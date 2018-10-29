@@ -48,57 +48,129 @@ namespace HBLib.Utils
         public static MemoryStream memoryStream = new MemoryStream();
         
         //TODO write docs
-        //TODO testing
         //SERVICE BUS
+        /// <summary>
+        /// Static class for MQ subscribing/publishing. Shared between threads.
+        /// </summary>
         public static class MQMessenger
         {
+            /// <summary>
+            /// Delegate for message handling.
+            /// </summary>
+            /// <param name="sender">Standard C# inheritted sender object.</param>
+            /// <param name="message">String, which is message sent via MQ.</param>
             public delegate void MessageHandler(object sender, string message);
+            /// <summary>
+            /// Indicates whether class was initialized.
+            /// </summary>
             public static bool IsInited { get; private set; } = false;
+            /// <summary>
+            /// Default number of worker threads.
+            /// </summary>
             public static readonly int ThreadNoDefault = 350;
-
-            public static string _srvUrl { get; private set; }
-            public static string _appName { get; private set; }
-            public static string _cstrName { get; private set; }
 
             private static ConnectionFactory _connFact = new ConnectionFactory();
             private static IConnection _conn = null;
+            /// <summary>
+            /// Used for synchronization 
+            /// </summary>
             private static bool _isInReinit = false;
+            /// <summary>
+            /// Maximum allowed number of worker threads.
+            /// </summary>
             private static int _threadNo = ThreadNoDefault;
+            /// <summary>
+            /// Maximum possible number of worker threads.
+            /// </summary>
             private static int _threadNoMax = 1950;
+            /// <summary>
+            /// Channel, used for RabbitMQ subscribing.
+            /// </summary>
             private static IModel _channel = null;
 
 
             #region Settings
+            /// <summary>
+            /// Connection and class settings.
+            /// <seealso cref="http://rabbitmq.github.io/rabbitmq-dotnet-client/api/RabbitMQ.Client.ConnectionFactory.html#properties"/>
+            /// </summary>
             public class MQSettings
             {
+                /// <summary>
+                /// Authomatically recover connection if it is lost. RabbitMQ setting. Default to true.
+                /// </summary>
                 public bool AuthomaticRecoveryEnabled { get; set; } = true;
+                /// <summary>
+                /// Timeout for network delay in ordinary actions (e.g. subscribing, publishing).
+                /// </summary>
                 public TimeSpan ContinuationTimeout { get; set; } = new TimeSpan(0, 0, 5);
+                /// <summary>
+                /// Name of host to connect to.
+                /// </summary>
                 public string HostName { get; set; } = "localhost";
+                /// <summary>
+                /// Amount of time client will wait for before re-trying to recover connection.
+                /// </summary>
                 public TimeSpan NetworkRecoveryInterval { get; set; } = new TimeSpan(0, 0, 15);
+                /// <summary>
+                /// Password to connect to MQ.
+                /// </summary>
                 public string Password { get; set; } = "guest";
+                /// <summary>
+                /// AMQP port to connect to.
+                /// </summary>
                 public int Port { get; set; } = AmqpTcpEndpoint.UseDefaultPort;
+                /// <summary>
+                /// Timeout setting for connection attempts (in milliseconds).
+                /// </summary>
                 public int RequestedConnectionTimeout { get; set; } = 5000;
+                /// <summary>
+                /// Heartbeat timeout to use when negotiating with the server (in seconds).
+                /// <para>Heartbeat is needed to keep TCP connection alive.</para>
+                /// </summary>
                 public ushort RequestedHeartbeat { get; set; } = 15;
+                /// <summary>
+                /// User's name to connect to MQ.
+                /// </summary>
                 public string UserName { get; set; } = "guest";
 
+                /// <summary>
+                /// Maximum allowed number of worker threads. 0 if default.
+                /// </summary>
                 public int ThreadNo { get; set; } = 0;
             }
-            public static MQSettings _settings { get; private set; } = new MQSettings();
+            /// <summary>
+            /// Current connection and class settings.
+            /// </summary>
+            public static MQSettings Settings { get; private set; } = new MQSettings();
             #endregion
 
             #region SubsActStore
+            /// <summary>
+            /// Represents action on receiving message.
+            /// </summary>
             private struct SubscriptionAction
             {
                 public string topic;
                 public MessageHandler handler;
             };
+            /// <summary>
+            /// Stores actions on subscriptions. Used when reinitializing (e.g. in case of severe loss of connection).
+            /// </summary>
             private static List<SubscriptionAction> _subsActs = new List<SubscriptionAction>();
             #endregion
 
             #region InitReinit
+            /// <summary>
+            /// Initialization method. Makes a connection to MQ server with given settings.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Thrown when class has been already initialized.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown when bad settings are given (e.g. invalid value of <see cref="MQSettings.ThreadNo"/> was given).</exception>
+            /// <exception cref="InitializationException">Thrown when one couldn't connect to MQ server.</exception>
+            /// <param name="settings">Settings to use.<seealso cref="MQSettings"/></param>
             public static void Init(MQSettings settings)
             {
-                if (IsInited) throw new InvalidOperationException("MQ messenger has already been initialised.");
+                if (IsInited) throw new InvalidOperationException("MQ messenger has already been initialized.");
                 if (settings.ThreadNo < 0 || settings.ThreadNo > _threadNoMax) throw new ArgumentOutOfRangeException("settings.threadNo", settings.ThreadNo, "Invalid number of threads.");
                 _connFact = new ConnectionFactory()
                 {
@@ -112,7 +184,7 @@ namespace HBLib.Utils
                     RequestedHeartbeat = settings.RequestedHeartbeat,
                     UserName = settings.UserName
                 };
-                _settings = settings;
+                Settings = settings;
 
                 _threadNo = settings.ThreadNo == 0 ? _threadNo : settings.ThreadNo;
                 
@@ -122,7 +194,7 @@ namespace HBLib.Utils
                 }
                 catch (RabbitMQ.Client.Exceptions.BrokerUnreachableException e)
                 {
-                    throw new InitialisationException("Error: unable to connect to server.", e);
+                    throw new InitializationException("Error: unable to connect to server.", e);
                 }
                 try
                 {
@@ -130,18 +202,40 @@ namespace HBLib.Utils
                 }
                 catch (Exception e)
                 {
-                    throw new InitialisationException("Error: unable to create a channel.", e);
+                    throw new InitializationException("Error: unable to create a channel.", e);
                 }
                 IsInited = true;
             }
-            public static void Init() => Init(_settings);
+            /// <summary>
+            /// Initialization method. Makes a connection to MQ server with current (default) settings.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Thrown when class has been already initialized.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown when bad settings are given (e.g. invalid value of <see cref="MQSettings.ThreadNo"/> was given).</exception>
+            /// <exception cref="InitializationException">Thrown when one couldn't connect to MQ server.</exception>
+            public static void Init() => Init(Settings);
+            /// <summary>
+            /// Async initialization method. Makes a connection to MQ server with given settings.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Thrown when class has been already initialized.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown when bad settings are given (e.g. invalid value of <see cref="MQSettings.ThreadNo"/> was given).</exception>
+            /// <exception cref="InitializationException">Thrown when one couldn't connect to MQ server.</exception>
+            /// <param name="settings">Settings to use.<seealso cref="MQSettings"/></param>
             public static async Task InitAsync(MQSettings settings)
             {
                 await Task.Run(() => Init(settings) );
                 return;
             }
-            public static async Task InitAsync() => await InitAsync(_settings);
+            /// <summary>
+            /// Async initialization method. Makes a connection to MQ server with current (default) settings.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Thrown when class has been already initialized.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown when bad settings are given (e.g. invalid value of <see cref="MQSettings.ThreadNo"/> was given).</exception>
+            /// <exception cref="InitializationException">Thrown when one couldn't connect to MQ server.</exception>
+            public static async Task InitAsync() => await InitAsync(Settings);
 
+            /// <summary>
+            /// Restore actions on subscriptions when reinitializing.
+            /// </summary>
             private static void RestoreSubs()
             {
                 foreach (var action in _subsActs)
@@ -173,14 +267,25 @@ namespace HBLib.Utils
                     _channel.BasicConsume(action.topic, autoAck: false, consumer: consumer);
                 }
             }
+
+            /// <summary>
+            /// Reinitialization method. Kills old connection and sets up new one with current settings.
+            /// <para>If one can't establish new connection, old one is keeped open. Previous settings are also saved.</para>
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Thrown when class has not been yet initialized.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown when bad settings are given (e.g. invalid value of <see cref="MQSettings.ThreadNo"/> was given).</exception>
+            /// <exception cref="ReinitializationException">Thrown when one couldn't connect to MQ server.</exception>
+            /// <exception cref="SubscriptionsRestoreException">Thrown when one can't resubscribe previous action on new connection.</exception>
+            /// <param name="settings">Settings to use.<seealso cref="MQSettings"/></param>
+            /// <param name="dropSubs">Set true to not restore actions on subscriptions. Default set to false.</param>
             public static void ReInit(MQSettings settings, bool dropSubs = false)
             {
-                if (!IsInited) throw new InvalidOperationException("MQ messenger has not been initialised.");
+                if (!IsInited) throw new InvalidOperationException("MQ messenger has not been initialized.");
                 if (settings.ThreadNo < 0 || settings.ThreadNo > _threadNoMax) throw new ArgumentOutOfRangeException("settings.threadNo", settings.ThreadNo, "Invalid number of threads.");
 
                 _isInReinit = true;
                 var oldConn = _conn;
-                var oldSet = _settings;
+                var oldSet = Settings;
                 var oldCF = _connFact;
                 var oldThreadNo = _threadNo;
 
@@ -198,7 +303,7 @@ namespace HBLib.Utils
                     RequestedHeartbeat = settings.RequestedHeartbeat,
                     UserName = settings.UserName
                 };
-                _settings = settings;
+                Settings = settings;
 
                 try
                 {
@@ -211,10 +316,10 @@ namespace HBLib.Utils
                     {
                         _conn.Close();
                         _conn = oldConn;
-                        _settings = oldSet;
+                        Settings = oldSet;
                         _connFact = oldCF;
                         _threadNo = oldThreadNo;
-                        throw new ReinitialisationException("Error: unable to create a channel.", e);
+                        throw new ReinitializationException("Error: unable to create a channel.", e);
                     }
                     try
                     {
@@ -236,35 +341,76 @@ namespace HBLib.Utils
                             throw new SubscriptionsRestoreException("Couldn't restore subs", e);
                         }
                     }
+                    else
+                    {
+                        _subsActs = new List<SubscriptionAction>();
+                    }
                 }
                 catch (RabbitMQ.Client.Exceptions.BrokerUnreachableException e)
                 {
                     _conn = oldConn;
-                    _settings = oldSet;
+                    Settings = oldSet;
                     _connFact = oldCF;
                     _threadNo = oldThreadNo;
-                    throw new ReinitialisationException("Error: unable to connect to server.", e);
+                    throw new ReinitializationException("Error: unable to connect to server.", e);
                 }
                 finally
                 {
                     _isInReinit = false;
                 }
-                
+
             }
-            public static void ReInit() => ReInit(_settings);
-            public static async Task ReInitAsync(MQSettings settings)
+            /// <summary>
+            /// Reinitialization method. Kills old connection and sets up new one with current settings.
+            /// <para>If one can't establish new connection, old one is keeped open. Previous settings are also saved.</para>
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Thrown when class has not been yet initialized.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown when bad settings are given (e.g. invalid value of <see cref="MQSettings.ThreadNo"/> was given).</exception>
+            /// <exception cref="ReinitializationException">Thrown when one couldn't connect to MQ server.</exception>
+            /// <exception cref="SubscriptionsRestoreException">Thrown when one can't resubscribe previous action on new connection.</exception>
+            /// <param name="dropSubs">Set true to not restore actions on subscriptions. Default set to false.</param>
+            public static void ReInit(bool dropSubs = false) => ReInit(Settings, dropSubs);
+            /// <summary>
+            /// Async reinitialization method. Kills old connection and sets up new one with current settings.
+            /// <para>If one can't establish new connection, old one is keeped open. Previous settings are also saved.</para>
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Thrown when class has not been yet initialized.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown when bad settings are given (e.g. invalid value of <see cref="MQSettings.ThreadNo"/> was given).</exception>
+            /// <exception cref="ReinitializationException">Thrown when one couldn't connect to MQ server.</exception>
+            /// <exception cref="SubscriptionsRestoreException">Thrown when one can't resubscribe previous action on new connection.</exception>
+            /// <param name="settings">Settings to use.<seealso cref="MQSettings"/></param>
+            /// <param name="dropSubs">Set true to not restore actions on subscriptions. Default set to false.</param>
+            public static async Task ReInitAsync(MQSettings settings, bool dropSubs = false)
             {
-                await Task.Run(() => ReInit(settings) );
+                await Task.Run(() => ReInit(settings, dropSubs) );
                 return;
             }
-            public static async Task ReInitAsync() => await ReInitAsync(_settings);
+            /// <summary>
+            /// Async reinitialization method. Kills old connection and sets up new one with current settings.
+            /// <para>If one can't establish new connection, old one is keeped open. Previous settings are also saved.</para>
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Thrown when class has not been yet initialized.</exception>
+            /// <exception cref="ArgumentOutOfRangeException">Thrown when bad settings are given (e.g. invalid value of <see cref="MQSettings.ThreadNo"/> was given).</exception>
+            /// <exception cref="ReinitializationException">Thrown when one couldn't connect to MQ server.</exception>
+            /// <exception cref="SubscriptionsRestoreException">Thrown when one can't resubscribe previous action on new connection.</exception>
+            /// <param name="dropSubs">Set true to not restore actions on subscriptions. Default set to false.</param>
+            public static async Task ReInitAsync(bool dropSubs = false) => await ReInitAsync(Settings, dropSubs);
             #endregion
 
             #region PubSub
+            /// <summary>
+            /// Publish a message on topic (publisher/subscribe scheme).
+            /// </summary>
+            /// <param name="topic">Topic to which is message sent.</param>
+            /// <param name="msg">Message to send.</param>
+            /// <exception cref="ArgumentNullException">Thrown when topic or message are null.</exception>
+            /// <exception cref="InvalidOperationException">Thrown when class has not been yet initialized.</exception>
+            /// <exception cref="PublishException">Thrown when one couldn't send message to MQ.</exception>
             public static void Publish(string topic, string msg)
             {
                 if (topic is null) throw new ArgumentNullException("topic", "Topic name can't be null.");
-                if (!IsInited) throw new InvalidOperationException("MQ messenger has not been initialised.");
+                if (msg is null) throw new ArgumentNullException("msg", "Message can't be null.");
+                if (!IsInited) throw new InvalidOperationException("MQ messenger has not been initialized.");
                 while (_isInReinit) { } //waiting for get out of Reinit
                 var rawMsg = Encoding.UTF8.GetBytes(msg);
 
@@ -276,9 +422,9 @@ namespace HBLib.Utils
                         _conn.Dispose();
                         ReInit();
                     }
-                    catch (ReinitialisationException e)
+                    catch (ReinitializationException e)
                     {
-                        throw new SubscribeException("No connection to server.", e);
+                        throw new PublishException("No connection to server.", e);
                     }
                 }
                 try
@@ -296,11 +442,21 @@ namespace HBLib.Utils
                 }
             }
 
-            public static void Subscribe(string topic, MessageHandler handler, string dName = null, string gName = null)
+            /// <summary>
+            /// Subscribe an action to topic (publisher/subscribe scheme).
+            /// <para>Received message is processed by fire-and-forget pattern.</para>
+            /// </summary>
+            /// <param name="topic">Topic to subscribe on.</param>
+            /// <param name="handler">Action to be done on message receiving.</param>
+            /// <exception cref="ArgumentNullException">Thrown when topic or handler are null.</exception>
+            /// <exception cref="InvalidOperationException">Thrown when class has not been yet initialized.</exception>
+            /// <exception cref="SubscribeException">Thrown when one couldn't subscribe to MQ.</exception>
+            public static void Subscribe(string topic, MessageHandler handler)
             {
                 if (topic is null) throw new ArgumentNullException("topic", "Topic name can't be null.");
-                if (!IsInited) throw new InvalidOperationException("MQ messenger has not been initialised.");
-                if (_channel is null) throw new SubscribeException("No channel to connect to. Consider reinitialisation.");
+                if (handler is null) throw new ArgumentNullException("handler", "Message handler can't be null.");
+                if (!IsInited) throw new InvalidOperationException("MQ messenger has not been initialized.");
+                if (_channel is null) throw new SubscribeException("No channel to connect to. Consider reinitialization.");
                 while (_isInReinit) { } //waiting for get out of Reinit
                 
                 if (!_conn.IsOpen)
@@ -311,7 +467,7 @@ namespace HBLib.Utils
                         _conn.Dispose();
                         ReInit();
                     }
-                    catch (ReinitialisationException e)
+                    catch (ReinitializationException e)
                     {
                         throw new SubscribeException("No connection to server.", e);
                     }
@@ -333,7 +489,10 @@ namespace HBLib.Utils
                                 handler(model, msg);
                                 _channel.BasicAck(inMsg.DeliveryTag, multiple: false);
                             }
-                            catch { }
+                            catch
+                            {
+                                _channel.BasicAck(inMsg.DeliveryTag, multiple: false);
+                            }
                             finally
                             {
                                 _threadNo++;       //free thread
@@ -356,6 +515,10 @@ namespace HBLib.Utils
             #endregion
 
             #region Dispose
+            /// <summary>
+            /// Use this method to properly close connection to MQ server.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Thrown when class has not been yet initialized.</exception>
             public static void Dispose()
             {
                 if (!IsInited) throw new InvalidOperationException("MQ messenger has not been initialised.");
@@ -376,16 +539,22 @@ namespace HBLib.Utils
             #endregion
 
             #region Exceptions
-            public class InitialisationException : Exception
+            /// <summary>
+            /// Thrown when errors occured on initialization.
+            /// </summary>
+            public class InitializationException : Exception
             {
-                private static string baseMsg = "Error on MQ messenger's initialisation.";
+                private static string baseMsg = "Error on MQ messenger's initialization.";
 
-                public InitialisationException() : base(baseMsg) { }
-                public InitialisationException(string errMsg) : base(baseMsg + "\n" + errMsg) { }
-                public InitialisationException(string errMsg, Exception innerException) : base(baseMsg + "\n" + errMsg, innerException) { }
-                public InitialisationException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+                public InitializationException() : base(baseMsg) { }
+                public InitializationException(string errMsg) : base(baseMsg + "\n" + errMsg) { }
+                public InitializationException(string errMsg, Exception innerException) : base(baseMsg + "\n" + errMsg, innerException) { }
+                public InitializationException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
             }
 
+            /// <summary>
+            /// Thrown when errors occured on subscription.
+            /// </summary>
             public class SubscriptionsRestoreException : Exception
             {
                 private static string baseMsg = "Error when restoring subscriptions.";
@@ -396,16 +565,22 @@ namespace HBLib.Utils
                 public SubscriptionsRestoreException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
             }
 
-            public class ReinitialisationException : Exception
+            /// <summary>
+            /// Thrown when errors occured on reinitialization.
+            /// </summary>
+            public class ReinitializationException : Exception
             {
-                private static string baseMsg = "Error on MQ messenger's reinitialisation.";
+                private static string baseMsg = "Error on MQ messenger's reinitialization.";
 
-                public ReinitialisationException() : base(baseMsg) { }
-                public ReinitialisationException(string errMsg) : base(baseMsg + "\n" + errMsg) { }
-                public ReinitialisationException(string errMsg, Exception innerException) : base(baseMsg + "\n" + errMsg, innerException) { }
-                public ReinitialisationException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+                public ReinitializationException() : base(baseMsg) { }
+                public ReinitializationException(string errMsg) : base(baseMsg + "\n" + errMsg) { }
+                public ReinitializationException(string errMsg, Exception innerException) : base(baseMsg + "\n" + errMsg, innerException) { }
+                public ReinitializationException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
             }
 
+            /// <summary>
+            /// Thrown when errors occured on publishing.
+            /// </summary>
             public class PublishException : Exception
             {
                 private static string baseMsg = "Error when publishing the message to MQ.";
@@ -428,6 +603,9 @@ namespace HBLib.Utils
                 }
             }
 
+            /// <summary>
+            /// Thrown when errors occured on subscribing.
+            /// </summary>
             public class SubscribeException : Exception
             {
                 private static string baseMsg = "Error when subscribing to MQ.";
