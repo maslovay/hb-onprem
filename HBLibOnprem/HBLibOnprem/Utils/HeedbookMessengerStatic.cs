@@ -133,6 +133,10 @@ namespace HBLib.Utils
                 /// User's name to connect to MQ.
                 /// </summary>
                 public string UserName { get; set; } = "guest";
+                /// <summary>
+                /// virtual host to connect to.
+                /// </summary>
+                public string VHost { get; set; } = "/";
 
                 /// <summary>
                 /// Maximum allowed number of worker threads. 0 if default.
@@ -182,7 +186,8 @@ namespace HBLib.Utils
                     Port = settings.Port,
                     RequestedConnectionTimeout = settings.RequestedConnectionTimeout,
                     RequestedHeartbeat = settings.RequestedHeartbeat,
-                    UserName = settings.UserName
+                    UserName = settings.UserName,
+                    VirtualHost = settings.VHost
                 };
                 Settings = settings;
 
@@ -521,7 +526,7 @@ namespace HBLib.Utils
             /// <exception cref="InvalidOperationException">Thrown when class has not been yet initialized.</exception>
             public static void Dispose()
             {
-                if (!IsInited) throw new InvalidOperationException("MQ messenger has not been initialised.");
+                if (!IsInited) return;
 
                 try
                 {
