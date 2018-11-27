@@ -29,7 +29,9 @@
 Здесь ничего сложного. Нужно зайти в папку с основным приложением (Local) и выполнить следующие команды:
 
 `dotnet add reference ../hblibonprem/hb-onprem/HBLibOnprem/HBLibOnprem/HBLibOnprem.csproj` - добавить ссылку на связанный проект
+
 `dotnet add package Newtonsoft.Json` - добавить nuget-пакет Newtonsoft.Json в проект
+
 `dotnet build -c Release` - собрать проект под конфигурацией Release
 
 Для запуска необходимо ввести команду: 
