@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class Country
     {
@@ -15,7 +15,7 @@ namespace HBLib.Models
 
         //links
         //компании языка
-        public virtual ICollection<Company> Company { get; set; }
+        public  ICollection<Company> Company { get; set; }
         
     }
 }

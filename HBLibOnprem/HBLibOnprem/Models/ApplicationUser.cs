@@ -3,49 +3,50 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
-    // Add profile data for application users by adding properties to the ApplicationUser class
+    /// <summary>
+    /// Application user information
+    /// </summary>
     public class ApplicationUser 
     {
-		public string Id { get; set; }
+        // User id
+		public Guid ApplicationUserId { get; set; }
 		
-        //полное имя сотрудника
+        // User full name
         public string FullName { get; set; }
 
-        //ссылка на аватар сотрудника
+        // Avatar filename
         public string Avatar { get; set; }
 
-        //почта сотрудника
+        // User email
         public string Email { get; set; }
 
-        //id сотрудника в компании
+        // User id in company
         public string EmpoyeeId { get; set; }
 
-        //дата создания
+        // Creation date of user profile
         public DateTime CreationDate { get; set; }
 
-        //компания пользователя
+        // User company
         public int? CompanyId { get; set; }
         public virtual Company Company { get; set; }
 
-        //статус пользователя
+        // User status
         public int? StatusId { get; set; }
         public virtual Status Status { get; set; }
 
-        //id пользователей в OneSignal
+        // User id in OneSignal 
         public string OneSignalId { get; set; }
 
-        //id position
+        // User position id
         public int? WorkerTypeId { get; set; }
-        public virtual WorkerType WorkerType { get; set; }
+        public  WorkerType WorkerType { get; set; }
 
-        //links
-
-        //диалоги сотрудника
+        // Dialogues link
         public virtual ICollection<Dialogue> Dialogue { get; set; }
 
-        //сессии
+        // Session list
         public virtual ICollection<Session> Session { get; set; }
     }
 }

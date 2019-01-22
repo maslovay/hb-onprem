@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class Company
     {
@@ -16,32 +16,32 @@ namespace HBLib.Models
 
         //отрасль компании
 		public int? CompanyIndustryId { get; set; }
-        public virtual CompanyIndustry CompanyIndustry { get; set; }
+        public  CompanyIndustry CompanyIndustry { get; set; }
 
         //дата создания
         public DateTime CreationDate { get; set; }
 
         //язык компании
         public int LanguageId { get; set; }
-        public virtual Language Language { get; set; }
+        public  Language Language { get; set; }
 
         //страна компании
         public int? CountryId { get; set; }
-        public virtual Country Country { get; set; }
+        public  Country Country { get; set; }
 
         //status company
         public int? StatusId { get; set; }
-        public virtual Status Status { get; set; }
+        public  Status Status { get; set; }
 
         //links
         //сотрудники компании
-        public virtual ICollection<ApplicationUser> ApplicationUser { get; set; }
+        public  ICollection<ApplicationUser> ApplicationUser { get; set; }
 
         //оплаты компании
-        public virtual ICollection<Payment> Payment { get; set; }
+        public  ICollection<Payment> Payment { get; set; }
         
         //корпорация, к которой принадлежит компания. Может быть пустой.
         public int? CorporationId { get; set; }
-        public virtual Corporation Corporation { get; set; }
+        public  Corporation Corporation { get; set; }
     }
 }

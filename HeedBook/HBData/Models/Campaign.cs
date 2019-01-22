@@ -1,10 +1,19 @@
 using System;
-using HBLib.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about campaign
+    /// </summary>
     public class Campaign
     {
+        /// <summary>
+        /// Campaign id
+        /// </summary>
+        [Key]
         public Guid CampaignId { get; set; }
 
         /// <summary>
@@ -49,7 +58,7 @@ namespace HBData.Models
         /// <summary>
         /// Company to differentiate access
         /// </summary>
-        public int CompanyId { get; set; }
+        public Guid CompanyId { get; set; }
         public Company Company { get; set; }
 
         /// <summary>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class PhraseCompany
     {
@@ -11,11 +11,11 @@ namespace HBLib.Models
 
         //phrase 
         public int? PhraseId { get; set; }
-        public virtual Phrase Phrase { get; set; }
+        public  Phrase Phrase { get; set; }
 
         //Company 
         public int? CompanyId { get; set; }
-        public virtual Company Company { get; set; }
+        public  Company Company { get; set; }
 
     }
 }

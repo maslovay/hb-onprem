@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using HBData.Models;
 
-namespace HBLib.Models
+namespace HBData.Models
 {
     public class Dialogue
     {
+        [Key]
         public Guid DialogueId { get; set; }
 
         //creation date
@@ -21,7 +21,7 @@ namespace HBLib.Models
         public DateTime EndTime { get; set; }
 			
         //автор диалога (сотрудник)
-        public string ApplicationUserId { get; set; }
+        public Guid ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
 
         //язык 
@@ -54,8 +54,6 @@ namespace HBLib.Models
         public  ICollection<DialogueInterval> DialogueInterval { get; set; }
 
         public  ICollection<DialoguePhraseCount> DialoguePhraseCount { get; set; }
-
-        public  ICollection<DialoguePhrasePlace> DialoguePhrasePlace { get; set; }
 
         public  ICollection<DialogueSpeech> DialogueSpeech { get; set; }
 

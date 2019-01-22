@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class PhraseType
     {
@@ -20,6 +20,6 @@ namespace HBLib.Models
 
         //links
         //phrases
-        public virtual ICollection<Phrase> Phrase { get; set; }
+        public  ICollection<Phrase> Phrase { get; set; }
     }
 }

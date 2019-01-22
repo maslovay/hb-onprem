@@ -1,10 +1,13 @@
 using System;
-using HBLib.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     public class DialoguePhraseCount
     {
+        [Key]
         public int DialoguePhraseCountId { get; set; }
 
         //dialogue 

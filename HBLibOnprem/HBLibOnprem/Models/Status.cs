@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class Status
     {
@@ -16,10 +16,10 @@ namespace HBLib.Models
 
         //links
         //сотрудники статуса
-        public virtual ICollection<ApplicationUser> ApplicationUser { get; set; }
+        public  ICollection<ApplicationUser> ApplicationUser { get; set; }
 
         //диалоги статуса
-        public virtual ICollection<Dialogue> Dialogue { get; set; }
+        public  ICollection<Dialogue> Dialogue { get; set; }
 
     }
 }

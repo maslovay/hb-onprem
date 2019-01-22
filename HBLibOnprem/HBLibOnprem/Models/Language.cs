@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class Language
     {
@@ -21,9 +21,9 @@ namespace HBLib.Models
 
         //links
         //компании языка
-        public virtual ICollection<Company> Company { get; set; }
+        public  ICollection<Company> Company { get; set; }
 
         //диалоги языка
-        public virtual ICollection<Dialogue> Dialogue { get; set; }
+        public  ICollection<Dialogue> Dialogue { get; set; }
     }
 }

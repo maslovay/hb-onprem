@@ -1,5 +1,9 @@
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
@@ -10,6 +14,7 @@ namespace HBData.Models
 
     public class Content
     {
+        [Key]
         public Guid ContentId { get; set; }
 
         /// <summary>
@@ -31,7 +36,8 @@ namespace HBData.Models
         /// <summary>
         /// Company of content
         /// </summary>
-        public int CompanyId { get; set; }
+        public Guid CompanyId { get; set; }
+        [JsonIgnore]
         public Company Company { get; set; }
 
         /// <summary>

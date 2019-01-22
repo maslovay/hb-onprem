@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL
+.Models
 {
     public class Transaction
     {
@@ -20,11 +21,11 @@ namespace HBLib.Models
 
         //тариф, по которому произошла оплата
         public Guid? TariffId { get; set; }
-        public virtual Tariff Tariff { get; set; }
+        public  Tariff Tariff { get; set; }
 
         //статус транзакции
         public int? StatusId { get; set; }
-        public virtual Status Status { get; set; }
+        public  Status Status { get; set; }
 
         //дата оплаты
         public DateTime PaymentDate { get; set; }

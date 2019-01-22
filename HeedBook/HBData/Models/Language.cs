@@ -1,10 +1,14 @@
+using System;
 using System.Collections.Generic;
-using HBLib.Models;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     public class Language
     {
+        [Key]
         public int LanguageId { get; set; }
 
         //название языка

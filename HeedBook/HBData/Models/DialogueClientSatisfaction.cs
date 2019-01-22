@@ -1,10 +1,14 @@
 using System;
-using HBLib.Models;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     public class DialogueClientSatisfaction
     {
+        [Key]
         public Guid DialogueClientSatisfactionId { get; set; }
 
         //dialogue

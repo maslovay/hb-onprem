@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class DialoguePhraseCount
     {
@@ -11,11 +11,11 @@ namespace HBLib.Models
 
         //dialogue 
         public Guid? DialogueId { get; set; }
-        public virtual Dialogue Dialogue { get; set; }
+        public  Dialogue Dialogue { get; set; }
 
         //phrase 
         public int? PhraseTypeId { get; set; }
-        public virtual PhraseType PhrType { get; set; }
+        public  PhraseType PhrType { get; set; }
 
         //Phrase Count
         public int? PhraseCount { get; set; }

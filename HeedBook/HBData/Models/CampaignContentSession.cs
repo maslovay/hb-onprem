@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     public class CampaignContentSession
     {
+        [Key]
         public Guid CampaignContentSessionId { get; set; }
 
         /// <summary>
@@ -21,7 +25,7 @@ namespace HBData.Models
         /// <summary>
         /// Place where the content was shown
         /// </summary>
-        public string ApplicationUserId { get; set; }
+        public Guid ApplicationUserId { get; set; }
         public virtual ApplicationUser ApplicationUser { get; set; }
     }
 }

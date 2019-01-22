@@ -1,10 +1,12 @@
+
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class Payment
     {
@@ -12,12 +14,12 @@ namespace HBLib.Models
 
         //компания оплаты
         public int? CompanyId { get; set; }
-        public virtual Company Company { get; set; }
+        public  Company Company { get; set; }
 
 
         //status of payment
         public int? StatusId { get; set; }
-        public virtual Status Status { get; set; }
+        public  Status Status { get; set; }
 
         //дата оплаты
         public DateTime Date { get; set; }

@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class AspNetUserRole
     {
-        public string UserId { get; set; }
+        public Guid AspNetUserRoleId { get; set; }
 
         public string RoleId { get; set; }
     }
