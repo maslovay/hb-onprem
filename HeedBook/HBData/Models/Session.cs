@@ -1,15 +1,21 @@
+using Newtonsoft.Json;
 using System;
-using HBLib.Models;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     public class Session
     {
+        [Key]
         public int SessionId { get; set; }
 
         //сотрудник
-        public string ApplicationUserId { get; set; }
-        public ApplicationUser ApplicationUser { get; set; }
+        public Guid ApplicationUserId { get; set; }
+        [JsonIgnore]
+        public  ApplicationUser ApplicationUser { get; set; }
 
         //начало сессии
         public DateTime BegTime { get; set; }
@@ -19,9 +25,12 @@ namespace HBData.Models
 
         //статус сессии
         public int? StatusId { get; set; }
-        public Status Status { get; set; }
+        public  Status Status { get; set; }
+
 
         //desktop session
         public bool IsDesktop { get; set; }
+
+
     }
 }

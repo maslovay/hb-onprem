@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using HBLib.Models;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     public class Status
     {
+        [Key]
         public int StatusId { get; set; }
 
         //название статуса

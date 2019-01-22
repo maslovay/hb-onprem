@@ -1,56 +1,53 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using HBLib.Models;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
-    // Add profile data for application users by adding properties to the ApplicationUser class
-    public class ApplicationUser
+    /// <summary>
+    /// Application user information
+    /// </summary>
+    public class ApplicationUser 
     {
         [Key]
-        public String Id { get; set; }
-
-        //полное имя сотрудника
+		public Guid ApplicationUserId { get; set; }
+		
+        // User full name
         public string FullName { get; set; }
 
-        //ссылка на аватар сотрудника
+        // Avatar filename
         public string Avatar { get; set; }
 
-        //почта сотрудника
+        // User email
         public string Email { get; set; }
 
-        //id сотрудника в компании
-        public string EmployeeId { get; set; }
+        // User id in company
+        public string EmpoyeeId { get; set; }
 
-        //дата создания
+        // Creation date of user profile
         public DateTime CreationDate { get; set; }
 
-        //компания пользователя
-        public Int32? CompanyId { get; set; }
-        public Company Company { get; set; }
+        // User company
+        public Guid? CompanyId { get; set; }
+        public virtual Company Company { get; set; }
 
-        /// <summary>
-        /// Статус пользователя
-        /// </summary>
+        // User status
         public int? StatusId { get; set; }
-        public Status Status { get; set; }
+        public virtual Status Status { get; set; }
 
-        //id пользователей в OneSignal
+        // User id in OneSignal 
         public string OneSignalId { get; set; }
 
-        //id position
+        // User position id
         public int? WorkerTypeId { get; set; }
-        public WorkerType WorkerType { get; set; }
+        public  WorkerType WorkerType { get; set; }
 
-        //links
+        // Dialogues link
+        public virtual ICollection<Dialogue> Dialogue { get; set; }
 
-        /// <summary>
-        /// Диалоги сотрудников
-        /// </summary>
-        public ICollection<Dialogue> Dialogue { get; set; }
-
-        //сессии
-        public ICollection<Session> Session { get; set; }
+        // Session list
+        public virtual ICollection<Session> Session { get; set; }
     }
 }

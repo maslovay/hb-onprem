@@ -1,10 +1,14 @@
 using System;
-using HBLib.Models;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     public class DialogueHint
     {
+        [Key]
         public int DialogueHintId { get; set; }
 
         //dialogue 

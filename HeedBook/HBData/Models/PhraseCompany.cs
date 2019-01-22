@@ -1,7 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 namespace HBData.Models
 {
     public class PhraseCompany
     {
+        [Key]
         public int PhraseCompanyId { get; set; }
 
         //phrase 
@@ -9,7 +15,7 @@ namespace HBData.Models
         public  Phrase Phrase { get; set; }
 
         //Company 
-        public int? CompanyId { get; set; }
+        public Guid? CompanyId { get; set; }
         public  Company Company { get; set; }
 
     }

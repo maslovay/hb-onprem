@@ -4,11 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
+    /// <summary>
+    /// Application user role
+    /// </summary>
     public class AspNetRole
     {
-        public string Id { get; set; }
+        // User role id
+        public Guid AspNetRoleId { get; set; }
         
         public string ConcurrencyStamp { get; set; }
 

@@ -1,9 +1,13 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     public class PhraseType
     {
+        [Key]
         public int PhraseTypeId { get; set; }
 
         //phrase type text

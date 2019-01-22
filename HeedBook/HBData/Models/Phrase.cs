@@ -1,10 +1,13 @@
+using System;
 using System.Collections.Generic;
-using HBLib.Models;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     public class Phrase
     {
+        [Key]
         public int PhraseId { get; set; }
 
         //text of phrase

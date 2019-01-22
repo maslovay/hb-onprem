@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class DialogueAudio
     {
@@ -12,7 +12,7 @@ namespace HBLib.Models
 		
 		//dialogue
 		public Guid? DialogueId { get; set; }
-        public virtual Dialogue Dialogue { get; set; }
+        public  Dialogue Dialogue { get; set; }
 		
 		//client or employee
 		public bool IsClient { get; set; }

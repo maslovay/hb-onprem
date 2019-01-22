@@ -1,5 +1,9 @@
+using Newtonsoft.Json;
 using System;
-using HBLib.Models;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HBData.Models
 {
@@ -8,6 +12,7 @@ namespace HBData.Models
     /// </summary>
     public class CampaignContent
     {
+        [Key]
         public Guid CampaignContentId { get; set; }
 
         /// <summary>
@@ -19,6 +24,7 @@ namespace HBData.Models
         /// Reference to HTML code with buttons, messages, videos, images and links to it
         /// </summary>
         public Guid? ContentId { get; set; }
+        [JsonIgnore]
         public Content Content { get; set; }
 
 
@@ -26,6 +32,7 @@ namespace HBData.Models
         /// Link to campaign
         /// </summary>
         public Guid CampaignId { get; set; }
+        [JsonIgnore]
         public Campaign Campaign { get; set; }
 
     }

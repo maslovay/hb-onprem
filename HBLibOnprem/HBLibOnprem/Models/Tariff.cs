@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace HBLib.Models
+namespace PostgreSQL.Models
 {
     public class Tariff
     {
@@ -11,7 +11,7 @@ namespace HBLib.Models
 
         //компания, которой принадлежит данный тариф
         public int? CompanyId { get; set; }
-        public virtual Company Company { get; set; }
+        public  Company Company { get; set; }
 
         //ключ покупателя, необходим для рекуррентных платежей. Ассоциируется с банковской картой в системе Тинькова.
         public string CustomerKey { get; set; }
@@ -36,7 +36,7 @@ namespace HBLib.Models
 
         //статус тарифа
         public int? StatusId { get; set; }
-        public virtual Status Status { get; set; }
+        public  Status Status { get; set; }
 
         //Помесячная или погодовая оплата
         public bool isMonthly { get; set; }
