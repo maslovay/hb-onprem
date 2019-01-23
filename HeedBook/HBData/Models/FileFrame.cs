@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+
 
 namespace HBData.Models
 {
@@ -14,17 +16,17 @@ namespace HBData.Models
         public Guid FileFrameId { get; set; }
 
         public Guid ApplicationUserId { get; set; }
-        public virtual ApplicationUser ApplicationUser { get; set; }
+        public ApplicationUser ApplicationUser { get; set; }
 
         public bool FileExist { get; set; }
         public string FileName { get; set; }
         public string FileContainer { get; set; }
 
         public int StatusId { get; set; }
-        public virtual Status Status { get; set; }
+        public Status Status { get; set; }
 
         public int StatusNNId { get; set; }
-        public virtual Status StatusNN { get; set; }
+        public Status StatusNN { get; set; }
 
         public DateTime Time { get; set; }
 

@@ -11,7 +11,6 @@ namespace HBData.Models {
             var connectionString = Environment.GetEnvironmentVariable("PostgreSQLConnectionString");
             optionsBuilder.UseNpgsql(connectionString);
         }
-
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<AspNetRole> AspNetRoles { get; set; }
         public DbSet<AspNetUserRole> AspNetUserRoles { get; set; }
@@ -31,13 +30,17 @@ namespace HBData.Models {
         public DbSet<DialogueClientSatisfaction> DialogueClientSatisfactions { get; set; }
         public DbSet<DialogueFrame> DialogueFrames { get; set; }
         public DbSet<DialogueInterval> DialogueIntervals { get; set; }
+        public DbSet<DialogueMarkup> DialogueMarkups { get; set; }
         public DbSet<DialoguePhraseCount> DialoguePhraseCounts { get; set; }
         public DbSet<DialogueSpeech> DialogueSpeechs { get; set; }
         public DbSet<DialogueVisual> DialogueVisuals { get; set; }
         public DbSet<DialogueWord> DialogueWords { get; set; }
+        public DbSet<FileAudioDialogue> FileAudioDialogues{ get; set; }
         public DbSet<FileAudioEmployee> FileAudioEmployees { get; set; }
         public DbSet<FileFrame> FileFrames { get; set; }
-        public DbSet<FileVideo> FileVideos { get; set; } 
+        public DbSet<FileVideo> FileVideos { get; set; }
+        public DbSet<FrameAttribute> FrameAttributes { get; set; }
+        public DbSet<FrameEmotion> FrameEmotions { get; set; }
         public DbSet<Language> Languages { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Phrase> Phrases { get; set; }

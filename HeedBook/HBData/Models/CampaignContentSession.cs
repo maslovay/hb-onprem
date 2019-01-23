@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
@@ -26,6 +27,6 @@ namespace HBData.Models
         /// Place where the content was shown
         /// </summary>
         public Guid ApplicationUserId { get; set; }
-        public virtual ApplicationUser ApplicationUser { get; set; }
+        public ApplicationUser ApplicationUser { get; set; }
     }
 }

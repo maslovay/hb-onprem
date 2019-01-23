@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
@@ -65,7 +66,7 @@ namespace HBData.Models
         /// status
         /// </summary>
         public int? StatusId { get; set; }
-        public virtual Status Status { get; set; }
+        public Status Status { get; set; }
         
 
 
