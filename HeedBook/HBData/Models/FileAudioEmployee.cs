@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+
 
 namespace HBData.Models
 {
@@ -13,7 +15,7 @@ namespace HBData.Models
         [Key]
         public Guid FileAudioEmployeeId { get; set; }
         public Guid ApplicationUserId { get; set; }
-        public virtual ApplicationUser ApplicationUser { get; set; }
+        public ApplicationUser ApplicationUser { get; set; }
 
         public DateTime BegTime { get; set; }
         public DateTime EndTime { get; set; }
@@ -24,7 +26,7 @@ namespace HBData.Models
 
         public bool FileExist { get; set; }
         public int? StatusId { get; set; }
-        public virtual Status Status { get; set; }
+        public Status Status { get; set; }
 
         public double? Duration { get; set; }
     }

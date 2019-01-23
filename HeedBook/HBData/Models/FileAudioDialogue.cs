@@ -7,12 +7,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
-    public class FileVideo
+    public class FileAudioDialogue
     {
         [Key]
-        public Guid FileVideoId { get; set; }
-        public Guid ApplicationUserId { get; set; }
-        public ApplicationUser ApplicationUser { get; set; }
+        public Guid FileAudioDialogueId { get; set; }
+        public Guid DialogueId { get; set; }
+        public Dialogue Dialogue { get; set; }
+
         public DateTime BegTime { get; set; }
         public DateTime EndTime { get; set; }
         public DateTime CreationTime { get; set; }

@@ -31,23 +31,23 @@ namespace HBData.Models
 
         // User company
         public Guid? CompanyId { get; set; }
-        public virtual Company Company { get; set; }
+        public Company Company { get; set; }
 
         // User status
         public int? StatusId { get; set; }
-        public virtual Status Status { get; set; }
+        public Status Status { get; set; }
 
         // User id in OneSignal 
         public string OneSignalId { get; set; }
 
         // User position id
         public int? WorkerTypeId { get; set; }
-        public  WorkerType WorkerType { get; set; }
+        public WorkerType WorkerType { get; set; }
 
         // Dialogues link
-        public virtual ICollection<Dialogue> Dialogue { get; set; }
+        public ICollection<Dialogue> Dialogue { get; set; }
 
         // Session list
-        public virtual ICollection<Session> Session { get; set; }
+        public ICollection<Session> Session { get; set; }
     }
 }

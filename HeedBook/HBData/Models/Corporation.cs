@@ -8,7 +8,7 @@ namespace HBData.Models
 {
     public class Corporation
     {
-        [Ksey]
+        [Key]
         public int Id { get; set; }
 
         public string Name { get; set; }
