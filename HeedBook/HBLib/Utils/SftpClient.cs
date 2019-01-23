@@ -32,22 +32,26 @@ namespace HBLib.Utils
             }
         }
 
-        public async Task<ConcurrentBag<MemoryStream>> DownloadAllAsync(String remoteDirectory)
+        public async Task<ConcurrentDictionary<String, MemoryStream>> DownloadAllAsync(String remoteDirectory)
         {
-            var fileStreams = new ConcurrentBag<MemoryStream>();
+            var fileStreams = new ConcurrentDictionary<String, MemoryStream>();
             _client.Connect(_sftpSettings.Host, _sftpSettings.Port);
             await _client.LoginAsync(_sftpSettings.UserName, _sftpSettings.Password);
             IEnumerable<SftpItem> files = await _client.GetListAsync(remoteDirectory);
-            Parallel.ForEach(files, file =>
+
+            var tasks = files.Select(file =>
             {
-                var fileName = file.Name;
-                if ((file.Name.StartsWith(".")) || ((file.LastWriteTime.Value != DateTime.Today))) return;
-                using (var f = new MemoryStream())
+                var name = file.Name;
+                return new Task(async () =>
                 {
-                    _client.GetFileAsync(remoteDirectory + fileName, f);
-                    fileStreams.Add(f);
-                }
+                    using (var ms = new MemoryStream())
+                    {
+                        await _client.GetFileAsync(remoteDirectory + name, ms);
+                        fileStreams.TryAdd(name, ms);
+                    }
+                });
             });
+            await Task.WhenAll(tasks);
             return fileStreams;
         }
 
