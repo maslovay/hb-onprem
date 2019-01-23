@@ -6,6 +6,7 @@ using System.IO;
 using System.Net.Security;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace HBLib.Utils
 {
@@ -20,24 +21,27 @@ namespace HBLib.Utils
             _sftpSettings = sftpSettings;
         }
 
-        public async void UploadAsync(String sourceFile, String container)
+        private async Task ConnectToSftpAsync()
         {
-            var destinationPath = _sftpSettings.DestinationPath + container;
-            _client.Connect(_sftpSettings.Host, _sftpSettings.Port);
+            await _client.ConnectAsync(_sftpSettings.Host, _sftpSettings.Port);
             await _client.LoginAsync(_sftpSettings.UserName, _sftpSettings.Password);
-            await _client.ChangeDirectoryAsync(destinationPath);
+            await _client.ChangeDirectoryAsync(_sftpSettings.DestinationPath);
+        }
+
+        public async Task UploadAsync(String sourceFile, String container)
+        {
+            await ConnectToSftpAsync();
             using (var fs = new FileStream(sourceFile, FileMode.Open))
             {
-                await _client.PutFileAsync(fs, destinationPath);
+                await _client.PutFileAsync(fs, container);
             }
         }
 
-        public async Task<ConcurrentDictionary<String, MemoryStream>> DownloadAllAsync(String remoteDirectory)
+        public async Task<ConcurrentDictionary<String, MemoryStream>> DownloadAllAsync(String directory)
         {
             var fileStreams = new ConcurrentDictionary<String, MemoryStream>();
-            _client.Connect(_sftpSettings.Host, _sftpSettings.Port);
-            await _client.LoginAsync(_sftpSettings.UserName, _sftpSettings.Password);
-            IEnumerable<SftpItem> files = await _client.GetListAsync(remoteDirectory);
+            await ConnectToSftpAsync();
+            IEnumerable<SftpItem> files = await _client.GetListAsync(directory);
 
             var tasks = files.Select(file =>
             {
@@ -46,13 +50,25 @@ namespace HBLib.Utils
                 {
                     using (var ms = new MemoryStream())
                     {
-                        await _client.GetFileAsync(remoteDirectory + name, ms);
+                        await _client.GetFileAsync(directory + name, ms);
                         fileStreams.TryAdd(name, ms);
                     }
                 });
             });
             await Task.WhenAll(tasks);
             return fileStreams;
+        }
+
+        public async Task<Boolean> IsFileExistsAsync(String path)
+        {
+            await ConnectToSftpAsync();
+            return await _client.FileExistsAsync(path);
+        }
+
+        public async Task DeleteFileAsync(String path)
+        {
+            await ConnectToSftpAsync();
+            await _client.DeleteFileAsync(path);
         }
 
         public void Dispose()
