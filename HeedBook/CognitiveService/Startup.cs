@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Notifications.Base;
 using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 using RabbitMqEventBus.Models;
 
 namespace CognitiveService
@@ -59,7 +60,7 @@ namespace CognitiveService
         private void SubscribeEvents(IApplicationBuilder app)
         {
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<FaceRecognitionMessage, FaceRecognitionMessageHandler>();
+            service.Subscribe<FaceRecognitionRun, FaceRecognitionMessageHandler>();
         }
     }
 }
