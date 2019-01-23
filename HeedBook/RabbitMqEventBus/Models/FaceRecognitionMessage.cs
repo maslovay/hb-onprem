@@ -3,7 +3,7 @@ using RabbitMqEventBus.Base;
 
 namespace RabbitMqEventBus.Models  {
 
-    public class FaceRecognitionMessage: IntegrationEvent
+    public class FaceRecognitionMessage
     {
         public String Id { get; set; }
         public Guid ApplicationUserId { get; set; }

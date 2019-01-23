@@ -1,6 +1,8 @@
 ﻿using CognitiveService.Handlers;
 using CognitiveService.Legacy;
 using Configurations;
+using HBLib;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Notifications.Base;
 using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 using RabbitMqEventBus.Models;
 
 namespace CognitiveService
@@ -25,6 +28,12 @@ namespace CognitiveService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient<SftpClient>( provider =>
+            {
+                var opt = provider.GetRequiredService<SftpSettings>();
+                return new SftpClient(opt);
+            });
             services.AddRabbitMqEventBus(Configuration);
             services.AddTransient<FrameSubFaceReq>();
             services.AddTransient<FaceRecognitionMessageHandler>();
@@ -51,7 +60,7 @@ namespace CognitiveService
         private void SubscribeEvents(IApplicationBuilder app)
         {
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<FaceRecognitionMessage, FaceRecognitionMessageHandler>();
+            service.Subscribe<FaceRecognitionRun, FaceRecognitionMessageHandler>();
         }
     }
 }
