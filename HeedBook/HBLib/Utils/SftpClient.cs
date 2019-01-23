@@ -28,6 +28,12 @@ namespace HBLib.Utils
             await _client.ChangeDirectoryAsync(_sftpSettings.DestinationPath);
         }
 
+        /// <summary>
+        /// Upload file to remote sftp server. 
+        /// </summary>
+        /// <param name="sourceFile">name of source file</param>
+        /// <param name="container">name of folder in remote server</param>
+        /// <returns></returns>
         public async Task UploadAsync(String sourceFile, String container)
         {
             await ConnectToSftpAsync();
@@ -37,6 +43,11 @@ namespace HBLib.Utils
             }
         }
 
+        /// <summary>
+        /// Downloads all files from specified directory. It's downloaded files to memory.
+        /// </summary>
+        /// <param name="directory"></param>
+        /// <returns>Returns ConcurrentDictionary String, MemoryStream where string is filename, Memory stream is file</returns>
         public async Task<ConcurrentDictionary<String, MemoryStream>> DownloadAllAsync(String directory)
         {
             var fileStreams = new ConcurrentDictionary<String, MemoryStream>();
@@ -59,16 +70,29 @@ namespace HBLib.Utils
             return fileStreams;
         }
 
+        /// <summary>
+        /// Check file exists on server
+        /// </summary>
+        /// <param name="path">Specified directory + filename</param>
+        /// <returns></returns>
         public async Task<Boolean> IsFileExistsAsync(String path)
         {
             await ConnectToSftpAsync();
             return await _client.FileExistsAsync(path);
         }
 
-        public async Task DeleteFileAsync(String path)
+        /// <summary>
+        /// Delete file from server
+        /// </summary>
+        /// <param name="path">Specified directory + filename</param>
+        /// <returns></returns>
+        public async Task DeleteFileIfExistsAsync(String path)
         {
             await ConnectToSftpAsync();
-            await _client.DeleteFileAsync(path);
+            if (await _client.FileExistsAsync(path))
+            {
+                await _client.DeleteFileAsync(path);
+            }
         }
 
         public void Dispose()
