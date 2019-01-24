@@ -34,6 +34,8 @@ ProjectSection(SolutionItems) = preProject
 	FrameFromVideoService.Dockerfile = FrameFromVideoService.Dockerfile
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaceAnalyzeService", "FaceAnalyzeService\FaceAnalyzeService.csproj", "{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +78,10 @@ Global
 		{32785144-D258-46F8-AF5D-FCD1745AB5B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32785144-D258-46F8-AF5D-FCD1745AB5B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32785144-D258-46F8-AF5D-FCD1745AB5B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1BF2A68A-EB32-44B7-B7CC-B85A70DE1691} = {6DF2D04E-B9A6-40C9-8222-00F11D59B099}
@@ -87,5 +93,6 @@ Global
 		{75263CAD-7296-4DE9-B94B-173E345BDAF5} = {5ACD64F0-851F-4971-A6F7-0B51DB7429E1}
 		{F6A95B43-06CB-4075-A03F-B1AA48999853} = {5ACD64F0-851F-4971-A6F7-0B51DB7429E1}
 		{32785144-D258-46F8-AF5D-FCD1745AB5B2} = {5ACD64F0-851F-4971-A6F7-0B51DB7429E1}
+		{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 	EndGlobalSection
 EndGlobal

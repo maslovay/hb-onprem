@@ -13,14 +13,14 @@ namespace HBData.Models
         public Guid FrameEmotionId { get; set; }
         public Guid FileFrameId { get; set; }
         public FileFrame FileFrame { get; set; }
-        public double? AngerShare { get; set; }
-        public double? ContemptShare { get; set; }
-        public double? DisgustShare { get; set; }
-        public double? HappinessShare { get; set; }
-        public double? NeutralShare { get; set; }
-        public double? SadnessShare { get; set; }
-        public double? SurpriseShare { get; set; }
-        public double? FearShare { get; set; }
-        public double? YawShare { get; set; }
+        public Double? AngerShare { get; set; }
+        public Double? ContemptShare { get; set; }
+        public Double? DisgustShare { get; set; }
+        public Double? HappinessShare { get; set; }
+        public Double? NeutralShare { get; set; }
+        public Double? SadnessShare { get; set; }
+        public Double? SurpriseShare { get; set; }
+        public Double? FearShare { get; set; }
+        public Double? YawShare { get; set; }
     }
 }

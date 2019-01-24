@@ -20,7 +20,7 @@ namespace HBLib.Utils
             _client = new Sftp();
             _sftpSettings = sftpSettings;
         }
-
+        
         private async Task ConnectToSftpAsync()
         {
             await _client.ConnectAsync(_sftpSettings.Host, _sftpSettings.Port);
@@ -48,7 +48,7 @@ namespace HBLib.Utils
         /// </summary>
         /// <param name="directory"></param>
         /// <returns>Returns ConcurrentDictionary String, MemoryStream where string is filename, Memory stream is file</returns>
-        public async Task<ConcurrentDictionary<String, MemoryStream>> DownloadAllAsync(String directory)
+        public async Task<ConcurrentDictionary<String, MemoryStream>> DownloadAllAsMemoryStreamAsync(String directory)
         {
             var fileStreams = new ConcurrentDictionary<String, MemoryStream>();
             await ConnectToSftpAsync();
@@ -69,7 +69,33 @@ namespace HBLib.Utils
             await Task.WhenAll(tasks);
             return fileStreams;
         }
-
+        /// <summary>
+        /// Download one file from sftp as memory stream
+        /// </summary>
+        /// <param name="path">Specific remote path of file. {folder}/{file}</param>
+        /// <returns></returns>
+        public async Task<MemoryStream> DownloadFromFtpAsMemoryStreamAsync(String path)
+        {
+            await ConnectToSftpAsync();
+            var stream = new MemoryStream();
+            await _client.GetFileAsync(path, stream);
+            return stream;
+        }
+        
+        /// <summary>
+        /// Download file to local disk.
+        /// </summary>
+        /// <param name="remotePath"></param>
+        /// <returns></returns>
+        public async Task<String> DownloadFromFtpToLocalDiskAsync(String remotePath)
+        {
+            await ConnectToSftpAsync();
+            var filename = remotePath.Split('/').Last();
+            var localPath = _sftpSettings.DownloadPath + filename;
+            await _client.GetFileAsync(remotePath, localPath);
+            return localPath;
+        }
+        
         /// <summary>
         /// Check file exists on server
         /// </summary>

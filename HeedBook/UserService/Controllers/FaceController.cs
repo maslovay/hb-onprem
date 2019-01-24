@@ -49,5 +49,10 @@ namespace UserService.Controllers
                 }
             };
         }
+        [HttpPost]
+        public async Task FaceAnalyzeRun([FromBody] FaceAnalyzeMessage message)
+        {
+            _handler.EventRaised(message);
+        }
     }
 }
