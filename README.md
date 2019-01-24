@@ -1,7 +1,7 @@
 # hb-onprem
 
 Ссылка на Yandex Disk, где лежат все схемы, необходимые exe файлы
-https://disk.yandex.ru/client/disk/Project%2010%20DialogAnalytics/HeedbookOnPrem
+https://disk.yandex.ru/client/disk/Heedbook_IT/HeedbookOnPrem
 
 # Файловое хранилище (FTP сервер)
 ### Подключение.
