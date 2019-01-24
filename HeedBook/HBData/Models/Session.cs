@@ -7,28 +7,38 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about user session
+    /// </summary>
     public class Session
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Key]
         public int SessionId { get; set; }
-
-        //сотрудник
+        /// <summary>
+        /// User id
+        /// </summary>
         public Guid ApplicationUserId { get; set; }
         [JsonIgnore]
         public  ApplicationUser ApplicationUser { get; set; }
-
-        //начало сессии
+        /// <summary>
+        /// Session beginning time
+        /// </summary>
         public DateTime BegTime { get; set; }
-
-        //окончание сессии
+        /// <summary>
+        /// Session ending time
+        /// </summary>
         public DateTime EndTime { get; set; }
-
-        //статус сессии
+        /// <summary>
+        /// Session status
+        /// </summary>
         public int? StatusId { get; set; }
         public  Status Status { get; set; }
-
-
-        //desktop session
+        /// <summary>
+        /// Is desktop session or mobile
+        /// </summary>
         public bool IsDesktop { get; set; }
 
 

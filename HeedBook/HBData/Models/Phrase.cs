@@ -6,38 +6,49 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about phrase
+    /// </summary>
     public class Phrase
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Key]
         public int PhraseId { get; set; }
-
-        //text of phrase
+        /// <summary>
+        /// Phrase text
+        /// </summary>
         public string PhraseText { get; set; }
-
-        //phrase type
+        /// <summary>
+        /// Phrase type
+        /// </summary>
         public int? PhraseTypeId { get; set; }
         public  PhraseType PhraseType { get; set; }
-
-        //language
+        /// <summary>
+        /// Phrase language
+        /// </summary>
         public int? LanguageId { get; set; }
         public  Language Language { get; set; }
-
-
-        //client phrase
+        /// <summary>
+        /// Is client's phrase or employee
+        /// </summary>
         public bool IsClient { get; set; }
-
-        //Words Space
+        /// <summary>
+        /// Number of additional words in phrase 
+        /// </summary>
         public int? WordsSpace { get; set; }
-
-        //accurancy
+        /// <summary>
+        /// Minimum percent of words in phrase must be detected
+        /// </summary>
         public double? Accurancy { get; set; }
-
-        //Template
+        /// <summary>
+        /// Template
+        /// </summary>
         public bool Template { get; set; }
-
-
-        //links
-        //phrases of company
+        /// <summary>
+        /// Links
+        /// </summary>
         public  ICollection<PhraseCompany> PhraseCompany { get; set; }
     }
 }

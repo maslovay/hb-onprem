@@ -6,44 +6,61 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about tariffs
+    /// </summary>
     public class Tariff
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Key]
         public Guid TariffId { get; set; }
-
-        //компания, которой принадлежит данный тариф
+        /// <summary>
+        /// Company with tariff
+        /// </summary>
         public Guid? CompanyId { get; set; }
         public  Company Company { get; set; }
-
-        //ключ покупателя, необходим для рекуррентных платежей. Ассоциируется с банковской картой в системе Тинькова.
+        /// <summary>
+        /// Customer key for payments. 
+        /// </summary>
         public string CustomerKey { get; set; }
-
-        //стоимость
+        /// <summary>
+        /// Cost
+        /// </summary>
         public Decimal TotalRate { get; set; }
-
-        //количество сотрудников в тарифе
+        /// <summary>
+        /// Employee number in tariff
+        /// </summary>
         public int EmployeeNo { get; set; }
-
-        //дата начала действия тарифа
+        /// <summary>
+        /// Tariff creation time
+        /// </summary>
         public DateTime CreationDate { get; set; }
-
-        //срок действия тарифа
+        /// <summary>
+        /// Tariff expiration date
+        /// </summary>
         public DateTime ExpirationDate { get; set; }
-
-        //код для рекуррентных платежей
+        /// <summary>
+        /// Code for recurrent payments
+        /// </summary>
         public string Rebillid { get; set; }
-
-        //токен для проведения рекуррентного платежа
+        /// <summary>
+        /// Token for recurrent payments
+        /// </summary>
         public byte[] Token { get; set; }
-
-        //статус тарифа
+        /// <summary>
+        /// Tariff status 
+        /// </summary>
         public int? StatusId { get; set; }
         public  Status Status { get; set; }
-
-        //Помесячная или погодовая оплата
+        /// <summary>
+        /// Is monthly or annual tariff
+        /// </summary>        
         public bool isMonthly { get; set; }
-
-        //Комментарий
+        /// <summary>
+        /// Comment
+        /// </summary>
         public string TariffComment { get; set; }
     }
 }

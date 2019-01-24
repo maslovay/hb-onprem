@@ -6,16 +6,24 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about worker position in company
+    /// </summary>
     public class WorkerType
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Key]
         public int WorkerTypeId { get; set; }
-
-        //company of position
+        /// <summary>
+        /// Company id
+        /// </summary>
         public Guid CompanyId { get; set; }
         public  Company Company { get; set; }
-
-        //position name
+        /// <summary>
+        /// Position name
+        /// </summary>
         public string WorkerTypeName { get; set; }
     }
 }

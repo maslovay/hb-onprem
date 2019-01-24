@@ -6,42 +6,65 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about company and company parameters
+    /// </summary>
     public class Company
     {
+        /// <summary>
+        /// Company id
+        /// </summary>
         [Key]
         public Guid CompanyId { get; set; }
 
-        //название компании
+        /// <summary>
+        /// Company name
+        /// </summary>
         [Required]
         public string CompanyName { get; set; }
 
-        //отрасль компании
+        /// <summary>
+        /// Id of company industry
+        /// </summary>
 		public int? CompanyIndustryId { get; set; }
         public  CompanyIndustry CompanyIndustry { get; set; }
 
-        //дата создания
+        /// <summary>
+        /// Company creation date
+        /// </summary>
         public DateTime CreationDate { get; set; }
 
-        //язык компании
+        /// <summary>
+        /// Company language id
+        /// </summary>
         public int LanguageId { get; set; }
         public  Language Language { get; set; }
 
-        //страна компании
+        /// <summary>
+        /// Company country id
+        /// </summary>
         public int? CountryId { get; set; }
         public  Country Country { get; set; }
 
-        //status company
+        /// <summary>
+        /// Company status id
+        /// </summary>
         public int? StatusId { get; set; }
         public  Status Status { get; set; }
 
-        //links
-        //сотрудники компании
+        /// <summary>
+        /// Link to application users
+        /// </summary>
         public  ICollection<ApplicationUser> ApplicationUser { get; set; }
 
-        //оплаты компании
-        public  ICollection<Payment> Payment { get; set; }
+        /// <summary>
+        /// Link to payments
+        /// </summary>
+        public ICollection<Payment> Payment { get; set; }
         
-        //корпорация, к которой принадлежит компания. Может быть пустой.
+        /// <summary>
+        /// Company corporation id
+        /// </summary>
         public int? CorporationId { get; set; }
         public  Corporation Corporation { get; set; }
     }

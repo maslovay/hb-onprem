@@ -6,6 +6,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
+
+    /// <summary>
+    /// Information about ad impressions
+    /// </summary>
     public class CampaignContentSession
     {
         [Key]

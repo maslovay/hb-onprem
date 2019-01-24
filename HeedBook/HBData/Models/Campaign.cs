@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about campaign
+    /// Parameters and information about advertising campaign
     /// </summary>
     public class Campaign
     {
@@ -31,7 +31,7 @@ namespace HBData.Models
         public bool IsSplash { get; set; }
 
         /// <summary>
-        /// both, male or female (0,1,2)
+        /// Both, male or female (0,1,2)
         /// </summary>
         public int GenderId { get; set; }
 
@@ -42,12 +42,12 @@ namespace HBData.Models
         public int? EndAge { get; set; }
 
         /// <summary>
-        /// start date-time (showing time period)
+        /// Start date-time (showing time period)
         /// </summary>
         public DateTime? BegDate { get; set; }
 
         /// <summary>
-        /// end date-time (showing time period)
+        /// End date-time (showing time period)
         /// </summary>
         public DateTime? EndDate { get; set; }
 
@@ -63,7 +63,7 @@ namespace HBData.Models
         public Company Company { get; set; }
 
         /// <summary>
-        /// status
+        /// Status
         /// </summary>
         public int? StatusId { get; set; }
         public Status Status { get; set; }

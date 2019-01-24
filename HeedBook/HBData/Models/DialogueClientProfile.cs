@@ -6,25 +6,36 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about client profile
+    /// </summary>
     public class DialogueClientProfile
     {
+        /// <summary>
+        /// Profile id
+        /// </summary>
         [Key]
         public Guid DialogueClientProfileId { get; set; }
-		
-		//dialogue
+		/// <summary>
+        /// Dialogue id
+        /// </summary>
 		public Guid? DialogueId { get; set; }
         public  Dialogue Dialogue { get; set; }
-		
-		//client or employee
+		/// <summary>
+        /// Is client or employee (true | false)
+        /// </summary>
 		public bool IsClient { get; set; }
-		
-        //клиент
+        /// <summary>
+        /// Filename of avatar in storage
+        /// </summary>
         public string Avatar { get; set; }
-
-        //возраст
+        /// <summary>
+        /// Client age
+        /// </summary>
         public double? Age { get; set; }
-
-        //пол
+        /// <summary>
+        /// Client gender
+        /// </summary>
         public string Gender { get; set; }
 
     }

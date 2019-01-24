@@ -12,13 +12,22 @@ namespace HBData.Models
     /// </summary>
     public class AspNetRole
     {
+        /// <summary>
+        /// Application user role id
+        /// </summary>
         [Key]
         public Guid AspNetRoleId { get; set; }
         
         public string ConcurrencyStamp { get; set; }
 
+        /// <summary>
+        /// User name
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Normalized user name
+        /// </summary>
         public string NormalizedName { get; set; }
     }
 }

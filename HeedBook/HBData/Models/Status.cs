@@ -6,20 +6,28 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about status
+    /// </summary>
     public class Status
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Key]
         public int StatusId { get; set; }
-
-        //название статуса
+        /// <summary>
+        /// Status name
+        /// </summary>
         [Required]
         public string StatusName { get; set; }
-
-        //links
-        //сотрудники статуса
+        /// <summary>
+        /// Link to users
+        /// </summary>
         public  ICollection<ApplicationUser> ApplicationUser { get; set; }
-
-        //диалоги статуса
+        /// <summary>
+        /// Link to dialogues
+        /// </summary>
         public  ICollection<Dialogue> Dialogue { get; set; }
 
     }

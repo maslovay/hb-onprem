@@ -7,23 +7,33 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Phrase number of each type in dialogue
+    /// </summary>
     public class DialoguePhraseCount
     {
+        /// <summary>
+        /// Phrase count id
+        /// </summary>
         [Key]
         public int DialoguePhraseCountId { get; set; }
-
-        //dialogue 
+        /// <summary>
+        /// Dialogue id
+        /// </summary>
         public Guid? DialogueId { get; set; }
         public  Dialogue Dialogue { get; set; }
-
-        //phrase 
+        /// <summary>
+        /// Phrase type
+        /// </summary>
         public int? PhraseTypeId { get; set; }
         public  PhraseType PhrType { get; set; }
-
-        //Phrase Count
+        /// <summary>
+        /// Phrase numbers
+        /// </summary>
         public int? PhraseCount { get; set; }
-
-		//client phrase
+        /// <summary>
+        /// Is client or employee
+        /// </summary>
 		public bool IsClient { get; set; }
     }
 }

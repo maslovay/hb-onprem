@@ -6,25 +6,36 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about hints for dialogue 
+    /// </summary>
     public class DialogueHint
     {
+        /// <summary>
+        /// Dilaogue hint id
+        /// </summary>
         [Key]
         public int DialogueHintId { get; set; }
-
-        //dialogue 
+        /// <summary>
+        /// Dialogue id
+        /// </summary>
         public Guid? DialogueId { get; set; }
         public Dialogue Dialogue { get; set; }
-
-        //hint text
+        /// <summary>
+        /// Text of hint
+        /// </summary>
         public string HintText { get; set; }
-
-        //is automatic created
+        /// <summary>
+        /// Created by teacher or not
+        /// </summary>
         public bool IsAutomatic { get; set; }
-
-        //hint type (Service, Efficiency, Cross-sales, TextAnalytics)
+        /// <summary>
+        /// Hint type (Service, Efficiency, Cross-sales, TextAnalytics)
+        /// </summary>
         public string Type { get; set; }
-
-        //is positive recomendation
+        /// <summary>
+        /// Is recomendation positive
+        /// </summary>
         public bool IsPositive { get; set; }
     }
 }

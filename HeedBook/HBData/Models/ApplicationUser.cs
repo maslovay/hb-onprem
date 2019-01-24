@@ -6,48 +6,74 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
-    /// <summary>
-    /// Application user information
-    /// </summary>
+   /// <summary>
+   /// The Application user class 
+   /// Contains parameters of all application users
+   /// </summary>
     public class ApplicationUser 
     {
+        /// <summary>
+        /// User system id
+        /// </summary>
         [Key]
 		public Guid ApplicationUserId { get; set; }
 		
-        // User full name
+        /// <summary>
+        /// User full name
+        /// </summary>
         public string FullName { get; set; }
 
-        // Avatar filename
+        /// <summary>
+        /// Filename of avatar on FTP server
+        /// </summary>
         public string Avatar { get; set; }
 
-        // User email
+        /// <summary>
+        /// User email
+        /// </summary>
         public string Email { get; set; }
 
-        // User id in company
+        /// <summary>
+        /// User id assigned by company
+        /// </summary>
         public string EmpoyeeId { get; set; }
 
-        // Creation date of user profile
+        /// <summary>
+        /// Creation date of user profile
+        /// </summary>
         public DateTime CreationDate { get; set; }
 
-        // User company
+        /// <summary>
+        /// User company id
+        /// </summary>
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
 
-        // User status
+        /// <summary>
+        /// User status
+        /// </summary>
         public int? StatusId { get; set; }
         public Status Status { get; set; }
 
-        // User id in OneSignal 
+        /// <summary>
+        /// User id in OneSignal
+        /// </summary>        
         public string OneSignalId { get; set; }
 
-        // User position id
+        /// <summary>
+        /// User worker type id (position)
+        /// </summary>
         public int? WorkerTypeId { get; set; }
         public WorkerType WorkerType { get; set; }
 
-        // Dialogues link
+        /// <summary>
+        /// Dialogue link
+        /// </summary>
         public ICollection<Dialogue> Dialogue { get; set; }
 
-        // Session list
+        /// <summary>
+        /// Session link
+        /// </summary>
         public ICollection<Session> Session { get; set; }
     }
 }

@@ -6,16 +6,24 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about company phrases
+    /// </summary>
     public class PhraseCompany
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Key]
         public int PhraseCompanyId { get; set; }
-
-        //phrase 
+        /// <summary>
+        /// Phrase id
+        /// </summary>
         public int? PhraseId { get; set; }
         public  Phrase Phrase { get; set; }
-
-        //Company 
+        /// <summary>
+        /// Company id
+        /// </summary>
         public Guid? CompanyId { get; set; }
         public  Company Company { get; set; }
 

@@ -8,33 +8,45 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Payments
+    /// </summary>
     public class Payment
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Key]
         public int PaymentId { get; set; }
-
-        //компания оплаты
+        /// <summary>
+        /// Company id
+        /// </summary>
         public Guid? CompanyId { get; set; }
         public  Company Company { get; set; }
-
-
-        //status of payment
+        /// <summary>
+        /// Payment status
+        /// </summary>
         public int? StatusId { get; set; }
         public  Status Status { get; set; }
-
-        //дата оплаты
+        /// <summary>
+        /// Payment date
+        /// </summary>
         public DateTime Date { get; set; }
-
-        //transaction Id
+        /// <summary>
+        /// Transaction id
+        /// </summary>
         public string TransactionId { get; set; }
-
-        //payment amount summ
+        /// <summary>
+        /// Amount of payment
+        /// </summary>
         public double PaymentAmount { get; set; }
-
-        //оплаченное время, мин
+        /// <summary>
+        /// Paid time
+        /// </summary>
         public double PaymentTime { get; set; }
-
-        //комментарий по оплате
+        /// <summary>
+        /// Comment about payment
+        /// </summary>
         public string PaymentComment { get; set; }
 
     }

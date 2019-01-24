@@ -6,16 +6,25 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information abount countries
+    /// </summary>
     public class Country
     {
+        /// <summary>
+        /// Country id
+        /// </summary>
         [Key]
         public int CountryId { get; set; }
 
-        //название страны
+        /// <summary>
+        /// Country name
+        /// </summary>
         public string CountryName { get; set; }
 
-        //links
-        //компании языка
+        /// <summary>
+        /// Link to companys with this language
+        /// </summary>
         public  ICollection<Company> Company { get; set; }
         
     }

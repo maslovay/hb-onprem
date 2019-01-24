@@ -6,25 +6,32 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about langage
+    /// </summary>
     public class Language
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Key]
         public int LanguageId { get; set; }
-
-        //название языка
+        /// <summary>
+        /// Language name
+        /// </summary>
         public string LanguageName { get; set; }
-
-        //Локальное название языка
+        /// <summary>
+        /// Language local name
+        /// </summary>
         public string LanguageLocalName { get; set; }
-
-        //короткое название языка
+        /// <summary>
+        /// Language short name 
+        /// </summary>
         public string LanguageShortName { get; set; }
-
-        //links
-        //компании языка
+        /// <summary>
+        /// Links
+        /// </summary>
         public  ICollection<Company> Company { get; set; }
-
-        //диалоги языка
         public  ICollection<Dialogue> Dialogue { get; set; }
     }
 }

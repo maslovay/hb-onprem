@@ -6,25 +6,36 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about speech
+    /// </summary>
     public class DialogueSpeech
     {
+        /// <summary>
+        /// Speech id
+        /// </summary>
         [Key]
         public Guid DialogueSpeechId { get; set; }
-		
-		//dialogue
+		/// <summary>
+        /// Dialogue id
+        /// </summary>
 		public Guid? DialogueId { get; set; }
         public  Dialogue Dialogue { get; set; }
-		
-		//client or employee
+        /// <summary>
+        /// Is client or employee
+        /// </summary>
 		public bool IsClient { get; set; }
-		
-        //positive share
+		/// <summary>
+        /// Text positive share (Microsoft)
+        /// </summary>
         public double? PositiveShare { get; set; }
-
-        //speech speed
+        /// <summary>
+        /// Speech speed (sounds per second)
+        /// </summary>
         public double? SpeechSpeed { get; set; }
-
-        //Silence share
+        /// <summary>
+        /// Silence share
+        /// </summary>
         public double? SilenceShare { get; set; }
 
     }

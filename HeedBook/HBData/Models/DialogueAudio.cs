@@ -6,23 +6,36 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about average tone emotions during dialogue
+    /// </summary>
     public class DialogueAudio
     {
+        /// <summary>
+        /// Dialogue audio id
+        /// </summary>
         [Key]
         public Guid DialogueAudioId { get; set; }
-		
-		//dialogue
+        /// <summary>
+        /// Dialogue id
+        /// </summary>
 		public Guid? DialogueId { get; set; }
         public  Dialogue Dialogue { get; set; }
-		
-		//client or employee
+		/// <summary>
+        /// Is client or employee
+        /// </summary>
 		public bool IsClient { get; set; }
-		
-        //тон голоса
+        /// <summary>
+        /// Value of average neutral tone
+        /// </summary>
         public double? NeutralityTone { get; set; }
-
+        /// <summary>
+        /// Value of average positive tone
+        /// </summary>
         public double? PositiveTone { get; set; }
-
+        /// <summary>
+        /// Value of average negative tone
+        /// </summary>
         public double? NegativeTone { get; set; }
 
     }

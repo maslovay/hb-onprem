@@ -6,32 +6,45 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Information about transactions
+    /// </summary>
     public class Transaction
     {
+        /// <summary>
+        /// Id
+        /// </summary>
         [Key]
         public Guid TransactionId { get; set; }
-
-        //оплата
+        /// <summary>
+        /// Amount of funds transferred
+        /// </summary>
         public Decimal Amount { get; set; }
-
-        //id заказа в системе продавца (см. API банка Тинькофф)
+        /// <summary>
+        /// Order id
+        /// </summary>
         public string OrderId { get; set; }
-
-        //id транзакции в системе банка (см. API банка Тинькофф)
+        /// <summary>
+        /// Payment id
+        /// </summary>
         public string PaymentId { get; set; }
-
-        //тариф, по которому произошла оплата
+        /// <summary>
+        /// Tariff id
+        /// </summary>
         public Guid? TariffId { get; set; }
         public  Tariff Tariff { get; set; }
-
-        //статус транзакции
+        /// <summary>
+        /// Transaction status
+        /// </summary>
         public int? StatusId { get; set; }
         public  Status Status { get; set; }
-
-        //дата оплаты
+        /// <summary>
+        /// Payment date
+        /// </summary>
         public DateTime PaymentDate { get; set; }
-
-        //комментарий к оплате
+        /// <summary>
+        /// Comment
+        /// </summary>
         public string TransactionComment { get; set; }
     }
 }

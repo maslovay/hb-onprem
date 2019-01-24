@@ -6,40 +6,56 @@ using System.Threading.Tasks;
 
 namespace HBData.Models
 {
+    /// <summary>
+    /// Average dialogue client emotions
+    /// </summary>
     public class DialogueVisual
     {
+        /// <summary>
+        /// Dialogue visual id
+        /// </summary>
         [Key]
         public Guid DialogueVisualId { get; set; }
-		
-		//dialogue
+		/// <summary>
+        /// Dialogue id
+        /// </summary>
 		public Guid? DialogueId { get; set; }
         public  Dialogue Dialogue { get; set; }
-				
-        //% внимания
+        /// <summary>
+        /// Average attention share
+        /// </summary>
         public double? AttentionShare { get; set; }
-
-        //% эмоций (по названиям)
+        /// <summary>
+        /// Average dialogue happiness share
+        /// </summary>
         public double? HappinessShare { get; set; }
-
-        //% эмоций (по названиям)
+        /// <summary>
+        /// Average dialogue neutral share
+        /// </summary>
         public double? NeutralShare { get; set; }
-
-        //% эмоций (по названиям)
+        /// <summary>
+        /// Average dialogue surprise share
+        /// </summary>
         public double? SurpriseShare { get; set; }
-
-        //% эмоций (по названиям)
+        /// <summary>
+        /// Average dialogue sadness share
+        /// </summary>
         public double? SadnessShare { get; set; }
-
-        //% эмоций (по названиям)
+        /// <summary>
+        /// Average dialogue anger share
+        /// </summary>
         public double? AngerShare { get; set; }
-
-        //% эмоций (по названиям)
+        /// <summary>
+        /// Average dialogue disgust share
+        /// </summary>
         public double? DisgustShare { get; set; }
-
-        //% эмоций (по названиям)
+        /// <summary>
+        /// Average dialogue disgust share
+        /// </summary>
         public double? ContemptShare { get; set; }
-
-        //% эмоций (по названиям)
+        /// <summary>
+        /// Average dialogue fear share
+        /// </summary>
         public double? FearShare { get; set; }
 		
     }
