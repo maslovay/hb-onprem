@@ -15,7 +15,7 @@ namespace HBData.Models
         /// Company iindustry id
         /// </summary>
         [Key]
-        public int CompanyIndustryId { get; set; }
+        public Guid CompanyIndustryId { get; set; }
         /// <summary>
         /// Industry name
         /// </summary>

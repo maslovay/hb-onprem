@@ -49,7 +49,7 @@ namespace HBData.Models
         /// <summary>
         /// Status id of google recognition
         /// </summary>
-        public int StatusId { get; set; }
+        public int? StatusId { get; set; }
         public Status Status { get; set; }
         /// <summary>
         /// Audio duration

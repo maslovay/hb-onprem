@@ -15,7 +15,7 @@ namespace HBData.Models
         /// Corporation id
         /// </summary>
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         /// <summary>
         /// Corporation name
         /// </summary>

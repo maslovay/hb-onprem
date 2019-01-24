@@ -16,7 +16,7 @@ namespace HBData.Models
         /// Id
         /// </summary>
         [Key]
-        public int SessionId { get; set; }
+        public Guid SessionId { get; set; }
         /// <summary>
         /// User id
         /// </summary>

@@ -37,12 +37,12 @@ namespace HBData.Models
         /// <summary>
         /// Teacher
         /// </summary>
-        public int StatusId { get; set; }
+        public int? StatusId { get; set; }
         public Status Status { get; set; }
         /// <summary>
         /// Status
         /// </summary>
-        public int StatusNNId { get; set; }
+        public int? StatusNNId { get; set; }
         public Status StatusNN { get; set; }
         /// <summary>
         /// Frame time
@@ -55,7 +55,7 @@ namespace HBData.Models
         /// <summary>
         /// Number of faces on frame
         /// </summary>
-        public int FaceLength { get; set; }
+        public int? FaceLength { get; set; }
 
     }
 }

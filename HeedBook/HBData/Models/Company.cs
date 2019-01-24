@@ -26,7 +26,7 @@ namespace HBData.Models
         /// <summary>
         /// Id of company industry
         /// </summary>
-		public int? CompanyIndustryId { get; set; }
+		public Guid? CompanyIndustryId { get; set; }
         public  CompanyIndustry CompanyIndustry { get; set; }
 
         /// <summary>
@@ -37,13 +37,13 @@ namespace HBData.Models
         /// <summary>
         /// Company language id
         /// </summary>
-        public int LanguageId { get; set; }
+        public int? LanguageId { get; set; }
         public  Language Language { get; set; }
 
         /// <summary>
         /// Company country id
         /// </summary>
-        public int? CountryId { get; set; }
+        public Guid? CountryId { get; set; }
         public  Country Country { get; set; }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace HBData.Models
         /// <summary>
         /// Company corporation id
         /// </summary>
-        public int? CorporationId { get; set; }
+        public Guid? CorporationId { get; set; }
         public  Corporation Corporation { get; set; }
     }
 }

@@ -16,7 +16,7 @@ namespace HBData.Models
         /// Phrase count id
         /// </summary>
         [Key]
-        public int DialoguePhraseCountId { get; set; }
+        public Guid DialoguePhraseCountId { get; set; }
         /// <summary>
         /// Dialogue id
         /// </summary>
@@ -25,12 +25,12 @@ namespace HBData.Models
         /// <summary>
         /// Phrase type
         /// </summary>
-        public int? PhraseTypeId { get; set; }
+        public Guid? PhraseTypeId { get; set; }
         public  PhraseType PhrType { get; set; }
         /// <summary>
         /// Phrase numbers
         /// </summary>
-        public int? PhraseCount { get; set; }
+        public Guid? PhraseCount { get; set; }
         /// <summary>
         /// Is client or employee
         /// </summary>

@@ -49,7 +49,7 @@ namespace HBData.Models
         /// <summary>
         /// Video file status
         /// </summary>
-        public int StatusId { get; set; }
+        public int? StatusId { get; set; }
         public Status Status { get; set; }
         /// <summary>
         /// Video file duration (usually 15 second)

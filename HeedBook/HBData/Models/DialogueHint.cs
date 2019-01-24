@@ -15,7 +15,7 @@ namespace HBData.Models
         /// Dilaogue hint id
         /// </summary>
         [Key]
-        public int DialogueHintId { get; set; }
+        public Guid DialogueHintId { get; set; }
         /// <summary>
         /// Dialogue id
         /// </summary>

@@ -41,6 +41,7 @@ namespace HBData.Models {
         public DbSet<FileVideo> FileVideos { get; set; }
         public DbSet<FrameAttribute> FrameAttributes { get; set; }
         public DbSet<FrameEmotion> FrameEmotions { get; set; }
+        public DbSet<GoogleAccount> GoogleAccounts { get; set; }
         public DbSet<Language> Languages { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Phrase> Phrases { get; set; }

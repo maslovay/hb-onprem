@@ -15,7 +15,7 @@ namespace HBData.Models
         /// Id
         /// </summary>
         [Key]
-        public int WorkerTypeId { get; set; }
+        public Guid WorkerTypeId { get; set; }
         /// <summary>
         /// Company id
         /// </summary>

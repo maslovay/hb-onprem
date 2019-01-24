@@ -17,7 +17,7 @@ namespace HBData.Models
         /// Id
         /// </summary>
         [Key]
-        public int PaymentId { get; set; }
+        public Guid PaymentId { get; set; }
         /// <summary>
         /// Company id
         /// </summary>

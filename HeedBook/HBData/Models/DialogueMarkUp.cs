@@ -48,7 +48,7 @@ namespace HBData.Models
         /// <summary>
         /// Status
         /// </summary>
-        public int StatusId { get; set; }
+        public int? StatusId { get; set; }
         public Status Status { get; set; }
         /// <summary>
         /// Teacher id

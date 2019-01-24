@@ -9,7 +9,7 @@ namespace HBData.Models
     public class PhraseType
     {
         [Key]
-        public int PhraseTypeId { get; set; }
+        public Guid PhraseTypeId { get; set; }
 
         //phrase type text
         public string PhraseTypeText { get; set; }

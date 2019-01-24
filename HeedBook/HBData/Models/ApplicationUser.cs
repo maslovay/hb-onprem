@@ -63,7 +63,7 @@ namespace HBData.Models
         /// <summary>
         /// User worker type id (position)
         /// </summary>
-        public int? WorkerTypeId { get; set; }
+        public Guid? WorkerTypeId { get; set; }
         public WorkerType WorkerType { get; set; }
 
         /// <summary>

@@ -15,11 +15,11 @@ namespace HBData.Models
         /// Id
         /// </summary>
         [Key]
-        public int PhraseCompanyId { get; set; }
+        public Guid PhraseCompanyId { get; set; }
         /// <summary>
         /// Phrase id
         /// </summary>
-        public int? PhraseId { get; set; }
+        public Guid? PhraseId { get; set; }
         public  Phrase Phrase { get; set; }
         /// <summary>
         /// Company id

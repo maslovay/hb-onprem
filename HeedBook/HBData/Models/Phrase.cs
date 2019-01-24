@@ -15,7 +15,7 @@ namespace HBData.Models
         /// Id
         /// </summary>
         [Key]
-        public int PhraseId { get; set; }
+        public Guid PhraseId { get; set; }
         /// <summary>
         /// Phrase text
         /// </summary>
@@ -23,13 +23,13 @@ namespace HBData.Models
         /// <summary>
         /// Phrase type
         /// </summary>
-        public int? PhraseTypeId { get; set; }
+        public Guid? PhraseTypeId { get; set; }
         public  PhraseType PhraseType { get; set; }
         /// <summary>
         /// Phrase language
         /// </summary>
         public int? LanguageId { get; set; }
-        public  Language Language { get; set; }
+        public Language Language { get; set; }
         /// <summary>
         /// Is client's phrase or employee
         /// </summary>

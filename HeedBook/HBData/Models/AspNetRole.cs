@@ -15,8 +15,7 @@ namespace HBData.Models
         /// <summary>
         /// Application user role id
         /// </summary>
-        [Key]
-        public Guid AspNetRoleId { get; set; }
+        public string Id { get; set; }
         
         public string ConcurrencyStamp { get; set; }
 

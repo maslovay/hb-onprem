@@ -23,7 +23,7 @@ namespace HBData.Models
         /// <summary>
         ///  Google key status id
         /// </summary>
-        public int StatusId { get; set; }
+        public int? StatusId { get; set; }
         public Status Status { get; set; }
         /// <summary>
         /// Google key creation date
