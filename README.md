@@ -8,6 +8,7 @@ https://disk.yandex.ru/client/disk/Project%2010%20DialogAnalytics/HeedbookOnPrem
   - Host - 13.79.133.194
   - User - nkrokhmal
   - Password - kloppolk_2018
+
 Если хочется посмотреть на все файлы "вживую", можно скачать FileZilla, установить, после чего выполнить последовательность операций
 1. File ->  Site Manager
 2. Protocol - выбрать SFTP, Logon Type - выбрать Normal, скопировать Host, Password и подключиться. 
