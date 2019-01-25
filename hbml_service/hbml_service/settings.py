@@ -25,7 +25,7 @@ SECRET_KEY = ''
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost']
 
 # Application definition
 
@@ -133,5 +133,11 @@ FACE_ATTRIBUTES_KEYS = ("Gender", "Age")
 
 # Перезапись конфигом
 DEBUG = os.environ.get('DEBUG', False)
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', ALLOWED_HOSTS)
+
+try:
+    ALLOWED_HOSTS = json.loads(os.environ.get('ALLOWED_HOSTS', str(ALLOWED_HOSTS)))
+except Exception as e:
+    print(e)
+    pass
+
 SECRET_KEY = os.environ.get('SECRET_KEY', 's0_s3cr3+_much_w0w')
