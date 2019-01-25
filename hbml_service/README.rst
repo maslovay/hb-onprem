@@ -20,6 +20,8 @@
 
     docker run -e DEBUG='true' -p 8000:8000 heedbookregistry.azurecr.io/heedbookdev/hbml_service
 
+  Сервис принимает запросы по 0.0.0.0 и по localhost. Если нужен другой hostname, например 127.0.0.1, нужно передать его в переменной -e ALLOWED_HOSTS='["127.0.0.1"]'
+
 4. (Опционально) Прогнать тесты внутри контейнера
 
   ::
