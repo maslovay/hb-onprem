@@ -13,8 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{F9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CognitiveService", "CognitiveService\CognitiveService.csproj", "{7A1C9BA4-E858-4554-A463-05CA16FECEDB}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrameFromVideoService", "FrameFromVideoService\FrameFromVideoService.csproj", "{62E8B94B-AAD3-4791-8EFA-FC479D463818}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OperationService", "OperationService\OperationService.csproj", "{6E8AB7BA-6E61-4A5E-8248-521502648893}"
@@ -31,7 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMqEventBus", "RabbitM
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498-9934-4664-B888-F24989B01059}"
 	ProjectSection(SolutionItems) = preProject
-		CognitiveService.Dockerfile = CognitiveService.Dockerfile
+		FaceAnalyzeService.Dockerfile = FaceAnalyzeService.Dockerfile
 		FrameFromVideoService.Dockerfile = FrameFromVideoService.Dockerfile
 		OperationService.Dockerfile = OperationService.Dockerfile
 		UserService.Dockerfile = UserService.Dockerfile
@@ -55,10 +53,6 @@ Global
 		{282BF88A-DB33-4225-954E-FFB3B8DAA371}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{282BF88A-DB33-4225-954E-FFB3B8DAA371}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{282BF88A-DB33-4225-954E-FFB3B8DAA371}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7A1C9BA4-E858-4554-A463-05CA16FECEDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7A1C9BA4-E858-4554-A463-05CA16FECEDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7A1C9BA4-E858-4554-A463-05CA16FECEDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7A1C9BA4-E858-4554-A463-05CA16FECEDB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{62E8B94B-AAD3-4791-8EFA-FC479D463818}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{62E8B94B-AAD3-4791-8EFA-FC479D463818}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62E8B94B-AAD3-4791-8EFA-FC479D463818}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -98,7 +92,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{1BF2A68A-EB32-44B7-B7CC-B85A70DE1691} = {6DF2D04E-B9A6-40C9-8222-00F11D59B099}
 		{282BF88A-DB33-4225-954E-FFB3B8DAA371} = {F9312081-26B8-4651-ABC9-A32914105EBA}
-		{7A1C9BA4-E858-4554-A463-05CA16FECEDB} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{62E8B94B-AAD3-4791-8EFA-FC479D463818} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{6E8AB7BA-6E61-4A5E-8248-521502648893} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{4C37D16D-A62A-4BDC-BFFA-C8F0B12E0C62} = {A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}
