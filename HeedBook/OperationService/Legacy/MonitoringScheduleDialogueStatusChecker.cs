@@ -242,7 +242,7 @@ namespace OperationService.Legacy
         public class MessageStructure
         {
             public Guid DialogueId { get; set; }
-            public string ApplicationUserId { get; set; }
+            public Guid ApplicationUserId { get; set; }
             public string BegTime { get; set; }
             public string EndTime { get; set; }
             public int? LanguageId { get; set; }
@@ -311,28 +311,6 @@ namespace OperationService.Legacy
                 var tmp = HeedbookMessengerStatic
                          .Context().DialoguePhraseCounts.Where(p => p.DialogueId == dialogueId).ToList();
                 HeedbookMessengerStatic.Context().DialoguePhraseCounts.RemoveRange(tmp);
-            }
-            catch
-            {
-                log.LogInformation("Dialogue Audio is empty");
-            }
-
-            try
-            {
-                var tmp = HeedbookMessengerStatic
-                         .Context().DialoguePhrasePlaces.Where(p => p.DialogueId == dialogueId).ToList();
-                HeedbookMessengerStatic.Context().DialoguePhrasePlaces.RemoveRange(tmp);
-            }
-            catch
-            {
-                log.LogInformation("Dialogue Audio is empty");
-            }
-
-            try
-            {
-                var tmp = HeedbookMessengerStatic
-                         .Context().DialoguePhrases.Where(p => p.DialogueId == dialogueId).ToList();
-                HeedbookMessengerStatic.Context().DialoguePhrases.RemoveRange(tmp);
             }
             catch
             {

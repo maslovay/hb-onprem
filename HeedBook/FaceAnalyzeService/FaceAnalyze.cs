@@ -1,33 +1,31 @@
+using DlibDotNet;
+using HBData.Models;
+using HBData.Repository;
+using HBLib.Utils;
+using HBMLHttpClient;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DlibDotNet;
-using FaceAnalyzeService.Model;
-using HBData.Models;
-using HBData.Repository;
-using HBLib.Utils;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Extensions.Logging;
-using RabbitMqEventBus.Events;
 
 namespace FaceAnalyzeService
 {
     public class FaceAnalyze
     {
-        private readonly ILogger<FaceAnalyze> _logger;
         private readonly SftpClient _sftpClient;
         private readonly IGenericRepository _repository;
+        private readonly HbMlHttpClient _client;
 
         public FaceAnalyze(
-            ILogger<FaceAnalyze> logger,
             SftpClient sftpClient,
-            IGenericRepository repository)
+            IServiceScopeFactory scopeFactory,
+            HbMlHttpClient client)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            var scope = scopeFactory.CreateScope();
+            _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
+            _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
         public async Task Run(String remotePath)
@@ -37,24 +35,12 @@ namespace FaceAnalyzeService
                 var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath);
                 if (IsFaceDetected(localPath))
                 {
-                    var random = new Random();
-                    var emotion = new FaceEmotionResult
-                    {
-                        Fear = (Single) random.NextDouble(),
-                        Anger = (Single) random.NextDouble(),
-                        Contempt = (Single) random.NextDouble(),
-                        Disgust = (Single) random.NextDouble(),
-                        Happiness = (Single) random.NextDouble(),
-                        Neutral = (Single) random.NextDouble(),
-                        Sadness = (Single) random.NextDouble(),
-                        Surprise = (Single) random.NextDouble()
-                    };
+                    var byteArray = await File.ReadAllBytesAsync(localPath);
+                    var base64String = Convert.ToBase64String(byteArray);
+                    var emotions = await _client.CreateFaceEmotion(base64String);
 
-                    var attributes = new FaceAttributeResult
-                    {
-                        Age = (Byte) random.Next(),
-                        Gender = "male"
-                    };
+                    var attributes = await _client.CreateFaceAttributes(base64String);
+
                     var fileName = localPath.Split('/').Last();
 
                     var fileFrame =
@@ -66,26 +52,26 @@ namespace FaceAnalyzeService
                         var frameEmotion = new FrameEmotion
                         {
                             FileFrameId = fileFrame.FileFrameId,
-                            AngerShare = emotion.Anger,
-                            ContemptShare = emotion.Contempt,
-                            DisgustShare = emotion.Disgust,
-                            FearShare = emotion.Fear,
-                            HappinessShare = emotion.Happiness,
-                            NeutralShare = emotion.Neutral,
-                            SadnessShare = emotion.Sadness,
-                            SurpriseShare = emotion.Surprise,
-                            YawShare = random.NextDouble()
+                            AngerShare = emotions.Sum(emotion => emotion.Anger),
+                            ContemptShare = emotions.Sum(emotion => emotion.Contempt),
+                            DisgustShare = emotions.Sum(emotion => emotion.Disgust),
+                            FearShare = emotions.Sum(emotion => emotion.Fear),
+                            HappinessShare = emotions.Sum(emotion => emotion.Fear),
+                            NeutralShare = emotions.Sum(emotion => emotion.Neutral),
+                            SadnessShare = emotions.Sum(emotion => emotion.Sadness),
+                            SurpriseShare = emotions.Sum(emotion => emotion.Sadness)
                         };
-
-                        var frameAttribute = new FrameAttribute
+                        var tasks = attributes.Select(faceAttributeResult => new FrameAttribute
                         {
-                            Age = attributes.Age,
-                            Gender = attributes.Gender,
+                            Age = faceAttributeResult.Age,
+                            Gender = faceAttributeResult.Gender,
                             FileFrameId = fileFrame.FileFrameId
-                        };
-                        Task.WaitAll(
-                            _repository.CreateAsync(frameEmotion),
-                            _repository.CreateAsync(frameAttribute));
+                        }).Select(frameAttribute => _repository.CreateAsync(frameAttribute)).ToList();
+
+                        tasks.Add(_repository.CreateAsync(frameEmotion));
+
+                        await Task.WhenAll(
+                            tasks);
                     }
                 }
             }

@@ -77,7 +77,7 @@ namespace HBLib.Utils
             //Supervisor or Admin with one company in request
             var supervisorRoles = EnvVar.Get("SupervisorRoles").Split(',');
             if (companyIds.Contains(claims["companyId"]) && companyIds.Count() == 1 &&
-                supervisorRoles.Contains(claims["role"]) && HeedbookMessengerStatic.Context().Companies
+                supervisorRoles.Contains(claims["role"]) && HeedbookMessengerStatic.Context().Companys
                     .Where(p => companyIds.Contains(p.CompanyId.ToString()))
                     .All(p => p.CorporationId.ToString() == claims["corporationId"]))
                 return true;

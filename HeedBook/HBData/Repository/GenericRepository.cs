@@ -77,7 +77,7 @@ namespace HBData.Repository
             foreach (var property in properties)
             {
                 if (property.GetCustomAttribute<KeyAttribute>() == null) continue;
-                keyValue = Guid.Parse((ReadOnlySpan<Char>) property.GetValue(entity));
+                keyValue = Guid.Parse(property.GetValue(entity).ToString());
                 break;
             }
 

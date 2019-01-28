@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace HBData.Migrations
 {
-    public partial class Initial : Migration
+    public partial class InitialCreate : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -12,30 +12,43 @@ namespace HBData.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
+                    AspNetRoleId = table.Column<Guid>(nullable: false),
                     ConcurrencyStamp = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
                     NormalizedName = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AspNetRoles", x => x.Id);
+                    table.PrimaryKey("PK_AspNetRoles", x => x.AspNetRoleId);
                 });
 
             migrationBuilder.CreateTable(
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(nullable: false),
+                    AspNetUserRoleId = table.Column<Guid>(nullable: false),
                     RoleId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AspNetUserRoles", x => x.UserId);
+                    table.PrimaryKey("PK_AspNetUserRoles", x => x.AspNetUserRoleId);
                 });
 
             migrationBuilder.CreateTable(
-                name: "CompanyIndustries",
+                name: "CatalogueHints",
+                columns: table => new
+                {
+                    CatalogueHintId = table.Column<Guid>(nullable: false),
+                    HintCondition = table.Column<string>(nullable: true),
+                    HintText = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CatalogueHints", x => x.CatalogueHintId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CompanyIndustrys",
                 columns: table => new
                 {
                     CompanyIndustryId = table.Column<int>(nullable: false)
@@ -47,7 +60,7 @@ namespace HBData.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CompanyIndustries", x => x.CompanyIndustryId);
+                    table.PrimaryKey("PK_CompanyIndustrys", x => x.CompanyIndustryId);
                 });
 
             migrationBuilder.CreateTable(
@@ -64,7 +77,7 @@ namespace HBData.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Countries",
+                name: "Countrys",
                 columns: table => new
                 {
                     CountryId = table.Column<int>(nullable: false)
@@ -73,7 +86,7 @@ namespace HBData.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Countries", x => x.CountryId);
+                    table.PrimaryKey("PK_Countrys", x => x.CountryId);
                 });
 
             migrationBuilder.CreateTable(
@@ -107,7 +120,7 @@ namespace HBData.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Statuses",
+                name: "Statuss",
                 columns: table => new
                 {
                     StatusId = table.Column<int>(nullable: false)
@@ -116,7 +129,7 @@ namespace HBData.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Statuses", x => x.StatusId);
+                    table.PrimaryKey("PK_Statuss", x => x.StatusId);
                 });
 
             migrationBuilder.CreateTable(
@@ -151,11 +164,10 @@ namespace HBData.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Companies",
+                name: "Companys",
                 columns: table => new
                 {
-                    CompanyId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    CompanyId = table.Column<Guid>(nullable: false),
                     CompanyName = table.Column<string>(nullable: false),
                     CompanyIndustryId = table.Column<int>(nullable: true),
                     CreationDate = table.Column<DateTime>(nullable: false),
@@ -166,35 +178,35 @@ namespace HBData.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Companies", x => x.CompanyId);
+                    table.PrimaryKey("PK_Companys", x => x.CompanyId);
                     table.ForeignKey(
-                        name: "FK_Companies_CompanyIndustries_CompanyIndustryId",
+                        name: "FK_Companys_CompanyIndustrys_CompanyIndustryId",
                         column: x => x.CompanyIndustryId,
-                        principalTable: "CompanyIndustries",
+                        principalTable: "CompanyIndustrys",
                         principalColumn: "CompanyIndustryId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Companies_Corporations_CorporationId",
+                        name: "FK_Companys_Corporations_CorporationId",
                         column: x => x.CorporationId,
                         principalTable: "Corporations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Companies_Countries_CountryId",
+                        name: "FK_Companys_Countrys_CountryId",
                         column: x => x.CountryId,
-                        principalTable: "Countries",
+                        principalTable: "Countrys",
                         principalColumn: "CountryId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Companies_Languages_LanguageId",
+                        name: "FK_Companys_Languages_LanguageId",
                         column: x => x.LanguageId,
                         principalTable: "Languages",
                         principalColumn: "LanguageId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Companies_Statuses_StatusId",
+                        name: "FK_Companys_Statuss_StatusId",
                         column: x => x.StatusId,
-                        principalTable: "Statuses",
+                        principalTable: "Statuss",
                         principalColumn: "StatusId",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -212,22 +224,22 @@ namespace HBData.Migrations
                     BegDate = table.Column<DateTime>(nullable: true),
                     EndDate = table.Column<DateTime>(nullable: true),
                     CreationDate = table.Column<DateTime>(nullable: true),
-                    CompanyId = table.Column<int>(nullable: false),
+                    CompanyId = table.Column<Guid>(nullable: false),
                     StatusId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Campaigns", x => x.CampaignId);
                     table.ForeignKey(
-                        name: "FK_Campaigns_Companies_CompanyId",
+                        name: "FK_Campaigns_Companys_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Companies",
+                        principalTable: "Companys",
                         principalColumn: "CompanyId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Campaigns_Statuses_StatusId",
+                        name: "FK_Campaigns_Statuss_StatusId",
                         column: x => x.StatusId,
-                        principalTable: "Statuses",
+                        principalTable: "Statuss",
                         principalColumn: "StatusId",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -240,7 +252,7 @@ namespace HBData.Migrations
                     RawHTML = table.Column<string>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     Duration = table.Column<int>(nullable: false),
-                    CompanyId = table.Column<int>(nullable: false),
+                    CompanyId = table.Column<Guid>(nullable: false),
                     JSONData = table.Column<string>(nullable: true),
                     IsTemplate = table.Column<bool>(nullable: false),
                     CreationDate = table.Column<DateTime>(nullable: true),
@@ -250,9 +262,9 @@ namespace HBData.Migrations
                 {
                     table.PrimaryKey("PK_Contents", x => x.ContentId);
                     table.ForeignKey(
-                        name: "FK_Contents_Companies_CompanyId",
+                        name: "FK_Contents_Companys_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Companies",
+                        principalTable: "Companys",
                         principalColumn: "CompanyId",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -263,7 +275,7 @@ namespace HBData.Migrations
                 {
                     PaymentId = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    CompanyId = table.Column<int>(nullable: true),
+                    CompanyId = table.Column<Guid>(nullable: true),
                     StatusId = table.Column<int>(nullable: true),
                     Date = table.Column<DateTime>(nullable: false),
                     TransactionId = table.Column<string>(nullable: true),
@@ -275,39 +287,39 @@ namespace HBData.Migrations
                 {
                     table.PrimaryKey("PK_Payments", x => x.PaymentId);
                     table.ForeignKey(
-                        name: "FK_Payments_Companies_CompanyId",
+                        name: "FK_Payments_Companys_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Companies",
+                        principalTable: "Companys",
                         principalColumn: "CompanyId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Payments_Statuses_StatusId",
+                        name: "FK_Payments_Statuss_StatusId",
                         column: x => x.StatusId,
-                        principalTable: "Statuses",
+                        principalTable: "Statuss",
                         principalColumn: "StatusId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "PhraseCompanies",
+                name: "PhraseCompanys",
                 columns: table => new
                 {
                     PhraseCompanyId = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     PhraseId = table.Column<int>(nullable: true),
-                    CompanyId = table.Column<int>(nullable: true)
+                    CompanyId = table.Column<Guid>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PhraseCompanies", x => x.PhraseCompanyId);
+                    table.PrimaryKey("PK_PhraseCompanys", x => x.PhraseCompanyId);
                     table.ForeignKey(
-                        name: "FK_PhraseCompanies_Companies_CompanyId",
+                        name: "FK_PhraseCompanys_Companys_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Companies",
+                        principalTable: "Companys",
                         principalColumn: "CompanyId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_PhraseCompanies_Phrases_PhraseId",
+                        name: "FK_PhraseCompanys_Phrases_PhraseId",
                         column: x => x.PhraseId,
                         principalTable: "Phrases",
                         principalColumn: "PhraseId",
@@ -319,7 +331,7 @@ namespace HBData.Migrations
                 columns: table => new
                 {
                     TariffId = table.Column<Guid>(nullable: false),
-                    CompanyId = table.Column<int>(nullable: true),
+                    CompanyId = table.Column<Guid>(nullable: true),
                     CustomerKey = table.Column<string>(nullable: true),
                     TotalRate = table.Column<decimal>(nullable: false),
                     EmployeeNo = table.Column<int>(nullable: false),
@@ -335,15 +347,15 @@ namespace HBData.Migrations
                 {
                     table.PrimaryKey("PK_Tariffs", x => x.TariffId);
                     table.ForeignKey(
-                        name: "FK_Tariffs_Companies_CompanyId",
+                        name: "FK_Tariffs_Companys_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Companies",
+                        principalTable: "Companys",
                         principalColumn: "CompanyId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Tariffs_Statuses_StatusId",
+                        name: "FK_Tariffs_Statuss_StatusId",
                         column: x => x.StatusId,
-                        principalTable: "Statuses",
+                        principalTable: "Statuss",
                         principalColumn: "StatusId",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -354,16 +366,16 @@ namespace HBData.Migrations
                 {
                     WorkerTypeId = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    CompanyId = table.Column<int>(nullable: false),
+                    CompanyId = table.Column<Guid>(nullable: false),
                     WorkerTypeName = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WorkerTypes", x => x.WorkerTypeId);
                     table.ForeignKey(
-                        name: "FK_WorkerTypes_Companies_CompanyId",
+                        name: "FK_WorkerTypes_Companys_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Companies",
+                        principalTable: "Companys",
                         principalColumn: "CompanyId",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -411,9 +423,9 @@ namespace HBData.Migrations
                 {
                     table.PrimaryKey("PK_Transactions", x => x.TransactionId);
                     table.ForeignKey(
-                        name: "FK_Transactions_Statuses_StatusId",
+                        name: "FK_Transactions_Statuss_StatusId",
                         column: x => x.StatusId,
-                        principalTable: "Statuses",
+                        principalTable: "Statuss",
                         principalColumn: "StatusId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -428,30 +440,30 @@ namespace HBData.Migrations
                 name: "ApplicationUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
+                    ApplicationUserId = table.Column<Guid>(nullable: false),
                     FullName = table.Column<string>(nullable: true),
                     Avatar = table.Column<string>(nullable: true),
                     Email = table.Column<string>(nullable: true),
-                    EmployeeId = table.Column<string>(nullable: true),
+                    EmpoyeeId = table.Column<string>(nullable: true),
                     CreationDate = table.Column<DateTime>(nullable: false),
-                    CompanyId = table.Column<int>(nullable: true),
+                    CompanyId = table.Column<Guid>(nullable: true),
                     StatusId = table.Column<int>(nullable: true),
                     OneSignalId = table.Column<string>(nullable: true),
                     WorkerTypeId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ApplicationUsers", x => x.Id);
+                    table.PrimaryKey("PK_ApplicationUsers", x => x.ApplicationUserId);
                     table.ForeignKey(
-                        name: "FK_ApplicationUsers_Companies_CompanyId",
+                        name: "FK_ApplicationUsers_Companys_CompanyId",
                         column: x => x.CompanyId,
-                        principalTable: "Companies",
+                        principalTable: "Companys",
                         principalColumn: "CompanyId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ApplicationUsers_Statuses_StatusId",
+                        name: "FK_ApplicationUsers_Statuss_StatusId",
                         column: x => x.StatusId,
-                        principalTable: "Statuses",
+                        principalTable: "Statuss",
                         principalColumn: "StatusId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -469,7 +481,7 @@ namespace HBData.Migrations
                     CampaignContentSessionId = table.Column<Guid>(nullable: false),
                     BegTime = table.Column<DateTime>(nullable: false),
                     CampaignContentId = table.Column<Guid>(nullable: false),
-                    ApplicationUserId = table.Column<string>(nullable: true)
+                    ApplicationUserId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -478,13 +490,45 @@ namespace HBData.Migrations
                         name: "FK_CampaignContentSessions_ApplicationUsers_ApplicationUserId",
                         column: x => x.ApplicationUserId,
                         principalTable: "ApplicationUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "ApplicationUserId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_CampaignContentSessions_CampaignContents_CampaignContentId",
                         column: x => x.CampaignContentId,
                         principalTable: "CampaignContents",
                         principalColumn: "CampaignContentId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DialogueMarkups",
+                columns: table => new
+                {
+                    DialogueMarkUpId = table.Column<Guid>(nullable: false),
+                    ApplicationUserId = table.Column<Guid>(nullable: true),
+                    BegTime = table.Column<DateTime>(nullable: false),
+                    CreationTime = table.Column<DateTime>(nullable: false),
+                    EndTime = table.Column<DateTime>(nullable: false),
+                    BegTimeMarkup = table.Column<DateTime>(nullable: false),
+                    EndTimeMarkup = table.Column<DateTime>(nullable: false),
+                    IsDialogue = table.Column<bool>(nullable: false),
+                    StatusId = table.Column<int>(nullable: false),
+                    TeacherId = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DialogueMarkups", x => x.DialogueMarkUpId);
+                    table.ForeignKey(
+                        name: "FK_DialogueMarkups_ApplicationUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "ApplicationUsers",
+                        principalColumn: "ApplicationUserId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DialogueMarkups_Statuss_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "Statuss",
+                        principalColumn: "StatusId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -496,7 +540,7 @@ namespace HBData.Migrations
                     CreationTime = table.Column<DateTime>(nullable: false),
                     BegTime = table.Column<DateTime>(nullable: false),
                     EndTime = table.Column<DateTime>(nullable: false),
-                    ApplicationUserId = table.Column<string>(nullable: true),
+                    ApplicationUserId = table.Column<Guid>(nullable: false),
                     LanguageId = table.Column<int>(nullable: true),
                     StatusId = table.Column<int>(nullable: true),
                     SysVersion = table.Column<string>(nullable: true),
@@ -510,8 +554,8 @@ namespace HBData.Migrations
                         name: "FK_Dialogues_ApplicationUsers_ApplicationUserId",
                         column: x => x.ApplicationUserId,
                         principalTable: "ApplicationUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "ApplicationUserId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Dialogues_Languages_LanguageId",
                         column: x => x.LanguageId,
@@ -519,11 +563,113 @@ namespace HBData.Migrations
                         principalColumn: "LanguageId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Dialogues_Statuses_StatusId",
+                        name: "FK_Dialogues_Statuss_StatusId",
                         column: x => x.StatusId,
-                        principalTable: "Statuses",
+                        principalTable: "Statuss",
                         principalColumn: "StatusId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FileAudioEmployees",
+                columns: table => new
+                {
+                    FileAudioEmployeeId = table.Column<Guid>(nullable: false),
+                    ApplicationUserId = table.Column<Guid>(nullable: false),
+                    BegTime = table.Column<DateTime>(nullable: false),
+                    EndTime = table.Column<DateTime>(nullable: false),
+                    CreationTime = table.Column<DateTime>(nullable: false),
+                    FileName = table.Column<string>(nullable: true),
+                    FileContainer = table.Column<string>(nullable: true),
+                    FileExist = table.Column<bool>(nullable: false),
+                    StatusId = table.Column<int>(nullable: true),
+                    Duration = table.Column<double>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FileAudioEmployees", x => x.FileAudioEmployeeId);
+                    table.ForeignKey(
+                        name: "FK_FileAudioEmployees_ApplicationUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "ApplicationUsers",
+                        principalColumn: "ApplicationUserId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FileAudioEmployees_Statuss_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "Statuss",
+                        principalColumn: "StatusId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FileFrames",
+                columns: table => new
+                {
+                    FileFrameId = table.Column<Guid>(nullable: false),
+                    ApplicationUserId = table.Column<Guid>(nullable: false),
+                    FileExist = table.Column<bool>(nullable: false),
+                    FileName = table.Column<string>(nullable: true),
+                    FileContainer = table.Column<string>(nullable: true),
+                    StatusId = table.Column<int>(nullable: false),
+                    StatusNNId = table.Column<int>(nullable: false),
+                    Time = table.Column<DateTime>(nullable: false),
+                    IsFacePresent = table.Column<bool>(nullable: false),
+                    FaceLength = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FileFrames", x => x.FileFrameId);
+                    table.ForeignKey(
+                        name: "FK_FileFrames_ApplicationUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "ApplicationUsers",
+                        principalColumn: "ApplicationUserId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FileFrames_Statuss_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "Statuss",
+                        principalColumn: "StatusId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FileFrames_Statuss_StatusNNId",
+                        column: x => x.StatusNNId,
+                        principalTable: "Statuss",
+                        principalColumn: "StatusId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FileVideos",
+                columns: table => new
+                {
+                    FileVideoId = table.Column<Guid>(nullable: false),
+                    ApplicationUserId = table.Column<Guid>(nullable: false),
+                    BegTime = table.Column<DateTime>(nullable: false),
+                    EndTime = table.Column<DateTime>(nullable: false),
+                    CreationTime = table.Column<DateTime>(nullable: false),
+                    FileName = table.Column<string>(nullable: true),
+                    FileContainer = table.Column<string>(nullable: true),
+                    FileExist = table.Column<bool>(nullable: false),
+                    StatusId = table.Column<int>(nullable: false),
+                    Duration = table.Column<double>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FileVideos", x => x.FileVideoId);
+                    table.ForeignKey(
+                        name: "FK_FileVideos_ApplicationUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "ApplicationUsers",
+                        principalColumn: "ApplicationUserId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FileVideos_Statuss_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "Statuss",
+                        principalColumn: "StatusId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -532,7 +678,7 @@ namespace HBData.Migrations
                 {
                     SessionId = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    ApplicationUserId = table.Column<string>(nullable: true),
+                    ApplicationUserId = table.Column<Guid>(nullable: false),
                     BegTime = table.Column<DateTime>(nullable: false),
                     EndTime = table.Column<DateTime>(nullable: false),
                     StatusId = table.Column<int>(nullable: true),
@@ -545,12 +691,12 @@ namespace HBData.Migrations
                         name: "FK_Sessions_ApplicationUsers_ApplicationUserId",
                         column: x => x.ApplicationUserId,
                         principalTable: "ApplicationUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "ApplicationUserId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Sessions_Statuses_StatusId",
+                        name: "FK_Sessions_Statuss_StatusId",
                         column: x => x.StatusId,
-                        principalTable: "Statuses",
+                        principalTable: "Statuss",
                         principalColumn: "StatusId",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -737,63 +883,7 @@ namespace HBData.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DialoguePhrasePlaces",
-                columns: table => new
-                {
-                    DialoguePhrasePlaceId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    DialogueId = table.Column<Guid>(nullable: true),
-                    PhraseId = table.Column<int>(nullable: true),
-                    WordPosition = table.Column<int>(nullable: true),
-                    Synonyn = table.Column<bool>(nullable: false),
-                    SynonynText = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DialoguePhrasePlaces", x => x.DialoguePhrasePlaceId);
-                    table.ForeignKey(
-                        name: "FK_DialoguePhrasePlaces_Dialogues_DialogueId",
-                        column: x => x.DialogueId,
-                        principalTable: "Dialogues",
-                        principalColumn: "DialogueId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_DialoguePhrasePlaces_Phrases_PhraseId",
-                        column: x => x.PhraseId,
-                        principalTable: "Phrases",
-                        principalColumn: "PhraseId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DialoguePhrases",
-                columns: table => new
-                {
-                    DialoguePhraseId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    DialogueId = table.Column<Guid>(nullable: true),
-                    PhraseId = table.Column<int>(nullable: true),
-                    IsClient = table.Column<bool>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DialoguePhrases", x => x.DialoguePhraseId);
-                    table.ForeignKey(
-                        name: "FK_DialoguePhrases_Dialogues_DialogueId",
-                        column: x => x.DialogueId,
-                        principalTable: "Dialogues",
-                        principalColumn: "DialogueId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_DialoguePhrases_Phrases_PhraseId",
-                        column: x => x.PhraseId,
-                        principalTable: "Phrases",
-                        principalColumn: "PhraseId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DialogueSpeeches",
+                name: "DialogueSpeechs",
                 columns: table => new
                 {
                     DialogueSpeechId = table.Column<Guid>(nullable: false),
@@ -805,9 +895,9 @@ namespace HBData.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DialogueSpeeches", x => x.DialogueSpeechId);
+                    table.PrimaryKey("PK_DialogueSpeechs", x => x.DialogueSpeechId);
                     table.ForeignKey(
-                        name: "FK_DialogueSpeeches_Dialogues_DialogueId",
+                        name: "FK_DialogueSpeechs_Dialogues_DialogueId",
                         column: x => x.DialogueId,
                         principalTable: "Dialogues",
                         principalColumn: "DialogueId",
@@ -848,9 +938,7 @@ namespace HBData.Migrations
                     DialogueWordId = table.Column<Guid>(nullable: false),
                     DialogueId = table.Column<Guid>(nullable: true),
                     IsClient = table.Column<bool>(nullable: false),
-                    Word = table.Column<string>(nullable: true),
-                    BegTime = table.Column<DateTime>(nullable: false),
-                    EndTime = table.Column<DateTime>(nullable: false)
+                    Words = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -861,6 +949,85 @@ namespace HBData.Migrations
                         principalTable: "Dialogues",
                         principalColumn: "DialogueId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FileAudioDialogues",
+                columns: table => new
+                {
+                    FileAudioDialogueId = table.Column<Guid>(nullable: false),
+                    DialogueId = table.Column<Guid>(nullable: false),
+                    BegTime = table.Column<DateTime>(nullable: false),
+                    EndTime = table.Column<DateTime>(nullable: false),
+                    CreationTime = table.Column<DateTime>(nullable: false),
+                    FileName = table.Column<string>(nullable: true),
+                    FileContainer = table.Column<string>(nullable: true),
+                    FileExist = table.Column<bool>(nullable: false),
+                    StatusId = table.Column<int>(nullable: false),
+                    Duration = table.Column<double>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FileAudioDialogues", x => x.FileAudioDialogueId);
+                    table.ForeignKey(
+                        name: "FK_FileAudioDialogues_Dialogues_DialogueId",
+                        column: x => x.DialogueId,
+                        principalTable: "Dialogues",
+                        principalColumn: "DialogueId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_FileAudioDialogues_Statuss_StatusId",
+                        column: x => x.StatusId,
+                        principalTable: "Statuss",
+                        principalColumn: "StatusId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FrameAttributes",
+                columns: table => new
+                {
+                    FrameAttributeId = table.Column<Guid>(nullable: false),
+                    FileFrameId = table.Column<Guid>(nullable: false),
+                    Gender = table.Column<string>(nullable: true),
+                    Age = table.Column<double>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FrameAttributes", x => x.FrameAttributeId);
+                    table.ForeignKey(
+                        name: "FK_FrameAttributes_FileFrames_FileFrameId",
+                        column: x => x.FileFrameId,
+                        principalTable: "FileFrames",
+                        principalColumn: "FileFrameId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FrameEmotions",
+                columns: table => new
+                {
+                    FrameEmotionId = table.Column<Guid>(nullable: false),
+                    FileFrameId = table.Column<Guid>(nullable: false),
+                    AngerShare = table.Column<double>(nullable: true),
+                    ContemptShare = table.Column<double>(nullable: true),
+                    DisgustShare = table.Column<double>(nullable: true),
+                    HappinessShare = table.Column<double>(nullable: true),
+                    NeutralShare = table.Column<double>(nullable: true),
+                    SadnessShare = table.Column<double>(nullable: true),
+                    SurpriseShare = table.Column<double>(nullable: true),
+                    FearShare = table.Column<double>(nullable: true),
+                    YawShare = table.Column<double>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FrameEmotions", x => x.FrameEmotionId);
+                    table.ForeignKey(
+                        name: "FK_FrameEmotions_FileFrames_FileFrameId",
+                        column: x => x.FileFrameId,
+                        principalTable: "FileFrames",
+                        principalColumn: "FileFrameId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -909,28 +1076,28 @@ namespace HBData.Migrations
                 column: "StatusId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Companies_CompanyIndustryId",
-                table: "Companies",
+                name: "IX_Companys_CompanyIndustryId",
+                table: "Companys",
                 column: "CompanyIndustryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Companies_CorporationId",
-                table: "Companies",
+                name: "IX_Companys_CorporationId",
+                table: "Companys",
                 column: "CorporationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Companies_CountryId",
-                table: "Companies",
+                name: "IX_Companys_CountryId",
+                table: "Companys",
                 column: "CountryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Companies_LanguageId",
-                table: "Companies",
+                name: "IX_Companys_LanguageId",
+                table: "Companys",
                 column: "LanguageId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Companies_StatusId",
-                table: "Companies",
+                name: "IX_Companys_StatusId",
+                table: "Companys",
                 column: "StatusId");
 
             migrationBuilder.CreateIndex(
@@ -969,6 +1136,16 @@ namespace HBData.Migrations
                 column: "DialogueId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DialogueMarkups_ApplicationUserId",
+                table: "DialogueMarkups",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DialogueMarkups_StatusId",
+                table: "DialogueMarkups",
+                column: "StatusId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DialoguePhraseCounts_DialogueId",
                 table: "DialoguePhraseCounts",
                 column: "DialogueId");
@@ -977,26 +1154,6 @@ namespace HBData.Migrations
                 name: "IX_DialoguePhraseCounts_PhraseTypeId",
                 table: "DialoguePhraseCounts",
                 column: "PhraseTypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DialoguePhrasePlaces_DialogueId",
-                table: "DialoguePhrasePlaces",
-                column: "DialogueId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DialoguePhrasePlaces_PhraseId",
-                table: "DialoguePhrasePlaces",
-                column: "PhraseId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DialoguePhrases_DialogueId",
-                table: "DialoguePhrases",
-                column: "DialogueId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DialoguePhrases_PhraseId",
-                table: "DialoguePhrases",
-                column: "PhraseId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Dialogues_ApplicationUserId",
@@ -1014,8 +1171,8 @@ namespace HBData.Migrations
                 column: "StatusId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DialogueSpeeches_DialogueId",
-                table: "DialogueSpeeches",
+                name: "IX_DialogueSpeechs_DialogueId",
+                table: "DialogueSpeechs",
                 column: "DialogueId");
 
             migrationBuilder.CreateIndex(
@@ -1029,6 +1186,61 @@ namespace HBData.Migrations
                 column: "DialogueId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_FileAudioDialogues_DialogueId",
+                table: "FileAudioDialogues",
+                column: "DialogueId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FileAudioDialogues_StatusId",
+                table: "FileAudioDialogues",
+                column: "StatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FileAudioEmployees_ApplicationUserId",
+                table: "FileAudioEmployees",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FileAudioEmployees_StatusId",
+                table: "FileAudioEmployees",
+                column: "StatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FileFrames_ApplicationUserId",
+                table: "FileFrames",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FileFrames_StatusId",
+                table: "FileFrames",
+                column: "StatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FileFrames_StatusNNId",
+                table: "FileFrames",
+                column: "StatusNNId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FileVideos_ApplicationUserId",
+                table: "FileVideos",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FileVideos_StatusId",
+                table: "FileVideos",
+                column: "StatusId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FrameAttributes_FileFrameId",
+                table: "FrameAttributes",
+                column: "FileFrameId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FrameEmotions_FileFrameId",
+                table: "FrameEmotions",
+                column: "FileFrameId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Payments_CompanyId",
                 table: "Payments",
                 column: "CompanyId");
@@ -1039,13 +1251,13 @@ namespace HBData.Migrations
                 column: "StatusId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhraseCompanies_CompanyId",
-                table: "PhraseCompanies",
+                name: "IX_PhraseCompanys_CompanyId",
+                table: "PhraseCompanys",
                 column: "CompanyId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhraseCompanies_PhraseId",
-                table: "PhraseCompanies",
+                name: "IX_PhraseCompanys_PhraseId",
+                table: "PhraseCompanys",
                 column: "PhraseId");
 
             migrationBuilder.CreateIndex(
@@ -1106,6 +1318,9 @@ namespace HBData.Migrations
                 name: "CampaignContentSessions");
 
             migrationBuilder.DropTable(
+                name: "CatalogueHints");
+
+            migrationBuilder.DropTable(
                 name: "DialogueAudios");
 
             migrationBuilder.DropTable(
@@ -1124,16 +1339,13 @@ namespace HBData.Migrations
                 name: "DialogueIntervals");
 
             migrationBuilder.DropTable(
+                name: "DialogueMarkups");
+
+            migrationBuilder.DropTable(
                 name: "DialoguePhraseCounts");
 
             migrationBuilder.DropTable(
-                name: "DialoguePhrasePlaces");
-
-            migrationBuilder.DropTable(
-                name: "DialoguePhrases");
-
-            migrationBuilder.DropTable(
-                name: "DialogueSpeeches");
+                name: "DialogueSpeechs");
 
             migrationBuilder.DropTable(
                 name: "DialogueVisuals");
@@ -1142,10 +1354,25 @@ namespace HBData.Migrations
                 name: "DialogueWords");
 
             migrationBuilder.DropTable(
+                name: "FileAudioDialogues");
+
+            migrationBuilder.DropTable(
+                name: "FileAudioEmployees");
+
+            migrationBuilder.DropTable(
+                name: "FileVideos");
+
+            migrationBuilder.DropTable(
+                name: "FrameAttributes");
+
+            migrationBuilder.DropTable(
+                name: "FrameEmotions");
+
+            migrationBuilder.DropTable(
                 name: "Payments");
 
             migrationBuilder.DropTable(
-                name: "PhraseCompanies");
+                name: "PhraseCompanys");
 
             migrationBuilder.DropTable(
                 name: "Sessions");
@@ -1158,6 +1385,9 @@ namespace HBData.Migrations
 
             migrationBuilder.DropTable(
                 name: "Dialogues");
+
+            migrationBuilder.DropTable(
+                name: "FileFrames");
 
             migrationBuilder.DropTable(
                 name: "Phrases");
@@ -1181,22 +1411,22 @@ namespace HBData.Migrations
                 name: "WorkerTypes");
 
             migrationBuilder.DropTable(
-                name: "Companies");
+                name: "Companys");
 
             migrationBuilder.DropTable(
-                name: "CompanyIndustries");
+                name: "CompanyIndustrys");
 
             migrationBuilder.DropTable(
                 name: "Corporations");
 
             migrationBuilder.DropTable(
-                name: "Countries");
+                name: "Countrys");
 
             migrationBuilder.DropTable(
                 name: "Languages");
 
             migrationBuilder.DropTable(
-                name: "Statuses");
+                name: "Statuss");
         }
     }
 }

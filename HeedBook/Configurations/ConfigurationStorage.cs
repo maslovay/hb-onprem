@@ -12,12 +12,12 @@ namespace Configurations
 {
     public static class ConfigurationStorage
     {
-        public static IServiceCollection AddRabbitMqEventBus(this IServiceCollection services,
+        public static void AddRabbitMqEventBus(this IServiceCollection services,
             IConfiguration configuration)
         {
             services
-               .AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionManager>()
-               .AddSingleton<IRabbitMqPersistentConnection, DefaultRabbitMqPersistentConnection>(sp =>
+                .AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionManager>()
+                .AddSingleton<IRabbitMqPersistentConnection, DefaultRabbitMqPersistentConnection>(sp =>
                 {
                     var rabbitmqsection = configuration.GetSection("RabbitMqConnection");
                     Int32.TryParse(rabbitmqsection.GetSection("Port").Value, out var port);
@@ -32,16 +32,15 @@ namespace Configurations
                     //we can set retry count into appsettings. Now defaults 5. 
                     return new DefaultRabbitMqPersistentConnection(factory);
                 })
-               .AddSingleton<INotificationPublisher, NotificationPublisher>(sp =>
+                .AddSingleton<INotificationPublisher, NotificationPublisher>(sp =>
                 {
                     var rabbitMqPersistentConnection = sp.GetRequiredService<IRabbitMqPersistentConnection>();
                     var subsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
                     var provider = sp.GetRequiredService<IServiceProvider>();
                     return new NotificationPublisher(rabbitMqPersistentConnection, subsManager, provider);
                 })
-               .AddSingleton<INotificationHandler, NotificationHandler>()
-               .AddSingleton<INotificationService, NotificationService>();
-            return services;
+                .AddSingleton<INotificationService, NotificationService>()
+                .AddSingleton<INotificationHandler, NotificationHandler>();
         }
     }
 }
