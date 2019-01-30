@@ -43,7 +43,20 @@ namespace HBLib.Utils
                 await Task.Run(() => _client.UploadFile(fs, container));
             }
         }
-
+        /// <summary>
+        /// Upload as memory stream to sftp server
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task UploadAsMemoryStreamAsync(Stream stream, String path, String filename)
+        {
+            await ConnectToSftpAsync();
+            _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
+            //await Task.Run(() => _client.Create(path));
+            _client.UploadFile(stream, filename);
+        }
+        
         /// <summary>
         /// Downloads all files from specified directory. It's downloaded files to memory.
         /// </summary>

@@ -39,6 +39,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceAnalyzeService", "FaceA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HBMLHttpClient", "HBMLHttpClient\HBMLHttpClient.csproj", "{05E56164-B33F-4D24-83F1-DEB5C1BEE833}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtractFramesFromVideo", "ExtractFramesFromVideo\ExtractFramesFromVideo.csproj", "{49F4B32D-062D-4D6E-9805-D6EB718661CA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,10 @@ Global
 		{05E56164-B33F-4D24-83F1-DEB5C1BEE833}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{05E56164-B33F-4D24-83F1-DEB5C1BEE833}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{05E56164-B33F-4D24-83F1-DEB5C1BEE833}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49F4B32D-062D-4D6E-9805-D6EB718661CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49F4B32D-062D-4D6E-9805-D6EB718661CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49F4B32D-062D-4D6E-9805-D6EB718661CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49F4B32D-062D-4D6E-9805-D6EB718661CA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -100,6 +106,7 @@ Global
 		{32785144-D258-46F8-AF5D-FCD1745AB5B2} = {5ACD64F0-851F-4971-A6F7-0B51DB7429E1}
 		{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{05E56164-B33F-4D24-83F1-DEB5C1BEE833} = {A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}
+		{49F4B32D-062D-4D6E-9805-D6EB718661CA} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}

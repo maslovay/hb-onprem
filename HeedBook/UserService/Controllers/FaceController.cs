@@ -14,7 +14,7 @@ namespace UserService.Controllers
     public class FaceController : ControllerBase
     {
         private readonly INotificationHandler _handler;
-        public FaceController(INotificationHandler handler, INotificationService service)
+        public FaceController(INotificationHandler handler)
         {
             _handler = handler;
         }
