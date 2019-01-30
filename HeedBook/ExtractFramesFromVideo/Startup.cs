@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
@@ -52,7 +53,7 @@ namespace ExtractFramesFromVideo
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            
+            app.ApplicationServices.GetRequiredService<INotificationService>();
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             service.Subscribe<FramesFromVideoMessage, FramesFromVideoMessageHandler>();
             if (env.IsDevelopment())

@@ -6,21 +6,26 @@ using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Notifications.Base;
+using RabbitMqEventBus.Events;
 
 namespace ExtractFramesFromVideo
 {
     public class FramesFromVideo
     {
         private readonly SftpClient _client;
-
+        private readonly INotificationHandler _handler;
+        
         private readonly IGenericRepository _repository;
         
         public FramesFromVideo(SftpClient client,
-            IServiceScopeFactory factory)
+            IServiceScopeFactory factory,
+            INotificationHandler handler)
         {
             _client = client;
             var scope = factory.CreateScope();
             _repository = scope.ServiceProvider.GetService<IGenericRepository>();
+            _handler = handler;
         }
 
         public async Task Run(string videoBlobName)
@@ -107,6 +112,7 @@ namespace ExtractFramesFromVideo
                 for (var i = 0; i < ffmpegOutLen - 3; i++)
                     try
                     {
+                        
                         // Detect jpeg bytes start file signature
                         if (ffmpegOut[i] == 255 && ffmpegOut[i + 1] == 216)
                         {
@@ -126,15 +132,16 @@ namespace ExtractFramesFromVideo
                                                            timeGreFrame.Hour.ToString("D2") +
                                                            timeGreFrame.Minute.ToString("D2") +
                                                            timeGreFrame.Second.ToString("D2");
-
+                                
+                                var filename = $"{applicUserId}_{timeGreFrameComplete}_2_test20.jpg";
                                 isUpload = false;
 
                                 Console.WriteLine("!!!Stream upload length ---- " + streamForUpload.Length);
                                 streamForUpload.Seek(0, SeekOrigin.Begin);
 
-
+                                
                                 // START TEST WORK WITH STORAGE
-                                await _client.UploadAsMemoryStreamAsync(streamForUpload, "test/", $"{applicUserId}_{timeGreFrameComplete}_2_test20.jpg");
+                                await _client.UploadAsMemoryStreamAsync(streamForUpload, "test/", filename);
                                     
                                 // END TEST WORK WITH STORAGE
 
@@ -160,10 +167,16 @@ namespace ExtractFramesFromVideo
                                 await _repository.CreateAsync(fileFrame);
                                 _repository.Save();
                                 // END CODE POSTGRESQL
+                                var message = new FaceAnalyzeMessage
+                                {
+                                    Path = $"frames/{filename}"
+                                };
+                                _handler.EventRaised(message);
                             }
 
                         // Write to stream jpeg content between start and end file signature
                         if (isUpload) streamForUpload.WriteByte(ffmpegOut[i]);
+                       
                     }
                     catch (Exception e)
                     {
