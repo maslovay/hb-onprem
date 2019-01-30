@@ -22,5 +22,6 @@ namespace HBData.Models
         public Double? SurpriseShare { get; set; }
         public Double? FearShare { get; set; }
         public Double? YawShare { get; set; }
+        public DateTime Time { get; set; }
     }
 }

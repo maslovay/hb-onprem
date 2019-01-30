@@ -17,6 +17,7 @@ namespace HBData.Repository
         Task<T> FindOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate)
             where T : class;
 
+        IEnumerable<T> Get<T>() where T : class;
         Task<Dictionary<TKey, TElement>> FindByConditionAsyncToDictionary<T, TKey, TElement>(
             Expression<Func<T, Boolean>> expression, Func<T, TKey> keySelector,
             Func<T, TElement> elementSelector)
@@ -28,6 +29,10 @@ namespace HBData.Repository
         Task CreateAsync<T>(T entity)
             where T : class;
 
+        Task BulkInsertAsync<T>(IEnumerable<T> entities) where T : class;
+
+        void BulkInsert<T>(IEnumerable<T> entities) where T : class;
+        
         void Update<T>(T entity)
             where T : class;
 

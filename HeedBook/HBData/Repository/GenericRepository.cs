@@ -37,6 +37,21 @@ namespace HBData.Repository
             return await _context.Set<T>().Where(predicate).ToListAsync();
         }
 
+        public IEnumerable<T> Get<T>() where T: class
+        {
+            return _context.Set<T>();
+        }
+
+        public void BulkInsert<T>(IEnumerable<T> entities) where T : class
+        {
+            _context.Set<T>().AddRange(entities);
+        }
+
+        public async Task BulkInsertAsync<T>(IEnumerable<T> entities) where T : class
+        {
+            await _context.Set<T>().AddRangeAsync(entities);
+        }
+        
         public async Task<Dictionary<TKey, TElement>> FindByConditionAsyncToDictionary<T, TKey, TElement>(
             Expression<Func<T, Boolean>> expression, Func<T, TKey> keySelector,
             Func<T, TElement> elementSelector)
