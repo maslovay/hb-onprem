@@ -1,23 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HBData.Models;
-using HBLib.Utils;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
 using Newtonsoft.Json;
 
 namespace OperationService.Legacy
 {
     public static class FillingSubFrame
     {
-        [FunctionName("Filling_Sub_Frame")]
         public static async System.Threading.Tasks.Task RunAsync(
             string mySbMsg,
-            ExecutionContext dir,
             ILogger log)
         {
             DateTime begTime, endTime;
@@ -62,7 +54,7 @@ namespace OperationService.Legacy
                     emp.Avatar = Avatar;
                     HeedbookMessengerStatic.Context().DialogueClientProfiles.Add(emp);
                     HeedbookMessengerStatic.Context().SaveChanges();
-                }
+                } 
 
                 void RecordDialogueFrame(string DialogueId, DateTime Time, double? HappinessShare,
                     double? NeutralShare, double? SurpriseShare, double? SadnessShare, double? AngerShare,
