@@ -1,4 +1,3 @@
-using DlibDotNet;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
@@ -33,7 +32,7 @@ namespace FaceAnalyzeService
             if (await _sftpClient.IsFileExistsAsync(remotePath))
             {
                 var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath);
-                if (IsFaceDetected(localPath))
+                if (FaceDetection.IsFaceDetected(localPath))
                 {
                     var byteArray = await File.ReadAllBytesAsync(localPath);
                     var base64String = Convert.ToBase64String(byteArray);
@@ -60,8 +59,7 @@ namespace FaceAnalyzeService
                             HappinessShare = emotions.Sum(emotion => emotion.Fear) / emotionsCount,
                             NeutralShare = emotions.Sum(emotion => emotion.Neutral) / emotionsCount,
                             SadnessShare = emotions.Sum(emotion => emotion.Sadness) / emotionsCount,
-                            SurpriseShare = emotions.Sum(emotion => emotion.Sadness) / emotionsCount,
-                            Time = DateTime.Now
+                            SurpriseShare = emotions.Sum(emotion => emotion.Sadness) / emotionsCount
                         };
                         var tasks = attributes.Select(faceAttributeResult => new FrameAttribute
                         {
@@ -74,20 +72,8 @@ namespace FaceAnalyzeService
 
                         await Task.WhenAll(
                             tasks);
+                        await _repository.SaveAsync();
                     }
-                }
-            }
-        }
-
-        private Boolean IsFaceDetected(String localPath)
-        {
-            using (var detector = Dlib.GetFrontalFaceDetector())
-            {
-                using (var img = Dlib.LoadImage<Byte>(localPath))
-                {
-                    Dlib.PyramidUp(img);
-                    var detectionResult = detector.Operator(img).Length;
-                    return detectionResult > 0;
                 }
             }
         }

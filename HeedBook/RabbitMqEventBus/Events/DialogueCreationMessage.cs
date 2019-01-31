@@ -1,8 +1,9 @@
 using System;
+using RabbitMqEventBus.Base;
 
 namespace RabbitMqEventBus.Events
 {
-    public class DialogueCreationMessage
+    public class DialogueCreationMessage: IntegrationEvent
     {
         public Guid ApplicationUserId { get; set; }
 

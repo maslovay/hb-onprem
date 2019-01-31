@@ -31,16 +31,18 @@ namespace HBLib.Utils
         /// <summary>
         /// Upload file to remote sftp server. 
         /// </summary>
-        /// <param name="sourceFile">name of source file</param>
-        /// <param name="container">name of folder in remote server</param>
+        /// <param name="localPath"></param>
+        /// <param name="remotePath"></param>
+        /// <param name="fileName"></param>
         /// <returns></returns>
-        public async Task UploadAsync(String sourceFile, String container)
+        public async Task UploadAsync(String localPath, String remotePath, String fileName)
         {
             await ConnectToSftpAsync();
-            using (var fs = new FileStream(sourceFile, FileMode.Open))
+            using (var fs = new FileStream(localPath, FileMode.Open))
             {
                 _client.BufferSize = 4 * 1024;
-                await Task.Run(() => _client.UploadFile(fs, container));
+                _client.ChangeDirectory(_sftpSettings.DestinationPath + remotePath);
+                await Task.Run(() => _client.UploadFile(fs, fileName));
             }
         }
 
@@ -54,8 +56,9 @@ namespace HBLib.Utils
         public async Task UploadAsMemoryStreamAsync(Stream stream, String path, String filename)
         {
             await ConnectToSftpAsync();
+            _client.BufferSize = 4 * 1024;
             _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
-            await Task.Run(() => _client.UploadFile(stream, filename));
+            _client.UploadFile(stream, filename);
         }
         
         /// <summary>
