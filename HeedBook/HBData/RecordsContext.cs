@@ -16,8 +16,6 @@ namespace HBData {
         }
 
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
-        public DbSet<AspNetRole> AspNetRoles { get; set; }
-        public DbSet<AspNetUserRole> AspNetUserRoles { get; set; }
         public DbSet<Campaign> Campaigns { get; set; }
         public DbSet<CampaignContent> CampaignContents { get; set; }
         public DbSet<CampaignContentSession> CampaignContentSessions { get; set; }
