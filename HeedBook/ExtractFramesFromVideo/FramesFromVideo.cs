@@ -33,15 +33,7 @@ namespace ExtractFramesFromVideo
                         //string storageConnectionString = MyJsonConfig["connect_string"];
             var datePartForFrameName = videoBlobName.Split('_', '_')[1];
 
-
-            var yearFrame = int.Parse(datePartForFrameName.Substring(0, 4));
-            var monthFrame = int.Parse(datePartForFrameName.Substring(4, 2));
-            var dayFrame = int.Parse(datePartForFrameName.Substring(6, 2));
-            var hourFrame = int.Parse(datePartForFrameName.Substring(8, 2));
-            var minuteFrame = int.Parse(datePartForFrameName.Substring(10, 2));
-            var secondFrame = int.Parse(datePartForFrameName.Substring(12, 2));
-
-            var timeGreFrame = new DateTime(yearFrame, monthFrame, dayFrame, hourFrame, minuteFrame, secondFrame);
+            var timeGreFrame = DateTime.ParseExact(datePartForFrameName ,"yyyyMMddHHmmss",null);
             timeGreFrame = timeGreFrame.AddSeconds(2);
 
             var start = videoBlobName.IndexOf('/') + 1;
@@ -103,7 +95,7 @@ namespace ExtractFramesFromVideo
                 }
                 // END BLOCK    
 
-                Stream streamForUpload = new MemoryStream();
+                var streamForUpload = new MemoryStream();
                 long ffmpegOutLen = ffmpegOut.Length;
                 var isUpload = false;
                 var blobNamePrefix = 0;
