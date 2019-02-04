@@ -1,11 +1,10 @@
-﻿using System;
+﻿using HBData.Models;
+using HBData.Repository;
+using HBLib.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HBData.Models;
-using HBData.Repository;
-using HBLib.Models;
-using HBLib.Utils;
 
 namespace HBLib.AzureFunctions
 {
@@ -69,7 +68,7 @@ namespace HBLib.AzureFunctions
 
                 if (visual.FearShare != null)
                 {
-                    var totalScore = (Single) Math.Round((Decimal) (80
+                    var totalScore = (Single)Math.Round((Decimal)(80
                                                                     + visual.HappinessShare.Value +
                                                                     visual.SurpriseShare.Value
                                                                     - (visual.FearShare.Value + visual.DisgustShare
@@ -151,7 +150,7 @@ namespace HBLib.AzureFunctions
                     Math.Min(Math.Abs(faceYawMax), Math.Abs(faceYawMin)))
                     yaw = 10;
 
-                begScore = (Int32) Math.Round((Decimal)
+                begScore = (Int32)Math.Round((Decimal)
                     (80 + 2 * (dialogueFrame.SurpriseShare + dialogueFrame.HappinessShare) -
                      (dialogueFrame.AngerShare + dialogueFrame.ContemptShare + dialogueFrame.DisgustShare +
                       3 * dialogueFrame.SadnessShare + dialogueFrame.FearShare)

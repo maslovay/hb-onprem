@@ -1,58 +1,76 @@
-﻿using Rebex.Net;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
-using System.Net.Security;
-using System.Threading.Tasks;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace HBLib.Utils
 {
     public class SftpClient : IDisposable
     {
         private readonly SftpSettings _sftpSettings;
-        private readonly Sftp _client;
+        private readonly Renci.SshNet.SftpClient _client;
 
         public SftpClient(SftpSettings sftpSettings)
         {
-            _client = new Sftp();
+            _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName, sftpSettings.Password);
             _sftpSettings = sftpSettings;
         }
 
         private async Task ConnectToSftpAsync()
         {
-            await _client.ConnectAsync(_sftpSettings.Host, _sftpSettings.Port);
-            await _client.LoginAsync(_sftpSettings.UserName, _sftpSettings.Password);
-            await _client.ChangeDirectoryAsync(_sftpSettings.DestinationPath);
+            if (!_client.IsConnected)
+            {
+                await Task.Run(() => _client.Connect()).ContinueWith((t) =>
+                {
+                    _client.ChangeDirectory(_sftpSettings.DestinationPath);
+                });
+            }
         }
 
         /// <summary>
         /// Upload file to remote sftp server. 
         /// </summary>
-        /// <param name="sourceFile">name of source file</param>
-        /// <param name="container">name of folder in remote server</param>
+        /// <param name="localPath"></param>
+        /// <param name="remotePath"></param>
+        /// <param name="fileName"></param>
         /// <returns></returns>
-        public async Task UploadAsync(String sourceFile, String container)
+        public async Task UploadAsync(String localPath, String remotePath, String fileName)
         {
             await ConnectToSftpAsync();
-            using (var fs = new FileStream(sourceFile, FileMode.Open))
+            using (var fs = new FileStream(localPath, FileMode.Open))
             {
-                await _client.PutFileAsync(fs, container);
+                _client.BufferSize = 4 * 1024;
+                _client.ChangeDirectory(_sftpSettings.DestinationPath + remotePath);
+                await Task.Run(() => _client.UploadFile(fs, fileName));
             }
         }
 
+        /// <summary>
+        /// Upload as memory stream to sftp server
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="path"></param>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public async Task UploadAsMemoryStreamAsync(Stream stream, String path, String filename)
+        {
+            await ConnectToSftpAsync();
+            _client.BufferSize = 4 * 1024;
+            _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
+            _client.UploadFile(stream, filename);
+        }
+        
         /// <summary>
         /// Downloads all files from specified directory. It's downloaded files to memory.
         /// </summary>
         /// <param name="directory"></param>
         /// <returns>Returns ConcurrentDictionary String, MemoryStream where string is filename, Memory stream is file</returns>
-        public async Task<ConcurrentDictionary<String, MemoryStream>> DownloadAllAsync(String directory)
+        public async Task<ConcurrentDictionary<String, MemoryStream>> DownloadAllAsMemoryStreamAsync(String directory)
         {
             var fileStreams = new ConcurrentDictionary<String, MemoryStream>();
             await ConnectToSftpAsync();
-            IEnumerable<SftpItem> files = await _client.GetListAsync(directory);
+            var files = _client.ListDirectory(directory);
 
             var tasks = files.Select(file =>
             {
@@ -61,13 +79,42 @@ namespace HBLib.Utils
                 {
                     using (var ms = new MemoryStream())
                     {
-                        await _client.GetFileAsync(directory + name, ms);
+                        _client.DownloadFile(directory + name, ms);
                         fileStreams.TryAdd(name, ms);
                     }
                 });
             });
             await Task.WhenAll(tasks);
             return fileStreams;
+        }
+        /// <summary>
+        /// Download one file from sftp as memory stream
+        /// </summary>
+        /// <param name="path">Specific remote path of file. {folder}/{file}</param>
+        /// <returns></returns>
+        public async Task<MemoryStream> DownloadFromFtpAsMemoryStreamAsync(String path)
+        {
+            await ConnectToSftpAsync();
+            var stream = new MemoryStream();
+            _client.DownloadFile(path, stream);
+            return stream;
+        }
+
+        /// <summary>
+        /// Download file to local disk.
+        /// </summary>
+        /// <param name="remotePath"></param>
+        /// <returns></returns>
+        public async Task<String> DownloadFromFtpToLocalDiskAsync(String remotePath)
+        {
+            await ConnectToSftpAsync();
+            var filename = remotePath.Split('/').Last();
+            var localPath = _sftpSettings.DownloadPath + filename;
+            using (var fs = File.OpenWrite(localPath))
+            {
+                await Task.Run(() => _client.DownloadFile(remotePath, fs));
+            }
+            return localPath;
         }
 
         /// <summary>
@@ -78,7 +125,7 @@ namespace HBLib.Utils
         public async Task<Boolean> IsFileExistsAsync(String path)
         {
             await ConnectToSftpAsync();
-            return await _client.FileExistsAsync(path);
+            return await Task.Run(() => _client.Exists(path));
         }
 
         /// <summary>
@@ -89,9 +136,9 @@ namespace HBLib.Utils
         public async Task DeleteFileIfExistsAsync(String path)
         {
             await ConnectToSftpAsync();
-            if (await _client.FileExistsAsync(path))
+            if (_client.Exists(path))
             {
-                await _client.DeleteFileAsync(path);
+                await Task.Run(() => _client.DeleteFile(path));
             }
         }
 

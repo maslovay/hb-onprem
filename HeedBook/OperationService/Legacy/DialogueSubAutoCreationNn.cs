@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HBLib.Models;
+using HBData.Models;
 using HBLib.Utils;
 using Microsoft.Azure.WebJobs;
 using Microsoft.EntityFrameworkCore;
@@ -68,7 +68,7 @@ namespace OperationService.Legacy
                 var languageId = HeedbookMessengerStatic.Context().ApplicationUsers
                     .Include(p => p.Company)
                     .Include(p => p.Company.Language)
-                    .FirstOrDefault(p => p.Id.ToString() == doc.ApplicationUserId).Company.Language.LanguageId;
+                    .FirstOrDefault(p => p.ApplicationUserId == doc.ApplicationUserId).Company.Language.LanguageId;
 
                 if (doc.FramesCount >= doc.EndTime.Subtract(doc.BegTime).TotalMinutes)
                 {
@@ -180,7 +180,7 @@ namespace OperationService.Legacy
 
 
         // function for dialogue creation and sending information to service bus topic
-        public static void SendMessage(string applicationUserId, int languageId, DateTime begTime, DateTime endTime, HeedbookMessenger messenger)
+        public static void SendMessage(Guid applicationUserId, int languageId, DateTime begTime, DateTime endTime, HeedbookMessenger messenger)
         {
             var guid = Guid.NewGuid();
             var sb = new MessageStructure();
@@ -210,7 +210,7 @@ namespace OperationService.Legacy
         public class FramesInfoStructure
         {
             public ObjectId _id;
-            public string ApplicationUserId;
+            public Guid ApplicationUserId;
             public string FaceId;
             public DateTime Time;
             public bool FileExist;
@@ -223,7 +223,7 @@ namespace OperationService.Legacy
         public class MessageStructure
         {
             public Guid DialogueId { get; set; }
-            public string ApplicationUserId { get; set; }
+            public Guid ApplicationUserId { get; set; }
             public string BegTime { get; set; }
             public string EndTime { get; set; }
             public int LanguageId { get; set; }

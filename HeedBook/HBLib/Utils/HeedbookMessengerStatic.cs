@@ -372,7 +372,7 @@ public static class HeedbookMessengerStatic
         }
 
         //send push notifiation to companies managers
-        public static void SendNotificationToCompanyManagers(int CompanyId, string mesHeading, string mesContent,
+        public static void SendNotificationToCompanyManagers(Guid CompanyId, string mesHeading, string mesContent,
             string url = null)
         {
             //todo! MVP - first user in company is Manager
@@ -391,11 +391,11 @@ public static class HeedbookMessengerStatic
         }
 
         //send notifaction to user
-        public static void SendNotificationToUser(string applicationUserId, string mesHeading, string mesContent,
+        public static void SendNotificationToUser(Guid applicationUserId, string mesHeading, string mesContent,
             string url = null)
         {
             //get oneSignalIds
-            var user = Context().ApplicationUsers.First(p => p.Id == applicationUserId);
+            var user = Context().ApplicationUsers.First(p => p.ApplicationUserId == applicationUserId);
             if (user.OneSignalId != null)
             {
                 var OneSignalIds = JsonConvert.DeserializeObject<List<string>>(user.OneSignalId);

@@ -66,7 +66,7 @@ namespace OperationService.Legacy
                 try
                 {
                     positiveTextTone = HeedbookMessengerStatic
-                                      .Context().DialogueSpeeches.First(p => p.DialogueId.ToString() == dialogueId)
+                                      .Context().DialogueSpeechs.First(p => p.DialogueId.ToString() == dialogueId)
                                       .PositiveShare;
                 }
                 catch

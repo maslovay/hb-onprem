@@ -62,8 +62,8 @@ namespace OperationService.Legacy
                                 session.StatusId = 7;
 
                                 //send notification
-                                var user = HeedbookMessengerStatic.Context().ApplicationUsers.First(p => p.Id.ToString() == session.ApplicationUserId);
-                                HeedbookMessengerStatic.PushNotificationMessenger.SendNotificationToCompanyManagers((int)user.CompanyId, "Session closed " + user.FullName, "Start time:" + session.BegTime + ", duration:" + Math.Round(session.EndTime.Subtract(session.BegTime).TotalHours, 2) + " hours", "/home/index");
+                                var user = HeedbookMessengerStatic.Context().ApplicationUsers.First(p => p.ApplicationUserId == session.ApplicationUserId);
+                                HeedbookMessengerStatic.PushNotificationMessenger.SendNotificationToCompanyManagers(user.CompanyId.Value, "Session closed " + user.FullName, "Start time:" + session.BegTime + ", duration:" + Math.Round(session.EndTime.Subtract(session.BegTime).TotalHours, 2) + " hours", "/home/index");
 
                                 HeedbookMessengerStatic.Context().SaveChanges();
 

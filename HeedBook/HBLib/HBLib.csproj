@@ -13,12 +13,13 @@
     <None Remove="Data\**" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DlibDotNet" Version="19.16.0.20190122" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="3.0.1" />
     <PackageReference Include="Microsoft.ProjectOxford.Face" Version="1.2.1.2" />
     <PackageReference Include="MongoDB.Driver" Version="2.7.2" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
-    <PackageReference Include="Rebex.Sftp" Version="3.0.6930" />
+    <PackageReference Include="SSH.NET" Version="2016.1.0" />
     <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.3.0" />
     <PackageReference Include="WindowsAzure.ServiceBus" Version="3.4.2" />

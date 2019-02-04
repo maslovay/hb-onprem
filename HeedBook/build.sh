@@ -1,14 +1,14 @@
-docker build -t cognitiveservice -f CognitiveService.Dockerfile . &&
-docker build -t operationservice -f OperationService.Dockerfile . &&
-docker build -t userservice -f UserService.Dockerfile . && 
-docker build -t framefromvideoservice -f FrameFromVideoService.Dockerfile . && 
-
-docker tag cognitiveservice heedbookregistry.azurecr.io/heedbookdev/cognitiveservice:latest &&
-docker tag operationservice heedbookregistry.azurecr.io/heedbookdev/operationservice:latest &&
-docker tag userservice heedbookregistry.azurecr.io/heedbookdev/userservice:latest &&
-docker tag framefromvideoservice heedbookregistry.azurecr.io/heedbookdev/framefromvideoservice:latest &&
+docker build -t heedbookregistry.azurecr.io/heedbookdev/faceanalyzeservice:latest -f FaceAnalyzeService.Dockerfile . &&
+docker build -t heedbookregistry.azurecr.io/heedbookdev/operationservice:latest -f OperationService.Dockerfile . &&
+docker build -t heedbookregistry.azurecr.io/heedbookdev/userservice:latest -f UserService.Dockerfile . && 
+docker build -t heedbookregistry.azurecr.io/heedbookdev/framefromvideoservice:latest -f FrameFromVideoService.Dockerfile . && 
+docker build -t heedbookregistry.azurecr.io/heedbookdev/fillingframeservice:latest -f FillingFrameService.Dockerfile . &&
+cd ExtractFramesFromVideo &&
+docker build -t heedbookregistry.azurecr.io/heedbookdev/extractfromframesservice:latest . &&
 
 docker push heedbookregistry.azurecr.io/heedbookdev/cognitiveservice:latest &&
 docker push heedbookregistry.azurecr.io/heedbookdev/operationservice:latest &&
 docker push heedbookregistry.azurecr.io/heedbookdev/userservice:latest && 
-docker push heedbookregistry.azurecr.io/heedbookdev/framefromvideoservice:latest
+docker push heedbookregistry.azurecr.io/heedbookdev/framefromvideoservice:latest &&
+docker push heedbookregistry.azurecr.io/heedbookdev/extractfromframesservice:latest && 
+docker push heedbookregistry.azurecr.io/heedbookdev/fillingframeservice:latest

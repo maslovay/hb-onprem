@@ -1,16 +1,20 @@
-﻿using System.Net;
-using System;
+﻿using System;
+using HBData.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace HBData.Models {
+namespace HBData {
 
     public class RecordsContext: DbContext
     {
+        public RecordsContext(DbContextOptions options): base(options)
+        {
+            
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connectionString = Environment.GetEnvironmentVariable("PostgreSQLConnectionString");
-            optionsBuilder.UseNpgsql(connectionString);
         }
+
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<AspNetRole> AspNetRoles { get; set; }
         public DbSet<AspNetUserRole> AspNetUserRoles { get; set; }

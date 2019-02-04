@@ -15,5 +15,7 @@ namespace HBLib
         public String Password { get; set; }
 
         public String DestinationPath { get; set; }
+
+        public String DownloadPath { get; set; }
     }
 }
