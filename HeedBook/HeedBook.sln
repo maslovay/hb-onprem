@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtractFramesFromVideo", "E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillingFrameService", "FillingFrameService\FillingFrameService.csproj", "{97751B12-896F-460F-B573-D5F45D739DAE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioAnalyzeService", "AudioAnalyzeService\AudioAnalyzeService.csproj", "{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -97,6 +99,10 @@ Global
 		{97751B12-896F-460F-B573-D5F45D739DAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97751B12-896F-460F-B573-D5F45D739DAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97751B12-896F-460F-B573-D5F45D739DAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -114,6 +120,7 @@ Global
 		{05E56164-B33F-4D24-83F1-DEB5C1BEE833} = {A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}
 		{49F4B32D-062D-4D6E-9805-D6EB718661CA} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{97751B12-896F-460F-B573-D5F45D739DAE} = {F9312081-26B8-4651-ABC9-A32914105EBA}
+		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
