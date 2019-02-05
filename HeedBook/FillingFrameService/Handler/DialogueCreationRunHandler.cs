@@ -2,13 +2,13 @@
 using RabbitMqEventBus.Base;
 using RabbitMqEventBus.Events;
 
-namespace FillingFrameService.Handlers
+namespace FillingFrameService.Handler
 {
-    public class DialogueCreationMessageHandler: IIntegrationEventHandler<DialogueCreationRun>
+    public class DialogueCreationRunHandler: IIntegrationEventHandler<DialogueCreationRun>
     {
         private readonly DialogueCreation _dialogueCreation;
 
-        public DialogueCreationMessageHandler(DialogueCreation dialogueCreation)
+        public DialogueCreationRunHandler(DialogueCreation dialogueCreation)
         {
             _dialogueCreation = dialogueCreation;
         }

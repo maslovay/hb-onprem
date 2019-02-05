@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Configurations;
-using FillingFrameService.Handlers;
+using FillingFrameService.Handler;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -45,7 +45,7 @@ namespace FillingFrameService
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
             services.AddTransient<DialogueCreation>();
-            services.AddTransient<DialogueCreationMessageHandler>();
+            services.AddTransient<DialogueCreationRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -55,7 +55,7 @@ namespace FillingFrameService
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             var handlerService = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            handlerService.Subscribe<DialogueCreationRun, DialogueCreationMessageHandler>();
+            handlerService.Subscribe<DialogueCreationRun, DialogueCreationRunHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

@@ -61,7 +61,7 @@ namespace FaceAnalyzeService
                 return new HbMlHttpClient(settings);
             });
             services.AddTransient<FaceAnalyze>();
-            services.AddTransient<FaceAnalyzeMessageHandler>();
+            services.AddTransient<FaceAnalyzeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddLogging(provider => provider.AddSerilog());
             services.AddRabbitMqEventBus(Configuration);
@@ -72,7 +72,7 @@ namespace FaceAnalyzeService
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<FaceAnalyzeRun, FaceAnalyzeMessageHandler>();
+            service.Subscribe<FaceAnalyzeRun, FaceAnalyzeRunHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

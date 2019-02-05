@@ -4,11 +4,11 @@ using RabbitMqEventBus.Events;
 
 namespace FaceAnalyzeService.Handler
 {
-    public class FaceAnalyzeMessageHandler: IIntegrationEventHandler<FaceAnalyzeRun>
+    public class FaceAnalyzeRunHandler: IIntegrationEventHandler<FaceAnalyzeRun>
     {
         private readonly FaceAnalyze _faceAnalyze;
 
-        public FaceAnalyzeMessageHandler(FaceAnalyze faceAnalyze)
+        public FaceAnalyzeRunHandler(FaceAnalyze faceAnalyze)
         {
             _faceAnalyze = faceAnalyze;
         }

@@ -2,13 +2,13 @@ using System.Threading.Tasks;
 using RabbitMqEventBus.Base;
 using RabbitMqEventBus.Events;
 
-namespace ExtractFramesFromVideo.Handlers
+namespace ExtractFramesFromVideo.Handler
 {
-    public class FramesFromVideoMessageHandler: IIntegrationEventHandler<FramesFromVideoRun>
+    public class FramesFromVideoRunHandler: IIntegrationEventHandler<FramesFromVideoRun>
     {
         private readonly FramesFromVideo _framesFromVideo;
 
-        public FramesFromVideoMessageHandler(FramesFromVideo framesFromVideo)
+        public FramesFromVideoRunHandler(FramesFromVideo framesFromVideo)
         {
             _framesFromVideo = framesFromVideo;
         }

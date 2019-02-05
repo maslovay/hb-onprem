@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HBLib\HBLib.csproj" />
+    <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
   </ItemGroup>
 
 </Project>

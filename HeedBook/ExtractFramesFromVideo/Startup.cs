@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Configurations;
-using ExtractFramesFromVideo.Handlers;
+using ExtractFramesFromVideo.Handler;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -46,7 +46,7 @@ namespace ExtractFramesFromVideo
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddTransient<FramesFromVideo>();
             services.AddRabbitMqEventBus(Configuration);
-            services.AddTransient<FramesFromVideoMessageHandler>();
+            services.AddTransient<FramesFromVideoRunHandler>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -55,7 +55,7 @@ namespace ExtractFramesFromVideo
         {
             app.ApplicationServices.GetRequiredService<INotificationService>();
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<FramesFromVideoRun, FramesFromVideoMessageHandler>();
+            service.Subscribe<FramesFromVideoRun, FramesFromVideoRunHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
