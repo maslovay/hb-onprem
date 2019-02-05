@@ -4,7 +4,7 @@ using RabbitMqEventBus.Events;
 
 namespace ExtractFramesFromVideo.Handlers
 {
-    public class FramesFromVideoMessageHandler: IIntegrationEventHandler<FramesFromVideoMessage>
+    public class FramesFromVideoMessageHandler: IIntegrationEventHandler<FramesFromVideoRun>
     {
         private readonly FramesFromVideo _framesFromVideo;
 
@@ -13,7 +13,7 @@ namespace ExtractFramesFromVideo.Handlers
             _framesFromVideo = framesFromVideo;
         }
         
-        public async Task Handle(FramesFromVideoMessage @event)
+        public async Task Handle(FramesFromVideoRun @event)
         {
             await _framesFromVideo.Run(@event.Path);
         }

@@ -27,7 +27,7 @@ namespace FillingFrameService
             _sftpSettings = sftpSettings;
         }
 
-        public async Task Run(DialogueCreationMessage message)
+        public async Task Run(DialogueCreationRun message)
         {
             var frameIds =
                 _repository.Get<FileFrame>().Where(item =>

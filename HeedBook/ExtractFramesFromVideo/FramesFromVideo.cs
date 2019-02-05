@@ -159,7 +159,7 @@ namespace ExtractFramesFromVideo
                                 await _repository.CreateAsync(fileFrame);
                                 _repository.Save();
                                 // END CODE POSTGRESQL
-                                var message = new FaceAnalyzeMessage
+                                var message = new FaceAnalyzeRun
                                 {
                                     Path = $"frames/{filename}"
                                 };

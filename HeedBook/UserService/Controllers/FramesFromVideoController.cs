@@ -17,7 +17,7 @@ namespace UserService.Controllers
         }
         
         [HttpPost]
-        public async Task CutVideoToFrames([FromBody] FramesFromVideoMessage message)
+        public async Task CutVideoToFrames([FromBody] FramesFromVideoRun message)
         {
             _handler.EventRaised(message);
         }

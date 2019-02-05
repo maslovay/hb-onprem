@@ -3,7 +3,7 @@ using RabbitMqEventBus.Base;
 
 namespace RabbitMqEventBus.Events
 {
-    public class FaceAnalyzeMessage: IntegrationEvent
+    public class FaceAnalyzeRun: IntegrationEvent
     {
         public String Path { get; set; }
     }

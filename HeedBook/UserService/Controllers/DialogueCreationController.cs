@@ -17,7 +17,7 @@ namespace UserService.Controllers
         }
 
         [HttpPost]
-        public async Task DialogueCreation([FromBody] DialogueCreationMessage message)
+        public async Task DialogueCreation([FromBody] DialogueCreationRun message)
         {
             _handler.EventRaised(message);
         }

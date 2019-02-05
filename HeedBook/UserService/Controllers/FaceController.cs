@@ -20,7 +20,7 @@ namespace UserService.Controllers
         }
 
         [HttpPost]
-        public async Task FaceAnalyzeRun([FromBody] FaceAnalyzeMessage message)
+        public async Task FaceAnalyzeRun([FromBody] FaceAnalyzeRun message)
         {
             _handler.EventRaised(message);
         }

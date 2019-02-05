@@ -55,7 +55,7 @@ namespace ExtractFramesFromVideo
         {
             app.ApplicationServices.GetRequiredService<INotificationService>();
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<FramesFromVideoMessage, FramesFromVideoMessageHandler>();
+            service.Subscribe<FramesFromVideoRun, FramesFromVideoMessageHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

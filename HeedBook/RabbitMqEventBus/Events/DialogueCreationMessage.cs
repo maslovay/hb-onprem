@@ -3,7 +3,7 @@ using RabbitMqEventBus.Base;
 
 namespace RabbitMqEventBus.Events
 {
-    public class DialogueCreationMessage: IntegrationEvent
+    public class DialogueCreationRun: IntegrationEvent
     {
         public Guid ApplicationUserId { get; set; }
 

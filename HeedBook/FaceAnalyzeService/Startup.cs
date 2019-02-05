@@ -72,7 +72,7 @@ namespace FaceAnalyzeService
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<FaceAnalyzeMessage, FaceAnalyzeMessageHandler>();
+            service.Subscribe<FaceAnalyzeRun, FaceAnalyzeMessageHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
