@@ -35,6 +35,10 @@ namespace HBData.Models
         /// </summary>
         public DateTime CreationTime { get; set; }
         /// <summary>
+        /// Id of google speech recognition request
+        /// </summary>
+        public string TransactionId {get;set;}
+        /// <summary>
         /// Audio filename
         /// </summary>
         public string FileName { get; set; }
