@@ -45,6 +45,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillingFrameService", "Fill
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioAnalyzeService", "AudioAnalyzeService\AudioAnalyzeService.csproj", "{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Schedulers", "Schedulers", "{66602303-8E1D-459C-AE59-57E1C8B6AC1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioAnalyzeScheduler", "AudioAnalyzeScheduler\AudioAnalyzeScheduler.csproj", "{724689EC-A52B-4A41-B7CE-16B82DBC9898}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,6 +107,10 @@ Global
 		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594}.Release|Any CPU.Build.0 = Release|Any CPU
+		{724689EC-A52B-4A41-B7CE-16B82DBC9898}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{724689EC-A52B-4A41-B7CE-16B82DBC9898}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{724689EC-A52B-4A41-B7CE-16B82DBC9898}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{724689EC-A52B-4A41-B7CE-16B82DBC9898}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -121,6 +129,7 @@ Global
 		{49F4B32D-062D-4D6E-9805-D6EB718661CA} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{97751B12-896F-460F-B573-D5F45D739DAE} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594} = {F9312081-26B8-4651-ABC9-A32914105EBA}
+		{724689EC-A52B-4A41-B7CE-16B82DBC9898} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Web;
 using HBData.Models;
 using HBData.Repository;
+using HBLib.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
@@ -127,8 +128,9 @@ namespace HBLib.Utils
                                           filename + @"?acl");
         }
 
-        public async Task<String> GetGoogleSTTResults(String googleTransactionId, String googleApiKey)
+        public async Task<GoogleSttResult> GetGoogleSTTResults(String googleTransactionId)
         {
+            var googleApiKey = GetApiKey();
             _httpClient.DefaultRequestHeaders.Clear();
 
             var response = _httpClient.GetAsync("https://speech.googleapis.com/v1/operations/" +
@@ -136,7 +138,7 @@ namespace HBLib.Utils
 
             var results = await response.Content.ReadAsStringAsync();
 
-            return results;
+            return JsonConvert.DeserializeObject<GoogleSttResult>(results);
         }
 
         public async Task<String> GetAuthorizationToken(String binPath)
@@ -191,7 +193,7 @@ namespace HBLib.Utils
                 {
                     var res = new Dictionary<String, String>();
                     var googleRecognitionId = js["name"].ToString();
-                    res.Add("GoogleTransactionId", js["name"].ToString());
+                    res.Add("GoogleTransactionId", googleRecognitionId);
                     res.Add("GoogleApiKey", apiKey);
                     return JsonConvert.SerializeObject(res);
                 }

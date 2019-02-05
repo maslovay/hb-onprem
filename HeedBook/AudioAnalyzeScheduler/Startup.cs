@@ -2,11 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AudioAnalyzeService.Handler;
-using Configurations;
-using HBData.Repository;
-using HBLib;
-using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -15,11 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Notifications.Base;
-using RabbitMqEventBus;
-using RabbitMqEventBus.Events;
 
-namespace AudioAnalyzeService
+namespace AudioAnalyzeScheduler
 {
     public class Startup
     {
@@ -33,23 +25,12 @@ namespace AudioAnalyzeService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            services.AddTransient(provider =>
-                provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddTransient<SftpClient>();
-            services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddTransient<GoogleConnector>();
-            services.AddTransient<AudioAnalyze>();
-            services.AddTransient<AudioAnalyzeRunHandler>();
-            services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<AudioAnalyzeRun, AudioAnalyzeRunHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

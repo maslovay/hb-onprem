@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using HBData.Models;
@@ -6,6 +7,7 @@ using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace AudioAnalyzeService
 {
@@ -45,14 +47,15 @@ namespace AudioAnalyzeService
                         : dialogueId + "_emp" + Path.GetExtension(fileName); 
                 await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);
                 await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
-                await _googleConnector.Recognize(blobGoogleDriveName, languageId, true,
+                var result = await _googleConnector.Recognize(blobGoogleDriveName, languageId, true,
                     containerName != _configuration["BlobContainerDialogueAudiosEmp"]);
-
+                var deserializedResult = JsonConvert.DeserializeObject<Dictionary<String, String>>(result);
                 var fileAudioDialogue =
                     await _repository.FindOneByConditionAsync<FileAudioDialogue>(item =>
                         item.DialogueId == Guid.Parse(dialogueId));
                 //1 - InProgress
                 fileAudioDialogue.StatusId = 1;
+                fileAudioDialogue.TransactionId = deserializedResult["GoogleTransactionId"];
                 _repository.Update(fileAudioDialogue);
                 _repository.Save();
             }
