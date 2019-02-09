@@ -115,7 +115,7 @@ namespace OperationService.Legacy
                     log.Info($"Dialogue text - {text}");
                     var phraseCount = new Dictionary<int, int>();
                     var phraseTypeId =
-                        HeedbookMessengerStatic.context.PhraseTypes.Select(p => new {typeId = p.PhraseTypeId});
+                        HeedbookMessengerStatic.Context().PhraseTypes.Select(p => new {typeId = p.PhraseTypeId});
 
                     foreach (var phrase in phrases)
                     {
