@@ -51,6 +51,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AudioAnalyzeScheduler", "Au
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuartzExtensions", "QuarzExtenssions\QuartzExtensions.csproj", "{1B4C1E5E-9725-4A12-9487-17A6C8025911}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueStatusScheduler", "DialogueStatusScheduler\DialogueStatusScheduler.csproj", "{F95DC1FC-0176-4051-B55E-BB28DF8C7978}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -117,6 +119,10 @@ Global
 		{1B4C1E5E-9725-4A12-9487-17A6C8025911}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B4C1E5E-9725-4A12-9487-17A6C8025911}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B4C1E5E-9725-4A12-9487-17A6C8025911}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F95DC1FC-0176-4051-B55E-BB28DF8C7978}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F95DC1FC-0176-4051-B55E-BB28DF8C7978}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F95DC1FC-0176-4051-B55E-BB28DF8C7978}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F95DC1FC-0176-4051-B55E-BB28DF8C7978}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -137,6 +143,7 @@ Global
 		{6C3A55AE-FCA5-4060-AA1C-3FA70CD70594} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{724689EC-A52B-4A41-B7CE-16B82DBC9898} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{1B4C1E5E-9725-4A12-9487-17A6C8025911} = {A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}
+		{F95DC1FC-0176-4051-B55E-BB28DF8C7978} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
