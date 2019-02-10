@@ -40,7 +40,9 @@ namespace AudioAnalyzeService
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddTransient<GoogleConnector>();
             services.AddTransient<AudioAnalyze>();
+            services.AddTransient<ToneAnalyze>();
             services.AddTransient<AudioAnalyzeRunHandler>();
+            services.AddTransient<ToneAnalyzeRunHandler>();
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
@@ -50,6 +52,7 @@ namespace AudioAnalyzeService
         {
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             service.Subscribe<AudioAnalyzeRun, AudioAnalyzeRunHandler>();
+            service.Subscribe<ToneAnalyzeRun, ToneAnalyzeRunHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
