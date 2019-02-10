@@ -7,7 +7,9 @@ using HBData.Repository;
 using HBLib.Model;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Quartz;
+using QuartzExtensions.Jobs;
 using Phrase = HBData.Models.Phrase;
 
 namespace QuartzExtensions.Jobs
@@ -63,6 +65,12 @@ namespace QuartzExtensions.Jobs
                              });
                          }
 
+                         await _repository.CreateAsync(new DialogueWord
+                         {
+                             DialogueId = item.DialogueId,
+                             IsClient = true,
+                             Words = JsonConvert.SerializeObject(phrases)
+                         });
                          await _repository.BulkInsertAsync(phraseCount);
                          _repository.Save();
                      }
@@ -106,18 +114,5 @@ namespace QuartzExtensions.Jobs
 
             return list;
         }
-    }
-
-    internal class PhraseResult
-    {
-        public String Word { get; set; }
-
-        public DateTime BegTime { get; set; }
-
-        public DateTime EndTime { get; set; }
-
-        public Guid? PhraseId { get; set; }
-
-        public Guid? PhraseTypeId { get; set; }
     }
 }
