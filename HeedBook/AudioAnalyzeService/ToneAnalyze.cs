@@ -84,6 +84,7 @@ namespace AudioAnalyzeService
             await _repository.BulkInsertAsync(intervals);
             await _repository.CreateAsync(dialogueAudio);
             await _repository.SaveAsync();
+            OS.SafeDelete(localPath);
         }
 
         public static Dictionary<string, double> RecognizeTone(String vacaturiPath, string fileName)
