@@ -77,9 +77,9 @@ namespace AudioAnalyzeService
             {
                 IsClient = true,
                 DialogueId = dialogueId,
-                NegativeTone = intervals.Sum(item => item.AngerTone + item.SadnessTone + item.FearTone) / count,
-                PositiveTone = intervals.Sum(item => item.HappinessTone) / count,
-                NeutralityTone = intervals.Sum(item => item.NeutralityTone) / count
+                NegativeTone = intervals.Average(item => item.AngerTone + item.SadnessTone + item.FearTone),
+                PositiveTone = intervals.Average(item => item.HappinessTone),
+                NeutralityTone = intervals.Average(item => item.NeutralityTone)
             };
             await _repository.BulkInsertAsync(intervals);
             await _repository.CreateAsync(dialogueAudio);
