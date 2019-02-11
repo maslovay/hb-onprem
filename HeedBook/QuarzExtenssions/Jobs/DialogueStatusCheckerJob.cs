@@ -28,18 +28,18 @@ namespace QuartzExtensions.Jobs
             foreach (var dialogue in dialogues)
             {
                 var dialogueFrame = _repository
-                    .Get<DialogueFrame>().Count(item => item.DialogueId == dialogue.DialogueId);
+                    .Get<DialogueFrame>().Any(item => item.DialogueId == dialogue.DialogueId);
                 var dialogueAudio = _repository
-                    .Get<DialogueFrame>().Count(item => item.DialogueId == dialogue.DialogueId);
+                    .Get<DialogueFrame>().Any(item => item.DialogueId == dialogue.DialogueId);
                 var dialogueInterval = _repository
-                    .Get<DialogueInterval>().Count(item => item.DialogueId == dialogue.DialogueId);
+                    .Get<DialogueInterval>().Any(item => item.DialogueId == dialogue.DialogueId);
                 var dialogueVisual = _repository
-                    .Get<DialogueVisual>().Count(item => item.DialogueId == dialogue.DialogueId);
+                    .Get<DialogueVisual>().Any(item => item.DialogueId == dialogue.DialogueId);
                 var dialogueClientProfiles = _repository
-                    .Get<DialogueClientProfile>().Count(item => item.DialogueId == dialogue.DialogueId);
+                    .Get<DialogueClientProfile>().Any(item => item.DialogueId == dialogue.DialogueId);
 
-                if (dialogueFrame > 0 && dialogueAudio > 0 && dialogueInterval > 0 && dialogueVisual > 0 &&
-                    dialogueClientProfiles > 0)
+                if (dialogueFrame && dialogueAudio && dialogueInterval && dialogueVisual &&
+                    dialogueClientProfiles)
                 {
                     dialogue.StatusId = 2;
                     _repository.Update(dialogue);

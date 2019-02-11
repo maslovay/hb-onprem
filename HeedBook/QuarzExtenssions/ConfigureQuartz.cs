@@ -13,7 +13,7 @@ namespace QuartzExtensions
     {
         public static void AddAudioRecognizeQuartz(this IServiceCollection services)
         {
-            services.Add(new ServiceDescriptor(typeof(IJob), typeof(CheckAudioRecognizeStatusJob), ServiceLifetime.Transient));
+            services.Add(new ServiceDescriptor(typeof(IJob), typeof(CheckAudioRecognizeStatusJob), ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
             services.AddSingleton(provider => JobBuilder.Create<CheckAudioRecognizeStatusJob>()
                 .WithIdentity("CheckAudioRecognizeStatus.job", "Audios")
@@ -23,7 +23,7 @@ namespace QuartzExtensions
                 return TriggerBuilder.Create()
                     .WithIdentity($"CheckAudioRecognizeStatus.trigger", "Audios")
                     .StartNow()
-                    .WithSimpleSchedule(s => s.WithIntervalInMinutes(2))
+                    .WithSimpleSchedule(s => s.WithIntervalInMinutes(2).RepeatForever())
                     .Build();
             });
 
@@ -47,10 +47,10 @@ namespace QuartzExtensions
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                    .WithIdentity($"DialogueStatus.trigger", "Dialogues")
-                    .StartNow()
-                    .WithSimpleSchedule(s => s.WithIntervalInMinutes(2))
-                    .Build();
+                                     .WithIdentity($"DialogueStatus.trigger", "Dialogues")
+                                     .StartNow()
+                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(2).RepeatForever())
+                                     .Build();
             });
 
             services.AddSingleton(provider =>

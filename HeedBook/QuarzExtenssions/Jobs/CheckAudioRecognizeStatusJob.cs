@@ -20,17 +20,18 @@ namespace QuartzExtensions.Jobs
 
         private readonly GoogleConnector _googleConnector;
 
-        public CheckAudioRecognizeStatusJob(IServiceProvider serviceProvider,
+        public CheckAudioRecognizeStatusJob(IServiceScopeFactory scopeFactory,
             GoogleConnector googleConnector)
         {
-            _repository = serviceProvider.GetRequiredService<IGenericRepository>();
+            var scope = scopeFactory.CreateScope();
+            _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
             _googleConnector = googleConnector;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 1);
-
+            System.Console.WriteLine("Job Started");
             var tasks = audios.Select(item =>
             {
                 return Task.Run(async () =>
@@ -42,7 +43,6 @@ namespace QuartzExtensions.Jobs
                          //8 - error
                          item.StatusId = 8;
                          _repository.Update(item);
-                         _repository.Save();
                      }
                      else
                      {
@@ -72,13 +72,12 @@ namespace QuartzExtensions.Jobs
                              Words = JsonConvert.SerializeObject(phrases)
                          });
                          await _repository.BulkInsertAsync(phraseCount);
-                         _repository.Save();
                      }
                  });
             }).ToList();
 
             await Task.WhenAll(tasks);
-
+            _repository.Save();
         }
 
         private int GetSpeechSpeed(List<WordRecognized> words, int languageId)
