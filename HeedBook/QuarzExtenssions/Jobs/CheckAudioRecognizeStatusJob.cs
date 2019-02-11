@@ -31,7 +31,6 @@ namespace QuartzExtensions.Jobs
         public async Task Execute(IJobExecutionContext context)
         {
             var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 1);
-            System.Console.WriteLine("Job Started");
             var tasks = audios.Select(item =>
             {
                 return Task.Run(async () =>
