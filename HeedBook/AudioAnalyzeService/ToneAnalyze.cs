@@ -35,7 +35,7 @@ namespace AudioAnalyzeService
 
         public async Task Run(String path)
         {
-            var ffmpeg = new FFMpegWrapper(_configuration["ffmpegPath"]);
+            var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
             var dialogueId = Guid.Parse((ReadOnlySpan<char>) Path.GetFileNameWithoutExtension(path.Split('/').Last()));
             var seconds = 3;
             var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);

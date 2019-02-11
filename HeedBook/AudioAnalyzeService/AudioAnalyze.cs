@@ -20,11 +20,9 @@ namespace AudioAnalyzeService
         private readonly IGenericRepository _repository;
         
         public AudioAnalyze(GoogleConnector googleConnector,
-            IConfiguration configuration,
             IServiceScopeFactory scopeFactory)
         {
             _googleConnector = googleConnector;
-            _configuration = configuration;
             var scope = scopeFactory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
         }
@@ -42,13 +40,11 @@ namespace AudioAnalyzeService
                 var token = await _googleConnector.GetAuthorizationToken("./");
                 
                 var blobGoogleDriveName =
-                    containerName != _configuration["BlobContainerDialogueAudiosEmp"]
-                        ? dialogueId + "_client" + Path.GetExtension(fileName)
-                        : dialogueId + "_emp" + Path.GetExtension(fileName); 
+                        dialogueId + "_client" + Path.GetExtension(fileName);
                 await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);
                 await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
                 var result = await _googleConnector.Recognize(blobGoogleDriveName, languageId, true,
-                    containerName != _configuration["BlobContainerDialogueAudiosEmp"]);
+                    true);
                 var deserializedResult = JsonConvert.DeserializeObject<Dictionary<String, String>>(result);
                 var fileAudioDialogue =
                     await _repository.FindOneByConditionAsync<FileAudioDialogue>(item =>
