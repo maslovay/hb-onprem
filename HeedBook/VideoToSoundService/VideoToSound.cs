@@ -12,28 +12,23 @@ namespace VideoToSoundService
     {
         private readonly IConfiguration _configuration;
         private readonly SftpClient _sftpClient;
-        private readonly SftpSettings _sftpSettings;
         public VideoToSound(IConfiguration configuration, 
-            SftpClient sftpClient,
-            SftpSettings sftpSettings)
+            SftpClient sftpClient)
         {
             _configuration = configuration;
             _sftpClient = sftpClient;
-            _sftpSettings = sftpSettings;
         }
         
         public async Task Run(String path)
         {
             var dialogueId = Path.GetFileNameWithoutExtension(path.Split('/').Last());
-            var localVideoPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
-            var localAudioPath = Path.Combine(_sftpSettings.DownloadPath + dialogueId + ".wav");
+            var localVideoStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(path);
             var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
-            ffmpeg.VideoToWav(localVideoPath, localAudioPath);
-            if (!File.Exists(localAudioPath))
+            var streamForUpload = await ffmpeg.VideoToWavAsync(localVideoStream);
+            if (streamForUpload != null)
             {
-                OS.SafeDelete(localVideoPath);
+                await _sftpClient.UploadAsMemoryStreamAsync(streamForUpload, "dialoguevideos", $"{dialogueId}.wav");
             }
-            
         }
     }
 }

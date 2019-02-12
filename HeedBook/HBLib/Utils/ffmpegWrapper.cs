@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 // todo: try-catch-throw
 
@@ -10,21 +12,21 @@ namespace HBLib.Utils
 {
     public class FFMpegWrapper
     {
-        public string ffPath;
+        public readonly String FfPath;
 
-        public FFMpegWrapper(string ffPath)
+        public FFMpegWrapper(String ffPath)
         {
-            this.ffPath = ffPath;
+            FfPath = ffPath;
         }
 
-        public double GetDuration(string fn)
+        public Double GetDuration(String fn)
         {
             var cmd = new CMDWithOutput();
             fn = Path.GetFullPath(fn);
 
             // input: ffmpeg -i input.webm
             // output: ... Duration: 01:40:06.08, start: 0.000000, bitrate: 22828 kb/s ...
-            var output = cmd.runCMD(ffPath, $"-i \"{fn}\"");
+            var output = cmd.runCMD(FfPath, $"-i \"{fn}\"");
 
             var pattern = @"Duration: ([^,]+),";
             var rgx = new Regex(pattern);
@@ -32,7 +34,7 @@ namespace HBLib.Utils
             var m = Regex.Matches(output, pattern)[0];
             var captured = m.Groups[1].ToString();
 
-            bool isValidTimeSpan;
+            Boolean isValidTimeSpan;
             try
             {
                 TimeSpan.Parse(captured);
@@ -51,7 +53,7 @@ namespace HBLib.Utils
                 // output: ... frame= 2087 fps=0.0 q=-0.0 Lsize=N/A time=00:01:23.48 bitrate=N/A speed= 123x ...
                 pattern = @"time=(.+)\s?bitrate";
                 rgx = new Regex(pattern);
-                output = cmd.runCMD(ffPath, $"-i \"{fn}\" -f null -");
+                output = cmd.runCMD(FfPath, $"-i \"{fn}\" -f null -");
 
                 var matches = Regex.Matches(output, pattern);
                 var match = matches[matches.Count - 1];
@@ -62,22 +64,47 @@ namespace HBLib.Utils
             return ts.TotalSeconds;
         }
 
-        public string VideoToWav(string videoFn, string audioFn)
+        public String VideoToWavAsync(String videoFn, String audioFn)
         {
             videoFn = Path.GetFullPath(videoFn);
             audioFn = Path.GetFullPath(audioFn);
             var cmd = new CMDWithOutput();
-            return cmd.runCMD(ffPath,
+            return cmd.runCMD(FfPath,
                 $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
         }
 
-        public List<Dictionary<string, string>> SplitBySeconds(string fn, double seconds, string directory = null,
-            string rootFn = "split", bool convertToWebm = false)
+        public async Task<MemoryStream> VideoToWavAsync(MemoryStream videoStream)
+        {
+            var processStartInfo = new ProcessStartInfo(FfPath)
+            {
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                Arguments =
+                    $@"-acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact"
+            };
+            var process = new Process {StartInfo = processStartInfo};
+            process.Start();
+            await Task.Run(() =>
+            {
+                var rawToProc = process.StandardInput;
+                var byteArrayOfStream = videoStream.ToArray();
+                rawToProc.BaseStream.Write(byteArrayOfStream, 0, byteArrayOfStream.Length);
+                process.StandardInput.Close();
+            });
+
+            if (!(process.StandardOutput.BaseStream is MemoryStream resultStream)) return null;
+            resultStream.Seek(0, SeekOrigin.Begin);
+            return resultStream;
+        }
+
+        public List<Dictionary<String, String>> SplitBySeconds(String fn, Double seconds, String directory = null,
+            String rootFn = "split", Boolean convertToWebm = false)
         {
             fn = Path.GetFullPath(fn);
-            var metadata = new List<Dictionary<string, string>>();
+            var metadata = new List<Dictionary<String, String>>();
             var duration = GetDuration(fn);
-            var NFiles = (int) Math.Ceiling(duration / seconds);
+            var NFiles = (Int32) Math.Ceiling(duration / seconds);
 
             var oldExtension = "." + fn.Split('.').Last();
             var newExtension = convertToWebm ? ".webm" : oldExtension;
@@ -86,7 +113,7 @@ namespace HBLib.Utils
 
             for (var i = 0; i < NFiles; i++)
             {
-                var curMetadata = new Dictionary<string, string>();
+                var curMetadata = new Dictionary<String, String>();
 
                 var a = i * seconds;
                 var b = (i + 1) * seconds;
@@ -102,7 +129,7 @@ namespace HBLib.Utils
 
                 arguments += $" {newFn}";
 
-                var output = cmd.runCMD(ffPath, arguments);
+                var output = cmd.runCMD(FfPath, arguments);
 
                 curMetadata["fn"] = newFn;
                 curMetadata["duration"] = Math.Min(b - a, duration - a).ToString();
@@ -112,7 +139,7 @@ namespace HBLib.Utils
             return metadata;
         }
 
-        public string ConcatSameCodecs(List<string> fns, string outputFn, string dir = null)
+        public String ConcatSameCodecs(List<String> fns, String outputFn, String dir = null)
         {
             // https://trac.ffmpeg.org/wiki/Concatenate
             // ffmpeg -f concat -safe 0 -i mylist.txt -c copy output
@@ -134,14 +161,14 @@ namespace HBLib.Utils
             foreach (var fn in fns) content += $"file '{fn.Replace(Path.DirectorySeparatorChar.ToString(), @"/")}'\n";
 
             File.WriteAllText(guidFn, content);
-            var res = cmd.runCMD(ffPath, arguments);
+            var res = cmd.runCMD(FfPath, arguments);
 
             // delete file
             OS.SafeDelete(guidFn);
             return res;
         }
 
-        public string ConcatDifferentCodecs(List<string> fns, string outputFn)
+        public String ConcatDifferentCodecs(List<String> fns, String outputFn)
         {
             // https://trac.ffmpeg.org/wiki/Concatenate
             /*ffmpeg -i input1.mp4 -i input2.webm -i input3.mov -filter_complex "[0:v:0][0:a:0][1:v:0][1:a:0][2:v:0][2:a:0]concat=n=3:v=1:a=1[outv][outa]" -map "[outv]" -map "[outa]" output.mkv*/
@@ -156,7 +183,7 @@ namespace HBLib.Utils
 
             for (var i = 0; i < fns.Count; i++) arguments += $"[{i}:v:0][{i}:a:0]";
             arguments += $"concat=n={fns.Count}:v=1:a=1[outv][outa]\" -map \"[outv]\" -map \"[outa]\" {outputFn}";
-            return cmd.runCMD(ffPath, arguments);
+            return cmd.runCMD(FfPath, arguments);
         }
 
         /// <summary>
@@ -169,7 +196,7 @@ namespace HBLib.Utils
         /// <param name="eTime">End of the fragment.</param>
         /// <param name="outputSeek">Seek fragment in output stream instead of input stream.</param>
         /// <returns>Ffmpeg's output.</returns>
-        public string CutBlob(string fn, string outFn, string sTime, string eTime, bool outputSeek = false)
+        public String CutBlob(String fn, String outFn, String sTime, String eTime, Boolean outputSeek = false)
         {
             //https://trac.ffmpeg.org/wiki/Seeking
             //ffmpeg -ss {sTime} -i {fn} -to {eTime} -acodec copy -vcodec copy -avoid_negative_ts 1 {outFn}
@@ -186,10 +213,10 @@ namespace HBLib.Utils
                 args += $"-ss {sTime} -i {fn} ";
             args += $"-to {eTime} -acodec copy -vcodec copy -avoid_negative_ts 1 {outFn}";
 
-            return cmd.runCMD(ffPath, args);
+            return cmd.runCMD(FfPath, args);
         }
 
-        public string SplitToKeyFrames(string fn, string directory = null, string prefix = "keyframe")
+        public String SplitToKeyFrames(String fn, String directory = null, String prefix = "keyframe")
         {
             // ffmpeg -i full.mp4 -acodec copy -f segment -vcodec copy -reset_timestamps 1 -map 0 keyframes_mp4/OUTPUT%d.mp4
             fn = Path.GetFullPath(fn);
@@ -201,7 +228,7 @@ namespace HBLib.Utils
             if (directory != null) newFn = Path.Combine(directory, newFn);
 
             var arguments = $"-i {fn} -acodec copy -f segment -vcodec copy -reset_timestamps 1 -map 0 {newFn}";
-            return cmd.runCMD(ffPath, arguments);
+            return cmd.runCMD(FfPath, arguments);
         }
     }
 }
