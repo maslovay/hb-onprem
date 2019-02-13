@@ -28,18 +28,19 @@ namespace VideoToSoundService
         {
             var dialogueId = Path.GetFileNameWithoutExtension(path.Split('/').Last());
             var localVideoStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(path);
+            var ffPath = _configuration["FfmpegPath"];
             var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
             var streamForUpload = await ffmpeg.VideoToWavAsync(localVideoStream);
             var uploadPath = Path.Combine("dialoguevideos", $"{dialogueId}.wav");
             if (streamForUpload != null)
             {
-                await _sftpClient.UploadAsMemoryStreamAsync(streamForUpload, "dialoguevideos", $"{dialogueId}.wav");
+                await _sftpClient.UploadAsMemoryStreamAsync(streamForUpload, "dialogueaudios", $"{dialogueId}.wav");
+                var @event = new AudioAnalyzeRun
+                {
+                    Path = uploadPath
+                };
+                _handler.EventRaised(@event);
             }
-            var @event = new AudioAnalyzeRun
-            {
-                Path = uploadPath
-            };
-            _handler.EventRaised(@event);
         }
     }
 }

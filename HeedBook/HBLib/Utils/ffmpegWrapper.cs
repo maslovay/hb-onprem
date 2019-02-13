@@ -73,28 +73,22 @@ namespace HBLib.Utils
                 $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
         }
 
-        public async Task<MemoryStream> VideoToWavAsync(MemoryStream videoStream)
+        public async Task<FileStream> VideoToWavAsync(MemoryStream videoStream)
         {
             var processStartInfo = new ProcessStartInfo(FfPath)
             {
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
+                CreateNoWindow = true,
                 UseShellExecute = false,
                 Arguments =
-                    $@"-acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact"
+                    $@"-i pipe:.mkv -acodec pcm_s16le -ac 2 pipe:.wav"
             };
-            var process = new Process {StartInfo = processStartInfo};
+            var process = new Process { StartInfo = processStartInfo };
             process.Start();
-            await Task.Run(() =>
-            {
-                var rawToProc = process.StandardInput;
-                var byteArrayOfStream = videoStream.ToArray();
-                rawToProc.BaseStream.Write(byteArrayOfStream, 0, byteArrayOfStream.Length);
-                process.StandardInput.Close();
-            });
-
-            if (!(process.StandardOutput.BaseStream is MemoryStream resultStream)) return null;
-            resultStream.Seek(0, SeekOrigin.Begin);
+            process.StandardInput.BaseStream.Write(videoStream.ToArray());
+            process.StandardInput.Close();
+            if (!(process.StandardOutput.BaseStream is FileStream resultStream)) return null;
             return resultStream;
         }
 
@@ -104,7 +98,7 @@ namespace HBLib.Utils
             fn = Path.GetFullPath(fn);
             var metadata = new List<Dictionary<String, String>>();
             var duration = GetDuration(fn);
-            var NFiles = (Int32) Math.Ceiling(duration / seconds);
+            var NFiles = (Int32)Math.Ceiling(duration / seconds);
 
             var oldExtension = "." + fn.Split('.').Last();
             var newExtension = convertToWebm ? ".webm" : oldExtension;
