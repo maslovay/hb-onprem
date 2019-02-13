@@ -74,7 +74,7 @@ namespace ExtractFramesFromVideo
 
                 // START BLOCK Write Stdout of ffmpeg to byte array(ffmpegOut)
 
-                var baseStream = process.StandardOutput.BaseStream as FileStream;
+                var baseStream = process.StandardOutput.BaseStream;
                 byte[] ffmpegOut;
 
                 var lastRead = 0;

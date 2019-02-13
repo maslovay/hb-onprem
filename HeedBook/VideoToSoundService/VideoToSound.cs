@@ -27,14 +27,17 @@ namespace VideoToSoundService
         public async Task Run(String path)
         {
             var dialogueId = Path.GetFileNameWithoutExtension(path.Split('/').Last());
-            var localVideoStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(path);
+            var localVideoPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
+            var localAudioPath = $"/home/daniyar/333/{dialogueId}.wav";
             var ffPath = _configuration["FfmpegPath"];
             var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
-            var streamForUpload = await ffmpeg.VideoToWavAsync(localVideoStream);
+            await ffmpeg.VideoToWavAsync(localVideoPath, localAudioPath);
             var uploadPath = Path.Combine("dialoguevideos", $"{dialogueId}.wav");
-            if (streamForUpload != null)
+            if (File.Exists(localAudioPath))
             {
-                await _sftpClient.UploadAsMemoryStreamAsync(streamForUpload, "dialogueaudios", $"{dialogueId}.wav");
+                await _sftpClient.UploadAsync(localAudioPath, "dialogueaudios", $"{dialogueId}.wav");
+                File.Delete(localAudioPath);
+                File.Delete(localVideoPath);
                 var @event = new AudioAnalyzeRun
                 {
                     Path = uploadPath

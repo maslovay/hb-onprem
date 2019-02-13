@@ -64,31 +64,34 @@ namespace HBLib.Utils
             return ts.TotalSeconds;
         }
 
-        public String VideoToWavAsync(String videoFn, String audioFn)
+        public async Task<String> VideoToWavAsync(String videoFn, String audioFn)
         {
             videoFn = Path.GetFullPath(videoFn);
             audioFn = Path.GetFullPath(audioFn);
             var cmd = new CMDWithOutput();
-            return cmd.runCMD(FfPath,
+            return cmd.runCMD("ffmpeg",
                 $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
         }
 
         public async Task<FileStream> VideoToWavAsync(MemoryStream videoStream)
         {
-            var processStartInfo = new ProcessStartInfo(FfPath)
+            var processStartInfo = new ProcessStartInfo("ffmpeg")
             {
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 Arguments =
-                    $@"-i pipe:.mkv -acodec pcm_s16le -ac 2 pipe:.wav"
+                    $@"-i pipe:.mkv -acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact pipe:.wav"
             };
             var process = new Process { StartInfo = processStartInfo };
             process.Start();
             process.StandardInput.BaseStream.Write(videoStream.ToArray());
             process.StandardInput.Close();
             if (!(process.StandardOutput.BaseStream is FileStream resultStream)) return null;
+            System.Console.WriteLine(DateTime.Now);
+            process.StandardOutput.Close();
+            process.WaitForExit();
             return resultStream;
         }
 
