@@ -16,7 +16,8 @@ namespace HBLib.Utils
 
         public FFMpegWrapper(String ffPath)
         {
-            FfPath = ffPath;
+            
+            FfPath = Environment.OSVersion.Platform == PlatformID.Win32NT ? ffPath : "ffmpeg";
         }
 
         public Double GetDuration(String fn)
@@ -69,13 +70,13 @@ namespace HBLib.Utils
             videoFn = Path.GetFullPath(videoFn);
             audioFn = Path.GetFullPath(audioFn);
             var cmd = new CMDWithOutput();
-            return cmd.runCMD("ffmpeg",
+            return cmd.runCMD(FfPath,
                 $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
         }
 
         public async Task<FileStream> VideoToWavAsync(MemoryStream videoStream)
         {
-            var processStartInfo = new ProcessStartInfo("ffmpeg")
+            var processStartInfo = new ProcessStartInfo(FfPath)
             {
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
