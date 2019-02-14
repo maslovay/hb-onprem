@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using QuartzExtensions;
 
-namespace DialogueStatusScheduler
+namespace DialogueStatusCheckerScheduler
 {
     public class Startup
     {
