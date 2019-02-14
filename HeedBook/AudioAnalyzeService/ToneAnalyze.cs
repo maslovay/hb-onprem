@@ -35,6 +35,7 @@ namespace AudioAnalyzeService
 
         public async Task Run(String path)
         {
+            Console.WriteLine("Function Tone analyze started");
             var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
             var dialogueId = Guid.Parse((ReadOnlySpan<char>) Path.GetFileNameWithoutExtension(path.Split('/').Last()));
             var seconds = 3;
@@ -72,7 +73,6 @@ namespace AudioAnalyzeService
                 }
             }
 
-            var count = intervals.Count();
             var dialogueAudio = new DialogueAudio
             {
                 IsClient = true,
@@ -85,6 +85,7 @@ namespace AudioAnalyzeService
             await _repository.CreateAsync(dialogueAudio);
             await _repository.SaveAsync();
             OS.SafeDelete(localPath);
+            Console.WriteLine("Function Tone analyze finished");
         }
 
         public static Dictionary<string, double> RecognizeTone(String vacaturiPath, string fileName)

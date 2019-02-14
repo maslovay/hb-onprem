@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using RsaKey = System.Security.Cryptography.RSA;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -147,7 +148,6 @@ namespace HBLib.Utils
 
             var jwt = CreateJwt(binPath);
 
-
             var dic = new Dictionary<String, String>
 
             {
@@ -160,44 +160,32 @@ namespace HBLib.Utils
 
             var response = await _httpClient.PostAsync("https://accounts.google.com/o/oauth2/token", content);
             dynamic dyn = await response.Content.ReadAsStringAsync();
-            return dyn.access_token;
+            var token = JsonConvert.DeserializeObject<JWTToken>(dyn.ToString());
+            return token.access_token;
         }
 
+        public class JWTToken
+        {
+            public string access_token;
+            public string token_type;
+            public int expires_in;
+        }
 
-
-
-        public async Task<String> Recognize(String fileName, Int32 languageId, Boolean enableWordTimeOffsets = true,
+        public async Task<String> Recognize(String fileName, Int32 languageId, string dialogueId, Boolean enableWordTimeOffsets = true,
             Boolean enableSpeakerDiarization = true)
         {
-            while (true)
+            var apiKey = await GetApiKey();
+            if (apiKey == null)
             {
-                var apiKey = await GetApiKey();
-
-                var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey, languageId); },
-                    TimeSpan.FromSeconds(1), 5);
-
-                dynamic js = JsonConvert.DeserializeObject(jsStr);
-                var error = js["error"];
-
-                if (error != null)
-                {
-                    if (((String) error["Status"] != "PERMISSION_DENIED")) continue;
-                    var googleAccount =
-                        await _repository.FindOneByConditionAsync<GoogleAccount>(item => item.GoogleKey == apiKey);
-                    //7 - inactive;
-                    googleAccount.StatusId = 7; 
-                    _repository.Update(googleAccount);
-                    _repository.Save();
-                }
-                else
-                {
-                    var res = new Dictionary<String, String>();
-                    var googleRecognitionId = js["name"].ToString();
-                    res.Add("GoogleTransactionId", googleRecognitionId);
-                    res.Add("GoogleApiKey", apiKey);
-                    return JsonConvert.SerializeObject(res);
-                }
+                return String.Empty;
             }
+
+            var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey, languageId); },
+                TimeSpan.FromSeconds(1), 5);
+            
+            dynamic js = JsonConvert.DeserializeObject(jsStr);
+            return js.ToString();
+            
         }
 
         private async Task<String> GetApiKey()
@@ -359,27 +347,40 @@ namespace HBLib.Utils
 
             var inputBytes = Encoding.UTF8.GetBytes(input);
 
-            // signiture
-            var rsa = (RSACryptoServiceProvider) certificate.PrivateKey;
-
-            //rsa.PersistKeyInCsp = true;
-
-            var cspParam = new CspParameters
+            // dotnet4.6
+            try
             {
-                KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
+                // signiture
+                var rsa = (RSACryptoServiceProvider) certificate.PrivateKey;
+                //rsa.PersistKeyInCsp = true;
 
-                KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2,
+                var cspParam = new CspParameters
+                {
+                    KeyContainerName = rsa.CspKeyContainerInfo.KeyContainerName,
 
-                Flags = CspProviderFlags.NoPrompt | CspProviderFlags.UseExistingKey |
-                        CspProviderFlags.UseMachineKeyStore
-            };
-            var cryptoServiceProvider = new RSACryptoServiceProvider(cspParam) {PersistKeyInCsp = false};
+                    KeyNumber = rsa.CspKeyContainerInfo.KeyNumber == KeyNumber.Exchange ? 1 : 2,
 
-            var signatureBytes = cryptoServiceProvider.SignData(inputBytes, "SHA256");
+                    Flags = CspProviderFlags.NoPrompt | CspProviderFlags.UseExistingKey |
+                            CspProviderFlags.UseMachineKeyStore
+                };
+                var cryptoServiceProvider = new RSACryptoServiceProvider(cspParam) {PersistKeyInCsp = false};
 
-            var signatureEncoded = Convert.ToBase64String(signatureBytes);
+                var signatureBytes = cryptoServiceProvider.SignData(inputBytes, "SHA256");
+                var signatureEncoded = Convert.ToBase64String(signatureBytes);
+                return String.Join(".", headerEncoded, claimsetEncoded, signatureEncoded);
+            }
+            // dotnet 2.2
+            catch
+            {
+                var rsa = certificate.GetRSAPrivateKey();
+                var signatureBytes =  rsa.SignData(inputBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-            return String.Join(".", headerEncoded, claimsetEncoded, signatureEncoded);
+                var signatureEncoded = Convert.ToBase64String(signatureBytes);
+
+                Console.WriteLine($"{String.Join(".", headerEncoded, claimsetEncoded, signatureEncoded)}");
+                return String.Join(".", headerEncoded, claimsetEncoded, signatureEncoded);
+            }
+            
         }
     }
 }

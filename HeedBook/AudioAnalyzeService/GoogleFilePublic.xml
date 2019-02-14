@@ -1,0 +1,8 @@
+<AccessControlList>
+<Entries>
+<Entry>
+<Scope type="AllUsers"/>
+<Permission>READ</Permission>
+</Entry>
+</Entries>
+</AccessControlList>
