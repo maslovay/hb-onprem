@@ -31,7 +31,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498
 		ExtractFramesFromVideoService.Dockerfile = ExtractFramesFromVideoService.Dockerfile
 		FaceAnalyzeService.Dockerfile = FaceAnalyzeService.Dockerfile
 		FillingFrameService.Dockerfile = FillingFrameService.Dockerfile
-		FrameFromVideoService.Dockerfile = FrameFromVideoService.Dockerfile
 		UserService.Dockerfile = UserService.Dockerfile
 		VideoToSoundService.Dockerfile = VideoToSoundService.Dockerfile
 	EndProjectSection
