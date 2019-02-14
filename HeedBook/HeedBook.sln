@@ -13,8 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{F9
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utilities", "Utilities", "{A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FrameFromVideoService", "FrameFromVideoService\FrameFromVideoService.csproj", "{62E8B94B-AAD3-4791-8EFA-FC479D463818}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PubSub", "PubSub", "{5ACD64F0-851F-4971-A6F7-0B51DB7429E1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HBLib", "HBLib\HBLib.csproj", "{4C37D16D-A62A-4BDC-BFFA-C8F0B12E0C62}"
@@ -27,17 +25,22 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMqEventBus", "RabbitM
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498-9934-4664-B888-F24989B01059}"
 	ProjectSection(SolutionItems) = preProject
+		AudioAnalyzeScheduler.Dockerfile = AudioAnalyzeScheduler.Dockerfile
+		AuidoAnalyzeService.Dockerfile = AuidoAnalyzeService.Dockerfile
+		DialogueStatusCheckerScheduler.Dockerfile = DialogueStatusCheckerScheduler.Dockerfile
+		ExtractFramesFromVideoService.Dockerfile = ExtractFramesFromVideoService.Dockerfile
 		FaceAnalyzeService.Dockerfile = FaceAnalyzeService.Dockerfile
+		FillingFrameService.Dockerfile = FillingFrameService.Dockerfile
 		FrameFromVideoService.Dockerfile = FrameFromVideoService.Dockerfile
-		OperationService.Dockerfile = OperationService.Dockerfile
 		UserService.Dockerfile = UserService.Dockerfile
+		VideoToSoundService.Dockerfile = VideoToSoundService.Dockerfile
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceAnalyzeService", "FaceAnalyzeService\FaceAnalyzeService.csproj", "{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HBMLHttpClient", "HBMLHttpClient\HBMLHttpClient.csproj", "{05E56164-B33F-4D24-83F1-DEB5C1BEE833}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExtractFramesFromVideo", "ExtractFramesFromVideo\ExtractFramesFromVideo.csproj", "{49F4B32D-062D-4D6E-9805-D6EB718661CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExtractFramesFromVideoService", "ExtractFramesFromVideoService\ExtractFramesFromVideoService.csproj", "{49F4B32D-062D-4D6E-9805-D6EB718661CA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FillingFrameService", "FillingFrameService\FillingFrameService.csproj", "{97751B12-896F-460F-B573-D5F45D739DAE}"
 EndProject
@@ -47,9 +50,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Schedulers", "Schedulers", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AudioAnalyzeScheduler", "AudioAnalyzeScheduler\AudioAnalyzeScheduler.csproj", "{724689EC-A52B-4A41-B7CE-16B82DBC9898}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuartzExtensions", "QuarzExtenssions\QuartzExtensions.csproj", "{1B4C1E5E-9725-4A12-9487-17A6C8025911}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QuartzExtensions", "QuartzExtensions\QuartzExtensions.csproj", "{1B4C1E5E-9725-4A12-9487-17A6C8025911}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueStatusScheduler", "DialogueStatusScheduler\DialogueStatusScheduler.csproj", "{F95DC1FC-0176-4051-B55E-BB28DF8C7978}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueStatusCheckerScheduler", "DialogueStatusCheckerScheduler\DialogueStatusCheckerScheduler.csproj", "{F95DC1FC-0176-4051-B55E-BB28DF8C7978}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoToSoundService", "VideoToSoundService\VideoToSoundService.csproj", "{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,10 +70,6 @@ Global
 		{282BF88A-DB33-4225-954E-FFB3B8DAA371}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{282BF88A-DB33-4225-954E-FFB3B8DAA371}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{282BF88A-DB33-4225-954E-FFB3B8DAA371}.Release|Any CPU.Build.0 = Release|Any CPU
-		{62E8B94B-AAD3-4791-8EFA-FC479D463818}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{62E8B94B-AAD3-4791-8EFA-FC479D463818}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{62E8B94B-AAD3-4791-8EFA-FC479D463818}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{62E8B94B-AAD3-4791-8EFA-FC479D463818}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4C37D16D-A62A-4BDC-BFFA-C8F0B12E0C62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4C37D16D-A62A-4BDC-BFFA-C8F0B12E0C62}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C37D16D-A62A-4BDC-BFFA-C8F0B12E0C62}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -117,6 +118,10 @@ Global
 		{F95DC1FC-0176-4051-B55E-BB28DF8C7978}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F95DC1FC-0176-4051-B55E-BB28DF8C7978}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F95DC1FC-0176-4051-B55E-BB28DF8C7978}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -124,7 +129,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{1BF2A68A-EB32-44B7-B7CC-B85A70DE1691} = {6DF2D04E-B9A6-40C9-8222-00F11D59B099}
 		{282BF88A-DB33-4225-954E-FFB3B8DAA371} = {F9312081-26B8-4651-ABC9-A32914105EBA}
-		{62E8B94B-AAD3-4791-8EFA-FC479D463818} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{4C37D16D-A62A-4BDC-BFFA-C8F0B12E0C62} = {A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}
 		{75263CAD-7296-4DE9-B94B-173E345BDAF5} = {5ACD64F0-851F-4971-A6F7-0B51DB7429E1}
 		{F6A95B43-06CB-4075-A03F-B1AA48999853} = {5ACD64F0-851F-4971-A6F7-0B51DB7429E1}
@@ -137,6 +141,7 @@ Global
 		{724689EC-A52B-4A41-B7CE-16B82DBC9898} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{1B4C1E5E-9725-4A12-9487-17A6C8025911} = {A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}
 		{F95DC1FC-0176-4051-B55E-BB28DF8C7978} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
+		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
