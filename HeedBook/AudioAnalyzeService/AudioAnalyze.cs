@@ -29,6 +29,8 @@ namespace AudioAnalyzeService
 
         public async Task Run(String path)
         {
+            Console.WriteLine("Function Audio STT started");
+            /* */
             if (!String.IsNullOrWhiteSpace(path))
             {
                 var splitedString = path.Split('/');
@@ -37,24 +39,18 @@ namespace AudioAnalyzeService
                 var dialogueId = Path.GetFileNameWithoutExtension(fileName);
                 var languageId = Int32.Parse("2");
                 
-                var token = await _googleConnector.GetAuthorizationToken("./");
+                var currentPath = Directory.GetCurrentDirectory();
+                //var token = await _googleConnector.GetAuthorizationToken("./");
+                var token = await _googleConnector.GetAuthorizationToken(currentPath);
                 
                 var blobGoogleDriveName =
                         dialogueId + "_client" + Path.GetExtension(fileName);
                 await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);
                 await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
-                var result = await _googleConnector.Recognize(blobGoogleDriveName, languageId, true,
-                    true);
-                var deserializedResult = JsonConvert.DeserializeObject<Dictionary<String, String>>(result);
-                var fileAudioDialogue =
-                    await _repository.FindOneByConditionAsync<FileAudioDialogue>(item =>
-                        item.DialogueId == Guid.Parse(dialogueId));
-                //1 - InProgress
-                fileAudioDialogue.StatusId = 1;
-                fileAudioDialogue.TransactionId = deserializedResult["GoogleTransactionId"];
-                _repository.Update(fileAudioDialogue);
-                _repository.Save();
+                await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId, true, true);
             }
+            Console.WriteLine("Function Audio STT started");
         }
+        
     }
 }

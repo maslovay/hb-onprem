@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AudioAnalyzeService.Handler;
 using Configurations;
+using DialogueVideoMerge.Handler;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -17,11 +17,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
-namespace AudioAnalyzeService
+namespace DialogueVideoMerge
 {
     public class Startup
     {
@@ -35,7 +34,6 @@ namespace AudioAnalyzeService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddDbContext<RecordsContext>
             (options =>
             {
@@ -43,15 +41,12 @@ namespace AudioAnalyzeService
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
-            services.AddTransient(provider =>
-                provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
+            services.AddTransient<DialogueCreation>();
+            services.AddTransient<DialogueCreationRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddTransient<GoogleConnector>();
-            services.AddTransient<AudioAnalyze>();
-            //services.AddTransient<ToneAnalyze>();
-            services.AddTransient<AudioAnalyzeRunHandler>();
-            //services.AddTransient<ToneAnalyzeRunHandler>();
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
@@ -59,9 +54,8 @@ namespace AudioAnalyzeService
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<AudioAnalyzeRun, AudioAnalyzeRunHandler>();
-            //service.Subscribe<ToneAnalyzeRun, ToneAnalyzeRunHandler>();
+            var handlerService = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
+            handlerService.Subscribe<DialogueCreationRun, DialogueCreationRunHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
