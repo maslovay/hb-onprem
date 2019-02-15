@@ -55,6 +55,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueStatusCheckerSchedu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoToSoundService", "VideoToSoundService\VideoToSoundService.csproj", "{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueVideoMerge", "DialogueVideoMerge\DialogueVideoMerge.csproj", "{858AD51F-9087-4407-98D6-9937D354C070}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,6 +123,10 @@ Global
 		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}.Release|Any CPU.Build.0 = Release|Any CPU
+		{858AD51F-9087-4407-98D6-9937D354C070}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{858AD51F-9087-4407-98D6-9937D354C070}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{858AD51F-9087-4407-98D6-9937D354C070}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{858AD51F-9087-4407-98D6-9937D354C070}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -141,6 +147,7 @@ Global
 		{1B4C1E5E-9725-4A12-9487-17A6C8025911} = {A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}
 		{F95DC1FC-0176-4051-B55E-BB28DF8C7978} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461} = {F9312081-26B8-4651-ABC9-A32914105EBA}
+		{858AD51F-9087-4407-98D6-9937D354C070} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
