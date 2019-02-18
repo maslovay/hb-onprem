@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HBData\HBData.csproj" />
-    <ProjectReference Include="..\QuarzExtenssions\QuartzExtensions.csproj" />
+    <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
   </ItemGroup>
 
 </Project>

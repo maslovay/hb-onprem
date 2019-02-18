@@ -14,7 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\HBData\HBData.csproj" />
     <ProjectReference Include="..\HBLib\HBLib.csproj" />
-    <ProjectReference Include="..\QuarzExtenssions\QuartzExtensions.csproj" />
+    <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
   </ItemGroup>
 
 </Project>

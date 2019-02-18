@@ -174,10 +174,6 @@ namespace DialogueVideoMerge
             {
                 Console.WriteLine(e);
             }
-
-            
-
-            
         }
     }
 }
