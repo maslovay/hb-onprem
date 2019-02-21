@@ -26,13 +26,6 @@ namespace UserService
     {
         public Startup(IConfiguration configuration)
         {
-            var elasticSearchUri =
-                new Uri(configuration["ElasticSearch:Host"] + ":" + configuration["ElasticSearch:Port"]);
-            Log.Logger = new LoggerConfiguration()
-                .Enrich.FromLogContext()
-                .MinimumLevel.Debug()
-                .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(elasticSearchUri))
-                .CreateLogger();
             Configuration = configuration;
         }
 
