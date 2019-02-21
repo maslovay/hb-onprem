@@ -14,17 +14,10 @@ namespace AudioAnalyzeService
     public class AudioAnalyze
     {
         private readonly GoogleConnector _googleConnector;
-
-        private readonly IConfiguration _configuration;
-
-        private readonly IGenericRepository _repository;
         
-        public AudioAnalyze(GoogleConnector googleConnector,
-            IServiceScopeFactory scopeFactory)
+        public AudioAnalyze(GoogleConnector googleConnector)
         {
             _googleConnector = googleConnector;
-            var scope = scopeFactory.CreateScope();
-            _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
         }
 
         public async Task Run(String path)
