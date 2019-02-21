@@ -49,7 +49,7 @@ namespace AudioAnalyzeService
                 await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
                 await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId, true, true);
             }
-            Console.WriteLine("Function Audio STT started");
+            Console.WriteLine("Function Audio STT finished");
         }
         
     }

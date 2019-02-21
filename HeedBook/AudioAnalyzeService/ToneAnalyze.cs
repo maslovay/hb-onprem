@@ -88,7 +88,7 @@ namespace AudioAnalyzeService
             Console.WriteLine("Function Tone analyze finished");
         }
 
-        public static Dictionary<string, double> RecognizeTone(String vacaturiPath, string fileName)
+        public static Dictionary<string, double> RecognizeTone(String vokaturi, string fileName)
         {
             /***********
             WAV files analyzed with:
