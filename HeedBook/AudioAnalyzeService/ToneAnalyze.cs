@@ -49,7 +49,7 @@ namespace AudioAnalyzeService
                 var fileName = currentMetadata["fn"];
                 try
                 {
-                    var result = RecognizeTone(_configuration["VacaturiPath"], fileName);
+                    var result = RecognizeTone(_configuration["VokaturiPath"], fileName);
                     var beginTime = begTime;
                     var endTime = beginTime.AddSeconds(seconds);
                     intervals.Add(new DialogueInterval
@@ -88,7 +88,7 @@ namespace AudioAnalyzeService
             Console.WriteLine("Function Tone analyze finished");
         }
 
-        public static Dictionary<string, double> RecognizeTone(String vokaturi, string fileName)
+        public static Dictionary<string, double> RecognizeTone(String vokaturiPath, string fileName)
         {
             /***********
             WAV files analyzed with:
@@ -103,7 +103,7 @@ namespace AudioAnalyzeService
             Anger 0.001639
             Fear 0.209058*/
             var cmd = new CMDWithOutput();
-            var text = cmd.runCMD(vacaturiPath, fileName);
+            var text = cmd.runCMD(vokaturiPath, fileName);
             try
             {
                 var pattern = @"\n\s?(\w+)\s+([\d\.]+)";
