@@ -185,7 +185,6 @@ namespace HBLib.Utils
             
             dynamic js = JsonConvert.DeserializeObject(jsStr);
             return js.ToString();
-            
         }
 
         private async Task<String> GetApiKey()
