@@ -9,5 +9,5 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/UserService/publish .
 ENTRYPOINT ["dotnet", "UserService.dll"]
-EXPOSE 80
-ENV ASPNETCORE_URLS http://+:80
+EXPOSE 53650
+ENV ASPNETCORE_URLS http://+:53650
