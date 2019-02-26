@@ -21,14 +21,20 @@ namespace DialogueVideoMerge
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
-        public DialogueCreation(IServiceScopeFactory factory,
+        private readonly ElasticSettings _elasticSettings;
+
+        public DialogueCreation(
+            IServiceScopeFactory factory,
             SftpClient client,
-            SftpSettings sftpSettings)
+            SftpSettings sftpSettings,
+            ElasticSettings elasticSettings
+            )
         {
             var scope = factory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
             _sftpClient = client;
             _sftpSettings = sftpSettings;
+            _elasticSettings = elasticSettings;
         }
 
         public static FileFrame LastFrame(FileVideo video, List<FileFrame> frames)
@@ -38,43 +44,42 @@ namespace DialogueVideoMerge
 
         public async Task Run(DialogueCreationRun message)
         {
-            var pathClient = new PathClient();
+            var log = new ElasticClient(_elasticSettings, "{ApplicationUserId}, {DialogueId}", message.ApplicationUserId, message.DialogueId);
 
-            // get language id
-            var languageId = _repository.GetWithInclude<ApplicationUser>(p => 
-                    p.ApplicationUserId == message.ApplicationUserId,
-                    link => link.Company)
-                .First().Company.LanguageId;
-            
-            var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
             try
             {
-                // create ffmpeg
+                var pathClient = new PathClient();
+                var languageId = _repository.GetWithInclude<ApplicationUser>(p => 
+                        p.ApplicationUserId == message.ApplicationUserId,
+                        link => link.Company)
+                    .First().Company.LanguageId;
+                
+                log.Info($"Language id is {languageId}");
+                var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
+            
                 var ffmpeg = new FFMpegWrapper(Path.Combine(pathClient.BinPath(), "ffmpeg.exe"));
 
-                // get info about vide files
                 var fileVideos = await _repository.FindByConditionAsync<FileVideo>(item => 
                         item.ApplicationUserId == message.ApplicationUserId &&
                         item.EndTime >= message.BeginTime &&
                         item.BegTime <= message.EndTime &&
                         item.FileExist);
                 
-                // get info about frames files
                 var fileFrames = await _repository.FindByConditionAsync<FileFrame>(item => 
                     item.ApplicationUserId == message.ApplicationUserId &&
                     item.Time >= message.BeginTime &&
                     item.Time <= message.EndTime &&
                     item.FileExist);
 
-                // to list
                 var videos = fileVideos.OrderBy(p => p.BegTime).ToList();
                 var frames = fileFrames.OrderBy(p => p.Time).ToList();
 
                 if (videos.Count() == 0)
                 {
+                    log.Error("No video files");
                     throw new Exception("No video files");
                 }
-                // commands list
+
                 var commands = new List<FFMpegWrapper.FFmpegCommand>();
                 commands.Add(new FFMpegWrapper.FFmpegCommand{
                     Command = $"-i {Path.Combine(sessionDir, videos[0].FileName)}",
@@ -113,7 +118,7 @@ namespace DialogueVideoMerge
                 }
 
 
-                // download files 
+                log.Info("Downloading all files");
                 foreach (var command in commands.GroupBy(p => p.FileName).Select(p => p.First()))
                 {
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync($"{_sftpSettings.DestinationPath}{command.FileFolder}/{command.FileName}", sessionDir);
@@ -125,21 +130,27 @@ namespace DialogueVideoMerge
                 var outputFn = Path.Combine(sessionDir, basename);
                 var outputTmpFn = Path.Combine(sessionDir, tmpBasename);
 
+                log.Info("Concat videos and frames");
                 var outputDialogueMerge = ffmpeg.ConcatSameCodecsAndFrames(commands, outputTmpFn, sessionDir);
-
                 var sTime = videos.First().BegTime.ToUniversalTime();
+
+                log.Info("Cut result dialogue video");
                 var outputCutDialogue = ffmpeg.CutBlob(outputTmpFn, 
                     outputFn,
                     (message.BeginTime - sTime).ToString(@"hh\:mm\:ss\.ff"), 
                     (message.EndTime - message.BeginTime).ToString(@"hh\:mm\:ss\.ff"));
                 
+                log.Info("Uploading to FTP server result dialogue video");
                 await _sftpClient.UploadAsync(outputTmpFn, "dialoguevideos", $"{message.DialogueId}{extension}");
                 
-                // remove all local files
+                log.Info("Delete all local files");
                 Directory.Delete(sessionDir, true);
+
+                log.Info($"Function finished {_elasticSettings.FunctionName}");
             }
             catch (Exception e)
             {
+                log.Fatal($"Exception occured {e}");
                 Console.WriteLine(e);
             }
         }

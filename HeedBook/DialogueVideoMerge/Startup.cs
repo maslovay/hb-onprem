@@ -42,8 +42,11 @@ namespace DialogueVideoMerge
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddTransient<SftpClient>();
+            services.AddTransient<ElasticClient>();
             services.AddTransient<DialogueCreation>();
             services.AddTransient<DialogueCreationRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
