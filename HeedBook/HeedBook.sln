@@ -55,7 +55,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueStatusCheckerSchedu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoToSoundService", "VideoToSoundService\VideoToSoundService.csproj", "{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueVideoMerge", "DialogueVideoMerge\DialogueVideoMerge.csproj", "{858AD51F-9087-4407-98D6-9937D354C070}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueVideoMergeService", "DialogueVideoMergeService\DialogueVideoMergeService.csproj", "{858AD51F-9087-4407-98D6-9937D354C070}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

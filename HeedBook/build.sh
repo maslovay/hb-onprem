@@ -6,6 +6,7 @@ docker build -t heedbookregistry.azurecr.io/heedbookdev/videotosoundservice:late
 docker build -t heedbookregistry.azurecr.io/heedbookdev/audioanalyzeservice:latest -f AudioAnalyzeService.Dockerfile . &&
 docker build -t heedbookregistry.azurecr.io/heedbookdev/audioanalyzescheduler:latest -f AudioAnalyzeScheduler.Dockerfile . &&
 docker build -t heedbookregistry.azurecr.io/heedbookdev/dialoguestatuscheckerschecduler:latest -f DialogueStatusCheckerScheduler.Dockerfile . &&
+docker build -t heedbookregistry.azurecr.io/heedbookdev/dialoguevideomergeservice:latest -f DialogueVideoMergeService.Dockerfile . &&
 
 docker push heedbookregistry.azurecr.io/heedbookdev/faceanalyzeservice:latest &&
 docker push heedbookregistry.azurecr.io/heedbookdev/userservice:latest && 
@@ -14,4 +15,5 @@ docker push heedbookregistry.azurecr.io/heedbookdev/extractframesfromvideoservic
 docker push heedbookregistry.azurecr.io/heedbookdev/videotosoundservice:latest &&
 docker push heedbookregistry.azurecr.io/heedbookdev/audioanalyzeservice:latest &&
 docker push heedbookregistry.azurecr.io/heedbookdev/dialoguestatuscheckerschecduler:latest &&
-docker push heedbookregistry.azurecr.io/heedbookdev/audioanalyzescheduler:latest
+docker push heedbookregistry.azurecr.io/heedbookdev/audioanalyzescheduler:latest &&
+docker push heedbookregistry.azurecr.io/heedbookdev/dialoguevideomergeservice:latest
