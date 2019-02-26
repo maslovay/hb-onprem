@@ -35,7 +35,7 @@ namespace VideoToSoundService
             var localAudioPath = $"{_sftpSettings.DownloadPath}{dialogueId}.wav";
             var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
             await ffmpeg.VideoToWavAsync(localVideoPath, localAudioPath);
-            var uploadPath = Path.Combine("dialoguevideos", $"{dialogueId}.wav");
+            var uploadPath = Path.Combine("dialogueaudios", $"{dialogueId}.wav");
             if (File.Exists(localAudioPath))
             {
                 await _sftpClient.UploadAsync(localAudioPath, "dialogueaudios", $"{dialogueId}.wav");
@@ -45,7 +45,12 @@ namespace VideoToSoundService
                 {
                     Path = uploadPath
                 };
+                var toneAnalyzeEvent = new ToneAnalyzeRun
+                {
+                    Path = uploadPath
+                };
                 _handler.EventRaised(@event);
+                _handler.EventRaised(toneAnalyzeEvent);
             }
         }
     }

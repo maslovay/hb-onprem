@@ -8,6 +8,8 @@ using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Notifications.Base;
+using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
 namespace DialogueVideoMerge
@@ -22,8 +24,9 @@ namespace DialogueVideoMerge
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly ElasticSettings _elasticSettings;
-
+        private readonly INotificationHandler _notificationHandler;
         public DialogueCreation(
+            INotificationHandler notificationHandler,
             IServiceScopeFactory factory,
             SftpClient client,
             SftpSettings sftpSettings,
@@ -35,6 +38,7 @@ namespace DialogueVideoMerge
             _sftpClient = client;
             _sftpSettings = sftpSettings;
             _elasticSettings = elasticSettings;
+            _notificationHandler = notificationHandler;
         }
 
         public static FileFrame LastFrame(FileVideo video, List<FileFrame> frames)
@@ -141,11 +145,16 @@ namespace DialogueVideoMerge
                     (message.EndTime - message.BeginTime).ToString(@"hh\:mm\:ss\.ff"));
                 
                 log.Info("Uploading to FTP server result dialogue video");
-                await _sftpClient.UploadAsync(outputTmpFn, "dialoguevideos", $"{message.DialogueId}{extension}");
+                var filename = $"{message.DialogueId}{extension}";
+                await _sftpClient.UploadAsync(outputTmpFn, "dialoguevideos", filename);
                 
                 log.Info("Delete all local files");
                 Directory.Delete(sessionDir, true);
-
+                var @event = new VideoToSoundRun
+                {
+                    Path = "dialoguevideos/" + filename
+                };
+                _notificationHandler.EventRaised(@event);
                 log.Info($"Function finished {_elasticSettings.FunctionName}");
             }
             catch (Exception e)

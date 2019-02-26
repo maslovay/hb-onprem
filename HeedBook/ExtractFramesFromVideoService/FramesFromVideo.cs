@@ -44,13 +44,6 @@ namespace ExtractFramesFromVideo
             // Write blob to memory stream 
             using (var memoryStream = await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobName))
             {
-                //await cloudBlockBlob.DownloadToStreamAsync(memStream);
-
-                // START DOWNLOAD SPECIFIED VIDEO FROM STORAGE
-
-                // END DOWNLOAD SPECIFIED VIDEO FROM STORAGE
-
-
                 // Configuration of ffmpeg process that will be created
                 var psi = new ProcessStartInfo("ffmpeg")
                 {
@@ -125,7 +118,7 @@ namespace ExtractFramesFromVideo
                                                            timeGreFrame.Minute.ToString("D2") +
                                                            timeGreFrame.Second.ToString("D2");
                                 
-                                var filename = $"{applicUserId}_{timeGreFrameComplete}_2_test20.jpg";
+                                var filename = $"{applicUserId}_{timeGreFrameComplete}.jpg";
                                 isUpload = false;
 
                                 Console.WriteLine("!!!Stream upload length ---- " + streamForUpload.Length);
@@ -133,7 +126,7 @@ namespace ExtractFramesFromVideo
 
                                 
                                 // START TEST WORK WITH STORAGE
-                                await _client.UploadAsMemoryStreamAsync(streamForUpload, "test/", filename);
+                                await _client.UploadAsMemoryStreamAsync(streamForUpload, "frames/", filename);
                                     
                                 // END TEST WORK WITH STORAGE
 
