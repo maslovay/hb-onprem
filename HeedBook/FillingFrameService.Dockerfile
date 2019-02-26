@@ -9,3 +9,5 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/FillingFrameService/publish .
 ENTRYPOINT ["dotnet", "FillingFrameService.dll"]
+RUN mkdir /opt/download
+RUN chmod -R 777 /opt/download

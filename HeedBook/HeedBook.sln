@@ -26,8 +26,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498-9934-4664-B888-F24989B01059}"
 	ProjectSection(SolutionItems) = preProject
 		AudioAnalyzeScheduler.Dockerfile = AudioAnalyzeScheduler.Dockerfile
-		AuidoAnalyzeService.Dockerfile = AuidoAnalyzeService.Dockerfile
+		AudioAnalyzeService.Dockerfile = AudioAnalyzeService.Dockerfile
 		DialogueStatusCheckerScheduler.Dockerfile = DialogueStatusCheckerScheduler.Dockerfile
+		DialogueVideoMergeService.Dockerfile = DialogueVideoMergeService.Dockerfile
 		ExtractFramesFromVideoService.Dockerfile = ExtractFramesFromVideoService.Dockerfile
 		FaceAnalyzeService.Dockerfile = FaceAnalyzeService.Dockerfile
 		FillingFrameService.Dockerfile = FillingFrameService.Dockerfile

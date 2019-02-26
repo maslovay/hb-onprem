@@ -9,3 +9,5 @@ WORKDIR /app
 COPY --from=build-env /app/DialogueVideoMerge/publish .
 ENTRYPOINT ["dotnet", "DialogueVideoMergeService.dll"]
 RUN apk add ffmpeg
+RUN mkdir /opt/download
+RUN chmod -R 777 /opt/download

@@ -11,3 +11,5 @@ COPY --from=build-env /app/UserService/publish .
 ENTRYPOINT ["dotnet", "UserService.dll"]
 EXPOSE 53650
 ENV ASPNETCORE_URLS http://+:53650
+RUN mkdir /opt/download
+RUN chmod -R 777 /opt/download
