@@ -1,4 +1,3 @@
-using HBLib.Extensions;
 using HBLib.Utils;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
@@ -89,7 +88,7 @@ namespace HBLib.Utils
             {
                 customDimensions[$"prop__{stringArgs[i]}"] = resArgs[i].ToString();
             }
-            js["customDimensions"] = customDimensions.JsonPrint();
+            js["customDimensions"] = JsonConvert.SerializeObject(customDimensions);
             return js;
         }
 

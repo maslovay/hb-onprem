@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Configurations;
 using HBData;
 using HBData.Models;
+using HBData.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -43,6 +44,7 @@ namespace UserService
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
+            services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info

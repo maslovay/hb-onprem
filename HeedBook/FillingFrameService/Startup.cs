@@ -55,7 +55,7 @@ namespace FillingFrameService
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             var handlerService = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            handlerService.Subscribe<DialogueCreationRun, DialogueCreationRunHandler>();
+            handlerService.Subscribe<DialougueCreationRun, DialogueCreationRunHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

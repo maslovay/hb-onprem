@@ -29,6 +29,7 @@ namespace FillingFrameService
 
         public async Task Run(DialogueCreationRun message)
         {
+            System.Console.WriteLine("Function started");
             var frameIds =
                 _repository.Get<FileFrame>().Where(item =>
                                 item.ApplicationUserId == message.ApplicationUserId
@@ -98,6 +99,7 @@ namespace FillingFrameService
                 stream.Close();
                 await Task.WhenAll(insertTasks);
                 await _repository.SaveAsync();
+                System.Console.WriteLine("Function finished");
             }
         }
     }

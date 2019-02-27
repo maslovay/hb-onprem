@@ -127,7 +127,7 @@ namespace ExtractFramesFromVideo
                                 
                                 // START TEST WORK WITH STORAGE
                                 await _client.UploadAsMemoryStreamAsync(streamForUpload, "frames/", filename);
-                                    
+                                System.Console.WriteLine(filename);
                                 // END TEST WORK WITH STORAGE
 
                                 streamForUpload.SetLength(0);

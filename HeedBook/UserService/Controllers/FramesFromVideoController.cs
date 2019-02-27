@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Notifications.Base;
+using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
 namespace UserService.Controllers
@@ -9,17 +10,17 @@ namespace UserService.Controllers
     [ApiController]
     public class FramesFromVideoController: ControllerBase
     {
-        private readonly INotificationHandler _handler;
+        private readonly INotificationPublisher _publisher;
         
-        public FramesFromVideoController(INotificationHandler handler)
+        public FramesFromVideoController(INotificationPublisher publisher)
         {
-            _handler = handler;
+            _publisher = publisher;
         }
         
         [HttpPost]
         public async Task CutVideoToFrames([FromBody] FramesFromVideoRun message)
         {
-            _handler.EventRaised(message);
+            _publisher.Publish(message);
         }
     }
 }

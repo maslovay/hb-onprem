@@ -36,10 +36,15 @@ namespace FaceAnalyzeService
                 {
                     var byteArray = await File.ReadAllBytesAsync(localPath);
                     var base64String = Convert.ToBase64String(byteArray);
+                    
                     var emotions = await _client.CreateFaceEmotion(base64String);
-
+                    foreach(var emotion in emotions){
+                        System.Console.WriteLine(emotion.Anger);
+                    }
                     var attributes = await _client.CreateFaceAttributes(base64String);
-
+                    foreach(var attribute in attributes){
+                        System.Console.WriteLine(attribute.Age);
+                    }
                     var fileName = localPath.Split('/').Last();
 
                     var fileFrame =

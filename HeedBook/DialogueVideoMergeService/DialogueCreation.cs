@@ -52,12 +52,14 @@ namespace DialogueVideoMerge
 
             try
             {
-                var pathClient = new PathClient();
+
                 var languageId = _repository.GetWithInclude<ApplicationUser>(p => 
-                        p.ApplicationUserId == message.ApplicationUserId,
-                        link => link.Company)
-                    .First().Company.LanguageId;
-                
+                            p.ApplicationUserId == message.ApplicationUserId,
+                            link => link.Company)
+                        .First().Company.LanguageId;
+
+                var pathClient = new PathClient();
+              
                 log.Info($"Language id is {languageId}");
                 var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
             
