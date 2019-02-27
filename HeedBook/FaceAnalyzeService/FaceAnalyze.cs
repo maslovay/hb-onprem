@@ -52,14 +52,14 @@ namespace FaceAnalyzeService
                         var frameEmotion = new FrameEmotion
                         {
                             FileFrameId = fileFrame.FileFrameId,
-                            AngerShare = emotions.Sum(emotion => emotion.Anger) / emotionsCount,
-                            ContemptShare = emotions.Sum(emotion => emotion.Contempt) / emotionsCount,
-                            DisgustShare = emotions.Sum(emotion => emotion.Disgust) / emotionsCount,
-                            FearShare = emotions.Sum(emotion => emotion.Fear) / emotionsCount,
-                            HappinessShare = emotions.Sum(emotion => emotion.Fear) / emotionsCount,
-                            NeutralShare = emotions.Sum(emotion => emotion.Neutral) / emotionsCount,
-                            SadnessShare = emotions.Sum(emotion => emotion.Sadness) / emotionsCount,
-                            SurpriseShare = emotions.Sum(emotion => emotion.Sadness) / emotionsCount
+                            AngerShare = emotions.Average(emotion => emotion.Anger),
+                            ContemptShare = emotions.Average(emotion => emotion.Contempt),
+                            DisgustShare = emotions.Average(emotion => emotion.Disgust),
+                            FearShare = emotions.Average(emotion => emotion.Fear),
+                            HappinessShare = emotions.Average(emotion => emotion.Fear),
+                            NeutralShare = emotions.Average(emotion => emotion.Neutral),
+                            SadnessShare = emotions.Average(emotion => emotion.Sadness),
+                            SurpriseShare = emotions.Average(emotion => emotion.Sadness)
                         };
                         var tasks = attributes.Select(faceAttributeResult => new FrameAttribute
                         {

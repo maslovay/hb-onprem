@@ -10,5 +10,7 @@ WORKDIR /app
 COPY --from=build-env /app/VideoToSoundService/publish .
 ENTRYPOINT ["dotnet", "VideoToSoundService.dll"]
 RUN apk add ffmpeg
+RUN mkdir /opt/
+RUN chmod -R 777 /opt/
 RUN mkdir /opt/download
 RUN chmod -R 777 /opt/download

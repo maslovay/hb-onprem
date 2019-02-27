@@ -9,5 +9,7 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/FaceAnalyzeService/publish .
 ENTRYPOINT ["dotnet", "FaceAnalyzeService.dll"]
+RUN mkdir /opt/
+RUN chmod -R 777 /opt/
 RUN mkdir /opt/download
 RUN chmod -R 777 /opt/download

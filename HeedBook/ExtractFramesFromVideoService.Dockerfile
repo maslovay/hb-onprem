@@ -9,5 +9,7 @@ WORKDIR /app
 COPY --from=build-env /app/ExtractFramesFromVideoService/publish .
 ENTRYPOINT ["dotnet", "ExtractFramesFromVideoService.dll"]
 RUN apk add ffmpeg
+RUN mkdir /opt/
+RUN chmod -R 777 /opt/
 RUN mkdir /opt/download
 RUN chmod -R 777 /opt/download
