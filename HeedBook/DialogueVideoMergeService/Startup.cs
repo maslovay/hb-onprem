@@ -1,26 +1,20 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Configurations;
-using DialogueVideoMerge.Handler;
+using DialogueVideoMergeService.Handler;
 using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
-namespace DialogueVideoMerge
+namespace DialogueVideoMergeService
 {
     public class Startup
     {
@@ -47,8 +41,8 @@ namespace DialogueVideoMerge
             services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddTransient<SftpClient>();
             services.AddTransient<ElasticClient>();
-            services.AddTransient<DialogueCreation>();
-            services.AddTransient<DialogueCreationRunHandler>();
+            services.AddTransient<DialogueVideoMerge>();
+            services.AddTransient<DialogueVideoMergeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -58,7 +52,7 @@ namespace DialogueVideoMerge
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             var handlerService = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            handlerService.Subscribe<DialogueCreationRun, DialogueCreationRunHandler>();
+            handlerService.Subscribe<DialogueVideoMergeRun, DialogueVideoMergeRunHandler>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

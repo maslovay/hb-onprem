@@ -26,22 +26,29 @@ namespace UserService.Controllers
         [HttpPost("dialogueCreation")]
         public async Task DialogueCreation([FromBody] DialogueCreationRun message)
         {
-            // var languageId = _genericRepository.GetWithInclude<ApplicationUser>(p => 
-            //         p.ApplicationUserId == message.ApplicationUserId,
-            //         link => link.Company)
-            //     .First().Company.LanguageId;
-            // var dialogue = new Dialogue
-            // {
-            //     DialogueId = message.DialogueId,
-            //     ApplicationUserId = message.ApplicationUserId,
-            //     BegTime = message.BeginTime,
-            //     EndTime = message.EndTime,
-            //     CreationTime = DateTime.UtcNow,
-            //     LanguageId = languageId
-            // };
-            // _genericRepository.Create(dialogue);
-            // _genericRepository.Save();
+            var languageId = _genericRepository.GetWithInclude<ApplicationUser>(p => 
+                    p.ApplicationUserId == message.ApplicationUserId,
+                    link => link.Company)
+                .First().Company.LanguageId;
+            var dialogue = new Dialogue
+            {
+                DialogueId = message.DialogueId,
+                ApplicationUserId = message.ApplicationUserId,
+                BegTime = message.BeginTime,
+                EndTime = message.EndTime,
+                CreationTime = DateTime.UtcNow,
+                LanguageId = languageId
+            };
+            _genericRepository.Create(dialogue);
+            _genericRepository.Save();
             System.Console.WriteLine("start send message to rabbit");
+            var dialogueVideoMerge = new DialogueVideoMergeRun
+            {
+                ApplicationUserId = message.ApplicationUserId,
+                DialogueId = message.DialogueId,
+                BeginTime = message.BeginTime,
+                EndTime = message.EndTime
+            };
             _publisher.Publish(message);
             System.Console.WriteLine("finished");
         }

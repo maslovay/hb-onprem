@@ -2,18 +2,18 @@ using System.Threading.Tasks;
 using RabbitMqEventBus.Base;
 using RabbitMqEventBus.Events;
 
-namespace DialogueVideoMerge.Handler
+namespace DialogueVideoMergeService.Handler
 {
-    public class DialogueCreationRunHandler: IIntegrationEventHandler<DialogueCreationRun>
+    public class DialogueVideoMergeRunHandler: IIntegrationEventHandler<DialogueVideoMergeRun>
     {
-        private readonly DialogueCreation _dialogueCreation;
+        private readonly DialogueVideoMerge _dialogueCreation;
 
-        public DialogueCreationRunHandler(DialogueCreation dialogueCreation)
+        public DialogueVideoMergeRunHandler(DialogueVideoMerge dialogueCreation)
         {
             _dialogueCreation = dialogueCreation;
         }
     
-        public async Task Handle(DialogueCreationRun @event)
+        public async Task Handle(DialogueVideoMergeRun @event)
         {
             await _dialogueCreation.Run(@event);
         }

@@ -9,12 +9,11 @@ using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Notifications.Base;
-using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
-namespace DialogueVideoMerge
+namespace DialogueVideoMergeService
 {
-    public class DialogueCreation
+    public class DialogueVideoMerge
     {
         private const String VideoFolder = "videos";
         private const String FrameFolder = "frames";
@@ -25,7 +24,7 @@ namespace DialogueVideoMerge
         private readonly SftpSettings _sftpSettings;
         private readonly ElasticSettings _elasticSettings;
         private readonly INotificationHandler _notificationHandler;
-        public DialogueCreation(
+        public DialogueVideoMerge(
             INotificationHandler notificationHandler,
             IServiceScopeFactory factory,
             SftpClient client,
@@ -46,7 +45,7 @@ namespace DialogueVideoMerge
             return frames.Where(p => p.Time >= video.BegTime && p.Time <= video.EndTime).OrderByDescending(p => p.Time).FirstOrDefault();
         }
 
-        public async Task Run(DialogueCreationRun message)
+        public async Task Run(DialogueVideoMergeRun message)
         {
             var log = new ElasticClient(_elasticSettings, "{ApplicationUserId}, {DialogueId}", message.ApplicationUserId, message.DialogueId);
 

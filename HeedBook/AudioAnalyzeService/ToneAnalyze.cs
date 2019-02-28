@@ -7,7 +7,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
-using HBLib.AzureFunctions;
 using HBLib.Utils;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Configuration;

@@ -22,7 +22,6 @@ namespace RabbitMqEventBus
         private IEventBusSubscriptionsManager _subsManager;
         private IServiceProvider _serviceProvider;
         private IModel _consumerChannel;
-        private string _queueName = "Notifications";
         private readonly int _retryCount;
         public NotificationPublisher(IRabbitMqPersistentConnection persistentConnection,
             IEventBusSubscriptionsManager subsManager,
@@ -33,7 +32,6 @@ namespace RabbitMqEventBus
             _subsManager = subsManager;
             _retryCount = retryCount;
             _serviceProvider = serviceProvider;
-            _consumerChannel = CreateConsumerChannel();
         }
 
         public void Publish(IntegrationEvent @event)
@@ -62,7 +60,7 @@ namespace RabbitMqEventBus
                 {
                     var properties = channel.CreateBasicProperties();
                     properties.DeliveryMode = 2; // persistent
-
+                    
                     channel.BasicPublish(exchange: BROKER_NAME,
                                      routingKey: eventName,
                                      mandatory: true,
@@ -97,12 +95,7 @@ namespace RabbitMqEventBus
                     _persistentConnection.TryConnect();
                 }
 
-                using (var channel = _persistentConnection.CreateModel())
-                {
-                    channel.QueueBind(queue: _queueName,
-                                      exchange: BROKER_NAME,
-                                      routingKey: eventName);
-                }
+                _consumerChannel = CreateConsumerChannel(eventName);
             }
         }
 
@@ -130,7 +123,7 @@ namespace RabbitMqEventBus
             _subsManager.Clear();
         }
 
-        private IModel CreateConsumerChannel()
+        private IModel CreateConsumerChannel(String eventName)
         {
             if (!_persistentConnection.IsConnected)
             {
@@ -142,32 +135,36 @@ namespace RabbitMqEventBus
             channel.ExchangeDeclare(exchange: BROKER_NAME,
                                  type: "direct");
 
-            channel.QueueDeclare(queue: _queueName,
-                                 durable: true,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
-
 
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += async (model, ea) =>
             {
-                var eventName = ea.RoutingKey;
+                var @event = ea.RoutingKey;
                 var message = Encoding.UTF8.GetString(ea.Body);
 
-                await ProcessEvent(eventName, message);
+                await ProcessEvent(@event, message);
 
                 channel.BasicAck(ea.DeliveryTag, multiple: false);
             };
-
-            channel.BasicConsume(queue: _queueName,
+            
+            channel.QueueDeclare(queue: eventName,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
+            
+            channel.QueueBind(queue: eventName,
+                exchange: BROKER_NAME,
+                routingKey: eventName);
+            
+            channel.BasicConsume(queue: eventName,
                                  autoAck: false,
                                  consumer: consumer);
 
             channel.CallbackException += (sender, ea) =>
             {
                 _consumerChannel.Dispose();
-                _consumerChannel = CreateConsumerChannel();
+                _consumerChannel = CreateConsumerChannel(eventName);
             };
             return channel;
         }
