@@ -53,7 +53,7 @@ namespace DialogueVideoMergeService
             {
 
                 var languageId = _repository.GetWithInclude<ApplicationUser>(p => 
-                            p.ApplicationUserId == message.ApplicationUserId,
+                            p.Id == message.ApplicationUserId,
                             link => link.Company)
                         .First().Company.LanguageId;
 

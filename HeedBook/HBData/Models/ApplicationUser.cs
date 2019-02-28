@@ -16,7 +16,7 @@ namespace HBData.Models
         /// User system id
         /// </summary>
         [Key]
-		public Guid ApplicationUserId { get; set; }
+		public Guid Id { get; set; }
 		
         /// <summary>
         /// User full name
@@ -63,7 +63,7 @@ namespace HBData.Models
         /// <summary>
         /// User worker type id (position)
         /// </summary>
-        public Guid? WorkerTypeId { get; set; }
+        public int? WorkerTypeId { get; set; }
         public WorkerType WorkerType { get; set; }
 
         /// <summary>

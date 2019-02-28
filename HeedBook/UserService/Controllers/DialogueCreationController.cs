@@ -27,7 +27,7 @@ namespace UserService.Controllers
         public async Task DialogueCreation([FromBody] DialogueCreationRun message)
         {
             var languageId = _genericRepository.GetWithInclude<ApplicationUser>(p => 
-                    p.ApplicationUserId == message.ApplicationUserId,
+                    p.Id == message.ApplicationUserId,
                     link => link.Company)
                 .First().Company.LanguageId;
             var dialogue = new Dialogue
