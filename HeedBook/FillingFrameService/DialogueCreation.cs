@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,7 +8,9 @@ using HBData.Models;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using HBMLHttpClient.Model;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using RabbitMqEventBus.Events;
 
 namespace FillingFrameService
@@ -92,8 +95,19 @@ namespace FillingFrameService
 
                 var localPath =
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + emotions.First().FileFrame.FileName);
-
-                var stream = FaceDetection.CreateAvatar(localPath);
+                var rectangle = attributes.Where(item => item.FileFrameId == emotions.First().FileFrameId)
+                    .Select(item =>
+                    {
+                        var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(item.Value);
+                        return new Rectangle
+                        {
+                            Height = faceRectangle.Height,
+                            Width = faceRectangle.Width,
+                            X = faceRectangle.Top,
+                            Y = faceRectangle.Left
+                        };
+                    }).First();
+                var stream = FaceDetection.CreateAvatar(localPath, rectangle);
                 stream.Seek(0, SeekOrigin.Begin);
                 await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
                 stream.Close();

@@ -1,8 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-
-namespace UserOperations.Models
+namespace HBData.Models
 {
     /// <summary>
     /// Phrase number of each type in dialogue

@@ -1,12 +1,8 @@
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
-namespace UserOperations.Models
+namespace HBData.Models
 {
     /// <summary>
     /// Content for company campaign
