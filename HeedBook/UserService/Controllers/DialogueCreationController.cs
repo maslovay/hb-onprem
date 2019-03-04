@@ -49,6 +49,7 @@ namespace UserService.Controllers
                 BeginTime = message.BeginTime,
                 EndTime = message.EndTime
             };
+            _publisher.Publish(dialogueVideoMerge);
             _publisher.Publish(message);
             System.Console.WriteLine("finished");
         }
