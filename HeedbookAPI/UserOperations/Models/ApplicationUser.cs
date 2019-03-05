@@ -16,7 +16,13 @@ namespace UserOperations.Models
     
     public class ApplicationUser : IdentityUser<Guid>
     {
-        //полное имя сотрудника
+        [Key]
+        [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
+        public override Guid Id
+        {
+            get { return base.Id; }
+            set { base.Id = value; }
+        }
         public string FullName { get; set; }
 
         //ссылка на аватар сотрудника

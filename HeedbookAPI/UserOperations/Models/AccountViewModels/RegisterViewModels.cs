@@ -31,7 +31,7 @@ namespace UserOperations.Models.AccountViewModels
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
 
-         public string CompanyName;
+        public string CompanyName;
         public int LanguageId;
         public Guid CountryId;
         public Guid CompanyIndustryId; 
