@@ -31,7 +31,7 @@ namespace HBData.Repository
         {
             return await _context.Set<T>().Where(predicate).FirstOrDefaultAsync();
         }
-
+        
         public async Task<IEnumerable<T>> FindByConditionAsync<T>(Expression<Func<T, Boolean>> predicate) where T : class
         {
             return await _context.Set<T>().Where(predicate).ToListAsync();

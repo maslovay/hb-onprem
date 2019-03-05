@@ -29,5 +29,9 @@
     <Content Include="GoogleFilePublic.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Remove="OpenVokaWavMean-3-0-win64.exe" />
+    <Content Include="OpenVokaWavMean-3-0-win64.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

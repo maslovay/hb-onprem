@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -32,6 +33,8 @@ namespace AudioAnalyzeService
             _repository = provider.GetRequiredService<IGenericRepository>();
         }
 
+        
+
         public async Task Run(String path)
         {
             Console.WriteLine("Function Tone analyze started");
@@ -48,7 +51,12 @@ namespace AudioAnalyzeService
                 var fileName = currentMetadata["fn"];
                 try
                 {
+                    System.Console.WriteLine(fileName);
+                    System.Console.WriteLine(_configuration["VokaturiPath"]);
                     var result = RecognizeTone(_configuration["VokaturiPath"], fileName);
+                    if(result.Count <= 0){
+                        continue;
+                    }
                     var beginTime = begTime;
                     var endTime = beginTime.AddSeconds(seconds);
                     intervals.Add(new DialogueInterval
@@ -64,6 +72,7 @@ namespace AudioAnalyzeService
                         SadnessTone = result["Sadness"]
                     });
                     begTime = endTime;
+                    File.Delete(fileName);
                 }
                 catch (Exception e)
                 {
@@ -87,6 +96,15 @@ namespace AudioAnalyzeService
             Console.WriteLine("Function Tone analyze finished");
         }
 
+        private static void OutputHandler(object sender, DataReceivedEventArgs e)
+        {
+            //The data we want is in e.Data, you must be careful of null strings
+            var strMessage = e.Data;
+            if (output != null && strMessage != null && strMessage.Length > 0)
+                output += string.Concat(strMessage, "\n");
+        }
+        private static string output = "";
+
         public static Dictionary<string, double> RecognizeTone(String vokaturiPath, string fileName)
         {
             /***********
@@ -101,8 +119,26 @@ namespace AudioAnalyzeService
             Sadness 0.174298
             Anger 0.001639
             Fear 0.209058*/
-            var cmd = new CMDWithOutput();
-            var text = cmd.runCMD(vokaturiPath, fileName);
+            var psi = new ProcessStartInfo("wine64")
+                {
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    Arguments = $"{vokaturiPath} {fileName}"
+                };
+            using(var proc = new Process {StartInfo = psi}){
+                proc.EnableRaisingEvents = true;
+                proc.OutputDataReceived += OutputHandler;
+                proc.Start();
+                proc.BeginOutputReadLine();
+                proc.WaitForExit();
+            }
+            
+            var text = output;
+            if(text.Split(' ').Contains("sonorancy")){
+                System.Console.WriteLine("not enought sonorancy");
+            }
             try
             {
                 var pattern = @"\n\s?(\w+)\s+([\d\.]+)";
@@ -123,6 +159,9 @@ namespace AudioAnalyzeService
                     var value = match.Groups[2].ToString();
                     result[emotion] = double.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
+                System.Console.WriteLine(text);
+                
+                output = "";
                 return result;
             }
             catch
