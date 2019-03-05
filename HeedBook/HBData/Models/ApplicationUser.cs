@@ -1,79 +1,62 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 namespace HBData.Models
 {
-   /// <summary>
-   /// The Application user class 
-   /// Contains parameters of all application users
-   /// </summary>
-    public class ApplicationUser 
+    /// <summary>
+    /// The Application user class 
+    /// Contains parameters of all application users
+    /// </summary>
+    
+    public class ApplicationUser : IdentityUser<Guid>
     {
-        /// <summary>
-        /// User system id
-        /// </summary>
         [Key]
-		public Guid Id { get; set; }
-		
-        /// <summary>
-        /// User full name
-        /// </summary>
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public override Guid Id
+        {
+            get { return base.Id; }
+            set { base.Id = value; }
+        }
         public string FullName { get; set; }
 
-        /// <summary>
-        /// Filename of avatar on FTP server
-        /// </summary>
+        //ссылка на аватар сотрудника
         public string Avatar { get; set; }
 
-        /// <summary>
-        /// User email
-        /// </summary>
-        public string Email { get; set; }
-
-        /// <summary>
-        /// User id assigned by company
-        /// </summary>
+        //id сотрудника в компании
         public string EmpoyeeId { get; set; }
 
-        /// <summary>
-        /// Creation date of user profile
-        /// </summary>
+        //дата создания
         public DateTime CreationDate { get; set; }
 
-        /// <summary>
-        /// User company id
-        /// </summary>
+        //компания пользователя
         public Guid? CompanyId { get; set; }
         public Company Company { get; set; }
 
-        /// <summary>
-        /// User status
-        /// </summary>
+        //статус пользователя
         public int? StatusId { get; set; }
         public Status Status { get; set; }
 
-        /// <summary>
-        /// User id in OneSignal
-        /// </summary>        
+        //id пользователей в OneSignal
         public string OneSignalId { get; set; }
 
-        /// <summary>
-        /// User worker type id (position)
-        /// </summary>
-        public int? WorkerTypeId { get; set; }
+        //id position
+        
+        public Guid? WorkerTypeId { get; set; }
+        [ForeignKey("WorkerTypeId")]
         public WorkerType WorkerType { get; set; }
 
-        /// <summary>
-        /// Dialogue link
-        /// </summary>
-        public ICollection<Dialogue> Dialogue { get; set; }
+        //links
 
-        /// <summary>
-        /// Session link
-        /// </summary>
-        public ICollection<Session> Session { get; set; }
+        //роли сотрудника
+        public  ICollection<ApplicationUserRole> UserRoles { get; set; }
+
+        //диалоги сотрудника
+        public  ICollection<Dialogue> Dialogue { get; set; }
+
+        //сессии
+        public  ICollection<Session> Session { get; set; }
     }
 }

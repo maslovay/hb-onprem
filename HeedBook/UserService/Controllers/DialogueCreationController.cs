@@ -22,7 +22,7 @@ namespace UserService.Controllers
             _publisher = publisher;
             _genericRepository = genericRepository;
         }
-
+        
         [HttpPost("dialogueCreation")]
         public async Task DialogueCreation([FromBody] DialogueCreationRun message)
         {
@@ -30,6 +30,7 @@ namespace UserService.Controllers
                     p.Id == message.ApplicationUserId,
                     link => link.Company)
                 .First().Company.LanguageId;
+            System.Console.WriteLine(languageId);
             var dialogue = new Dialogue
             {
                 DialogueId = message.DialogueId,

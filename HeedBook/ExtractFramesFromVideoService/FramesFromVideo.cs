@@ -140,7 +140,7 @@ namespace ExtractFramesFromVideo
                                     FaceLength = 0,
                                     FileContainer = "frames",
                                     FileExist = true,
-                                    FileName = $"{applicUserId}_{timeGreFrameComplete}_2_test20.jpg",
+                                    FileName = filename,
                                     IsFacePresent = false,
                                     StatusId = 1,
                                     StatusNNId = 1,

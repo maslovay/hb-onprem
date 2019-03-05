@@ -70,7 +70,7 @@ namespace FaceAnalyzeService
                         .ToList();
 
                     tasks.Add(_repository.CreateAsync(frameEmotion));
-
+                    Console.WriteLine("fileframe not null. Calculate average and insert frame emotion and frame attribute");
                     await Task.WhenAll(
                         tasks);
                     await _repository.SaveAsync();
