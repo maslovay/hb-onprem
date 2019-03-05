@@ -9,6 +9,7 @@ using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Notifications.Base;
+using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
 namespace DialogueVideoMergeService
@@ -23,9 +24,9 @@ namespace DialogueVideoMergeService
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly ElasticSettings _elasticSettings;
-        private readonly INotificationHandler _notificationHandler;
+        private readonly INotificationPublisher _notificationPublisher;
         public DialogueVideoMerge(
-            INotificationHandler notificationHandler,
+            INotificationPublisher notificationPublisher,
             IServiceScopeFactory factory,
             SftpClient client,
             SftpSettings sftpSettings,
@@ -37,7 +38,7 @@ namespace DialogueVideoMergeService
             _sftpClient = client;
             _sftpSettings = sftpSettings;
             _elasticSettings = elasticSettings;
-            _notificationHandler = notificationHandler;
+            _notificationPublisher = notificationPublisher;
         }
 
         public static FileFrame LastFrame(FileVideo video, List<FileFrame> frames)
@@ -155,7 +156,7 @@ namespace DialogueVideoMergeService
                 {
                     Path = "dialoguevideos/" + filename
                 };
-                _notificationHandler.EventRaised(@event);
+                _notificationPublisher.Publish(@event);
                 log.Info($"Function finished {_elasticSettings.FunctionName}");
             }
             catch (Exception e)

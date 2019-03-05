@@ -6,6 +6,7 @@ using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.Configuration;
 using Notifications.Base;
+using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
 namespace VideoToSoundService
@@ -14,17 +15,17 @@ namespace VideoToSoundService
     {
         private readonly IConfiguration _configuration;
         private readonly SftpClient _sftpClient;
-        private readonly INotificationHandler _handler;
+        private readonly INotificationPublisher _publisher;
         private readonly SftpSettings _sftpSettings;
 
         public VideoToSound(IConfiguration configuration, 
             SftpClient sftpClient,
-            INotificationHandler handler,
+            INotificationPublisher publisher,
             SftpSettings sftpSettings)
         {
             _configuration = configuration;
             _sftpClient = sftpClient;
-            _handler = handler;
+            _publisher = publisher;
             _sftpSettings = sftpSettings;
         }
         
@@ -49,8 +50,9 @@ namespace VideoToSoundService
                 {
                     Path = uploadPath
                 };
-                _handler.EventRaised(@event);
-                _handler.EventRaised(toneAnalyzeEvent);
+                _publisher.Publish(@event);
+                _publisher.Publish(toneAnalyzeEvent);
+                System.Console.WriteLine("message sended to rabbit. Wait for tone analyze and audio analyze");
             }
         }
     }

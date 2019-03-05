@@ -53,6 +53,7 @@ namespace DialogueVideoMergeService
         {
             var handlerService = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             handlerService.Subscribe<DialogueVideoMergeRun, DialogueVideoMergeRunHandler>();
+            
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

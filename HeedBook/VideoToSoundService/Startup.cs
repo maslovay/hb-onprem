@@ -39,7 +39,6 @@ namespace VideoToSoundService
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            var handler = app.ApplicationServices.GetRequiredService<INotificationHandler>();
             var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             publisher.Subscribe<VideoToSoundRun, VideoToSoundRunHandler>();
             if (env.IsDevelopment())
