@@ -21,7 +21,10 @@ namespace UserOperations.Repository
 
         IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, object>>[] children) 
             where T : class;
-        
+
+        T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, object>>[] children) 
+            where T : class;
+
         Task<Dictionary<TKey, TElement>> FindByConditionAsyncToDictionary<T, TKey, TElement>(
             Expression<Func<T, Boolean>> expression, Func<T, TKey> keySelector,
             Func<T, TElement> elementSelector)
@@ -48,6 +51,7 @@ namespace UserOperations.Repository
             where T : class;
 
         void Save();
+        void Dispose();
         Task SaveAsync();
     }
 }

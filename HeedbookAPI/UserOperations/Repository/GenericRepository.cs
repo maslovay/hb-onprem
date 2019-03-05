@@ -50,6 +50,13 @@ namespace UserOperations.Repository
             return dbSet;
         }
 
+        public T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, object>>[] children) where T : class
+        {
+            var dbSet = _context.Set<T>();
+            children.ToList().ForEach(x=>dbSet.Where(predicate).Include(x).Load());
+            return dbSet.First();
+        }
+
         public void BulkInsert<T>(IEnumerable<T> entities) where T : class
         {
             _context.Set<T>().AddRange(entities);
@@ -125,6 +132,11 @@ namespace UserOperations.Repository
         public void Save()
         {
             _context.SaveChanges();
+        }
+
+        public void Dispose()
+        {
+            _context.Dispose();
         }
 
         public async Task SaveAsync()

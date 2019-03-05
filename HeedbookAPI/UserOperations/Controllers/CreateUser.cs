@@ -24,6 +24,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using System.Net.Http;
 using System.Net;
+using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -134,9 +135,25 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("test")]
-        public string Test([FromBody] UserRegister message)
+        public string Test()
         {
+            try
+            {
+            var languageIds = _repository.GetWithInclude<ApplicationUser>(p => 
+                    p.Id == Guid.Parse("f3bc2965-cc13-4620-9c67-6b53e5126bab"),
+                    link => link.Company).ToList();
+            
+            Console.WriteLine($"{languageIds.Count()}");
+            Console.WriteLine($"{JsonConvert.SerializeObject(languageIds)}");
+            var languageId = languageIds.First().Company.LanguageId;
+            Console.WriteLine($"{languageId}");
+
             return "OK";
+            }
+            catch (Exception e)
+            {
+                return e.ToString();
+            }
         }
     }
 }

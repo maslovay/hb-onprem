@@ -1,11 +1,14 @@
 ﻿using System;
 using UserOperations.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 
 namespace UserOperations.Data
 {
 
-    public class RecordsContextWeb1: DbContext
+    public class RecordsContextWeb1: IdentityDbContext<ApplicationUser, ApplicationRole, Guid, IdentityUserClaim<Guid>, ApplicationUserRole, IdentityUserLogin<Guid>,IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
     {
         public RecordsContextWeb1(DbContextOptions<RecordsContextWeb1> options): base(options)
         {
@@ -20,6 +23,33 @@ namespace UserOperations.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<ApplicationUser>(i => {
+                i.ToTable("AspNetUsers");
+                i.HasKey(x => x.Id);
+                i.HasMany(x => x.UserRoles)
+                    .WithOne()
+                    .HasForeignKey(p => p.UserId).IsRequired();
+            });
+            builder.Entity<ApplicationRole>(i => {
+                i.ToTable("AspNetRole");
+                i.HasKey(x => x.Id);
+                i.HasMany(x => x.UserRoles).WithOne().HasForeignKey(p => p.RoleId).IsRequired();
+                
+            });
+            
+            builder.Entity<IdentityUserLogin<Guid>>(i => {
+                i.ToTable("AspNetUserLogins");
+                i.HasKey(x => new { x.ProviderKey, x.LoginProvider });
+            });
+            builder.Entity<IdentityRoleClaim<Guid>>(i => {
+                i.ToTable("AspNetRoleClaims");
+                i.HasKey(x => x.Id);
+            });
+            builder.Entity<IdentityUserClaim<Guid>>(i => {
+                i.ToTable("AspNetUserClaims");
+                i.HasKey(x => x.Id);
+            });
             builder.Entity<ApplicationUserRole>(userRole =>
             {
                 userRole.HasKey(ur => new { ur.UserId, ur.RoleId });
@@ -32,7 +62,10 @@ namespace UserOperations.Data
                 userRole.HasOne(ur => ur.User)
                     .WithMany(r => r.UserRoles)
                     .HasForeignKey(ur => ur.UserId)
-                    .IsRequired();
+                    .IsRequired()
+                    //.HasPrincipalKey(p => p.Id)
+                    ;
+                userRole.ToTable("AspNetUserRoles");
             });
         }
 
