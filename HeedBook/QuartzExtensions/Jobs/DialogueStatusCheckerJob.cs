@@ -20,7 +20,7 @@ namespace QuartzExtensions.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var dialogues = await _repository.FindByConditionAsync<Dialogue>(item => item.StatusId == 1);
+            var dialogues = await _repository.FindByConditionAsync<Dialogue>(item => item.StatusId == 6);
             if (!dialogues.Any())
             {
                 return;
@@ -30,7 +30,7 @@ namespace QuartzExtensions.Jobs
                 var dialogueFrame = _repository
                     .Get<DialogueFrame>().Any(item => item.DialogueId == dialogue.DialogueId);
                 var dialogueAudio = _repository
-                    .Get<DialogueFrame>().Any(item => item.DialogueId == dialogue.DialogueId);
+                    .Get<DialogueAudio>().Any(item => item.DialogueId == dialogue.DialogueId);
                 var dialogueInterval = _repository
                     .Get<DialogueInterval>().Any(item => item.DialogueId == dialogue.DialogueId);
                 var dialogueVisual = _repository
@@ -41,7 +41,7 @@ namespace QuartzExtensions.Jobs
                 if (dialogueFrame && dialogueAudio && dialogueInterval && dialogueVisual &&
                     dialogueClientProfiles)
                 {
-                    dialogue.StatusId = 2;
+                    dialogue.StatusId = 7;
                     _repository.Update(dialogue);
                 }
                 else

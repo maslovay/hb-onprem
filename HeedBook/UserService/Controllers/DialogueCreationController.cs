@@ -22,7 +22,7 @@ namespace UserService.Controllers
             _publisher = publisher;
             _genericRepository = genericRepository;
         }
-        
+
         [HttpPost("dialogueCreation")]
         public async Task DialogueCreation([FromBody] DialogueCreationRun message)
         {
@@ -38,7 +38,8 @@ namespace UserService.Controllers
                 BegTime = message.BeginTime,
                 EndTime = message.EndTime,
                 CreationTime = DateTime.UtcNow,
-                LanguageId = languageId
+                LanguageId = languageId,
+                StatusId = 6
             };
             _genericRepository.Create(dialogue);
             _genericRepository.Save();

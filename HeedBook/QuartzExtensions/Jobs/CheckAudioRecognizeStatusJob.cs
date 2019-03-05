@@ -30,7 +30,7 @@ namespace QuartzExtensions.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 1);
+            var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 6);
             var tasks = audios.Select(item =>
             {
                 return Task.Run(async () =>
@@ -42,6 +42,7 @@ namespace QuartzExtensions.Jobs
                          //8 - error
                          item.StatusId = 8;
                          _repository.Update(item);
+
                      }
                      else
                      {
@@ -63,7 +64,7 @@ namespace QuartzExtensions.Jobs
                                  PhraseTypeId = phraseResult.PhraseTypeId
                              });
                          }
-
+                         item.StatusId = 7;
                          await _repository.CreateAsync(new DialogueWord
                          {
                              DialogueId = item.DialogueId,
