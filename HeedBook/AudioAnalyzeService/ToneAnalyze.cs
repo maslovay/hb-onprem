@@ -1,4 +1,9 @@
-﻿using System;
+﻿using HBData.Models;
+using HBData.Repository;
+using HBLib.Utils;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -6,13 +11,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using HBData.Models;
-using HBData.Repository;
-using HBLib.Utils;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace AudioAnalyzeService
 {
@@ -33,13 +31,13 @@ namespace AudioAnalyzeService
             _repository = provider.GetRequiredService<IGenericRepository>();
         }
 
-        
+
 
         public async Task Run(String path)
         {
             Console.WriteLine("Function Tone analyze started");
             var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
-            var dialogueId = Guid.Parse((ReadOnlySpan<char>) Path.GetFileNameWithoutExtension(path.Split('/').Last()));
+            var dialogueId = Guid.Parse((ReadOnlySpan<char>)Path.GetFileNameWithoutExtension(path.Split('/').Last()));
             var seconds = 3;
             var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
             var metadata = ffmpeg.SplitBySeconds(localPath, seconds);
@@ -51,12 +49,9 @@ namespace AudioAnalyzeService
                 var fileName = currentMetadata["fn"];
                 try
                 {
-                    System.Console.WriteLine(fileName);
-                    System.Console.WriteLine(_configuration["VokaturiPath"]);
+                    Console.WriteLine(fileName);
+                    Console.WriteLine(_configuration["VokaturiPath"]);
                     var result = RecognizeTone(_configuration["VokaturiPath"], fileName);
-                    if(result.Count <= 0){
-                        continue;
-                    }
                     var beginTime = begTime;
                     var endTime = beginTime.AddSeconds(seconds);
                     intervals.Add(new DialogueInterval
@@ -65,11 +60,11 @@ namespace AudioAnalyzeService
                         IsClient = true,
                         BegTime = beginTime,
                         EndTime = endTime,
-                        AngerTone = result["Anger"],
-                        FearTone = result["Fear"],
-                        HappinessTone = result["Happiness"],
-                        NeutralityTone = result["Neutrality"],
-                        SadnessTone = result["Sadness"]
+                        AngerTone = result.TryGetValue("Anger", out var anger) ? anger : default(double?),
+                        FearTone = result.TryGetValue("Fear", out var fear) ? fear : default(double?),
+                        HappinessTone = result.TryGetValue("Happiness", out var happiness) ? happiness : default(double?),
+                        NeutralityTone = result.TryGetValue("Neutrality", out var neutrality) ? neutrality : default(double?),
+                        SadnessTone = result.TryGetValue("Sadness", out var sadness) ? sadness : default(double?)
                     });
                     begTime = endTime;
                     File.Delete(fileName);
@@ -120,23 +115,25 @@ namespace AudioAnalyzeService
             Anger 0.001639
             Fear 0.209058*/
             var psi = new ProcessStartInfo("wine64")
-                {
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    Arguments = $"{vokaturiPath} {fileName}"
-                };
-            using(var proc = new Process {StartInfo = psi}){
+            {
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                Arguments = $"{vokaturiPath} {fileName}"
+            };
+            using (var proc = new Process { StartInfo = psi })
+            {
                 proc.EnableRaisingEvents = true;
                 proc.OutputDataReceived += OutputHandler;
                 proc.Start();
                 proc.BeginOutputReadLine();
                 proc.WaitForExit();
             }
-            
+
             var text = output;
-            if(text.Split(' ').Contains("sonorancy")){
+            if (text.Split(' ').Contains("sonorancy"))
+            {
                 System.Console.WriteLine("not enought sonorancy");
             }
             try
@@ -160,7 +157,7 @@ namespace AudioAnalyzeService
                     result[emotion] = double.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
                 System.Console.WriteLine(text);
-                
+
                 output = "";
                 return result;
             }
