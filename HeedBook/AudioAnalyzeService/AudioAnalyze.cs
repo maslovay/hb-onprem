@@ -45,7 +45,7 @@ namespace AudioAnalyzeService
                 await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);
                 await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
                 var transactionId = await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId, true, true);
-                Console.WriteLine(transactionId);
+                Console.WriteLine("transaction id: " + transactionId);
                 var dialogue = await _repository.FindOneByConditionAsync<Dialogue>(item => item.DialogueId == Guid.Parse(dialogueId));
                 var fileAudio = new FileAudioDialogue
                 {

@@ -41,7 +41,7 @@ namespace FillingFrameService
                            .Select(item => item.FileFrameId)
                            .ToList();
             var emotions =
-                await _repository.FindByConditionAsync<FrameEmotion>(item => frameIds.Contains(item.FileFrameId));
+                _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId), item => item.FileFrame);
             var attributes =
                 await _repository.FindByConditionAsync<FrameAttribute>(item => frameIds.Contains(item.FileFrameId));
             if (emotions.Any() && attributes.Any())
@@ -58,7 +58,8 @@ namespace FillingFrameService
                         SadnessShare = item.SadnessShare,
                         SurpriseShare = item.SurpriseShare,
                         HappinessShare = item.HappinessShare,
-                        YawShare = default(Double)
+                        YawShare = default(Double),
+                        Time = item.FileFrame.Time
                     })
                     .ToList();
 
