@@ -50,6 +50,7 @@ namespace FillingFrameService
                 var attributesCount = attributes.Count();
                 var dialogueFrames = emotions.Select(item => new DialogueFrame
                     {
+                        DialogueId = message.DialogueId,
                         AngerShare = item.AngerShare,
                         FearShare = item.FearShare,
                         DisgustShare = item.DisgustShare,
