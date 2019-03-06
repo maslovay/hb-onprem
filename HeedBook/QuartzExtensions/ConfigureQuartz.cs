@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
@@ -39,15 +36,15 @@ namespace QuartzExtensions
 
         public static void AddDialogueStatusCheckerQuartz(this IServiceCollection services)
         {
-            services.Add(new ServiceDescriptor(typeof(IJob), typeof(DialogueStatusCheckerJob), ServiceLifetime.Transient));
+            services.Add(new ServiceDescriptor(typeof(IJob), typeof(DialogueStatusCheckerJob), ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
             services.AddSingleton(provider => JobBuilder.Create<DialogueStatusCheckerJob>()
-                .WithIdentity("DialogueStatus.job", "Dialogues")
+                .WithIdentity("DialogueStatusChecker.job", "Dialogues")
                 .Build());
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity($"DialogueStatus.trigger", "Dialogues")
+                                     .WithIdentity($"DialogueStatusChecker.trigger", "Dialogues")
                                      .StartNow()
                                      .WithSimpleSchedule(s => s.WithIntervalInMinutes(2).RepeatForever())
                                      .Build();

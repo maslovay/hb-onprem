@@ -47,8 +47,11 @@ namespace DialogueStatusCheckerScheduler
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
-                app.ApplicationServices.GetService<ITrigger>());
+
+            var job = app.ApplicationServices.GetService<IJobDetail>();
+            var trigger = app.ApplicationServices.GetService<ITrigger>();
+            scheduler.ScheduleJob(job,
+                trigger);
             app.UseHttpsRedirection();
             app.UseMvc();
         }

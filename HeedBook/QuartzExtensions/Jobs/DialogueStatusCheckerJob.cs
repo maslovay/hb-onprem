@@ -13,16 +13,19 @@ namespace QuartzExtensions.Jobs
     {
         private readonly IGenericRepository _repository;
 
-        public DialogueStatusCheckerJob(IServiceProvider provider)
+        public DialogueStatusCheckerJob(IServiceScopeFactory scopeFactory)
         {
-            _repository = provider.GetRequiredService<IGenericRepository>();
+            var scope = scopeFactory.CreateScope();
+            _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
+            Console.WriteLine("Function started.");
             var dialogues = await _repository.FindByConditionAsync<Dialogue>(item => item.StatusId == 6);
             if (!dialogues.Any())
             {
+                Console.WriteLine("No dialogues.");
                 return;
             }
             foreach (var dialogue in dialogues)
@@ -41,6 +44,7 @@ namespace QuartzExtensions.Jobs
                 if (dialogueFrame && dialogueAudio && dialogueInterval && dialogueVisual &&
                     dialogueClientProfiles)
                 {
+                    Console.WriteLine("Everything is Ok");
                     dialogue.StatusId = 7;
                     _repository.Update(dialogue);
                 }
@@ -48,12 +52,14 @@ namespace QuartzExtensions.Jobs
                 {
                     if ((DateTime.Now - dialogue.CreationTime).Hours >= 2)
                     {
+                        Console.WriteLine("Error");
                         dialogue.StatusId = 8;
                         _repository.Update(dialogue);
                     }
                 }
             }
             _repository.Save();
+            Console.WriteLine("Function ended.");
         }
     }
 }

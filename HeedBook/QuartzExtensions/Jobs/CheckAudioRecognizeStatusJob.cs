@@ -30,6 +30,7 @@ namespace QuartzExtensions.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
+            Console.WriteLine("Scheduler started.");
             var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 6);
             var tasks = audios.Select(item =>
             {
@@ -42,7 +43,7 @@ namespace QuartzExtensions.Jobs
                          //8 - error
                          item.StatusId = 8;
                          _repository.Update(item);
-
+                         Console.WriteLine("Error with stt results");
                      }
                      else
                      {
@@ -72,12 +73,14 @@ namespace QuartzExtensions.Jobs
                              Words = JsonConvert.SerializeObject(phrases)
                          });
                          await _repository.BulkInsertAsync(phraseCount);
+                         Console.WriteLine("Everything is ok");
                      }
                  });
             }).ToList();
 
             await Task.WhenAll(tasks);
             _repository.Save();
+            Console.WriteLine("Scheduler ended.");
         }
 
         private int GetSpeechSpeed(List<WordRecognized> words, int languageId)
