@@ -132,10 +132,6 @@ namespace AudioAnalyzeService
             }
 
             var text = output;
-            if (text.Split(' ').Contains("sonorancy"))
-            {
-                System.Console.WriteLine("not enought sonorancy");
-            }
             try
             {
                 var pattern = @"\n\s?(\w+)\s+([\d\.]+)";
@@ -156,8 +152,7 @@ namespace AudioAnalyzeService
                     var value = match.Groups[2].ToString();
                     result[emotion] = double.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
-                System.Console.WriteLine(text);
-
+                Console.WriteLine(text);
                 output = "";
                 return result;
             }

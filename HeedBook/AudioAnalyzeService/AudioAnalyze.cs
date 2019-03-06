@@ -14,10 +14,15 @@ namespace AudioAnalyzeService
     public class AudioAnalyze
     {
         private readonly GoogleConnector _googleConnector;
-        
-        public AudioAnalyze(GoogleConnector googleConnector)
+        private readonly IGenericRepository _repository;
+
+        public AudioAnalyze(GoogleConnector googleConnector,
+            IServiceScopeFactory scopeFactory
+            )
         {
             _googleConnector = googleConnector;
+            var scope = scopeFactory.CreateScope();
+            _repository = scope.ServiceProvider.GetService<IGenericRepository>();
         }
 
         public async Task Run(String path)
@@ -33,14 +38,29 @@ namespace AudioAnalyzeService
                 var languageId = Int32.Parse("2");
                 
                 var currentPath = Directory.GetCurrentDirectory();
-                //var token = await _googleConnector.GetAuthorizationToken("./");
                 var token = await _googleConnector.GetAuthorizationToken(currentPath);
                 
                 var blobGoogleDriveName =
                         dialogueId + "_client" + Path.GetExtension(fileName);
                 await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);
                 await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
-                await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId, true, true);
+                var transactionId = await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId, true, true);
+                Console.WriteLine(transactionId);
+                var dialogue = await _repository.FindOneByConditionAsync<Dialogue>(item => item.DialogueId == Guid.Parse(dialogueId));
+                var fileAudio = new FileAudioDialogue
+                {
+                    DialogueId = Guid.Parse(dialogueId),
+                    CreationTime = DateTime.UtcNow,
+                    FileName = fileName,
+                    StatusId = 6,
+                    FileContainer = "dialogueaudios",
+                    TransactionId = transactionId,
+                    BegTime = dialogue.BegTime,
+                    EndTime = dialogue.EndTime,
+                    Duration = 15.0
+                };
+                await _repository.CreateAsync(fileAudio);
+                _repository.Save();
             }
             Console.WriteLine("Function Audio STT finished");
         }
