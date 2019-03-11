@@ -48,6 +48,7 @@ namespace AudioAnalyzeService
             services.AddTransient<SftpClient>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddTransient<GoogleConnector>();
+            services.AddHttpClient<GoogleConnector>();
             services.AddTransient<AudioAnalyze>();
             services.AddTransient<ToneAnalyze>();
             services.AddTransient<AudioAnalyzeRunHandler>();

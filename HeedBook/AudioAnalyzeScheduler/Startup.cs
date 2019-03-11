@@ -42,6 +42,7 @@ namespace AudioAnalyzeScheduler
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.AddSingleton<GoogleConnector>();
+            services.AddHttpClient<GoogleConnector>();
             services.AddSingleton<SftpClient>();
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddScoped<IGenericRepository, GenericRepository>();

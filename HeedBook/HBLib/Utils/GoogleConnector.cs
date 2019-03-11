@@ -39,10 +39,11 @@ namespace HBLib.Utils
         private readonly DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         public GoogleConnector(SftpClient sftpClient,
-            IServiceScopeFactory scopeFactory)
+            IServiceScopeFactory scopeFactory,
+            HttpClient httpClient)
         {
             _sftpClient = sftpClient;
-            _httpClient = new HttpClient();
+            _httpClient = httpClient;
             var scope = scopeFactory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
         }
@@ -129,17 +130,17 @@ namespace HBLib.Utils
                                           filename + @"?acl");
         }
 
-        public async Task<GoogleSttResult> GetGoogleSTTResults(String googleTransactionId)
+        public async Task<GoogleSttLongrunningResult> GetGoogleSTTResults(String googleTransactionId)
         {
-            var googleApiKey = GetApiKey();
+            var googleApiKey = await GetApiKey();
             _httpClient.DefaultRequestHeaders.Clear();
 
             var response = _httpClient.GetAsync("https://speech.googleapis.com/v1/operations/" +
                                                 googleTransactionId + "?key=" + googleApiKey).Result;
 
             var results = await response.Content.ReadAsStringAsync();
-
-            return JsonConvert.DeserializeObject<GoogleSttResult>(results);
+            Console.WriteLine(results);
+            return JsonConvert.DeserializeObject<GoogleSttLongrunningResult>(results);
         }
 
         public async Task<String> GetAuthorizationToken(String binPath)
@@ -171,20 +172,19 @@ namespace HBLib.Utils
             public int expires_in;
         }
 
-        public async Task<String> Recognize(String fileName, Int32 languageId, string dialogueId, Boolean enableWordTimeOffsets = true,
+        public async Task<GoogleTransactionId> Recognize(String fileName, Int32 languageId, string dialogueId, Boolean enableWordTimeOffsets = true,
             Boolean enableSpeakerDiarization = true)
         {
             var apiKey = await GetApiKey();
             if (apiKey == null)
             {
-                return String.Empty;
+                return null;
             }
 
-            var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey, languageId); },
+            var googleTransactionId = await Retry.Do(async () => { return await RecognizeLongRunning(fileName, apiKey, languageId); },
                 TimeSpan.FromSeconds(1), 5);
-            
-            dynamic js = JsonConvert.DeserializeObject(jsStr);
-            return js.ToString();
+
+            return googleTransactionId;
         }
 
         private async Task<String> GetApiKey()
@@ -194,11 +194,10 @@ namespace HBLib.Utils
             return googleAccount.GoogleKey;
         }
         
-        private String RecognizeLongRunning(String fn, String apiKey, Int32 languageId,
+        private async Task<GoogleTransactionId> RecognizeLongRunning(String fn, String apiKey, Int32 languageId,
             Boolean enableWordTimeOffsets = true)
         {
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-
+            var httpClient = new HttpClient();
             /*test example:
                 body = {
                 "config": {
@@ -231,14 +230,13 @@ namespace HBLib.Utils
                 }
             };
 
-            var response = _httpClient
+            var response = httpClient
                           .PostAsync("https://speech.googleapis.com/v1/speech:longrunningrecognize?key=" + apiKey,
                                new StringContent(JsonConvert.SerializeObject(request).ToString(), Encoding.UTF8,
                                    "application/json")).Result;
-            //response.EnsureSuccessStatusCode();
-
-            // dynamic dyn = response.Content.ReadAsAsync<dynamic>();
-            return response.Content.ReadAsStringAsync().Result;
+            response.EnsureSuccessStatusCode();
+            var result = JsonConvert.DeserializeObject<GoogleTransactionId>(await response.Content.ReadAsStringAsync());
+            return result;
         }
 
         private static String GetLanguageName(Int32 languageId)

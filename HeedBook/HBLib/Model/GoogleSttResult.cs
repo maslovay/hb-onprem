@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace HBLib.Model
 {
     public class GoogleSttResult
     {
-        public List<WordRecognized> Words { get; set; }
+        public List<GoogleSttAlternative> Alternatives { get; set; }
     }
 }

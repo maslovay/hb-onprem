@@ -54,7 +54,7 @@ namespace AudioAnalyzeService
                     FileName = fileName,
                     StatusId = 6,
                     FileContainer = "dialogueaudios",
-                    TransactionId = transactionId,
+                    TransactionId = transactionId.Name.ToString(),
                     BegTime = dialogue.BegTime,
                     EndTime = dialogue.EndTime,
                     Duration = 15.0
