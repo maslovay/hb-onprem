@@ -41,13 +41,11 @@ namespace FillingFrameService
                            .Select(item => item.FileFrameId)
                            .ToList();
             var emotions =
-                _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId), item => item.FileFrame);
+                _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId), item => item.FileFrame).ToList();
             var attributes =
                 await _repository.FindByConditionAsync<FrameAttribute>(item => frameIds.Contains(item.FileFrameId));
             if (emotions.Any() && attributes.Any())
             {
-                var emotionsCount = emotions.Count();
-                var attributesCount = attributes.Count();
                 var dialogueFrames = emotions.Select(item => new DialogueFrame
                     {
                         DialogueId = message.DialogueId,
@@ -64,27 +62,27 @@ namespace FillingFrameService
                     })
                     .ToList();
 
-                var genderCount = attributes.Count(item => item.Gender == "male");
+                var genderCount = attributes.Count(item => item.Gender == "Male");
 
                 var dialogueClientProfile = new DialogueClientProfile
                 {
                     DialogueId = message.DialogueId,
                     Gender = genderCount > 0 ? "male" : "female",
-                    Age = attributes.Sum(item => item.Age) / attributesCount,
+                    Age = attributes.Average(item => item.Age),
                     Avatar = $"{message.DialogueId}.jpg"
                 };
 
                 var dialogueVisual = new DialogueVisual
                 {
                     DialogueId = message.DialogueId,
-                    AngerShare = emotions.Sum(item => item.AngerShare) / emotionsCount,
-                    FearShare = emotions.Sum(item => item.FearShare) / emotionsCount,
-                    DisgustShare = emotions.Sum(item => item.DisgustShare) / emotionsCount,
-                    ContemptShare = emotions.Sum(item => item.ContemptShare) / emotionsCount,
-                    NeutralShare = emotions.Sum(item => item.NeutralShare) / emotionsCount,
-                    SadnessShare = emotions.Sum(item => item.SadnessShare) / emotionsCount,
-                    SurpriseShare = emotions.Sum(item => item.SurpriseShare) / emotionsCount,
-                    HappinessShare = emotions.Sum(item => item.HappinessShare) / emotionsCount,
+                    AngerShare = emotions.Average(item => item.AngerShare),
+                    FearShare = emotions.Average(item => item.FearShare),
+                    DisgustShare = emotions.Average(item => item.DisgustShare),
+                    ContemptShare = emotions.Average(item => item.ContemptShare),
+                    NeutralShare = emotions.Average(item => item.NeutralShare),
+                    SadnessShare = emotions.Average(item => item.SadnessShare),
+                    SurpriseShare = emotions.Average(item => item.SurpriseShare),
+                    HappinessShare = emotions.Average(item => item.HappinessShare),
                     AttentionShare = default(Double)
                 };
 
@@ -97,18 +95,16 @@ namespace FillingFrameService
 
                 var localPath =
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + emotions.First().FileFrame.FileName);
-                var rectangle = attributes.Where(item => item.FileFrameId == emotions.First().FileFrameId)
-                    .Select(item =>
+                var attribute = attributes.First(item => item.FileFrameId == emotions.First(emotion => frameIds.Contains(emotion.FileFrameId)).FileFrameId);
+
+                var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
+                var rectangle = new Rectangle
                     {
-                        var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(item.Value);
-                        return new Rectangle
-                        {
-                            Height = faceRectangle.Height,
-                            Width = faceRectangle.Width,
-                            X = faceRectangle.Top,
-                            Y = faceRectangle.Left
-                        };
-                    }).First();
+                        Height = faceRectangle.Height,
+                        Width = faceRectangle.Width,
+                        X = faceRectangle.Top,
+                        Y = faceRectangle.Left
+                    };
                 var stream = FaceDetection.CreateAvatar(localPath, rectangle);
                 stream.Seek(0, SeekOrigin.Begin);
                 await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");

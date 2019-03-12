@@ -33,47 +33,53 @@ namespace FaceAnalyzeService
         {
             if (await _sftpClient.IsFileExistsAsync(remotePath))
             {
+                
                 var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath);
-
-                var byteArray = await File.ReadAllBytesAsync(localPath);
-                var base64String = Convert.ToBase64String(byteArray);
-
-                var faceResult = await _client.GetFaceResult(base64String);
-                var fileName = localPath.Split('/').Last();
-                var fileFrame =
-                    await _repository
-                       .FindOneByConditionAsync<FileFrame>(entity => entity.FileName == fileName);
-
-                if (fileFrame != null)
+                
+                if (FaceDetection.IsFaceDetected(localPath))
                 {
-                    var frameEmotion = new FrameEmotion
-                    {
-                        FileFrameId = fileFrame.FileFrameId,
-                        AngerShare = faceResult.Average(item => item.Emotions.Anger),
-                        ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
-                        DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
-                        FearShare = faceResult.Average(item => item.Emotions.Fear),
-                        HappinessShare = faceResult.Average(item => item.Emotions.Happiness),
-                        NeutralShare = faceResult.Average(item => item.Emotions.Neutral),
-                        SadnessShare = faceResult.Average(item => item.Emotions.Sadness),
-                        SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
-                        YawShare = faceResult.Average(item => item.Headpose.Yaw)
-                    };
-                    var tasks = faceResult.Select(item => new FrameAttribute
-                    {
-                        Age = item.Attributes.Age,
-                        Gender = item.Attributes.Gender,
-                        Descriptor = JsonConvert.SerializeObject(item.Descriptor),
-                        FileFrameId = fileFrame.FileFrameId,
-                        Value = JsonConvert.SerializeObject(item.Rectangle),
-                    }).Select(item => _repository.CreateAsync(item))
-                        .ToList();
+                    Console.WriteLine("face detected!");
+                    
+                    var byteArray = await File.ReadAllBytesAsync(localPath);
+                    var base64String = Convert.ToBase64String(byteArray);
 
-                    tasks.Add(_repository.CreateAsync(frameEmotion));
-                    Console.WriteLine("fileframe not null. Calculate average and insert frame emotion and frame attribute");
-                    await Task.WhenAll(
-                        tasks);
-                    await _repository.SaveAsync();
+                    var faceResult = await _client.GetFaceResult(base64String);
+                    var fileName = localPath.Split('/').Last();
+                    var fileFrame =
+                        await _repository
+                        .FindOneByConditionAsync<FileFrame>(entity => entity.FileName == fileName);
+
+                    if (fileFrame != null)
+                    {
+                        var frameEmotion = new FrameEmotion
+                        {
+                            FileFrameId = fileFrame.FileFrameId,
+                            AngerShare = faceResult.Average(item => item.Emotions.Anger),
+                            ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
+                            DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
+                            FearShare = faceResult.Average(item => item.Emotions.Fear),
+                            HappinessShare = faceResult.Average(item => item.Emotions.Happiness),
+                            NeutralShare = faceResult.Average(item => item.Emotions.Neutral),
+                            SadnessShare = faceResult.Average(item => item.Emotions.Sadness),
+                            SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
+                            YawShare = faceResult.Average(item => item.Headpose.Yaw)
+                        };
+                        var tasks = faceResult.Select(item => new FrameAttribute
+                        {
+                            Age = item.Attributes.Age,
+                            Gender = item.Attributes.Gender,
+                            Descriptor = JsonConvert.SerializeObject(item.Descriptor),
+                            FileFrameId = fileFrame.FileFrameId,
+                            Value = JsonConvert.SerializeObject(item.Rectangle),
+                        }).Select(item => _repository.CreateAsync(item))
+                            .ToList();
+
+                        tasks.Add(_repository.CreateAsync(frameEmotion));
+                        Console.WriteLine("fileframe not null. Calculate average and insert frame emotion and frame attribute");
+                        await Task.WhenAll(
+                            tasks);
+                        await _repository.SaveAsync();
+                    }
                 }
             }
         }

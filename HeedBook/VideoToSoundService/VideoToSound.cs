@@ -52,7 +52,7 @@ namespace VideoToSoundService
                 };
                 _publisher.Publish(@event);
                 _publisher.Publish(toneAnalyzeEvent);
-                System.Console.WriteLine("message sended to rabbit. Wait for tone analyze and audio analyze");
+                Console.WriteLine("message sended to rabbit. Wait for tone analyze and audio analyze");
             }
         }
     }
