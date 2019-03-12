@@ -2,11 +2,24 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using DlibDotNet;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace HBLib.Utils
 {
     public static class FaceDetection
     {
+        public static Boolean IsFaceDetected(string path)
+        {
+            using (var detector = Dlib.GetFrontalFaceDetector())
+            using (var img = Dlib.LoadImage<byte>(path))
+            {
+                Dlib.PyramidUp(img);
+                var dets = detector.Operator(img);
+                return dets.Length > 0;
+            }
+        }
+
         public static MemoryStream CreateAvatar(String path, Rectangle rectangle)
         {
             var rect = new System.Drawing.Rectangle(rectangle.Top,

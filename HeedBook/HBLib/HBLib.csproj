@@ -13,6 +13,7 @@
     <None Remove="Data\**" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DlibDotNet" Version="19.16.0.20190223" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="3.0.1" />
     <PackageReference Include="MongoDB.Driver" Version="2.7.2" />
