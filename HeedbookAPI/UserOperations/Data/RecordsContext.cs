@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 namespace UserOperations.Data
 {
 
-    public class RecordsContextWeb1: IdentityDbContext<ApplicationUser, ApplicationRole, Guid, IdentityUserClaim<Guid>, ApplicationUserRole, IdentityUserLogin<Guid>,IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
+    public class RecordsContext: IdentityDbContext<ApplicationUser, ApplicationRole, Guid, IdentityUserClaim<Guid>, ApplicationUserRole, IdentityUserLogin<Guid>,IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
     {
-        public RecordsContextWeb1(DbContextOptions<RecordsContextWeb1> options): base(options)
+        public RecordsContext(DbContextOptions<RecordsContext> options): base(options)
         {
             
         }
@@ -87,6 +87,7 @@ namespace UserOperations.Data
         public DbSet<DialogueFrame> DialogueFrames { get; set; }
         public DbSet<DialogueInterval> DialogueIntervals { get; set; }
         public DbSet<DialogueMarkup> DialogueMarkups { get; set; }
+        public DbSet<DialoguePhrase> DialoguePhrase { get; set; }
         public DbSet<DialoguePhraseCount> DialoguePhraseCounts { get; set; }
         public DbSet<DialogueSpeech> DialogueSpeechs { get; set; }
         public DbSet<DialogueVisual> DialogueVisuals { get; set; }

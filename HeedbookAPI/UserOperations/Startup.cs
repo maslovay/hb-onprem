@@ -26,6 +26,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using UserOperations.Services;
 
 namespace UserOperations
 {
@@ -42,7 +43,7 @@ namespace UserOperations
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
-            services.AddDbContext<RecordsContextWeb1>
+            services.AddDbContext<RecordsContext>
             (options =>
             {
                 var connectionString = Configuration.GetConnectionString("DefaultConnection");
@@ -50,6 +51,7 @@ namespace UserOperations
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
+            services.AddScoped<Utils.DBOperations>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(p => {
                 p.Password.RequireDigit = true;
                 p.Password.RequireLowercase = true;
@@ -57,7 +59,9 @@ namespace UserOperations
                 p.Password.RequireNonAlphanumeric = false;
                 p.Password.RequiredLength = 8;
             })
-            .AddEntityFrameworkStores<RecordsContextWeb1>();
+            .AddEntityFrameworkStores<RecordsContext>();
+            
+            services.AddScoped(typeof(ITokenService), typeof(TokenService));
 
             services.AddSwaggerGen(c =>
             {
@@ -91,6 +95,7 @@ namespace UserOperations
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "User Service API V1");
             });
+            app.UseAuthentication();
             app.UseHttpsRedirection();
             app.UseMvc();
         }

@@ -89,5 +89,7 @@ namespace UserOperations.Models
         /// </summary>
         public ICollection<DialogueWord> DialogueWord { get; set; }
 
+        public ICollection<DialoguePhrase> DialoguePhrase { get; set; }
+
     }
 }

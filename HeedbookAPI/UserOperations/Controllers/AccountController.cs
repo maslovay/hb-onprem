@@ -41,25 +41,25 @@ namespace UserOperations.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
-        // private readonly ITokenService _tokenService;
+        private readonly ITokenService _tokenService;
 
 
         public AccountController(
             IGenericRepository repository,
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            IConfiguration config
-            // ITokenService tokenService
+            IConfiguration config,
+            ITokenService tokenService
             )
         {
             _repository = repository;
             _userManager = userManager;
             _signInManager = signInManager;
             _config = config;
-            // _tokenService = tokenService;
+            _tokenService = tokenService;
         }
 
-        [HttpPost("register")]
+        [HttpPost("Register")]
         public async Task<string>  UserRegister([FromBody] UserRegister message)
         {
             try
@@ -144,60 +144,44 @@ namespace UserOperations.Controllers
             }
         }
 
-        // [AllowAnonymous]
-        // [HttpPost("generatetoken")]
-        // public async Task<IActionResult> GenerateToken([FromBody]AccountAuthorization message)
-        // {
-        //     try
-        //     {
-        //         var user = await _userManager.FindByEmailAsync(message.UserName);
-        //         Console.WriteLine(message.UserName);
-        //         Console.WriteLine()
+        [AllowAnonymous]
+        [HttpPost("GenerateToken")]
+        public async Task<IActionResult> GenerateToken([FromBody]AccountAuthorization message)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(message.UserName);
+                Console.WriteLine(message.UserName);
+                System.Console.WriteLine(user == null);  
 
-        //         if (user != null)
-        //         {
-        //             var result = await _signInManager.CheckPasswordSignInAsync(user, req.pswd, false);
-        //             if (result.Succeeded)
-        //             {
-        //                 var token = _tokenService.CreateTokenForUser(req.username, req.remember);
-        //                 if(token != null)
-        //                     return Ok(token);
-        //                 else
-        //                     return BadRequest("Could not create token");
-        //             }
-        //         }
-        //         return BadRequest("Could not create token");
-        //     }
-        //     catch
-        //     {
-        //         return BadRequest("Could not create token");
-        //     }
-        // }
-
-
-
-
+                if (user != null)
+                {
+                    var result = await _signInManager.CheckPasswordSignInAsync(user, message.Password, false);
+                    System.Console.WriteLine(result.Succeeded);
+                    if (result.Succeeded)
+                    {
+                        var token = _tokenService.CreateTokenForUser(message.UserName, message.Remember);
+                        System.Console.WriteLine(token);
+                        if(token != null)
+                            return Ok(token);
+                        else
+                            return BadRequest("Could not create token");
+                    }
+                }
+                return BadRequest("Could not create token");
+            }
+            catch (Exception e)
+            {
+                return BadRequest($"Could not create token {e}");
+            }
+        }
 
 
 
         [HttpPost("test")]
         public string Test()
         {
-            try
-            {
-            var languageIds = _repository.GetWithInclude<ApplicationUser>(p => 
-                    p.Id == Guid.Parse("f3bc2965-cc13-4620-9c67-6b53e5126bab"),
-                    link => link.Company).ToList();
-            // Console.WriteLine($"{JsonConvert.SerializeObject(languageIds)}");
-            var languageId = languageIds.First().Company.LanguageId;
-            Console.WriteLine($"{languageId}");
-
-            return languageId.ToString();
-            }
-            catch (Exception e)
-            {
-                return e.ToString();
-            }
+            return "OK";
         }
     }
 }
