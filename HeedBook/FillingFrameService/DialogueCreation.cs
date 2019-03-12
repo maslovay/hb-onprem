@@ -42,6 +42,7 @@ namespace FillingFrameService
                            .ToList();
             var emotions =
                 _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId), item => item.FileFrame).ToList();
+            
             var attributes =
                 await _repository.FindByConditionAsync<FrameAttribute>(item => frameIds.Contains(item.FileFrameId));
             if (emotions.Any() && attributes.Any())
@@ -57,7 +58,7 @@ namespace FillingFrameService
                         SadnessShare = item.SadnessShare,
                         SurpriseShare = item.SurpriseShare,
                         HappinessShare = item.HappinessShare,
-                        YawShare = default(Double),
+                        YawShare = item.YawShare,
                         Time = item.FileFrame.Time
                     })
                     .ToList();
@@ -71,7 +72,7 @@ namespace FillingFrameService
                     Age = attributes.Average(item => item.Age),
                     Avatar = $"{message.DialogueId}.jpg"
                 };
-
+                var yawShare = emotions.Average(item => item.YawShare);
                 var dialogueVisual = new DialogueVisual
                 {
                     DialogueId = message.DialogueId,
@@ -83,9 +84,8 @@ namespace FillingFrameService
                     SadnessShare = emotions.Average(item => item.SadnessShare),
                     SurpriseShare = emotions.Average(item => item.SurpriseShare),
                     HappinessShare = emotions.Average(item => item.HappinessShare),
-                    AttentionShare = default(Double)
+                    AttentionShare = yawShare >= -10 && yawShare <= 10 ? 100 : 0
                 };
-
                 var insertTasks = new List<Task>
                 {
                     _repository.CreateAsync(dialogueVisual),

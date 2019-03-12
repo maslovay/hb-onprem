@@ -69,6 +69,15 @@ namespace QuartzExtensions.Jobs
                              .Select(d => d.LanguageId ?? 1)
                              .First();
                          var speechSpeed = GetSpeechSpeed(recognized, languageId);
+                         var dialogueSpeech = new DialogueSpeech
+                         {
+                             DialogueId = item.DialogueId,
+                             IsClient = true,
+                             SpeechSpeed = speechSpeed,
+                             PositiveShare = default(Double),
+                             SilenceShare = GetSilenceShare(recognized, item.BegTime, item.EndTime)
+                         };
+
                          var phrases = await FindPhrases(recognized, languageId, item.BegTime);
                          var phraseCount = new List<DialoguePhraseCount>();
                          foreach (var phraseResult in phrases)
@@ -110,6 +119,12 @@ namespace QuartzExtensions.Jobs
             });
             var vowelsCount = words.Select(item => item.Word.Where(c => vowels.Contains(c))).Count();
             return vowelsCount / sumTime;
+        }
+
+        private Double GetSilenceShare(List<WordRecognized> words, DateTime begTime, DateTime endTime)
+        {
+            var wordsDuration = words.Sum(item => Double.Parse(item.EndTime) - Double.Parse(item.StartTime));
+            return (endTime.Subtract(begTime).TotalSeconds > 0) ? 100 * Math.Max(endTime.Subtract(begTime).TotalSeconds - wordsDuration, 0.01) / endTime.Subtract(begTime).TotalSeconds : 0;
         }
 
         private async Task<List<PhraseResult>> FindPhrases(List<WordRecognized> wordRecognized, int languageId, DateTime begTime)

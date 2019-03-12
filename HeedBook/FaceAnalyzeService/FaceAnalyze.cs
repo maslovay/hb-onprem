@@ -36,7 +36,7 @@ namespace FaceAnalyzeService
                 
                 var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath);
                 
-                if (FaceDetection.IsFaceDetected(localPath))
+                if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
                 {
                     Console.WriteLine("face detected!");
                     
@@ -74,6 +74,9 @@ namespace FaceAnalyzeService
                         }).Select(item => _repository.CreateAsync(item))
                             .ToList();
 
+                        fileFrame.FaceLength = faceLength;    
+                        fileFrame.IsFacePresent = true;
+                        _repository.Update(fileFrame);
                         tasks.Add(_repository.CreateAsync(frameEmotion));
                         Console.WriteLine("fileframe not null. Calculate average and insert frame emotion and frame attribute");
                         await Task.WhenAll(

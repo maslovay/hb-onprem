@@ -19,6 +19,8 @@ namespace FillingFrameService
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+            .UseKestrel()
+            .UseUrls("http://localhost:5678")
                 .UseStartup<Startup>();
     }
 }

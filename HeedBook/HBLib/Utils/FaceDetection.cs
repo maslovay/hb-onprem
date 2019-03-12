@@ -9,13 +9,14 @@ namespace HBLib.Utils
 {
     public static class FaceDetection
     {
-        public static Boolean IsFaceDetected(string path)
+        public static Boolean IsFaceDetected(string path, out int faceLength)
         {
             using (var detector = Dlib.GetFrontalFaceDetector())
             using (var img = Dlib.LoadImage<byte>(path))
             {
                 Dlib.PyramidUp(img);
                 var dets = detector.Operator(img);
+                faceLength = dets.Length;
                 return dets.Length > 0;
             }
         }
