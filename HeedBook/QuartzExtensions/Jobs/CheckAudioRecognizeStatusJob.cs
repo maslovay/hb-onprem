@@ -33,6 +33,9 @@ namespace QuartzExtensions.Jobs
         {
             Console.WriteLine("Scheduler started.");
             var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 6);
+            if(!audios.Any()){
+                Console.WriteLine("No audios found");
+            }
             var tasks = audios.Select(item =>
             {
                 return Task.Run(async () =>
