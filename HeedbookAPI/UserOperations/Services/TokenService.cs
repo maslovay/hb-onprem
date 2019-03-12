@@ -13,7 +13,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using UserOperations.Services;
-
+using Newtonsoft.Json;
 
 
 namespace UserOperations.Services
@@ -29,15 +29,16 @@ namespace UserOperations.Services
             _config = config;
         }
 
-        public async Task<string> CreateTokenForUser(string userEmail, bool remember)
+        public string CreateTokenForUser(string userEmail, bool remember)
         {
             try
             {
+                userEmail = userEmail.ToUpper();
 
-                var user = await _repository.FindOneByConditionAsync<ApplicationUser>(p => p.NormalizedEmail == userEmail);
-                var role = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, q => q.Role).Role.Name; 
-                var company = await _repository.FindOneByConditionAsync<Company>(p => p.CompanyId == user.CompanyId);
-                Console.WriteLine($"{user.StatusId}");
+                System.Console.WriteLine("CreateTokenForUser --------------- " + userEmail);
+                var user = _repository.GetWithIncludeOne<ApplicationUser>(p => p.NormalizedEmail == userEmail, link => link.Company);
+                var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
+                var role = roleInfo.Role.Name;            
 
                 if (user.StatusId == 3)
                 {
@@ -48,24 +49,22 @@ namespace UserOperations.Services
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim("applicationUserId", user.Id.ToString()),
                         new Claim("applicationUserName", user.FullName),
-                        new Claim("companyName", company.CompanyName),
-                        new Claim("companyId", company.CompanyId.ToString()),
-                        new Claim("corporationId", company.CorporationId.ToString()),
-                        new Claim("languageCode", company.LanguageId.ToString()),
-                        // new Claim("role", role),
+                        new Claim("companyName", user.Company.CompanyName),
+                        new Claim("companyId", user.Company.ToString()),
+                        new Claim("corporationId", user.Company.CorporationId.ToString()),
+                        new Claim("languageCode", user.Company.LanguageId.ToString()),
+                        new Claim("role", role),
                     };
-                    Console.WriteLine("Create key");
+
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
                     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-                    Console.WriteLine($"{key}");
                     var token = new JwtSecurityToken(_config["Tokens:Issuer"],
                         _config["Tokens:Issuer"],
                         claims,
                         expires: remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
                         signingCredentials: creds);
 
-                    Console.WriteLine($"{token}");
                     var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
 
                     return tokenenc;

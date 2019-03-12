@@ -68,10 +68,12 @@ namespace HBLib.Utils
 
                 response.EnsureSuccessStatusCode();
                 var results = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"{results}");
                 return results;
             }
             catch (Exception e)
             {
+                 Console.WriteLine($"{e}");
                 return $"Exception occured {e}";
             }
         }
@@ -93,6 +95,7 @@ namespace HBLib.Utils
                 @"https://storage.googleapis.com/" + GoogleCloudContainerName + @"/" + filename + @"?acl", cont);
 
             var results = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Make public result - {results}");
             return results;
         }
 
@@ -197,7 +200,8 @@ namespace HBLib.Utils
         private String RecognizeLongRunning(String fn, String apiKey, Int32 languageId,
             Boolean enableWordTimeOffsets = true)
         {
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Accept.Clear();
 
             /*test example:
                 body = {
@@ -228,10 +232,14 @@ namespace HBLib.Utils
                 audio = new
                 {
                     uri = "gs://hbfiles/" + fn
+                    // uri = "https://www.googleapis.com/download/storage/v1/b/hbfiles/o/982082bd-e509-4a09-b757-1464f2bda3a9_client.wav?generation=1552302916913445&alt=media"
                 }
             };
+            Console.WriteLine($"{apiKey}");
+            Console.WriteLine($"{JsonConvert.SerializeObject(request).ToString()}");
+            Console.WriteLine($"{"https://speech.googleapis.com/v1/speech:longrunningrecognize?key=" + apiKey}");
 
-            var response = _httpClient
+            var response = httpClient
                           .PostAsync("https://speech.googleapis.com/v1/speech:longrunningrecognize?key=" + apiKey,
                                new StringContent(JsonConvert.SerializeObject(request).ToString(), Encoding.UTF8,
                                    "application/json")).Result;

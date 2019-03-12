@@ -16,9 +16,9 @@ namespace UserOperations.Repository
 {
     public class GenericRepository : IGenericRepository
     {
-        private readonly RecordsContextWeb1 _context;
+        private readonly RecordsContext _context;
 
-        public GenericRepository(RecordsContextWeb1 context)
+        public GenericRepository(RecordsContext context)
         {
             _context = context;
         }

@@ -2,16 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UserOperations.Data;
 
 namespace UserOperations.Migrations
 {
-    [DbContext(typeof(RecordsContextWeb1))]
-    partial class RecordsContextWeb1ModelSnapshot : ModelSnapshot
+    [DbContext(typeof(RecordsContext))]
+    [Migration("20190311092155_InitialMigration1")]
+    partial class InitialMigration1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
