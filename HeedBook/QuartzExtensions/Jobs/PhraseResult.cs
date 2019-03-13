@@ -13,5 +13,7 @@ namespace QuartzExtensions.Jobs
         public Guid? PhraseId { get; set; }
 
         public Guid? PhraseTypeId { get; set; }
+
+        public Int32 Position { get; set; }     
     }
 }

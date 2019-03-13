@@ -2,6 +2,7 @@
 using HBData.Repository;
 using HBLib.Model;
 using HBLib.Utils;
+using LemmaSharp;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Quartz;
@@ -127,31 +128,72 @@ namespace QuartzExtensions.Jobs
             return (endTime.Subtract(begTime).TotalSeconds > 0) ? 100 * Math.Max(endTime.Subtract(begTime).TotalSeconds - wordsDuration, 0.01) / endTime.Subtract(begTime).TotalSeconds : 0;
         }
 
-        private async Task<List<PhraseResult>> FindPhrases(List<WordRecognized> wordRecognized, int languageId, DateTime begTime)
+        private List<PhraseResult> FindWord(List<WordRecognized> text, string word, ILemmatizer lemmatizer, DateTime begTime, Guid phraseId, Guid phraseTypeId)
         {
-            var words = wordRecognized.Select(item => new
+            var result = new List<PhraseResult>();
+            word = lemmatizer.Lemmatize(word.ToLower());
+            var index = 0;
+            foreach (var w in text)
             {
-                Word = LemmatizerFactory.CreateLemmatizer(languageId).Lemmatize(item.Word),
-                item.StartTime,
-                item.EndTime
-            }).ToList();
-            var list = new List<PhraseResult>();
-            foreach (var word in words)
-            {
-                var foundedPhrase = await _repository
-                    .FindOneByConditionAsync<Phrase>(phrase => phrase.LanguageId == languageId && phrase.PhraseText.Contains(word.Word));
-                
-                list.Add(new PhraseResult
+                if (w.Word == word)
                 {
-                    Word = word.Word,
-                    BegTime = begTime.AddSeconds(Double.Parse(word.StartTime)),
-                    EndTime = begTime.AddSeconds(Double.Parse(word.EndTime)),
-                    PhraseId = foundedPhrase?.PhraseId,
-                    PhraseTypeId = foundedPhrase?.PhraseTypeId
-                });
+                    var phraseResult = new PhraseResult{
+                        Word = w.Word,
+                        BegTime = begTime.AddSeconds(Double.Parse(w.StartTime)),
+                        EndTime = begTime.AddSeconds(Double.Parse(w.EndTime)),
+                        PhraseId = phraseId,
+                        PhraseTypeId = phraseTypeId
+                    };
+                    result.Add(phraseResult);
+                }
+                index += 1;
             }
+            return result;
+        }
 
-            return list;
+        private async Task<List<List<PhraseResult>>> FindPhrases(List<WordRecognized> wordRecognized, Int32 languageId, DateTime begTime)
+        {
+            var result = new List<List<PhraseResult>>();
+            var wordPos = new List<PhraseResult>();
+            var phrases = await _repository.FindByConditionAsync<Phrase>(item => item.LanguageId == languageId);
+            var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
+            foreach(var phrase in phrases){
+                var phraseWords = Separator(phrase.PhraseText);
+                int minWords = Convert.ToInt32(Math.Round(phrase.Accurancy.Value * phraseWords.Count(), 0));
+                if (minWords == 0)
+                {
+                    minWords = phraseWords.Count();
+                }
+                var space = phrase.WordsSpace + minWords - 1;
+                foreach (var phraseWord in phraseWords)
+                {
+                    wordPos.AddRange(FindWord(wordRecognized, phraseWord, lemmatizer, begTime, phrase.PhraseId, phrase.PhraseTypeId.Value));
+                }
+                wordPos = wordPos.OrderBy(p => p.Position).ToList();
+                while (wordPos.Count > 0)
+                {
+                    var el = wordPos[0];
+                    var beg = el.Position;
+                    var end = el.Position + space;
+                    var acceptWords = wordPos.Where(p => p.Position >= beg & p.Position <= end).GroupBy(p => p.Word).Select(x => x.First()).ToList();
+                    if (acceptWords.Count() >= minWords)
+                    {
+                        result.Add(acceptWords);
+                        var deleteIndex = wordPos.Where(p => p.Position >= beg & p.Position <= end).ToList().Count();
+                        wordPos.RemoveRange(0, deleteIndex);
+                    }
+                    else
+                    {
+                        wordPos.RemoveRange(0, 1);
+                    }
+                }
+            }
+            return result;
+        }
+
+        private static List<string> Separator(string text)
+        {
+            return text.Split(new char[] { ' ', ',', '.', ')', '(' }, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
     }
 }
