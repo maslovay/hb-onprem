@@ -1,8 +1,8 @@
-﻿using System;
+﻿using DlibDotNet;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using DlibDotNet;
 using Rectangle = System.Drawing.Rectangle;
 
 namespace HBLib.Utils

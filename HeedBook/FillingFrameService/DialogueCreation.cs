@@ -44,7 +44,7 @@ namespace FillingFrameService
                 _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId), item => item.FileFrame).ToList();
             
             var attributes =
-                await _repository.FindByConditionAsync<FrameAttribute>(item => frameIds.Contains(item.FileFrameId));
+                _repository.GetWithInclude<FrameAttribute>(item => frameIds.Contains(item.FileFrameId), item => item.FileFrame).ToList();
             if (emotions.Any() && attributes.Any())
             {
                 var dialogueFrames = emotions.Select(item => new DialogueFrame
@@ -93,10 +93,11 @@ namespace FillingFrameService
                     _repository.BulkInsertAsync(dialogueFrames)
                 };
 
-                var localPath =
-                    await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + emotions.First().FileFrame.FileName);
-                var attribute = attributes.First(item => item.FileFrameId == emotions.First(emotion => frameIds.Contains(emotion.FileFrameId)).FileFrameId);
+                var attribute = attributes.First();
 
+                var localPath =
+                    await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
+                
                 var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
                 var rectangle = new Rectangle
                     {
