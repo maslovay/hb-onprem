@@ -14,6 +14,8 @@ namespace UserOperations.Models.AnalyticModels
         public Guid ApplicationUserId;
         public DateTime BegTime;
         public DateTime EndTime;
+
+        public string FullName;
     }
 
     public class DialogueInfo
