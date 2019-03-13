@@ -192,53 +192,62 @@ namespace UserOperations.Controllers
                     })
                     .ToList();
 
-                // var result = dialogues
-                //     .GroupBy(p => p.ApplicationUserId)
-                //     .Select(p => new RatingInfo
-                //     {
-                //         FullName = p.First().FullName,
-                //         SatisfactionIndex = _dbOperation.SatisfactionIndex(p),
-                //         LoadIndex = _dbOperation.LoadIndex(sessions, p, begTime, endTime),
-                //         CrossIndex = _dbOperation.CrossIndex(p),
-                //         EfficiencyIndex = _dbOperation.EfficiencyIndex(sessions, p, begTime, endTime),
-                //         Recommendation = "",
-                //         DialoguesCount = p.Select(q => q.DialogueId).Distinct().Count(),
-                //         DaysCount = p.Select(q => q.BegTime.Date).Distinct().Count(),
-                //         WorkingHoursDaily = _dbOperation.SessionAverageHours(p, begTime, endTime),
-                //         DialogueAverageDuration = DialogueAverageDuration(p, Beg, End.AddDays(1)),
-                //         DialogueAveragePause = DialogueAveragePause(sessions, p, Beg, End.AddDays(1)),
-                //         ClientsWorkingHoursDaily = ClientsWorkingHoursDaily(p, Beg, End.AddDays(1))
-                //     }).ToList();
-                // result = result.OrderBy(p => p.EfficiencyIndex).ToList();
-
-
-
-                return Ok();
+                var result = dialogues
+                    .GroupBy(p => p.ApplicationUserId)
+                    .Select(p => new RatingUserInfo
+                    {
+                        FullName = p.First().FullName,
+                        SatisfactionIndex = _dbOperation.SatisfactionIndex(p),
+                        LoadIndex = _dbOperation.LoadIndex(sessions, p, begTime, endTime),
+                        CrossIndex = _dbOperation.CrossIndex(p),
+                        EfficiencyIndex = _dbOperation.EfficiencyIndex(sessions, p, begTime, endTime),
+                        Recommendation = "",
+                        DialoguesCount = p.Select(q => q.DialogueId).Distinct().Count(),
+                        DaysCount = p.Select(q => q.BegTime.Date).Distinct().Count(),
+                        WorkingHoursDaily = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
+                        DialogueAverageDuration = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
+                        DialogueAveragePause = _dbOperation.DialogueAveragePause(sessions, p, begTime, endTime),
+                        ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime)
+                    }).ToList();
+                result = result.OrderBy(p => p.EfficiencyIndex).ToList();
+                return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
                 return BadRequest(e);
             }
-        }
-
-       
-       
+        }       
     }
      public class RatingProgressInfo
-        {
-            public string FullName;
+    {
+        public string FullName;
+        public List<RatingProgressUserInfo> UserResults;
+    }
 
-            public List<RatingProgressUserInfo> UserResults;
-        }
+    public class RatingProgressUserInfo
+    {
+        public DateTime? Date;
+        public int DialogueCount;
+        public double? TotalScore;
+        public double? Load;
+        public double? LoadHours;
+        public double? WorkingHours;
+        public double? DialogueDuration;
+    }
 
-        public class RatingProgressUserInfo
-        {
-            public DateTime? Date;
-            public int DialogueCount;
-            public double? TotalScore;
-            public double? Load;
-            public double? LoadHours;
-            public double? WorkingHours;
-            public double? DialogueDuration;
-        }
+    public class RatingUserInfo
+    {
+        public string FullName;
+        public double? EfficiencyIndex;
+        public double? SatisfactionIndex;
+        public double? LoadIndex;
+        public double? CrossIndex;
+        public string Recommendation;
+        public int DialoguesCount;
+        public int DaysCount;
+        public double? WorkingHoursDaily;
+        public double? DialogueAverageDuration;
+        public double? DialogueAveragePause;
+        public double? ClientsWorkingHoursDaily;
+    }
 }

@@ -203,7 +203,7 @@ namespace UserOperations.Controllers
                         FullName = p.First().FullName,
                         LoadIndex = _dbOperation.LoadIndex(sessions, p, begTime, endTime),
                         DialoguesCount = p.Select(q => q.DialogueId).Distinct().Count(),
-                        WorkingHoursDaily = _dbOperation.DialogueAverageHoursDaily(p, begTime, endTime),
+                        WorkingHoursDaily = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAverageDuration = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAveragePause = _dbOperation.DialogueAveragePause(sessions, p, begTime, endTime),
                         ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime),
