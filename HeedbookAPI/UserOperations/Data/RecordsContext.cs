@@ -87,7 +87,7 @@ namespace UserOperations.Data
         public DbSet<DialogueFrame> DialogueFrames { get; set; }
         public DbSet<DialogueInterval> DialogueIntervals { get; set; }
         public DbSet<DialogueMarkup> DialogueMarkups { get; set; }
-        public DbSet<DialoguePhrase> DialoguePhrase { get; set; }
+        public DbSet<DialoguePhrase> DialoguePhrases { get; set; }
         public DbSet<DialoguePhraseCount> DialoguePhraseCounts { get; set; }
         public DbSet<DialogueSpeech> DialogueSpeechs { get; set; }
         public DbSet<DialogueVisual> DialogueVisuals { get; set; }

@@ -236,7 +236,7 @@ namespace UserOperations.Controllers
             begTime = begTime.Date;
             endTime = endTime.Date.AddDays(1);
 
-            var dialogues = _context.DialoguePhrase
+            var dialogues = _context.DialoguePhrases
             .Include(p => p.Dialogue)
             .Include(p => p.Dialogue.ApplicationUser)
             .Where(p => 

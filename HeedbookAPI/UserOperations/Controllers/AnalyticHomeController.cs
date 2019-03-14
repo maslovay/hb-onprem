@@ -37,13 +37,13 @@ namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AnalyticsHomeController : Controller
+    public class AnalyticHomeController : Controller
     {
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
 
-        public AnalyticsHomeController(
+        public AnalyticHomeController(
             RecordsContext context,
             IConfiguration config,
             DBOperations dbOperation

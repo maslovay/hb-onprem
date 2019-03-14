@@ -519,5 +519,136 @@ namespace UserOperations.Utils
             }
             return result;
         }
+
+         public List<ReportFullDayInfo> Sum(List<ReportFullDayInfo> curRes, ReportFullDayInfo newInterval)
+        {
+            var intervals = curRes;
+            newInterval.End = MinTime(newInterval.End, intervals.Max(p => p.End));
+            newInterval.Beg = MaxTime(newInterval.Beg, intervals.Min(p => p.Beg));
+
+            foreach (var interval in intervals.Where(p => p.Beg >= newInterval.Beg && p.End <= newInterval.End))
+            {
+                interval.ActivityType += 1;
+            }
+
+            // case inside
+            var begInterval = intervals.Where(p => p.Beg < newInterval.Beg && p.End > newInterval.End);
+
+            if (begInterval.Count() == 1)
+            {
+
+                var end = begInterval.First().End;
+                var dialogueId = begInterval.First().DialogueId;
+                var type = begInterval.First().ActivityType;
+
+                begInterval.First().End = newInterval.Beg;
+
+                newInterval.ActivityType = type + newInterval.ActivityType;
+                newInterval.DialogueId = Guid.Parse(dialogueId.ToString() + newInterval.DialogueId.ToString());
+                intervals.Add(newInterval);
+
+                intervals.Add(new ReportFullDayInfo
+                {
+                    Beg = newInterval.End,
+                    End = end,
+                    DialogueId = dialogueId,
+                    ActivityType = type
+                });
+            }
+            else
+            {
+                begInterval = intervals.Where(p => p.Beg < newInterval.Beg && p.End > newInterval.Beg);
+                if (begInterval.Count() == 1)
+                {
+                    var end = begInterval.First().End;
+                    var dialogueId = begInterval.First().DialogueId;
+                    var type = begInterval.First().ActivityType;
+
+                    begInterval.First().End = newInterval.Beg;
+
+                    intervals.Add(new ReportFullDayInfo
+                    {
+                        Beg = newInterval.Beg,
+                        End = end,
+                        DialogueId = Guid.Parse(dialogueId.ToString() + newInterval.DialogueId.ToString()),
+                        ActivityType = type + newInterval.ActivityType
+                    });
+                }
+
+                var endInterval = intervals.Where(p => p.Beg < newInterval.End && p.End > newInterval.End);
+
+                if (endInterval.Count() == 1)
+                {
+                    var end = endInterval.First().End;
+                    var dialogueId = endInterval.First().DialogueId;
+                    var type = endInterval.First().ActivityType;
+
+                    var endIntervalNew = endInterval.First();
+                    endIntervalNew.End = newInterval.End;
+                    endIntervalNew.DialogueId =Guid.Parse(endIntervalNew.DialogueId.ToString() + newInterval.DialogueId.ToString());
+                    endIntervalNew.ActivityType += newInterval.ActivityType;
+
+                    intervals.Add(new ReportFullDayInfo
+                    {
+                        Beg = newInterval.End,
+                        End = end,
+                        DialogueId = dialogueId,
+                        ActivityType = type
+                    });
+                }
+            }
+
+
+            return intervals;
+        }
+
+        public List<ReportFullDayInfo> TimeTable(List<SessionInfo> sessions, List<DialogueInfo> dialogues, Guid applicationUserId, DateTime date)
+        {
+            var result = new List<ReportFullDayInfo>();
+            result.Add(new ReportFullDayInfo
+            {
+                Beg = date.Date,
+                End = date.Date.AddDays(1),
+                ActivityType = 0,
+                DialogueId = null
+            });
+            if (sessions.Count() != 0)
+            {
+                foreach (var session in sessions.Where(p => p.BegTime.Date == date && p.ApplicationUserId == applicationUserId))
+                {
+                    result = Sum(result, new ReportFullDayInfo
+                    {
+                        Beg = session.BegTime,
+                        End = session.EndTime,
+                        DialogueId = null,
+                        ActivityType = 1
+                    });
+                }
+            }
+
+            if (dialogues.Count() != 0)
+            {
+                foreach (var dialogue in dialogues)
+                {
+                    result = Sum(result, new ReportFullDayInfo
+                    {
+                        Beg = dialogue.BegTime,
+                        End = dialogue.EndTime,
+                        DialogueId = dialogue.DialogueId,
+                        ActivityType = 1
+                    });
+                }
+            }
+            result = result.OrderBy(p => p.Beg).ToList();
+            foreach (var element in result.Where(p => p.ActivityType != 0 && p.ActivityType != 1 && p.ActivityType != 2 ))
+            {
+                element.ActivityType = 0;
+            }
+            foreach (var element in result.Where(p =>p.DialogueId != null))
+            {
+                element.ActivityType = 2;
+            }
+            return result;
+        }
     }
 }

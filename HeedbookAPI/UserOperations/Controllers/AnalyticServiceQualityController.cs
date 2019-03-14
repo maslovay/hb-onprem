@@ -123,6 +123,16 @@ namespace UserOperations.Controllers
                     })
                     .ToList();
 
+                ComponentsPhraseTypeInfo Normalization(ComponentsPhraseTypeInfo info)
+                {
+                    var normCoeff = Convert.ToDouble(info.Cross) + Convert.ToDouble(info.Necessary) + Convert.ToDouble(info.Loyalty) + Convert.ToDouble(info.Alert) + Convert.ToDouble(info.Fillers);
+                    info.Cross = normCoeff != 0 ? 100 * info.Cross / normCoeff : null;
+                    info.Necessary = normCoeff != 0 ? 100 * info.Necessary / normCoeff : null;
+                    info.Loyalty = normCoeff != 0 ? 100 * info.Loyalty / normCoeff : null;
+                    info.Alert = normCoeff != 0 ? 100 * info.Alert / normCoeff : null;
+                    info.Fillers = normCoeff != 0 ? 100 * info.Fillers / normCoeff : null;
+                    return info;
+                }
                 //Result
                 var result = new ComponentsSatisfactionInfo
                 {
@@ -302,9 +312,9 @@ namespace UserOperations.Controllers
                         PositiveEmotionShare = p.Any() ? p.Where(q => q.PositiveEmotion!= null && q.PositiveEmotion != 0).Average(q => q.PositiveEmotion) : null,
                         AttentionShare = p.Any() ? p.Where(q => q.AttentionShare != null && q.AttentionShare != 0).Average(q => q.AttentionShare) : null,
                         PositiveToneShare =p.Any() ? p.Where(q => q.PositiveTone != null && q.PositiveTone != 0).Average(q => q.PositiveTone) : null,
-                        TextAlertShare = AlertIndex(p),
-                        TextCrossShare = CrossIndex(p),
-                        TextNecessaryShare = NecessaryIndex(p),
+                        TextAlertShare = p.Any() ?(double?) p.Average(q => Math.Min(q.AlertCount, 1)): null,
+                        TextCrossShare = p.Any() ?(double?) p.Average(q => Math.Min(q.CrossCount, 1)): null,
+                        TextNecessaryShare =  p.Any() ?(double?) p.Average(q => Math.Min(q.NecessaryCount, 1)): null,
                         TextPositiveShare = p.Any()? p.Where(q => q.TextShare != null && q.TextShare!= 0).Average(q => q.TextShare) : null
                     }).ToList();
                
@@ -372,40 +382,10 @@ namespace UserOperations.Controllers
             }
         }
 
-
-        public static ComponentsPhraseTypeInfo Normalization(ComponentsPhraseTypeInfo info)
-        {
-            var normCoeff = Convert.ToDouble(info.Cross) + Convert.ToDouble(info.Necessary) + Convert.ToDouble(info.Loyalty) + Convert.ToDouble(info.Alert) + Convert.ToDouble(info.Fillers);
-            info.Cross = normCoeff != 0 ? 100 * info.Cross / normCoeff : null;
-            info.Necessary = normCoeff != 0 ? 100 * info.Necessary / normCoeff : null;
-            info.Loyalty = normCoeff != 0 ? 100 * info.Loyalty / normCoeff : null;
-            info.Alert = normCoeff != 0 ? 100 * info.Alert / normCoeff : null;
-            info.Fillers = normCoeff != 0 ? 100 * info.Fillers / normCoeff : null;
-            return info;
-        }
-
-        public double? CrossIndex(IGrouping<string, RatingDialogueInfo> dialogues)
-        {
-            var dialoguesCount = dialogues.Count() != 0 ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
-            var crossDialoguesCount = dialogues.Count() != 0 ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;
-            return dialoguesCount != 0 ? (double?)(100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount)) : null;
-        }
-
-        public double? AlertIndex(IGrouping<string, RatingDialogueInfo> dialogues)
-        {
-            var dialoguesCount = dialogues.Count() != 0 ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
-            var alertDialoguesCount = dialogues.Count() != 0 ? dialogues.Sum(p => Math.Min(p.AlertCount, 1)) : 0;
-            return dialoguesCount != 0 ? (double?)(100 * Convert.ToDouble(alertDialoguesCount) / Convert.ToDouble(dialoguesCount)) : null;
-        }
-
-        public double? NecessaryIndex(IGrouping<string, RatingDialogueInfo> dialogues)
-        {
-            var dialoguesCount = dialogues.Count() != 0 ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
-            var necessaryDialoguesCount = dialogues.Count() != 0 ? dialogues.Sum(p => Math.Min(p.NecessaryCount, 1)) : 0;
-            return dialoguesCount != 0 ? (double?)(100 * Convert.ToDouble(necessaryDialoguesCount) / Convert.ToDouble(dialoguesCount)) : null;
-        }
-
+        
     }
+
+    
 
     public class ComponentsDialogueInfo
     {

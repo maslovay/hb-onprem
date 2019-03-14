@@ -119,7 +119,7 @@ namespace UserOperations.Controllers
                                 TotalScore = q.Count() != 0 ? q.Average(r => r.SatisfactionScore) : null,
                                 Load = _dbOperation.LoadIndex(sessions, q, p.Key, q.Key, begTime, endTime),
                                 LoadHours = _dbOperation.SessionAverageHours(sessions, p.Key, q.Key, begTime, endTime),
-                                WorkingHours = _dbOperation.DialogueAverageHoursDaily(q, begTime, endTime),
+                                WorkingHours = _dbOperation.DialogueSumDuration(q, begTime, endTime),
                                 DialogueDuration = _dbOperation.DialogueAverageDuration(q, begTime, endTime)
                             }).ToList()
                     }).ToList();

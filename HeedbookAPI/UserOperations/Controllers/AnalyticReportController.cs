@@ -90,7 +90,6 @@ namespace UserOperations.Controllers
             {
                return BadRequest(e); 
             }
-
         }
 
         [HttpGet("UserPartial")]
@@ -258,7 +257,7 @@ namespace UserOperations.Controllers
                             userInfo.Load = _dbOperation.LoadIndex(sessions, dialoguesUser, applicationUserId, Convert.ToDateTime(date), begDate, endDate);
                             userInfo.DialoguesTime = _dbOperation.DialogueSumDuration(dialoguesUser, begDate, endDate);
                             userInfo.SessionTime = _dbOperation. SessionAverageHours(sessions, applicationUserId, Convert.ToDateTime(date), begDate, endDate);
-                            userInfo.PeriodInfo = TimeTable(sessions, dialoguesUser, applicationUserId, Convert.ToDateTime(date));
+                            userInfo.PeriodInfo = _dbOperation.TimeTable(sessions, dialoguesUser, applicationUserId, Convert.ToDateTime(date));
                             
                             result.Add(userInfo);
                         }
@@ -273,136 +272,7 @@ namespace UserOperations.Controllers
             }
         }
 
-        public List<ReportFullDayInfo> Sum(List<ReportFullDayInfo> curRes, ReportFullDayInfo newInterval)
-        {
-            var intervals = curRes;
-            newInterval.End = _dbOperation.MinTime(newInterval.End, intervals.Max(p => p.End));
-            newInterval.Beg = _dbOperation.MaxTime(newInterval.Beg, intervals.Min(p => p.Beg));
-
-            foreach (var interval in intervals.Where(p => p.Beg >= newInterval.Beg && p.End <= newInterval.End))
-            {
-                interval.ActivityType += 1;
-            }
-
-            // case inside
-            var begInterval = intervals.Where(p => p.Beg < newInterval.Beg && p.End > newInterval.End);
-
-            if (begInterval.Count() == 1)
-            {
-
-                var end = begInterval.First().End;
-                var dialogueId = begInterval.First().DialogueId;
-                var type = begInterval.First().ActivityType;
-
-                begInterval.First().End = newInterval.Beg;
-
-                newInterval.ActivityType = type + newInterval.ActivityType;
-                newInterval.DialogueId = Guid.Parse(dialogueId.ToString() + newInterval.DialogueId.ToString());
-                intervals.Add(newInterval);
-
-                intervals.Add(new ReportFullDayInfo
-                {
-                    Beg = newInterval.End,
-                    End = end,
-                    DialogueId = dialogueId,
-                    ActivityType = type
-                });
-            }
-            else
-            {
-                begInterval = intervals.Where(p => p.Beg < newInterval.Beg && p.End > newInterval.Beg);
-                if (begInterval.Count() == 1)
-                {
-                    var end = begInterval.First().End;
-                    var dialogueId = begInterval.First().DialogueId;
-                    var type = begInterval.First().ActivityType;
-
-                    begInterval.First().End = newInterval.Beg;
-
-                    intervals.Add(new ReportFullDayInfo
-                    {
-                        Beg = newInterval.Beg,
-                        End = end,
-                        DialogueId = Guid.Parse(dialogueId.ToString() + newInterval.DialogueId.ToString()),
-                        ActivityType = type + newInterval.ActivityType
-                    });
-                }
-
-                var endInterval = intervals.Where(p => p.Beg < newInterval.End && p.End > newInterval.End);
-
-                if (endInterval.Count() == 1)
-                {
-                    var end = endInterval.First().End;
-                    var dialogueId = endInterval.First().DialogueId;
-                    var type = endInterval.First().ActivityType;
-
-                    var endIntervalNew = endInterval.First();
-                    endIntervalNew.End = newInterval.End;
-                    endIntervalNew.DialogueId =Guid.Parse(endIntervalNew.DialogueId.ToString() + newInterval.DialogueId.ToString());
-                    endIntervalNew.ActivityType += newInterval.ActivityType;
-
-                    intervals.Add(new ReportFullDayInfo
-                    {
-                        Beg = newInterval.End,
-                        End = end,
-                        DialogueId = dialogueId,
-                        ActivityType = type
-                    });
-                }
-            }
-
-
-            return intervals;
-        }
-
-        public List<ReportFullDayInfo> TimeTable(List<SessionInfo> sessions, List<DialogueInfo> dialogues, Guid applicationUserId, DateTime date)
-        {
-            var result = new List<ReportFullDayInfo>();
-            result.Add(new ReportFullDayInfo
-            {
-                Beg = date.Date,
-                End = date.Date.AddDays(1),
-                ActivityType = 0,
-                DialogueId = null
-            });
-            if (sessions.Count() != 0)
-            {
-                foreach (var session in sessions.Where(p => p.BegTime.Date == date && p.ApplicationUserId == applicationUserId))
-                {
-                    result = Sum(result, new ReportFullDayInfo
-                    {
-                        Beg = session.BegTime,
-                        End = session.EndTime,
-                        DialogueId = null,
-                        ActivityType = 1
-                    });
-                }
-            }
-
-            if (dialogues.Count() != 0)
-            {
-                foreach (var dialogue in dialogues)
-                {
-                    result = Sum(result, new ReportFullDayInfo
-                    {
-                        Beg = dialogue.BegTime,
-                        End = dialogue.EndTime,
-                        DialogueId = dialogue.DialogueId,
-                        ActivityType = 1
-                    });
-                }
-            }
-            result = result.OrderBy(p => p.Beg).ToList();
-            foreach (var element in result.Where(p => p.ActivityType != 0 && p.ActivityType != 1 && p.ActivityType != 2 ))
-            {
-                element.ActivityType = 0;
-            }
-            foreach (var element in result.Where(p =>p.DialogueId != null))
-            {
-                element.ActivityType = 2;
-            }
-            return result;
-        }
+       
     }
 
      public class ReportPartDayEmployeeInfo
@@ -421,25 +291,5 @@ namespace UserOperations.Controllers
         // public string WorkerType;
         public double? LoadIndexAverage;
         public List<ReportPartDayEmployeeInfo> PeriodInfo;
-    }
-
-    public class ReportFullDayInfo
-    {
-        public int ActivityType;
-        public DateTime Beg;
-        public DateTime End;
-        public Guid? DialogueId;
-    }
-
-    public class ReportFullPeriodInfo
-    {
-        public string FullName;
-        public Guid ApplicationUserId;
-        public string WorkerType;
-        public DateTime Date;
-        public double? SessionTime;
-        public double? DialoguesTime;
-        public double? Load;
-        public List<ReportFullDayInfo> PeriodInfo;
     }
 }
