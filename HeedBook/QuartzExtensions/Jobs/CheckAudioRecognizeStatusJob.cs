@@ -1,4 +1,5 @@
-﻿using HBData.Models;
+﻿using System.Runtime.InteropServices;
+using HBData.Models;
 using HBData.Repository;
 using HBLib.Model;
 using HBLib.Utils;
@@ -64,12 +65,14 @@ namespace QuartzExtensions.Jobs
                                          recognized.Add(word);
                                      })));
 
-                         var languageId = _repository
-                             .Get<Dialogue>()
-                             .Where(d => d.DialogueId == item.DialogueId)
-                             .Select(d => d.LanguageId ?? 1)
-                             .First();
+                        //  var languageId = _repository
+                        //      .Get<Dialogue>()
+                        //      .Where(d => d.DialogueId == item.DialogueId)
+                        //      .Select(d => d.LanguageId ?? 1)
+                        //      .First();
+                        var languageId = 2;
                          var speechSpeed = GetSpeechSpeed(recognized, languageId);
+                         System.Console.WriteLine(speechSpeed);
                          var dialogueSpeech = new DialogueSpeech
                          {
                              DialogueId = item.DialogueId,
@@ -78,18 +81,29 @@ namespace QuartzExtensions.Jobs
                              PositiveShare = default(Double),
                              SilenceShare = GetSilenceShare(recognized, item.BegTime, item.EndTime)
                          };
-
-                         var phrases = await FindPhrases(recognized, languageId, item.BegTime);
+                         var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
+                         
+                         foreach(var recWord in recognized)
+                         {
+                             recWord.Word = lemmatizer.Lemmatize(recWord.Word);
+                         }
+                         var phrases = await FindPhrases(recognized, item.BegTime, lemmatizer, languageId);
+                         System.Console.WriteLine(JsonConvert.SerializeObject(phrases));
                          var phraseCount = new List<DialoguePhraseCount>();
+
                          foreach (var phraseResult in phrases)
                          {
-                             phraseCount.Add(new DialoguePhraseCount
+                             foreach(var phrase in phraseResult)
                              {
-                                 DialogueId = item.DialogueId,
-                                 IsClient = true,
-                                 PhraseCount = phrases.Count(p => p.PhraseTypeId == phraseResult.PhraseTypeId),
-                                 PhraseTypeId = phraseResult.PhraseTypeId
-                             });
+                                phraseCount.Add(new DialoguePhraseCount
+                                {
+                                    DialogueId = item.DialogueId,
+                                    IsClient = true,
+                                    PhraseCount = phraseResult.Count(p => p.PhraseTypeId == phrase.PhraseTypeId),
+                                    PhraseTypeId = phrase.PhraseTypeId
+                                });
+                             }
+
                          }
                          item.StatusId = 7;
                          await _repository.CreateAsync(new DialogueWord
@@ -133,16 +147,20 @@ namespace QuartzExtensions.Jobs
             var result = new List<PhraseResult>();
             word = lemmatizer.Lemmatize(word.ToLower());
             var index = 0;
+            System.Console.WriteLine(JsonConvert.SerializeObject(text));
+            System.Console.WriteLine(JsonConvert.SerializeObject(word));
+
             foreach (var w in text)
             {
-                if (w.Word == word)
+                if (lemmatizer.Lemmatize(w.Word) == word)
                 {
                     var phraseResult = new PhraseResult{
                         Word = w.Word,
                         BegTime = begTime.AddSeconds(Double.Parse(w.StartTime)),
                         EndTime = begTime.AddSeconds(Double.Parse(w.EndTime)),
                         PhraseId = phraseId,
-                        PhraseTypeId = phraseTypeId
+                        PhraseTypeId = phraseTypeId,
+                        Position = index
                     };
                     result.Add(phraseResult);
                 }
@@ -151,12 +169,11 @@ namespace QuartzExtensions.Jobs
             return result;
         }
 
-        private async Task<List<List<PhraseResult>>> FindPhrases(List<WordRecognized> wordRecognized, Int32 languageId, DateTime begTime)
+        private async Task<List<List<PhraseResult>>> FindPhrases(List<WordRecognized> wordRecognized, DateTime begTime, ILemmatizer lemmatizer, Int32 languageId)
         {
             var result = new List<List<PhraseResult>>();
             var wordPos = new List<PhraseResult>();
             var phrases = await _repository.FindByConditionAsync<Phrase>(item => item.LanguageId == languageId);
-            var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
             foreach(var phrase in phrases){
                 var phraseWords = Separator(phrase.PhraseText);
                 int minWords = Convert.ToInt32(Math.Round(phrase.Accurancy.Value * phraseWords.Count(), 0));

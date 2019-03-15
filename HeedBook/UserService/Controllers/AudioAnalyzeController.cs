@@ -5,7 +5,7 @@ using RabbitMqEventBus.Events;
 
 namespace UserService.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("user/[controller]")]
     [ApiController]
     public class AudioAnalyzeController: Controller
     {

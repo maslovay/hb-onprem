@@ -73,11 +73,15 @@ namespace UserService
                 app.UseHsts();
             }
             
-            app.UseSwagger();
+            app.UseSwagger(c =>
+            {
+                c.RouteTemplate = "user/swagger/{documentName}/swagger.json";
+            });
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "User Service API V1");
+               c.SwaggerEndpoint("/user/swagger/v1/swagger.json", "Sample API");
+               c.RoutePrefix = "user/swagger";
             });
             app.UseHttpsRedirection();
             app.UseMvc();

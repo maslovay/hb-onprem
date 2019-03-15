@@ -9,7 +9,7 @@ using RabbitMqEventBus.Models;
 
 namespace UserService.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("user/[controller]")]
     [ApiController]
     public class FaceController : ControllerBase
     {
