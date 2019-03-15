@@ -2,6 +2,7 @@ using System;
 using Microsoft.AspNetCore.Mvc;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserService.Controllers
 {
@@ -16,6 +17,7 @@ namespace UserService.Controllers
         }
 
         [HttpPost("audio-analyze")]
+        [SwaggerOperation(Summary = "Hello world", Description = "Hello everybody")]
         public void AudioAnalyze([FromBody] AudioAnalyzeRun message)
         {
             _handler.EventRaised(message);
