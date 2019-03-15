@@ -43,7 +43,7 @@ namespace QuartzExtensions.Jobs
                 return Task.Run(async () =>
                  {
                      var sttResults = await _googleConnector.GetGoogleSTTResults(item.TransactionId);
-                     Console.WriteLine($"{sstResults}");
+                     Console.WriteLine($"{sttResults}");
                      var differenceHour = (DateTime.Now - item.CreationTime).Hours;
                      if (sttResults.Response == null && differenceHour >= 1)
                      {
