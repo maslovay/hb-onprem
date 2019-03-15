@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\HBData\HBData.csproj" />
+    <ProjectReference Include="..\HBLib\HBLib.csproj" />
   </ItemGroup>
 
 </Project>
