@@ -37,11 +37,21 @@ namespace UserOperations
             Configuration = configuration;
         }
 
+        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         private IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(MyAllowSpecificOrigins,
+                builder =>
+                {
+                    builder.WithOrigins("http://localhost:3000",
+                                        "https://hbreactapp.azurewebsites.net");
+                });
+            }); 
             services.AddOptions();
             services.AddDbContext<RecordsContext>
             (options =>
@@ -89,14 +99,21 @@ namespace UserOperations
                 app.UseHsts();
             }
             
-            app.UseSwagger();
+           
+           
+            app.UseSwagger(c =>
+            {
+                c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
+            });
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "User Service API V1");
+                c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
+                c.RoutePrefix = "api/swagger";
             });
             app.UseAuthentication();
             app.UseHttpsRedirection();
+            app.UseCors(MyAllowSpecificOrigins); 
             app.UseMvc();
         }
     }

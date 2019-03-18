@@ -32,11 +32,22 @@ namespace UserService
             Configuration = configuration;
         }
 
+        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         private IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy(MyAllowSpecificOrigins,
+                builder =>
+                {
+                    builder.WithOrigins("http://localhost:3000",
+                                        "https://hbreactapp.azurewebsites.net");
+                });
+            }); 
             services.AddOptions();
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
             services.AddDbContext<RecordsContext>
@@ -50,6 +61,7 @@ namespace UserService
             
             services.AddSwaggerGen(c =>
             {
+                c.EnableAnnotations();
                 c.SwaggerDoc("v1", new Info
                 {
                     Title = "User Service Api",
@@ -90,6 +102,7 @@ namespace UserService
                c.SwaggerEndpoint("/user/swagger/v1/swagger.json", "Sample API");
                c.RoutePrefix = "user/swagger";
             });
+            app.UseCors(MyAllowSpecificOrigins); 
             app.UseHttpsRedirection();
             app.UseMvc();
         }

@@ -13,7 +13,7 @@ using System.Globalization;
 
 namespace UserService.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("user/[controller]")]
     [ApiController]
     public class VideoSaveController : Controller
     {
@@ -25,17 +25,25 @@ namespace UserService.Controllers
         {
             _handler = handler;
             _context = context;
-            _sftpClient = _sftpClient;
+            _sftpClient = sftpClient;
         }
 
         [HttpPost]
-        public async Task<IActionResult> VideoToSound([FromBody] byte[] video, [FromQuery] Guid applicationUserId, [FromQuery] string begTime, [FromQuery] double? duration)
+        public async Task<IActionResult> VideoToSound([FromQuery] Guid applicationUserId, 
+            [FromQuery] string begTime,
+            [FromQuery] double? duration,
+            [FromBody] string video)
         {
+            Console.WriteLine(video);
             try
             {
-
+                System.Console.WriteLine("Function started");
                 duration = duration == null ? 15 : duration;
-                var memoryStream = new MemoryStream(video);
+                System.Console.WriteLine("1");
+                var imgBytes = Convert.FromBase64String(video);
+                System.Console.WriteLine("2");
+                var memoryStream = new MemoryStream(imgBytes);
+                System.Console.WriteLine("3");
                 var languageId = _context.ApplicationUsers
                     .Include(p => p.Company)
                     .Include(p => p.Company.Language)
@@ -61,6 +69,13 @@ namespace UserService.Controllers
 
                 _context.FileVideos.Add(videoFile);
                 _context.SaveChanges();
+
+                if (videoFile.FileExist)
+                {
+                    var message = new FramesFromVideoRun();
+                    message.Path = $"videos/{fileName}";
+                    _handler.EventRaised(message);
+                }
                 return Ok();
             }
             catch (Exception e)

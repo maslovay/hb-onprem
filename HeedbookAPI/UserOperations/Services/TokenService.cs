@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UserOperations.Services;
 using Newtonsoft.Json;
-
+using UserOperations.Data;
 
 namespace UserOperations.Services
 {
@@ -22,11 +22,13 @@ namespace UserOperations.Services
     {
         private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
-
-        public TokenService(IGenericRepository repository, IConfiguration config)
+        private readonly RecordsContext _context;
+        
+        public TokenService(IGenericRepository repository, IConfiguration config, RecordsContext context)
         {
             _repository = repository;
             _config = config;
+            _context = context;
         }
 
         public string CreateTokenForUser(string userEmail, bool remember)
@@ -36,9 +38,13 @@ namespace UserOperations.Services
                 userEmail = userEmail.ToUpper();
 
                 System.Console.WriteLine("CreateTokenForUser --------------- " + userEmail);
-                var user = _repository.GetWithIncludeOne<ApplicationUser>(p => p.NormalizedEmail == userEmail, link => link.Company);
+                var user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == userEmail).FirstOrDefault();
+                System.Console.WriteLine(user == null);
                 var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
+                System.Console.WriteLine(roleInfo == null);
                 var role = roleInfo.Role.Name;            
+                System.Console.WriteLine(role);
+                System.Console.WriteLine(user.StatusId);
 
                 if (user.StatusId == 3)
                 {
@@ -55,8 +61,10 @@ namespace UserOperations.Services
                         new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
                     };
+                    System.Console.WriteLine("End");
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
+                    System.Console.WriteLine($"{key}");
                     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                     var token = new JwtSecurityToken(_config["Tokens:Issuer"],
