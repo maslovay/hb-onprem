@@ -9,8 +9,8 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/UserOperations/publish .
 ENTRYPOINT ["dotnet", "UserOperations.dll"]
-EXPOSE 53650
-ENV ASPNETCORE_URLS http://+:53650
+EXPOSE 53651
+ENV ASPNETCORE_URLS http://+:53651
 RUN mkdir /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir /opt/download

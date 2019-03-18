@@ -21,6 +21,8 @@ using UserOperations.Repository;
 using UserOperations.Models;
 using UserOperations.Models.AccountViewModels;
 using UserOperations.Services;
+using UserOperations.Data;
+
 
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +31,7 @@ using System.Net.Http;
 using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
+
 
 
 namespace UserOperations.Controllers
@@ -42,6 +45,7 @@ namespace UserOperations.Controllers
         private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
         private readonly ITokenService _tokenService;
+        private readonly RecordsContext _context;
 
 
         public AccountController(
@@ -49,7 +53,8 @@ namespace UserOperations.Controllers
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
-            ITokenService tokenService
+            ITokenService tokenService,
+            RecordsContext context
             )
         {
             _repository = repository;
@@ -57,13 +62,14 @@ namespace UserOperations.Controllers
             _signInManager = signInManager;
             _config = config;
             _tokenService = tokenService;
+            _context = context;
         }
 
         [HttpPost("Register")]
         public async Task<string>  UserRegister([FromBody] UserRegister message)
         {
             try
-            {
+            { 
                 var companyId = Guid.NewGuid();
                 var company = new Company{
                     CompanyId = companyId,
@@ -75,8 +81,7 @@ namespace UserOperations.Controllers
                     StatusId = 5
                 };
 
-                _repository.Create(company);
-                _repository.Save();
+                _context.Companys.Add(company);
 
                 var user = new ApplicationUser { 
                     UserName = message.Email,
@@ -90,13 +95,10 @@ namespace UserOperations.Controllers
                 var result = await _userManager.CreateAsync(user, message.Password);
                 await _userManager.AddToRoleAsync(user, "Manager");
 
-                _repository.Create(user);
-                _repository.Save();
-                
                 if (result.Succeeded)
                 {
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    if (await _repository.FindByConditionAsync<Tariff>(item => item.CompanyId == companyId).ToAsyncEnumerable().Count() == 0)
+                    if (_context.Tariffs.Where(item => item.CompanyId == companyId).ToList().Count() == 0)
                     {
                         Tariff tariff = new Tariff
                         {
@@ -111,7 +113,7 @@ namespace UserOperations.Controllers
                             Rebillid = "",
                             StatusId = 10
                         };
-                        
+
                         Transaction transaction = new Transaction
                         {
                             TransactionId = Guid.NewGuid(),
@@ -125,11 +127,13 @@ namespace UserOperations.Controllers
                         };
 
                         company.StatusId = 3;
-                        _repository.Update(company);
-
-                        _repository.Create(tariff);
-                        _repository.Create(transaction);                    
-                        _repository.Save();
+                        
+                        _context.Tariffs.Add(tariff);
+                        _context.Transactions.Add(transaction);
+                        var ids = _context.ApplicationUsers.Where(p => p.Id == user.Id).ToList();
+                        _context.SaveChanges();
+                        _context.Dispose();
+                        // _signInManager.
                     }
                     else
                     {
@@ -157,7 +161,7 @@ namespace UserOperations.Controllers
                 if (user != null)
                 {
                     var result = await _signInManager.CheckPasswordSignInAsync(user, message.Password, false);
-                    System.Console.WriteLine(result.Succeeded);
+                    System.Console.WriteLine("result of checking " + result.Succeeded);
                     if (result.Succeeded)
                     {
                         var token = _tokenService.CreateTokenForUser(message.UserName, message.Remember);
