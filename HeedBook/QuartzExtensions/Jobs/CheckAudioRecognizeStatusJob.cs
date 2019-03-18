@@ -71,7 +71,7 @@ namespace QuartzExtensions.Jobs
                         //      .Where(d => d.DialogueId == item.DialogueId)
                         //      .Select(d => d.LanguageId ?? 1)
                         //      .First();
-                        var languageId = 2;
+                         var languageId = 2;
                          var speechSpeed = GetSpeechSpeed(recognized, languageId);
                          System.Console.WriteLine(speechSpeed);
                          var dialogueSpeech = new DialogueSpeech
@@ -83,36 +83,50 @@ namespace QuartzExtensions.Jobs
                              SilenceShare = GetSilenceShare(recognized, item.BegTime, item.EndTime)
                          };
                          var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
-                         
-                         foreach(var recWord in recognized)
-                         {
-                             recWord.Word = lemmatizer.Lemmatize(recWord.Word);
-                         }
-                         var phrases = await FindPhrases(recognized, item.BegTime, lemmatizer, languageId);
-                         System.Console.WriteLine(JsonConvert.SerializeObject(phrases));
+                         var phrases = await _repository.FindAllAsync<Phrase>();
                          var phraseCount = new List<DialoguePhraseCount>();
+                         var phraseCounter = new Dictionary<Guid, Int32>();
+                         var words = new List<PhraseResult>();
+                         foreach(var phrase in phrases){                            
+                            var foundPhrases = await FindPhrases(recognized, phrase, item.BegTime, lemmatizer, languageId);
+                            System.Console.WriteLine(JsonConvert.SerializeObject(phrases));
+                            foundPhrases.ForEach(f => words.AddRange(f));
+                            if (phraseCounter.Keys.Contains(phrase.PhraseTypeId.Value))
+                            {
+                                phraseCounter[phrase.PhraseTypeId.Value] += foundPhrases.Count();
+                            }
+                            else
+                            {
+                                phraseCounter[phrase.PhraseTypeId.Value] = foundPhrases.Count();
+                            }
+                         }
 
-                         foreach (var phraseResult in phrases)
-                         {
-                             foreach(var phrase in phraseResult)
-                             {
-                                phraseCount.Add(new DialoguePhraseCount
-                                {
-                                    DialogueId = item.DialogueId,
-                                    IsClient = true,
-                                    PhraseCount = phraseResult.Count(p => p.PhraseTypeId == phrase.PhraseTypeId),
-                                    PhraseTypeId = phrase.PhraseTypeId
-                                });
-                             }
-
+                         foreach(var key in phraseCounter.Keys){
+                             phraseCount.Add(new DialoguePhraseCount(){
+                                 DialogueId = item.DialogueId,
+                                 PhraseTypeId = key,
+                                 PhraseCount = phraseCounter[key],
+                                 IsClient = true
+                             });
                          }
                          item.StatusId = 7;
+                         recognized.ForEach(r => {
+                             if(!words.Any(w => w.Word == r.Word)){
+                                 words.Add(new PhraseResult{
+                                    Word = r.Word,
+                                    BegTime = item.BegTime.AddSeconds(Double.Parse(r.StartTime)),
+                                    EndTime = item.BegTime.AddSeconds(Double.Parse(r.EndTime)),
+                                 });
+                             }
+                         });
+                            
                          await _repository.CreateAsync(new DialogueWord
                          {
                              DialogueId = item.DialogueId,
                              IsClient = true,
-                             Words = JsonConvert.SerializeObject(phrases)
+                             Words = JsonConvert.SerializeObject(words)
                          });
+                         await _repository.CreateAsync(dialogueSpeech);
                          await _repository.BulkInsertAsync(phraseCount);
                          Console.WriteLine("Everything is ok");
                      }
@@ -170,40 +184,38 @@ namespace QuartzExtensions.Jobs
             return result;
         }
 
-        private async Task<List<List<PhraseResult>>> FindPhrases(List<WordRecognized> wordRecognized, DateTime begTime, ILemmatizer lemmatizer, Int32 languageId)
+        private async Task<List<List<PhraseResult>>> FindPhrases(List<WordRecognized> wordRecognized, Phrase phrase, DateTime begTime, ILemmatizer lemmatizer, Int32 languageId)
         {
             var result = new List<List<PhraseResult>>();
             var wordPos = new List<PhraseResult>();
             var phrases = await _repository.FindByConditionAsync<Phrase>(item => item.LanguageId == languageId);
-            foreach(var phrase in phrases){
-                var phraseWords = Separator(phrase.PhraseText);
-                int minWords = Convert.ToInt32(Math.Round(phrase.Accurancy.Value * phraseWords.Count(), 0));
-                if (minWords == 0)
+            var phraseWords = Separator(phrase.PhraseText);
+            int minWords = Convert.ToInt32(Math.Round(phrase.Accurancy.Value * phraseWords.Count(), 0));
+            if (minWords == 0)
+            {
+                minWords = phraseWords.Count();
+            }
+            var space = phrase.WordsSpace + minWords - 1;
+            foreach (var phraseWord in phraseWords)
+            {
+                wordPos.AddRange(FindWord(wordRecognized, phraseWord, lemmatizer, begTime, phrase.PhraseId, phrase.PhraseTypeId.Value));
+            }
+            wordPos = wordPos.OrderBy(p => p.Position).ToList();
+            while (wordPos.Count > 0)
+            {
+                var el = wordPos[0];
+                var beg = el.Position;
+                var end = el.Position + space;
+                var acceptWords = wordPos.Where(p => p.Position >= beg & p.Position <= end).GroupBy(p => p.Word).Select(x => x.First()).ToList();
+                if (acceptWords.Count() >= minWords)
                 {
-                    minWords = phraseWords.Count();
+                    result.Add(acceptWords);
+                    var deleteIndex = wordPos.Where(p => p.Position >= beg & p.Position <= end).ToList().Count();
+                    wordPos.RemoveRange(0, deleteIndex);
                 }
-                var space = phrase.WordsSpace + minWords - 1;
-                foreach (var phraseWord in phraseWords)
+                else
                 {
-                    wordPos.AddRange(FindWord(wordRecognized, phraseWord, lemmatizer, begTime, phrase.PhraseId, phrase.PhraseTypeId.Value));
-                }
-                wordPos = wordPos.OrderBy(p => p.Position).ToList();
-                while (wordPos.Count > 0)
-                {
-                    var el = wordPos[0];
-                    var beg = el.Position;
-                    var end = el.Position + space;
-                    var acceptWords = wordPos.Where(p => p.Position >= beg & p.Position <= end).GroupBy(p => p.Word).Select(x => x.First()).ToList();
-                    if (acceptWords.Count() >= minWords)
-                    {
-                        result.Add(acceptWords);
-                        var deleteIndex = wordPos.Where(p => p.Position >= beg & p.Position <= end).ToList().Count();
-                        wordPos.RemoveRange(0, deleteIndex);
-                    }
-                    else
-                    {
-                        wordPos.RemoveRange(0, 1);
-                    }
+                    wordPos.RemoveRange(0, 1);
                 }
             }
             return result;
