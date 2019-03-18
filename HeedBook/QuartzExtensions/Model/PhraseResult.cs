@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace QuartzExtensions.Jobs
+namespace QuartzExtensions.Model
 {
     internal class PhraseResult
     {

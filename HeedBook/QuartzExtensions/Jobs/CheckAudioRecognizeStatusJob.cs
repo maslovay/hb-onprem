@@ -14,6 +14,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Phrase = HBData.Models.Phrase;
+using QuartzExtensions.Model;
 
 namespace QuartzExtensions.Jobs
 {
