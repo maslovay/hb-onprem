@@ -14,10 +14,9 @@ namespace QuartzExtensions.Jobs
             var now = DateTime.Now;
             foreach (var file in files)
             {
-                if ((now - File.GetLastWriteTime(file)).Hours > 1)
-                {
-                    OS.SafeDelete(file);
-                }
+                if ((now - File.GetLastWriteTime(file)).Hours <= 1) continue;
+                OS.SafeDelete(file);
+                Console.WriteLine(file + " deleted");
             }
         }
     }

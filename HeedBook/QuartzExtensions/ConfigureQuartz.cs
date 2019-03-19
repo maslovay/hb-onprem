@@ -64,7 +64,7 @@ namespace QuartzExtensions
         {
             services.Add(new ServiceDescriptor(typeof(IJob), typeof(DeleteOldFilesJob), ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
-            services.AddSingleton(provider => JobBuilder.Create<DialogueStatusCheckerJob>()
+            services.AddSingleton(provider => JobBuilder.Create<DeleteOldFilesJob>()
                                                         .WithIdentity("DeleteOldFiles.job", "Files")
                                                         .Build());
             services.AddSingleton(provider =>
