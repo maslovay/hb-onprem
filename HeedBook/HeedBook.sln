@@ -58,6 +58,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoToSoundService", "Vide
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueVideoMergeService", "DialogueVideoMergeService\DialogueVideoMergeService.csproj", "{858AD51F-9087-4407-98D6-9937D354C070}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillingHintService", "FillingHintService\FillingHintService.csproj", "{7BA2E9ED-5AC4-4F32-BEB6-E9A9857E1148}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillingSatisfactionService", "FillingSatisfactionService\FillingSatisfactionService.csproj", "{12E5B74B-9957-427C-9283-BBD45B1B890E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -128,6 +132,14 @@ Global
 		{858AD51F-9087-4407-98D6-9937D354C070}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{858AD51F-9087-4407-98D6-9937D354C070}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{858AD51F-9087-4407-98D6-9937D354C070}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BA2E9ED-5AC4-4F32-BEB6-E9A9857E1148}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BA2E9ED-5AC4-4F32-BEB6-E9A9857E1148}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BA2E9ED-5AC4-4F32-BEB6-E9A9857E1148}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BA2E9ED-5AC4-4F32-BEB6-E9A9857E1148}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12E5B74B-9957-427C-9283-BBD45B1B890E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12E5B74B-9957-427C-9283-BBD45B1B890E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12E5B74B-9957-427C-9283-BBD45B1B890E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12E5B74B-9957-427C-9283-BBD45B1B890E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -149,6 +161,8 @@ Global
 		{F95DC1FC-0176-4051-B55E-BB28DF8C7978} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{B8596FA7-2E7C-46AC-B4FA-108BFBAFE461} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{858AD51F-9087-4407-98D6-9937D354C070} = {F9312081-26B8-4651-ABC9-A32914105EBA}
+		{7BA2E9ED-5AC4-4F32-BEB6-E9A9857E1148} = {F9312081-26B8-4651-ABC9-A32914105EBA}
+		{12E5B74B-9957-427C-9283-BBD45B1B890E} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}

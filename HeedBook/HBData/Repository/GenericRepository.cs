@@ -2,6 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
+using System.Data.Common;
+using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -9,6 +12,7 @@ using System.Threading.Tasks;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal;
+using Newtonsoft.Json;
 using Remotion.Linq.Clauses;
 
 namespace HBData.Repository
@@ -119,6 +123,40 @@ namespace HBData.Repository
         public void Delete<T>(T entity) where T : class
         {
             _context.Set<T>().Remove(entity);
+        }
+
+        public IEnumerable<Object> ExecuteDbCommand(Type type, String sql, Dictionary<String, Object> @params = null)
+        {
+            using (var cmd = _context.Database.GetDbConnection().CreateCommand())
+            {
+                cmd.CommandText = sql;
+                if (cmd.Connection.State != ConnectionState.Open)
+                {
+                    cmd.Connection.Open();
+                }
+
+                if (@params != null)
+                {
+                    foreach (KeyValuePair<String, Object> p in @params)
+                    {
+                        DbParameter dbParameter = cmd.CreateParameter();
+                        dbParameter.ParameterName = p.Key;
+                        dbParameter.Value = p.Value;
+                        cmd.Parameters.Add(dbParameter);
+                    }
+                }
+
+                using (var dataReader = cmd.ExecuteReader())
+                {
+                    while (dataReader.Read())
+                    {
+                        for (var fieldCount = 0; fieldCount < dataReader.FieldCount; fieldCount++)
+                        {
+                            yield return JsonConvert.DeserializeObject(dataReader[fieldCount].ToString(), type);
+                        }
+                    }
+                }
+            }
         }
 
         public void Save()
