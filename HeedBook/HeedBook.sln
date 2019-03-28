@@ -27,11 +27,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498
 	ProjectSection(SolutionItems) = preProject
 		AudioAnalyzeScheduler.Dockerfile = AudioAnalyzeScheduler.Dockerfile
 		AudioAnalyzeService.Dockerfile = AudioAnalyzeService.Dockerfile
+		build.sh = build.sh
 		DialogueStatusCheckerScheduler.Dockerfile = DialogueStatusCheckerScheduler.Dockerfile
 		DialogueVideoMergeService.Dockerfile = DialogueVideoMergeService.Dockerfile
 		ExtractFramesFromVideoService.Dockerfile = ExtractFramesFromVideoService.Dockerfile
 		FaceAnalyzeService.Dockerfile = FaceAnalyzeService.Dockerfile
 		FillingFrameService.Dockerfile = FillingFrameService.Dockerfile
+		FillingHintService.Dockerfile = FillingHintService.Dockerfile
+		FillingSatisfactionService.Dockerfile = FillingSatisfactionService.Dockerfile
 		UserService.Dockerfile = UserService.Dockerfile
 		VideoToSoundService.Dockerfile = VideoToSoundService.Dockerfile
 	EndProjectSection
@@ -58,9 +61,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoToSoundService", "Vide
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueVideoMergeService", "DialogueVideoMergeService\DialogueVideoMergeService.csproj", "{858AD51F-9087-4407-98D6-9937D354C070}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillingHintService", "FillingHintService\FillingHintService.csproj", "{7BA2E9ED-5AC4-4F32-BEB6-E9A9857E1148}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FillingHintService", "FillingHintService\FillingHintService.csproj", "{7BA2E9ED-5AC4-4F32-BEB6-E9A9857E1148}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillingSatisfactionService", "FillingSatisfactionService\FillingSatisfactionService.csproj", "{12E5B74B-9957-427C-9283-BBD45B1B890E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FillingSatisfactionService", "FillingSatisfactionService\FillingSatisfactionService.csproj", "{12E5B74B-9957-427C-9283-BBD45B1B890E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
