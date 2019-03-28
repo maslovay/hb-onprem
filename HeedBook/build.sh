@@ -1,19 +1,23 @@
-docker build -t heedbookregistry.azurecr.io/heedbookdev/faceanalyzeservice:latest -f FaceAnalyzeService.Dockerfile . &&
-docker build -t heedbookregistry.azurecr.io/heedbookdev/userservice:latest -f UserService.Dockerfile . && 
-docker build -t heedbookregistry.azurecr.io/heedbookdev/fillingframeservice:latest -f FillingFrameService.Dockerfile . &&
-docker build -t heedbookregistry.azurecr.io/heedbookdev/extractframesfromvideoservice:latest -f ExtractFramesFromVideoService.Dockerfile . &&
-docker build -t heedbookregistry.azurecr.io/heedbookdev/videotosoundservice:latest -f VideoToSoundService.Dockerfile . &&
-docker build -t heedbookregistry.azurecr.io/heedbookdev/audioanalyzeservice:latest -f AudioAnalyzeService.Dockerfile . &&
-docker build -t heedbookregistry.azurecr.io/heedbookdev/audioanalyzescheduler:latest -f AudioAnalyzeScheduler.Dockerfile . &&
-docker build -t heedbookregistry.azurecr.io/heedbookdev/dialoguestatuscheckerschecduler:latest -f DialogueStatusCheckerScheduler.Dockerfile . &&
-docker build -t heedbookregistry.azurecr.io/heedbookdev/dialoguevideomergeservice:latest -f DialogueVideoMergeService.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/faceanalyzeservice:latest -f FaceAnalyzeService.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/userservice:latest -f UserService.Dockerfile . && 
+docker build -t hbcontainerregistry.azurecr.io/fillingframeservice:latest -f FillingFrameService.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/extractframesfromvideoservice:latest -f ExtractFramesFromVideoService.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/videotosoundservice:latest -f VideoToSoundService.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/audioanalyzeservice:latest -f AudioAnalyzeService.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/audioanalyzescheduler:latest -f AudioAnalyzeScheduler.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/dialoguestatuscheckerschecduler:latest -f DialogueStatusCheckerScheduler.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/dialoguevideomergeservice:latest -f DialogueVideoMergeService.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/fillinghintservice:latest -f FillingHintService.Dockerfile . &&
+docker build -t hbcontainerregistry.azurecr.io/fillingsatisfactionservice:latest
 
-docker push heedbookregistry.azurecr.io/heedbookdev/faceanalyzeservice:latest &&
-docker push heedbookregistry.azurecr.io/heedbookdev/userservice:latest && 
-docker push heedbookregistry.azurecr.io/heedbookdev/fillingframeservice:latest &&
-docker push heedbookregistry.azurecr.io/heedbookdev/extractframesfromvideoservice:latest && 
-docker push heedbookregistry.azurecr.io/heedbookdev/videotosoundservice:latest &&
-docker push heedbookregistry.azurecr.io/heedbookdev/audioanalyzeservice:latest &&
-docker push heedbookregistry.azurecr.io/heedbookdev/dialoguestatuscheckerschecduler:latest &&
-docker push heedbookregistry.azurecr.io/heedbookdev/audioanalyzescheduler:latest &&
-docker push heedbookregistry.azurecr.io/heedbookdev/dialoguevideomergeservice:latest
+docker push hbcontainerregistry.azurecr.io/faceanalyzeservice:latest &&
+docker push hbcontainerregistry.azurecr.io/userservice:latest && 
+docker push hbcontainerregistry.azurecr.io/fillingframeservice:latest &&
+docker push hbcontainerregistry.azurecr.io/extractframesfromvideoservice:latest && 
+docker push hbcontainerregistry.azurecr.io/videotosoundservice:latest &&
+docker push hbcontainerregistry.azurecr.io/audioanalyzeservice:latest &&
+docker push hbcontainerregistry.azurecr.io/dialoguestatuscheckerschecduler:latest &&
+docker push hbcontainerregistry.azurecr.io/audioanalyzescheduler:latest &&
+docker push hbcontainerregistry.azurecr.io/dialoguevideomergeservice:latest &&
+docker push hbcontainerregistry.azurecr.io/fillinghintservice:latest &&
+docker push hbcontainerregistry.azurecr.io/fillingsatisfactionservice:latest

@@ -1,4 +1,5 @@
-﻿using HBData;
+﻿using Configurations;
+using HBData;
 using HBData.Repository;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -32,6 +33,7 @@ namespace DialogueStatusCheckerScheduler
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddDialogueStatusCheckerQuartz();
+            services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

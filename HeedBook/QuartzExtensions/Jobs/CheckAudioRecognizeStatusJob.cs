@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using HBData.Models;
+﻿using HBData.Models;
 using HBData.Repository;
 using HBLib.Model;
 using HBLib.Utils;
@@ -7,14 +6,14 @@ using LemmaSharp;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Quartz;
+using QuartzExtensions.Model;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 using Phrase = HBData.Models.Phrase;
-using QuartzExtensions.Model;
 
 namespace QuartzExtensions.Jobs
 {
@@ -24,19 +23,24 @@ namespace QuartzExtensions.Jobs
 
         private readonly GoogleConnector _googleConnector;
 
+        private readonly INotificationPublisher _notificationPublisher;
+
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory scopeFactory,
-            GoogleConnector googleConnector)
+            GoogleConnector googleConnector,
+            INotificationPublisher notificationPublisher)
         {
             var scope = scopeFactory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
             _googleConnector = googleConnector;
+            _notificationPublisher = notificationPublisher;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             Console.WriteLine("Scheduler started.");
             var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 6);
-            if(!audios.Any()){
+            if (!audios.Any())
+            {
                 Console.WriteLine("No audios found");
             }
             var tasks = audios.Select(item =>
@@ -67,11 +71,11 @@ namespace QuartzExtensions.Jobs
                                          recognized.Add(word);
                                      })));
 
-                        //  var languageId = _repository
-                        //      .Get<Dialogue>()
-                        //      .Where(d => d.DialogueId == item.DialogueId)
-                        //      .Select(d => d.LanguageId ?? 1)
-                        //      .First();
+                         //  var languageId = _repository
+                         //      .Get<Dialogue>()
+                         //      .Where(d => d.DialogueId == item.DialogueId)
+                         //      .Select(d => d.LanguageId ?? 1)
+                         //      .First();
                          var languageId = 2;
                          var speechSpeed = GetSpeechSpeed(recognized, languageId);
                          System.Console.WriteLine(speechSpeed);
@@ -88,22 +92,25 @@ namespace QuartzExtensions.Jobs
                          var phraseCount = new List<DialoguePhraseCount>();
                          var phraseCounter = new Dictionary<Guid, Int32>();
                          var words = new List<PhraseResult>();
-                         foreach(var phrase in phrases){                            
-                            var foundPhrases = await FindPhrases(recognized, phrase, item.BegTime, lemmatizer, languageId);
-                            System.Console.WriteLine(JsonConvert.SerializeObject(phrases));
-                            foundPhrases.ForEach(f => words.AddRange(f));
-                            if (phraseCounter.Keys.Contains(phrase.PhraseTypeId.Value))
-                            {
-                                phraseCounter[phrase.PhraseTypeId.Value] += foundPhrases.Count();
-                            }
-                            else
-                            {
-                                phraseCounter[phrase.PhraseTypeId.Value] = foundPhrases.Count();
-                            }
+                         foreach (var phrase in phrases)
+                         {
+                             var foundPhrases = await FindPhrases(recognized, phrase, item.BegTime, lemmatizer, languageId);
+                             System.Console.WriteLine(JsonConvert.SerializeObject(phrases));
+                             foundPhrases.ForEach(f => words.AddRange(f));
+                             if (phraseCounter.Keys.Contains(phrase.PhraseTypeId.Value))
+                             {
+                                 phraseCounter[phrase.PhraseTypeId.Value] += foundPhrases.Count();
+                             }
+                             else
+                             {
+                                 phraseCounter[phrase.PhraseTypeId.Value] = foundPhrases.Count();
+                             }
                          }
 
-                         foreach(var key in phraseCounter.Keys){
-                             phraseCount.Add(new DialoguePhraseCount(){
+                         foreach (var key in phraseCounter.Keys)
+                         {
+                             phraseCount.Add(new DialoguePhraseCount()
+                             {
                                  DialogueId = item.DialogueId,
                                  PhraseTypeId = key,
                                  PhraseCount = phraseCounter[key],
@@ -111,16 +118,19 @@ namespace QuartzExtensions.Jobs
                              });
                          }
                          item.StatusId = 7;
-                         recognized.ForEach(r => {
-                             if(!words.Any(w => w.Word == r.Word)){
-                                 words.Add(new PhraseResult{
-                                    Word = r.Word,
-                                    BegTime = item.BegTime.AddSeconds(Double.Parse(r.StartTime)),
-                                    EndTime = item.BegTime.AddSeconds(Double.Parse(r.EndTime)),
+                         recognized.ForEach(r =>
+                         {
+                             if (words.All(w => w.Word != r.Word))
+                             {
+                                 words.Add(new PhraseResult
+                                 {
+                                     Word = r.Word,
+                                     BegTime = item.BegTime.AddSeconds(Double.Parse(r.StartTime)),
+                                     EndTime = item.BegTime.AddSeconds(Double.Parse(r.EndTime)),
                                  });
                              }
                          });
-                            
+
                          await _repository.CreateAsync(new DialogueWord
                          {
                              DialogueId = item.DialogueId,
@@ -129,6 +139,11 @@ namespace QuartzExtensions.Jobs
                          });
                          await _repository.CreateAsync(dialogueSpeech);
                          await _repository.BulkInsertAsync(phraseCount);
+                         var @event = new FillingHintsRun
+                         {
+                             DialogueId = item.DialogueId
+                         };
+                         _notificationPublisher.Publish(@event);
                          Console.WriteLine("Everything is ok");
                      }
                  });
@@ -170,7 +185,8 @@ namespace QuartzExtensions.Jobs
             {
                 if (lemmatizer.Lemmatize(w.Word) == word)
                 {
-                    var phraseResult = new PhraseResult{
+                    var phraseResult = new PhraseResult
+                    {
                         Word = w.Word,
                         BegTime = begTime.AddSeconds(Double.Parse(w.StartTime)),
                         EndTime = begTime.AddSeconds(Double.Parse(w.EndTime)),

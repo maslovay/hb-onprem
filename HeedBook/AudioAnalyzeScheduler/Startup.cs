@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Configurations;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -47,6 +48,7 @@ namespace AudioAnalyzeScheduler
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddAudioRecognizeQuartz();
+            services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

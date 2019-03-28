@@ -5,6 +5,8 @@ using Quartz;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 using DialogueVisual = HBData.Models.DialogueVisual;
 
 namespace QuartzExtensions.Jobs
@@ -12,11 +14,13 @@ namespace QuartzExtensions.Jobs
     public class DialogueStatusCheckerJob : IJob
     {
         private readonly IGenericRepository _repository;
-
-        public DialogueStatusCheckerJob(IServiceScopeFactory scopeFactory)
+        private readonly INotificationPublisher _notificationPublisher;
+        public DialogueStatusCheckerJob(IServiceScopeFactory scopeFactory,
+            INotificationPublisher notificationPublisher)
         {
             var scope = scopeFactory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
+            _notificationPublisher = notificationPublisher;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -47,6 +51,11 @@ namespace QuartzExtensions.Jobs
                     Console.WriteLine("Everything is Ok");
                     dialogue.StatusId = 7;
                     _repository.Update(dialogue);
+                    var @event = new FillingSatisfactionRun
+                    {
+                        DialogueId = dialogue.DialogueId
+                    };
+                    _notificationPublisher.Publish(@event);
                 }
                 else
                 {
