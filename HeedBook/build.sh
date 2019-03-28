@@ -8,7 +8,7 @@ docker build -t hbcontainerregistry.azurecr.io/audioanalyzescheduler:latest -f A
 docker build -t hbcontainerregistry.azurecr.io/dialoguestatuscheckerschecduler:latest -f DialogueStatusCheckerScheduler.Dockerfile . &&
 docker build -t hbcontainerregistry.azurecr.io/dialoguevideomergeservice:latest -f DialogueVideoMergeService.Dockerfile . &&
 docker build -t hbcontainerregistry.azurecr.io/fillinghintservice:latest -f FillingHintService.Dockerfile . &&
-docker build -t hbcontainerregistry.azurecr.io/fillingsatisfactionservice:latest . &&
+docker build -t hbcontainerregistry.azurecr.io/fillingsatisfactionservice:latest -f FillingSatisfactionService.Dockerfile . &&
 
 docker push hbcontainerregistry.azurecr.io/faceanalyzeservice:latest &&
 docker push hbcontainerregistry.azurecr.io/userservice:latest && 

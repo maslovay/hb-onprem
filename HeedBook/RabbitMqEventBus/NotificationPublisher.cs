@@ -1,16 +1,16 @@
-﻿using System;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Polly;
 using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 using RabbitMqEventBus.Base;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace RabbitMqEventBus
 {
@@ -60,9 +60,9 @@ namespace RabbitMqEventBus
                 var body = Encoding.UTF8.GetBytes(message);
                 policy.Execute(() =>
                 {
-                    var properties = channel.CreateBasicProperties(); 
+                    var properties = channel.CreateBasicProperties();
                     properties.DeliveryMode = 2; // persistent
-                    properties.Headers.Add(DELIVERY_COUNT_HEADER, 0);
+                    properties.Headers = new Dictionary<string, object> { { DELIVERY_COUNT_HEADER, 0 } };
                     channel.BasicPublish(exchange: BROKER_NAME,
                                      routingKey: eventName,
                                      mandatory: true,
@@ -143,9 +143,10 @@ namespace RabbitMqEventBus
             {
                 var @event = ea.RoutingKey;
                 var message = Encoding.UTF8.GetString(ea.Body);
-                if(ea.BasicProperties.Headers.TryGetValue(DELIVERY_COUNT_HEADER, out var deliveryCount)){
+                if (ea.BasicProperties.Headers.TryGetValue(DELIVERY_COUNT_HEADER, out var deliveryCount))
+                {
                     var count = Int32.Parse(deliveryCount.ToString());
-                    if(count >= _deliveryCount)
+                    if (count >= _deliveryCount)
                     {
                         channel.BasicAck(ea.DeliveryTag, multiple: false);
                     }
@@ -155,20 +156,20 @@ namespace RabbitMqEventBus
                     }
                 }
                 await ProcessEvent(@event, message);
-                
+
                 channel.BasicAck(ea.DeliveryTag, multiple: false);
             };
-            
+
             channel.QueueDeclare(queue: eventName,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null);
-            
+
             channel.QueueBind(queue: eventName,
                 exchange: BROKER_NAME,
                 routingKey: eventName);
-            
+
             channel.BasicConsume(queue: eventName,
                                  autoAck: false,
                                  consumer: consumer);

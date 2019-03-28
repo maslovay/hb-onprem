@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Configurations;
 using FillingSatisfactionService.Handler;
 using FillingSatisfactionService.Helper;
 using HBData;
@@ -45,6 +46,7 @@ namespace FillingSatisfactionService
             services.AddTransient<Calculations>();
             services.AddTransient<FillingSatisfaction>();
             services.AddTransient<FillingSatisfactionRunHandler>();
+            services.AddRabbitMqEventBus(Configuration);
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
