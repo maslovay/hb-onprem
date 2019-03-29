@@ -1,0 +1,11 @@
+hbcontainerregistry.azurecr.io/faceanalyzeservice:latest
+hbcontainerregistry.azurecr.io/userservice:latest
+hbcontainerregistry.azurecr.io/fillingframeservice:latest
+hbcontainerregistry.azurecr.io/extractframesfromvideoservice:latest
+hbcontainerregistry.azurecr.io/videotosoundservice:latest
+hbcontainerregistry.azurecr.io/audioanalyzeservice:latest
+hbcontainerregistry.azurecr.io/dialoguestatuscheckerscheduler:latest
+hbcontainerregistry.azurecr.io/audioanalyzescheduler:latest
+hbcontainerregistry.azurecr.io/dialoguevideomergeservice:latest
+hbcontainerregistry.azurecr.io/fillinghintservice:latest &&
+hbcontainerregistry.azurecr.io/fillingsatisfactionservice:latest

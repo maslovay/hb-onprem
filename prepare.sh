@@ -1,0 +1,1 @@
+sed -i "s/latest/$buildId/" images.txt
