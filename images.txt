@@ -7,5 +7,5 @@ hbcontainerregistry.azurecr.io/audioanalyzeservice:latest
 hbcontainerregistry.azurecr.io/dialoguestatuscheckerscheduler:latest
 hbcontainerregistry.azurecr.io/audioanalyzescheduler:latest
 hbcontainerregistry.azurecr.io/dialoguevideomergeservice:latest
-hbcontainerregistry.azurecr.io/fillinghintservice:latest &&
+hbcontainerregistry.azurecr.io/fillinghintservice:latest
 hbcontainerregistry.azurecr.io/fillingsatisfactionservice:latest
