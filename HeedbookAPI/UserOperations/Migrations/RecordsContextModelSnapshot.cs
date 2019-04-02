@@ -629,6 +629,30 @@ namespace UserOperations.Migrations
                     b.ToTable("DialogueMarkups");
                 });
 
+            modelBuilder.Entity("UserOperations.Models.DialoguePhrase", b =>
+                {
+                    b.Property<Guid>("DialoguePhraseId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid?>("DialogueId");
+
+                    b.Property<bool>("IsClient");
+
+                    b.Property<Guid?>("PhraseId");
+
+                    b.Property<Guid?>("PhraseTypeId");
+
+                    b.HasKey("DialoguePhraseId");
+
+                    b.HasIndex("DialogueId");
+
+                    b.HasIndex("PhraseId");
+
+                    b.HasIndex("PhraseTypeId");
+
+                    b.ToTable("DialoguePhrases");
+                });
+
             modelBuilder.Entity("UserOperations.Models.DialoguePhraseCount", b =>
                 {
                     b.Property<Guid>("DialoguePhraseCountId")
@@ -1346,6 +1370,21 @@ namespace UserOperations.Migrations
                     b.HasOne("UserOperations.Models.Status", "Status")
                         .WithMany()
                         .HasForeignKey("StatusId");
+                });
+
+            modelBuilder.Entity("UserOperations.Models.DialoguePhrase", b =>
+                {
+                    b.HasOne("UserOperations.Models.Dialogue", "Dialogue")
+                        .WithMany("DialoguePhrase")
+                        .HasForeignKey("DialogueId");
+
+                    b.HasOne("UserOperations.Models.Phrase", "Phrase")
+                        .WithMany()
+                        .HasForeignKey("PhraseId");
+
+                    b.HasOne("UserOperations.Models.PhraseType", "PhraseType")
+                        .WithMany()
+                        .HasForeignKey("PhraseTypeId");
                 });
 
             modelBuilder.Entity("UserOperations.Models.DialoguePhraseCount", b =>

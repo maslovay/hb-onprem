@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace UserOperations.Migrations
 {
-    public partial class InitialMigration1 : Migration
+    public partial class InitialMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -1001,6 +1001,39 @@ namespace UserOperations.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DialoguePhrases",
+                columns: table => new
+                {
+                    DialoguePhraseId = table.Column<Guid>(nullable: false),
+                    DialogueId = table.Column<Guid>(nullable: true),
+                    PhraseTypeId = table.Column<Guid>(nullable: true),
+                    PhraseId = table.Column<Guid>(nullable: true),
+                    IsClient = table.Column<bool>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DialoguePhrases", x => x.DialoguePhraseId);
+                    table.ForeignKey(
+                        name: "FK_DialoguePhrases_Dialogues_DialogueId",
+                        column: x => x.DialogueId,
+                        principalTable: "Dialogues",
+                        principalColumn: "DialogueId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DialoguePhrases_Phrases_PhraseId",
+                        column: x => x.PhraseId,
+                        principalTable: "Phrases",
+                        principalColumn: "PhraseId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DialoguePhrases_PhraseTypes_PhraseTypeId",
+                        column: x => x.PhraseTypeId,
+                        principalTable: "PhraseTypes",
+                        principalColumn: "PhraseTypeId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DialogueSpeechs",
                 columns: table => new
                 {
@@ -1314,6 +1347,21 @@ namespace UserOperations.Migrations
                 column: "PhraseTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DialoguePhrases_DialogueId",
+                table: "DialoguePhrases",
+                column: "DialogueId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DialoguePhrases_PhraseId",
+                table: "DialoguePhrases",
+                column: "PhraseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DialoguePhrases_PhraseTypeId",
+                table: "DialoguePhrases",
+                column: "PhraseTypeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Dialogues_ApplicationUserId",
                 table: "Dialogues",
                 column: "ApplicationUserId");
@@ -1515,6 +1563,9 @@ namespace UserOperations.Migrations
 
             migrationBuilder.DropTable(
                 name: "DialoguePhraseCounts");
+
+            migrationBuilder.DropTable(
+                name: "DialoguePhrases");
 
             migrationBuilder.DropTable(
                 name: "DialogueSpeechs");

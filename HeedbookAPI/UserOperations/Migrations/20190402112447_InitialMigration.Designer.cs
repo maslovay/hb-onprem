@@ -10,8 +10,8 @@ using UserOperations.Data;
 namespace UserOperations.Migrations
 {
     [DbContext(typeof(RecordsContext))]
-    [Migration("20190311092155_InitialMigration1")]
-    partial class InitialMigration1
+    [Migration("20190402112447_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -629,6 +629,30 @@ namespace UserOperations.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("DialogueMarkups");
+                });
+
+            modelBuilder.Entity("UserOperations.Models.DialoguePhrase", b =>
+                {
+                    b.Property<Guid>("DialoguePhraseId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid?>("DialogueId");
+
+                    b.Property<bool>("IsClient");
+
+                    b.Property<Guid?>("PhraseId");
+
+                    b.Property<Guid?>("PhraseTypeId");
+
+                    b.HasKey("DialoguePhraseId");
+
+                    b.HasIndex("DialogueId");
+
+                    b.HasIndex("PhraseId");
+
+                    b.HasIndex("PhraseTypeId");
+
+                    b.ToTable("DialoguePhrases");
                 });
 
             modelBuilder.Entity("UserOperations.Models.DialoguePhraseCount", b =>
@@ -1348,6 +1372,21 @@ namespace UserOperations.Migrations
                     b.HasOne("UserOperations.Models.Status", "Status")
                         .WithMany()
                         .HasForeignKey("StatusId");
+                });
+
+            modelBuilder.Entity("UserOperations.Models.DialoguePhrase", b =>
+                {
+                    b.HasOne("UserOperations.Models.Dialogue", "Dialogue")
+                        .WithMany("DialoguePhrase")
+                        .HasForeignKey("DialogueId");
+
+                    b.HasOne("UserOperations.Models.Phrase", "Phrase")
+                        .WithMany()
+                        .HasForeignKey("PhraseId");
+
+                    b.HasOne("UserOperations.Models.PhraseType", "PhraseType")
+                        .WithMany()
+                        .HasForeignKey("PhraseTypeId");
                 });
 
             modelBuilder.Entity("UserOperations.Models.DialoguePhraseCount", b =>
