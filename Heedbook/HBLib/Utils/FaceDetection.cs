@@ -21,24 +21,26 @@ namespace HBLib.Utils
             }
         }
 
-        // public static Boolean IsFaceDetected(byte[] image, out int faceLength)
-        // {
-        //     Bitmap bmp;
+        public static Boolean IsFaceDetected(byte[] image, out int faceLength)
+        {
+            Bitmap bmp;
 
-        //     using (var ms = new MemoryStream(image))
-        //     {
-        //         bmp = new Bitmap(ms);
-        //     }
+            using (var ms = new MemoryStream(image))
+            {
+                bmp = new Bitmap(ms);
+            }
+            var data = bmp.LockBits(new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
+                System.Drawing.Imaging.ImageLockMode.ReadOnly, bmp.PixelFormat);
 
-        //     using (var detector = Dlib.GetFrontalFaceDetector())
-        //     using (var img = Dlib.
-        //     {
-        //         Dlib.PyramidUp(img);
-        //         var dets = detector.Operator(img);
-        //         faceLength = dets.Length;
-        //         return dets.Length > 0;
-        //     }
-        // }
+            using (var detector = Dlib.GetFrontalFaceDetector())
+            using (var img = Dlib.LoadImageData<RgbPixel>(image, (uint)bmp.Height, (uint)bmp.Width, (uint)data.Stride))
+            {
+                Dlib.PyramidUp(img);
+                var dets = detector.Operator(img);
+                faceLength = dets.Length;
+                return dets.Length > 0;
+            }
+        }
 
         public static MemoryStream CreateAvatar(String path, Rectangle rectangle)
         {
