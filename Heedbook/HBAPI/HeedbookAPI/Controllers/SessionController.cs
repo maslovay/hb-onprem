@@ -52,59 +52,84 @@ namespace UserOperations.Controllers
             _dbOperation = dbOperation;
         }
 
-        [HttpGet("CrossRating")]
-        public IActionResult SpeechCrossRating([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds)
+        [HttpPost("SessionStatus")]
+        public IActionResult SessionStatus([FromBody] SessionParams data)
         {
             try
             {
-                var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-                begTime = begTime.Date;
-                endTime = endTime.Date.AddDays(1);
+                if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) return BadRequest("ApplicationUser is empty");
+                if (data.Action != "open" || data.Action != "close") return BadRequest("ApplicationUser is empty");
+                var actionId = data.Action == "open" ? 6 : 7;
+                var curTime = DateTime.UtcNow;
+                var oldTime = DateTime.UtcNow.AddDays(-3);
+                var lastSession = _context.Sessions
+                        .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
+                        .ToList().OrderByDescending(p => p.BegTime)
+                        .FirstOrDefault();
 
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
-                //Dialogues info
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfo
+                if (lastSession == null)
+                {
+                    switch (actionId)
                     {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        FullName = p.ApplicationUser.FullName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                    })
-                    .ToList();
-                //Result
-                var result = dialogues
-                    .GroupBy(p => p.ApplicationUserId)
-                    .Select(p => new
+                        case 6:
+                            var session = new Session{
+                                BegTime = DateTime.UtcNow,
+                                EndTime = DateTime.UtcNow,
+                                ApplicationUserId = data.ApplicationUserId,
+                                StatusId = actionId,
+                                IsDesktop = (bool)data.IsDesktop
+                            };
+                            _context.Sessions.Add(session);
+                            _context.SaveChanges();
+                            return Ok("Session successfully opened");
+                        case 7:
+                            return Ok("Can't close not opened session");
+                        default:
+                            return BadRequest();
+                    }
+                }
+                else
+                {
+                    switch (actionId)
                     {
-                        FullName = p.First().FullName,
-                        CrossIndex = p.Any() ? (double?) p.Average(q => Math.Min(q.CrossCout, 1)) : null
-                    }).ToList();
-                result = result.OrderBy(p => p.CrossIndex).ToList();
-                var jsonToReturn = JsonConvert.SerializeObject(result);
+                        case 6:
+                            if (lastSession.StatusId == 6) return Ok("Can't open not closed session");
+                            var session = new Session{
+                                BegTime = DateTime.UtcNow,
+                                EndTime = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1),
+                                ApplicationUserId = data.ApplicationUserId,
+                                StatusId = actionId,
+                                IsDesktop = (bool)data.IsDesktop
+                            };
 
-                return Ok();
+                            _context.Sessions.Add(session);
+                            _context.SaveChanges();
+
+                            return Ok("Session successfully opened");
+                        
+                        case 7:
+                            if (lastSession.StatusId == 7) return Ok("Can't close not opened session");
+                            lastSession.StatusId = 7;
+                            lastSession.EndTime = DateTime.UtcNow;
+
+                            _context.SaveChanges();
+                            return Ok("Session successfully closed");
+                        default:
+                            return BadRequest();
+                    }
+                }
             }
             catch (Exception e)
             {
                 return BadRequest(e);
             }
         }
+    }
+
+     public class SessionParams
+    {
+        public Guid ApplicationUserId;
+        public string Action;
+        public bool? IsDesktop;
     }
 }
