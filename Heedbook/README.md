@@ -52,11 +52,11 @@ sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
 sudo apt install kubeadm
 ```
 #### 4. Развертывание kubernetes. 
--- Отключаем свап:
+- Отключаем свап:
 ```sh
 sudo swapoff -a
 ```
--- Именуем каждую ноду
+- Именуем каждую ноду
 Мастер
 ```sh
 sudo hostnamectl set-hostname master
@@ -65,7 +65,7 @@ sudo hostnamectl set-hostname master
 ```sh
 sudo hostnamectl set-hostname slave
 ```
--- Инициализируем kubernetes (выполняем только на мастере)
+- Инициализируем kubernetes (выполняем только на мастере)
 ```sh
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 ```
