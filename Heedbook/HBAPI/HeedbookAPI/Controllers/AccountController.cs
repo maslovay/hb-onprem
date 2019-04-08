@@ -16,12 +16,11 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
-using UserOperations.Repository;
-using UserOperations.Models;
-using UserOperations.Models.AccountViewModels;
+using HBData.Models;
+using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-using UserOperations.Data;
+using UserOperations.AccountModels;
+using HBData;
 
 
 using System.Globalization;
@@ -42,14 +41,12 @@ namespace UserOperations.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
         private readonly ITokenService _tokenService;
         private readonly RecordsContext _context;
 
 
         public AccountController(
-            IGenericRepository repository,
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
@@ -57,7 +54,6 @@ namespace UserOperations.Controllers
             RecordsContext context
             )
         {
-            _repository = repository;
             _userManager = userManager;
             _signInManager = signInManager;
             _config = config;
