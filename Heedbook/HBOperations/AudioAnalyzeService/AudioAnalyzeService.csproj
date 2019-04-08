@@ -18,10 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Model" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="heedbook-project-195914-c1665bca2cd3.p12" />
     <Content Include="heedbook-project-195914-c1665bca2cd3.p12">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
