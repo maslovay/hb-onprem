@@ -41,7 +41,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceAnalyzeService", "FaceAnalyzeService\FaceAnalyzeService.csproj", "{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HBMLHttpClient", "HBMLHttpClient\HBMLHttpClient.csproj", "{05E56164-B33F-4D24-83F1-DEB5C1BEE833}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HBMLHttpClient", "..\HBML\HBMLHttpClient\HBMLHttpClient.csproj", "{05E56164-B33F-4D24-83F1-DEB5C1BEE833}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExtractFramesFromVideoService", "ExtractFramesFromVideoService\ExtractFramesFromVideoService.csproj", "{49F4B32D-062D-4D6E-9805-D6EB718661CA}"
 EndProject
