@@ -8,7 +8,7 @@ RUN dotnet publish ./HBOperations/FaceAnalyzeService -c Release -o publish
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime
 WORKDIR /app
-COPY --from=build-env /app/FaceAnalyzeService/publish .
+COPY --from=build-env /app/HBOperations/FaceAnalyzeService/publish .
 ENTRYPOINT ["dotnet", "FaceAnalyzeService.dll"]
 RUN chmod -R 777 /opt/
 RUN mkdir /opt/download

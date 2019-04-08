@@ -7,5 +7,5 @@ RUN dotnet publish ./HBOperations/DialogueStatusCheckerScheduler -c Release -o p
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
-COPY --from=build-env /app/DialogueStatusCheckerScheduler/publish .
+COPY --from=build-env /app/HBOperations/DialogueStatusCheckerScheduler/publish .
 ENTRYPOINT ["dotnet", "DialogueStatusCheckerScheduler.dll"]

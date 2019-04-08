@@ -6,7 +6,7 @@ RUN dotnet publish ./HBOperations/DialogueVideoMergeService -c Release -o publis
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
-COPY --from=build-env /app/DialogueVideoMergeService/publish .
+COPY --from=build-env /app/HBOperations/DialogueVideoMergeService/publish .
 ENTRYPOINT ["dotnet", "DialogueVideoMergeService.dll"]
 RUN apk add ffmpeg
 RUN mkdir /opt/

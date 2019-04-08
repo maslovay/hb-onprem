@@ -6,7 +6,7 @@ RUN dotnet publish ./HBOperations/ExtractFramesFromVideoService -c Release -o pu
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
-COPY --from=build-env /app/ExtractFramesFromVideoService/publish .
+COPY --from=build-env /app/HBOperations/ExtractFramesFromVideoService/publish .
 ENTRYPOINT ["dotnet", "ExtractFramesFromVideoService.dll"]
 RUN apk add ffmpeg
 RUN mkdir /opt/

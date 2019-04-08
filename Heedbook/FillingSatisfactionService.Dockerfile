@@ -7,5 +7,5 @@ RUN dotnet publish ./HBOperations/FillingSatisfactionService -c Release -o publi
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
-COPY --from=build-env /app/FillingSatisfactionService/publish .
+COPY --from=build-env /app/HBOperations/FillingSatisfactionService/publish .
 ENTRYPOINT ["dotnet", "FillingSatisfactionService.dll"]

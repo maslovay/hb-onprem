@@ -7,7 +7,7 @@ RUN dotnet publish ./HBOperations/AudioAnalyzeScheduler -c Release -o publish
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
-COPY --from=build-env /app/AudioAnalyzeScheduler/publish .
+COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/publish .
 ENTRYPOINT ["dotnet", "AudioAnalyzeScheduler.dll"]
 RUN mkdir /opt/
 RUN chmod -R 777 /opt/
