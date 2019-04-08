@@ -80,7 +80,7 @@ namespace DialogueVideoMergeService
                 var videos = fileVideos.OrderBy(p => p.BegTime).ToList();
                 var frames = fileFrames.OrderBy(p => p.Time).ToList();
 
-                if (videos.Count() == 0)
+                if (!videos.Any())
                 {
                     log.Error("No video files");
                     throw new Exception("No video files");
