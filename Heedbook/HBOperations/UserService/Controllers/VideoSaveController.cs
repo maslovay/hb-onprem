@@ -28,8 +28,8 @@ namespace UserService.Controllers
             _sftpClient = sftpClient;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> VideoToSound([FromQuery] Guid applicationUserId, 
+        [HttpPost("VideoSave")]
+        public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId, 
             [FromQuery] string begTime,
             [FromQuery] double? duration,
             [FromBody] string video)

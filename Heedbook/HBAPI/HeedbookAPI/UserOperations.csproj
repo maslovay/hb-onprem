@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
+    <ProjectReference Include="..\..\HBML\HBMLHttpClient\HBMLHttpClient.csproj" />
   </ItemGroup>
 
 </Project>
