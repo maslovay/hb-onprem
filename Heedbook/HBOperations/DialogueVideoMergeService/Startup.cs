@@ -40,7 +40,11 @@ namespace DialogueVideoMergeService
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddTransient<SftpClient>();
-            services.AddTransient<ElasticClient>();
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
             services.AddTransient<DialogueVideoMerge>();
             services.AddTransient<DialogueVideoMergeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
