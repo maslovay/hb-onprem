@@ -19,22 +19,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = ''
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', 'hbml']
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
     'django.contrib.staticfiles',
     'coreapi',
     'rest_framework',
@@ -43,12 +34,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'hbml_service.urls'
@@ -63,8 +50,6 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
             ],
         },
     },
@@ -77,30 +62,7 @@ WSGI_APPLICATION = 'hbml_service.wsgi.application'
 
 # В этом сервисе не предполагается использования баз данных
 # TODO: Django может быть оверкиллом, подумать о переходе на Flask/aiohttp
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
-# Password validation
-# https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+DATABASES = {}
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -109,9 +71,9 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
-USE_I18N = True
+USE_I18N = False
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = True
 
@@ -122,22 +84,28 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        #'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    'DEFAULT_PERMISSION_CLASSES': [],
+    'DEFAULT_AUTHENTICATION_CLASSES': []
 }
-FACE_EMOTIONS_KEYS = ("Anger", "Contempt", "Disgust", "Fear", "Happiness", "Neutral", "Sadness", "Surprise")
-FACE_ATTRIBUTES_KEYS = ("Gender", "Age")
-
-# Перезапись конфигом
+# Перезапись env-переменной
 DEBUG = os.environ.get('DEBUG', False)
 
 try:
     ALLOWED_HOSTS = json.loads(os.environ.get('ALLOWED_HOSTS', str(ALLOWED_HOSTS)))
 except Exception as e:
-    print(e)
     pass
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 's0_s3cr3+_much_w0w')
+DOCKER_DEFAULT_OPENVINO_FACEAPI_CONFIG = {
+    "-m_lm": "/opt/intel/computer_vision_sdk/deployment_tools/intel_models/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009.xml",
+    "-m_hp": "/opt/intel/computer_vision_sdk/deployment_tools/intel_models/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001.xml",
+    "-m_fd": "/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-detection-retail-0004/FP32/face-detection-retail-0004.xml",
+    "-m_reid": "/opt/intel/computer_vision_sdk/deployment_tools/intel_models/face-reidentification-retail-0095/FP32/face-reidentification-retail-0095.xml",
+    "-m_ag": "/opt/intel/computer_vision_sdk/deployment_tools/intel_models/age-gender-recognition-retail-0013/FP32/age-gender-recognition-retail-0013.xml",
+    "-m_em": "/opt/intel/computer_vision_sdk/deployment_tools/intel_models/emotions-recognition-retail-0003/FP32/emotions-recognition-retail-0003.xml",
+    "-l": "/opt/intel/computer_vision_sdk/deployment_tools/inference_engine/lib/ubuntu_16.04/intel64/libcpu_extension_sse4.so"
+}
+
+OPENVINO_FACEAPI_CONFIG = json.loads(os.environ.get('OPENVINO_FACEAPI_CONFIG', '{}'))
+if not OPENVINO_FACEAPI_CONFIG:
+    OPENVINO_FACEAPI_CONFIG = DOCKER_DEFAULT_OPENVINO_FACEAPI_CONFIG
