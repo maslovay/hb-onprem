@@ -10,6 +10,7 @@ using RabbitMqEventBus.Events;
 using HBLib.Utils;
 using System.Threading.Tasks;
 using System.Globalization;
+using Newtonsoft.Json;
 
 namespace UserService.Controllers
 {
@@ -34,16 +35,11 @@ namespace UserService.Controllers
             [FromQuery] double? duration,
             [FromBody] string video)
         {
-            Console.WriteLine(video);
             try
             {
-                System.Console.WriteLine("Function started");
                 duration = duration == null ? 15 : duration;
-                System.Console.WriteLine("1");
                 var imgBytes = Convert.FromBase64String(video);
-                System.Console.WriteLine("2");
                 var memoryStream = new MemoryStream(imgBytes);
-                System.Console.WriteLine("3");
                 var languageId = _context.ApplicationUsers
                     .Include(p => p.Company)
                     .Include(p => p.Company.Language)
@@ -70,11 +66,17 @@ namespace UserService.Controllers
                 _context.FileVideos.Add(videoFile);
                 _context.SaveChanges();
 
+
                 if (videoFile.FileExist)
                 {
                     var message = new FramesFromVideoRun();
                     message.Path = $"videos/{fileName}";
+                    Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
                     _handler.EventRaised(message);
+                }
+                else
+                {
+                    Console.WriteLine($"No such file {fileName}");
                 }
                 return Ok();
             }
