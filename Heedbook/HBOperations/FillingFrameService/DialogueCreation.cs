@@ -19,100 +19,111 @@ namespace FillingFrameService
     {
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
-        private readonly SftpSettings _sftpSettings;
+        private readonly ElasticClient _log;
+
         public DialogueCreation(IServiceScopeFactory factory,
             SftpClient client,
-            SftpSettings sftpSettings)
+            ElasticClient log)
         {
-            var scope = factory.CreateScope();
-            _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
+            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _sftpClient = client;
-            _sftpSettings = sftpSettings;
+            _log = log;
         }
 
         public async Task Run(DialogueCreationRun message)
         {
-            System.Console.WriteLine("Function started");
-            var frameIds =
-                _repository.Get<FileFrame>().Where(item =>
-                                item.ApplicationUserId == message.ApplicationUserId
-                                && item.Time >= message.BeginTime
-                                && item.Time <= message.EndTime)
-                           .Select(item => item.FileFrameId)
-                           .ToList();
-            var emotions =
-                _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId), item => item.FileFrame).ToList();
-            
-            var attributes =
-                _repository.GetWithInclude<FrameAttribute>(item => frameIds.Contains(item.FileFrameId), item => item.FileFrame).ToList();
-            if (emotions.Any() && attributes.Any())
+            try
             {
-                var dialogueFrames = emotions.Select(item => new DialogueFrame
+                _log.Info("Function started");
+                var frameIds =
+                    _repository.Get<FileFrame>().Where(item =>
+                                    item.ApplicationUserId == message.ApplicationUserId
+                                    && item.Time >= message.BeginTime
+                                    && item.Time <= message.EndTime)
+                               .Select(item => item.FileFrameId)
+                               .ToList();
+                var emotions =
+                    _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId),
+                        item => item.FileFrame).ToList();
+
+                var attributes =
+                    _repository.GetWithInclude<FrameAttribute>(item => frameIds.Contains(item.FileFrameId),
+                        item => item.FileFrame).ToList();
+                if (emotions.Any() && attributes.Any())
+                {
+                    var dialogueFrames = emotions.Select(item => new DialogueFrame
+                                                  {
+                                                      DialogueId = message.DialogueId,
+                                                      AngerShare = item.AngerShare,
+                                                      FearShare = item.FearShare,
+                                                      DisgustShare = item.DisgustShare,
+                                                      ContemptShare = item.ContemptShare,
+                                                      NeutralShare = item.NeutralShare,
+                                                      SadnessShare = item.SadnessShare,
+                                                      SurpriseShare = item.SurpriseShare,
+                                                      HappinessShare = item.HappinessShare,
+                                                      YawShare = item.YawShare,
+                                                      Time = item.FileFrame.Time
+                                                  })
+                                                 .ToList();
+
+                    var genderCount = attributes.Count(item => item.Gender == "Male");
+                    _log.Info($"Gender count {genderCount}");
+
+                    var dialogueClientProfile = new DialogueClientProfile
                     {
                         DialogueId = message.DialogueId,
-                        AngerShare = item.AngerShare,
-                        FearShare = item.FearShare,
-                        DisgustShare = item.DisgustShare,
-                        ContemptShare = item.ContemptShare,
-                        NeutralShare = item.NeutralShare,
-                        SadnessShare = item.SadnessShare,
-                        SurpriseShare = item.SurpriseShare,
-                        HappinessShare = item.HappinessShare,
-                        YawShare = item.YawShare,
-                        Time = item.FileFrame.Time
-                    })
-                    .ToList();
+                        Gender = genderCount > 0 ? "male" : "female",
+                        Age = attributes.Average(item => item.Age),
+                        Avatar = $"{message.DialogueId}.jpg"
+                    };
+                    var yawShare = emotions.Average(item => item.YawShare);
+                    var dialogueVisual = new DialogueVisual
+                    {
+                        DialogueId = message.DialogueId,
+                        AngerShare = emotions.Average(item => item.AngerShare),
+                        FearShare = emotions.Average(item => item.FearShare),
+                        DisgustShare = emotions.Average(item => item.DisgustShare),
+                        ContemptShare = emotions.Average(item => item.ContemptShare),
+                        NeutralShare = emotions.Average(item => item.NeutralShare),
+                        SadnessShare = emotions.Average(item => item.SadnessShare),
+                        SurpriseShare = emotions.Average(item => item.SurpriseShare),
+                        HappinessShare = emotions.Average(item => item.HappinessShare),
+                        AttentionShare = yawShare >= -10 && yawShare <= 10 ? 100 : 0
+                    };
+                    var insertTasks = new List<Task>
+                    {
+                        _repository.CreateAsync(dialogueVisual),
+                        _repository.CreateAsync(dialogueClientProfile),
+                        _repository.BulkInsertAsync(dialogueFrames)
+                    };
 
-                var genderCount = attributes.Count(item => item.Gender == "Male");
+                    var attribute = attributes.First();
 
-                var dialogueClientProfile = new DialogueClientProfile
-                {
-                    DialogueId = message.DialogueId,
-                    Gender = genderCount > 0 ? "male" : "female",
-                    Age = attributes.Average(item => item.Age),
-                    Avatar = $"{message.DialogueId}.jpg"
-                };
-                var yawShare = emotions.Average(item => item.YawShare);
-                var dialogueVisual = new DialogueVisual
-                {
-                    DialogueId = message.DialogueId,
-                    AngerShare = emotions.Average(item => item.AngerShare),
-                    FearShare = emotions.Average(item => item.FearShare),
-                    DisgustShare = emotions.Average(item => item.DisgustShare),
-                    ContemptShare = emotions.Average(item => item.ContemptShare),
-                    NeutralShare = emotions.Average(item => item.NeutralShare),
-                    SadnessShare = emotions.Average(item => item.SadnessShare),
-                    SurpriseShare = emotions.Average(item => item.SurpriseShare),
-                    HappinessShare = emotions.Average(item => item.HappinessShare),
-                    AttentionShare = yawShare >= -10 && yawShare <= 10 ? 100 : 0
-                };
-                var insertTasks = new List<Task>
-                {
-                    _repository.CreateAsync(dialogueVisual),
-                    _repository.CreateAsync(dialogueClientProfile),
-                    _repository.BulkInsertAsync(dialogueFrames)
-                };
+                    var localPath =
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
 
-                var attribute = attributes.First();
-
-                var localPath =
-                    await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
-                
-                var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
-                var rectangle = new Rectangle
+                    var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
+                    var rectangle = new Rectangle
                     {
                         Height = faceRectangle.Height,
                         Width = faceRectangle.Width,
                         X = faceRectangle.Top,
                         Y = faceRectangle.Left
                     };
-                var stream = FaceDetection.CreateAvatar(localPath, rectangle);
-                stream.Seek(0, SeekOrigin.Begin);
-                await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
-                stream.Close();
-                await Task.WhenAll(insertTasks);
-                await _repository.SaveAsync();
-                System.Console.WriteLine("Function finished");
+                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
+                    stream.Close();
+                    await Task.WhenAll(insertTasks);
+                    await _repository.SaveAsync();
+                    _log.Info("Function finished");
+                }
+            }
+            catch (Exception e)
+            {
+                _log.Info($"exception occured {e}");
+                throw;
             }
         }
     }

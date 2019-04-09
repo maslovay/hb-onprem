@@ -19,16 +19,20 @@ namespace FillingHintService
     public class FillingHints
     {
         private readonly IGenericRepository _repository;
+        private readonly ElasticClient _log;
 
-        public FillingHints(IServiceScopeFactory factory)
+        public FillingHints(IServiceScopeFactory factory,
+            ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
+            _log = log;
         }
 
         public async Task Run(Guid dialogueId)
         {
             try
             {
+                _log.Info("Function filling hints started.");
                 var language = _repository.GetWithInclude<Dialogue>(item => item.DialogueId == dialogueId,
                                                item => item.Language)
                                           .Select(item => item.Language.LanguageName)
@@ -44,7 +48,8 @@ namespace FillingHintService
                         var reqSql = BuildRequest(hintCondition.Table, dialogueId.ToString(), hintCondition.Condition,
                             hintCondition.Indexes);
 
-                        var data = _repository.ExecuteDbCommand(Tables.TablesDictionary[hintCondition.Table], reqSql).ToList();
+                        var data = _repository.ExecuteDbCommand(Tables.TablesDictionary[hintCondition.Table], reqSql)
+                                              .ToList();
 
                         Double? resValue = 0;
                         switch (hintCondition.Operation)
@@ -114,9 +119,10 @@ namespace FillingHintService
                                         }
 
                                         return first - second;
-                                    });;
+                                    });
+                                    ;
                                 }
-                                
+
                                 if (resValue >= hintCondition.Min & resValue <= hintCondition.Max)
                                 {
                                     var textInfo = hintConditions.HintText.Where(p => p.Language == language).ToList();
@@ -139,13 +145,19 @@ namespace FillingHintService
                             default:
                                 break;
                         }
+                        _log.Info($"Table: {hintCondition.Table}");
+                        _log.Info($"Conditions: {JsonConvert.SerializeObject(hintCondition.Condition)}");
+                        _log.Info($"Result value is {resValue.Value}");
                     }
                 }
+
                 _repository.Save();
+                _log.Info("Function filling hints ended.");
             }
             catch (Exception e)
             {
-                throw e;
+                _log.Fatal($"exception occured {e}");
+                throw;
             }
         }
 
@@ -171,7 +183,9 @@ namespace FillingHintService
 
             request += $" FROM dbo.{tableName}";
             request += $" WHERE CAST(DialogueId as uniqueidentifier) = CAST('{dialogueId}' as uniqueidentifier) ";
-            return !conditions.Any() ? request : conditions.Aggregate(request, (current, cond) => current + $"AND {cond.Field} = {cond.Value}");
+            return !conditions.Any()
+                ? request
+                : conditions.Aggregate(request, (current, cond) => current + $"AND {cond.Field} = {cond.Value}");
         }
     }
 }

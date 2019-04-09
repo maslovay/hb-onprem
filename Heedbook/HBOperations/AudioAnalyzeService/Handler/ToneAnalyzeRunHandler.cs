@@ -1,11 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using RabbitMqEventBus.Base;
 using RabbitMqEventBus.Events;
 
 namespace AudioAnalyzeService.Handler
 {
-    public class ToneAnalyzeRunHandler: IIntegrationEventHandler<ToneAnalyzeRun>
+    public class ToneAnalyzeRunHandler : IIntegrationEventHandler<ToneAnalyzeRun>
     {
         private readonly ToneAnalyze _toneAnalyze;
 

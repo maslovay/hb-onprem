@@ -4,7 +4,7 @@ using RabbitMqEventBus.Events;
 
 namespace AudioAnalyzeService.Handler
 {
-    public class AudioAnalyzeRunHandler: IIntegrationEventHandler<AudioAnalyzeRun>
+    public class AudioAnalyzeRunHandler : IIntegrationEventHandler<AudioAnalyzeRun>
     {
         private readonly AudioAnalyze _audioAnalyze;
 
@@ -12,7 +12,7 @@ namespace AudioAnalyzeService.Handler
         {
             _audioAnalyze = audioAnalyze;
         }
-        
+
         public async Task Handle(AudioAnalyzeRun @event)
         {
             await _audioAnalyze.Run(@event.Path);

@@ -25,23 +25,26 @@ namespace QuartzExtensions.Jobs
 
         private readonly INotificationPublisher _notificationPublisher;
 
-        public CheckAudioRecognizeStatusJob(IServiceScopeFactory scopeFactory,
+        private readonly ElasticClient _log;
+        
+        public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
             GoogleConnector googleConnector,
-            INotificationPublisher notificationPublisher)
+            INotificationPublisher notificationPublisher,
+            ElasticClient log)
         {
-            var scope = scopeFactory.CreateScope();
-            _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
+            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _googleConnector = googleConnector;
             _notificationPublisher = notificationPublisher;
+            _log = log;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            Console.WriteLine("Scheduler started.");
+            _log.Info("Audion analyze scheduler started.");
             var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 6);
             if (!audios.Any())
             {
-                Console.WriteLine("No audios found");
+                _log.Info("No audios found");
             }
             var tasks = audios.Select(item =>
             {
@@ -55,7 +58,7 @@ namespace QuartzExtensions.Jobs
                          //8 - error
                          item.StatusId = 8;
                          _repository.Update(item);
-                         Console.WriteLine("Error with stt results");
+                         _log.Info("Error with stt results");
                      }
                      else
                      {
@@ -78,7 +81,7 @@ namespace QuartzExtensions.Jobs
                          //      .First();
                          var languageId = 2;
                          var speechSpeed = GetSpeechSpeed(recognized, languageId);
-                         System.Console.WriteLine(speechSpeed);
+                         _log.Info($"Speech speed: {speechSpeed}");
                          var dialogueSpeech = new DialogueSpeech
                          {
                              DialogueId = item.DialogueId,
@@ -144,14 +147,14 @@ namespace QuartzExtensions.Jobs
                              DialogueId = item.DialogueId
                          };
                          _notificationPublisher.Publish(@event);
-                         Console.WriteLine("Everything is ok");
+                         _log.Info("Everything is ok");
                      }
                  });
             }).ToList();
 
             await Task.WhenAll(tasks);
             _repository.Save();
-            Console.WriteLine("Scheduler ended.");
+            _log.Info("Scheduler ended.");
         }
 
         private Double GetSpeechSpeed(List<WordRecognized> words, int languageId)

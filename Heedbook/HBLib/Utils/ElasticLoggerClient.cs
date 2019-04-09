@@ -18,7 +18,7 @@ using Serilog.Sinks.Network;
 namespace HBLib.Utils
 
 {
-    public interface ElasticLogger
+    public interface IElasticLogger
     {
         void Debug(string s, params object[] args);
         void Info(string s, params object[] args);
@@ -28,7 +28,7 @@ namespace HBLib.Utils
     }
 
 
-    public class ElasticClient : ElasticLogger
+    public class ElasticClient : IElasticLogger
     {
         private readonly Logger _logger;
         private readonly ElasticSettings _elasticSettings;

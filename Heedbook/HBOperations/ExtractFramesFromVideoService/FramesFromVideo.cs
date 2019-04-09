@@ -15,33 +15,35 @@ namespace ExtractFramesFromVideo
     {
         private readonly SftpClient _client;
         private readonly INotificationHandler _handler;
-        
+
         private readonly IGenericRepository _repository;
-        
+
+        private readonly ElasticClient _log;
+
         public FramesFromVideo(SftpClient client,
             IServiceScopeFactory factory,
-            INotificationHandler handler)
+            INotificationHandler handler,
+            ElasticClient log)
         {
             _client = client;
-            var scope = factory.CreateScope();
-            _repository = scope.ServiceProvider.GetService<IGenericRepository>();
+            _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
             _handler = handler;
+            _log = log;
         }
 
-        public async Task Run(string videoBlobName)
+        public async Task Run(String videoBlobName)
         {
-                        //string storageConnectionString = MyJsonConfig["connect_string"];
+            _log.Info("Function Extract Frames From Video Started");
             var datePartForFrameName = videoBlobName.Split('_', '_')[1];
 
-            var timeGreFrame = DateTime.ParseExact(datePartForFrameName ,"yyyyMMddHHmmss",null);
+            var timeGreFrame = DateTime.ParseExact(datePartForFrameName, "yyyyMMddHHmmss", null);
             timeGreFrame = timeGreFrame.AddSeconds(2);
 
             var start = videoBlobName.IndexOf('/') + 1;
             var end = videoBlobName.IndexOf('_', start);
-            //var body = "178bd1e8-e98a-4ed9-ab2c-ac74734d1903_20190116082942_2.mkv";
-            var applicUserId = videoBlobName.Substring( start, end - start);
+            var applicUserId = videoBlobName.Substring(start, end - start);
 
-            // Write blob to memory stream 
+            _log.Info("Write blob to memory stream");
             using (var memoryStream = await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobName))
             {
                 // Configuration of ffmpeg process that will be created
@@ -68,13 +70,13 @@ namespace ExtractFramesFromVideo
                 // START BLOCK Write Stdout of ffmpeg to byte array(ffmpegOut)
 
                 var baseStream = process.StandardOutput.BaseStream;
-                byte[] ffmpegOut;
+                Byte[] ffmpegOut;
 
                 var lastRead = 0;
                 using (var ms = new MemoryStream())
                 {
                     // to do: 4096 ? Answer: Count of bytes in iteration. We can use any number
-                    var buffer = new byte[4096];
+                    var buffer = new Byte[4096];
                     do
                     {
                         lastRead = baseStream.Read(buffer, 0, buffer.Length);
@@ -89,22 +91,19 @@ namespace ExtractFramesFromVideo
                 // END BLOCK    
 
                 var streamForUpload = new MemoryStream();
-                long ffmpegOutLen = ffmpegOut.Length;
+                Int64 ffmpegOutLen = ffmpegOut.Length;
                 var isUpload = false;
                 var blobNamePrefix = 0;
 
-                // START BLOCK Algorithm for read ffmpeg output, detect jpeg and write jpeg to blobstorage
+                _log.Info("Algorithm for read ffmpeg output, detect jpeg and write jpeg to blobstorage");
                 for (var i = 0; i < ffmpegOutLen - 3; i++)
                     try
                     {
-                        
-                        // Detect jpeg bytes start file signature
+                        _log.Info("Detect jpeg bytes start file signature");
                         if (ffmpegOut[i] == 255 && ffmpegOut[i + 1] == 216)
                         {
                             isUpload = true;
                             blobNamePrefix++;
-                            //cloudBlockBlob = destinationContainer.GetBlockBlobReference($"{BlobNamePrefix}_test_frame.jpg");
-                            Console.WriteLine(blobNamePrefix + "==========");
                         }
 
                         // limit of frames from 15 second video(5 frames)
@@ -117,22 +116,22 @@ namespace ExtractFramesFromVideo
                                                            timeGreFrame.Hour.ToString("D2") +
                                                            timeGreFrame.Minute.ToString("D2") +
                                                            timeGreFrame.Second.ToString("D2");
-                                
+
                                 var filename = $"{applicUserId}_{timeGreFrameComplete}.jpg";
                                 isUpload = false;
 
                                 Console.WriteLine("!!!Stream upload length ---- " + streamForUpload.Length);
                                 streamForUpload.Seek(0, SeekOrigin.Begin);
 
-                                
+
                                 // START TEST WORK WITH STORAGE
                                 await _client.UploadAsMemoryStreamAsync(streamForUpload, "frames/", filename);
-                                System.Console.WriteLine(filename);
+                                Console.WriteLine(filename);
                                 // END TEST WORK WITH STORAGE
 
                                 streamForUpload.SetLength(0);
-                                
-                                
+
+
                                 // START CODE POSTGRESQL
                                 var fileFrame = new FileFrame
                                 {
@@ -148,7 +147,7 @@ namespace ExtractFramesFromVideo
                                         timeGreFrame.Hour, timeGreFrame.Minute, timeGreFrame.Second)
                                 };
                                 timeGreFrame = timeGreFrame.AddSeconds(3);
-                                
+
                                 await _repository.CreateAsync(fileFrame);
                                 _repository.Save();
                                 // END CODE POSTGRESQL
@@ -161,16 +160,16 @@ namespace ExtractFramesFromVideo
 
                         // Write to stream jpeg content between start and end file signature
                         if (isUpload) streamForUpload.WriteByte(ffmpegOut[i]);
-                       
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine($"Exception occured {e}");
+                        _log.Fatal($"Exception occured {e}");
                     }
                 // END BLOCK
 
                 Task.WaitAll(inputTask);
                 process.WaitForExit();
+                _log.Info("Function Extract Frames From Video finished");
             }
         }
     }

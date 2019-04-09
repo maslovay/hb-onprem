@@ -33,8 +33,7 @@ namespace DialogueVideoMergeService
             ElasticClient log
             )
         {
-            var scope = factory.CreateScope();
-            _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
+            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _sftpClient = client;
             _sftpSettings = sftpSettings;
             _log = log;
@@ -162,7 +161,7 @@ namespace DialogueVideoMergeService
             catch (Exception e)
             {
                 _log.Fatal($"Exception occured {e}");
-                Console.WriteLine(e);
+                throw;
             }
         }
     }

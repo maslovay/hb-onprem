@@ -4,7 +4,7 @@ using RabbitMqEventBus.Events;
 
 namespace FillingSatisfactionService.Handler
 {
-    public class FillingSatisfactionRunHandler: IIntegrationEventHandler<FillingSatisfactionRun>
+    public class FillingSatisfactionRunHandler : IIntegrationEventHandler<FillingSatisfactionRun>
     {
         private readonly FillingSatisfaction _fillingSatisfaction;
 
@@ -12,9 +12,10 @@ namespace FillingSatisfactionService.Handler
         {
             _fillingSatisfaction = fillingSatisfaction;
         }
+
         public async Task Handle(FillingSatisfactionRun @event)
         {
-           await _fillingSatisfaction.Run(@event.DialogueId);
+            await _fillingSatisfaction.Run(@event.DialogueId);
         }
     }
 }

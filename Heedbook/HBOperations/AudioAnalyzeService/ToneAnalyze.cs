@@ -1,9 +1,4 @@
-﻿using HBData.Models;
-using HBData.Repository;
-using HBLib.Utils;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -11,46 +6,57 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using HBData.Models;
+using HBData.Repository;
+using HBLib.Utils;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AudioAnalyzeService
 {
     public class ToneAnalyze
     {
-        private readonly SftpClient _sftpClient;
+        private static String output = "";
 
         private readonly IConfiguration _configuration;
 
+        private readonly ElasticClient _log;
+
         private readonly IGenericRepository _repository;
+        
+        private readonly SftpClient _sftpClient;
 
         public ToneAnalyze(SftpClient sftpClient,
             IConfiguration configuration,
-            IServiceProvider provider)
+            IServiceScopeFactory factory,
+            ElasticClient log)
         {
             _sftpClient = sftpClient;
             _configuration = configuration;
-            _repository = provider.GetRequiredService<IGenericRepository>();
+            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
+            _log = log;
         }
-
 
 
         public async Task Run(String path)
         {
-            Console.WriteLine("Function Tone analyze started");
-            var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
-            var dialogueId = Guid.Parse((ReadOnlySpan<char>)Path.GetFileNameWithoutExtension(path.Split('/').Last()));
-            var seconds = 3;
-            var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
-            var metadata = ffmpeg.SplitBySeconds(localPath, seconds);
-            var intervals = new List<DialogueInterval>();
-            var begTime = _repository.Get<Dialogue>().Where(item => item.DialogueId == dialogueId)
-                .Select(item => item.BegTime).First();
-            foreach (var currentMetadata in metadata)
+            try
             {
-                var fileName = currentMetadata["fn"];
-                try
+                _log.Info("Function Tone analyze started");
+                var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
+                var dialogueId =
+                    Guid.Parse((ReadOnlySpan<Char>) Path.GetFileNameWithoutExtension(path.Split('/').Last()));
+                var seconds = 3;
+                var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
+                var metadata = ffmpeg.SplitBySeconds(localPath, seconds);
+                var intervals = new List<DialogueInterval>();
+                var begTime = _repository.Get<Dialogue>().Where(item => item.DialogueId == dialogueId)
+                                         .Select(item => item.BegTime).First();
+                foreach (var currentMetadata in metadata)
                 {
-                    Console.WriteLine(fileName);
-                    Console.WriteLine(_configuration["VokaturiPath"]);
+                    var fileName = currentMetadata["fn"];
+
+                    _log.Info(fileName);
                     var result = RecognizeTone(_configuration["VokaturiPath"], fileName);
                     var beginTime = begTime;
                     var endTime = beginTime.AddSeconds(seconds);
@@ -60,47 +66,50 @@ namespace AudioAnalyzeService
                         IsClient = true,
                         BegTime = beginTime,
                         EndTime = endTime,
-                        AngerTone = result.TryGetValue("Anger", out var anger) ? anger : default(double?),
-                        FearTone = result.TryGetValue("Fear", out var fear) ? fear : default(double?),
-                        HappinessTone = result.TryGetValue("Happiness", out var happiness) ? happiness : default(double?),
-                        NeutralityTone = result.TryGetValue("Neutrality", out var neutrality) ? neutrality : default(double?),
-                        SadnessTone = result.TryGetValue("Sadness", out var sadness) ? sadness : default(double?)
+                        AngerTone = result.TryGetValue("Anger", out var anger) ? anger : default(Double?),
+                        FearTone = result.TryGetValue("Fear", out var fear) ? fear : default(Double?),
+                        HappinessTone = result.TryGetValue("Happiness", out var happiness)
+                            ? happiness
+                            : default(Double?),
+                        NeutralityTone = result.TryGetValue("Neutrality", out var neutrality)
+                            ? neutrality
+                            : default(Double?),
+                        SadnessTone = result.TryGetValue("Sadness", out var sadness) ? sadness : default(Double?)
                     });
                     begTime = endTime;
                     File.Delete(fileName);
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
-            }
 
-            var dialogueAudio = new DialogueAudio
+                var dialogueAudio = new DialogueAudio
+                {
+                    IsClient = true,
+                    DialogueId = dialogueId,
+                    NegativeTone = intervals.Average(item => item.AngerTone + item.SadnessTone + item.FearTone),
+                    PositiveTone = intervals.Average(item => item.HappinessTone),
+                    NeutralityTone = intervals.Average(item => item.NeutralityTone)
+                };
+                await _repository.BulkInsertAsync(intervals);
+                await _repository.CreateAsync(dialogueAudio);
+                await _repository.SaveAsync();
+                OS.SafeDelete(localPath);
+                _log.Info("Function Tone analyze finished");
+            }
+            catch (Exception e)
             {
-                IsClient = true,
-                DialogueId = dialogueId,
-                NegativeTone = intervals.Average(item => item.AngerTone + item.SadnessTone + item.FearTone),
-                PositiveTone = intervals.Average(item => item.HappinessTone),
-                NeutralityTone = intervals.Average(item => item.NeutralityTone)
-            };
-            await _repository.BulkInsertAsync(intervals);
-            await _repository.CreateAsync(dialogueAudio);
-            await _repository.SaveAsync();
-            OS.SafeDelete(localPath);
-            Console.WriteLine("Function Tone analyze finished");
+                _log.Fatal($"Exception occurs {e}");
+                throw;
+            }
         }
 
-        private static void OutputHandler(object sender, DataReceivedEventArgs e)
+        private static void OutputHandler(Object sender, DataReceivedEventArgs e)
         {
             //The data we want is in e.Data, you must be careful of null strings
             var strMessage = e.Data;
             if (output != null && strMessage != null && strMessage.Length > 0)
-                output += string.Concat(strMessage, "\n");
+                output += String.Concat(strMessage, "\n");
         }
-        private static string output = "";
 
-        public static Dictionary<string, double> RecognizeTone(String vokaturiPath, string fileName)
+        private Dictionary<String, Double> RecognizeTone(String vokaturiPath, String fileName)
         {
             /***********
             WAV files analyzed with:
@@ -122,7 +131,7 @@ namespace AudioAnalyzeService
                 CreateNoWindow = true,
                 Arguments = $"{vokaturiPath} {fileName}"
             };
-            using (var proc = new Process { StartInfo = psi })
+            using (var proc = new Process {StartInfo = psi})
             {
                 proc.EnableRaisingEvents = true;
                 proc.OutputDataReceived += OutputHandler;
@@ -143,21 +152,23 @@ namespace AudioAnalyzeService
                   "Anger": 0.001639,
                   "Fear": 0.209058
                 }*/
-                var result = new Dictionary<string, double>();
+                var result = new Dictionary<String, Double>();
 
                 var matches = Regex.Matches(text, pattern);
                 foreach (Match match in matches)
                 {
                     var emotion = match.Groups[1].ToString();
                     var value = match.Groups[2].ToString();
-                    result[emotion] = double.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
+                    result[emotion] = Double.Parse(value, CultureInfo.InvariantCulture.NumberFormat);
                 }
-                Console.WriteLine(text);
+
+                _log.Info(text);
                 output = "";
                 return result;
             }
             catch
             {
+                _log.Fatal(text);
                 throw new Exception($"Something went wrong! The error message: {text}");
             }
         }
