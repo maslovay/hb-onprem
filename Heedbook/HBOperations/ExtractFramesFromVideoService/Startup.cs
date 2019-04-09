@@ -38,6 +38,12 @@ namespace ExtractFramesFromVideo
             services.AddOptions();
             services.AddDbContext<RecordsContext>(options => options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
             services.AddTransient(provider =>
             {
                 var sftpSettings = provider.GetRequiredService<IOptions<SftpSettings>>().Value;

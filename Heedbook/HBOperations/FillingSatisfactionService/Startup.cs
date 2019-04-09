@@ -7,6 +7,8 @@ using FillingSatisfactionService.Handler;
 using FillingSatisfactionService.Helper;
 using HBData;
 using HBData.Repository;
+using HBLib;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -43,6 +45,12 @@ namespace FillingSatisfactionService
             });
             services.Configure<CalculationConfig>(Configuration.GetSection(nameof(CalculationConfig)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<CalculationConfig>>().Value);
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
             services.AddTransient<Calculations>();
             services.AddTransient<FillingSatisfaction>();
             services.AddTransient<FillingSatisfactionRunHandler>();

@@ -32,8 +32,8 @@ namespace HBLib.Utils
     {
         private readonly Logger _logger;
         private readonly ElasticSettings _elasticSettings;
-        private readonly object[] _args;
-        private readonly string _format;
+        private object[] _args;
+        private string _format;
         private readonly string _invocationId;
 
 
@@ -57,7 +57,16 @@ namespace HBLib.Utils
             this.LogstashLog($"Function started: {elasticSettings.FunctionName}");
         }
 
+        public void SetFormat(String format)
+        {
+            _format = format;
+        }
 
+        public void SetArgs(params object[] args)
+        {
+            _args = args;
+        }
+        
         public Dictionary<string, string> GetJson(string s, params object[] args )
         {
             var js = new Dictionary<string, string>();

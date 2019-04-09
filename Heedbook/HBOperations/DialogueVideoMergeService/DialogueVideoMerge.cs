@@ -23,21 +23,21 @@ namespace DialogueVideoMergeService
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
-        private readonly ElasticSettings _elasticSettings;
+        private readonly ElasticClient _log;
         private readonly INotificationPublisher _notificationPublisher;
         public DialogueVideoMerge(
             INotificationPublisher notificationPublisher,
             IServiceScopeFactory factory,
             SftpClient client,
             SftpSettings sftpSettings,
-            ElasticSettings elasticSettings
+            ElasticClient log
             )
         {
             var scope = factory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
             _sftpClient = client;
             _sftpSettings = sftpSettings;
-            _elasticSettings = elasticSettings;
+            _log = log;
             _notificationPublisher = notificationPublisher;
         }
 
@@ -48,8 +48,8 @@ namespace DialogueVideoMergeService
 
         public async Task Run(DialogueVideoMergeRun message)
         {
-            var log = new ElasticClient(_elasticSettings, "{ApplicationUserId}, {DialogueId}", message.ApplicationUserId, message.DialogueId);
-
+            _log.SetFormat("{ApplicationUserId}, {DialogueId}");
+            _log.SetArgs(message.ApplicationUserId, message.DialogueId);
             try
             {
 
@@ -60,7 +60,7 @@ namespace DialogueVideoMergeService
 
                 var pathClient = new PathClient();
               
-                log.Info($"Language id is {languageId}");
+                _log.Info($"Language id is {languageId}");
                 var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
             
                 var ffmpeg = new FFMpegWrapper(Path.Combine(pathClient.BinPath(), "ffmpeg.exe"));
@@ -82,7 +82,7 @@ namespace DialogueVideoMergeService
 
                 if (!videos.Any())
                 {
-                    log.Error("No video files");
+                    _log.Error("No video files");
                     throw new Exception("No video files");
                 }
 
@@ -124,7 +124,7 @@ namespace DialogueVideoMergeService
                 }
 
 
-                log.Info("Downloading all files");
+                _log.Info("Downloading all files");
                 foreach (var command in commands.GroupBy(p => p.FileName).Select(p => p.First()))
                 {
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync($"{_sftpSettings.DestinationPath}{command.FileFolder}/{command.FileName}", sessionDir);
@@ -136,32 +136,32 @@ namespace DialogueVideoMergeService
                 var outputFn = Path.Combine(sessionDir, basename);
                 var outputTmpFn = Path.Combine(sessionDir, tmpBasename);
 
-                log.Info("Concat videos and frames");
+                _log.Info("Concat videos and frames");
                 var outputDialogueMerge = ffmpeg.ConcatSameCodecsAndFrames(commands, outputTmpFn, sessionDir);
                 var sTime = videos.First().BegTime.ToUniversalTime();
 
-                log.Info("Cut result dialogue video");
+                _log.Info("Cut result dialogue video");
                 var outputCutDialogue = ffmpeg.CutBlob(outputTmpFn, 
                     outputFn,
                     (message.BeginTime - sTime).ToString(@"hh\:mm\:ss\.ff"), 
                     (message.EndTime - message.BeginTime).ToString(@"hh\:mm\:ss\.ff"));
                 
-                log.Info("Uploading to FTP server result dialogue video");
+                _log.Info("Uploading to FTP server result dialogue video");
                 var filename = $"{message.DialogueId}{extension}";
                 await _sftpClient.UploadAsync(outputTmpFn, "dialoguevideos", filename);
                 
-                log.Info("Delete all local files");
+                _log.Info("Delete all local files");
                 Directory.Delete(sessionDir, true);
                 var @event = new VideoToSoundRun
                 {
                     Path = "dialoguevideos/" + filename
                 };
                 _notificationPublisher.Publish(@event);
-                log.Info($"Function finished {_elasticSettings.FunctionName}");
+                _log.Info($"Function finished OnPremDialogueVideoMerge");
             }
             catch (Exception e)
             {
-                log.Fatal($"Exception occured {e}");
+                _log.Fatal($"Exception occured {e}");
                 Console.WriteLine(e);
             }
         }

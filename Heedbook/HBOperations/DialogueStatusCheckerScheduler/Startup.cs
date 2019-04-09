@@ -1,6 +1,8 @@
 ﻿using Configurations;
 using HBData;
 using HBData.Repository;
+using HBLib;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +32,12 @@ namespace DialogueStatusCheckerScheduler
                 var connectionString = Configuration.GetConnectionString("DefaultConnection");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
+            });
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddDialogueStatusCheckerQuartz();

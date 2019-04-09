@@ -42,6 +42,12 @@ namespace AudioAnalyzeScheduler
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
             services.AddSingleton<GoogleConnector>();
             services.AddHttpClient<GoogleConnector>();
             services.AddSingleton<SftpClient>();

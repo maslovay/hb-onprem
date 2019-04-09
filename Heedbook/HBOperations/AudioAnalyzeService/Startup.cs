@@ -36,6 +36,12 @@ namespace AudioAnalyzeService
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
             services.AddDbContext<RecordsContext>
             (options =>
             {

@@ -2,6 +2,8 @@
 using FillingHintService.Handler;
 using HBData;
 using HBData.Repository;
+using HBLib;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -33,6 +35,12 @@ namespace FillingHintService
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
             services.AddTransient<FillingHints>();
             services.AddTransient<FillingHintsRunHandler>();
             services.AddRabbitMqEventBus(Configuration);
