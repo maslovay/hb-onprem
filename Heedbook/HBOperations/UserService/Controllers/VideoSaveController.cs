@@ -29,7 +29,7 @@ namespace UserService.Controllers
             _sftpClient = sftpClient;
         }
 
-        [HttpPost("VideoSave")]
+        [HttpPost()]
         public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId, 
             [FromQuery] string begTime,
             [FromQuery] double? duration,
@@ -58,7 +58,7 @@ namespace UserService.Controllers
                 videoFile.Duration = duration;
                 videoFile.EndTime = time.AddSeconds((double) duration);
                 videoFile.FileContainer = "videos";
-                videoFile.FileExist =  await _sftpClient.IsFileExistsAsync($"videos/{fileName}");
+                videoFile.FileExist =  await _sftpClient.IsFileExistsAsync($"{fileName}");
                 videoFile.FileName = fileName;
                 videoFile.FileVideoId = Guid.NewGuid();
                 videoFile.StatusId = 6;
@@ -76,7 +76,7 @@ namespace UserService.Controllers
                 }
                 else
                 {
-                    Console.WriteLine($"No such file {fileName}");
+                    Console.WriteLine($"No such file videos/{fileName}");
                 }
                 return Ok();
             }
