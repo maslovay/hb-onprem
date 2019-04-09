@@ -34,7 +34,7 @@ namespace VideoToSoundService
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddTransient(provider =>
             {
-                var settings = provider.GetRequiredService<ElasticSettings>();
+                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);

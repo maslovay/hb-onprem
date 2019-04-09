@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
@@ -27,6 +28,7 @@ namespace FillingHintService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddOptions();
             services.AddDbContext<RecordsContext>
             (options =>
             {
@@ -38,7 +40,7 @@ namespace FillingHintService
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddTransient(provider =>
             {
-                var settings = provider.GetRequiredService<ElasticSettings>();
+                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
             services.AddTransient<FillingHints>();

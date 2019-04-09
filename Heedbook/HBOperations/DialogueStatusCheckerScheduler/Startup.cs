@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Quartz;
 using QuartzExtensions;
 
@@ -26,6 +27,7 @@ namespace DialogueStatusCheckerScheduler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddOptions();
             services.AddDbContext<RecordsContext>
             (options =>
             {
@@ -34,9 +36,9 @@ namespace DialogueStatusCheckerScheduler
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddTransient(provider =>
+            services.AddSingleton(provider =>
             {
-                var settings = provider.GetRequiredService<ElasticSettings>();
+                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
             services.AddScoped<IGenericRepository, GenericRepository>();

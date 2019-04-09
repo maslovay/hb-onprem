@@ -28,11 +28,12 @@ namespace AudioAnalyzeService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddOptions();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddTransient<IElasticLogger>(provider =>
             {
-                var settings = provider.GetRequiredService<ElasticSettings>();
+                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
             services.AddDbContext<RecordsContext>
