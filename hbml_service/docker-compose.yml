@@ -11,7 +11,7 @@ services:
     depends_on:
       - hbml
   hbml:
-    image: heedbookregistry.azurecr.io/heedbookdev/hbml_service:v2
+    image: hbcontainerregistry.azurecr.io/hbml_service:v2
     build: .
     container_name: hbml
     volumes:
