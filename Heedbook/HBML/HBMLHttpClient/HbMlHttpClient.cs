@@ -30,6 +30,10 @@ namespace HBMLHttpClient
             content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
             var response = await client.PostAsync(uri, content);
             var contentAsString = await response.Content.ReadAsStringAsync();
+            
+            // to do: delete or change to elastic
+            Console.WriteLine($"{contentAsString}");
+            
             return JsonConvert.DeserializeObject<List<FaceResult>>(contentAsString);
         }
     }

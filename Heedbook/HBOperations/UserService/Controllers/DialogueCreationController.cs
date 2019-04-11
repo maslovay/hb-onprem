@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserService.Controllers
 {
@@ -24,6 +25,7 @@ namespace UserService.Controllers
         }
 
         [HttpPost("dialogueCreation")]
+        [SwaggerOperation(Description = "Dialogue creation. Merge videos and frames in one video.")]
         public async Task DialogueCreation([FromBody] DialogueCreationRun message)
         {
             var languageId = _genericRepository.GetWithInclude<ApplicationUser>(p => 

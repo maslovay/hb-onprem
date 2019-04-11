@@ -11,6 +11,7 @@ using HBLib.Utils;
 using System.Threading.Tasks;
 using System.Globalization;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserService.Controllers
 {
@@ -30,6 +31,7 @@ namespace UserService.Controllers
         }
 
         [HttpPost()]
+        [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
         public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId, 
             [FromQuery] string begTime,
             [FromQuery] double? duration,

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserService.Controllers
 {
@@ -16,6 +17,7 @@ namespace UserService.Controllers
         }
 
         [HttpPost]
+        [SwaggerOperation(Description = "Detect hints based on dialogue scores")]
         public async Task FillingHintRun([FromBody] FillingHintsRun message)
         {
             _handler.EventRaised(message);

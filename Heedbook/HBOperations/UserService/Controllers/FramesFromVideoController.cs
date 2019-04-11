@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserService.Controllers
 {
@@ -18,6 +19,7 @@ namespace UserService.Controllers
         }
         
         [HttpPost]
+        [SwaggerOperation(Description = "Extract frames from video each 3 seconds")]
         public async Task CutVideoToFrames([FromBody] FramesFromVideoRun message)
         {
             _publisher.Publish(message);

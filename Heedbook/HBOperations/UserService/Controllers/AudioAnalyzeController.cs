@@ -17,13 +17,14 @@ namespace UserService.Controllers
         }
 
         [HttpPost("audio-analyze")]
-        [SwaggerOperation(Summary = "Hello world", Description = "Hello everybody")]
+        [SwaggerOperation(Description = "Speech recogntion for audio file in message")]
         public void AudioAnalyze([FromBody] AudioAnalyzeRun message)
         {
             _handler.EventRaised(message);
         }
 
         [HttpPost("tone-analyze")]
+        [SwaggerOperation(Description = "Tone analyze for audio file in message")]
         public void ToneAnalyze([FromBody] ToneAnalyzeRun toneAnalyzeRun)
         {
             _handler.EventRaised(toneAnalyzeRun);
