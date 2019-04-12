@@ -29,6 +29,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using UserOperations.Services;
 using Microsoft.AspNetCore.Identity;
+using HBLib.Utils;
+using HBLib;
 
 namespace UserOperations
 {
@@ -85,6 +87,9 @@ namespace UserOperations
 
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddTransient<SftpClient>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

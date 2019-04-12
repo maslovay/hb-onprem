@@ -68,7 +68,7 @@ namespace HBData.Models
         public int? StatusId { get; set; }
         public Status Status { get; set; }
         
-
+        public ICollection<CampaignContent> CampaignContents { get; set; }
 
     }
 }

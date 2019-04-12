@@ -43,8 +43,7 @@ namespace UserOperations.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
         private readonly ITokenService _tokenService;
-        private readonly RecordsContext _context;
-
+        private readonly RecordsContext _context;      
 
         public AccountController(
             UserManager<ApplicationUser> userManager,

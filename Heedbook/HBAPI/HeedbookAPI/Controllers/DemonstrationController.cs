@@ -354,21 +354,21 @@ namespace UserOperations.Controllers
         public Guid ApplicationUserId;
     }
 
-     public class Content
-    {
-        public string Id;
-        public string HTML;
-        public int Duration;
-        public string Type;
-    }
+    // public class Content
+    //{
+    //    public string Id;
+    //    public string HTML;
+    //    public int Duration;
+    //    public string Type;
+    //}
 
-    public class Campaign
-    {
-        public Guid Id;
-        public int Gender;
-        public int BegAge;
-        public int EndAge;
-        public List<Content> Content;
-        public bool IsSplashScreen;
-    }
+    //public class Campaign
+    //{
+    //    public Guid Id;
+    //    public int Gender;
+    //    public int BegAge;
+    //    public int EndAge;
+    //    public List<Content> Content;
+    //    public bool IsSplashScreen;
+    //}
 }
