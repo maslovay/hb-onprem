@@ -71,7 +71,7 @@ namespace HBLib.Utils
             audioFn = Path.GetFullPath(audioFn);
             var cmd = new CMDWithOutput();
             return cmd.runCMD(FfPath,
-                $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
+                $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
         }
 
         public async Task<FileStream> VideoToWavAsync(MemoryStream videoStream)
