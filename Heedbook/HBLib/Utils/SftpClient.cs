@@ -13,7 +13,8 @@ namespace HBLib.Utils
 
         public SftpClient(SftpSettings sftpSettings)
         {
-            _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName, sftpSettings.Password);
+            _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
+                sftpSettings.Password);
             _sftpSettings = sftpSettings;
         }
 
@@ -60,7 +61,7 @@ namespace HBLib.Utils
             _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
             _client.UploadFile(stream, filename);
         }
-        
+
         /// <summary>
         /// Downloads all files from specified directory. It's downloaded files to memory.
         /// </summary>
@@ -75,18 +76,17 @@ namespace HBLib.Utils
             var tasks = files.Select(file =>
             {
                 var name = file.Name;
-                return new Task(async () =>
+                return new Task( () =>
                 {
-                    using (var ms = new MemoryStream())
-                    {
-                        _client.DownloadFile(directory + name, ms);
-                        fileStreams.TryAdd(name, ms);
-                    }
+                    var ms = new MemoryStream();
+                    _client.DownloadFile(directory + name, ms);
+                    fileStreams.TryAdd(name, ms);
                 });
             });
             await Task.WhenAll(tasks);
             return fileStreams;
         }
+
         /// <summary>
         /// Download one file from sftp as memory stream
         /// </summary>
@@ -110,7 +110,7 @@ namespace HBLib.Utils
             await ConnectToSftpAsync();
             Console.WriteLine("Successfully connected");
             var filename = remotePath.Split('/').Last();
-            
+
             Console.WriteLine(localPath == null);
             localPath = (localPath == null) ? localPath = _sftpSettings.DownloadPath + filename : localPath + filename;
             Console.WriteLine($"{localPath}, {remotePath}");
@@ -118,6 +118,7 @@ namespace HBLib.Utils
             {
                 await Task.Run(() => _client.DownloadFile(remotePath, fs));
             }
+
             return localPath;
         }
 

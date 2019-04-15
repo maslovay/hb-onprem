@@ -67,7 +67,6 @@ namespace UserService
                     Title = "User Service Api",
                     Version = "v1"
                 });
-
             });
             services.AddRabbitMqEventBus(Configuration);
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));

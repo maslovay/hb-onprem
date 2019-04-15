@@ -34,20 +34,6 @@ namespace AudioAnalyzeService
                     var splitedString = path.Split('/');
                     var fileName = splitedString[1];
                     var dialogueId = Path.GetFileNameWithoutExtension(fileName);
-                    var languageId = Int32.Parse("2");
-
-                    var currentPath = Directory.GetCurrentDirectory();
-                    var token = await _googleConnector.GetAuthorizationToken(currentPath);
-
-                    var blobGoogleDriveName =
-                        dialogueId + "_client" + Path.GetExtension(fileName);
-                    await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);
-                    _log.Info("Load to disk");
-                    await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
-                    _log.Info("Make file public");
-                    var transactionId =
-                        await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId, true, true);
-                    _log.Info("transaction id: " + transactionId);
                     var dialogue =
                         await _repository.FindOneByConditionAsync<Dialogue>(item =>
                             item.DialogueId == Guid.Parse(dialogueId));
@@ -58,7 +44,6 @@ namespace AudioAnalyzeService
                         FileName = fileName,
                         StatusId = 6,
                         FileContainer = "dialogueaudios",
-                        TransactionId = transactionId.Name.ToString(),
                         BegTime = dialogue.BegTime,
                         EndTime = dialogue.EndTime,
                         Duration = 15.0

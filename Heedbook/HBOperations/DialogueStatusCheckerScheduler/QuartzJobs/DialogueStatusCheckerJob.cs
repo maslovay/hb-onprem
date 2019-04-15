@@ -1,22 +1,21 @@
-﻿using HBData.Models;
-using HBData.Repository;
-using Microsoft.Extensions.DependencyInjection;
-using Quartz;
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using HBData.Models;
+using HBData.Repository;
 using HBLib.Utils;
+using Microsoft.Extensions.DependencyInjection;
+using Quartz;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
-using DialogueVisual = HBData.Models.DialogueVisual;
 
 namespace QuartzExtensions.Jobs
 {
     public class DialogueStatusCheckerJob : IJob
     {
-        private readonly IGenericRepository _repository;
-        private readonly INotificationPublisher _notificationPublisher;
         private readonly ElasticClient _log;
+        private readonly INotificationPublisher _notificationPublisher;
+        private readonly IGenericRepository _repository;
 
         public DialogueStatusCheckerJob(IServiceScopeFactory factory,
             INotificationPublisher notificationPublisher,
