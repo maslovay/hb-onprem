@@ -1,66 +1,76 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about tariffs
+    ///     Information about tariffs
     /// </summary>
     public class Tariff
     {
         /// <summary>
-        /// Id
+        ///     Id
         /// </summary>
         [Key]
         public Guid TariffId { get; set; }
+
         /// <summary>
-        /// Company with tariff
+        ///     Company with tariff
         /// </summary>
         public Guid? CompanyId { get; set; }
-        public  Company Company { get; set; }
+
+        public Company Company { get; set; }
+
         /// <summary>
-        /// Customer key for payments. 
+        ///     Customer key for payments.
         /// </summary>
-        public string CustomerKey { get; set; }
+        public String CustomerKey { get; set; }
+
         /// <summary>
-        /// Cost
+        ///     Cost
         /// </summary>
         public Decimal TotalRate { get; set; }
+
         /// <summary>
-        /// Employee number in tariff
+        ///     Employee number in tariff
         /// </summary>
-        public int EmployeeNo { get; set; }
+        public Int32 EmployeeNo { get; set; }
+
         /// <summary>
-        /// Tariff creation time
+        ///     Tariff creation time
         /// </summary>
         public DateTime CreationDate { get; set; }
+
         /// <summary>
-        /// Tariff expiration date
+        ///     Tariff expiration date
         /// </summary>
         public DateTime ExpirationDate { get; set; }
+
         /// <summary>
-        /// Code for recurrent payments
+        ///     Code for recurrent payments
         /// </summary>
-        public string Rebillid { get; set; }
+        public String Rebillid { get; set; }
+
         /// <summary>
-        /// Token for recurrent payments
+        ///     Token for recurrent payments
         /// </summary>
-        public byte[] Token { get; set; }
+        public Byte[] Token { get; set; }
+
         /// <summary>
-        /// Tariff status 
+        ///     Tariff status
         /// </summary>
-        public int? StatusId { get; set; }
-        public  Status Status { get; set; }
+        public Int32? StatusId { get; set; }
+
+        public Status Status { get; set; }
+
         /// <summary>
-        /// Is monthly or annual tariff
-        /// </summary>        
-        public bool isMonthly { get; set; }
-        /// <summary>
-        /// Comment
+        ///     Is monthly or annual tariff
         /// </summary>
-        public string TariffComment { get; set; }
+        public Boolean isMonthly { get; set; }
+
+        /// <summary>
+        ///     Comment
+        /// </summary>
+        public String TariffComment { get; set; }
     }
 }

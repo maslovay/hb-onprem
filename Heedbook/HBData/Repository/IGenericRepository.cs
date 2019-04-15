@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -19,12 +18,13 @@ namespace HBData.Repository
 
         IEnumerable<T> Get<T>() where T : class;
 
-        IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, object>>[] children) 
+        IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate,
+            params Expression<Func<T, Object>>[] children)
             where T : class;
 
-        T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, object>>[] children) 
+        T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, Object>>[] children)
             where T : class;
-        
+
         Task<Dictionary<TKey, TElement>> FindByConditionAsyncToDictionary<T, TKey, TElement>(
             Expression<Func<T, Boolean>> expression, Func<T, TKey> keySelector,
             Func<T, TElement> elementSelector)
@@ -39,7 +39,7 @@ namespace HBData.Repository
         Task BulkInsertAsync<T>(IEnumerable<T> entities) where T : class;
 
         void BulkInsert<T>(IEnumerable<T> entities) where T : class;
-        
+
         void Update<T>(T entity)
             where T : class;
 
@@ -51,7 +51,7 @@ namespace HBData.Repository
             where T : class;
 
         IEnumerable<Object> ExecuteDbCommand(Type type, String sql, Dictionary<String, Object> @params = null);
-        
+
         void Save();
         void Dispose();
 

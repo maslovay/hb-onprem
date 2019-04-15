@@ -10,7 +10,7 @@ namespace HBLib.Utils
 
         static Tables()
         {
-            TablesDictionary = new Dictionary<String, Type>()
+            TablesDictionary = new Dictionary<String, Type>
             {
                 {"DialogueVisuals", typeof(DialogueVisual)},
                 {"DialogueAudios", typeof(DialogueAudio)},

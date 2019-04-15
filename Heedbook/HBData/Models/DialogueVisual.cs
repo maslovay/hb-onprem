@@ -1,62 +1,69 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HBData.Models
 {
-    /// <summary>
-    /// Average dialogue client emotions
-    /// </summary>
-    public class DialogueVisual
+	/// <summary>
+	///     Average dialogue client emotions
+	/// </summary>
+	public class DialogueVisual
     {
-        /// <summary>
-        /// Dialogue visual id
-        /// </summary>
-        [Key]
+	    /// <summary>
+	    ///     Dialogue visual id
+	    /// </summary>
+	    [Key]
         public Guid DialogueVisualId { get; set; }
-		/// <summary>
-        /// Dialogue id
-        /// </summary>
-		public Guid? DialogueId { get; set; }
-        public  Dialogue Dialogue { get; set; }
+
+	    /// <summary>
+	    ///     Dialogue id
+	    /// </summary>
+	    public Guid? DialogueId { get; set; }
+
+        public Dialogue Dialogue { get; set; }
+
         /// <summary>
-        /// Average attention share
+        ///     Average attention share
         /// </summary>
-        public double? AttentionShare { get; set; }
+        public Double? AttentionShare { get; set; }
+
         /// <summary>
-        /// Average dialogue happiness share
+        ///     Average dialogue happiness share
         /// </summary>
-        public double? HappinessShare { get; set; }
+        public Double? HappinessShare { get; set; }
+
         /// <summary>
-        /// Average dialogue neutral share
+        ///     Average dialogue neutral share
         /// </summary>
-        public double? NeutralShare { get; set; }
+        public Double? NeutralShare { get; set; }
+
         /// <summary>
-        /// Average dialogue surprise share
+        ///     Average dialogue surprise share
         /// </summary>
-        public double? SurpriseShare { get; set; }
+        public Double? SurpriseShare { get; set; }
+
         /// <summary>
-        /// Average dialogue sadness share
+        ///     Average dialogue sadness share
         /// </summary>
-        public double? SadnessShare { get; set; }
+        public Double? SadnessShare { get; set; }
+
         /// <summary>
-        /// Average dialogue anger share
+        ///     Average dialogue anger share
         /// </summary>
-        public double? AngerShare { get; set; }
+        public Double? AngerShare { get; set; }
+
         /// <summary>
-        /// Average dialogue disgust share
+        ///     Average dialogue disgust share
         /// </summary>
-        public double? DisgustShare { get; set; }
+        public Double? DisgustShare { get; set; }
+
         /// <summary>
-        /// Average dialogue disgust share
+        ///     Average dialogue disgust share
         /// </summary>
-        public double? ContemptShare { get; set; }
+        public Double? ContemptShare { get; set; }
+
         /// <summary>
-        /// Average dialogue fear share
+        ///     Average dialogue fear share
         /// </summary>
-        public double? FearShare { get; set; }
-		
+        public Double? FearShare { get; set; }
     }
 }

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
 using Microsoft.AspNetCore.Mvc;
-using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using Swashbuckle.AspNetCore.Annotations;
@@ -15,10 +14,11 @@ namespace UserService.Controllers
     [ApiController]
     public class DialogueCreationController : Controller
     {
-        private readonly INotificationPublisher _publisher;
         private readonly IGenericRepository _genericRepository;
+        private readonly INotificationPublisher _publisher;
+
         public DialogueCreationController(INotificationPublisher publisher,
-        IGenericRepository genericRepository)
+            IGenericRepository genericRepository)
         {
             _publisher = publisher;
             _genericRepository = genericRepository;
@@ -28,11 +28,11 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Dialogue creation. Merge videos and frames in one video.")]
         public async Task DialogueCreation([FromBody] DialogueCreationRun message)
         {
-            var languageId = _genericRepository.GetWithInclude<ApplicationUser>(p => 
-                    p.Id == message.ApplicationUserId,
-                    link => link.Company)
-                .First().Company.LanguageId;
-            System.Console.WriteLine(languageId);
+            var languageId = _genericRepository.GetWithInclude<ApplicationUser>(p =>
+                                                        p.Id == message.ApplicationUserId,
+                                                    link => link.Company)
+                                               .First().Company.LanguageId;
+            Console.WriteLine(languageId);
             var dialogue = new Dialogue
             {
                 DialogueId = message.DialogueId,
@@ -45,7 +45,7 @@ namespace UserService.Controllers
             };
             _genericRepository.Create(dialogue);
             _genericRepository.Save();
-            System.Console.WriteLine("start send message to rabbit");
+            Console.WriteLine("start send message to rabbit");
             var dialogueVideoMerge = new DialogueVideoMergeRun
             {
                 ApplicationUserId = message.ApplicationUserId,
@@ -55,7 +55,7 @@ namespace UserService.Controllers
             };
             _publisher.Publish(dialogueVideoMerge);
             _publisher.Publish(message);
-            System.Console.WriteLine("finished");
+            Console.WriteLine("finished");
         }
     }
 }

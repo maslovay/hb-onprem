@@ -8,7 +8,6 @@ using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
-using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
@@ -20,18 +19,19 @@ namespace DialogueVideoMergeService
         private const String FrameFolder = "frames";
         private const String VideoType = "video";
         private const String FrameType = "frame";
+        private readonly ElasticClient _log;
+        private readonly INotificationPublisher _notificationPublisher;
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
-        private readonly ElasticClient _log;
-        private readonly INotificationPublisher _notificationPublisher;
+
         public DialogueVideoMerge(
             INotificationPublisher notificationPublisher,
             IServiceScopeFactory factory,
             SftpClient client,
             SftpSettings sftpSettings,
             ElasticClient log
-            )
+        )
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _sftpClient = client;
@@ -42,7 +42,8 @@ namespace DialogueVideoMergeService
 
         public static FileFrame LastFrame(FileVideo video, List<FileFrame> frames)
         {
-            return frames.Where(p => p.Time >= video.BegTime && p.Time <= video.EndTime).OrderByDescending(p => p.Time).FirstOrDefault();
+            return frames.Where(p => p.Time >= video.BegTime && p.Time <= video.EndTime).OrderByDescending(p => p.Time)
+                         .FirstOrDefault();
         }
 
         public async Task Run(DialogueVideoMergeRun message)
@@ -51,26 +52,25 @@ namespace DialogueVideoMergeService
             _log.SetArgs(message.ApplicationUserId, message.DialogueId);
             try
             {
-
-                var languageId = _repository.GetWithInclude<ApplicationUser>(p => 
-                            p.Id == message.ApplicationUserId,
-                            link => link.Company)
-                        .First().Company.LanguageId;
+                var languageId = _repository.GetWithInclude<ApplicationUser>(p =>
+                                                     p.Id == message.ApplicationUserId,
+                                                 link => link.Company)
+                                            .First().Company.LanguageId;
 
                 var pathClient = new PathClient();
-              
+
                 _log.Info($"Language id is {languageId}");
                 var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
-            
+
                 var ffmpeg = new FFMpegWrapper(Path.Combine(pathClient.BinPath(), "ffmpeg.exe"));
 
-                var fileVideos = await _repository.FindByConditionAsync<FileVideo>(item => 
-                        item.ApplicationUserId == message.ApplicationUserId &&
-                        item.EndTime >= message.BeginTime &&
-                        item.BegTime <= message.EndTime &&
-                        item.FileExist);
-                
-                var fileFrames = await _repository.FindByConditionAsync<FileFrame>(item => 
+                var fileVideos = await _repository.FindByConditionAsync<FileVideo>(item =>
+                    item.ApplicationUserId == message.ApplicationUserId &&
+                    item.EndTime >= message.BeginTime &&
+                    item.BegTime <= message.EndTime &&
+                    item.FileExist);
+
+                var fileFrames = await _repository.FindByConditionAsync<FileFrame>(item =>
                     item.ApplicationUserId == message.ApplicationUserId &&
                     item.Time >= message.BeginTime &&
                     item.Time <= message.EndTime &&
@@ -86,7 +86,8 @@ namespace DialogueVideoMergeService
                 }
 
                 var commands = new List<FFMpegWrapper.FFmpegCommand>();
-                commands.Add(new FFMpegWrapper.FFmpegCommand{
+                commands.Add(new FFMpegWrapper.FFmpegCommand
+                {
                     Command = $"-i {Path.Combine(sessionDir, videos[0].FileName)}",
                     Path = Path.Combine(sessionDir, videos[0].FileName),
                     Type = VideoType,
@@ -94,9 +95,9 @@ namespace DialogueVideoMergeService
                     FileName = videos[0].FileName
                 });
 
-                for (int i = 1; i < videos.Count(); i++)
+                for (var i = 1; i < videos.Count(); i++)
                 {
-                    var timeGap = videos[i].BegTime.Subtract(videos[i - 1].EndTime).TotalSeconds;  
+                    var timeGap = videos[i].BegTime.Subtract(videos[i - 1].EndTime).TotalSeconds;
                     if (timeGap > 1)
                     {
                         var lastFrame = LastFrame(videos[i - 1], frames);
@@ -125,9 +126,8 @@ namespace DialogueVideoMergeService
 
                 _log.Info("Downloading all files");
                 foreach (var command in commands.GroupBy(p => p.FileName).Select(p => p.First()))
-                {
-                    await _sftpClient.DownloadFromFtpToLocalDiskAsync($"{_sftpSettings.DestinationPath}{command.FileFolder}/{command.FileName}", sessionDir);
-                }
+                    await _sftpClient.DownloadFromFtpToLocalDiskAsync(
+                        $"{_sftpSettings.DestinationPath}{command.FileFolder}/{command.FileName}", sessionDir);
 
                 var extension = videos.Select(item => Path.GetExtension(item.FileName.ToString())).First();
                 var basename = $"{message.DialogueId}{extension}";
@@ -140,15 +140,15 @@ namespace DialogueVideoMergeService
                 var sTime = videos.First().BegTime.ToUniversalTime();
 
                 _log.Info("Cut result dialogue video");
-                var outputCutDialogue = ffmpeg.CutBlob(outputTmpFn, 
+                var outputCutDialogue = ffmpeg.CutBlob(outputTmpFn,
                     outputFn,
-                    (message.BeginTime - sTime).ToString(@"hh\:mm\:ss\.ff"), 
+                    (message.BeginTime - sTime).ToString(@"hh\:mm\:ss\.ff"),
                     (message.EndTime - message.BeginTime).ToString(@"hh\:mm\:ss\.ff"));
-                
+
                 _log.Info("Uploading to FTP server result dialogue video");
                 var filename = $"{message.DialogueId}{extension}";
                 await _sftpClient.UploadAsync(outputTmpFn, "dialoguevideos", filename);
-                
+
                 _log.Info("Delete all local files");
                 Directory.Delete(sessionDir, true);
                 var @event = new VideoToSoundRun
@@ -156,7 +156,7 @@ namespace DialogueVideoMergeService
                     Path = "dialoguevideos/" + filename
                 };
                 _notificationPublisher.Publish(@event);
-                _log.Info($"Function finished OnPremDialogueVideoMerge");
+                _log.Info("Function finished OnPremDialogueVideoMerge");
             }
             catch (Exception e)
             {

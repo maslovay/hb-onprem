@@ -4,7 +4,7 @@ using RabbitMqEventBus.Events;
 
 namespace FaceAnalyzeService.Handler
 {
-    public class FaceAnalyzeRunHandler: IIntegrationEventHandler<FaceAnalyzeRun>
+    public class FaceAnalyzeRunHandler : IIntegrationEventHandler<FaceAnalyzeRun>
     {
         private readonly FaceAnalyze _faceAnalyze;
 
@@ -12,7 +12,7 @@ namespace FaceAnalyzeService.Handler
         {
             _faceAnalyze = faceAnalyze;
         }
-        
+
         public async Task Handle(FaceAnalyzeRun @event)
         {
             await _faceAnalyze.Run(@event.Path);

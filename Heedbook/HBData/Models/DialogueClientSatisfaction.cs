@@ -1,77 +1,89 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about intergral score
+    ///     Information about intergral score
     /// </summary>
     public class DialogueClientSatisfaction
     {
         /// <summary>
-        /// Id of satisfaction score
+        ///     Id of satisfaction score
         /// </summary>
         [Key]
         public Guid DialogueClientSatisfactionId { get; set; }
+
         /// <summary>
-        /// Dialogue id
+        ///     Dialogue id
         /// </summary>
         public Guid? DialogueId { get; set; }
-        public  Dialogue Dialogue { get; set; }
+
+        public Dialogue Dialogue { get; set; }
+
         /// <summary>
-        /// Total dialogue estimation
+        ///     Total dialogue estimation
         /// </summary>
-        public double? MeetingExpectationsTotal { get; set; }
+        public Double? MeetingExpectationsTotal { get; set; }
+
         /// <summary>
-        /// Early total mood of client
+        ///     Early total mood of client
         /// </summary>
-        public double? BegMoodTotal { get; set; }
+        public Double? BegMoodTotal { get; set; }
+
         /// <summary>
-        /// Later total moode of client
+        ///     Later total moode of client
         /// </summary>
-        public double? EndMoodTotal { get; set; }
+        public Double? EndMoodTotal { get; set; }
+
         /// <summary>
-        /// Dialogue satisfaction estimation by client
+        ///     Dialogue satisfaction estimation by client
         /// </summary>
-        public double? MeetingExpectationsByClient { get; set; }
+        public Double? MeetingExpectationsByClient { get; set; }
+
         /// <summary>
-        /// Dialogue satisfaction estimation by employee
+        ///     Dialogue satisfaction estimation by employee
         /// </summary>
-        public double? MeetingExpectationsByEmpoyee { get; set; }
+        public Double? MeetingExpectationsByEmpoyee { get; set; }
+
         /// <summary>
-        /// Dialogue early satisfaction estimation by employee
+        ///     Dialogue early satisfaction estimation by employee
         /// </summary>
-        public double? BegMoodByEmpoyee { get; set; }
+        public Double? BegMoodByEmpoyee { get; set; }
+
         /// <summary>
-        /// Dialogue later satisfaction estimation by employee
+        ///     Dialogue later satisfaction estimation by employee
         /// </summary>
-        public double? EndMoodByEmpoyee { get; set; }
+        public Double? EndMoodByEmpoyee { get; set; }
+
         /// <summary>
-        /// Dialogue total satisfaction estimation by teacher
+        ///     Dialogue total satisfaction estimation by teacher
         /// </summary>
-        public double? MeetingExpectationsByTeacher { get; set; }
+        public Double? MeetingExpectationsByTeacher { get; set; }
+
         /// <summary>
-        /// Dialogue early satisfaction estimation by teacher
+        ///     Dialogue early satisfaction estimation by teacher
         /// </summary>
-        public double? BegMoodByTeacher { get; set; }
+        public Double? BegMoodByTeacher { get; set; }
+
         /// <summary>
-        /// Dialogue later satisfaction estimation by teacher
+        ///     Dialogue later satisfaction estimation by teacher
         /// </summary>
-        public double? EndMoodByTeacher { get; set; }
+        public Double? EndMoodByTeacher { get; set; }
+
         /// <summary>
-        /// Dialogue total satisfaction estimation by nn
+        ///     Dialogue total satisfaction estimation by nn
         /// </summary>
-        public double? MeetingExpectationsByNN { get; set; }
+        public Double? MeetingExpectationsByNN { get; set; }
+
         /// <summary>
-        /// Dialogue early satisfaction estimation by nn
+        ///     Dialogue early satisfaction estimation by nn
         /// </summary>
-        public double? BegMoodByNN { get; set; }
+        public Double? BegMoodByNN { get; set; }
+
         /// <summary>
-        /// Dialogue later satisfaction estimation by nn
+        ///     Dialogue later satisfaction estimation by nn
         /// </summary>
-        public double? EndMoodByNN { get; set; }
+        public Double? EndMoodByNN { get; set; }
     }
 }

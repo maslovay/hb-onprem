@@ -1,20 +1,21 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace HBLib.Utils
 {
     public class CMDWithOutput
     {
-        private string output = "";
+        private String output = "";
 
-        private void OutputHandler(object sender, DataReceivedEventArgs e)
+        private void OutputHandler(Object sender, DataReceivedEventArgs e)
         {
             //The data we want is in e.Data, you must be careful of null strings
             var strMessage = e.Data;
             if (output != null && strMessage != null && strMessage.Length > 0)
-                output += string.Concat(strMessage, "\n");
+                output += String.Concat(strMessage, "\n");
         }
 
-        public string runCMD(string path, string arguments)
+        public String runCMD(String path, String arguments)
         {
             using (var proc = new Process())
             {
@@ -33,7 +34,7 @@ namespace HBLib.Utils
                 proc.WaitForExit();
             }
 
-            var res = string.Copy(output);
+            var res = String.Copy(output);
             output = "";
             return res;
         }

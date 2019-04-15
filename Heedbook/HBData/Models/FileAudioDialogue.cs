@@ -1,63 +1,71 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
-
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about dialogue audio file 
+    ///     Information about dialogue audio file
     /// </summary>
     public class FileAudioDialogue
     {
         /// <summary>
-        /// Id
+        ///     Id
         /// </summary>
         [Key]
         public Guid FileAudioDialogueId { get; set; }
+
         /// <summary>
-        /// Dialogue id
+        ///     Dialogue id
         /// </summary>
         public Guid DialogueId { get; set; }
+
         public Dialogue Dialogue { get; set; }
+
         /// <summary>
-        /// Audio beg time
+        ///     Audio beg time
         /// </summary>
         public DateTime BegTime { get; set; }
+
         /// <summary>
-        /// Audio end time
+        ///     Audio end time
         /// </summary>
         public DateTime EndTime { get; set; }
+
         /// <summary>
-        /// Audio creation time
+        ///     Audio creation time
         /// </summary>
         public DateTime CreationTime { get; set; }
+
         /// <summary>
-        /// Id of google speech recognition request
+        ///     Id of google speech recognition request
         /// </summary>
-        public string TransactionId {get;set;}
+        public String TransactionId { get; set; }
+
         /// <summary>
-        /// Audio filename
+        ///     Audio filename
         /// </summary>
-        public string FileName { get; set; }
+        public String FileName { get; set; }
+
         /// <summary>
-        /// Audio folder
+        ///     Audio folder
         /// </summary>
-        public string FileContainer { get; set; }
+        public String FileContainer { get; set; }
+
         /// <summary>
-        /// Is file exist
+        ///     Is file exist
         /// </summary>
-        public bool FileExist { get; set; }
+        public Boolean FileExist { get; set; }
+
         /// <summary>
-        /// Status id of google recognition
+        ///     Status id of google recognition
         /// </summary>
-        public int? StatusId { get; set; }
+        public Int32? StatusId { get; set; }
+
         public Status Status { get; set; }
+
         /// <summary>
-        /// Audio duration
+        ///     Audio duration
         /// </summary>
-        public double? Duration { get; set; }
+        public Double? Duration { get; set; }
     }
 }

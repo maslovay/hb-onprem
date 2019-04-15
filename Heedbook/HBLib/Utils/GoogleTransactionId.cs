@@ -5,7 +5,6 @@ namespace HBLib.Utils
 {
     public class GoogleTransactionId
     {
-        [JsonProperty("name")]
-        public Int64 Name { get; set; }
+        [JsonProperty("name")] public Int64 Name { get; set; }
     }
 }

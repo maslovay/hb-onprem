@@ -1,54 +1,62 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about phrase
+    ///     Information about phrase
     /// </summary>
     public class Phrase
     {
         /// <summary>
-        /// Id
+        ///     Id
         /// </summary>
         [Key]
         public Guid PhraseId { get; set; }
+
         /// <summary>
-        /// Phrase text
+        ///     Phrase text
         /// </summary>
-        public string PhraseText { get; set; }
+        public String PhraseText { get; set; }
+
         /// <summary>
-        /// Phrase type
+        ///     Phrase type
         /// </summary>
         public Guid? PhraseTypeId { get; set; }
-        public  PhraseType PhraseType { get; set; }
+
+        public PhraseType PhraseType { get; set; }
+
         /// <summary>
-        /// Phrase language
+        ///     Phrase language
         /// </summary>
-        public int? LanguageId { get; set; }
+        public Int32? LanguageId { get; set; }
+
         public Language Language { get; set; }
+
         /// <summary>
-        /// Is client's phrase or employee
+        ///     Is client's phrase or employee
         /// </summary>
-        public bool IsClient { get; set; }
+        public Boolean IsClient { get; set; }
+
         /// <summary>
-        /// Number of additional words in phrase 
+        ///     Number of additional words in phrase
         /// </summary>
-        public int? WordsSpace { get; set; }
+        public Int32? WordsSpace { get; set; }
+
         /// <summary>
-        /// Minimum percent of words in phrase must be detected
+        ///     Minimum percent of words in phrase must be detected
         /// </summary>
-        public double? Accurancy { get; set; }
+        public Double? Accurancy { get; set; }
+
         /// <summary>
-        /// Template
+        ///     Template
         /// </summary>
-        public bool Template { get; set; }
+        public Boolean Template { get; set; }
+
         /// <summary>
-        /// Links
+        ///     Links
         /// </summary>
-        public  ICollection<PhraseCompany> PhraseCompany { get; set; }
+        public ICollection<PhraseCompany> PhraseCompany { get; set; }
     }
 }

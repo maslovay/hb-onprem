@@ -1,16 +1,12 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
-
 
 namespace HBData.Models
 {
     public class FrameEmotion
     {
-        [Key]
-        public Guid FrameEmotionId { get; set; }
+        [Key] public Guid FrameEmotionId { get; set; }
+
         public Guid FileFrameId { get; set; }
         public FileFrame FileFrame { get; set; }
         public Double? AngerShare { get; set; }

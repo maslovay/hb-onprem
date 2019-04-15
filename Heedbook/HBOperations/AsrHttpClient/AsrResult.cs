@@ -1,9 +1,11 @@
+using System;
+
 namespace AsrHttpClient
 {
     public class AsrResult
     {
-        public double Time { get; set; }
-        public double Duration { get; set; }
-        public string Word { get; set; }
+        public Double Time { get; set; }
+        public Double Duration { get; set; }
+        public String Word { get; set; }
     }
 }

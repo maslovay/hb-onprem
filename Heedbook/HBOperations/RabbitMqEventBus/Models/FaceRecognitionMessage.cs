@@ -1,8 +1,7 @@
 ﻿using System;
-using RabbitMqEventBus.Base;
 
-namespace RabbitMqEventBus.Models  {
-
+namespace RabbitMqEventBus.Models
+{
     public class FaceRecognitionMessage
     {
         public String Id { get; set; }

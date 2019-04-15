@@ -1,9 +1,10 @@
-﻿using RabbitMqEventBus.Base;
+﻿using System;
+using RabbitMqEventBus.Base;
 
 namespace Notifications.Base
 {
-    public interface INotificationService 
+    public interface INotificationService
     {
-        void Publish(object sender, IntegrationEvent e);
+        void Publish(Object sender, IntegrationEvent e);
     }
 }

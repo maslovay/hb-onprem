@@ -16,9 +16,9 @@ namespace ExtractFramesFromVideo
         private readonly SftpClient _client;
         private readonly INotificationHandler _handler;
 
-        private readonly IGenericRepository _repository;
-
         private readonly ElasticClient _log;
+
+        private readonly IGenericRepository _repository;
 
         public FramesFromVideo(SftpClient client,
             IServiceScopeFactory factory,

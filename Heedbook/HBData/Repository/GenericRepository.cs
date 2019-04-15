@@ -1,19 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
-using System.Data.Common;
-using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
-using HBData.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal;
 using Newtonsoft.Json;
-using Remotion.Linq.Clauses;
 
 namespace HBData.Repository
 {
@@ -35,28 +29,31 @@ namespace HBData.Repository
         {
             return await _context.Set<T>().Where(predicate).FirstOrDefaultAsync();
         }
-        
-        public async Task<IEnumerable<T>> FindByConditionAsync<T>(Expression<Func<T, Boolean>> predicate) where T : class
+
+        public async Task<IEnumerable<T>> FindByConditionAsync<T>(Expression<Func<T, Boolean>> predicate)
+            where T : class
         {
             return await _context.Set<T>().Where(predicate).ToListAsync();
         }
 
-        public IEnumerable<T> Get<T>() where T: class
+        public IEnumerable<T> Get<T>() where T : class
         {
             return _context.Set<T>();
         }
 
-        public IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, object>>[] children) where T : class
+        public IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate,
+            params Expression<Func<T, Object>>[] children) where T : class
         {
             var dbSet = _context.Set<T>();
-            children.ToList().ForEach(x=>dbSet.Include(x).Load());
+            children.ToList().ForEach(x => dbSet.Include(x).Load());
             return dbSet.Where(predicate);
         }
 
-        public T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, object>>[] children) where T : class
+        public T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate,
+            params Expression<Func<T, Object>>[] children) where T : class
         {
             var dbSet = _context.Set<T>();
-            children.ToList().ForEach(x=>dbSet.Where(predicate).Include(x).Load());
+            children.ToList().ForEach(x => dbSet.Where(predicate).Include(x).Load());
             return dbSet.First();
         }
 
@@ -69,7 +66,7 @@ namespace HBData.Repository
         {
             await _context.Set<T>().AddRangeAsync(entities);
         }
-        
+
         public async Task<Dictionary<TKey, TElement>> FindByConditionAsyncToDictionary<T, TKey, TElement>(
             Expression<Func<T, Boolean>> expression, Func<T, TKey> keySelector,
             Func<T, TElement> elementSelector)
@@ -95,10 +92,7 @@ namespace HBData.Repository
 
         public async void AddOrUpdate<T>(T entity, Expression<Func<T, Boolean>> predicateExpression) where T : class
         {
-            if (await _context.Set<T>().AnyAsync(predicateExpression))
-            {
-                _context.Set<T>().Update(entity);
-            }
+            if (await _context.Set<T>().AnyAsync(predicateExpression)) _context.Set<T>().Update(entity);
 
             await _context.Set<T>().AddAsync(entity);
         }
@@ -114,19 +108,13 @@ namespace HBData.Repository
                 break;
             }
 
-            if (keyValue == Guid.Empty)
-            {
-                throw new Exception($"{typeof(T).FullName} does not have key attribute");
-            }
+            if (keyValue == Guid.Empty) throw new Exception($"{typeof(T).FullName} does not have key attribute");
 
-            if (_context.Set<T>().Find(keyValue) != null)
-            {
-                _context.Set<T>().Update(entity);
-            }
+            if (_context.Set<T>().Find(keyValue) != null) _context.Set<T>().Update(entity);
 
             await _context.Set<T>().AddAsync(entity);
         }
-        
+
         public void Delete<T>(T entity) where T : class
         {
             _context.Set<T>().Remove(entity);
@@ -137,31 +125,22 @@ namespace HBData.Repository
             using (var cmd = _context.Database.GetDbConnection().CreateCommand())
             {
                 cmd.CommandText = sql;
-                if (cmd.Connection.State != ConnectionState.Open)
-                {
-                    cmd.Connection.Open();
-                }
+                if (cmd.Connection.State != ConnectionState.Open) cmd.Connection.Open();
 
                 if (@params != null)
-                {
-                    foreach (KeyValuePair<String, Object> p in @params)
+                    foreach (var p in @params)
                     {
-                        DbParameter dbParameter = cmd.CreateParameter();
+                        var dbParameter = cmd.CreateParameter();
                         dbParameter.ParameterName = p.Key;
                         dbParameter.Value = p.Value;
                         cmd.Parameters.Add(dbParameter);
                     }
-                }
 
                 using (var dataReader = cmd.ExecuteReader())
                 {
                     while (dataReader.Read())
-                    {
                         for (var fieldCount = 0; fieldCount < dataReader.FieldCount; fieldCount++)
-                        {
                             yield return JsonConvert.DeserializeObject(dataReader[fieldCount].ToString(), type);
-                        }
-                    }
                 }
             }
         }

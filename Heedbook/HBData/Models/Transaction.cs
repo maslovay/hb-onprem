@@ -1,50 +1,56 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about transactions
+    ///     Information about transactions
     /// </summary>
     public class Transaction
     {
         /// <summary>
-        /// Id
+        ///     Id
         /// </summary>
         [Key]
         public Guid TransactionId { get; set; }
+
         /// <summary>
-        /// Amount of funds transferred
+        ///     Amount of funds transferred
         /// </summary>
         public Decimal Amount { get; set; }
+
         /// <summary>
-        /// Order id
+        ///     Order id
         /// </summary>
-        public string OrderId { get; set; }
+        public String OrderId { get; set; }
+
         /// <summary>
-        /// Payment id
+        ///     Payment id
         /// </summary>
-        public string PaymentId { get; set; }
+        public String PaymentId { get; set; }
+
         /// <summary>
-        /// Tariff id
+        ///     Tariff id
         /// </summary>
         public Guid? TariffId { get; set; }
-        public  Tariff Tariff { get; set; }
+
+        public Tariff Tariff { get; set; }
+
         /// <summary>
-        /// Transaction status
+        ///     Transaction status
         /// </summary>
-        public int? StatusId { get; set; }
-        public  Status Status { get; set; }
+        public Int32? StatusId { get; set; }
+
+        public Status Status { get; set; }
+
         /// <summary>
-        /// Payment date
+        ///     Payment date
         /// </summary>
         public DateTime PaymentDate { get; set; }
+
         /// <summary>
-        /// Comment
+        ///     Comment
         /// </summary>
-        public string TransactionComment { get; set; }
+        public String TransactionComment { get; set; }
     }
 }

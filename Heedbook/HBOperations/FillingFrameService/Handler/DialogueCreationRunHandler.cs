@@ -4,7 +4,7 @@ using RabbitMqEventBus.Events;
 
 namespace FillingFrameService.Handler
 {
-    public class DialogueCreationRunHandler: IIntegrationEventHandler<DialogueCreationRun>
+    public class DialogueCreationRunHandler : IIntegrationEventHandler<DialogueCreationRun>
     {
         private readonly DialogueCreation _dialogueCreation;
 
@@ -12,7 +12,7 @@ namespace FillingFrameService.Handler
         {
             _dialogueCreation = dialogueCreation;
         }
-    
+
         public async Task Handle(DialogueCreationRun @event)
         {
             await _dialogueCreation.Run(@event);

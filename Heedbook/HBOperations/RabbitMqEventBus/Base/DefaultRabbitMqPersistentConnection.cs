@@ -1,46 +1,35 @@
-﻿using RabbitMQ.Client;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Text;
-using Polly;
-using Polly.Retry;
 using System.Net.Sockets;
-using RabbitMQ.Client.Exceptions;
+using Polly;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 namespace RabbitMqEventBus.Base
 {
-    public class DefaultRabbitMqPersistentConnection: IRabbitMqPersistentConnection
+    public class DefaultRabbitMqPersistentConnection : IRabbitMqPersistentConnection
     {
         private readonly IConnectionFactory _connectionFactory;
-        private readonly int _retryCount;
-        IConnection _connection;
-        bool _disposed;
+        private readonly Int32 _retryCount;
+        private IConnection _connection;
+        private Boolean _disposed;
 
-        object sync_root = new object();
+        private readonly Object sync_root = new Object();
 
-        public DefaultRabbitMqPersistentConnection(IConnectionFactory connectionFactory, int retryCount = 5)
+        public DefaultRabbitMqPersistentConnection(IConnectionFactory connectionFactory, Int32 retryCount = 5)
         {
             _connectionFactory = connectionFactory;
             _retryCount = retryCount;
         }
 
-        public bool IsConnected
-        {
-            get
-            {
-                return _connection != null && _connection.IsOpen && !_disposed;
-            }
-        }
+        public Boolean IsConnected => _connection != null && _connection.IsOpen && !_disposed;
 
 
         public IModel CreateModel()
         {
             if (!IsConnected)
-            {
                 throw new InvalidOperationException("No RabbitMQ connections are available to perform this action");
-            }
 
             return _connection.CreateModel();
         }
@@ -62,24 +51,21 @@ namespace RabbitMqEventBus.Base
         }
 
 
-
-        public bool TryConnect()
+        public Boolean TryConnect()
         {
-
             lock (sync_root)
             {
-                var policy = RetryPolicy.Handle<SocketException>()
-                    .Or<BrokerUnreachableException>()
-                    .WaitAndRetry(_retryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
-                    {
-                        
-                    }
-                );
+                var policy = Policy.Handle<SocketException>()
+                                   .Or<BrokerUnreachableException>()
+                                   .WaitAndRetry(_retryCount,
+                                        retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                                        (ex, time) => { }
+                                    );
 
                 policy.Execute(() =>
                 {
                     _connection = _connectionFactory
-                          .CreateConnection();
+                       .CreateConnection();
                 });
 
                 if (IsConnected)
@@ -90,30 +76,27 @@ namespace RabbitMqEventBus.Base
 
                     return true;
                 }
-                else
-                {
-                    return false;
-                }
+
+                return false;
             }
         }
 
-        private void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
+        private void OnConnectionBlocked(Object sender, ConnectionBlockedEventArgs e)
         {
             if (_disposed) return;
             TryConnect();
         }
 
-        void OnCallbackException(object sender, CallbackExceptionEventArgs e)
+        private void OnCallbackException(Object sender, CallbackExceptionEventArgs e)
         {
             if (_disposed) return;
             TryConnect();
         }
 
-        void OnConnectionShutdown(object sender, ShutdownEventArgs reason)
+        private void OnConnectionShutdown(Object sender, ShutdownEventArgs reason)
         {
             if (_disposed) return;
             TryConnect();
         }
-
     }
 }

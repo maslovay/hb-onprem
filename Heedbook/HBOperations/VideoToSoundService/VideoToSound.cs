@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.Configuration;
-using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
@@ -14,10 +13,10 @@ namespace VideoToSoundService
     public class VideoToSound
     {
         private readonly IConfiguration _configuration;
-        private readonly SftpClient _sftpClient;
-        private readonly INotificationPublisher _publisher;
-        private readonly SftpSettings _sftpSettings;
         private readonly ElasticClient _log;
+        private readonly INotificationPublisher _publisher;
+        private readonly SftpClient _sftpClient;
+        private readonly SftpSettings _sftpSettings;
 
         public VideoToSound(IConfiguration configuration,
             SftpClient sftpClient,

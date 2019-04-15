@@ -1,57 +1,64 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HBData.Models
 {
-    /// <summary>
-    /// Information about dialogue tone emotions in each interval
-    /// </summary>
-    public class DialogueInterval
+	/// <summary>
+	///     Information about dialogue tone emotions in each interval
+	/// </summary>
+	public class DialogueInterval
     {
-        /// <summary>
-        /// Dialogue interval id
-        /// </summary>
-        [Key]
+	    /// <summary>
+	    ///     Dialogue interval id
+	    /// </summary>
+	    [Key]
         public Guid DialogueIntervalId { get; set; }
+
+	    /// <summary>
+	    ///     Dialogue id
+	    /// </summary>
+	    public Guid? DialogueId { get; set; }
+
+        public Dialogue Dialogue { get; set; }
+
         /// <summary>
-        /// Dialogue id
+        ///     Is client or employee
         /// </summary>
-        public Guid? DialogueId { get; set; }
-        public  Dialogue Dialogue { get; set; }
-		/// <summary>
-        /// Is client or employee
-        /// </summary>
-		public bool IsClient { get; set; }
+        public Boolean IsClient { get; set; }
+
         /// <summary>
-        /// Beginning time of interval
+        ///     Beginning time of interval
         /// </summary>
         public DateTime BegTime { get; set; }
-		/// <summary>
-        /// Ending time of interval
+
+        /// <summary>
+        ///     Ending time of interval
         /// </summary>
         public DateTime EndTime { get; set; }
+
         /// <summary>
-        /// Netrality tone share
+        ///     Netrality tone share
         /// </summary>
-		public double? NeutralityTone { get; set; }
+        public Double? NeutralityTone { get; set; }
+
         /// <summary>
-        /// Happiness tone share
+        ///     Happiness tone share
         /// </summary>
-        public double? HappinessTone { get; set; }
+        public Double? HappinessTone { get; set; }
+
         /// <summary>
-        /// Saddness tone share
+        ///     Saddness tone share
         /// </summary>
-        public double? SadnessTone { get; set; }
+        public Double? SadnessTone { get; set; }
+
         /// <summary>
-        /// Anger tone share
+        ///     Anger tone share
         /// </summary>
-        public double? AngerTone { get; set; }
+        public Double? AngerTone { get; set; }
+
         /// <summary>
-        /// Fear tone share
+        ///     Fear tone share
         /// </summary>
-        public double? FearTone { get; set; }
+        public Double? FearTone { get; set; }
     }
 }

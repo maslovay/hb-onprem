@@ -3,7 +3,7 @@ using RabbitMqEventBus.Base;
 
 namespace RabbitMqEventBus.Events
 {
-    public class FramesFromVideoRun: IntegrationEvent
+    public class FramesFromVideoRun : IntegrationEvent
     {
         public String Path { get; set; }
     }

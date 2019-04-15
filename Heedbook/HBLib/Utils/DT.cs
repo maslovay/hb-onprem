@@ -5,35 +5,35 @@ namespace HBLib.Utils
 {
     public class DT
     {
-        public static string Format(DateTime dt, bool isSystem = true)
+        public static String Format(DateTime dt, Boolean isSystem = true)
         {
             if (isSystem)
                 return dt.ToString("yyyyMMddHHmmss");
             return dt.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
-        public static string FormatDate(DateTime dt, bool isSystem = true)
+        public static String FormatDate(DateTime dt, Boolean isSystem = true)
         {
             if (isSystem)
                 return dt.ToString("yyyyMMdd");
             return dt.ToString("yyyy-MM-dd");
         }
 
-        public static string FormatTime(DateTime dt, bool isSystem = true)
+        public static String FormatTime(DateTime dt, Boolean isSystem = true)
         {
             if (isSystem)
                 return dt.ToString("HHmmss");
             return dt.ToString("HH:mm:ss");
         }
 
-        public static DateTime Parse(string s, bool isSystem = true)
+        public static DateTime Parse(String s, Boolean isSystem = true)
         {
             if (isSystem)
                 return Parse(s, "yyyyMMddHHmmss");
             return Parse(s, "yyyy-MM-dd HH:mm:ss");
         }
 
-        public static DateTime Parse(string s, string format)
+        public static DateTime Parse(String s, String format)
         {
             return DateTime.ParseExact(s, format, CultureInfo.InvariantCulture.DateTimeFormat);
         }

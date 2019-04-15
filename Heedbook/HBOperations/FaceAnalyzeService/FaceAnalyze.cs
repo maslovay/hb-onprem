@@ -1,23 +1,22 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
 using HBMLHttpClient;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace FaceAnalyzeService
 {
     public class FaceAnalyze
     {
-        private readonly SftpClient _sftpClient;
-        private readonly IGenericRepository _repository;
         private readonly HbMlHttpClient _client;
         private readonly ElasticClient _log;
+        private readonly IGenericRepository _repository;
+        private readonly SftpClient _sftpClient;
 
         public FaceAnalyze(
             SftpClient sftpClient,
@@ -74,7 +73,7 @@ namespace FaceAnalyzeService
                                                        Gender = item.Attributes.Gender,
                                                        Descriptor = JsonConvert.SerializeObject(item.Descriptor),
                                                        FileFrameId = fileFrame.FileFrameId,
-                                                       Value = JsonConvert.SerializeObject(item.Rectangle),
+                                                       Value = JsonConvert.SerializeObject(item.Rectangle)
                                                    }).Select(item => _repository.CreateAsync(item))
                                                   .ToList();
 

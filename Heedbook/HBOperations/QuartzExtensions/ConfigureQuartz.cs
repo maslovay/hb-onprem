@@ -8,10 +8,6 @@ namespace QuartzExtensions
 {
     public static class ConfigureQuartz
     {
-        
-
-        
-
         public static void AddDeleteOldFilesQuartz(this IServiceCollection services)
         {
             services.Add(new ServiceDescriptor(typeof(IJob), typeof(DeleteOldFilesJob), ServiceLifetime.Singleton));
@@ -22,7 +18,7 @@ namespace QuartzExtensions
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity($"DeleteOldFiles.trigger", "Files")
+                                     .WithIdentity("DeleteOldFiles.trigger", "Files")
                                      .StartNow()
                                      .WithSimpleSchedule(s => s.WithIntervalInHours(1).RepeatForever())
                                      .Build();

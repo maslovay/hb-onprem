@@ -1,14 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace HBLib.Utils
 {
     public static class Vowels
     {
-        public static readonly Dictionary<int, char[]> VowelsDictionary;
+        public static readonly Dictionary<Int32, Char[]> VowelsDictionary;
 
         static Vowels()
         {
-            VowelsDictionary = new Dictionary<int, char[]>
+            VowelsDictionary = new Dictionary<Int32, Char[]>
             {
                 {1, new[] {'a', 'e', 'i', 'o', 'u', 'y'}},
                 {2, new[] {'а', 'е', 'ё', 'и', 'о', 'у', 'ы', 'э', 'ю', 'я'}},

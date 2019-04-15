@@ -19,10 +19,10 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 {
     public class CheckAudioRecognizeStatusJob : IJob
     {
+        private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
         private readonly ElasticClient _log;
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IGenericRepository _repository;
-        private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
 
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
             AsrHttpClient.AsrHttpClient asrHttpClient,
@@ -61,7 +61,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         asrResults
                            .ForEach(word =>
                             {
-                                recognized.Add(new WordRecognized()
+                                recognized.Add(new WordRecognized
                                 {
                                     Word = word.Word,
                                     StartTime = word.Time.ToString(CultureInfo.InvariantCulture),

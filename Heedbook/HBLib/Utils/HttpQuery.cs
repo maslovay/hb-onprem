@@ -18,7 +18,7 @@
 //             par.Add(url);
 //             // add manually
 //             par["key4"] = "a"; // or par.Add("key4", "a")
-            
+
 //             // add params in af: par.Add(req.GetQueryNameValuePairs());
 
 //             Console.WriteLine(par.ToDictionary().JsonPrint());
@@ -121,3 +121,4 @@
 //         }
 //     }
 // }
+

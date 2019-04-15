@@ -4,7 +4,7 @@ using RabbitMqEventBus.Events;
 
 namespace DialogueVideoMergeService.Handler
 {
-    public class DialogueVideoMergeRunHandler: IIntegrationEventHandler<DialogueVideoMergeRun>
+    public class DialogueVideoMergeRunHandler : IIntegrationEventHandler<DialogueVideoMergeRun>
     {
         private readonly DialogueVideoMerge _dialogueCreation;
 
@@ -12,7 +12,7 @@ namespace DialogueVideoMergeService.Handler
         {
             _dialogueCreation = dialogueCreation;
         }
-    
+
         public async Task Handle(DialogueVideoMergeRun @event)
         {
             await _dialogueCreation.Run(@event);

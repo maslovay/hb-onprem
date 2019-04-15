@@ -9,9 +9,9 @@ namespace HBLib.Utils
         public static void Do(
             Action action,
             TimeSpan retryInterval,
-            int maxAttemptCount = 3)
+            Int32 maxAttemptCount = 3)
         {
-            Do<object>(() =>
+            Do<Object>(() =>
             {
                 action();
                 return null;
@@ -21,8 +21,8 @@ namespace HBLib.Utils
         public static T Do<T>(
             Func<T> action,
             TimeSpan retryInterval,
-            int maxAttemptCount = 3,
-            bool isProgressiveTimeout = true)
+            Int32 maxAttemptCount = 3,
+            Boolean isProgressiveTimeout = true)
         {
             var exceptions = new List<Exception>();
 
