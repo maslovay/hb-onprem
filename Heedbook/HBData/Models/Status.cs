@@ -1,34 +1,34 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about status
+    ///     Information about status
     /// </summary>
     public class Status
     {
         /// <summary>
-        /// Id
+        ///     Id
         /// </summary>
         [Key]
-        public int StatusId { get; set; }
+        public Int32 StatusId { get; set; }
+
         /// <summary>
-        /// Status name
+        ///     Status name
         /// </summary>
         [Required]
-        public string StatusName { get; set; }
-        /// <summary>
-        /// Link to users
-        /// </summary>
-        public  ICollection<ApplicationUser> ApplicationUser { get; set; }
-        /// <summary>
-        /// Link to dialogues
-        /// </summary>
-        public  ICollection<Dialogue> Dialogue { get; set; }
+        public String StatusName { get; set; }
 
+        /// <summary>
+        ///     Link to users
+        /// </summary>
+        public ICollection<ApplicationUser> ApplicationUser { get; set; }
+
+        /// <summary>
+        ///     Link to dialogues
+        /// </summary>
+        public ICollection<Dialogue> Dialogue { get; set; }
     }
 }

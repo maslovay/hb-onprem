@@ -56,7 +56,7 @@ namespace UserOperations.Services
                         new Claim("applicationUserId", user.Id.ToString()),
                         new Claim("applicationUserName", user.FullName),
                         new Claim("companyName", user.Company.CompanyName),
-                        new Claim("companyId", user.Company.ToString()),
+                        new Claim("companyId", user.CompanyId.ToString()),
                         new Claim("corporationId", user.Company.CorporationId.ToString()),
                         new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
@@ -87,6 +87,60 @@ namespace UserOperations.Services
             {
                 return $"User not exist or internal error {e}";
             }
+        }
+
+        // <summary>
+        /// Parse JWT token 
+        /// </summary>
+        /// <param name="token">JWT token in request</param>
+        /// <returns></returns>
+        public Dictionary<string, string> GetDataFromToken(string token, string sign = null)
+        {
+            try
+            {
+                var pureToken = token.Split(' ')[1];
+                if (CheckToken(pureToken, sign))
+                {
+                    var jwt = new JwtSecurityToken(pureToken);
+                    Dictionary<string, string> claims;
+                    claims = jwt.Payload.ToDictionary(key => key.Key.ToString(), value => value.Value.ToString());
+                    return claims;
+                }
+                else
+                    return null;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Validate token function
+        /// </summary>
+        /// <param name="token">JWT token</param>
+        /// <param name="sign"></param>
+        /// <returns></returns>
+        public bool CheckToken(string token, string sign = "")
+        {
+            if (sign == "" || sign == null)
+                sign = _config["Tokens:Key"];
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                SecurityToken tk;
+                var principial = handler.ValidateToken(token, new TokenValidationParameters()
+                {
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(sign)),
+                    ValidIssuer = _config["Tokens:Issuer"],
+                    ValidateAudience = false
+                }, out tk);
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+            return true;
         }
 
         public bool _disposed;

@@ -11,6 +11,7 @@ namespace UserService.Controllers
     public class FillingSatisfactionController : ControllerBase
     {
         private readonly INotificationHandler _handler;
+
         public FillingSatisfactionController(INotificationHandler handler)
         {
             _handler = handler;

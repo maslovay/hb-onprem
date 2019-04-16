@@ -1,16 +1,16 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
-using HBLib.Utils;
-using System.Threading.Tasks;
-using System.Globalization;
-using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserService.Controllers
@@ -19,8 +19,8 @@ namespace UserService.Controllers
     [ApiController]
     public class VideoSaveController : Controller
     {
-        private readonly INotificationHandler _handler;
         private readonly RecordsContext _context;
+        private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
 
         public VideoSaveController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient)
@@ -30,12 +30,12 @@ namespace UserService.Controllers
             _sftpClient = sftpClient;
         }
 
-        [HttpPost()]
+        [HttpPost]
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
-        public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId, 
-            [FromQuery] string begTime,
-            [FromQuery] double? duration,
-            [FromBody] string video)
+        public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId,
+            [FromQuery] String begTime,
+            [FromQuery] Double? duration,
+            [FromBody] String video)
         {
             try
             {
@@ -43,24 +43,24 @@ namespace UserService.Controllers
                 var imgBytes = Convert.FromBase64String(video);
                 var memoryStream = new MemoryStream(imgBytes);
                 var languageId = _context.ApplicationUsers
-                    .Include(p => p.Company)
-                    .Include(p => p.Company.Language)
-                    .Where(p => p.Id == applicationUserId)
-                    .First().Company.Language.LanguageId;
+                                         .Include(p => p.Company)
+                                         .Include(p => p.Company.Language)
+                                         .Where(p => p.Id == applicationUserId)
+                                         .First().Company.Language.LanguageId;
 
                 var stringFormat = "yyyyMMddhhmmss";
-                var time =  DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
+                var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var fileName = $"{applicationUserId}_{time.ToString(stringFormat)}_{languageId}.mkv";
                 await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, "videos/", fileName);
-                
+
                 var videoFile = new FileVideo();
                 videoFile.ApplicationUserId = applicationUserId;
                 videoFile.BegTime = time;
                 videoFile.CreationTime = DateTime.UtcNow;
                 videoFile.Duration = duration;
-                videoFile.EndTime = time.AddSeconds((double) duration);
+                videoFile.EndTime = time.AddSeconds((Double) duration);
                 videoFile.FileContainer = "videos";
-                videoFile.FileExist =  await _sftpClient.IsFileExistsAsync($"{fileName}");
+                videoFile.FileExist = await _sftpClient.IsFileExistsAsync($"{fileName}");
                 videoFile.FileName = fileName;
                 videoFile.FileVideoId = Guid.NewGuid();
                 videoFile.StatusId = 6;
@@ -80,13 +80,14 @@ namespace UserService.Controllers
                 {
                     Console.WriteLine($"No such file videos/{fileName}");
                 }
+
                 return Ok();
             }
             catch (Exception e)
             {
                 return BadRequest(e);
             }
-            
+
 
             // _handler.EventRaised(message);
         }

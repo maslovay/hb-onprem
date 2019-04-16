@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using LemmaSharp;
 
 namespace HBLib.Utils
 {
     public static class LemmatizerFactory
     {
-        public static ILemmatizer CreateLemmatizer(int languageId)
+        public static ILemmatizer CreateLemmatizer(Int32 languageId)
         {
             switch (languageId)
             {

@@ -4,24 +4,25 @@ namespace HBLib.Model
 {
     public class MediaFile
     {
-        private string _name;
-        public string Name
+        private String _name;
+
+        public MediaFile(String extension)
+        {
+            Extension = extension;
+        }
+
+        public String Name
         {
             get => _name;
             set => _name = GetNameWithExtension(value);
         }
 
-        public byte[] Content { get; set; }
-        public string Extension { get; }
+        public Byte[] Content { get; set; }
+        public String Extension { get; }
 
-        public MediaFile(string extension)
+        private String GetNameWithExtension(String value)
         {
-            Extension = extension;
-        }
-
-        private string GetNameWithExtension(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value) || string.IsNullOrWhiteSpace(Extension))
+            if (String.IsNullOrWhiteSpace(value) || String.IsNullOrWhiteSpace(Extension))
                 return value;
 
             return value.EndsWith(Extension, StringComparison.CurrentCultureIgnoreCase)

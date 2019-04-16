@@ -31,7 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using HBLib.Utils;
 using HBLib;
-
+using Microsoft.Extensions.Primitives;
 
 namespace UserOperations.Controllers
 {
@@ -45,7 +45,7 @@ namespace UserOperations.Controllers
         private readonly ITokenService _tokenService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-        private readonly string containerName;
+        private readonly string _containerName;
 
 
         public CampaignContentController(
@@ -63,20 +63,27 @@ namespace UserOperations.Controllers
             _tokenService = tokenService;
             _context = context;
             _sftpClient = sftpClient;
-            containerName = "content-screenshots";
+            _containerName = "content-screenshots";
         }
         #region Campaign
         [HttpGet("Campaign")]
         public IEnumerable<Campaign> CampaignGet()
-        {
-            var campaigns = _context.Campaigns.Include(x => x.CampaignContents).ToList();
+        {             
+            Guid? companyId = GetCompanyIdFromToken();
+            if (companyId == null) return null;
+
+            var campaigns = _context.Campaigns.Include(x => x.CampaignContents).Where(x=>x.CompanyId == companyId).ToList();
             return campaigns;
         }
 
         [HttpPost("Campaign")]
         public Campaign CampaignPost([FromBody] CampaignModel model)
         {
+            Guid? companyId = GetCompanyIdFromToken();
+            if (companyId == null) return null;
+
             Campaign campaign = model.Campaign;
+            campaign.CompanyId = (Guid)companyId;
             campaign.CreationDate = DateTime.UtcNow;
             campaign.StatusId = 2;
             campaign.CampaignContents = new List<CampaignContent>();
@@ -90,89 +97,103 @@ namespace UserOperations.Controllers
             _context.SaveChanges();
             return campaign;
         }
+
         [HttpPut("Campaign")]
         public Campaign CampaignPut([FromBody] CampaignModel model)
         {
-            Campaign modelCampaign = model.Campaign;
-            var campaignEntity = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == modelCampaign.CampaignId).FirstOrDefault();
-            if (campaignEntity == null)
-            {
-                return null;
-            }
-            else
-            {
-                foreach (var campCont in campaignEntity.CampaignContents)
+             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
+                Campaign modelCampaign = model.Campaign;
+                var campaignEntity = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == modelCampaign.CampaignId).FirstOrDefault();
+                if (campaignEntity == null)
                 {
-                    _context.Remove(campCont);
+                    return null;
                 }
-                foreach (var p in typeof(Campaign).GetProperties())
+                else
                 {
-                    if (p.GetValue(modelCampaign, null) != null)
-                        p.SetValue(campaignEntity, p.GetValue(modelCampaign, null), null);
+                    foreach (var campCont in campaignEntity.CampaignContents)
+                    {
+                        _context.Remove(campCont);
+                    }
+                    foreach (var p in typeof(Campaign).GetProperties())
+                    {
+                        if (p.GetValue(modelCampaign, null) != null)
+                            p.SetValue(campaignEntity, p.GetValue(modelCampaign, null), null);
+                    }
+                    _context.SaveChanges();
+                    foreach (var campCont in model.CampaignContents)
+                    {
+                        campCont.CampaignId = campaignEntity.CampaignId;
+                        _context.Add(campCont);
+                    }
+                    _context.SaveChanges();
                 }
-                _context.SaveChanges();
-                foreach (var campCont in model.CampaignContents)
-                {
-                    campCont.CampaignId = campaignEntity.CampaignId;
-                    _context.Add(campCont);
-                }
-                _context.SaveChanges();
-            }
-            return campaignEntity;
+                return campaignEntity;
         }
+
         [HttpDelete("Campaign")]
         public IActionResult CampaignDelete([FromQuery] Guid campaignId)
         {
-            var campaign = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == campaignId).FirstOrDefault();
-            if (campaign != null)
-            {
-                campaign.StatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
-                foreach (var item in campaign.CampaignContents)
+          if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return BadRequest("Token error");
+                var campaign = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == campaignId).FirstOrDefault();
+                if (campaign != null)
                 {
-                    _context.Remove(item);
+                    campaign.StatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
+                    foreach (var item in campaign.CampaignContents)
+                    {
+                        _context.Remove(item);
+                    }
+                    _context.SaveChanges();
+                    return Ok("OK");
                 }
-                _context.SaveChanges();
-                return Ok("OK");
-            }
-            return BadRequest("No such campaign");
-        }
+                return BadRequest("No such campaign");
+        }       
         #endregion
+
 
         #region Content
         [HttpGet("Content")]
         public async Task<IEnumerable<ContentModel>> ContentGet()
         {
-            var contents = _context.Contents.ToList();
+            Guid? companyId = GetCompanyIdFromToken();
+            if (companyId == null) return null; 
+            
+            var contents = _context.Contents.Where(x => x.CompanyId == companyId).ToList();
             var result = new List<ContentModel>();
             foreach (var c in contents)
             {
-                var screenshotLink = await _sftpClient.GetFileUrl(containerName + "/" + c.ContentId.ToString() + ".png");
+                var screenshotLink = await _sftpClient.GetFileUrl(_containerName + "/" + c.ContentId.ToString() + ".png");
                 result.Add(new ContentModel(c, screenshotLink));
             }
             return result;
         }
+
         [HttpPost("Content")]
         public async Task<ContentModel> ContentPost([FromBody] ContentModel model)
         {
-            var containerName = "content-screenshots";
+            Guid? companyId = GetCompanyIdFromToken();
+            if (companyId == null) return null; 
+            
             Content content = model.Content;
+            content.CompanyId = (Guid)companyId;
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
             //   content.StatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;;
             _context.Add(content);
             _context.SaveChanges();
+
             string base64 = model.Screenshot;
             Byte[] imgBytes = Convert.FromBase64String(base64);
             Stream blobStream = new MemoryStream(imgBytes);
-            await _sftpClient.UploadAsMemoryStreamAsync(blobStream, containerName, content.ContentId.ToString() + ".png");
+            await _sftpClient.UploadAsMemoryStreamAsync(blobStream, _containerName, content.ContentId.ToString() + ".png");
             model.Content = content;
-            model.Screenshot = await _sftpClient.GetFileUrl(containerName + "/" + content.ContentId.ToString() + ".png");
+            model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
             return model;
         }
 
         [HttpPut("Content")]
         public async Task<ContentModel> ContentPut([FromBody] ContentModel model)
         {
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
             Content content = model.Content;
             Content contentEntity = _context.Contents.Where(p => p.ContentId == content.ContentId).FirstOrDefault();
             foreach (var p in typeof(Content).GetProperties())
@@ -184,20 +205,21 @@ namespace UserOperations.Controllers
             contentEntity.UpdateDate = DateTime.UtcNow;
             if (model.Screenshot != null)
             {
-                await _sftpClient.DeleteFileIfExistsAsync(containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
+                await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
                 string base64 = model.Screenshot;
                 Byte[] imgBytes = Convert.FromBase64String(base64);
                 Stream blobStream = new MemoryStream(imgBytes);
-                await _sftpClient.UploadAsMemoryStreamAsync(blobStream, containerName, content.ContentId.ToString() + ".png");
+                await _sftpClient.UploadAsMemoryStreamAsync(blobStream, _containerName, content.ContentId.ToString() + ".png");
             }
             model.Content = contentEntity;
-            model.Screenshot = await _sftpClient.GetFileUrl(containerName + "/" + content.ContentId.ToString() + ".png");
+            model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
             return model;
         }
 
         [HttpDelete("Content")]
         public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId)
         {
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))  return BadRequest("Token error");
             var contentEntity = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
             if (contentEntity != null)
             {
@@ -208,14 +230,28 @@ namespace UserOperations.Controllers
                 }
                 _context.Remove(contentEntity);
                 _context.SaveChanges();
-                await _sftpClient.DeleteFileIfExistsAsync(containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
+                await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
                 return Ok("OK");
             }
             return BadRequest("No such content");
         }
         #endregion
+        private Guid? GetCompanyIdFromToken()
+        {
+            try
+            {
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
+                string token = authToken.First();
+                var claims = _tokenService.GetDataFromToken(token);
+                return Guid.Parse(claims["companyId"]);
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
-        public struct CampaignModel
+        public class CampaignModel
         {
             public CampaignModel(Campaign cmp, List<CampaignContent> campaignContents)
             {
@@ -225,7 +261,7 @@ namespace UserOperations.Controllers
             public Campaign Campaign { get; set; }
             public List<CampaignContent> CampaignContents { get; set; }
         }
-        public struct ContentModel
+        public class ContentModel
         {
             public ContentModel(Content cnt, string screen)
             {

@@ -1,35 +1,32 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
-
+using Microsoft.AspNetCore.Identity;
 
 namespace HBData.Models
 {
-   /// <summary>
-   /// The Application user class 
-   /// Contains parameters of all application users
-   /// </summary>
-    
+    /// <summary>
+    ///     The Application user class
+    ///     Contains parameters of all application users
+    /// </summary>
     public class ApplicationUser : IdentityUser<Guid>
     {
         [Key]
-        [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public override Guid Id
         {
-            get { return base.Id; }
-            set { base.Id = value; }
+            get => base.Id;
+            set => base.Id = value;
         }
-        public string FullName { get; set; }
+
+        public String FullName { get; set; }
 
         //ссылка на аватар сотрудника
-        public string Avatar { get; set; }
+        public String Avatar { get; set; }
 
         //id сотрудника в компании
-        public string EmpoyeeId { get; set; }
+        public String EmpoyeeId { get; set; }
 
         //дата создания
         public DateTime CreationDate { get; set; }
@@ -39,27 +36,27 @@ namespace HBData.Models
         public Company Company { get; set; }
 
         //статус пользователя
-        public int? StatusId { get; set; }
+        public Int32? StatusId { get; set; }
         public Status Status { get; set; }
 
         //id пользователей в OneSignal
-        public string OneSignalId { get; set; }
+        public String OneSignalId { get; set; }
 
         //id position
-        
+
         public Guid? WorkerTypeId { get; set; }
-        [ForeignKey("WorkerTypeId")]
-        public WorkerType WorkerType { get; set; }
+
+        [ForeignKey("WorkerTypeId")] public WorkerType WorkerType { get; set; }
 
         //links
 
         //роли сотрудника
-        public  ICollection<ApplicationUserRole> UserRoles { get; set; }
+        public ICollection<ApplicationUserRole> UserRoles { get; set; }
 
         //диалоги сотрудника
-        public  ICollection<Dialogue> Dialogue { get; set; }
+        public ICollection<Dialogue> Dialogue { get; set; }
 
         //сессии
-        public  ICollection<Session> Session { get; set; }
+        public ICollection<Session> Session { get; set; }
     }
 }

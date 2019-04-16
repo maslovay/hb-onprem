@@ -23,7 +23,7 @@ namespace AudioAnalyzeService
         private readonly ElasticClient _log;
 
         private readonly IGenericRepository _repository;
-        
+
         private readonly SftpClient _sftpClient;
 
         public ToneAnalyze(SftpClient sftpClient,

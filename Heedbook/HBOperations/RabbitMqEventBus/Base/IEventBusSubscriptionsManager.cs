@@ -1,32 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace RabbitMqEventBus.Base
 {
     public interface IEventBusSubscriptionsManager
     {
-        bool IsEmpty { get; }
-        event EventHandler<string> OnEventRemoved;
-        void AddDynamicSubscription<TH>(string eventName)
-           where TH : IDynamicIntegrationEventHandler;
+        Boolean IsEmpty { get; }
+        event EventHandler<String> OnEventRemoved;
 
-        void AddSubscription<T, TH>()
-           where T : IntegrationEvent
-           where TH : IIntegrationEventHandler<T>;
-
-        void RemoveSubscription<T, TH>()
-             where TH : IIntegrationEventHandler<T>
-             where T : IntegrationEvent;
-        void RemoveDynamicSubscription<TH>(string eventName)
+        void AddDynamicSubscription<TH>(String eventName)
             where TH : IDynamicIntegrationEventHandler;
 
-        bool HasSubscriptionsForEvent<T>() where T : IntegrationEvent;
-        bool HasSubscriptionsForEvent(string eventName);
-        Type GetEventTypeByName(string eventName);
+        void AddSubscription<T, TH>()
+            where T : IntegrationEvent
+            where TH : IIntegrationEventHandler<T>;
+
+        void RemoveSubscription<T, TH>()
+            where TH : IIntegrationEventHandler<T>
+            where T : IntegrationEvent;
+
+        void RemoveDynamicSubscription<TH>(String eventName)
+            where TH : IDynamicIntegrationEventHandler;
+
+        Boolean HasSubscriptionsForEvent<T>() where T : IntegrationEvent;
+        Boolean HasSubscriptionsForEvent(String eventName);
+        Type GetEventTypeByName(String eventName);
         void Clear();
         IEnumerable<SubscriptionInfo> GetHandlersForEvent<T>() where T : IntegrationEvent;
-        IEnumerable<SubscriptionInfo> GetHandlersForEvent(string eventName);
-        string GetEventKey<T>();
+        IEnumerable<SubscriptionInfo> GetHandlersForEvent(String eventName);
+        String GetEventKey<T>();
     }
 }

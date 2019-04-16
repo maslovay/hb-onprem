@@ -1,4 +1,5 @@
 ﻿using Configurations;
+using DialogueStatusCheckerScheduler.Extensions;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -11,7 +12,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Quartz;
-using QuartzExtensions;
 
 namespace DialogueStatusCheckerScheduler
 {
@@ -51,14 +51,9 @@ namespace DialogueStatusCheckerScheduler
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
             else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-            }
 
             var job = app.ApplicationServices.GetService<IJobDetail>();
             var trigger = app.ApplicationServices.GetService<ITrigger>();

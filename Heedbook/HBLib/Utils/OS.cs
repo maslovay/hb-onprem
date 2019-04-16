@@ -5,7 +5,7 @@ namespace HBLib.Utils
 {
     public class OS
     {
-        public static bool IsFileLocked(string fn)
+        public static Boolean IsFileLocked(String fn)
         {
             FileStream stream = null;
             var file = new FileInfo(fn);
@@ -31,19 +31,19 @@ namespace HBLib.Utils
             return false;
         }
 
-        internal static bool PathExists(string path)
+        internal static Boolean PathExists(String path)
         {
             return Directory.Exists(path) || File.Exists(path);
         }
 
-        public static bool SafeDelete(string path, double timeout = 0.0)
+        public static Boolean SafeDelete(String path, Double timeout = 0.0)
         {
             // todo: make properly
             try
             {
                 if (!PathExists(path)) return false;
 
-                bool isDir;
+                Boolean isDir;
                 try
                 {
                     var attr = File.GetAttributes(path);
@@ -93,7 +93,7 @@ namespace HBLib.Utils
             }
         }
 
-        public static string[] GetFiles(string dir, string pattern,
+        public static String[] GetFiles(String dir, String pattern,
             SearchOption searchOption = SearchOption.TopDirectoryOnly)
         {
             return Directory.GetFiles(dir, pattern, searchOption);

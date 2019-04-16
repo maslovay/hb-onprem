@@ -1,16 +1,15 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Configurations;
+using HBLib;
+using HBLib.Utils;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Configurations;
-using VideoToSoundService.Hander;
-using HBLib.Utils;
-using HBLib;
 using Microsoft.Extensions.Options;
-using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using VideoToSoundService.Hander;
 
 namespace VideoToSoundService
 {
@@ -48,14 +47,9 @@ namespace VideoToSoundService
             var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             publisher.Subscribe<VideoToSoundRun, VideoToSoundRunHandler>();
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
             else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-            }
 
             app.UseHttpsRedirection();
             app.UseMvc();

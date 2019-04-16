@@ -129,9 +129,10 @@
 //         }
 
 //         private class Cache
-        //{
+//{
 //             public Dictionary<string, List<double>> laps;
 //             public Dictionary<string, Dictionary<string, double>> stats;
 //         }
 //     }
 // }
+

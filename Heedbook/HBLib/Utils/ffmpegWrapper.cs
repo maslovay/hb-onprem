@@ -16,7 +16,6 @@ namespace HBLib.Utils
 
         public FFMpegWrapper(String ffPath)
         {
-            
             FfPath = Environment.OSVersion.Platform == PlatformID.Win32NT ? ffPath : "ffmpeg";
         }
 
@@ -71,7 +70,7 @@ namespace HBLib.Utils
             audioFn = Path.GetFullPath(audioFn);
             var cmd = new CMDWithOutput();
             return cmd.runCMD(FfPath,
-                $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
+                $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
         }
 
         public async Task<FileStream> VideoToWavAsync(MemoryStream videoStream)
@@ -83,14 +82,14 @@ namespace HBLib.Utils
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 Arguments =
-                    $@"-i pipe:.mkv -acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact pipe:.wav"
+                    @"-i pipe:.mkv -acodec pcm_s16le -ac 1 -ar 16000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact pipe:.wav"
             };
-            var process = new Process { StartInfo = processStartInfo };
+            var process = new Process {StartInfo = processStartInfo};
             process.Start();
             process.StandardInput.BaseStream.Write(videoStream.ToArray());
             process.StandardInput.Close();
             if (!(process.StandardOutput.BaseStream is FileStream resultStream)) return null;
-            System.Console.WriteLine(DateTime.Now);
+            Console.WriteLine(DateTime.Now);
             process.StandardOutput.Close();
             process.WaitForExit();
             return resultStream;
@@ -102,7 +101,7 @@ namespace HBLib.Utils
             fn = Path.GetFullPath(fn);
             var metadata = new List<Dictionary<String, String>>();
             var duration = GetDuration(fn);
-            var NFiles = (Int32)Math.Ceiling(duration / seconds);
+            var NFiles = (Int32) Math.Ceiling(duration / seconds);
 
             var oldExtension = "." + fn.Split('.').Last();
             var newExtension = convertToWebm ? ".webm" : oldExtension;
@@ -229,66 +228,59 @@ namespace HBLib.Utils
             return cmd.runCMD(FfPath, arguments);
         }
 
-        public class FFmpegCommand
-        {
-            public string Command;
-            public string Path;
-            public string Type;
-            public string FileFolder;
-            public string FileName;
-        }
-
-        public string ConcatSameCodecsAndFrames(List<FFmpegCommand> fns, string outputFn, string dir = null)
+        public String ConcatSameCodecsAndFrames(List<FFmpegCommand> fns, String outputFn, String dir = null)
         {
             // https://trac.ffmpeg.org/wiki/Concatenate
             // ffmpeg -f concat -safe 0 -i mylist.txt -c copy output
 
-            string guidFn = $"{Guid.NewGuid()}.txt";
-            if (dir != null)
-            {
-                guidFn = Path.Combine(dir, guidFn);
-            }
+            var guidFn = $"{Guid.NewGuid()}.txt";
+            if (dir != null) guidFn = Path.Combine(dir, guidFn);
             guidFn = Path.GetFullPath(guidFn);
 
-            for (int i = 1; i< fns.Count(); i++)
-            {
+            for (var i = 1; i < fns.Count(); i++)
                 if (fns[i].Type == "frame")
                 {
                     var concutRes = ConcatVideoAndFrame(fns[i - 1], fns[i]);
                 }
-            }
 
             outputFn = Path.GetFullPath(outputFn);
             fns = fns.Where(p => p.Type == "video").ToList();
 
             var cmd = new CMDWithOutput();
-            string arguments = $"-f concat -safe 0 -i {guidFn} -c copy {outputFn}";
+            var arguments = $"-f concat -safe 0 -i {guidFn} -c copy {outputFn}";
 
-            string content = "";
-            foreach (var fn in fns)
-            {
-                content += $"file '{fn.Path}'\n";
-            }
+            var content = "";
+            foreach (var fn in fns) content += $"file '{fn.Path}'\n";
 
             File.WriteAllText(guidFn, content);
-            string res = cmd.runCMD(FfPath, arguments);
+            var res = cmd.runCMD(FfPath, arguments);
 
             // delete file
             OS.SafeDelete(guidFn);
             return res;
         }
 
-        public string ConcatVideoAndFrame(FFmpegCommand video, FFmpegCommand frame)
+        public String ConcatVideoAndFrame(FFmpegCommand video, FFmpegCommand frame)
         {
             video.Path = Path.GetFullPath(video.Path);
             //frame.Path = Path.GetFullPath(frame.Path);
 
             var cmd = new CMDWithOutput();
             var command = $"-y {video.Command} {frame.Command} ";
-            var arguments = $" {command} -f lavfi -t 0.1 -i anullsrc=channel_layout=stereo:sample_rate=44100 -filter_complex \"[0:v][0:a][1:v][2:a]concat=n=2:v=1:a=1\" {video.Path}";
+            var arguments =
+                $" {command} -f lavfi -t 0.1 -i anullsrc=channel_layout=stereo:sample_rate=44100 -filter_complex \"[0:v][0:a][1:v][2:a]concat=n=2:v=1:a=1\" {video.Path}";
 
-            string res = cmd.runCMD(FfPath, arguments);
+            var res = cmd.runCMD(FfPath, arguments);
             return res;
+        }
+
+        public class FFmpegCommand
+        {
+            public String Command;
+            public String FileFolder;
+            public String FileName;
+            public String Path;
+            public String Type;
         }
     }
 }

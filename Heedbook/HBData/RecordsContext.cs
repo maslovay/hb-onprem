@@ -1,72 +1,16 @@
 ﻿using System;
 using HBData.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace HBData
 {
-
-    public class RecordsContext: IdentityDbContext<ApplicationUser, ApplicationRole, Guid, IdentityUserClaim<Guid>, ApplicationUserRole, IdentityUserLogin<Guid>,IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
+    public class RecordsContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid, IdentityUserClaim<Guid>,
+        ApplicationUserRole, IdentityUserLogin<Guid>, IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
     {
-        public RecordsContext(DbContextOptions<RecordsContext> options): base(options)
+        public RecordsContext(DbContextOptions<RecordsContext> options) : base(options)
         {
-            
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-        }
-
-
-        protected override void OnModelCreating(ModelBuilder builder)
-        {
-            base.OnModelCreating(builder);
-
-            builder.Entity<ApplicationUser>(i => {
-                i.ToTable("AspNetUsers");
-                i.HasKey(x => x.Id);
-                i.HasMany(x => x.UserRoles)
-                    .WithOne()
-                    .HasForeignKey(p => p.UserId).IsRequired();
-            });
-            builder.Entity<ApplicationRole>(i => {
-                i.ToTable("AspNetRole");
-                i.HasKey(x => x.Id);
-                i.HasMany(x => x.UserRoles).WithOne().HasForeignKey(p => p.RoleId).IsRequired();
-                
-            });
-            
-            builder.Entity<IdentityUserLogin<Guid>>(i => {
-                i.ToTable("AspNetUserLogins");
-                i.HasKey(x => new { x.ProviderKey, x.LoginProvider });
-            });
-            builder.Entity<IdentityRoleClaim<Guid>>(i => {
-                i.ToTable("AspNetRoleClaims");
-                i.HasKey(x => x.Id);
-            });
-            builder.Entity<IdentityUserClaim<Guid>>(i => {
-                i.ToTable("AspNetUserClaims");
-                i.HasKey(x => x.Id);
-            });
-            builder.Entity<ApplicationUserRole>(userRole =>
-            {
-                userRole.HasKey(ur => new { ur.UserId, ur.RoleId });
-
-                userRole.HasOne(ur => ur.Role)
-                    .WithMany(r => r.UserRoles)
-                    .HasForeignKey(ur => ur.RoleId)
-                    .IsRequired();
-
-                userRole.HasOne(ur => ur.User)
-                    .WithMany(r => r.UserRoles)
-                    .HasForeignKey(ur => ur.UserId)
-                    .IsRequired()
-                    //.HasPrincipalKey(p => p.Id)
-                    ;
-                userRole.ToTable("AspNetUserRoles");
-            });
         }
 
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
@@ -92,7 +36,7 @@ namespace HBData
         public DbSet<DialogueSpeech> DialogueSpeechs { get; set; }
         public DbSet<DialogueVisual> DialogueVisuals { get; set; }
         public DbSet<DialogueWord> DialogueWords { get; set; }
-        public DbSet<FileAudioDialogue> FileAudioDialogues{ get; set; }
+        public DbSet<FileAudioDialogue> FileAudioDialogues { get; set; }
         public DbSet<FileAudioEmployee> FileAudioEmployees { get; set; }
         public DbSet<FileFrame> FileFrames { get; set; }
         public DbSet<FileVideo> FileVideos { get; set; }
@@ -109,5 +53,63 @@ namespace HBData
         public DbSet<Tariff> Tariffs { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<WorkerType> WorkerTypes { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+        }
+
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<ApplicationUser>(i =>
+            {
+                i.ToTable("AspNetUsers");
+                i.HasKey(x => x.Id);
+                i.HasMany(x => x.UserRoles)
+                 .WithOne()
+                 .HasForeignKey(p => p.UserId).IsRequired();
+            });
+            builder.Entity<ApplicationRole>(i =>
+            {
+                i.ToTable("AspNetRole");
+                i.HasKey(x => x.Id);
+                i.HasMany(x => x.UserRoles).WithOne().HasForeignKey(p => p.RoleId).IsRequired();
+            });
+
+            builder.Entity<IdentityUserLogin<Guid>>(i =>
+            {
+                i.ToTable("AspNetUserLogins");
+                i.HasKey(x => new {x.ProviderKey, x.LoginProvider});
+            });
+            builder.Entity<IdentityRoleClaim<Guid>>(i =>
+            {
+                i.ToTable("AspNetRoleClaims");
+                i.HasKey(x => x.Id);
+            });
+            builder.Entity<IdentityUserClaim<Guid>>(i =>
+            {
+                i.ToTable("AspNetUserClaims");
+                i.HasKey(x => x.Id);
+            });
+            builder.Entity<ApplicationUserRole>(userRole =>
+            {
+                userRole.HasKey(ur => new {ur.UserId, ur.RoleId});
+
+                userRole.HasOne(ur => ur.Role)
+                        .WithMany(r => r.UserRoles)
+                        .HasForeignKey(ur => ur.RoleId)
+                        .IsRequired();
+
+                userRole.HasOne(ur => ur.User)
+                        .WithMany(r => r.UserRoles)
+                        .HasForeignKey(ur => ur.UserId)
+                        .IsRequired()
+                    //.HasPrincipalKey(p => p.Id)
+                    ;
+                userRole.ToTable("AspNetUserRoles");
+            });
+        }
     }
 }

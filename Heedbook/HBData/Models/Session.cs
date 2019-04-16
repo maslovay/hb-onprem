@@ -1,46 +1,47 @@
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about user session
+    ///     Information about user session
     /// </summary>
     public class Session
     {
         /// <summary>
-        /// Id
+        ///     Id
         /// </summary>
         [Key]
         public Guid SessionId { get; set; }
+
         /// <summary>
-        /// User id
+        ///     User id
         /// </summary>
         public Guid ApplicationUserId { get; set; }
-        [JsonIgnore]
-        public  ApplicationUser ApplicationUser { get; set; }
+
+        [JsonIgnore] public ApplicationUser ApplicationUser { get; set; }
+
         /// <summary>
-        /// Session beginning time
+        ///     Session beginning time
         /// </summary>
         public DateTime BegTime { get; set; }
+
         /// <summary>
-        /// Session ending time
+        ///     Session ending time
         /// </summary>
         public DateTime EndTime { get; set; }
-        /// <summary>
-        /// Session status
-        /// </summary>
-        public int? StatusId { get; set; }
-        public  Status Status { get; set; }
-        /// <summary>
-        /// Is desktop session or mobile
-        /// </summary>
-        public bool IsDesktop { get; set; }
 
+        /// <summary>
+        ///     Session status
+        /// </summary>
+        public Int32? StatusId { get; set; }
 
+        public Status Status { get; set; }
+
+        /// <summary>
+        ///     Is desktop session or mobile
+        /// </summary>
+        public Boolean IsDesktop { get; set; }
     }
 }

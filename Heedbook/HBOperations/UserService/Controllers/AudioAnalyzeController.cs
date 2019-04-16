@@ -1,4 +1,3 @@
-using System;
 using Microsoft.AspNetCore.Mvc;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
@@ -8,9 +7,10 @@ namespace UserService.Controllers
 {
     [Route("user/[controller]")]
     [ApiController]
-    public class AudioAnalyzeController: Controller
+    public class AudioAnalyzeController : Controller
     {
         private readonly INotificationHandler _handler;
+
         public AudioAnalyzeController(INotificationHandler handler)
         {
             _handler = handler;

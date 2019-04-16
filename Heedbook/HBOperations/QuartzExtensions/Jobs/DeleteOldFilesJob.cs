@@ -6,7 +6,7 @@ using Quartz;
 
 namespace QuartzExtensions.Jobs
 {
-    public class DeleteOldFilesJob: IJob
+    public class DeleteOldFilesJob : IJob
     {
         public async Task Execute(IJobExecutionContext context)
         {

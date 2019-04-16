@@ -1,31 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information abount countries
+    ///     Information abount countries
     /// </summary>
     public class Country
     {
         /// <summary>
-        /// Country id
+        ///     Country id
         /// </summary>
         [Key]
         public Guid CountryId { get; set; }
 
         /// <summary>
-        /// Country name
+        ///     Country name
         /// </summary>
-        public string CountryName { get; set; }
+        public String CountryName { get; set; }
 
         /// <summary>
-        /// Link to companys with this language
+        ///     Link to companys with this language
         /// </summary>
-        public  ICollection<Company> Company { get; set; }
-        
+        public ICollection<Company> Company { get; set; }
     }
 }

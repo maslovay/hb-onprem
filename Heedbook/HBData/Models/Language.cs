@@ -1,37 +1,40 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about langage
+    ///     Information about langage
     /// </summary>
     public class Language
     {
         /// <summary>
-        /// Id
+        ///     Id
         /// </summary>
         [Key]
-        public int LanguageId { get; set; }
+        public Int32 LanguageId { get; set; }
+
         /// <summary>
-        /// Language name
+        ///     Language name
         /// </summary>
-        public string LanguageName { get; set; }
+        public String LanguageName { get; set; }
+
         /// <summary>
-        /// Language local name
+        ///     Language local name
         /// </summary>
-        public string LanguageLocalName { get; set; }
+        public String LanguageLocalName { get; set; }
+
         /// <summary>
-        /// Language short name 
+        ///     Language short name
         /// </summary>
-        public string LanguageShortName { get; set; }
+        public String LanguageShortName { get; set; }
+
         /// <summary>
-        /// Links
+        ///     Links
         /// </summary>
-        public  ICollection<Company> Company { get; set; }
-        public  ICollection<Dialogue> Dialogue { get; set; }
+        public ICollection<Company> Company { get; set; }
+
+        public ICollection<Dialogue> Dialogue { get; set; }
     }
 }

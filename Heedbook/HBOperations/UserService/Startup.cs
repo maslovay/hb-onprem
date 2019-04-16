@@ -1,53 +1,45 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Configurations;
 using HBData;
-using HBData.Models;
 using HBData.Repository;
-using HBLib.Utils;
 using HBLib;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Notifications.Base;
 using Serilog;
-using Serilog.Sinks.Elasticsearch;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace UserService
 {
     public class Startup
     {
+        private readonly String MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
 
-        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         private IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddCors(options =>
             {
                 options.AddPolicy(MyAllowSpecificOrigins,
-                builder =>
-                {
-                    builder.WithOrigins("http://localhost:3000",
-                                        "https://hbreactapp.azurewebsites.net");
-                });
-            }); 
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:3000",
+                            "https://hbreactapp.azurewebsites.net");
+                    });
+            });
             services.AddOptions();
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
             services.AddDbContext<RecordsContext>
@@ -58,7 +50,7 @@ namespace UserService
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            
+
             services.AddSwaggerGen(c =>
             {
                 c.EnableAnnotations();
@@ -67,7 +59,6 @@ namespace UserService
                     Title = "User Service Api",
                     Version = "v1"
                 });
-
             });
             services.AddRabbitMqEventBus(Configuration);
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
@@ -79,30 +70,20 @@ namespace UserService
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-
             var service = app.ApplicationServices.GetRequiredService<INotificationService>();
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-
-            }
             else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-            }
-            
-            app.UseSwagger(c =>
-            {
-                c.RouteTemplate = "user/swagger/{documentName}/swagger.json";
-            });
+
+            app.UseSwagger(c => { c.RouteTemplate = "user/swagger/{documentName}/swagger.json"; });
 
             app.UseSwaggerUI(c =>
             {
-               c.SwaggerEndpoint("/user/swagger/v1/swagger.json", "Sample API");
-               c.RoutePrefix = "user/swagger";
+                c.SwaggerEndpoint("/user/swagger/v1/swagger.json", "Sample API");
+                c.RoutePrefix = "user/swagger";
             });
-            app.UseCors(MyAllowSpecificOrigins); 
+            app.UseCors(MyAllowSpecificOrigins);
             app.UseHttpsRedirection();
             app.UseMvc();
         }

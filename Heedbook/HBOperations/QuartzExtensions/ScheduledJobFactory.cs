@@ -21,10 +21,7 @@ namespace QuartzExtensions
         public void ReturnJob(IJob job)
         {
             var disposable = job as IDisposable;
-            if (disposable != null)
-            {
-                disposable.Dispose();
-            }
+            if (disposable != null) disposable.Dispose();
         }
     }
 }

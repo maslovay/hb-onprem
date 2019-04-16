@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RabbitMqEventBus.Base
+﻿namespace RabbitMqEventBus.Base
 {
     public class IntegrationEvent
     {

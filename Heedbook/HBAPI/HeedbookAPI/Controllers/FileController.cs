@@ -31,7 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using HBLib.Utils;
 using HBLib;
-
+using Microsoft.Extensions.Primitives;
 
 namespace UserOperations.Controllers
 {
@@ -45,7 +45,7 @@ namespace UserOperations.Controllers
         private readonly ITokenService _tokenService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-
+        private readonly string _containerName;
 
         public FileController(
             UserManager<ApplicationUser> userManager,
@@ -62,18 +62,21 @@ namespace UserOperations.Controllers
             _tokenService = tokenService;
             _context = context;
             _sftpClient = sftpClient;
+            _containerName = "media";
         }
         #region File
         [HttpGet("File")]
         public async Task<IEnumerable<string>> FileGet([FromQuery]string containerName = null, [FromQuery]string[] directoryNames = null, [FromQuery]string fileName = null)
         {
-            IEnumerable <string> files = null;
-            if( fileName != null )
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
+            IEnumerable<string> files = null;
+            containerName = containerName ?? _containerName;
+            if (fileName != null)
             {
-                files =  new List<string> { await _sftpClient.GetFileUrl(containerName + "/" + fileName)};
+                files = new List<string> { await _sftpClient.GetFileUrl(containerName + "/" + fileName) };
                 return files;
             }
-            if (containerName != null)
+            else
                 files = await _sftpClient.GetAllFilesUrl(containerName, directoryNames);
             return files;
         }

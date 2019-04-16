@@ -1,5 +1,4 @@
 ﻿using System;
-using Notifications.Services;
 using RabbitMqEventBus.Base;
 
 namespace Notifications.Base

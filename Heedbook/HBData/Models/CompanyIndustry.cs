@@ -1,41 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about indexies of industries such as Load index, Satisfaction index and Cross sales index
+    ///     Information about indexies of industries such as Load index, Satisfaction index and Cross sales index
     /// </summary>
     public class CompanyIndustry
     {
         /// <summary>
-        /// Company iindustry id
+        ///     Company iindustry id
         /// </summary>
         [Key]
         public Guid CompanyIndustryId { get; set; }
+
         /// <summary>
-        /// Industry name
+        ///     Industry name
         /// </summary>
-        public string CompanyIndustryName { get; set; }
+        public String CompanyIndustryName { get; set; }
+
         /// <summary>
-        /// Value of satisfaction index for companies in industry
+        ///     Value of satisfaction index for companies in industry
         /// </summary>
-        public double? SatisfactionIndex { get; set; }
+        public Double? SatisfactionIndex { get; set; }
+
         /// <summary>
-        /// Value of load index for companies in industry
+        ///     Value of load index for companies in industry
         /// </summary>
-        public double? LoadIndex { get; set; }
+        public Double? LoadIndex { get; set; }
+
         /// <summary>
-        /// Value for cross sales index in industry
+        ///     Value for cross sales index in industry
         /// </summary>
-        public double? CrossSalesIndex { get; set; }
+        public Double? CrossSalesIndex { get; set; }
+
         /// <summary>
-        /// Link to companys
+        ///     Link to companys
         /// </summary>
         public ICollection<Company> Company { get; set; }
-        
     }
 }

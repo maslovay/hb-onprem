@@ -11,6 +11,7 @@ namespace UserService.Controllers
     public class FillingHintController : ControllerBase
     {
         private readonly INotificationHandler _handler;
+
         public FillingHintController(INotificationHandler handler)
         {
             _handler = handler;

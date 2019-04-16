@@ -1,5 +1,4 @@
-﻿using System;
-using Configurations;
+﻿using Configurations;
 using FaceAnalyzeService.Handler;
 using HBData;
 using HBData.Repository;
@@ -10,15 +9,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using Serilog;
-using Serilog.Sinks.Elasticsearch;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace FaceAnalyzeService
 {
@@ -74,19 +70,12 @@ namespace FaceAnalyzeService
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             service.Subscribe<FaceAnalyzeRun, FaceAnalyzeRunHandler>();
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
             else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-            }
 
             app.UseHttpsRedirection();
             app.UseMvc();
-
-
         }
     }
 }

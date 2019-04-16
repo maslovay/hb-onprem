@@ -1,54 +1,57 @@
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
-
     /// <summary>
-    /// Adretising (HTML) Content class
+    ///     Adretising (HTML) Content class
     /// </summary>
     public class Content
     {
-        [Key]
-        public Guid ContentId { get; set; }
+        [Key] public Guid ContentId { get; set; }
 
         /// <summary>
-        /// html code of the content slide
+        ///     html code of the content slide
         /// </summary>
         [Required]
-        public string RawHTML { get; set; }
+        public String RawHTML { get; set; }
+
         /// <summary>
-        /// Name for content
+        ///     Name for content
         /// </summary>
-        public string Name { get; set; }
+        public String Name { get; set; }
+
         /// <summary>
-        /// Duration in milliseconds
+        ///     Duration in milliseconds
         /// </summary>
-        public int Duration { get; set; }
+        public Int32 Duration { get; set; }
+
         /// <summary>
-        /// Company of content
+        ///     Company of content
         /// </summary>
         public Guid CompanyId { get; set; }
-        [JsonIgnore]
-        public Company Company { get; set; }
+
+        [JsonIgnore] public Company Company { get; set; }
+
         /// <summary>
-        /// Serialization of editor state
+        ///     Serialization of editor state
         /// </summary>
-        public string JSONData { get; set; }
+        public String JSONData { get; set; }
+
         /// <summary>
-        /// Content is template
+        ///     Content is template
         /// </summary>
-        public bool IsTemplate { get; set; }
+        public Boolean IsTemplate { get; set; }
+
         /// <summary>
-        /// Creation date
+        ///     Creation date
         /// </summary>
         public DateTime? CreationDate { get; set; }
+
         /// <summary>
-        /// Update date (if it is request on Af  with PUT method -  Update date will be changed on DateTime.Now)
+        ///     Update date (if it is request on Af  with PUT method -  Update date will be changed on DateTime.Now)
         /// </summary>
         public DateTime? UpdateDate { get; set; }
         public ICollection<CampaignContent> CampaignContents { get; set; }

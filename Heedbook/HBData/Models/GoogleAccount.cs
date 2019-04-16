@@ -1,36 +1,38 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Keys for google account
+    ///     Keys for google account
     /// </summary>
     public class GoogleAccount
     {
         /// <summary>
-        /// Id
+        ///     Id
         /// </summary>
         [Key]
         public Guid GoogleAccountId { get; set; }
+
         /// <summary>
-        /// Google key
+        ///     Google key
         /// </summary>
-        public string GoogleKey { get; set; }
+        public String GoogleKey { get; set; }
+
         /// <summary>
-        ///  Google key status id
+        ///     Google key status id
         /// </summary>
-        public int? StatusId { get; set; }
+        public Int32? StatusId { get; set; }
+
         public Status Status { get; set; }
+
         /// <summary>
-        /// Google key creation date
+        ///     Google key creation date
         /// </summary>
         public DateTime CreationTime { get; set; }
+
         /// <summary>
-        /// Google key expiration date
+        ///     Google key expiration date
         /// </summary>
         public DateTime ExpirationTime { get; set; }
     }

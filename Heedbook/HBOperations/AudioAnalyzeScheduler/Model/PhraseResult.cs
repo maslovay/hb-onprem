@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace QuartzExtensions.Model
+namespace AudioAnalyzeScheduler.Model
 {
     internal class PhraseResult
     {
@@ -14,6 +14,6 @@ namespace QuartzExtensions.Model
 
         public Guid? PhraseTypeId { get; set; }
 
-        public Int32 Position { get; set; }     
+        public Int32 Position { get; set; }
     }
 }

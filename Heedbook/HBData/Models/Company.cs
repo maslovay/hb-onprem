@@ -1,71 +1,74 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace HBData.Models
 {
     /// <summary>
-    /// Information about company and company parameters
+    ///     Information about company and company parameters
     /// </summary>
     public class Company
     {
         /// <summary>
-        /// Company id
+        ///     Company id
         /// </summary>
         [Key]
         public Guid CompanyId { get; set; }
 
         /// <summary>
-        /// Company name
+        ///     Company name
         /// </summary>
         [Required]
-        public string CompanyName { get; set; }
+        public String CompanyName { get; set; }
 
         /// <summary>
-        /// Id of company industry
+        ///     Id of company industry
         /// </summary>
-		public Guid? CompanyIndustryId { get; set; }
-        public  CompanyIndustry CompanyIndustry { get; set; }
+        public Guid? CompanyIndustryId { get; set; }
+
+        public CompanyIndustry CompanyIndustry { get; set; }
 
         /// <summary>
-        /// Company creation date
+        ///     Company creation date
         /// </summary>
         public DateTime CreationDate { get; set; }
 
         /// <summary>
-        /// Company language id
+        ///     Company language id
         /// </summary>
-        public int? LanguageId { get; set; }
-        public  Language Language { get; set; }
+        public Int32? LanguageId { get; set; }
+
+        public Language Language { get; set; }
 
         /// <summary>
-        /// Company country id
+        ///     Company country id
         /// </summary>
         public Guid? CountryId { get; set; }
-        public  Country Country { get; set; }
+
+        public Country Country { get; set; }
 
         /// <summary>
-        /// Company status id
+        ///     Company status id
         /// </summary>
-        public int? StatusId { get; set; }
-        public  Status Status { get; set; }
+        public Int32? StatusId { get; set; }
+
+        public Status Status { get; set; }
 
         /// <summary>
-        /// Link to application users
+        ///     Link to application users
         /// </summary>
-        public  ICollection<ApplicationUser> ApplicationUser { get; set; }
+        public ICollection<ApplicationUser> ApplicationUser { get; set; }
 
         /// <summary>
-        /// Link to payments
+        ///     Link to payments
         /// </summary>
         public ICollection<Payment> Payment { get; set; }
-        
+
         /// <summary>
-        /// Company corporation id
+        ///     Company corporation id
         /// </summary>
         public Guid? CorporationId { get; set; }
-        public  Corporation Corporation { get; set; }
+
+        public Corporation Corporation { get; set; }
     }
 }

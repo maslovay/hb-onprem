@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using RsaKey = System.Security.Cryptography.RSA;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -15,6 +14,7 @@ using HBData.Repository;
 using HBLib.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using RsaKey = System.Security.Cryptography.RSA;
 
 namespace HBLib.Utils
 {
@@ -29,13 +29,13 @@ namespace HBLib.Utils
         private const String GoogleKeyFileName = "heedbook-project-195914-c1665bca2cd3.p12";
 
         private const String FileGoogleCloudPublicAccess = "GoogleFilePublic.xml";
-        
+
         private readonly HttpClient _httpClient;
+
+        private readonly IGenericRepository _repository;
 
         private readonly SftpClient _sftpClient;
 
-        private readonly IGenericRepository _repository;
-        
         private readonly DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         public GoogleConnector(SftpClient sftpClient,
@@ -74,7 +74,7 @@ namespace HBLib.Utils
             }
             catch (Exception e)
             {
-                 Console.WriteLine($"{e}");
+                Console.WriteLine($"{e}");
                 return $"Exception occured {e}";
             }
         }
@@ -138,8 +138,8 @@ namespace HBLib.Utils
             var googleApiKey = await GetApiKey();
             _httpClient.DefaultRequestHeaders.Clear();
 
-            var response =  await _httpClient.GetAsync("https://speech.googleapis.com/v1/operations/" +
-                                                googleTransactionId + "?key=" + googleApiKey);
+            var response = await _httpClient.GetAsync("https://speech.googleapis.com/v1/operations/" +
+                                                      googleTransactionId + "?key=" + googleApiKey);
 
             var results = await response.Content.ReadAsStringAsync();
 
@@ -168,25 +168,16 @@ namespace HBLib.Utils
             return token.access_token;
         }
 
-        public class JWTToken
-        {
-            public string access_token;
-            public string token_type;
-            public int expires_in;
-        }
-
-        public async Task<GoogleTransactionId> Recognize(String fileName, Int32 languageId, string dialogueId, Boolean enableWordTimeOffsets = true,
+        public async Task<GoogleTransactionId> Recognize(String fileName, Int32 languageId, String dialogueId,
+            Boolean enableWordTimeOffsets = true,
             Boolean enableSpeakerDiarization = true)
         {
             var apiKey = await GetApiKey();
-            if (apiKey == null)
-            {
-                return null;
-            }
+            if (apiKey == null) return null;
 
             var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey, languageId); },
                 TimeSpan.FromSeconds(1), 5);
-            
+
             return jsStr;
         }
 
@@ -196,7 +187,7 @@ namespace HBLib.Utils
             var googleAccount = await _repository.FindOneByConditionAsync<GoogleAccount>(item => item.StatusId == 3);
             return googleAccount.GoogleKey;
         }
-        
+
         private GoogleTransactionId RecognizeLongRunning(String fn, String apiKey, Int32 languageId,
             Boolean enableWordTimeOffsets = true)
         {
@@ -223,7 +214,7 @@ namespace HBLib.Utils
                     encoding = "LINEAR16",
                     sampleRateHertz = 16000,
                     languageCode = GetLanguageName(languageId),
-                    enableWordTimeOffsets = enableWordTimeOffsets,
+                    enableWordTimeOffsets
                     //enableSpeakerDiarization,
                     //enableWordConfidence = true,
                     //enableAutomaticPunctuation = true
@@ -236,12 +227,12 @@ namespace HBLib.Utils
                 }
             };
             Console.WriteLine($"{apiKey}");
-            Console.WriteLine($"{JsonConvert.SerializeObject(request).ToString()}");
+            Console.WriteLine($"{JsonConvert.SerializeObject(request)}");
             Console.WriteLine($"{"https://speech.googleapis.com/v1/speech:longrunningrecognize?key=" + apiKey}");
 
             var response = httpClient
                           .PostAsync("https://speech.googleapis.com/v1/speech:longrunningrecognize?key=" + apiKey,
-                               new StringContent(JsonConvert.SerializeObject(request).ToString(), Encoding.UTF8,
+                               new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8,
                                    "application/json")).Result;
             var result = response.Content.ReadAsStringAsync().Result;
             return JsonConvert.DeserializeObject<GoogleTransactionId>(result);
@@ -378,14 +369,20 @@ namespace HBLib.Utils
             catch
             {
                 var rsa = certificate.GetRSAPrivateKey();
-                var signatureBytes =  rsa.SignData(inputBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                var signatureBytes = rsa.SignData(inputBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
                 var signatureEncoded = Convert.ToBase64String(signatureBytes);
 
                 Console.WriteLine($"{String.Join(".", headerEncoded, claimsetEncoded, signatureEncoded)}");
                 return String.Join(".", headerEncoded, claimsetEncoded, signatureEncoded);
             }
-            
+        }
+
+        public class JWTToken
+        {
+            public String access_token;
+            public Int32 expires_in;
+            public String token_type;
         }
     }
 }

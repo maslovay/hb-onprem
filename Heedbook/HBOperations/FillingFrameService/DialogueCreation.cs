@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
-using HBLib;
 using HBLib.Utils;
 using HBMLHttpClient.Model;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,9 +16,9 @@ namespace FillingFrameService
 {
     public class DialogueCreation
     {
+        private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
-        private readonly ElasticClient _log;
 
         public DialogueCreation(IServiceScopeFactory factory,
             SftpClient client,

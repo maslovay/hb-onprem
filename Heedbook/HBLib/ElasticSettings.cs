@@ -1,11 +1,11 @@
-using System.Net;
+using System;
 
 namespace HBLib
 {
     public class ElasticSettings
     {
-        public string Host {get; set;}
-        public int Port {get;set;}
-        public string FunctionName {get;set;}
+        public String Host { get; set; }
+        public Int32 Port { get; set; }
+        public String FunctionName { get; set; }
     }
 }
