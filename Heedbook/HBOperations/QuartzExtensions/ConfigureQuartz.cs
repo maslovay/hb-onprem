@@ -48,7 +48,7 @@ namespace QuartzExtensions
                 return TriggerBuilder.Create()
                     .WithIdentity($"SendNotMarckedImageCount.trigger", "Frames")
                     .StartNow()
-                    .WithSimpleSchedule(s => s.WithIntervalInMinutes(2).RepeatForever())
+                    .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
                     .Build();
             });
             Console.WriteLine("Середина AddSendNotMarckedImageCountQuartz");

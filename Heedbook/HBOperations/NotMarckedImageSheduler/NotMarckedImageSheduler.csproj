@@ -12,8 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\HBData\HBData.csproj" />
-      <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
       <ProjectReference Include="..\Configurations\Configurations.csproj" />
       <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
     </ItemGroup>
