@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -44,6 +45,33 @@ namespace HBLib.Utils
                 _client.ChangeDirectory(_sftpSettings.DestinationPath + remotePath);
                 await Task.Run(() => _client.UploadFile(fs, fileName));
             }
+        }
+        /// <summary>
+        /// Get url to file. 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<string> GetFileUrl(String path)
+        {
+            await ConnectToSftpAsync();
+            if ( await IsFileExistsAsync(_sftpSettings.DestinationPath + "/" + path))
+            return $"ftp://{_sftpSettings.UserName}:{_sftpSettings.Password}@{_sftpSettings.Host}/storage/{path}";
+            return null;
+        }
+
+        public async Task<IEnumerable<string>> GetAllFilesUrl(String directory, string [] subDirs = null)
+        {
+            await ConnectToSftpAsync();
+            List<Renci.SshNet.Sftp.SftpFile> files = new List<Renci.SshNet.Sftp.SftpFile>();
+            if(subDirs != null)
+            {
+                foreach ( var dir in subDirs )
+                {
+                    files.AddRange( _client.ListDirectory(directory+"/"+dir));
+                }
+            }
+            else _client.ListDirectory(directory).ToList();
+            return await Task.Run(() => files.Where( f=> !f.IsDirectory).Select( f => $"ftp://{_sftpSettings.UserName}:{_sftpSettings.Password}@{_sftpSettings.Host}/storage/{f.Name}"));
         }
 
         /// <summary>
@@ -140,9 +168,9 @@ namespace HBLib.Utils
         public async Task DeleteFileIfExistsAsync(String path)
         {
             await ConnectToSftpAsync();
-            if (_client.Exists(path))
+            if (_client.Exists(_sftpSettings.DestinationPath+"/"+path))
             {
-                await Task.Run(() => _client.DeleteFile(path));
+                await Task.Run(() => _client.DeleteFile(_sftpSettings.DestinationPath+"/"+path));
             }
         }
 
