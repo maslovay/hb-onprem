@@ -85,6 +85,8 @@ namespace HBLib.Utils
         {
             await ConnectToSftpAsync();
             _client.BufferSize = 4 * 1024;
+             if (! await IsFileExistsAsync(_sftpSettings.DestinationPath + path))
+                _client.CreateDirectory(_sftpSettings.DestinationPath + path);
             _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
             _client.UploadFile(stream, filename);
         }

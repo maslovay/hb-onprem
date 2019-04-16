@@ -68,12 +68,14 @@ namespace UserOperations.Controllers
         [HttpGet("File")]
         public async Task<IEnumerable<string>> FileGet([FromQuery]string containerName = null, [FromQuery]string[] directoryNames = null, [FromQuery]string fileName = null)
         {
-            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
+            string companyId = GetCompanyIdFromToken();
+            if (companyId == null) return null; 
+
             IEnumerable<string> files = null;
             containerName = containerName ?? _containerName;
             if (fileName != null)
             {
-                files = new List<string> { await _sftpClient.GetFileUrl(containerName + "/" + fileName) };
+                files = new List<string> { await _sftpClient.GetFileUrl(containerName + "/" + companyId + "/" + fileName) };
                 return files;
             }
             else
@@ -82,24 +84,88 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("File")]
-        public string FilePost([FromBody] string file)
+        public async Task<IEnumerable<string>> FilePost()
         {
-          
-            return "";
+            string companyId = GetCompanyIdFromToken();
+            if (companyId == null) return null; 
+
+            var provider = new MultipartMemoryStreamProvider();
+            var form = await Request.ReadFormAsync();
+            var files = form.Files;
+            var containerNameParam = form.FirstOrDefault(x => x.Key == "containerName");
+            var containerName = containerNameParam.Value.Count() != 0 ? containerNameParam.Value.ToString() : _containerName;
+
+            List<string> res = new List<string>();
+            foreach (var file in files)
+            {
+                var memoryStream = new MemoryStream();
+                await file.CopyToAsync(memoryStream);
+                var fs = memoryStream.ToArray();
+                FileInfo f = new FileInfo(file.FileName);
+                var fn = Guid.NewGuid() + f.Extension;
+                var mymeType = file.ContentType.ToString();
+                memoryStream.Flush();
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, containerName + "/" + companyId, fn);
+                res.Add(await _sftpClient.GetFileUrl(containerName + "/" + companyId + "/" + fn));
+            }
+            return res;
         }
-        [HttpPut("File")]
-        public string FilePut([FromBody] string file)
-        {
         
-            return "";
-        }
-        [HttpDelete("File")]
-        public IActionResult FileDelete([FromQuery] Guid campaignId)
+        [HttpPut("File")]
+        public async Task<IEnumerable<string>> FilePut()
         {
-         
-                return Ok("OK");            
-                //return BadRequest("No such campaign");
+            string companyId = GetCompanyIdFromToken();
+            if (companyId == null) return null; 
+
+            var provider = new MultipartMemoryStreamProvider();
+            var form = await Request.ReadFormAsync();
+            var files = form.Files;
+            var containerNameParam = form.FirstOrDefault(x => x.Key == "containerName");
+            var containerName = containerNameParam.Value.Count() != 0 ? containerNameParam.Value.ToString() : _containerName;
+            var fileName = form.FirstOrDefault(x => x.Key == "fileName");
+
+            await _sftpClient.DeleteFileIfExistsAsync(containerName+"/"+ companyId+"/"+ fileName);
+
+            List<string> res = new List<string>();
+            foreach (var file in files)
+            {
+                var memoryStream = new MemoryStream();
+                await file.CopyToAsync(memoryStream);
+                var fs = memoryStream.ToArray();
+                FileInfo f = new FileInfo(file.FileName);
+                var fn = Guid.NewGuid() + f.Extension;
+                var mymeType = file.ContentType.ToString();
+                memoryStream.Flush();
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, containerName + "/" + companyId, fn);
+                res.Add(await _sftpClient.GetFileUrl(containerName + "/" + companyId + "/" + fn));
+            }
+            return res;
+        }
+
+        [HttpDelete("File")]
+        public async Task<IActionResult> FileDelete([FromQuery] string containerName = null, [FromQuery] string fileName = null)
+        {
+            string companyId = GetCompanyIdFromToken();
+            if (companyId == null) return null; 
+            var container = containerName?? _containerName;
+            await _sftpClient.DeleteFileIfExistsAsync(container + "/" + companyId + "/" + fileName);
+            return Ok("OK");
         }
         #endregion
-}
+
+        private string GetCompanyIdFromToken()
+        {
+            try
+            {
+            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
+                string token = authToken.First();
+                var claims = _tokenService.GetDataFromToken(token);
+                return claims["companyId"];
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    }
 }
