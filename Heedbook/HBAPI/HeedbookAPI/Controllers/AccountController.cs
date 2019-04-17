@@ -88,6 +88,7 @@ namespace UserOperations.Controllers
                     StatusId = 3};
 
                 var result = await _userManager.CreateAsync(user, message.Password);
+                //await _userManager.CreateSecurityTokenAsync(user);
                 await _userManager.AddToRoleAsync(user, "Manager");
 
                 if (result.Succeeded)

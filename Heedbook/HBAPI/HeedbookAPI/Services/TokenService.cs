@@ -36,19 +36,12 @@ namespace UserOperations.Services
             try
             {
                 userEmail = userEmail.ToUpper();
-
-                System.Console.WriteLine("CreateTokenForUser --------------- " + userEmail);
                 var user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == userEmail).FirstOrDefault();
-                System.Console.WriteLine(user == null);
                 var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
-                System.Console.WriteLine(roleInfo == null);
                 var role = roleInfo.Role.Name;            
-                System.Console.WriteLine(role);
-                System.Console.WriteLine(user.StatusId);
 
                 if (user.StatusId == 3)
                 {
-                    Console.WriteLine("New claim");
                     var claims = new[]
                     {       
                         new Claim(JwtRegisteredClaimNames.Sub, user.Email),
@@ -61,10 +54,8 @@ namespace UserOperations.Services
                         new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
                     };
-                    System.Console.WriteLine("End");
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
-                    System.Console.WriteLine($"{key}");
                     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                     var token = new JwtSecurityToken(_config["Tokens:Issuer"],
@@ -96,8 +87,11 @@ namespace UserOperations.Services
         /// <returns></returns>
         public Dictionary<string, string> GetDataFromToken(string token, string sign = null)
         {
+            if (sign == "" || sign == null)
+                sign = _config["Tokens:Key"];
             try
             {
+                
                 var pureToken = token.Split(' ')[1];
                 if (CheckToken(pureToken, sign))
                 {
@@ -141,6 +135,24 @@ namespace UserOperations.Services
                 return false;
             }
             return true;
+        }
+
+        public bool CheckAccess(Dictionary<string, string> claims, List<string> companyIds)
+        {
+            //manager with one company in request
+            var managerRoles = _config["Roles:ManagerRoles"].Split(',');
+            if (companyIds.Contains(claims["companyId"]) 
+                && companyIds.Count() == 1 
+                && managerRoles.Contains(claims["role"]))
+                return true;
+            //Supervisor or Admin with one company in request
+            var supervisorRoles = _config["Roles:SupervisorRoles"].Split(',');
+            if (companyIds.Contains(claims["companyId"]) 
+                && companyIds.Count() == 1 && supervisorRoles.Contains(claims["role"]) 
+                && _context.Companys.Where(p => companyIds.Contains(p.CompanyId.ToString())).All(p => p.CorporationId.ToString()  == claims["corporationId"]))
+                return true;
+            //reject if non succeded request
+            return false;
         }
 
         public bool _disposed;

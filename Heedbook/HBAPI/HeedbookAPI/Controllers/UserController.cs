@@ -29,7 +29,7 @@ using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using HBData;
-
+using System.Net.Http.Headers;
 
 namespace UserOperations.Controllers
 {
@@ -57,55 +57,102 @@ namespace UserOperations.Controllers
             _config = config;
             _tokenService = tokenService;
             _context = context;
-        }
-
+        }        
+        
         [HttpGet("User")]
-        public IEnumerable<ApplicationUser> UserGet()
+        public IEnumerable<ApplicationUser> UserGet([FromHeader] string Authorization)
         {
-            var users = _context.ApplicationUsers.Where(p => p.CompanyId != null).ToList();
+            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var companyId = Guid.Parse(userClaims["companyId"]);
+            var users = _context.ApplicationUsers.Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();
             return users;
         }
 
         [HttpPut("User")]
-        public ApplicationUser UserPut([FromBody] ApplicationUser message)
+        public IActionResult UserPut([FromBody] ApplicationUser message, [FromHeader] string Authorization)
         {
-            var user = _context.ApplicationUsers.Where(p => p.Id == message.Id).FirstOrDefault();
-            if (user == null)
+            try
             {
-                _context.Add(message);
-                _context.SaveChanges();
-            }
-            else
-            {
-                foreach(var p in typeof(ApplicationUser).GetProperties()) 
+                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                var user = _context.ApplicationUsers
+                    .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
+                    .FirstOrDefault();
+                if (user != null)
                 {
-                    if (p.GetValue(message, null) != null)
-                        p.SetValue(user, p.GetValue(message, null), null);
+                    foreach(var p in typeof(ApplicationUser).GetProperties()) 
+                    {
+                        if (p.GetValue(message, null) != null)
+                            p.SetValue(user, p.GetValue(message, null), null);
+                    }
+                    _context.SaveChanges();
+                    return Ok(user);
                 }
-                _context.SaveChanges();
+                else
+                {
+                    return Ok();
+                }
             }
-            return user;
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         [HttpPost("User")]
-        public ApplicationUser UserPost([FromBody] ApplicationUser message)
+        public async Task<IActionResult> UserPostAsync([FromBody] PostUser message, [FromHeader] string Authorization)
         {
-            _context.Add(message);
-            _context.SaveChanges();
-           
-            return message;
+            try
+            {
+                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var user = new ApplicationUser { 
+                    UserName = message.Email,
+                    Email = message.Email,
+                    Id = Guid.NewGuid(),
+                    CompanyId = Guid.Parse(userClaims["companyId"]),
+                    CreationDate = DateTime.UtcNow,
+                    FullName = message.FullName,
+                    StatusId = 3,
+                    EmpoyeeId = message.EmployeeId
+                };
+                var result = await _userManager.CreateAsync(user, message.Password);
+                await _userManager.AddToRoleAsync(user, "Employee");
+                return Ok(user);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         [HttpDelete("User")]
-        public IActionResult UserDelete([FromQuery] Guid applicationUserId)
+        public IActionResult UserDelete([FromQuery] Guid applicationUserId, [FromHeader] string Authorization)
         {
-            var user = _context.ApplicationUsers.Where(p => p.Id == applicationUserId).FirstOrDefault();
-            if (user != null)
+            try
             {
-                _context.Remove(user);
-                _context.SaveChanges();
+                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                var user = _context.ApplicationUsers.Where(p => p.Id == applicationUserId && p.CompanyId == companyId).FirstOrDefault();
+                 
+                if (user != null)
+                {
+                    try
+                    {
+                        _context.Remove(user);
+                        _context.SaveChanges();
+                    }
+                    catch
+                    {
+                        user.StatusId = 4;
+                        _context.SaveChanges();
+                    }
+                }
+                return Ok();
             }
-            return Ok("OK");
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
 
@@ -222,9 +269,12 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
                                                 [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
-                                                [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds)
+                                                [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                [FromHeader] string Authorization)
         {
-            string formatString = "yyyyMMdd";
+            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var companyId = Guid.Parse(userClaims["companyId"]);
+            var formatString = "yyyyMMdd";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
             var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
 
@@ -238,6 +288,7 @@ namespace UserOperations.Controllers
             .Where(p => 
                 p.Dialogue.BegTime >= begTime &&
                 p.Dialogue.EndTime <= endTime &&
+                p.Dialogue.ApplicationUser.CompanyId == companyId &&
                 (!applicationUserIds.Any() || applicationUserIds.Contains(p.Dialogue.ApplicationUserId)) &&
                 (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.Dialogue.ApplicationUser.WorkerTypeId)) &&
                 (!phraseIds.Any() || phraseIds.Contains((Guid) p.PhraseId)) && 
@@ -253,9 +304,13 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
                                                         [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds)
+                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromHeader] string Authorization
+                                                        )
         {
-            string formatString = "yyyyMMdd";
+            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var companyId = Guid.Parse(userClaims["companyId"]);
+            var formatString = "yyyyMMdd";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
             var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
 
@@ -287,13 +342,27 @@ namespace UserOperations.Controllers
 
             return dialogues;
         }
+    }
 
+    public class PostUser
+    {
+        public string FullName;
+        public string Email;
+        public string Password;
+        public string EmployeeId;
+    }
 
-
-
-
-
-
+    public class PutUser
+    {
+        public Guid Id;
+        public string FullName;
+        public string Avatar;
+        public string EmployeeId;
+        public string CreationDate;
+        public string CompanyId;
+        public Int32 StatusId;
+        public string OneSignalId;
+        public Guid? WorkerTypeId;
     }
     
 }
