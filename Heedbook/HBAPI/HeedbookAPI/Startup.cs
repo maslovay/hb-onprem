@@ -77,15 +77,16 @@ namespace UserOperations
             
             services.AddScoped(typeof(ITokenService), typeof(TokenService));
 
-            services.AddSwaggerGen(c =>
+              services.AddSwaggerGen(c =>
             {
+                c.EnableAnnotations();
                 c.SwaggerDoc("v1", new Info
                 {
                     Title = "User Service Api",
                     Version = "v1"
                 });
-
             });
+            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);

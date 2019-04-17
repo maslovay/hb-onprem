@@ -32,6 +32,7 @@ using HBData;
 using HBLib.Utils;
 using HBLib;
 using Microsoft.Extensions.Primitives;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -56,24 +57,34 @@ namespace UserOperations.Controllers
         }
         #region Catalogue
         [HttpGet("Country")]
+        [SwaggerOperation(Description = "Return all countries. Does not require to transfer a token")]
         public IEnumerable<Country> CountrysGet()
         {             
             return _context.Countrys.ToList();
         }     
         [HttpGet("Role")]
+        [SwaggerOperation(Description = "Return all available user roles. Does not require to transfer a token")]
         public IEnumerable<ApplicationRole> RolesGet()
         {             
             return _context.ApplicationRoles.ToList();
         }     
         [HttpGet("Industry")]
+        [SwaggerOperation(Description = "Return all industries. Does not require to transfer a token")]
         public IEnumerable<CompanyIndustry> IndustryGet()
         {             
             return _context.CompanyIndustrys.ToList();
         }     
         [HttpGet("Language")]
+        [SwaggerOperation(Description = "Return all available languages. Does not require to transfer a token")]
         public IEnumerable<Language> LanguageGet()
         {             
             return _context.Languages.ToList();
+        }     
+        [HttpGet("PhraseType")]
+        [SwaggerOperation(Description = "Return all available phrase types. Does not require to transfer a token")]
+        public IEnumerable<PhraseType> PhraseTypeGet()
+        {             
+            return _context.PhraseTypes.ToList();
         }     
         #endregion
     }

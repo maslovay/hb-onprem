@@ -1,37 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
 using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-
-using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
-using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using HBLib.Utils;
-using HBLib;
 using Microsoft.Extensions.Primitives;
+using Swashbuckle.AspNetCore.Annotations;
+
+
 
 namespace UserOperations.Controllers
 {
@@ -67,6 +50,7 @@ namespace UserOperations.Controllers
         }
         #region Campaign
         [HttpGet("Campaign")]
+        [SwaggerOperation(Description = "Return all camapigns for loggined company with content relations")]
         public IEnumerable<Campaign> CampaignGet()
         {             
             Guid? companyId = GetCompanyIdFromToken();
@@ -77,6 +61,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("Campaign")]
+        [SwaggerOperation(Description = "Create new campaign with content relations")]
         public Campaign CampaignPost([FromBody] CampaignModel model)
         {
             Guid? companyId = GetCompanyIdFromToken();
@@ -99,6 +84,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("Campaign")]
+        [SwaggerOperation(Description = "Edit existing campaign. Remove all content relations and create new")]
         public Campaign CampaignPut([FromBody] CampaignModel model)
         {
              if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
@@ -131,6 +117,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("Campaign")]
+        [SwaggerOperation(Description = "Set camapign status Inactive and delete all content relations for this campaign")]
         public IActionResult CampaignDelete([FromQuery] Guid campaignId)
         {
           if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return BadRequest("Token error");
@@ -152,6 +139,7 @@ namespace UserOperations.Controllers
 
         #region Content
         [HttpGet("Content")]
+        [SwaggerOperation(Description = "Get all content for loggined company with screenshot url links")]
         public async Task<IEnumerable<ContentModel>> ContentGet()
         {
             Guid? companyId = GetCompanyIdFromToken();
@@ -168,6 +156,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("Content")]
+        [SwaggerOperation(Description = "Create new content and save screenshot on sftp server")]
         public async Task<ContentModel> ContentPost([FromBody] ContentModel model)
         {
             Guid? companyId = GetCompanyIdFromToken();
@@ -191,6 +180,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("Content")]
+        [SwaggerOperation(Description = "Edit existing content, remove screenshot from sftp and save new screenshot(if you pass it in json body)")]
         public async Task<ContentModel> ContentPut([FromBody] ContentModel model)
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
@@ -217,6 +207,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("Content")]
+        [SwaggerOperation(Description = "DElete content and remove screenshot from sftp")]
         public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId)
         {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))  return BadRequest("Token error");

@@ -32,6 +32,7 @@ using HBData;
 using HBLib.Utils;
 using HBLib;
 using Microsoft.Extensions.Primitives;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -39,8 +40,6 @@ namespace UserOperations.Controllers
     [ApiController]
     public class FileController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
         private readonly ITokenService _tokenService;
         private readonly RecordsContext _context;
@@ -48,16 +47,12 @@ namespace UserOperations.Controllers
         private readonly string _containerName;
 
         public FileController(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
             ITokenService tokenService,
             RecordsContext context,
             SftpClient sftpClient
             )
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
             _config = config;
             _tokenService = tokenService;
             _context = context;
@@ -66,6 +61,7 @@ namespace UserOperations.Controllers
         }
         #region File
         [HttpGet("File")]
+        [SwaggerOperation(Description = "Return all files from sftp. If no parameters are passed return files from 'media', for loggined company")]
         public async Task<IEnumerable<string>> FileGet([FromQuery]string containerName = null, [FromQuery]string[] directoryNames = null, [FromQuery]string fileName = null)
         {
             string companyId = GetCompanyIdFromToken();
@@ -84,6 +80,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("File")]
+        [SwaggerOperation(Description = "Save file on sftp. Can take containerName in body or save to media container. Folder determined by company id in token")]
         public async Task<IEnumerable<string>> FilePost()
         {
             string companyId = GetCompanyIdFromToken();
@@ -112,6 +109,7 @@ namespace UserOperations.Controllers
         }
         
         [HttpPut("File")]
+        [SwaggerOperation(Description = "Remove old and save new file on sftp. Can take containerName in body or save to media container. Folder determined by company id in token")]
         public async Task<IEnumerable<string>> FilePut()
         {
             string companyId = GetCompanyIdFromToken();
@@ -143,6 +141,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("File")]
+        [SwaggerOperation(Description = "Remove file from sftp. Take containerName in params and filename. Or remove from media container. Folder determined by company id in token")]
         public async Task<IActionResult> FileDelete([FromQuery] string containerName = null, [FromQuery] string fileName = null)
         {
             string companyId = GetCompanyIdFromToken();
