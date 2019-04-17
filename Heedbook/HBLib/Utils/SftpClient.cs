@@ -42,7 +42,7 @@ namespace HBLib.Utils
         public async Task UploadAsync(String localPath, String remotePath, String fileName)
         {
             await ConnectToSftpAsync();
-            using (var fs = new FileStream(localPath, FileMode.Open))
+            using (var fs = new FileStream(localPath, FileMode.Open, FileAccess.Read))
             {
                 _client.BufferSize = 4 * 1024;
                 _client.ChangeDirectory(_sftpSettings.DestinationPath + remotePath);

@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
-using Microsoft.Extensions.DependencyInjection;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
 
@@ -15,162 +18,164 @@ namespace ExtractFramesFromVideo
     {
         private readonly SftpClient _client;
         private readonly INotificationHandler _handler;
-
         private readonly ElasticClient _log;
-
         private readonly IGenericRepository _repository;
-
+        private const string fileContainerName = "frames";
+        private readonly string _localVideoPath;
+        private readonly string _localFramesPath;
+        
         public FramesFromVideo(SftpClient client,
-            IServiceScopeFactory factory,
+            IGenericRepository repository,
             INotificationHandler handler,
-            ElasticClient log)
+            ElasticClient log,
+            string localVideoPath,
+            string localFramesPath)
         {
             _client = client;
-            _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
+            _repository = repository;
             _handler = handler;
             _log = log;
+            _localVideoPath = localVideoPath;
+            _localFramesPath = localFramesPath;
+
+            CreateTempFolders();
         }
 
-        public async Task Run(String videoBlobName)
+        public async Task Run(string videoBlobName)
         {
+            CleanTempFolders();
+            
             _log.Info("Function Extract Frames From Video Started");
-            var datePartForFrameName = videoBlobName.Split('_', '_')[1];
-
-            var timeGreFrame = DateTime.ParseExact(datePartForFrameName, "yyyyMMddHHmmss", null);
-            timeGreFrame = timeGreFrame.AddSeconds(2);
-
-            var start = videoBlobName.IndexOf('/') + 1;
-            var end = videoBlobName.IndexOf('_', start);
-            var applicUserId = videoBlobName.Substring(start, end - start);
-
             _log.Info("Write blob to memory stream");
-            using (var memoryStream = await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobName))
+ 
+            var targetLocalVideoPath = Path.Combine(_localVideoPath, Path.GetFileName(videoBlobName));
+            var targetVideoFileName = Path.GetFileNameWithoutExtension(targetLocalVideoPath);
+
+            var appUserId = targetVideoFileName.Split(("_"))[0];
+            var videoTimestampText = targetVideoFileName.Split(("_"))[1];
+            var videoTimeStamp = DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            videoTimeStamp = videoTimeStamp.AddSeconds(2);
+
+            using (var ftpDownloadStream = await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobName))
+                using (var file = File.Create(targetLocalVideoPath))
+                    file.Write(ftpDownloadStream.ToArray());
+
+            var filesToUpload = CutVideo(targetLocalVideoPath);
+
+            foreach (var fileName in filesToUpload.OrderBy(s => s).ToArray())
             {
-                // Configuration of ffmpeg process that will be created
-                var psi = new ProcessStartInfo("ffmpeg")
+                var newFileName = GenerateFrameFileName(appUserId, videoTimeStamp);
+                await _client.UploadAsync(fileName, fileContainerName + Path.DirectorySeparatorChar, newFileName);
+                await InsertNewFileFrameToDb(appUserId, newFileName, videoTimeStamp);
+                RaiseNewFrameEvent(newFileName);
+                
+                videoTimeStamp = videoTimeStamp.AddSeconds(3);
+            }
+            
+            CleanTempFolders();
+            _log.Info("Function Extract Frames From Video finished");
+        }
+
+        private void RaiseNewFrameEvent(string filename)
+        {
+            var message = new FaceAnalyzeRun
+            {
+                Path = $"{fileContainerName}{Path.PathSeparator}{filename}"
+            };
+
+            _handler.EventRaised(message);
+        }
+
+        private async Task InsertNewFileFrameToDb(string appUserId, string filename, DateTime timeStampForFrame)
+        {
+            try
+            {
+                var fileFrame = new FileFrame
                 {
-                    RedirectStandardInput = true,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    Arguments = "-hide_banner -i pipe:0 -f image2 -vf fps=1/3 -update 1 pipe:1"
+                    ApplicationUserId = Guid.Parse(appUserId),
+                    FaceLength = 0,
+                    FileContainer = "frames",
+                    FileExist = true,
+                    FileName = filename,
+                    IsFacePresent = false,
+                    StatusId = 1,
+                    StatusNNId = 1,
+                    Time = new DateTime(timeStampForFrame.Year,
+                        timeStampForFrame.Month,
+                        timeStampForFrame.Day,
+                        timeStampForFrame.Hour,
+                        timeStampForFrame.Minute,
+                        timeStampForFrame.Second)
                 };
 
-                // Use configuration of process and run it
-                var process = new Process {StartInfo = psi};
-                process.Start();
-
-                // Write to StdIn(Async)
-                var inputTask = Task.Run(() =>
-                {
-                    var rawToProc = process.StandardInput;
-                    rawToProc.BaseStream.Write(memoryStream.ToArray(), 0, memoryStream.ToArray().Length);
-                    process.StandardInput.Close();
-                });
-
-                // START BLOCK Write Stdout of ffmpeg to byte array(ffmpegOut)
-
-                var baseStream = process.StandardOutput.BaseStream;
-                Byte[] ffmpegOut;
-
-                var lastRead = 0;
-                using (var ms = new MemoryStream())
-                {
-                    // to do: 4096 ? Answer: Count of bytes in iteration. We can use any number
-                    var buffer = new Byte[4096];
-                    do
-                    {
-                        lastRead = baseStream.Read(buffer, 0, buffer.Length);
-                        ms.Write(buffer, 0, lastRead);
-
-                        //Console.WriteLine("LastRead ----- " + lastRead +  "Buffer Lenght ----- " + buffer.Length);
-                    } while (lastRead > 0);
-
-                    ffmpegOut = ms.ToArray();
-                    Console.WriteLine("ffmpegOut.Length" + ffmpegOut.Length);
-                }
-                // END BLOCK    
-
-                var streamForUpload = new MemoryStream();
-                Int64 ffmpegOutLen = ffmpegOut.Length;
-                var isUpload = false;
-                var blobNamePrefix = 0;
-
-                _log.Info("Algorithm for read ffmpeg output, detect jpeg and write jpeg to blobstorage");
-                for (var i = 0; i < ffmpegOutLen - 3; i++)
-                    try
-                    {
-                        _log.Info("Detect jpeg bytes start file signature");
-                        if (ffmpegOut[i] == 255 && ffmpegOut[i + 1] == 216)
-                        {
-                            isUpload = true;
-                            blobNamePrefix++;
-                        }
-
-                        // limit of frames from 15 second video(5 frames)
-                        if (i < ffmpegOutLen - 1)
-                            //if (BlobNamePrefix < 6)
-                            if (ffmpegOut[i + 2] == 255 && ffmpegOut[i + 3] == 217)
-                            {
-                                var timeGreFrameComplete = timeGreFrame.Year + timeGreFrame.Month.ToString("D2") +
-                                                           timeGreFrame.Day.ToString("D2") +
-                                                           timeGreFrame.Hour.ToString("D2") +
-                                                           timeGreFrame.Minute.ToString("D2") +
-                                                           timeGreFrame.Second.ToString("D2");
-
-                                var filename = $"{applicUserId}_{timeGreFrameComplete}.jpg";
-                                isUpload = false;
-
-                                Console.WriteLine("!!!Stream upload length ---- " + streamForUpload.Length);
-                                streamForUpload.Seek(0, SeekOrigin.Begin);
-
-
-                                // START TEST WORK WITH STORAGE
-                                await _client.UploadAsMemoryStreamAsync(streamForUpload, "frames/", filename);
-                                Console.WriteLine(filename);
-                                // END TEST WORK WITH STORAGE
-
-                                streamForUpload.SetLength(0);
-
-
-                                // START CODE POSTGRESQL
-                                var fileFrame = new FileFrame
-                                {
-                                    ApplicationUserId = Guid.Parse(applicUserId),
-                                    FaceLength = 0,
-                                    FileContainer = "frames",
-                                    FileExist = true,
-                                    FileName = filename,
-                                    IsFacePresent = false,
-                                    StatusId = 1,
-                                    StatusNNId = 1,
-                                    Time = new DateTime(timeGreFrame.Year, timeGreFrame.Month, timeGreFrame.Day,
-                                        timeGreFrame.Hour, timeGreFrame.Minute, timeGreFrame.Second)
-                                };
-                                timeGreFrame = timeGreFrame.AddSeconds(3);
-
-                                await _repository.CreateAsync(fileFrame);
-                                _repository.Save();
-                                // END CODE POSTGRESQL
-                                var message = new FaceAnalyzeRun
-                                {
-                                    Path = $"frames/{filename}"
-                                };
-                                _handler.EventRaised(message);
-                            }
-
-                        // Write to stream jpeg content between start and end file signature
-                        if (isUpload) streamForUpload.WriteByte(ffmpegOut[i]);
-                    }
-                    catch (Exception e)
-                    {
-                        _log.Fatal($"Exception occured {e}");
-                    }
-                // END BLOCK
-
-                Task.WaitAll(inputTask);
-                process.WaitForExit();
-                _log.Info("Function Extract Frames From Video finished");
+                await _repository.CreateAsync(fileFrame);
+                await _repository.SaveAsync();
             }
+            catch ( Exception ex )
+            {
+                _log.Error("Exception was thrown while trying to access to DB: " + ex.Message, ex);
+            }
+        }
+        
+        
+        private void CreateTempFolders()
+        {
+            if (!Directory.Exists(_localVideoPath))
+                Directory.CreateDirectory(_localVideoPath);
+
+            if (!Directory.Exists(_localFramesPath))
+                Directory.CreateDirectory(_localFramesPath);
+        }
+
+        private void CleanTempFolders()
+        {
+            foreach (var file in Directory.GetFiles(_localVideoPath))
+            {
+                File.Delete(file);
+            }
+            
+            foreach (var file in Directory.GetFiles(_localFramesPath))
+            {
+                File.Delete(file);
+            }
+        }
+        
+        private string[] CutVideo(string localVideoFilePath, int quality = 10)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(localVideoFilePath);
+            
+            var psi = new ProcessStartInfo("ffmpeg")
+            {
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                Arguments = $"-hide_banner -i {localVideoFilePath} -r 1/3 -q:v {quality} " +
+                            $"-f image2 {Path.Combine(_localFramesPath, fileName)}_%05d.jpg"
+            };
+
+            var process = new Process()
+            {
+                StartInfo = psi
+            };
+            
+            process.Start();
+            process.WaitForExit();
+            
+            return Directory.GetFiles(_localFramesPath, $"{fileName}*.jpg");
+        }
+
+        private string GenerateFrameFileName(string appUserId, DateTime timeStampForFrame)
+        {
+            var finalTimeStampString =
+                timeStampForFrame.Year +
+                timeStampForFrame.Month.ToString("D2") +
+                timeStampForFrame.Day.ToString("D2") +
+                timeStampForFrame.Hour.ToString("D2") +
+                timeStampForFrame.Minute.ToString("D2") +
+                timeStampForFrame.Second.ToString("D2");
+
+            return $"{appUserId}_{finalTimeStampString}.jpg";
         }
     }
 }
