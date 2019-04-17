@@ -157,39 +157,61 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("PhraseLib")]
-        public IEnumerable<Phrase> PhraseGet([FromQuery] Guid companyId)
+        public IActionResult PhraseGet([FromQuery] Guid? companyId, [FromHeader] string Authorization)
         {
-            if (companyId == null)
+            try
             {
-                return _context.Phrases.Where(p => p.PhraseText != null);
+                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var companyIdUser = Guid.Parse(userClaims["companyId"]);
+                if (companyId != companyIdUser && companyId != null) return BadRequest("User has no permission");
+                return Ok(_context.PhraseCompanys
+                        .Include(p => p.Phrase)
+                        .Where(p => p.CompanyId == companyIdUser && p.Phrase.PhraseText != null).Select(p => p.Phrase).ToList());
             }
-            else
+            catch (Exception e)
             {
-                return _context.PhraseCompanys
-                    .Include(p => p.Phrase)
-                    .Where(p => p.Phrase.PhraseText != null && p.PhraseCompanyId == companyId)
-                    .Select(p => p.Phrase);
+                return BadRequest(e.ToString());
             }
         }
 
         [HttpPost("PhraseLib")]
-        public Phrase PhrasePost([FromBody] Phrase message)
+        public IActionResult PhrasePost([FromBody] Phrase message, [FromHeader] string Authorization)
         {
-            _context.Add(message);
-            _context.SaveChanges();
-            return message;
+            try
+            {
+                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var companyId = Guid.Parse(userClaims["companyId"]);
+
+                _context.Phrases.Add(message);
+                var phraseCompany = new PhraseCompany();
+                phraseCompany.CompanyId = companyId;
+                phraseCompany.PhraseCompanyId = Guid.NewGuid();
+                phraseCompany.PhraseId = message.PhraseId;
+                _context.PhraseCompanys.Add(phraseCompany);
+                _context.SaveChanges();
+                return Ok(message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         [HttpPut("PhraseLib")]
-        public Phrase PhrasePut([FromBody] Phrase message)
+        public IActionResult PhrasePut([FromBody] Phrase message, [FromHeader] string Authorization)
         {
-            var phrase = _context.Phrases.Where(p => p.PhraseId == message.PhraseId).FirstOrDefault();
-            if (phrase == null)
+            try
             {
-                _context.Add(message);
-                _context.SaveChanges();
-            }
-            else
+            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var companyId = Guid.Parse(userClaims["companyId"]);
+
+            var phrase = _context.PhraseCompanys
+                .Include(p => p.Phrase)
+                .Where(p => p.Phrase.PhraseId == message.PhraseId && p.CompanyId == companyId)
+                .Select(p => p.Phrase)
+                .FirstOrDefault();
+
+            if (phrase != null)
             {
                 foreach(var p in typeof(ApplicationUser).GetProperties()) 
                 {
@@ -197,29 +219,51 @@ namespace UserOperations.Controllers
                         p.SetValue(phrase, p.GetValue(message, null), null);
                 }
                 _context.SaveChanges();
+                return Ok(phrase);
             }
-            return phrase;
+            else
+            {
+                return BadRequest("No permission for changing phrase")
+            }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+            
         }
 
         [HttpDelete("PhraseLib")]
-        public IActionResult PhraseDelete([FromQuery] Guid phraseId)
+        public IActionResult PhraseDelete([FromQuery] Guid phraseId, [FromHeader] string Authorization)
         {
-           var phrase =  _context.Phrases.Where(p => p.PhraseId == phraseId).FirstOrDefault();
-           _context.Remove(phrase);
-           _context.SaveChanges();
-           
-            return Ok();
+            try
+            {
+                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var companyId = Guid.Parse(userClaims["companyId"]);
+
+                var phrase = _context.PhraseCompanys
+                    .Include(p => p.Phrase)
+                    .Where(p => p.Phrase.PhraseId == phraseId && p.CompanyId == companyId).FirstOrDefault();
+                _context.Remove(phrase);
+                _context.SaveChanges();
+            
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         [HttpGet("CompanyPhrase")]
-        public List<Guid> CompanyPhraseGet([FromQuery(Name = "companyId")] List<Guid> companyIds)
+        public List<Guid> CompanyPhraseGet([FromQuery(Name = "companyId")] List<Guid> companyIds, [FromHeader] string Authorization)
         {
             var companyPhrase = _context.PhraseCompanys.Where(p => companyIds.Contains((Guid) p.CompanyId));
             return companyPhrase.Select(p => (Guid) p.PhraseId).ToList();
         }  
 
         [HttpPost("CompanyPhrase")]
-        public IActionResult CompanyPhraseGet([FromQuery(Name = "companyId")] List<Guid> companyIds, [FromQuery] Guid phraseId)
+        public IActionResult CompanyPhraseGet([FromQuery(Name = "companyId")] List<Guid> companyIds, [FromQuery] Guid phraseId, [FromHeader] string Authorization)
         {
             try
             {
@@ -242,10 +286,13 @@ namespace UserOperations.Controllers
         }  
 
         [HttpDelete("CompanyPhrase")]
-        public IActionResult CompanyPhraseDelete([FromQuery] Guid companyId, [FromQuery] Guid phraseId)
+        public IActionResult CompanyPhraseDelete([FromQuery] Guid phraseId, [FromHeader] string Authorization)
         {
             try
             {
+                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var companyId = Guid.Parse(userClaims["companyId"]);
+
                 var phrase = _context.PhraseCompanys.Where(p => p.CompanyId == companyId && p.PhraseId == phraseId);
                 if (phrase != null)
                 {
