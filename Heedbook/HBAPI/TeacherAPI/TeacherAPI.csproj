@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HBData\HBData.csproj" />
+    <ProjectReference Include="..\..\HBData\HBData.csproj" />
   </ItemGroup>
 
 </Project>
