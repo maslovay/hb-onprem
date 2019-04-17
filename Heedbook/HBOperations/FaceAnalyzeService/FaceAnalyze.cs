@@ -47,12 +47,13 @@ namespace FaceAnalyzeService
                         var base64String = Convert.ToBase64String(byteArray);
 
                         var faceResult = await _client.GetFaceResult(base64String);
+                        _log.Info($"face result is {JsonConvert.SerializeObject(faceResult)}");
                         var fileName = localPath.Split('/').Last();
                         var fileFrame =
                             await _repository
                                .FindOneByConditionAsync<FileFrame>(entity => entity.FileName == fileName);
 
-                        if (fileFrame != null && faceResult.Any())
+                        if (fileFrame != null)
                         {
                             var frameEmotion = new FrameEmotion
                             {

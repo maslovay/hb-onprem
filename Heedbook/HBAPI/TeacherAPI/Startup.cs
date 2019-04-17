@@ -16,7 +16,8 @@ using Swashbuckle.AspNetCore.Swagger;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.HttpOverrides;
+
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -79,13 +80,13 @@ namespace TeacherAPI
            
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
+                c.RouteTemplate = "teacher/swagger/{documentName}/swagger.json";
             });
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
-                c.RoutePrefix = "api/swagger";
+                c.SwaggerEndpoint("/teacher/swagger/v1/swagger.json", "Sample API");
+                c.RoutePrefix = "teacher/swagger";
             });
             app.UseHttpsRedirection();
             app.UseMvc();

@@ -46,35 +46,6 @@ namespace TeacherAPI
             _context = context;
             _config = config;
         }
-        
-        [HttpGet("AddData")]
-        public IActionResult AddData()
-        {
-            var applicationUserId = Guid.Parse("f14505a6-f7cb-4814-8243-ccb0eb061c26");
-            var result = new List<FileFrame>();
-            var begTime = DateTime.UtcNow;
-            for (int i = 0; i < 200; i++)
-            {
-                var time = begTime.AddSeconds(3 * i);
-                result.Add(new FileFrame
-                {
-                    FileFrameId = Guid.NewGuid(),
-                    ApplicationUserId =  applicationUserId,
-                    FileExist =  true,
-                    Time =  time,
-                    FileName =  $"{applicationUserId}_{time.ToString("yyyyMMddHHmmss")}.jpg",
-                    FileContainer =  "frames",
-                    StatusId = 5,
-                    StatusNNId = 5,
-                    IsFacePresent = false,
-                    FaceLength =  0
-                });
-            }
-            _context.FileFrames.AddRange(result);
-            _context.SaveChanges();
-            return Ok();
-        }
-        
 
         [HttpGet("GetCompanyList")]     
         public IActionResult GetCompanyName([FromQuery(Name = "begTime")] string beg,
