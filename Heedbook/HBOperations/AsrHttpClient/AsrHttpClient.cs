@@ -18,8 +18,8 @@ namespace AsrHttpClient
         public async Task<List<AsrResult>> GetAsrResult(String filename)
         {
             var path = _asrSettings.Uri.EndsWith('/')
-                ? _asrSettings.Uri + filename
-                : _asrSettings.Uri + "/" + filename;
+                ? _asrSettings.Uri + "asr/audiorecognize/" + filename
+                : _asrSettings.Uri + "/" + "asr/audiorecognize/" + filename;
             var uri = new Uri(path);
             var client = new HttpClient();
             var response = await client.GetAsync(uri);
