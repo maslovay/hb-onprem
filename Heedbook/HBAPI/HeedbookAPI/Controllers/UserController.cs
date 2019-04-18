@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using System.Net.Http.Headers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -37,38 +38,35 @@ namespace UserOperations.Controllers
     [ApiController]
     public class UserController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
 
 
         public UserController(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context
             )
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
             _config = config;
             _loginService = loginService;
             _context = context;
         }        
         
         [HttpGet("User")]
-        public IEnumerable<ApplicationUser> UserGet([FromHeader] string Authorization)
+        [SwaggerOperation(Description = "Return all users for loggined company with role Ids")]
+        public IEnumerable<UserModel> UserGet([FromHeader] string Authorization)
         {
             var userClaims = _loginService.GetDataFromToken(Authorization);
             var companyId = Guid.Parse(userClaims["companyId"]);
-            var users = _context.ApplicationUsers.Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();
-            return users;
+            var users = _context.ApplicationUsers.Include(p => p.UserRoles).Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();
+            var result = users.Select(p => new UserModel(p));
+            return result;
         }
 
         [HttpPut("User")]
+        [SwaggerOperation(Description = "Edit user and return edited")]
         public IActionResult UserPut([FromBody] ApplicationUser message, [FromHeader] string Authorization)
         {
             try
@@ -86,7 +84,7 @@ namespace UserOperations.Controllers
                             p.SetValue(user, p.GetValue(message, null), null);
                     }
                     _context.SaveChanges();
-                    return Ok(user);
+                    return Ok(new UserModel(user));
                 }
                 else
                 {
@@ -100,6 +98,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("User")]
+        [SwaggerOperation(Description = "Create new user with role Manager in loggined company (taked from token)/ Return new user")]
         public async Task<IActionResult> UserPostAsync([FromBody] PostUser message, [FromHeader] string Authorization)
         {
             try
@@ -107,16 +106,26 @@ namespace UserOperations.Controllers
                 var userClaims = _loginService.GetDataFromToken(Authorization);
                 var user = new ApplicationUser { 
                     UserName = message.Email,
+                    NormalizedUserName = message.Email.ToUpper(),
                     Email = message.Email,
+                    NormalizedEmail = message.Email.ToUpper(),
                     Id = Guid.NewGuid(),
                     CompanyId = Guid.Parse(userClaims["companyId"]),
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
+                    PasswordHash =  _loginService.GeneratePasswordHash(message.Password),
                     StatusId = 3,
                     EmpoyeeId = message.EmployeeId
-                };
-                var result = await _userManager.CreateAsync(user, message.Password);
-                await _userManager.AddToRoleAsync(user, "Employee");
+                    };
+                _context.Add(user);
+
+                var userRole = new ApplicationUserRole()
+                    {
+                        UserId = user.Id,
+                        RoleId = _context.Roles.First(p => p.Name == "Manager").Id //Manager role
+                    };
+                _context.ApplicationUserRoles.Add(userRole);
+                _context.SaveChanges();
                 return Ok(user);
             }
             catch (Exception e)
@@ -126,6 +135,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("User")]
+        [SwaggerOperation(Description = "Delete user by Id if he hasnt any relations in DB or make status Disabled")]
         public IActionResult UserDelete([FromQuery] Guid applicationUserId, [FromHeader] string Authorization)
         {
             try
@@ -352,7 +362,7 @@ namespace UserOperations.Controllers
         public string EmployeeId;
     }
 
-    public class PutUser
+    public class UserModel
     {
         public Guid Id;
         public string FullName;
@@ -360,9 +370,22 @@ namespace UserOperations.Controllers
         public string EmployeeId;
         public string CreationDate;
         public string CompanyId;
-        public Int32 StatusId;
+        public Int32? StatusId;
         public string OneSignalId;
         public Guid? WorkerTypeId;
+        public List<string> RoleIds;
+        public UserModel(ApplicationUser user)
+        {
+            Id = user.Id;
+            FullName = user.FullName;
+            Avatar = user.Avatar;
+            EmployeeId = user.EmpoyeeId;
+            CreationDate = user.CreationDate.ToLongDateString();
+            CompanyId = user.CompanyId.ToString();
+            StatusId = user.StatusId;
+            OneSignalId = user.OneSignalId;
+            WorkerTypeId = user.WorkerTypeId;
+            RoleIds = user.UserRoles.Select(x=>x.RoleId.ToString()).ToList();
+        }
     }
-    
 }
