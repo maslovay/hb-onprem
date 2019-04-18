@@ -161,7 +161,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var companyIdUser = Guid.Parse(userClaims["companyId"]);
                 if (companyId != companyIdUser && companyId != null) return BadRequest("User has no permission");
                 return Ok(_context.PhraseCompanys
@@ -179,7 +179,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var companyId = Guid.Parse(userClaims["companyId"]);
 
                 _context.Phrases.Add(message);
@@ -202,7 +202,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var userClaims = _loginService.GetDataFromToken(Authorization);
             var companyId = Guid.Parse(userClaims["companyId"]);
 
             var phrase = _context.PhraseCompanys
@@ -223,7 +223,7 @@ namespace UserOperations.Controllers
             }
             else
             {
-                return BadRequest("No permission for changing phrase")
+                return BadRequest("No permission for changing phrase");
             }
             }
             catch (Exception e)
@@ -238,7 +238,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var companyId = Guid.Parse(userClaims["companyId"]);
 
                 var phrase = _context.PhraseCompanys
@@ -290,7 +290,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var companyId = Guid.Parse(userClaims["companyId"]);
 
                 var phrase = _context.PhraseCompanys.Where(p => p.CompanyId == companyId && p.PhraseId == phraseId);

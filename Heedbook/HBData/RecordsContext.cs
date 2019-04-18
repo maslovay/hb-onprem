@@ -18,7 +18,7 @@ namespace HBData
         public DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
         public DbSet<Campaign> Campaigns { get; set; }
         public DbSet<CampaignContent> CampaignContents { get; set; }
-        public DbSet<CampaignContentSession> CampaignContentSessions { get; set; }
+        public DbSet<SlideShowSession> SlideShowSessions { get; set; }
         public DbSet<CatalogueHint> CatalogueHints { get; set; }
         public DbSet<Content> Contents { get; set; }
         public DbSet<Company> Companys { get; set; }
