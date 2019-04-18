@@ -41,18 +41,18 @@ namespace UserOperations.Controllers
     public class CatalogueController : Controller
     {
         private readonly IConfiguration _config;
-        private readonly ITokenService _tokenService;
+        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
 
 
         public CatalogueController(
             IConfiguration config,
-            ITokenService tokenService,
+            ILoginService loginService,
             RecordsContext context
             )
         {
             _config = config;
-            _tokenService = tokenService;
+            _loginService = loginService;
             _context = context;
         }
         #region Catalogue

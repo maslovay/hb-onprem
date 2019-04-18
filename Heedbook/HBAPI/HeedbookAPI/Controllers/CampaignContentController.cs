@@ -22,28 +22,22 @@ namespace UserOperations.Controllers
     [ApiController]
     public class CampaignContentController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
-        private readonly ITokenService _tokenService;
+        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly string _containerName;
 
 
         public CampaignContentController(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
-            ITokenService tokenService,
+            ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient
             )
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
             _config = config;
-            _tokenService = tokenService;
+            _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
             _containerName = "content-screenshots";
@@ -233,7 +227,7 @@ namespace UserOperations.Controllers
             {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
                 string token = authToken.First();
-                var claims = _tokenService.GetDataFromToken(token);
+                var claims = _loginService.GetDataFromToken(token);
                 return Guid.Parse(claims["companyId"]);
             }
             catch

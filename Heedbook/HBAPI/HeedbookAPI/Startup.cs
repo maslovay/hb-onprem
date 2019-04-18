@@ -75,7 +75,7 @@ namespace UserOperations
             })
             .AddEntityFrameworkStores<RecordsContext>();
             
-            services.AddScoped(typeof(ITokenService), typeof(TokenService));
+            services.AddScoped(typeof(ILoginService), typeof(LoginService));
 
               services.AddSwaggerGen(c =>
             {
@@ -86,7 +86,7 @@ namespace UserOperations
                     Version = "v1"
                 });
             });
-            
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);

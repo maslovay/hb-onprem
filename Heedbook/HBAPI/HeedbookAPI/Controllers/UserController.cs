@@ -40,7 +40,7 @@ namespace UserOperations.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
-        private readonly ITokenService _tokenService;
+        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
 
 
@@ -48,21 +48,21 @@ namespace UserOperations.Controllers
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
-            ITokenService tokenService,
+            ILoginService loginService,
             RecordsContext context
             )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _config = config;
-            _tokenService = tokenService;
+            _loginService = loginService;
             _context = context;
         }        
         
         [HttpGet("User")]
         public IEnumerable<ApplicationUser> UserGet([FromHeader] string Authorization)
         {
-            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var userClaims = _loginService.GetDataFromToken(Authorization);
             var companyId = Guid.Parse(userClaims["companyId"]);
             var users = _context.ApplicationUsers.Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();
             return users;
@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var user = _context.ApplicationUsers
                     .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
@@ -104,7 +104,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var user = new ApplicationUser { 
                     UserName = message.Email,
                     Email = message.Email,
@@ -130,7 +130,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var user = _context.ApplicationUsers.Where(p => p.Id == applicationUserId && p.CompanyId == companyId).FirstOrDefault();
                  
@@ -272,7 +272,7 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
                                                 [FromHeader] string Authorization)
         {
-            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var userClaims = _loginService.GetDataFromToken(Authorization);
             var companyId = Guid.Parse(userClaims["companyId"]);
             var formatString = "yyyyMMdd";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
@@ -308,7 +308,7 @@ namespace UserOperations.Controllers
                                                         [FromHeader] string Authorization
                                                         )
         {
-            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var userClaims = _loginService.GetDataFromToken(Authorization);
             var companyId = Guid.Parse(userClaims["companyId"]);
             var formatString = "yyyyMMdd";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);

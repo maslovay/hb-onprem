@@ -15,28 +15,42 @@ using Newtonsoft.Json;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
+using System.Security.Cryptography;
 
 namespace UserOperations.Services
 {
-    public class TokenService : ITokenService
+    public class LoginService : ILoginService
     {
         private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
         private readonly RecordsContext _context;
         
-        public TokenService(IGenericRepository repository, IConfiguration config, RecordsContext context)
+        public LoginService(IGenericRepository repository, IConfiguration config, RecordsContext context)
         {
             _repository = repository;
             _config = config;
             _context = context;
         }
 
-        public string CreateTokenForUser(string userEmail, bool remember)
+        public string GeneratePasswordHash(string password)
+        {
+            var crypt = new SHA256Managed();
+            var passwordHashSalt = _config["Tokens:Hash_salt"];
+            byte[] crypto = crypt.ComputeHash(Encoding.ASCII.GetBytes(password + passwordHashSalt));
+            return System.Convert.ToBase64String(crypto);
+        }
+
+        public bool CheckUserLogin(string login, string password)
+        {
+            login = login.ToUpper();
+            password = GeneratePasswordHash(password);
+            return _context.ApplicationUsers.Count(p => p.NormalizedEmail == login && p.PasswordHash == password) == 1;
+        }
+
+        public string CreateTokenForUser(ApplicationUser user, bool remember)
         {
             try
             {
-                userEmail = userEmail.ToUpper();
-                var user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == userEmail).FirstOrDefault();
                 var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
                 var role = roleInfo.Role.Name;            
 

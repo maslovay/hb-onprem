@@ -41,20 +41,20 @@ namespace UserOperations.Controllers
     public class FileController : Controller
     {
         private readonly IConfiguration _config;
-        private readonly ITokenService _tokenService;
+        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly string _containerName;
 
         public FileController(
             IConfiguration config,
-            ITokenService tokenService,
+            ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient
             )
         {
             _config = config;
-            _tokenService = tokenService;
+            _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
             _containerName = "media";
@@ -158,7 +158,7 @@ namespace UserOperations.Controllers
             {
             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
                 string token = authToken.First();
-                var claims = _tokenService.GetDataFromToken(token);
+                var claims = _loginService.GetDataFromToken(token);
                 return claims["companyId"];
             }
             catch
