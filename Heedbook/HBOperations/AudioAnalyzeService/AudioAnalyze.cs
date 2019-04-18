@@ -10,18 +10,19 @@ namespace AudioAnalyzeService
 {
     public class AudioAnalyze
     {
-        private readonly GoogleConnector _googleConnector;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
+        private readonly AsrHttpClient.AsrHttpClient _asrHttpClient; 
 
         public AudioAnalyze(GoogleConnector googleConnector,
             IServiceScopeFactory factory,
-            ElasticClient log
+            ElasticClient log,
+            AsrHttpClient.AsrHttpClient asrHttpClient
         )
         {
-            _googleConnector = googleConnector;
             _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
             _log = log;
+            _asrHttpClient = asrHttpClient;
         }
 
         public async Task Run(String path)
@@ -48,6 +49,7 @@ namespace AudioAnalyzeService
                         EndTime = dialogue.EndTime,
                         Duration = 15.0
                     };
+                    await _asrHttpClient.StartAudioAnalyze();
                     await _repository.CreateAsync(fileAudio);
                     _repository.Save();
                 }

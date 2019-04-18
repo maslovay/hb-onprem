@@ -15,7 +15,7 @@ namespace AsrHttpClient
             _asrSettings = asrSettings;
         }
 
-        public async Task<List<AsrResult>> GetAsrResult(String filename)
+        public async Task<List<AsrResult>> StartAudioAnalyze(String filename)
         {
             var path = _asrSettings.Uri.EndsWith('/')
                 ? _asrSettings.Uri + "asr/audiorecognize/" + filename

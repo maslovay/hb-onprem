@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using AsrHttpClient;
 using AudioAnalyzeScheduler.Model;
 using HBData.Models;
 using HBData.Repository;
@@ -19,20 +20,17 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 {
     public class CheckAudioRecognizeStatusJob : IJob
     {
-        private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
         private readonly ElasticClient _log;
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IGenericRepository _repository;
 
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
-            AsrHttpClient.AsrHttpClient asrHttpClient,
             INotificationPublisher notificationPublisher,
             ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _notificationPublisher = notificationPublisher;
             _log = log;
-            _asrHttpClient = asrHttpClient;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -44,7 +42,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             {
                 return Task.Run(async () =>
                 {
-                    var asrResults = await _asrHttpClient.GetAsrResult(item.FileName);
+                    var asrResults = new List<AsrResult>();
                     Console.WriteLine($"{asrResults}");
                     var differenceHour = (DateTime.Now - item.CreationTime).Hours;
                     if (!asrResults.Any() && differenceHour >= 1)
