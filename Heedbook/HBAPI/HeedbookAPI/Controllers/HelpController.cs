@@ -42,7 +42,7 @@ namespace UserOperations.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
-        private readonly ITokenService _tokenService;
+        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
 
 
@@ -50,14 +50,14 @@ namespace UserOperations.Controllers
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
-            ITokenService tokenService,
+            ILoginService loginService,
             RecordsContext context
             )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _config = config;
-            _tokenService = tokenService;
+            _loginService = loginService;
             _context = context;
         }
 
