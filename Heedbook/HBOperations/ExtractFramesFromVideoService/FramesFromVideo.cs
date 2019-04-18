@@ -21,26 +21,23 @@ namespace ExtractFramesFromVideo
         private readonly INotificationHandler _handler;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
-        private const string fileContainerName = "frames";
-        private readonly string _localVideoPath;
-        private readonly string _localFramesPath;
-        private byte[] jpegBegin = {0xFF, 0xD8};
-        private byte[] jpegEnd = {0xFF, 0xD9};
-        private const int bufferSize = 4096;
+        private const string FileContainerName = "frames";
+        private readonly FFMpegSettings _ffMpegSettings;
+        private byte[] _jpegBegin = {0xFF, 0xD8};
+        private byte[] _jpegEnd = {0xFF, 0xD9};
+        private const int BufferSize = 4096;
         
         public FramesFromVideo(SftpClient client,
             IGenericRepository repository,
             INotificationHandler handler,
             ElasticClient log,
-            string localVideoPath,
-            string localFramesPath)
+            FFMpegSettings ffMpegSettings)
         {
             _client = client;
             _repository = repository;
             _handler = handler;
             _log = log;
-            _localVideoPath = localVideoPath;
-            _localFramesPath = localFramesPath;
+            _ffMpegSettings = ffMpegSettings;
         }
 
         public async Task Run(string videoBlobName)
@@ -48,7 +45,7 @@ namespace ExtractFramesFromVideo
             _log.Info("Function Extract Frames From Video Started");
             _log.Info("Write blob to memory stream");
  
-            var targetLocalVideoPath = Path.Combine(_localVideoPath, Path.GetFileName(videoBlobName));
+            var targetLocalVideoPath = Path.Combine(_ffMpegSettings.LocalVideoPath, Path.GetFileName(videoBlobName));
             var targetVideoFileName = Path.GetFileNameWithoutExtension(targetLocalVideoPath);
 
             var appUserId = targetVideoFileName.Split(("_"))[0];
@@ -56,7 +53,7 @@ namespace ExtractFramesFromVideo
             var videoTimeStamp = DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
             videoTimeStamp = videoTimeStamp.AddSeconds(2);
      
-            using (var ftpDownloadStream = await _client.DownloadFromFtpAsMemoryStreamAsync("videos/" + videoBlobName))
+            using (var ftpDownloadStream = await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobName))
             {
                 CutVideo(ftpDownloadStream, new MemoryStream(), videoTimeStamp, appUserId, 5 );                
             }
@@ -68,7 +65,7 @@ namespace ExtractFramesFromVideo
         {
             var message = new FaceAnalyzeRun
             {
-                Path = $"{fileContainerName}{Path.PathSeparator}{filename}"
+                Path = $"{FileContainerName}{Path.PathSeparator}{filename}"
             };
 
             _handler.EventRaised(message);
@@ -108,21 +105,21 @@ namespace ExtractFramesFromVideo
         
         private void CreateTempFolders()
         {
-            if (!Directory.Exists(_localVideoPath))
-                Directory.CreateDirectory(_localVideoPath);
+            if (!Directory.Exists(_ffMpegSettings.LocalVideoPath))
+                Directory.CreateDirectory(_ffMpegSettings.LocalVideoPath);
 
-            if (!Directory.Exists(_localFramesPath))
-                Directory.CreateDirectory(_localFramesPath);
+            if (!Directory.Exists(_ffMpegSettings.LocalFramesPath))
+                Directory.CreateDirectory(_ffMpegSettings.LocalFramesPath);
         }
 
         private void CleanTempFolders()
         {
-            foreach (var file in Directory.GetFiles(_localVideoPath))
+            foreach (var file in Directory.GetFiles(_ffMpegSettings.LocalVideoPath))
             {
                 File.Delete(file);
             }
             
-            foreach (var file in Directory.GetFiles(_localFramesPath))
+            foreach (var file in Directory.GetFiles(_ffMpegSettings.LocalFramesPath))
             {
                 File.Delete(file);
             }
@@ -156,10 +153,10 @@ namespace ExtractFramesFromVideo
                 var tt = sourceStream.ToArray();
                 sourceStream.Position = 0;
                 
-                sourceStream.Write(tt, 0, tt.Length);
+                inputStream.Write(tt, 0, tt.Length);
             }
 
-            using (var outputStream = new BufferedStream(process.StandardOutput.BaseStream, bufferSize))
+            using (var outputStream = new BufferedStream(process.StandardOutput.BaseStream, BufferSize))
             {
                 using (BinaryReader br = new BinaryReader(outputStream, Encoding.ASCII))
                 {
@@ -173,7 +170,7 @@ namespace ExtractFramesFromVideo
                         if (len == 0)
                             break;
                         
-                        while (shortBuffer[0] != jpegBegin[0] && shortBuffer[1] != jpegBegin[1]) 
+                        while (shortBuffer[0] != _jpegBegin[0] && shortBuffer[1] != _jpegBegin[1]) 
                             continue;
 
                         uploadStream.Flush();
@@ -185,7 +182,7 @@ namespace ExtractFramesFromVideo
                         {
                             len = br.Read(shortBuffer);
                             uploadStream.Write(shortBuffer);
-                        } while (shortBuffer[0] != jpegEnd[0] && shortBuffer[1] != jpegEnd[1] && len > 0);
+                        } while (shortBuffer[0] != _jpegEnd[0] && shortBuffer[1] != _jpegEnd[1] && len > 0);
                         
                         if (uploadStream.Length > 0)
                             await _client.UploadAsMemoryStreamAsync(uploadStream, "videos/",
