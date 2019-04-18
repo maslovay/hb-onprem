@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -126,6 +127,28 @@ namespace HBLib.Utils
         }
 
         /// <summary>
+        ///     Download files to local disk.
+        /// </summary>
+        /// <param name="remotePath"></param>
+        /// <returns></returns>
+        public async Task<String> DownloadFromFtpToLocalDiskAsync(String remotePath, string pattern, String localPath = null)
+        {
+            await ConnectToSftpAsync();
+            Console.WriteLine("Successfully connected");
+            var filename = remotePath.Split('/').Last();
+
+            Console.WriteLine(localPath == null);
+            localPath = localPath == null ? localPath = _sftpSettings.DownloadPath + filename : localPath + filename;
+            Console.WriteLine($"{localPath}, {remotePath}");
+            using (var fs = File.OpenWrite(localPath))
+            {
+                await Task.Run(() => _client.DownloadFile(remotePath, fs));
+            }
+
+            return localPath;
+        }
+        
+        /// <summary>
         ///     Check file exists on server
         /// </summary>
         /// <param name="path">Specified directory + filename</param>
@@ -144,7 +167,30 @@ namespace HBLib.Utils
         public async Task DeleteFileIfExistsAsync(String path)
         {
             await ConnectToSftpAsync();
-            if (_client.Exists(path)) await Task.Run(() => _client.DeleteFile(path));
+            if (_client.Exists(path)) 
+                await Task.Run(() => _client.DeleteFile(path));
+        }
+
+        /// <summary>
+        /// Lists all files in a directory using a pattern
+        /// </summary>
+        /// <param name="path">dir path in FTP</param>
+        /// <param name="patternToFind">pattern for filename</param>
+        /// <returns></returns>
+        public async Task<ICollection<string>> ListDirectoryFiles(string path, string patternToFind = null)
+        {
+            var result = new List<string>();
+            await ConnectToSftpAsync();
+
+            path = _sftpSettings.DestinationPath + path;
+
+            if (!_client.Exists(path))
+                return result;
+
+            if (patternToFind != null)
+                return _client.ListDirectory(path).Where(f => !f.IsDirectory && f.Name.Contains(patternToFind)).Select(f => f.Name).ToList();
+            else
+                return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();          
         }
     }
 }
