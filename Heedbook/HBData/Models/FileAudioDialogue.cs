@@ -67,5 +67,11 @@ namespace HBData.Models
         ///     Audio duration
         /// </summary>
         public Double? Duration { get; set; }
+
+        /// <summary>
+        ///     Result of speech recognition
+        /// </summary>
+        public string STTResult {get; set;}
+
     }
 }
