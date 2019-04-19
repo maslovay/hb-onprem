@@ -123,6 +123,35 @@ namespace UserOperations.Services
             }
         }
 
+           // <summary>
+        /// Parse JWT token 
+        /// </summary>
+        /// <param name="token">JWT token in request</param>
+        /// <returns></returns>
+        public bool GetDataFromToken(string token, out Dictionary<string, string> claims, string sign = null)
+        {
+            claims = null;
+            if (sign == "" || sign == null)
+                sign = _config["Tokens:Key"];
+            try
+            {
+                
+                var pureToken = token.Split(' ')[1];
+                if (CheckToken(pureToken, sign))
+                {
+                    var jwt = new JwtSecurityToken(pureToken);                
+                    claims = jwt.Payload.ToDictionary(key => key.Key.ToString(), value => value.Value.ToString());
+                    return true;
+                }
+                else
+                    return false;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         /// Validate token function
         /// </summary>

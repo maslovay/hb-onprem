@@ -27,6 +27,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly string _containerName;
+        private Dictionary<string, string> userClaims;
 
 
         public CampaignContentController(
@@ -43,23 +44,32 @@ namespace UserOperations.Controllers
             _containerName = "content-screenshots";
         }
         #region Campaign
+          [HttpGet("Test")]
+        [SwaggerOperation(Description = "Return all camapigns for loggined company with content relations")]
+        public IActionResult Test()
+        {
+           
+            return Ok("Its working");
+        }
+
         [HttpGet("Campaign")]
         [SwaggerOperation(Description = "Return all camapigns for loggined company with content relations")]
-        public IEnumerable<Campaign> CampaignGet()
-        {             
-            Guid? companyId = GetCompanyIdFromToken();
-            if (companyId == null) return null;
-
+        public IActionResult CampaignGet([FromHeader] string Authorization)
+        {
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");             
+            var companyId = Guid.Parse(userClaims["companyId"]);
             var campaigns = _context.Campaigns.Include(x => x.CampaignContents).Where(x=>x.CompanyId == companyId).ToList();
-            return campaigns;
+            return Ok(campaigns);
         }
 
         [HttpPost("Campaign")]
         [SwaggerOperation(Description = "Create new campaign with content relations")]
-        public Campaign CampaignPost([FromBody] CampaignModel model)
+        public IActionResult CampaignPost([FromBody] CampaignModel model, [FromHeader] string Authorization)
         {
-            Guid? companyId = GetCompanyIdFromToken();
-            if (companyId == null) return null;
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");             
+            var companyId = Guid.Parse(userClaims["companyId"]);
 
             Campaign campaign = model.Campaign;
             campaign.CompanyId = (Guid)companyId;
@@ -74,14 +84,15 @@ namespace UserOperations.Controllers
                 _context.Add(campCont);
             }
             _context.SaveChanges();
-            return campaign;
+            return Ok(campaign);
         }
 
         [HttpPut("Campaign")]
         [SwaggerOperation(Description = "Edit existing campaign. Remove all content relations and create new")]
-        public Campaign CampaignPut([FromBody] CampaignModel model)
+        public IActionResult CampaignPut([FromBody] CampaignModel model, [FromHeader] string Authorization)
         {
-             if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
+             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");           
                 Campaign modelCampaign = model.Campaign;
                 var campaignEntity = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == modelCampaign.CampaignId).FirstOrDefault();
                 if (campaignEntity == null)
@@ -107,14 +118,15 @@ namespace UserOperations.Controllers
                     }
                     _context.SaveChanges();
                 }
-                return campaignEntity;
+                return Ok(campaignEntity);
         }
 
         [HttpDelete("Campaign")]
         [SwaggerOperation(Description = "Set camapign status Inactive and delete all content relations for this campaign")]
-        public IActionResult CampaignDelete([FromQuery] Guid campaignId)
+        public IActionResult CampaignDelete([FromQuery] Guid campaignId, [FromHeader] string Authorization)
         {
-          if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return BadRequest("Token error");
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");  
                 var campaign = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == campaignId).FirstOrDefault();
                 if (campaign != null)
                 {
@@ -134,10 +146,11 @@ namespace UserOperations.Controllers
         #region Content
         [HttpGet("Content")]
         [SwaggerOperation(Description = "Get all content for loggined company with screenshot url links")]
-        public async Task<IEnumerable<ContentModel>> ContentGet()
+        public async Task<IActionResult> ContentGet([FromHeader] string Authorization)
         {
-            Guid? companyId = GetCompanyIdFromToken();
-            if (companyId == null) return null; 
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");             
+            var companyId = Guid.Parse(userClaims["companyId"]);
             
             var contents = _context.Contents.Where(x => x.CompanyId == companyId).ToList();
             var result = new List<ContentModel>();
@@ -146,15 +159,16 @@ namespace UserOperations.Controllers
                 var screenshotLink = await _sftpClient.GetFileUrl(_containerName + "/" + c.ContentId.ToString() + ".png");
                 result.Add(new ContentModel(c, screenshotLink));
             }
-            return result;
+            return Ok(result);
         }
 
         [HttpPost("Content")]
         [SwaggerOperation(Description = "Create new content and save screenshot on sftp server")]
-        public async Task<ContentModel> ContentPost([FromBody] ContentModel model)
+        public async Task<IActionResult> ContentPost([FromBody] ContentModel model, [FromHeader] string Authorization)
         {
-            Guid? companyId = GetCompanyIdFromToken();
-            if (companyId == null) return null; 
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");             
+            var companyId = Guid.Parse(userClaims["companyId"]);
             
             Content content = model.Content;
             content.CompanyId = (Guid)companyId;
@@ -170,14 +184,15 @@ namespace UserOperations.Controllers
             await _sftpClient.UploadAsMemoryStreamAsync(blobStream, _containerName, content.ContentId.ToString() + ".png");
             model.Content = content;
             model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
-            return model;
+            return Ok(model);
         }
 
         [HttpPut("Content")]
         [SwaggerOperation(Description = "Edit existing content, remove screenshot from sftp and save new screenshot(if you pass it in json body)")]
-        public async Task<ContentModel> ContentPut([FromBody] ContentModel model)
+        public async Task<IActionResult> ContentPut([FromBody] ContentModel model, [FromHeader] string Authorization)
         {
-            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");         
             Content content = model.Content;
             Content contentEntity = _context.Contents.Where(p => p.ContentId == content.ContentId).FirstOrDefault();
             foreach (var p in typeof(Content).GetProperties())
@@ -197,14 +212,15 @@ namespace UserOperations.Controllers
             }
             model.Content = contentEntity;
             model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
-            return model;
+            return Ok(model);
         }
 
         [HttpDelete("Content")]
         [SwaggerOperation(Description = "DElete content and remove screenshot from sftp")]
-        public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId)
+        public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId, [FromHeader] string Authorization)
         {
-            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken))  return BadRequest("Token error");
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");             
             var contentEntity = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
             if (contentEntity != null)
             {
@@ -221,21 +237,7 @@ namespace UserOperations.Controllers
             return BadRequest("No such content");
         }
         #endregion
-        private Guid? GetCompanyIdFromToken()
-        {
-            try
-            {
-            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
-                string token = authToken.First();
-                var claims = _loginService.GetDataFromToken(token);
-                return Guid.Parse(claims["companyId"]);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
+        #region Helper classes
         public class CampaignModel
         {
             public CampaignModel(Campaign cmp, List<CampaignContent> campaignContents)
@@ -256,5 +258,6 @@ namespace UserOperations.Controllers
             public Content Content { get; set; }
             public string Screenshot { get; set; }
         }
+        #endregion
     }
 }
