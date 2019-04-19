@@ -34,13 +34,13 @@ namespace AudioAnalyzeService
                 {
                     var splitedString = path.Split('/');
                     var fileName = splitedString[1];
-                    var dialogueId = Path.GetFileNameWithoutExtension(fileName);
+                    var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
                     var dialogue =
                         await _repository.FindOneByConditionAsync<Dialogue>(item =>
-                            item.DialogueId == Guid.Parse(dialogueId));
+                            item.DialogueId == dialogueId);
                     var fileAudio = new FileAudioDialogue
                     {
-                        DialogueId = Guid.Parse(dialogueId),
+                        DialogueId = dialogueId,
                         CreationTime = DateTime.UtcNow,
                         FileName = fileName,
                         StatusId = 6,
@@ -49,7 +49,7 @@ namespace AudioAnalyzeService
                         EndTime = dialogue.EndTime,
                         Duration = 15.0
                     };
-                    await _asrHttpClient.StartAudioAnalyze();
+                    await _asrHttpClient.StartAudioRecognize(dialogueId);
                     await _repository.CreateAsync(fileAudio);
                     _repository.Save();
                 }
