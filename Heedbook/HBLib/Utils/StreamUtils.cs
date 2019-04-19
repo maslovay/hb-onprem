@@ -5,6 +5,11 @@ namespace HBLib.Utils
 {
     public static class StreamUtils
     {
+        /// <summary>
+        /// Optimized copying of stream contents
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dest"></param>
         public static void CopyToOptimized(this Stream src, Stream dest)
         {
             int size = (src.CanSeek) ? Math.Min((int)(src.Length - src.Position), 0x2000) : 0x2000;
@@ -16,12 +21,22 @@ namespace HBLib.Utils
                 dest.Write(buffer, 0, n);
             } while (n != 0);           
         }
-
+        
+        /// <summary>
+        /// Optimized copying of stream contents for MemoryStream
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dest"></param>
         public static void CopyToOptimized(this MemoryStream src, Stream dest)
         {
             dest.Write(src.GetBuffer(), (int)src.Position, (int)(src.Length - src.Position));
         }
 
+        /// <summary>
+        /// Optimized copying of stream contents to MemoryStream
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dest"></param>
         public static void CopyToOptimized(this Stream src, MemoryStream dest)
         {
             if (src.CanSeek)
@@ -37,6 +52,12 @@ namespace HBLib.Utils
                 src.CopyTo((Stream)dest);
         }
         
+        /// <summary>
+        /// Moves to a position to a position of a given sequence
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="sequence"></param>
+        /// <returns></returns>
         public static bool MoveToSequence(this Stream src, byte[] sequence)
         {
             if (sequence == null || sequence.Length == 0)
@@ -50,9 +71,16 @@ namespace HBLib.Utils
                 len = src.Read(buffer);
             } while (len > 0 && !buffer.isMatch(sequence, 0));
 
-            return len != 0; // Если достигли конца потока и ничего не нашли - false! 
+            return len != 0; // FALSE if we reached an end of stream without any results
         }
         
+        /// <summary>
+        /// Writes to a target stream until we will reach a given sequence
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="target"></param>
+        /// <param name="sequence"></param>
+        /// <returns></returns>
         public static bool WriteUntilSequence(this Stream src, Stream target, byte[] sequence)
         {
             if (sequence == null || sequence.Length == 0)
@@ -67,7 +95,7 @@ namespace HBLib.Utils
                 target.Write(buffer);
             } while (len > 0 && !buffer.isMatch(sequence, 0));
             
-            return !(len == 0 && !buffer.isMatch(sequence, 0)); // Если "уперлись" в конец потока и притом ничего не нашли - false! 
+            return !(len == 0 && !buffer.isMatch(sequence, 0)); // FALSE if we reached an end of stream without any results
         }
     }
 }
