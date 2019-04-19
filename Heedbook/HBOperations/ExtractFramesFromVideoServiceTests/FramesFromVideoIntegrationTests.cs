@@ -1,29 +1,23 @@
-﻿using System;
-using System.Configuration;
+﻿using Xunit;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ExtractFramesFromVideo;
-using ExtractFramesFromVideo.Handler;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Notifications.Base;
-using NUnit.Framework;
-using RabbitMqEventBus.Events;
 
 namespace ExtractFramesFromVideoService.Tests
 {
-    [TestFixture]
-    public class FramesFromVideoIntegrationTests
+    public class FramesFromVideoIntegrationTests : IDisposable
     {
         private SftpClient _ftpClient;
         private FramesFromVideo _framesFromVideo;
@@ -31,17 +25,15 @@ namespace ExtractFramesFromVideoService.Tests
         private RecordsContext _context;
         private IGenericRepository _repository;
         private ElasticClient _elasticClient;
+        private readonly FFMpegSettings _settings;
+        private readonly FFMpegWrapper _wrapper;
         private string appUserId;
         private string videoFileName;
         private DateTime minDate;
         private DateTime maxDate;
-        private string _localVideoPath;
-        private string _localFramesPath;
-        private string _localTempPath;
         private const string _testFilePattern = "testuser*.mkv";
         
-        [SetUp]
-        public void Init()
+        public FramesFromVideoIntegrationTests()
         {
             _config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.test.json")
@@ -77,39 +69,36 @@ namespace ExtractFramesFromVideoService.Tests
             });
             
             PrepareDirectories();
+
+            _settings = new FFMpegSettings()
+            {
+                FFMpegPath = _config.GetSection("FFMpegSettings")["FFMpegPath"],
+                LocalVideoPath = _config.GetSection("FFMpegSettings")["LocalVideoPath"]
+            };
+                
+            _wrapper = new FFMpegWrapper(_settings);
             
             _framesFromVideo = new FramesFromVideo(_ftpClient, 
                 _repository,
                 new NotificationHandler(), 
                 _elasticClient,
-                _localVideoPath,
-                _localFramesPath);
+                _settings,
+                _wrapper);
             
-         //   CleanDatabaseRecords();
+            CleanDatabaseRecords();
         }
 
         private async void PrepareDirectories()
         {
-            _localVideoPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                _config.GetSection("FFMpegSettings")["LocalVideoPath"]);
-            _localFramesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                _config.GetSection("FFMpegSettings")["LocalFramesPath"]);
-            _localTempPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                _config.GetSection("TestSettings")["LocalTempPath"]);
-            
             var rootDir  = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            var resourceVideos = Directory.GetFiles(Path.Combine(rootDir, "Resources"), "testuser*.mkv");
 
-            var testFiles = Directory.GetFiles(Path.Combine(rootDir, "Resources"), _testFilePattern);
-            if (testFiles.Length == 0)
-                throw new Exception("No test video file was presented!");
+            if (resourceVideos.Length == 0)
+                throw new Exception("No video for testing!");
+
+            videoFileName = Path.GetFileName(resourceVideos.First());
             
-            foreach (var file in testFiles)
-                File.Copy(file, _localVideoPath, true);
-
-            videoFileName = Path.GetFileName(testFiles.FirstOrDefault());
-
-            //await _ftpClient.UploadAsync(Path.Combine(_localVideoPath, videoFileName), "videos", videoFileName);
-            
+            await _ftpClient.UploadAsync(Path.Combine(rootDir, "Resources", videoFileName), "videos", videoFileName);
             appUserId = videoFileName.Split(("_"))[0];
 
             var videoTimestampText = videoFileName.Split(("_"))[1];
@@ -128,21 +117,22 @@ namespace ExtractFramesFromVideoService.Tests
             _repository.Save();
         }
 
-        [TearDown]
         public void Dispose()
         {
             CleanDatabaseRecords();
         }
 
-        [Test]
+        [Fact(DisplayName = "Video frames cutting test")]
         public async Task RunTest()
         {
-            await _framesFromVideo.Run(videoFileName);
-            
-            Assert.IsTrue(_repository.Get<FileFrame>()
+            var runTask = _framesFromVideo.Run(videoFileName);
+            Task.WaitAll(runTask);
+            Assert.True(_repository.Get<FileFrame>()
                 .Any(f => f.FileName.Contains(appUserId) && f.Time >= minDate && f.Time <= maxDate));
-
-            await _ftpClient.ListDirectoryFiles("frames", "testuser*.mkv");
+            var checkTask = _ftpClient.ListDirectoryFiles("frames", "testuser*.jpg");
+            Task.WaitAll(checkTask);
+            var framesOnServer = checkTask.Result;
+            Assert.True(framesOnServer.Count > 0);
         }
     }
 }
