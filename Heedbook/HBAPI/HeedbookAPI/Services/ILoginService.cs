@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
-
+using HBData.Models;
 
 namespace UserOperations.Services
 {
-    public interface ITokenService : IDisposable
+    public interface ILoginService : IDisposable
     {
-        string CreateTokenForUser(string userEmail, bool remember);
+        string CreateTokenForUser(ApplicationUser user, bool remember);
         Dictionary<string, string> GetDataFromToken(string token, string sign = null);
         bool CheckToken(string token, string sign = "");
+        string GeneratePasswordHash(string password);
+        bool CheckUserLogin(string login, string password);
     }
 }

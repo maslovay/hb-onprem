@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using System.Net.Http.Headers;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -37,43 +38,40 @@ namespace UserOperations.Controllers
     [ApiController]
     public class UserController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
-        private readonly ITokenService _tokenService;
+        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
 
 
         public UserController(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
-            ITokenService tokenService,
+            ILoginService loginService,
             RecordsContext context
             )
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
             _config = config;
-            _tokenService = tokenService;
+            _loginService = loginService;
             _context = context;
         }        
         
         [HttpGet("User")]
-        public IEnumerable<ApplicationUser> UserGet([FromHeader] string Authorization)
+        [SwaggerOperation(Description = "Return all users for loggined company with role Ids")]
+        public IEnumerable<UserModel> UserGet([FromHeader] string Authorization)
         {
-            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var userClaims = _loginService.GetDataFromToken(Authorization);
             var companyId = Guid.Parse(userClaims["companyId"]);
-            var users = _context.ApplicationUsers.Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();
-            return users;
+            var users = _context.ApplicationUsers.Include(p => p.UserRoles).Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();
+            var result = users.Select(p => new UserModel(p));
+            return result;
         }
 
         [HttpPut("User")]
+        [SwaggerOperation(Description = "Edit user and return edited")]
         public IActionResult UserPut([FromBody] ApplicationUser message, [FromHeader] string Authorization)
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var user = _context.ApplicationUsers
                     .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
@@ -86,7 +84,7 @@ namespace UserOperations.Controllers
                             p.SetValue(user, p.GetValue(message, null), null);
                     }
                     _context.SaveChanges();
-                    return Ok(user);
+                    return Ok(new UserModel(user));
                 }
                 else
                 {
@@ -100,23 +98,34 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("User")]
+        [SwaggerOperation(Description = "Create new user with role Manager in loggined company (taked from token)/ Return new user")]
         public async Task<IActionResult> UserPostAsync([FromBody] PostUser message, [FromHeader] string Authorization)
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var user = new ApplicationUser { 
                     UserName = message.Email,
+                    NormalizedUserName = message.Email.ToUpper(),
                     Email = message.Email,
+                    NormalizedEmail = message.Email.ToUpper(),
                     Id = Guid.NewGuid(),
                     CompanyId = Guid.Parse(userClaims["companyId"]),
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
+                    PasswordHash =  _loginService.GeneratePasswordHash(message.Password),
                     StatusId = 3,
                     EmpoyeeId = message.EmployeeId
-                };
-                var result = await _userManager.CreateAsync(user, message.Password);
-                await _userManager.AddToRoleAsync(user, "Employee");
+                    };
+                _context.Add(user);
+
+                var userRole = new ApplicationUserRole()
+                    {
+                        UserId = user.Id,
+                        RoleId = _context.Roles.First(p => p.Name == "Manager").Id //Manager role
+                    };
+                _context.ApplicationUserRoles.Add(userRole);
+                _context.SaveChanges();
                 return Ok(user);
             }
             catch (Exception e)
@@ -126,11 +135,12 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("User")]
+        [SwaggerOperation(Description = "Delete user by Id if he hasnt any relations in DB or make status Disabled")]
         public IActionResult UserDelete([FromQuery] Guid applicationUserId, [FromHeader] string Authorization)
         {
             try
             {
-                var userClaims = _tokenService.GetDataFromToken(Authorization);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var user = _context.ApplicationUsers.Where(p => p.Id == applicationUserId && p.CompanyId == companyId).FirstOrDefault();
                  
@@ -157,39 +167,61 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("PhraseLib")]
-        public IEnumerable<Phrase> PhraseGet([FromQuery] Guid companyId)
+        public IActionResult PhraseGet([FromQuery] Guid? companyId, [FromHeader] string Authorization)
         {
-            if (companyId == null)
+            try
             {
-                return _context.Phrases.Where(p => p.PhraseText != null);
+                var userClaims = _loginService.GetDataFromToken(Authorization);
+                var companyIdUser = Guid.Parse(userClaims["companyId"]);
+                if (companyId != companyIdUser && companyId != null) return BadRequest("User has no permission");
+                return Ok(_context.PhraseCompanys
+                        .Include(p => p.Phrase)
+                        .Where(p => p.CompanyId == companyIdUser && p.Phrase.PhraseText != null).Select(p => p.Phrase).ToList());
             }
-            else
+            catch (Exception e)
             {
-                return _context.PhraseCompanys
-                    .Include(p => p.Phrase)
-                    .Where(p => p.Phrase.PhraseText != null && p.PhraseCompanyId == companyId)
-                    .Select(p => p.Phrase);
+                return BadRequest(e.ToString());
             }
         }
 
         [HttpPost("PhraseLib")]
-        public Phrase PhrasePost([FromBody] Phrase message)
+        public IActionResult PhrasePost([FromBody] Phrase message, [FromHeader] string Authorization)
         {
-            _context.Add(message);
-            _context.SaveChanges();
-            return message;
+            try
+            {
+                var userClaims = _loginService.GetDataFromToken(Authorization);
+                var companyId = Guid.Parse(userClaims["companyId"]);
+
+                _context.Phrases.Add(message);
+                var phraseCompany = new PhraseCompany();
+                phraseCompany.CompanyId = companyId;
+                phraseCompany.PhraseCompanyId = Guid.NewGuid();
+                phraseCompany.PhraseId = message.PhraseId;
+                _context.PhraseCompanys.Add(phraseCompany);
+                _context.SaveChanges();
+                return Ok(message);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         [HttpPut("PhraseLib")]
-        public Phrase PhrasePut([FromBody] Phrase message)
+        public IActionResult PhrasePut([FromBody] Phrase message, [FromHeader] string Authorization)
         {
-            var phrase = _context.Phrases.Where(p => p.PhraseId == message.PhraseId).FirstOrDefault();
-            if (phrase == null)
+            try
             {
-                _context.Add(message);
-                _context.SaveChanges();
-            }
-            else
+            var userClaims = _loginService.GetDataFromToken(Authorization);
+            var companyId = Guid.Parse(userClaims["companyId"]);
+
+            var phrase = _context.PhraseCompanys
+                .Include(p => p.Phrase)
+                .Where(p => p.Phrase.PhraseId == message.PhraseId && p.CompanyId == companyId)
+                .Select(p => p.Phrase)
+                .FirstOrDefault();
+
+            if (phrase != null)
             {
                 foreach(var p in typeof(ApplicationUser).GetProperties()) 
                 {
@@ -197,29 +229,51 @@ namespace UserOperations.Controllers
                         p.SetValue(phrase, p.GetValue(message, null), null);
                 }
                 _context.SaveChanges();
+                return Ok(phrase);
             }
-            return phrase;
+            else
+            {
+                return BadRequest("No permission for changing phrase");
+            }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+            
         }
 
         [HttpDelete("PhraseLib")]
-        public IActionResult PhraseDelete([FromQuery] Guid phraseId)
+        public IActionResult PhraseDelete([FromQuery] Guid phraseId, [FromHeader] string Authorization)
         {
-           var phrase =  _context.Phrases.Where(p => p.PhraseId == phraseId).FirstOrDefault();
-           _context.Remove(phrase);
-           _context.SaveChanges();
-           
-            return Ok();
+            try
+            {
+                var userClaims = _loginService.GetDataFromToken(Authorization);
+                var companyId = Guid.Parse(userClaims["companyId"]);
+
+                var phrase = _context.PhraseCompanys
+                    .Include(p => p.Phrase)
+                    .Where(p => p.Phrase.PhraseId == phraseId && p.CompanyId == companyId).FirstOrDefault();
+                _context.Remove(phrase);
+                _context.SaveChanges();
+            
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
         [HttpGet("CompanyPhrase")]
-        public List<Guid> CompanyPhraseGet([FromQuery(Name = "companyId")] List<Guid> companyIds)
+        public List<Guid> CompanyPhraseGet([FromQuery(Name = "companyId")] List<Guid> companyIds, [FromHeader] string Authorization)
         {
             var companyPhrase = _context.PhraseCompanys.Where(p => companyIds.Contains((Guid) p.CompanyId));
             return companyPhrase.Select(p => (Guid) p.PhraseId).ToList();
         }  
 
         [HttpPost("CompanyPhrase")]
-        public IActionResult CompanyPhraseGet([FromQuery(Name = "companyId")] List<Guid> companyIds, [FromQuery] Guid phraseId)
+        public IActionResult CompanyPhraseGet([FromQuery(Name = "companyId")] List<Guid> companyIds, [FromQuery] Guid phraseId, [FromHeader] string Authorization)
         {
             try
             {
@@ -242,10 +296,13 @@ namespace UserOperations.Controllers
         }  
 
         [HttpDelete("CompanyPhrase")]
-        public IActionResult CompanyPhraseDelete([FromQuery] Guid companyId, [FromQuery] Guid phraseId)
+        public IActionResult CompanyPhraseDelete([FromQuery] Guid phraseId, [FromHeader] string Authorization)
         {
             try
             {
+                var userClaims = _loginService.GetDataFromToken(Authorization);
+                var companyId = Guid.Parse(userClaims["companyId"]);
+
                 var phrase = _context.PhraseCompanys.Where(p => p.CompanyId == companyId && p.PhraseId == phraseId);
                 if (phrase != null)
                 {
@@ -272,7 +329,7 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
                                                 [FromHeader] string Authorization)
         {
-            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var userClaims = _loginService.GetDataFromToken(Authorization);
             var companyId = Guid.Parse(userClaims["companyId"]);
             var formatString = "yyyyMMdd";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
@@ -308,7 +365,7 @@ namespace UserOperations.Controllers
                                                         [FromHeader] string Authorization
                                                         )
         {
-            var userClaims = _tokenService.GetDataFromToken(Authorization);
+            var userClaims = _loginService.GetDataFromToken(Authorization);
             var companyId = Guid.Parse(userClaims["companyId"]);
             var formatString = "yyyyMMdd";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
@@ -352,7 +409,7 @@ namespace UserOperations.Controllers
         public string EmployeeId;
     }
 
-    public class PutUser
+    public class UserModel
     {
         public Guid Id;
         public string FullName;
@@ -360,9 +417,22 @@ namespace UserOperations.Controllers
         public string EmployeeId;
         public string CreationDate;
         public string CompanyId;
-        public Int32 StatusId;
+        public Int32? StatusId;
         public string OneSignalId;
         public Guid? WorkerTypeId;
+        public List<string> RoleIds;
+        public UserModel(ApplicationUser user)
+        {
+            Id = user.Id;
+            FullName = user.FullName;
+            Avatar = user.Avatar;
+            EmployeeId = user.EmpoyeeId;
+            CreationDate = user.CreationDate.ToLongDateString();
+            CompanyId = user.CompanyId.ToString();
+            StatusId = user.StatusId;
+            OneSignalId = user.OneSignalId;
+            WorkerTypeId = user.WorkerTypeId;
+            RoleIds = user.UserRoles.Select(x=>x.RoleId.ToString()).ToList();
+        }
     }
-    
 }
