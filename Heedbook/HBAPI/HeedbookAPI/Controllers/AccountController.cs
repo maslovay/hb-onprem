@@ -39,7 +39,8 @@ namespace UserOperations.Controllers
     public class AccountController : Controller
     {
         private readonly ILoginService _loginService;
-        private readonly RecordsContext _context;      
+        private readonly RecordsContext _context;     
+        private Dictionary<string, string> userClaims; 
 
         public AccountController(
             ILoginService loginService,
@@ -52,10 +53,10 @@ namespace UserOperations.Controllers
 
         [HttpPost("Register")]
         [SwaggerOperation(Description = "Create new company, new user, add manager role, create ew Tariff and newTransaction if no exist ")]
-        public async Task<string>  UserRegister([FromBody] UserRegister message)
+        public async Task<IActionResult> UserRegister([FromBody] UserRegister message, [FromHeader] string Authorization)
         {
             if (_context.Companys.Where(x => x.CompanyName == message.CompanyName).Any() || _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
-                return "Company name or user email not unique";
+                return BadRequest("Company name or user email not unique");
             try
             { 
                 var companyId = Guid.NewGuid();
@@ -68,7 +69,7 @@ namespace UserOperations.Controllers
                     CountryId = message.CountryId,
                     StatusId = 5
                 };
-                _context.Companys.Add(company);
+                await _context.Companys.AddAsync(company);
 
                 var user = new ApplicationUser { 
                     UserName = message.Email,
@@ -81,14 +82,14 @@ namespace UserOperations.Controllers
                     FullName = message.FullName,
                     PasswordHash =  _loginService.GeneratePasswordHash(message.Password),
                     StatusId = 3};
-                _context.Add(user);
+                await _context.AddAsync(user);
 
                 var userRole = new ApplicationUserRole()
                     {
                         UserId = user.Id,
                         RoleId = _context.Roles.First(p => p.Name == "Manager").Id //Manager role
                     };
-                _context.ApplicationUserRoles.Add(userRole);
+                await _context.ApplicationUserRoles.AddAsync(userRole);
                 
                 if (_context.Tariffs.Where(item => item.CompanyId == companyId).ToList().Count() == 0)
                 {
@@ -119,28 +120,28 @@ namespace UserOperations.Controllers
                     };
                         company.StatusId = 3;
                         
-                        _context.Tariffs.Add(tariff);
-                        _context.Transactions.Add(transaction);
+                        await _context.Tariffs.AddAsync(tariff);
+                        await _context.Transactions.AddAsync(transaction);
                         var ids = _context.ApplicationUsers.Where(p => p.Id == user.Id).ToList();
-                        _context.SaveChanges();
+                        await _context.SaveChangesAsync();
                         _context.Dispose();
                     }
                     else
                     {
                         
                     }
-                return "Ok";
+                return Ok("Registred");
             }
             catch (Exception e)
             {
-                return e.ToString();
+                return BadRequest(e.ToString());
             }
         }
 
         [AllowAnonymous]
         [HttpPost("GenerateToken")]
         [SwaggerOperation(Description = "Loggin for user. Return jwt token")]
-        public async Task<IActionResult> GenerateToken([FromBody]AccountAuthorization message)
+        public IActionResult GenerateToken([FromBody]AccountAuthorization message)
         {
             try
             {
