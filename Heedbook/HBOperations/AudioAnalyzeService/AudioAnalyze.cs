@@ -49,9 +49,10 @@ namespace AudioAnalyzeService
                         EndTime = dialogue.EndTime,
                         Duration = 15.0
                     };
-                    await _asrHttpClient.StartAudioRecognize(dialogueId);
                     await _repository.CreateAsync(fileAudio);
                     _repository.Save();
+                    await _asrHttpClient.StartAudioRecognize(dialogueId);
+                    _log.Info("Started recognize audio");
                 }
 
                 _log.Info("Function Audio STT finished");
