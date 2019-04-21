@@ -43,7 +43,7 @@ namespace AudioAnalyzeService
                         DialogueId = dialogueId,
                         CreationTime = DateTime.UtcNow,
                         FileName = fileName,
-                        StatusId = 6,
+                        StatusId = 3,
                         FileContainer = "dialogueaudios",
                         BegTime = dialogue.BegTime,
                         EndTime = dialogue.EndTime,
