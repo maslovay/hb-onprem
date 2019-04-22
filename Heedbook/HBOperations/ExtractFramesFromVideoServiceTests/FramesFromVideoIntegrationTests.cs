@@ -125,7 +125,7 @@ namespace ExtractFramesFromVideoService.Tests
         [Fact(DisplayName = "Video frames cutting test")]
         public async Task RunTest()
         {
-            var runTask = _framesFromVideo.Run(videoFileName);
+            var runTask = _framesFromVideo.Run("Videos/"+videoFileName);
             Task.WaitAll(runTask);
             Assert.True(_repository.Get<FileFrame>()
                 .Any(f => f.FileName.Contains(appUserId) && f.Time >= minDate && f.Time <= maxDate));

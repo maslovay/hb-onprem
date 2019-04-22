@@ -38,12 +38,12 @@ namespace ExtractFramesFromVideo
             _wrapper = wrapper;
         }
 
-        public async Task Run(string videoBlobName)
+        public async Task Run(string videoBlobRelativePath)
         {
             _log.Info("Function Extract Frames From Video Started");
             _log.Info("Write blob to memory stream");
  
-            var targetVideoFileName = Path.GetFileNameWithoutExtension(videoBlobName);
+            var targetVideoFileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
 
             var appUserId = targetVideoFileName.Split(("_"))[0];
             var videoTimestampText = targetVideoFileName.Split(("_"))[1];
@@ -51,7 +51,7 @@ namespace ExtractFramesFromVideo
             videoTimeStamp = videoTimeStamp.AddSeconds(2);
 
             using (var ftpDownloadStream =
-                await _client.DownloadFromFtpAsMemoryStreamAsync(VideoContainerName + "/" + videoBlobName))
+                await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobRelativePath))
             {
                 var uploadStreams = await _wrapper.CutVideo(ftpDownloadStream, videoTimeStamp, appUserId, 10, 3);
 
