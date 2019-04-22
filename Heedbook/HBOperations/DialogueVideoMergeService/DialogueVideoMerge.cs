@@ -62,7 +62,11 @@ namespace DialogueVideoMergeService
                 _log.Info($"Language id is {languageId}");
                 var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
 
-                var ffmpeg = new FFMpegWrapper(Path.Combine(pathClient.BinPath(), "ffmpeg.exe"));
+                var ffmpeg = new FFMpegWrapper(
+                    new FFMpegSettings()
+                {
+                    FFMpegPath = Path.Combine(pathClient.BinPath(), "ffmpeg.exe")
+                });
 
                 var fileVideos = await _repository.FindByConditionAsync<FileVideo>(item =>
                     item.ApplicationUserId == message.ApplicationUserId &&
