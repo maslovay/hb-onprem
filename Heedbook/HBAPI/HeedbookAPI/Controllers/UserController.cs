@@ -503,7 +503,7 @@ namespace UserOperations.Controllers
         public Int32? StatusId;
         public string OneSignalId;
         public Guid? WorkerTypeId;
-        public List<string> RoleIds;
+        public string RoleId;
         public UserModel(ApplicationUser user)
         {
             Id = user.Id;
@@ -516,7 +516,7 @@ namespace UserOperations.Controllers
             StatusId = user.StatusId;
             OneSignalId = user.OneSignalId;
             WorkerTypeId = user.WorkerTypeId;
-            RoleIds = user.UserRoles.Select(x => x.RoleId.ToString()).ToList();
+            RoleId = user.UserRoles.FirstOrDefault().RoleId.ToString();
         }
     }
 

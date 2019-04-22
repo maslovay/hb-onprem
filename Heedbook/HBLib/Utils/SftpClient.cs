@@ -32,6 +32,34 @@ namespace HBLib.Utils
                     _client.ChangeDirectory(_sftpSettings.DestinationPath);
                 });
         }
+        /// <summary>
+        /// Get url to file. 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<string> GetFileUrl(String path)
+        {
+            await ConnectToSftpAsync();
+            if (await IsFileExistsAsync(_sftpSettings.DestinationPath + "/" + path))
+                return $"http://{_sftpSettings.Host}/{path}";
+            return null;
+        }
+
+        public async Task<IEnumerable<string>> GetAllFilesUrl(String directory, string[] subDirs = null)
+        {
+            await ConnectToSftpAsync();
+            List<Renci.SshNet.Sftp.SftpFile> files = new List<Renci.SshNet.Sftp.SftpFile>();
+            if (subDirs != null && subDirs.Count() != 0)
+            {
+                foreach (var dir in subDirs)
+                {
+                    files.AddRange(_client.ListDirectory(directory + "/" + dir));
+                }
+            }
+            else
+                files = _client.ListDirectory(directory).ToList();
+            return await Task.Run(() => files.Where(f => !f.IsDirectory).Select(f => $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}"));
+        }
 
         /// <summary>
         ///     Upload file to remote sftp server.
