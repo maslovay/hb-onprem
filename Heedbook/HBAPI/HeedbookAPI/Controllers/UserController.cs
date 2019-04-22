@@ -93,7 +93,7 @@ namespace UserOperations.Controllers
                 {
                     foreach (var p in typeof(ApplicationUser).GetProperties())
                     {
-                        if (p.GetValue(message, null) != null)
+                        if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
                             p.SetValue(user, p.GetValue(message, null), null);
                     }
                     await _context.SaveChangesAsync();
@@ -120,7 +120,7 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 if (_context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                     return BadRequest("User email not unique");
-                string password = GeneratePass(6);
+                //string password = GeneratePass(6);
                 var user = new ApplicationUser
                 {
                     UserName = message.Email,
@@ -131,12 +131,12 @@ namespace UserOperations.Controllers
                     CompanyId = Guid.Parse(userClaims["companyId"]),
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
-                    PasswordHash = _loginService.GeneratePasswordHash(password),
+                    PasswordHash = _loginService.GeneratePasswordHash(message.Password),
                     StatusId = 3,
                     EmpoyeeId = message.EmployeeId
                 };
-                string msg = GenerateEmailMsg(password, user);
-                _loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
+                //string msg = GenerateEmailMsg(password, user);
+                //_loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
                 await _context.AddAsync(user);
 
                 var userRole = new ApplicationUserRole()
@@ -489,6 +489,8 @@ namespace UserOperations.Controllers
         public string Email;
         public string EmployeeId;
         public string RoleId;
+        public string Password;
+
     }
 
     public class UserModel
