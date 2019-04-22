@@ -45,6 +45,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly string _containerName;
+        private Dictionary<string, string> userClaims;
 
         public FileController(
             IConfiguration config,
@@ -62,28 +63,34 @@ namespace UserOperations.Controllers
         #region File
         [HttpGet("File")]
         [SwaggerOperation(Description = "Return all files from sftp. If no parameters are passed return files from 'media', for loggined company")]
-        public async Task<IEnumerable<string>> FileGet([FromQuery]string containerName = null, [FromQuery]string[] directoryNames = null, [FromQuery]string fileName = null)
+        public async Task<IActionResult> FileGet([FromHeader]string Authorization,
+                                                        [FromQuery]string containerName = null, 
+                                                        [FromQuery]string[] directoryNames = null, 
+                                                        [FromQuery]string fileName = null)
         {
-            string companyId = GetCompanyIdFromToken();
-            if (companyId == null) return null; 
-
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+            var companyId = userClaims["companyId"];
             IEnumerable<string> files = null;
             containerName = containerName ?? _containerName;
+            var tasks = new List<Task>();
             if (fileName != null)
             {
                 files = new List<string> { await _sftpClient.GetFileUrl(containerName + "/" + companyId + "/" + fileName) };
-                return files;
+                return Ok(files);
             }
             else
                 files = await _sftpClient.GetAllFilesUrl(containerName, directoryNames);
-            return files;
+            return Ok(files);
         }
 
         [HttpPost("File")]
         [SwaggerOperation(Description = "Save file on sftp. Can take containerName in body or save to media container. Folder determined by company id in token")]
-        public async Task<IEnumerable<string>> FilePost([FromHeader] string Authorization, [FromForm] IFormCollection formData)
+        public async Task<IActionResult> FilePost([FromHeader] string Authorization, [FromForm] IFormCollection formData)
         {
-            var companyId = _loginService.GetDataFromToken(Authorization)["companyId"];
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+            var companyId = userClaims["companyId"];
             var containerNameParam = formData.FirstOrDefault(x => x.Key == "containerName");
             var containerName = containerNameParam.Value.Any() ? containerNameParam.Value.ToString() : _containerName;
 
@@ -99,12 +106,13 @@ namespace UserOperations.Controllers
             }
             await Task.WhenAll(tasks);
             
+            tasks.Clear();
             var result = new List<string>();
             foreach (var fileName in fileNames)
             {
                 result.Add(await _sftpClient.GetFileUrl(fileName));
             }
-            return result;
+            return Ok(result);
         }
         
         [HttpPut("File")]
@@ -124,6 +132,7 @@ namespace UserOperations.Controllers
             await _sftpClient.DeleteFileIfExistsAsync(containerName+"/"+ companyId+"/"+ fileName);
 
             List<string> res = new List<string>();
+            var tasks = new List<Task>();
             foreach (var file in files)
             {
                 var memoryStream = new MemoryStream();
