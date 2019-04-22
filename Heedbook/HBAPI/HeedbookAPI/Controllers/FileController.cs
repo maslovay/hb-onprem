@@ -99,11 +99,12 @@ namespace UserOperations.Controllers
             }
             await Task.WhenAll(tasks);
             
-            var result = new List<string>();
+            var urlTasks = new List<Task<String>>();
             foreach (var fileName in fileNames)
             {
-                result.Add(await _sftpClient.GetFileUrl(fileName));
+                urlTasks.Add(_sftpClient.GetFileUrl(fileName));
             }
+            var result = await Task.WhenAll(urlTasks);
             return result;
         }
         
