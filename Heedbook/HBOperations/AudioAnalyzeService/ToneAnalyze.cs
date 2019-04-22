@@ -24,9 +24,9 @@ namespace AudioAnalyzeService
 
         private readonly IGenericRepository _repository;
 
-        private readonly FFMpegWrapper _wrapper;
-
         private readonly SftpClient _sftpClient;
+
+        private readonly FFMpegWrapper _wrapper;
 
         public ToneAnalyze(SftpClient sftpClient,
             IConfiguration configuration,

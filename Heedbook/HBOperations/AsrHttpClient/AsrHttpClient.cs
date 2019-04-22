@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace AsrHttpClient
 {
     public class AsrHttpClient
     {
-        private readonly AsrSettings _asrSettings;
-
         private const String AudioRecognize = "asr/audiorecognize/";
+        private readonly AsrSettings _asrSettings;
 
         public AsrHttpClient(AsrSettings asrSettings)
         {

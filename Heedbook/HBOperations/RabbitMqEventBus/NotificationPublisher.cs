@@ -17,11 +17,11 @@ namespace RabbitMqEventBus
         private const String BROKER_NAME = "Notifications";
         private const String DELIVERY_COUNT_HEADER = "x-delivery-count";
         private readonly Int32 _deliveryCount;
-        private readonly Int32 _retryCount;
-        private IModel _consumerChannel;
         private readonly IRabbitMqPersistentConnection _persistentConnection;
+        private readonly Int32 _retryCount;
         private readonly IServiceProvider _serviceProvider;
         private readonly IEventBusSubscriptionsManager _subsManager;
+        private IModel _consumerChannel;
 
         public NotificationPublisher(IRabbitMqPersistentConnection persistentConnection,
             IEventBusSubscriptionsManager subsManager,

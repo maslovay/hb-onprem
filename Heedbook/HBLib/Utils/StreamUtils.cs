@@ -6,34 +6,34 @@ namespace HBLib.Utils
     public static class StreamUtils
     {
         /// <summary>
-        /// Optimized copying of stream contents
+        ///     Optimized copying of stream contents
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dest"></param>
         public static void CopyToOptimized(this Stream src, Stream dest)
         {
-            int size = (src.CanSeek) ? Math.Min((int)(src.Length - src.Position), 0x2000) : 0x2000;
-            byte[] buffer = new byte[size];
-            int n;
+            var size = src.CanSeek ? Math.Min((Int32) (src.Length - src.Position), 0x2000) : 0x2000;
+            var buffer = new Byte[size];
+            Int32 n;
             do
             {
                 n = src.Read(buffer, 0, buffer.Length);
                 dest.Write(buffer, 0, n);
-            } while (n != 0);           
+            } while (n != 0);
         }
-        
+
         /// <summary>
-        /// Optimized copying of stream contents for MemoryStream
+        ///     Optimized copying of stream contents for MemoryStream
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dest"></param>
         public static void CopyToOptimized(this MemoryStream src, Stream dest)
         {
-            dest.Write(src.GetBuffer(), (int)src.Position, (int)(src.Length - src.Position));
+            dest.Write(src.GetBuffer(), (Int32) src.Position, (Int32) (src.Length - src.Position));
         }
 
         /// <summary>
-        /// Optimized copying of stream contents to MemoryStream
+        ///     Optimized copying of stream contents to MemoryStream
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dest"></param>
@@ -41,30 +41,32 @@ namespace HBLib.Utils
         {
             if (src.CanSeek)
             {
-                int pos = (int)dest.Position;
-                int length = (int)(src.Length - src.Position) + pos;
-                dest.SetLength(length); 
+                var pos = (Int32) dest.Position;
+                var length = (Int32) (src.Length - src.Position) + pos;
+                dest.SetLength(length);
 
-                while(pos < length)                
+                while (pos < length)
                     pos += src.Read(dest.GetBuffer(), pos, length - pos);
             }
             else
-                src.CopyTo((Stream)dest);
+            {
+                src.CopyTo(dest);
+            }
         }
-        
+
         /// <summary>
-        /// Moves to a position to a position of a given sequence
+        ///     Moves to a position to a position of a given sequence
         /// </summary>
         /// <param name="src"></param>
         /// <param name="sequence"></param>
         /// <returns></returns>
-        public static bool MoveToSequence(this Stream src, byte[] sequence)
+        public static Boolean MoveToSequence(this Stream src, Byte[] sequence)
         {
             if (sequence == null || sequence.Length == 0)
                 return false;
 
-            var buffer = new byte[sequence.Length];
-            int len = 0;
+            var buffer = new Byte[sequence.Length];
+            var len = 0;
 
             do
             {
@@ -73,29 +75,30 @@ namespace HBLib.Utils
 
             return len != 0; // FALSE if we reached an end of stream without any results
         }
-        
+
         /// <summary>
-        /// Writes to a target stream until we will reach a given sequence
+        ///     Writes to a target stream until we will reach a given sequence
         /// </summary>
         /// <param name="src"></param>
         /// <param name="target"></param>
         /// <param name="sequence"></param>
         /// <returns></returns>
-        public static bool WriteUntilSequence(this Stream src, Stream target, byte[] sequence)
+        public static Boolean WriteUntilSequence(this Stream src, Stream target, Byte[] sequence)
         {
             if (sequence == null || sequence.Length == 0)
                 return false;
-            var buffer = new byte[sequence.Length];
+            var buffer = new Byte[sequence.Length];
 
-            int len = 0;
+            var len = 0;
 
             do
             {
                 len = src.Read(buffer);
                 target.Write(buffer);
             } while (len > 0 && !buffer.isMatch(sequence, 0));
-            
-            return !(len == 0 && !buffer.isMatch(sequence, 0)); // FALSE if we reached an end of stream without any results
+
+            return
+                !(len == 0 && !buffer.isMatch(sequence, 0)); // FALSE if we reached an end of stream without any results
         }
     }
 }

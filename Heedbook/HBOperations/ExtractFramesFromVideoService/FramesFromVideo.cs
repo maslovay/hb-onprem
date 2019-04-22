@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
@@ -14,15 +13,14 @@ namespace ExtractFramesFromVideo
 {
     public class FramesFromVideo
     {
+        private const String FrameContainerName = "frames";
         private readonly SftpClient _client;
         private readonly INotificationHandler _handler;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
-        private const string FrameContainerName = "frames";
-        private const string VideoContainerName = "videos";
         private readonly FFMpegSettings _settings;
         private readonly FFMpegWrapper _wrapper;
-        
+
         public FramesFromVideo(SftpClient client,
             IGenericRepository repository,
             INotificationHandler handler,
@@ -38,38 +36,39 @@ namespace ExtractFramesFromVideo
             _wrapper = wrapper;
         }
 
-        public async Task Run(string videoBlobName)
+        public async Task Run(String videoBlobName)
         {
             _log.Info("Function Extract Frames From Video Started");
             _log.Info("Write blob to memory stream");
- 
+
             var targetVideoFileName = Path.GetFileNameWithoutExtension(videoBlobName);
 
-            var appUserId = targetVideoFileName.Split(("_"))[0];
-            var videoTimestampText = targetVideoFileName.Split(("_"))[1];
-            var videoTimeStamp = DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+            var appUserId = targetVideoFileName.Split("_")[0];
+            var videoTimestampText = targetVideoFileName.Split("_")[1];
+            var videoTimeStamp =
+                DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
             videoTimeStamp = videoTimeStamp.AddSeconds(2);
 
             using (var ftpDownloadStream =
-                await _client.DownloadFromFtpAsMemoryStreamAsync(VideoContainerName + "/" + videoBlobName))
+                await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobName))
             {
                 var uploadStreams = await _wrapper.CutVideo(ftpDownloadStream, videoTimeStamp, appUserId, 10, 3);
 
-                List<Task> uploadTasks = new List<Task>();
-                
+                var uploadTasks = new List<Task>();
+
                 foreach (var frameFilename in uploadStreams.Keys)
                 {
                     uploadStreams[frameFilename].Position = 0;
-                    
+
                     var uploadTask = _client.UploadAsMemoryStreamAsync(uploadStreams[frameFilename],
                         FrameContainerName + "/", frameFilename);
 
                     uploadTasks.Add(uploadTask);
-                    
+
                     RaiseNewFrameEvent(frameFilename);
-                   
+
                     await InsertNewFileFrameToDb(appUserId, frameFilename, videoTimeStamp);
-                    
+
                     videoTimeStamp = videoTimeStamp.AddSeconds(3);
                 }
 
@@ -79,7 +78,7 @@ namespace ExtractFramesFromVideo
             _log.Info("Function Extract Frames From Video finished");
         }
 
-        private void RaiseNewFrameEvent(string filename)
+        private void RaiseNewFrameEvent(String filename)
         {
             var message = new FaceAnalyzeRun
             {
@@ -89,7 +88,7 @@ namespace ExtractFramesFromVideo
             _handler.EventRaised(message);
         }
 
-        private async Task InsertNewFileFrameToDb(string appUserId, string filename, DateTime timeStampForFrame)
+        private async Task InsertNewFileFrameToDb(String appUserId, String filename, DateTime timeStampForFrame)
         {
             try
             {
@@ -114,7 +113,7 @@ namespace ExtractFramesFromVideo
                 await _repository.CreateAsync(fileFrame);
                 await _repository.SaveAsync();
             }
-            catch ( Exception ex )
+            catch (Exception ex)
             {
                 _log.Error("Exception was thrown while trying to access to DB: " + ex.Message, ex);
             }

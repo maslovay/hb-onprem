@@ -71,7 +71,6 @@ namespace HBData.Models
         /// <summary>
         ///     Result of speech recognition
         /// </summary>
-        public string STTResult {get; set;}
-
+        public String STTResult { get; set; }
     }
 }

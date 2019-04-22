@@ -12,12 +12,12 @@ namespace HBLib.Utils
 {
     public class FFMpegWrapper
     {
-        public readonly String FfPath;
-        private readonly byte[] _jpegBegin = {0xFF, 0xD8};
-        private readonly byte[] _jpegEnd = {0xFF, 0xD9};
-        private const int BufferSize = 4096;
+        private const Int32 BufferSize = 4096;
+        private readonly Byte[] _jpegBegin = {0xFF, 0xD8};
+        private readonly Byte[] _jpegEnd = {0xFF, 0xD9};
         private readonly FFMpegSettings _settings;
-        
+        public readonly String FfPath;
+
         public FFMpegWrapper(FFMpegSettings settings)
         {
             _settings = settings;
@@ -278,16 +278,16 @@ namespace HBLib.Utils
             var res = cmd.runCMD(FfPath, arguments);
             return res;
         }
-        
-                
-        public async Task<Dictionary<string, Stream>> CutVideo(MemoryStream sourceStream, 
+
+
+        public async Task<Dictionary<String, Stream>> CutVideo(MemoryStream sourceStream,
             DateTime dateTime,
-            string appUserId,
-            int quality = 10,
-            int cutPeriod = 3)
+            String appUserId,
+            Int32 quality = 10,
+            Int32 cutPeriod = 3)
         {
-            var result = new Dictionary<string, Stream>();
-            
+            var result = new Dictionary<String, Stream>();
+
             var psi = new ProcessStartInfo("ffmpeg")
             {
                 RedirectStandardInput = true,
@@ -297,7 +297,7 @@ namespace HBLib.Utils
                 Arguments = $"-hide_banner -i pipe:0 -r 1/{cutPeriod} -q:v {quality} -f image2 -update 1 pipe:1"
             };
 
-            var process = new Process()
+            var process = new Process
             {
                 StartInfo = psi
             };
@@ -312,8 +312,8 @@ namespace HBLib.Utils
 
             using (var outputStream = new BufferedStream(process.StandardOutput.BaseStream, BufferSize))
             {
-                bool isBegan = false;
-                bool checkPoint = false;
+                var isBegan = false;
+                var checkPoint = false;
 
                 do
                 {
@@ -322,7 +322,7 @@ namespace HBLib.Utils
                     isBegan = outputStream.MoveToSequence(_jpegBegin);
 
                     if (!isBegan) break;
-                    
+
                     uploadStream.Write(_jpegBegin);
 
                     checkPoint = outputStream.WriteUntilSequence(uploadStream, _jpegEnd);
@@ -340,8 +340,8 @@ namespace HBLib.Utils
 
             return result;
         }
-        
-        private string GenerateFrameFileName(string appUserId, DateTime timeStampForFrame)
+
+        private String GenerateFrameFileName(String appUserId, DateTime timeStampForFrame)
         {
             var finalTimeStampString =
                 timeStampForFrame.Year +

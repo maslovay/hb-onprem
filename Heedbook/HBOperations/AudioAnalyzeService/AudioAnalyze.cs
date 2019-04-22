@@ -10,9 +10,9 @@ namespace AudioAnalyzeService
 {
     public class AudioAnalyze
     {
+        private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
-        private readonly AsrHttpClient.AsrHttpClient _asrHttpClient; 
 
         public AudioAnalyze(GoogleConnector googleConnector,
             IServiceScopeFactory factory,

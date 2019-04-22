@@ -1,4 +1,9 @@
-﻿using AsrHttpClient;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
+using AsrHttpClient;
 using AudioAnalyzeScheduler.Model;
 using HBData.Models;
 using HBData.Repository;
@@ -10,11 +15,6 @@ using Newtonsoft.Json;
 using Quartz;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AudioAnalyzeScheduler.QuartzJobs
 {
@@ -221,7 +221,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private static List<String> Separator(String text)
         {
-            return text.Split(new[] { ' ', ',', '.', ')', '(' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            return text.Split(new[] {' ', ',', '.', ')', '('}, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
     }
 }

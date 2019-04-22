@@ -3,21 +3,21 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
-	/// <summary>
-	///     Information about client profile
-	/// </summary>
-	public class DialogueClientProfile
+    /// <summary>
+    ///     Information about client profile
+    /// </summary>
+    public class DialogueClientProfile
     {
-	    /// <summary>
-	    ///     Profile id
-	    /// </summary>
-	    [Key]
+        /// <summary>
+        ///     Profile id
+        /// </summary>
+        [Key]
         public Guid DialogueClientProfileId { get; set; }
 
-	    /// <summary>
-	    ///     Dialogue id
-	    /// </summary>
-	    public Guid? DialogueId { get; set; }
+        /// <summary>
+        ///     Dialogue id
+        /// </summary>
+        public Guid? DialogueId { get; set; }
 
         public Dialogue Dialogue { get; set; }
 

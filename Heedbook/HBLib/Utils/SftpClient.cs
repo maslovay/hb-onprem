@@ -131,7 +131,8 @@ namespace HBLib.Utils
         /// </summary>
         /// <param name="remotePath"></param>
         /// <returns></returns>
-        public async Task<String> DownloadFromFtpToLocalDiskAsync(String remotePath, String pattern, String localPath = null)
+        public async Task<String> DownloadFromFtpToLocalDiskAsync(String remotePath, String pattern,
+            String localPath = null)
         {
             await ConnectToSftpAsync();
             Console.WriteLine("Successfully connected");
@@ -147,7 +148,7 @@ namespace HBLib.Utils
 
             return localPath;
         }
-        
+
         /// <summary>
         ///     Check file exists on server
         /// </summary>
@@ -167,12 +168,12 @@ namespace HBLib.Utils
         public async Task DeleteFileIfExistsAsync(String path)
         {
             await ConnectToSftpAsync();
-            if (_client.Exists(path)) 
+            if (_client.Exists(path))
                 await Task.Run(() => _client.DeleteFile(path));
         }
 
         /// <summary>
-        /// Lists all files in a directory using a pattern
+        ///     Lists all files in a directory using a pattern
         /// </summary>
         /// <param name="path">dir path in FTP</param>
         /// <param name="patternToFind">pattern for filename</param>
@@ -188,9 +189,9 @@ namespace HBLib.Utils
                 return result;
 
             if (patternToFind != null)
-                return _client.ListDirectory(path).Where(f => !f.IsDirectory && f.Name.Contains(patternToFind)).Select(f => f.Name).ToList();
-            else
-                return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();          
+                return _client.ListDirectory(path).Where(f => !f.IsDirectory && f.Name.Contains(patternToFind))
+                              .Select(f => f.Name).ToList();
+            return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();
         }
     }
 }

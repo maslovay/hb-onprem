@@ -19,7 +19,7 @@ namespace HBData.Models
         ///     7 - Finished
         ///     8 - Error
         ///     9 - Pending disabled
-        ///     10 - Trial  
+        ///     10 - Trial
         ///     11 - AutoActive
         ///     12 - AutoFinished
         ///     13 - AutoError

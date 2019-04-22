@@ -63,10 +63,10 @@ namespace DialogueVideoMergeService
                 var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
 
                 var ffmpeg = new FFMpegWrapper(
-                    new FFMpegSettings()
-                {
-                    FFMpegPath = Path.Combine(pathClient.BinPath(), "ffmpeg.exe")
-                });
+                    new FFMpegSettings
+                    {
+                        FFMpegPath = Path.Combine(pathClient.BinPath(), "ffmpeg.exe")
+                    });
 
                 var fileVideos = await _repository.FindByConditionAsync<FileVideo>(item =>
                     item.ApplicationUserId == message.ApplicationUserId &&
