@@ -70,6 +70,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtractFramesFromVideoServiceTests", "ExtractFramesFromVideoServiceTests\ExtractFramesFromVideoServiceTests.csproj", "{903DC45A-1337-4A38-A3DE-D403740B318A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotMarckedImageSheduler", "NotMarckedImageSheduler\NotMarckedImageSheduler.csproj", "{677A2C95-00B1-4793-8C6F-75719FD84BC2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -17,11 +17,6 @@ namespace HBLib.Utils
             _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
                 sftpSettings.Password);
             _sftpSettings = sftpSettings;
-        }
-
-        public void Dispose()
-        {
-            _client.Dispose();
         }
 
         private async Task ConnectToSftpAsync()
@@ -50,6 +45,34 @@ namespace HBLib.Utils
                 await Task.Run(() => _client.UploadFile(fs, fileName));
             }
         }
+        /// <summary>
+        /// Get url to file. 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<string> GetFileUrl(String path)
+        {
+            await ConnectToSftpAsync();
+            if (await IsFileExistsAsync(_sftpSettings.DestinationPath + "/" + path))
+                return $"http://{_sftpSettings.Host}/{path}";
+            return null;
+        }
+
+        public async Task<IEnumerable<string>> GetAllFilesUrl(String directory, string[] subDirs = null)
+        {
+            await ConnectToSftpAsync();
+            List<Renci.SshNet.Sftp.SftpFile> files = new List<Renci.SshNet.Sftp.SftpFile>();
+            if (subDirs != null && subDirs.Count() != 0)
+            {
+                foreach (var dir in subDirs)
+                {
+                    files.AddRange(_client.ListDirectory(directory + "/" + dir));
+                }
+            }
+            else
+                files = _client.ListDirectory(directory).ToList();
+            return await Task.Run(() => files.Where(f => !f.IsDirectory).Select(f => $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/","")}"));
+        }
 
         /// <summary>
         ///     Upload as memory stream to sftp server
@@ -62,6 +85,8 @@ namespace HBLib.Utils
         {
             await ConnectToSftpAsync();
             _client.BufferSize = 4 * 1024;
+             if (! await IsFileExistsAsync(_sftpSettings.DestinationPath + path))
+                _client.CreateDirectory(_sftpSettings.DestinationPath + path);
             _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
             _client.UploadFile(stream, filename);
         }
@@ -112,12 +137,12 @@ namespace HBLib.Utils
         public async Task<String> DownloadFromFtpToLocalDiskAsync(String remotePath, String localPath = null)
         {
             await ConnectToSftpAsync();
-            Console.WriteLine("Successfully connected");
+            //Console.WriteLine("Successfully connected");
             var filename = remotePath.Split('/').Last();
 
-            Console.WriteLine(localPath == null);
+            //Console.WriteLine(localPath == null);
             localPath = localPath == null ? localPath = _sftpSettings.DownloadPath + filename : localPath + filename;
-            Console.WriteLine($"{localPath}, {remotePath}");
+            //Console.WriteLine($"{localPath}, {remotePath}");
             using (var fs = File.OpenWrite(localPath))
             {
                 await Task.Run(() => _client.DownloadFile(remotePath, fs));
@@ -168,7 +193,7 @@ namespace HBLib.Utils
         {
             await ConnectToSftpAsync();
             if (_client.Exists(path)) 
-                await Task.Run(() => _client.DeleteFile(path));
+                await Task.Run(() => _client.DeleteFile(path));conflict?name=Heedbook%252FHBOperations%252FHeedbook.sln&ancestor_oid=71a486bf139b886d6ad0fd7a39b03b29fc09da9f&base_oid=d6a55cb7d861f54f5e249d439ac87fdb245fb382&head_oid=29cccf1b9acab127d6b5a35d2533d65fca438522
         }
 
         /// <summary>
@@ -191,6 +216,16 @@ namespace HBLib.Utils
                 return _client.ListDirectory(path).Where(f => !f.IsDirectory && f.Name.Contains(patternToFind)).Select(f => f.Name).ToList();
             else
                 return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();          
+
+            if (_client.Exists(_sftpSettings.DestinationPath + "/" + path))
+            {
+                await Task.Run(() => _client.DeleteFile(_sftpSettings.DestinationPath + "/" + path));
+            }
+        }
+
+        public void Dispose()
+        {
+            _client.Dispose();
         }
     }
 }

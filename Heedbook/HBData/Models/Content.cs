@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 
@@ -53,5 +54,6 @@ namespace HBData.Models
         ///     Update date (if it is request on Af  with PUT method -  Update date will be changed on DateTime.Now)
         /// </summary>
         public DateTime? UpdateDate { get; set; }
+        public ICollection<CampaignContent> CampaignContents { get; set; }
     }
 }

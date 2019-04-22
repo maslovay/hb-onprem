@@ -42,7 +42,7 @@ namespace UserOperations.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
-        private readonly ITokenService _tokenService;
+        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
 
 
@@ -50,81 +50,92 @@ namespace UserOperations.Controllers
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
-            ITokenService tokenService,
+            ILoginService loginService,
             RecordsContext context
             )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _config = config;
-            _tokenService = tokenService;
+            _loginService = loginService;
             _context = context;
         }
 
         [HttpGet("DatabaseFilling")]
-        public string DatabaseFilling()
+        public string DatabaseFilling
+        (
+            [FromQuery]string countryName = null, 
+            [FromQuery]string companyIndustryName = null, 
+            [FromQuery]string corporationName = null, 
+            [FromQuery]string languageName = null,
+            [FromQuery]string languageShortName = null
+            )
         {
+            // add country
+            if ( countryName != null )
+            {
             var countryId = Guid.NewGuid();
             var country = new Country{
                 CountryId = countryId,
-                CountryName = "Russia",
+                CountryName = countryName,
             };
             _context.Countrys.Add(country);
             _context.SaveChanges();
+            }
 
             // add language
+            if(languageName != null && languageShortName != null)
+            {
             var language = new Language{
-                LanguageId = 1,
-                LanguageName = "English",
-                LanguageLocalName = "English",
-                LanguageShortName = "en-us"
+               // LanguageId = 1,
+                LanguageName = languageName,
+                LanguageLocalName = languageName,
+                LanguageShortName = languageShortName
             };
             _context.Languages.Add(language);
             _context.SaveChanges();
-
-            language = new Language{
-                LanguageId = 2,
-                LanguageName = "Russian",
-                LanguageLocalName = "Русский",
-                LanguageShortName = "ru-RU"
-            };
-            _context.Languages.Add(language);
-            _context.SaveChanges();
+            }
 
             // create company industry
+            if(companyIndustryName != null )
+            {
             var companyIndustryId = Guid.NewGuid();
             var companyIndustry = new CompanyIndustry{
                 CompanyIndustryId = companyIndustryId,
-                CompanyIndustryName = "IT",
+                CompanyIndustryName = companyIndustryName,
                 CrossSalesIndex = 100,
                 LoadIndex = 100,
                 SatisfactionIndex = 100
             };
             _context.CompanyIndustrys.Add(companyIndustry);
             _context.SaveChanges();
+            }
 
             // create new corporation
+            if(corporationName != null)
+            {
             var corporationId = Guid.NewGuid(); 
             var corp = new Corporation{
                 Id = corporationId,
-                Name = "Heedbook" 
+                Name = corporationName 
             };
             _context.Corporations.Add(corp);
             _context.SaveChanges();
+            }
 
             // add statuss
-            List<string> statuses = new List<string>(new string[] { "Online", "Offline", "Active", "Disabled", "Inactive", "InProgress", "Finished", "Error", "Pending disabled", "Trial", "AutoActive", "AutoFinished", "AutoError" });
+            // List<string> statuses = new List<string>(new string[] { "Online", "Offline", "Active", "Disabled", "Inactive", "InProgress", "Finished", "Error", "Pending disabled", "Trial", "AutoActive", "AutoFinished", "AutoError" });
             
             
-            for (int i = 1; i < statuses.Count() + 1; i++)
-            {   
-                var status = new Status{
-                    StatusId = i,
-                    StatusName = statuses[i]
-                };
-                _context.Statuss.Add(status);
-                _context.SaveChanges();
-            }
+            // for (int i = 1; i < statuses.Count() + 1; i++)
+            // {   
+            //     var status = new Status{
+            //         StatusId = i,
+            //         StatusName = statuses[i]
+            //     };
+            //     _context.Statuss.Add(status);
+            //     _context.SaveChanges();
+            // }
             return "OK";
         }
 

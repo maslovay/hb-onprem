@@ -10,18 +10,19 @@ namespace AudioAnalyzeService
 {
     public class AudioAnalyze
     {
-        private readonly GoogleConnector _googleConnector;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
+        private readonly AsrHttpClient.AsrHttpClient _asrHttpClient; 
 
         public AudioAnalyze(GoogleConnector googleConnector,
             IServiceScopeFactory factory,
-            ElasticClient log
+            ElasticClient log,
+            AsrHttpClient.AsrHttpClient asrHttpClient
         )
         {
-            _googleConnector = googleConnector;
             _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
             _log = log;
+            _asrHttpClient = asrHttpClient;
         }
 
         public async Task Run(String path)
@@ -33,16 +34,16 @@ namespace AudioAnalyzeService
                 {
                     var splitedString = path.Split('/');
                     var fileName = splitedString[1];
-                    var dialogueId = Path.GetFileNameWithoutExtension(fileName);
+                    var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
                     var dialogue =
                         await _repository.FindOneByConditionAsync<Dialogue>(item =>
-                            item.DialogueId == Guid.Parse(dialogueId));
+                            item.DialogueId == dialogueId);
                     var fileAudio = new FileAudioDialogue
                     {
-                        DialogueId = Guid.Parse(dialogueId),
+                        DialogueId = dialogueId,
                         CreationTime = DateTime.UtcNow,
                         FileName = fileName,
-                        StatusId = 6,
+                        StatusId = 3,
                         FileContainer = "dialogueaudios",
                         BegTime = dialogue.BegTime,
                         EndTime = dialogue.EndTime,
@@ -50,6 +51,8 @@ namespace AudioAnalyzeService
                     };
                     await _repository.CreateAsync(fileAudio);
                     _repository.Save();
+                    await _asrHttpClient.StartAudioRecognize(dialogueId);
+                    _log.Info("Started recognize audio");
                 }
 
                 _log.Info("Function Audio STT finished");

@@ -2,11 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UserOperations;
-using UserOperations.Models;
-using HBData.Repository;
-using HBData;
-using HBData.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -21,19 +16,18 @@ using Swashbuckle.AspNetCore.Swagger;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.HttpOverrides;
+
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using UserOperations.Services;
-using Microsoft.AspNetCore.Identity;
-using HBLib.Utils;
-using HBLib;
+using HBData;
 
-namespace UserOperations
+namespace TeacherAPI
 {
+    
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -41,56 +35,31 @@ namespace UserOperations
             Configuration = configuration;
         }
 
-        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+        //readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         private IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options =>
-            {
-                options.AddPolicy(MyAllowSpecificOrigins,
-                builder =>
-                {
-                    builder.WithOrigins("http://localhost:3000",
-                                        "https://hbreactapp.azurewebsites.net");
-                });
-            }); 
             services.AddOptions();
-            services.AddDbContext<RecordsContext>
+            services.AddDbContext<RecordsContext>                                                   //Add Data Context how service in App
             (options =>
             {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                var connectionString = Configuration.GetConnectionString("DefaultConnection");      //Add Connection string from appsettings.json
                 options.UseNpgsql(connectionString,
-                    dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
+                dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
-            services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddScoped<Utils.DBOperations>();
-            services.AddIdentity<ApplicationUser, ApplicationRole>(p => {
-                p.Password.RequireDigit = true;
-                p.Password.RequireLowercase = true;
-                p.Password.RequireUppercase = true;
-                p.Password.RequireNonAlphanumeric = false;
-                p.Password.RequiredLength = 8;
-            })
-            .AddEntityFrameworkStores<RecordsContext>();
-            
-            services.AddScoped(typeof(ILoginService), typeof(LoginService));
 
-              services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(c =>
             {
-                c.EnableAnnotations();
                 c.SwaggerDoc("v1", new Info
                 {
                     Title = "User Service Api",
                     Version = "v1"
                 });
-            });
 
+            });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddTransient<SftpClient>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -111,20 +80,16 @@ namespace UserOperations
            
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
+                c.RouteTemplate = "teacher/swagger/{documentName}/swagger.json";
             });
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
-                c.RoutePrefix = "api/swagger";
+                c.SwaggerEndpoint("/teacher/swagger/v1/swagger.json", "Sample API");
+                c.RoutePrefix = "teacher/swagger";
             });
-            app.UseAuthentication();
-
             app.UseHttpsRedirection();
-            app.UseCors(MyAllowSpecificOrigins); 
             app.UseMvc();
         }
-        
     }
 }

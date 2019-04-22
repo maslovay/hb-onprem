@@ -52,8 +52,7 @@ namespace HBData.Models
         /// <summary>
         ///     Template
         /// </summary>
-        public Boolean Template { get; set; }
-
+        public Boolean IsTemplate { get; set; }
         /// <summary>
         ///     Links
         /// </summary>

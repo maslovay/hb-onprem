@@ -163,14 +163,14 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var session  = new CampaignContentSession {
-                    CampaignContentSessionId = Guid.NewGuid(),
+                var session  = new SlideShowSession {
+                    SlideShowSessionId = Guid.NewGuid(),
                     ApplicationUserId = content.ApplicationUserId,
                     BegTime = DateTime.UtcNow,
                     CampaignContentId = content.CampaignContentId
 
                 };
-                _context.CampaignContentSessions.Add(session);
+                _context.SlideShowSessions.Add(session);
                 _context.SaveChanges();
                 return Ok();
             }
@@ -192,14 +192,14 @@ namespace UserOperations.Controllers
                     var campaignContentId = stat.CampaignContentId;
                     var applicationUserId = stat.ApplicationUserId;
 
-                    var session = new CampaignContentSession{
-                        CampaignContentSessionId = Guid.NewGuid(),
+                    var session = new SlideShowSession{
+                        SlideShowSessionId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
                         BegTime = DateTime.UtcNow,
                         CampaignContentId = campaignContentId
                     };
 
-                    _context.CampaignContentSessions.Add(session);
+                    _context.SlideShowSessions.Add(session);
                     _context.SaveChanges();
 
                 }
