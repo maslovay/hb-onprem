@@ -16,6 +16,8 @@ using HBData;
 using HBData.Models;
 using HBData.Repository;
 using System.Security.Cryptography;
+using System.Net.Mail;
+using System.Net;
 
 namespace UserOperations.Services
 {
@@ -197,6 +199,36 @@ namespace UserOperations.Services
             //reject if non succeded request
             return false;
         }
+
+        #region Email
+            private string emailAddressSender = "heedbookmailagent@gmail.com";
+            private string emailServerSender = "smtp.gmail.com";
+            private string emailSenderPassword = "Test_User12345";
+            private int emailSenderPort = 587;
+
+            // //sendgrid account settings
+            // private static string sendGridApiKey = "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";
+            // private static string sendGridSenderEmail = "info@wantad.club";
+            // private static string sendGridSenderName = "WantAd";
+
+            //create and email notification 
+            public void SendEmail(string email, string messageTitle, string messageText, string senderName = "Heedbook")
+            {
+                MailAddress from = new MailAddress(emailAddressSender, senderName);
+                MailAddress to = new MailAddress(email);
+                // create mail object 
+                MailMessage m = new MailMessage(from, to);
+                // list text
+                m.Body = messageText;
+                m.Subject = messageTitle;
+                m.IsBodyHtml = true;
+                SmtpClient smtp = new SmtpClient(emailServerSender, emailSenderPort);
+                smtp.Credentials = new NetworkCredential(emailAddressSender, emailSenderPassword);
+                smtp.EnableSsl = true;
+                smtp.Send(m);
+            }
+
+        #endregion
 
         public bool _disposed;
 

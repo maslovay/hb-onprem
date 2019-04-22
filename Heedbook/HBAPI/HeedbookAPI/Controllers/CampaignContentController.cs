@@ -47,8 +47,7 @@ namespace UserOperations.Controllers
           [HttpGet("Test")]
         [SwaggerOperation(Description = "Return all camapigns for loggined company with content relations")]
         public IActionResult Test()
-        {
-           
+        {           
             return Ok("Its working");
         }
 

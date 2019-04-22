@@ -53,7 +53,7 @@ namespace UserOperations.Controllers
 
         [HttpPost("Register")]
         [SwaggerOperation(Description = "Create new company, new user, add manager role, create ew Tariff and newTransaction if no exist ")]
-        public async Task<IActionResult> UserRegister([FromBody] UserRegister message, [FromHeader] string Authorization)
+        public async Task<IActionResult> UserRegister([FromBody] UserRegister message)
         {
             if (_context.Companys.Where(x => x.CompanyName == message.CompanyName).Any() || _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                 return BadRequest("Company name or user email not unique");

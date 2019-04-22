@@ -120,6 +120,7 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 if (_context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                     return BadRequest("User email not unique");
+                string password = GeneratePass(6);
                 var user = new ApplicationUser
                 {
                     UserName = message.Email,
@@ -130,16 +131,18 @@ namespace UserOperations.Controllers
                     CompanyId = Guid.Parse(userClaims["companyId"]),
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
-                    PasswordHash = _loginService.GeneratePasswordHash(message.Password),
+                    PasswordHash = _loginService.GeneratePasswordHash(password),
                     StatusId = 3,
                     EmpoyeeId = message.EmployeeId
                 };
+                string msg = GenerateEmailMsg(password, user);
+                _loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
                 await _context.AddAsync(user);
 
                 var userRole = new ApplicationUserRole()
                 {
                     UserId = user.Id,
-                    RoleId = _context.Roles.First(p => p.Name == "Manager").Id //Manager role
+                    RoleId = Guid.Parse(message.RoleId) //Manager role
                 };
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
@@ -456,14 +459,36 @@ namespace UserOperations.Controllers
                 return BadRequest(e.Message);
             }
         }
+
+        #region EmailSend
+        public string GeneratePass(int x)
+        {
+            string pass = "";
+            var r = new Random();
+            while (pass.Length < x)
+            {
+                Char c = (char)r.Next(33, 125);
+                if (Char.IsLetterOrDigit(c))
+                    pass += c;
+            }
+            return pass;
+        }
+        public string GenerateEmailMsg(string pswd, ApplicationUser user)
+            {
+                string msg = "Login:    " + user.Email;
+                msg += "   Password: " + pswd + ".";
+                msg += " You were registred in Heedbook";
+                return msg;
+            }
+        #endregion
     }
 
     public class PostUser
     {
         public string FullName;
         public string Email;
-        public string Password;
         public string EmployeeId;
+        public string RoleId;
     }
 
     public class UserModel
@@ -500,4 +525,5 @@ namespace UserOperations.Controllers
         public List<Guid> companyIds { get; set; }   
         public Guid phraseId { get; set; }       
     }
+
 }

@@ -13,5 +13,6 @@ namespace UserOperations.Services
         bool CheckToken(string token, string sign = "");
         string GeneratePasswordHash(string password);
         bool CheckUserLogin(string login, string password);
+        void SendEmail(string email, string messageTitle, string messageText, string senderName = null);
     }
 }
