@@ -49,7 +49,9 @@ namespace AudioAnalyzeService
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddTransient<GoogleConnector>();
             services.AddHttpClient<GoogleConnector>();
-            services.AddHttpClient<AsrHttpClient.AsrHttpClient>();
+            services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
+            services.AddTransient(provider => provider.GetService<IOptions<AsrResult>>().Value);
+            services.AddTransient<AsrHttpClient.AsrHttpClient>();
             services.AddTransient<AudioAnalyze>();
             services.AddTransient<ToneAnalyze>();
             services.AddTransient<AudioAnalyzeRunHandler>();
