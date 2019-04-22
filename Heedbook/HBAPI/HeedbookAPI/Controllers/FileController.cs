@@ -65,23 +65,22 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Return all files from sftp. If no parameters are passed return files from 'media', for loggined company")]
         public async Task<IActionResult> FileGet([FromHeader]string Authorization,
                                                         [FromQuery]string containerName = null, 
-                                                        [FromQuery]string[] directoryNames = null, 
                                                         [FromQuery]string fileName = null)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
             var companyId = userClaims["companyId"];
-            IEnumerable<string> files = null;
             containerName = containerName ?? _containerName;
-            var tasks = new List<Task>();
             if (fileName != null)
             {
-                files = new List<string> { await _sftpClient.GetFileUrl(containerName + "/" + companyId + "/" + fileName) };
-                return Ok(files);
+                var result = await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fileName})");
+                return Ok(result);
             }
             else
-                files = await _sftpClient.GetAllFilesUrl(containerName, directoryNames);
-            return Ok(files);
+            {
+                var result = await _sftpClient.GetAllFilesUrl(containerName, new []{ companyId.ToString()});
+                return Ok(result);
+            }
         }
 
         [HttpPost("File")]
@@ -106,73 +105,48 @@ namespace UserOperations.Controllers
             }
             await Task.WhenAll(tasks);
             
-            tasks.Clear();
-            var result = new List<string>();
+            var urlTasks = new List<Task<String>>();            
             foreach (var fileName in fileNames)
             {
-                result.Add(await _sftpClient.GetFileUrl(fileName));
+                urlTasks.Add(_sftpClient.GetFileUrl(fileName));
             }
+            var result = await Task.WhenAll(urlTasks);
             return Ok(result);
         }
         
         [HttpPut("File")]
         [SwaggerOperation(Description = "Remove old and save new file on sftp. Can take containerName in body or save to media container. Folder determined by company id in token")]
-        public async Task<IEnumerable<string>> FilePut()
+        public async Task<IActionResult> FilePut([FromHeader] string Authorization, [FromForm] IFormCollection formData)
         {
-            string companyId = GetCompanyIdFromToken();
-            if (companyId == null) return null; 
-
-            var provider = new MultipartMemoryStreamProvider();
-            var form = await Request.ReadFormAsync();
-            var files = form.Files;
-            var containerNameParam = form.FirstOrDefault(x => x.Key == "containerName");
-            var containerName = containerNameParam.Value.Count() != 0 ? containerNameParam.Value.ToString() : _containerName;
-            var fileName = form.FirstOrDefault(x => x.Key == "fileName");
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+            var companyId = userClaims["companyId"];
+            var containerNameParam = formData.FirstOrDefault(x => x.Key == "containerName");
+            var containerName = containerNameParam.Value.Any() ? containerNameParam.Value.ToString() : _containerName;
+            var fileName = formData.FirstOrDefault(x => x.Key == "fileName");
 
             await _sftpClient.DeleteFileIfExistsAsync(containerName+"/"+ companyId+"/"+ fileName);
 
-            List<string> res = new List<string>();
-            var tasks = new List<Task>();
-            foreach (var file in files)
-            {
-                var memoryStream = new MemoryStream();
-                await file.CopyToAsync(memoryStream);
-                var fs = memoryStream.ToArray();
-                FileInfo f = new FileInfo(file.FileName);
-                var fn = Guid.NewGuid() + f.Extension;
-                var mymeType = file.ContentType.ToString();
-                memoryStream.Flush();
-                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, containerName + "/" + companyId, fn);
-                res.Add(await _sftpClient.GetFileUrl(containerName + "/" + companyId + "/" + fn));
-            }
-            return res;
+            FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+            var fn = Guid.NewGuid() + fileInfo.Extension;
+            var memoryStream = formData.Files[0].OpenReadStream();
+            await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}/{companyId}", fn, true);
+            return Ok($"{containerName}/{companyId}/{fn}");
         }
 
         [HttpDelete("File")]
         [SwaggerOperation(Description = "Remove file from sftp. Take containerName in params and filename. Or remove from media container. Folder determined by company id in token")]
-        public async Task<IActionResult> FileDelete([FromQuery] string containerName = null, [FromQuery] string fileName = null)
+        public async Task<IActionResult> FileDelete([FromHeader] string Authorization, 
+                                                    [FromQuery] string containerName = null, 
+                                                    [FromQuery] string fileName = null)
         {
-            string companyId = GetCompanyIdFromToken();
-            if (companyId == null) return null; 
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+            var companyId = userClaims["companyId"];
             var container = containerName?? _containerName;
-            await _sftpClient.DeleteFileIfExistsAsync(container + "/" + companyId + "/" + fileName);
+            await _sftpClient.DeleteFileIfExistsAsync($"{container}/{companyId}/{fileName}");
             return Ok("OK");
         }
         #endregion
-
-        private string GetCompanyIdFromToken()
-        {
-            try
-            {
-            if (!Request.Headers.TryGetValue("Authorization", out StringValues authToken)) return null;
-                string token = authToken.First();
-                var claims = _loginService.GetDataFromToken(token);
-                return claims["companyId"];
-            }
-            catch
-            {
-                return null;
-            }
-        }
     }
 }
