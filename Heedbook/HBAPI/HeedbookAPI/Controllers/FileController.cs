@@ -81,31 +81,30 @@ namespace UserOperations.Controllers
 
         [HttpPost("File")]
         [SwaggerOperation(Description = "Save file on sftp. Can take containerName in body or save to media container. Folder determined by company id in token")]
-        public async Task<IEnumerable<string>> FilePost()
+        public async Task<IEnumerable<string>> FilePost([FromHeader] string Authorization, [FromForm] IFormCollection formData)
         {
-            string companyId = GetCompanyIdFromToken();
-            if (companyId == null) return null; 
+            var companyId = _loginService.GetDataFromToken(Authorization)["companyId"];
+            var containerNameParam = formData.FirstOrDefault(x => x.Key == "containerName");
+            var containerName = containerNameParam.Value.Any() ? containerNameParam.Value.ToString() : _containerName;
 
-            var provider = new MultipartMemoryStreamProvider();
-            var form = await Request.ReadFormAsync();
-            var files = form.Files;
-            var containerNameParam = form.FirstOrDefault(x => x.Key == "containerName");
-            var containerName = containerNameParam.Value.Count() != 0 ? containerNameParam.Value.ToString() : _containerName;
-
-            List<string> res = new List<string>();
-            foreach (var file in files)
+            var tasks = new List<Task>();
+            var fileNames = new List<string>();
+            foreach (var file in formData.Files)
             {
-                var memoryStream = new MemoryStream();
-                await file.CopyToAsync(memoryStream);
-                var fs = memoryStream.ToArray();
-                FileInfo f = new FileInfo(file.FileName);
-                var fn = Guid.NewGuid() + f.Extension;
-                var mymeType = file.ContentType.ToString();
-                memoryStream.Flush();
-                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, containerName + "/" + companyId, fn);
-                res.Add(await _sftpClient.GetFileUrl(containerName + "/" + companyId + "/" + fn));
+                FileInfo fileInfo = new FileInfo(file.FileName);
+                var fn = Guid.NewGuid() + fileInfo.Extension;
+                var memoryStream = file.OpenReadStream();
+                tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}/{companyId}", fn, true));
+                fileNames.Add($"{containerName}/{companyId}/{fn}");
             }
-            return res;
+            await Task.WhenAll(tasks);
+            
+            var result = new List<string>();
+            foreach (var fileName in fileNames)
+            {
+                result.Add(await _sftpClient.GetFileUrl(fileName));
+            }
+            return result;
         }
         
         [HttpPut("File")]

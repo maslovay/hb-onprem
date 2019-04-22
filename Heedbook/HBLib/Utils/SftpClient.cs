@@ -86,12 +86,13 @@ namespace HBLib.Utils
         /// <param name="path"></param>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public async Task UploadAsMemoryStreamAsync(Stream stream, String path, String filename)
+        public async Task UploadAsMemoryStreamAsync(Stream stream, String path, String filename, Boolean toDestionationPath = false)
         {
             await ConnectToSftpAsync();
             _client.BufferSize = 4 * 1024;
             _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
             _client.UploadFile(stream, filename);
+            if (toDestionationPath) _client.ChangeDirectory(_sftpSettings.DestinationPath);
         }
 
         /// <summary>
