@@ -1,4 +1,5 @@
-﻿using AudioAnalyzeService.Handler;
+﻿using AsrHttpClient;
+using AudioAnalyzeService.Handler;
 using Configurations;
 using HBData;
 using HBData.Repository;
