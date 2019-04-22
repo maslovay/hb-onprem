@@ -459,29 +459,29 @@ namespace UserOperations.Controllers
                 return BadRequest(e.Message);
             }
         }
-
-        #region EmailSend
-        public string GeneratePass(int x)
-        {
-            string pass = "";
-            var r = new Random();
-            while (pass.Length < x)
-            {
-                Char c = (char)r.Next(33, 125);
-                if (Char.IsLetterOrDigit(c))
-                    pass += c;
-            }
-            return pass;
-        }
-        public string GenerateEmailMsg(string pswd, ApplicationUser user)
-            {
-                string msg = "Login:    " + user.Email;
-                msg += "   Password: " + pswd + ".";
-                msg += " You were registred in Heedbook";
-                return msg;
-            }
-        #endregion
     }
+
+    // #region EmailSend
+    // public string GeneratePass(int x)
+    // {
+    //     string pass = "";
+    //     var r = new Random();
+    //     while (pass.Length < x)
+    //     {
+    //         Char c = (char)r.Next(33, 125);
+    //         if (Char.IsLetterOrDigit(c))
+    //             pass += c;
+    //     }
+    //     return pass;
+    // }
+    // public string GenerateEmailMsg(string pswd, ApplicationUser user)
+    //     {
+    //         string msg = "Login:    " + user.Email;
+    //         msg += "   Password: " + pswd + ".";
+    //         msg += " You were registred in Heedbook";
+    //         return msg;
+    //     }
+    // #endregion
 
     public class PostUser
     {
