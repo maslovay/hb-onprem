@@ -3,21 +3,21 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
 {
-	/// <summary>
-	///     Information about dialogue tone emotions in each interval
-	/// </summary>
-	public class DialogueInterval
+    /// <summary>
+    ///     Information about dialogue tone emotions in each interval
+    /// </summary>
+    public class DialogueInterval
     {
-	    /// <summary>
-	    ///     Dialogue interval id
-	    /// </summary>
-	    [Key]
+        /// <summary>
+        ///     Dialogue interval id
+        /// </summary>
+        [Key]
         public Guid DialogueIntervalId { get; set; }
 
-	    /// <summary>
-	    ///     Dialogue id
-	    /// </summary>
-	    public Guid? DialogueId { get; set; }
+        /// <summary>
+        ///     Dialogue id
+        /// </summary>
+        public Guid? DialogueId { get; set; }
 
         public Dialogue Dialogue { get; set; }
 

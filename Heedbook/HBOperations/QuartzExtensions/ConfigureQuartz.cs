@@ -34,22 +34,23 @@ namespace QuartzExtensions
                 return scheduler;
             });
         }
-        
+
         public static void AddSendNotMarckedImageCountQuartz(this IServiceCollection services)
         {
             Console.WriteLine("Зашли в AddSendNotMarckedImageCountQuartz");
-            services.Add(new ServiceDescriptor(typeof(IJob), typeof(SendNotMarckedImageCountJob), ServiceLifetime.Singleton));
+            services.Add(new ServiceDescriptor(typeof(IJob), typeof(SendNotMarckedImageCountJob),
+                ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
             services.AddSingleton(provider => JobBuilder.Create<SendNotMarckedImageCountJob>()
-                .WithIdentity("SendNotMarckedImageCount.job", "Frames")
-                .Build());
+                                                        .WithIdentity("SendNotMarckedImageCount.job", "Frames")
+                                                        .Build());
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                    .WithIdentity($"SendNotMarckedImageCount.trigger", "Frames")
-                    .StartNow()
-                    .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
-                    .Build();
+                                     .WithIdentity("SendNotMarckedImageCount.trigger", "Frames")
+                                     .StartNow()
+                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
+                                     .Build();
             });
             Console.WriteLine("Середина AddSendNotMarckedImageCountQuartz");
             services.AddSingleton(provider =>

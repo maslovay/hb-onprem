@@ -32,7 +32,7 @@ namespace NotMarckedImageSheduler
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddSendNotMarckedImageCountQuartz();                    //-----------
+            services.AddSendNotMarckedImageCountQuartz(); //-----------
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
@@ -41,14 +41,9 @@ namespace NotMarckedImageSheduler
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
             else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-            }
 
             var job = app.ApplicationServices.GetService<IJobDetail>();
             var trigger = app.ApplicationServices.GetService<ITrigger>();

@@ -26,15 +26,19 @@ namespace AudioAnalyzeService
 
         private readonly SftpClient _sftpClient;
 
+        private readonly FFMpegWrapper _wrapper;
+
         public ToneAnalyze(SftpClient sftpClient,
             IConfiguration configuration,
             IServiceScopeFactory factory,
-            ElasticClient log)
+            ElasticClient log,
+            FFMpegWrapper wrapper)
         {
             _sftpClient = sftpClient;
             _configuration = configuration;
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _log = log;
+            _wrapper = wrapper;
         }
 
 
@@ -43,12 +47,11 @@ namespace AudioAnalyzeService
             try
             {
                 _log.Info("Function Tone analyze started");
-                var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
                 var dialogueId =
                     Guid.Parse((ReadOnlySpan<Char>) Path.GetFileNameWithoutExtension(path.Split('/').Last()));
                 var seconds = 3;
                 var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
-                var metadata = ffmpeg.SplitBySeconds(localPath, seconds);
+                var metadata = _wrapper.SplitBySeconds(localPath, seconds);
                 var intervals = new List<DialogueInterval>();
                 var begTime = _repository.Get<Dialogue>().Where(item => item.DialogueId == dialogueId)
                                          .Select(item => item.BegTime).First();

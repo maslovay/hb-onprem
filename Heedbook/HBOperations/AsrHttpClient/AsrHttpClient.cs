@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace AsrHttpClient
 {
     public class AsrHttpClient
     {
+        private const String AudioRecognize = "asr/audiorecognize/";
         private readonly AsrSettings _asrSettings;
 
         public AsrHttpClient(AsrSettings asrSettings)
@@ -15,17 +14,14 @@ namespace AsrHttpClient
             _asrSettings = asrSettings;
         }
 
-        public async Task<List<AsrResult>> GetAsrResult(String filename)
+        public async Task StartAudioRecognize(Guid dialogueId)
         {
             var path = _asrSettings.Uri.EndsWith('/')
-                ? _asrSettings.Uri + "asr/audiorecognize/" + filename
-                : _asrSettings.Uri + "/" + "asr/audiorecognize/" + filename;
+                ? _asrSettings.Uri + AudioRecognize + dialogueId
+                : _asrSettings.Uri + "/" + AudioRecognize + dialogueId;
             var uri = new Uri(path);
             var client = new HttpClient();
-            var response = await client.GetAsync(uri);
-            var contentAsString = await response.Content.ReadAsStringAsync();
-
-            return JsonConvert.DeserializeObject<List<AsrResult>>(contentAsString);
+            await client.GetAsync(uri);
         }
     }
 }

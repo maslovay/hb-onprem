@@ -15,10 +15,11 @@ namespace HBData.Models
         ///     Start of content show
         /// </summary>
         public DateTime BegTime { get; set; }
+
         /// <summary>
         ///     End of content show
         /// </summary>
-        public DateTime EndTime {get;set;}
+        public DateTime EndTime { get; set; }
 
         /// <summary>
         ///     Id CampaignContent means the content in partiqular campaign wich shown:
@@ -30,7 +31,7 @@ namespace HBData.Models
         /// <summary>
         ///     Content type
         /// </summary>
-        public string ContentType {get;set;}
+        public String ContentType { get; set; }
 
         /// <summary>
         ///     Place where the content was shown

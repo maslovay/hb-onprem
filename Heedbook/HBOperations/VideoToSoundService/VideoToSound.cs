@@ -17,17 +17,20 @@ namespace VideoToSoundService
         private readonly INotificationPublisher _publisher;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
+        private readonly FFMpegWrapper _wrapper;
 
         public VideoToSound(IConfiguration configuration,
             SftpClient sftpClient,
             INotificationPublisher publisher,
             SftpSettings sftpSettings,
-            ElasticClient log)
+            ElasticClient log,
+            FFMpegWrapper wrapper)
         {
             _configuration = configuration;
             _sftpClient = sftpClient;
             _publisher = publisher;
             _sftpSettings = sftpSettings;
+            _wrapper = wrapper;
             _log = log;
         }
 
@@ -38,8 +41,7 @@ namespace VideoToSoundService
                 var dialogueId = Path.GetFileNameWithoutExtension(path.Split('/').Last());
                 var localVideoPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
                 var localAudioPath = $"{_sftpSettings.DownloadPath}{dialogueId}.wav";
-                var ffmpeg = new FFMpegWrapper(_configuration["FfmpegPath"]);
-                await ffmpeg.VideoToWavAsync(localVideoPath, localAudioPath);
+                await _wrapper.VideoToWavAsync(localVideoPath, localAudioPath);
                 var uploadPath = Path.Combine("dialogueaudios", $"{dialogueId}.wav");
                 if (File.Exists(localAudioPath))
                 {

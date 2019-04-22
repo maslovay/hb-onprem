@@ -12,11 +12,16 @@ namespace HBLib.Utils
 {
     public class FFMpegWrapper
     {
+        private const Int32 BufferSize = 4096;
+        private readonly Byte[] _jpegBegin = {0xFF, 0xD8};
+        private readonly Byte[] _jpegEnd = {0xFF, 0xD9};
+        private readonly FFMpegSettings _settings;
         public readonly String FfPath;
 
-        public FFMpegWrapper(String ffPath)
+        public FFMpegWrapper(FFMpegSettings settings)
         {
-            FfPath = Environment.OSVersion.Platform == PlatformID.Win32NT ? ffPath : "ffmpeg";
+            _settings = settings;
+            FfPath = Environment.OSVersion.Platform == PlatformID.Win32NT ? _settings.FFMpegPath : "ffmpeg";
         }
 
         public Double GetDuration(String fn)
@@ -272,6 +277,81 @@ namespace HBLib.Utils
 
             var res = cmd.runCMD(FfPath, arguments);
             return res;
+        }
+
+
+        public async Task<Dictionary<String, Stream>> CutVideo(MemoryStream sourceStream,
+            DateTime dateTime,
+            String appUserId,
+            Int32 quality = 10,
+            Int32 cutPeriod = 3)
+        {
+            var result = new Dictionary<String, Stream>();
+
+            var psi = new ProcessStartInfo("ffmpeg")
+            {
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                Arguments = $"-hide_banner -i pipe:0 -r 1/{cutPeriod} -q:v {quality} -f image2 -update 1 pipe:1"
+            };
+
+            var process = new Process
+            {
+                StartInfo = psi
+            };
+
+            process.Start();
+
+            using (var inputStream = process.StandardInput.BaseStream)
+            {
+                sourceStream.Position = 0;
+                sourceStream.CopyToOptimized(inputStream);
+            }
+
+            using (var outputStream = new BufferedStream(process.StandardOutput.BaseStream, BufferSize))
+            {
+                var isBegan = false;
+                var checkPoint = false;
+
+                do
+                {
+                    var uploadStream = new MemoryStream();
+
+                    isBegan = outputStream.MoveToSequence(_jpegBegin);
+
+                    if (!isBegan) break;
+
+                    uploadStream.Write(_jpegBegin);
+
+                    checkPoint = outputStream.WriteUntilSequence(uploadStream, _jpegEnd);
+
+                    if (!checkPoint) break;
+
+                    var frameFile = GenerateFrameFileName(appUserId, dateTime);
+                    if (uploadStream.Length > 0) result[frameFile] = uploadStream;
+
+                    dateTime = dateTime.AddSeconds(cutPeriod);
+                } while (isBegan);
+            }
+
+            process.WaitForExit();
+
+            return result;
+        }
+
+        private String GenerateFrameFileName(String appUserId, DateTime timeStampForFrame)
+        {
+            var finalTimeStampString =
+                timeStampForFrame.Year +
+                timeStampForFrame.Month.ToString("D2") +
+                timeStampForFrame.Day.ToString("D2") +
+                timeStampForFrame.Hour.ToString("D2") +
+                timeStampForFrame.Minute.ToString("D2") +
+                timeStampForFrame.Second.ToString("D2");
+
+            return $"{appUserId}_{finalTimeStampString}.jpg";
         }
 
         public class FFmpegCommand

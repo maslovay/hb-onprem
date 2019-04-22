@@ -12,10 +12,10 @@ namespace RabbitMqEventBus.Base
     {
         private readonly IConnectionFactory _connectionFactory;
         private readonly Int32 _retryCount;
-        private IConnection _connection;
-        private Boolean _disposed;
 
         private readonly Object sync_root = new Object();
+        private IConnection _connection;
+        private Boolean _disposed;
 
         public DefaultRabbitMqPersistentConnection(IConnectionFactory connectionFactory, Int32 retryCount = 5)
         {

@@ -34,6 +34,9 @@ namespace ExtractFramesFromVideo
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
+            services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
+            services.AddScoped<FFMpegWrapper>();
             services.AddTransient(provider =>
             {
                 var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
