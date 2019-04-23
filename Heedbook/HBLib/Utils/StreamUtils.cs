@@ -1,39 +1,61 @@
 using System;
 using System.IO;
+using System.Net.Sockets;
+using HBLib.Utils;
 
 namespace HBLib.Utils
 {
     public static class StreamUtils
     {
         /// <summary>
-        ///     Optimized copying of stream contents
+        /// Optimized copying of stream contents
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dest"></param>
         public static void CopyToOptimized(this Stream src, Stream dest)
         {
-            var size = src.CanSeek ? Math.Min((Int32) (src.Length - src.Position), 0x2000) : 0x2000;
-            var buffer = new Byte[size];
-            Int32 n;
+            int size = (src.CanSeek) ? Math.Min((int)(src.Length - src.Position), 0x2000) : 0x2000;
+            byte[] buffer = new byte[size];
+            int n;
             do
             {
                 n = src.Read(buffer, 0, buffer.Length);
                 dest.Write(buffer, 0, n);
-            } while (n != 0);
+            } while (n != 0);           
         }
-
+        
         /// <summary>
-        ///     Optimized copying of stream contents for MemoryStream
+        /// Optimized copying of stream contents for MemoryStream
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dest"></param>
         public static void CopyToOptimized(this MemoryStream src, Stream dest)
         {
-            dest.Write(src.GetBuffer(), (Int32) src.Position, (Int32) (src.Length - src.Position));
+            int bufSize = 8192;
+            var currentBuffer = src.GetBuffer();
+            
+            dest.Flush();
+            
+            if (currentBuffer.Length > bufSize)
+            {
+                byte[] sub = null;
+                while (src.Length - src.Position > bufSize)
+                {
+                    sub = currentBuffer.SubArray(src.Position, bufSize);
+                    dest.Write(sub);
+                    src.Position += bufSize;
+                }
+                
+                sub = currentBuffer.SubArray(src.Position, src.Length - src.Position);
+                dest.Write(sub);
+
+                src.Position = src.Length;
+            } else 
+                dest.Write(src.GetBuffer(), (int)src.Position, (int)(src.Length - src.Position));
         }
 
         /// <summary>
-        ///     Optimized copying of stream contents to MemoryStream
+        /// Optimized copying of stream contents to MemoryStream
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dest"></param>
@@ -41,64 +63,77 @@ namespace HBLib.Utils
         {
             if (src.CanSeek)
             {
-                var pos = (Int32) dest.Position;
-                var length = (Int32) (src.Length - src.Position) + pos;
-                dest.SetLength(length);
+                int pos = (int)dest.Position;
+                int length = (int)(src.Length - src.Position) + pos;
+                dest.SetLength(length); 
 
-                while (pos < length)
+                while(pos < length)                
                     pos += src.Read(dest.GetBuffer(), pos, length - pos);
             }
             else
-            {
-                src.CopyTo(dest);
-            }
+                src.CopyTo((Stream)dest);
         }
-
+        
         /// <summary>
-        ///     Moves to a position to a position of a given sequence
+        /// Moves to a position to a position of a given sequence
         /// </summary>
         /// <param name="src"></param>
         /// <param name="sequence"></param>
         /// <returns></returns>
-        public static Boolean MoveToSequence(this Stream src, Byte[] sequence)
+        public static bool MoveToSequence(this Stream src, byte[] sequence)
         {
+            long prevPosition = src.Position;
             if (sequence == null || sequence.Length == 0)
                 return false;
 
-            var buffer = new Byte[sequence.Length];
-            var len = 0;
+            var buffer = new byte[sequence.Length];
+            int len = 0;
 
             do
             {
+                prevPosition = src.Position;
                 len = src.Read(buffer);
-            } while (len > 0 && !buffer.isMatch(sequence, 0));
+
+                if (!buffer.isMatch(sequence, 0))
+                    src.Position = prevPosition + 1;
+                else
+                    break;
+            } while (len > 0);
 
             return len != 0; // FALSE if we reached an end of stream without any results
         }
-
+        
         /// <summary>
-        ///     Writes to a target stream until we will reach a given sequence
+        /// Writes to a target stream until we will reach a given sequence
         /// </summary>
         /// <param name="src"></param>
         /// <param name="target"></param>
         /// <param name="sequence"></param>
         /// <returns></returns>
-        public static Boolean WriteUntilSequence(this Stream src, Stream target, Byte[] sequence)
+        public static bool WriteUntilSequence(this Stream src, Stream target, byte[] sequence)
         {
             if (sequence == null || sequence.Length == 0)
                 return false;
-            var buffer = new Byte[sequence.Length];
+            var buffer = new byte[sequence.Length];
 
-            var len = 0;
+            long prevPosition = src.Position;
+            int len = 0;
 
             do
             {
+                prevPosition = src.Position;
                 len = src.Read(buffer);
-                target.Write(buffer);
-            } while (len > 0 && !buffer.isMatch(sequence, 0));
-
-            return
-                !(len == 0 && !buffer.isMatch(sequence, 0)); // FALSE if we reached an end of stream without any results
+                
+                if (len > 0)
+                    target.WriteByte(buffer[0]);
+                
+                if (!buffer.isMatch(sequence, 0))
+                    src.Position = prevPosition + 1;
+                else
+                    break;
+            } while (len > 0);
+            
+            return !(len == 0 && !buffer.isMatch(sequence, 0)); // FALSE if we reached an end of stream without any results
         }
     }
 }
