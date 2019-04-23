@@ -3,12 +3,12 @@ using HBData.Repository;
 using HBLib.Utils;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
+using Renci.SshNet.Common;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
-using Renci.SshNet.Common;
 
 namespace ExtractFramesFromVideo
 {
@@ -19,7 +19,6 @@ namespace ExtractFramesFromVideo
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private const string FrameContainerName = "frames";
-        private const string VideoContainerName = "videos";
         private readonly FFMpegSettings _settings;
         private readonly FFMpegWrapper _wrapper;
 
