@@ -100,13 +100,13 @@ namespace UserOperations.Controllers
                 }
                 else
                 {
-                    foreach (var campCont in campaignEntity.CampaignContents)
+                    if(model.CampaignContents != null && model.CampaignContents.Count != 0)
                     {
-                        _context.Remove(campCont);
+                        _context.RemoveRange(campaignEntity.CampaignContents);
                     }
                     foreach (var p in typeof(Campaign).GetProperties())
                     {
-                        if (p.GetValue(modelCampaign, null) != null)
+                        if (p.GetValue(modelCampaign, null) != null && p.GetValue(modelCampaign, null).ToString() != Guid.Empty.ToString())
                             p.SetValue(campaignEntity, p.GetValue(modelCampaign, null), null);
                     }
                     _context.SaveChanges();
@@ -130,10 +130,7 @@ namespace UserOperations.Controllers
                 if (campaign != null)
                 {
                     campaign.StatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
-                    foreach (var item in campaign.CampaignContents)
-                    {
-                        _context.Remove(item);
-                    }
+                    _context.RemoveRange(campaign.CampaignContents);
                     _context.SaveChanges();
                     return Ok("OK");
                 }
@@ -196,7 +193,7 @@ namespace UserOperations.Controllers
             Content contentEntity = _context.Contents.Where(p => p.ContentId == content.ContentId).FirstOrDefault();
             foreach (var p in typeof(Content).GetProperties())
             {
-                if (p.GetValue(content, null) != null)
+                if (p.GetValue(content, null) != null && p.GetValue(content, null).ToString() != Guid.Empty.ToString())
                     p.SetValue(contentEntity, p.GetValue(content, null), null);
             }
             _context.SaveChanges();

@@ -44,7 +44,11 @@ namespace HBLib.Utils
                 return $"http://{_sftpSettings.Host}/{path}";
             return null;
         }
-
+        /// <summary>
+        /// Get urls to files. 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public async Task<IEnumerable<string>> GetAllFilesUrl(String directory, string[] subDirs = null)
         {
             await ConnectToSftpAsync();
@@ -58,7 +62,9 @@ namespace HBLib.Utils
             }
             else
                 files = _client.ListDirectory(directory).ToList();
-            return await Task.Run(() => files.Where(f => !f.IsDirectory).Select(f => $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}"));
+            return await Task.Run(() => files
+                .Where(f => !f.IsDirectory)
+                .Select(f => $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}"));
         }
 
         /// <summary>
