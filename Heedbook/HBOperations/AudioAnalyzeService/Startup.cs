@@ -51,7 +51,7 @@ namespace AudioAnalyzeService
             services.AddTransient<GoogleConnector>();
             services.AddHttpClient<GoogleConnector>();
             services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
-            services.AddTransient(provider => provider.GetService<IOptions<AsrResult>>().Value);
+            services.AddTransient(provider => provider.GetService<IOptions<AsrSettings>>().Value);
             services.AddTransient<AsrHttpClient.AsrHttpClient>();
             services.AddTransient<AudioAnalyze>();
             services.AddTransient<ToneAnalyze>();
