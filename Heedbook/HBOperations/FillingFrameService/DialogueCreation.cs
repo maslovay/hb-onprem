@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using FillingFrameService.Exceptions;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
@@ -11,6 +12,7 @@ using HBMLHttpClient.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using RabbitMqEventBus.Events;
+using Renci.SshNet.Common;
 
 namespace FillingFrameService
 {
@@ -36,35 +38,36 @@ namespace FillingFrameService
                 _log.Info("Function started");
                 var frameIds =
                     _repository.Get<FileFrame>().Where(item =>
-                                    item.ApplicationUserId == message.ApplicationUserId
-                                    && item.Time >= message.BeginTime
-                                    && item.Time <= message.EndTime)
-                               .Select(item => item.FileFrameId)
-                               .ToList();
+                            item.ApplicationUserId == message.ApplicationUserId
+                            && item.Time >= message.BeginTime
+                            && item.Time <= message.EndTime)
+                        .Select(item => item.FileFrameId)
+                        .ToList();
                 var emotions =
                     _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId),
-                        item => item.FileFrame).ToList();
+                        item => item.FileFrame);
 
                 var attributes =
                     _repository.GetWithInclude<FrameAttribute>(item => frameIds.Contains(item.FileFrameId),
-                        item => item.FileFrame).ToList();
+                        item => item.FileFrame);
+
                 if (emotions.Any() && attributes.Any())
                 {
                     var dialogueFrames = emotions.Select(item => new DialogueFrame
-                                                  {
-                                                      DialogueId = message.DialogueId,
-                                                      AngerShare = item.AngerShare,
-                                                      FearShare = item.FearShare,
-                                                      DisgustShare = item.DisgustShare,
-                                                      ContemptShare = item.ContemptShare,
-                                                      NeutralShare = item.NeutralShare,
-                                                      SadnessShare = item.SadnessShare,
-                                                      SurpriseShare = item.SurpriseShare,
-                                                      HappinessShare = item.HappinessShare,
-                                                      YawShare = item.YawShare,
-                                                      Time = item.FileFrame.Time
-                                                  })
-                                                 .ToList();
+                        {
+                            DialogueId = message.DialogueId,
+                            AngerShare = item.AngerShare,
+                            FearShare = item.FearShare,
+                            DisgustShare = item.DisgustShare,
+                            ContemptShare = item.ContemptShare,
+                            NeutralShare = item.NeutralShare,
+                            SadnessShare = item.SadnessShare,
+                            SurpriseShare = item.SurpriseShare,
+                            HappinessShare = item.HappinessShare,
+                            YawShare = item.YawShare,
+                            Time = item.FileFrame.Time
+                        })
+                        .ToList();
 
                     var genderCount = attributes.Count(item => item.Gender == "Male");
                     _log.Info($"Gender count {genderCount}");
@@ -76,7 +79,9 @@ namespace FillingFrameService
                         Age = attributes.Average(item => item.Age),
                         Avatar = $"{message.DialogueId}.jpg"
                     };
+
                     var yawShare = emotions.Average(item => item.YawShare);
+
                     var dialogueVisual = new DialogueVisual
                     {
                         DialogueId = message.DialogueId,
@@ -90,6 +95,7 @@ namespace FillingFrameService
                         HappinessShare = emotions.Average(item => item.HappinessShare),
                         AttentionShare = yawShare >= -10 && yawShare <= 10 ? 100 : 0
                     };
+
                     var insertTasks = new List<Task>
                     {
                         _repository.CreateAsync(dialogueVisual),
@@ -110,6 +116,7 @@ namespace FillingFrameService
                         X = faceRectangle.Top,
                         Y = faceRectangle.Left
                     };
+
                     var stream = FaceDetection.CreateAvatar(localPath, rectangle);
                     stream.Seek(0, SeekOrigin.Begin);
                     await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
@@ -119,10 +126,15 @@ namespace FillingFrameService
                     _log.Info("Function finished");
                 }
             }
+            catch (SftpPathNotFoundException e)
+            {
+                _log.Info($"exception occured while trying to download file {e}");
+                throw new DialogueCreationException(e.Message, e);
+            }
             catch (Exception e)
             {
                 _log.Info($"exception occured {e}");
-                throw;
+                throw new DialogueCreationException(e.Message, e);
             }
         }
     }

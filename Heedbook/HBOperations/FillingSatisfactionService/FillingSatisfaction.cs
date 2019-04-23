@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FillingSatisfactionService.Exceptions;
 using FillingSatisfactionService.Helper;
 using HBData.Models;
 using HBData.Repository;
@@ -214,7 +215,7 @@ namespace FillingSatisfactionService
             catch (Exception e)
             {
                 _log.Fatal($"exception occured {e}");
-                throw;
+                throw new FillingSatisfactionException( e.Message, e );
             }
         }
     }

@@ -8,6 +8,9 @@
       <Reference Include="Microsoft.Extensions.Configuration, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
         <HintPath>..\..\..\..\..\..\..\usr\share\dotnet\sdk\NuGetFallbackFolder\microsoft.extensions.configuration\2.2.0\lib\netstandard2.0\Microsoft.Extensions.Configuration.dll</HintPath>
       </Reference>
+      <Reference Include="System.Configuration.ConfigurationManager, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
+        <HintPath>..\..\..\..\..\.nuget\packages\system.configuration.configurationmanager\4.5.0\ref\netstandard2.0\System.Configuration.ConfigurationManager.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
     <ItemGroup>
@@ -20,6 +23,17 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\HBData\HBData.csproj" />
+      <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Resources\Frames" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Resources\Videos\testid_20190417100653_2.mkv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
