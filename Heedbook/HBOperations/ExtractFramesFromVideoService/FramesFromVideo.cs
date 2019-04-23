@@ -1,23 +1,25 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Threading.Tasks;
+using Renci.SshNet.Common;
 
 namespace ExtractFramesFromVideo
 {
     public class FramesFromVideo
     {
-        private const String FrameContainerName = "frames";
         private readonly SftpClient _client;
         private readonly INotificationHandler _handler;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
+        private const string FrameContainerName = "frames";
+        private const string VideoContainerName = "videos";
         private readonly FFMpegSettings _settings;
         private readonly FFMpegWrapper _wrapper;
 
@@ -36,49 +38,61 @@ namespace ExtractFramesFromVideo
             _wrapper = wrapper;
         }
 
-        public async Task Run(String videoBlobName)
+        public async Task Run(string videoBlobRelativePath)
         {
-            _log.Info("Function Extract Frames From Video Started");
-            _log.Info("Write blob to memory stream");
-
-            var targetVideoFileName = Path.GetFileNameWithoutExtension(videoBlobName);
-
-            var appUserId = targetVideoFileName.Split("_")[0];
-            var videoTimestampText = targetVideoFileName.Split("_")[1];
-            var videoTimeStamp =
-                DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-            videoTimeStamp = videoTimeStamp.AddSeconds(2);
-
-            using (var ftpDownloadStream =
-                await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobName))
+            try
             {
-                var uploadStreams = await _wrapper.CutVideo(ftpDownloadStream, videoTimeStamp, appUserId, 10, 3);
+                _log.Info("Function Extract Frames From Video Started");
+                _log.Info("Write blob to memory stream");
 
-                var uploadTasks = new List<Task>();
+                var targetVideoFileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
 
-                foreach (var frameFilename in uploadStreams.Keys)
+                var appUserId = targetVideoFileName.Split(("_"))[0];
+                var videoTimestampText = targetVideoFileName.Split(("_"))[1];
+                var videoTimeStamp =
+                    DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+                videoTimeStamp = videoTimeStamp.AddSeconds(2);
+
+                using (var ftpDownloadStream =
+                    await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobRelativePath))
                 {
-                    uploadStreams[frameFilename].Position = 0;
+                    var uploadStreams = await _wrapper.CutVideo(ftpDownloadStream, videoTimeStamp, appUserId, 10, 3);
 
-                    var uploadTask = _client.UploadAsMemoryStreamAsync(uploadStreams[frameFilename],
-                        FrameContainerName + "/", frameFilename);
+                    List<Task> uploadTasks = new List<Task>();
 
-                    uploadTasks.Add(uploadTask);
+                    foreach (var frameFilename in uploadStreams.Keys)
+                    {
+                        uploadStreams[frameFilename].Position = 0;
 
-                    RaiseNewFrameEvent(frameFilename);
+                        var uploadTask = _client.UploadAsMemoryStreamAsync(uploadStreams[frameFilename],
+                            FrameContainerName + "/", frameFilename);
 
-                    await InsertNewFileFrameToDb(appUserId, frameFilename, videoTimeStamp);
+                        uploadTasks.Add(uploadTask);
 
-                    videoTimeStamp = videoTimeStamp.AddSeconds(3);
+                        RaiseNewFrameEvent(frameFilename);
+
+                        await InsertNewFileFrameToDb(appUserId, frameFilename, videoTimeStamp);
+
+                        videoTimeStamp = videoTimeStamp.AddSeconds(3);
+                    }
+
+                    Task.WaitAll(uploadTasks.ToArray());
                 }
 
-                Task.WaitAll(uploadTasks.ToArray());
+                _log.Info("Function Extract Frames From Video finished");
             }
-
-            _log.Info("Function Extract Frames From Video finished");
+            catch (SftpPathNotFoundException)
+            {
+                Console.WriteLine("Path not found");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
-        private void RaiseNewFrameEvent(String filename)
+        private void RaiseNewFrameEvent(string filename)
         {
             var message = new FaceAnalyzeRun
             {
@@ -88,7 +102,7 @@ namespace ExtractFramesFromVideo
             _handler.EventRaised(message);
         }
 
-        private async Task InsertNewFileFrameToDb(String appUserId, String filename, DateTime timeStampForFrame)
+        private async Task InsertNewFileFrameToDb(string appUserId, string filename, DateTime timeStampForFrame)
         {
             try
             {
