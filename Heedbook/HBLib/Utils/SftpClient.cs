@@ -45,6 +45,17 @@ namespace HBLib.Utils
             return null;
         }
         /// <summary>
+        /// Get url to file. 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public string GetFileUrlFast(String path)
+        {
+            return $"http://{_sftpSettings.Host}/{path}";
+        }
+
+
+        /// <summary>
         /// Get urls to files. 
         /// </summary>
         /// <param name="path"></param>

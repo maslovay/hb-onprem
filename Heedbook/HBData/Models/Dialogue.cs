@@ -82,6 +82,10 @@ namespace HBData.Models
         ///     Link to dialogue profile
         /// </summary>
         public ICollection<DialogueClientProfile> DialogueClientProfile { get; set; }
+        /// <summary>
+        ///     Link to hints
+        /// </summary>
+        public ICollection<DialogueHint> DialogueHint{get; set;}
 
         /// <summary>
         ///     Link to information about emotions on frame

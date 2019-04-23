@@ -31,6 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using System.Net.Http.Headers;
 using Swashbuckle.AspNetCore.Annotations;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -41,6 +42,8 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
+
+        private readonly SftpClient _sftpClient;
         private Dictionary<string, string> userClaims;
 
 
@@ -48,12 +51,14 @@ namespace UserOperations.Controllers
         public UserController(
             IConfiguration config,
             ILoginService loginService,
-            RecordsContext context
+            RecordsContext context,
+            SftpClient sftpClient
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
+            _sftpClient = sftpClient;
         }
 
         [HttpGet("User")]
@@ -389,6 +394,8 @@ namespace UserOperations.Controllers
                 var dialogues = _context.Dialogues
                 .Include(p => p.DialoguePhrase)
                 .Include(p => p.ApplicationUser)
+                .Include(p => p.DialogueHint)
+                .Include(p => p.DialogueClientProfile)
                 .Where(p => 
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
@@ -399,9 +406,12 @@ namespace UserOperations.Controllers
                     (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid) q.PhraseId))) &&
                     (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid) q.PhraseTypeId)))
                 )
-                .Select(p => new Dialogue{
+                .Select(p => new {
                     DialogueId = p.DialogueId,
+                    Avatar = _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.First().Avatar}"),
                     ApplicationUserId = p.ApplicationUserId,
+                    FullName = p.ApplicationUser.FullName,
+                    DialogueHints = p.DialogueHint,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     CreationTime = p.CreationTime,
@@ -427,6 +437,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
                                                         [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
                                                         [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "dialogueId")] List<Guid> dialogueIds,
                                                         [FromHeader] string Authorization
                                                         )
         {
@@ -435,17 +446,12 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
+                
                 var formatString = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
                 var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
-
-
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
-
-                var test = _context.Dialogues.Include(p => p.DialogueClientProfile)
-                .Where(p => p.DialogueId.ToString() == "ef0d8904-4cc6-4430-acb9-cd690decadc7").ToList();
-                Console.WriteLine(JsonConvert.SerializeObject(test));
 
                 var dialogues = _context.Dialogues
                 .Include(p => p.DialogueAudio)
@@ -459,10 +465,12 @@ namespace UserOperations.Controllers
                 .Include(p => p.DialogueVisual)
                 .Include(p => p.DialogueWord)
                 .Include(p => p.ApplicationUser)
+                .Include(p => p.DialogueHint)
                 .Where(p =>
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
                     p.StatusId == 3 && p.InStatistic == true &&
+                    (!dialogueIds.Any() || dialogueIds.Contains(p.DialogueId)) &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
                     (!phraseIds.Any() || p.DialoguePhrase.Where(q => phraseIds.Contains((Guid)q.PhraseId)).Any()) &&
