@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ExtractFramesFromVideo
@@ -21,7 +22,7 @@ namespace ExtractFramesFromVideo
         private const string FrameContainerName = "frames";
         private readonly FFMpegSettings _settings;
         private readonly FFMpegWrapper _wrapper;
-
+        
         public FramesFromVideo(SftpClient client,
             IGenericRepository repository,
             INotificationHandler handler,
@@ -104,6 +105,7 @@ namespace ExtractFramesFromVideo
 
         private async Task InsertNewFileFrameToDb(string appUserId, string filename, DateTime timeStampForFrame)
         {
+            Monitor.Enter(_repository);
             try
             {
                 var fileFrame = new FileFrame
@@ -130,6 +132,10 @@ namespace ExtractFramesFromVideo
             catch (Exception ex)
             {
                 _log.Error("Exception was thrown while trying to access to DB: " + ex.Message, ex);
+            }
+            finally
+            {
+                Monitor.Exit(_repository);
             }
         }
     }
