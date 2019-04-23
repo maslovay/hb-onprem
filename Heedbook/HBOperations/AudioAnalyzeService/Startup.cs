@@ -48,8 +48,6 @@ namespace AudioAnalyzeService
                 provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddTransient<GoogleConnector>();
-            services.AddHttpClient<GoogleConnector>();
             services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
             services.AddTransient(provider => provider.GetService<IOptions<AsrSettings>>().Value);
             services.AddTransient<AsrHttpClient.AsrHttpClient>();
