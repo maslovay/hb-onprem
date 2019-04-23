@@ -58,8 +58,8 @@ namespace ExtractFramesFromVideo
                 {
                     var uploadStreams = await _wrapper.CutVideo(ftpDownloadStream, videoTimeStamp, appUserId, 10, 3);
 
-                    List<Task> uploadTasks = new List<Task>();
-
+                    var uploadTasks = new List<Task>();
+                    var insertToDbTasks = new List<Task>();
                     foreach (var frameFilename in uploadStreams.Keys)
                     {
                         uploadStreams[frameFilename].Position = 0;
@@ -71,12 +71,13 @@ namespace ExtractFramesFromVideo
 
                         RaiseNewFrameEvent(frameFilename);
 
-                        await InsertNewFileFrameToDb(appUserId, frameFilename, videoTimeStamp);
+                        insertToDbTasks.Add(InsertNewFileFrameToDb(appUserId, frameFilename, videoTimeStamp));
 
                         videoTimeStamp = videoTimeStamp.AddSeconds(3);
                     }
 
-                    Task.WaitAll(uploadTasks.ToArray());
+                    await Task.WhenAll(uploadTasks);
+                    await Task.WhenAll(insertToDbTasks);
                 }
 
                 _log.Info("Function Extract Frames From Video finished");
@@ -125,7 +126,7 @@ namespace ExtractFramesFromVideo
                 };
 
                 await _repository.CreateAsync(fileFrame);
-                await _repository.SaveAsync();
+                _repository.Save();
             }
             catch (Exception ex)
             {
