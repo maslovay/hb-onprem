@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
@@ -19,6 +20,7 @@ namespace HBData.Models
         /// </summary>
         public Guid? DialogueId { get; set; }
 
+        [JsonIgnore] 
         public Dialogue Dialogue { get; set; }
 
         /// <summary>
