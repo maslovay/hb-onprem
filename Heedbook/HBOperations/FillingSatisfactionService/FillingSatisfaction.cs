@@ -44,6 +44,7 @@ namespace FillingSatisfactionService
                 }
                 catch
                 {
+                    _log.Warning("Couldn't get dialog audio metrics!");   
                     dialogueAudio = null;
                 }
 
@@ -54,6 +55,7 @@ namespace FillingSatisfactionService
                 }
                 catch
                 {
+                    _log.Warning("Couldn't get positivity of text tone metrics!");   
                     positiveTextTone = null;
                 }
 
@@ -61,8 +63,7 @@ namespace FillingSatisfactionService
                     await _repository.FindByConditionAsync<DialogueInterval>(p => p.DialogueId == dialogueId);
 
                 var meetingExpectationsByNN =
-                    _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio,
-                        positiveTextTone);
+                    _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio, positiveTextTone);
                 Double? begMoodByNN = 0;
                 Double? endMoodByNN = 0;
                 Double nNWeight = 0;
@@ -104,6 +105,7 @@ namespace FillingSatisfactionService
                 }
                 catch
                 {
+                    _log.Warning("Couldn't get satisfaction score!");   
                     satisfactionScore = null;
                 }
 
@@ -207,7 +209,7 @@ namespace FillingSatisfactionService
                 }
 
                 _repository.Save();
-                _log.Info("Function filling satisfaction ended.");
+                _log.Info("Function filling satisfaction finished.");
             }
             catch (Exception e)
             {

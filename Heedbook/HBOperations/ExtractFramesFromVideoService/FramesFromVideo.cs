@@ -68,12 +68,12 @@ namespace ExtractFramesFromVideo
                     
                     RaiseNewFrameEvent(frameFilename);
                    
-                    await InsertNewFileFrameToDb(appUserId, frameFilename, videoTimeStamp);
+                    InsertNewFileFrameToDb(appUserId, frameFilename, videoTimeStamp);
                     
                     videoTimeStamp = videoTimeStamp.AddSeconds(3);
                 }
 
-                Task.WaitAll(uploadTasks.ToArray());
+                await Task.WhenAll(uploadTasks);
             }
 
             _log.Info("Function Extract Frames From Video finished");
