@@ -378,26 +378,39 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
+                
                 var formatString = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
                 var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
 
-
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
 
-                var dialogues = _context.DialoguePhrases
-                .Include(p => p.Dialogue)
-                .Include(p => p.Dialogue.ApplicationUser)
-                .Where(p =>
-                    p.Dialogue.BegTime >= begTime &&
-                    p.Dialogue.EndTime <= endTime &&
-                    p.Dialogue.ApplicationUser.CompanyId == companyId &&
-                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.Dialogue.ApplicationUserId)) &&
-                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.Dialogue.ApplicationUser.WorkerTypeId)) &&
-                    (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId)) &&
-                    (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid)p.PhraseTypeId))
-                    ).Select(p => p.Dialogue).ToList();
+                var dialogues = _context.Dialogues
+                .Include(p => p.DialoguePhrase)
+                .Include(p => p.ApplicationUser)
+                .Where(p => 
+                    p.BegTime >= begTime &&
+                    p.EndTime <= endTime &&
+                    p.ApplicationUser.CompanyId == companyId &&
+                    p.StatusId == 3 && p.InStatistic == true &&
+                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
+                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
+                    (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid) q.PhraseId))) &&
+                    (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid) q.PhraseTypeId)))
+                )
+                .Select(p => new Dialogue{
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    CreationTime = p.CreationTime,
+                    Comment = p.Comment,
+                    SysVersion = p.SysVersion,
+                    StatusId = p.StatusId,
+                    InStatistic = p.InStatistic
+                })
+                .ToList();
                 return Ok(dialogues);
             }
             catch (Exception e)
@@ -430,6 +443,10 @@ namespace UserOperations.Controllers
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
 
+                var test = _context.Dialogues.Include(p => p.DialogueClientProfile)
+                .Where(p => p.DialogueId.ToString() == "ef0d8904-4cc6-4430-acb9-cd690decadc7").ToList();
+                Console.WriteLine(JsonConvert.SerializeObject(test));
+
                 var dialogues = _context.Dialogues
                 .Include(p => p.DialogueAudio)
                 .Include(p => p.DialogueClientProfile)
@@ -442,15 +459,16 @@ namespace UserOperations.Controllers
                 .Include(p => p.DialogueVisual)
                 .Include(p => p.DialogueWord)
                 .Include(p => p.ApplicationUser)
-
                 .Where(p =>
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
+                    p.StatusId == 3 && p.InStatistic == true &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
                     (!phraseIds.Any() || p.DialoguePhrase.Where(q => phraseIds.Contains((Guid)q.PhraseId)).Any()) &&
                     (!phraseTypeIds.Any() || p.DialoguePhrase.Where(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)).Any())
-                    ).ToList();
+                    )
+                .ToList();
 
                 return Ok(dialogues);
             }

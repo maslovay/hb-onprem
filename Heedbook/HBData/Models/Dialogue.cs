@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
@@ -35,6 +36,7 @@ namespace HBData.Models
         /// </summary>
         public Guid ApplicationUserId { get; set; }
 
+       [JsonIgnore] 
         public ApplicationUser ApplicationUser { get; set; }
 
         /// <summary>
@@ -73,7 +75,7 @@ namespace HBData.Models
 
         /// <summary>
         ///     Link to dialogue audio information
-        /// </summary>
+        /// </summary> 
         public ICollection<DialogueAudio> DialogueAudio { get; set; }
 
         /// <summary>
@@ -107,7 +109,6 @@ namespace HBData.Models
         ///     Link to words
         /// </summary>
         public ICollection<DialogueWord> DialogueWord { get; set; }
-
         public ICollection<DialoguePhrase> DialoguePhrase { get; set; }
     }
 }
