@@ -31,6 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using System.Net.Http.Headers;
 using Swashbuckle.AspNetCore.Annotations;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -41,6 +42,8 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
+
+        private readonly SftpClient _sftpClient;
         private Dictionary<string, string> userClaims;
 
 
@@ -48,12 +51,14 @@ namespace UserOperations.Controllers
         public UserController(
             IConfiguration config,
             ILoginService loginService,
-            RecordsContext context
+            RecordsContext context,
+            SftpClient sftpClient
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
+            _sftpClient = sftpClient;
         }
 
         [HttpGet("User")]
@@ -209,19 +214,29 @@ namespace UserOperations.Controllers
 
         [HttpPost("PhraseLib")]
         [SwaggerOperation(Description = "Save new phrase to DB and attach it to loggined company (create new PhraseCompany)")]
-        public async Task<IActionResult> PhrasePost([FromBody] Phrase message, [FromHeader] string Authorization)
+        public async Task<IActionResult> PhrasePost([FromBody] PhrasePost message, [FromHeader] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
+                var phrase = new Phrase {
+                    PhraseId = Guid.NewGuid(),
+                    PhraseText = message.PhraseText,
+                    PhraseTypeId = message.PhraseTypeId,
+                    LanguageId = message.LanguageId,
+                    IsClient = message.IsClient,
+                    WordsSpace = message.WordsSpace,
+                    Accurancy = message.Accurancy,
+                    IsTemplate = message.IsTemplate
+                };
 
-                await _context.Phrases.AddAsync(message);
+                await _context.Phrases.AddAsync(phrase);
                 var phraseCompany = new PhraseCompany();
                 phraseCompany.CompanyId = companyId;
                 phraseCompany.PhraseCompanyId = Guid.NewGuid();
-                phraseCompany.PhraseId = message.PhraseId;
+                phraseCompany.PhraseId = phrase.PhraseId;
                 await _context.PhraseCompanys.AddAsync(phraseCompany);
                 await _context.SaveChangesAsync();
                 return Ok(message);
@@ -234,7 +249,7 @@ namespace UserOperations.Controllers
 
         [HttpPut("PhraseLib")]
         [SwaggerOperation(Description = "Edit phrase")]
-        public async Task<IActionResult> PhrasePut([FromBody] Phrase message, [FromHeader] string Authorization)
+        public async Task<IActionResult> PhrasePut([FromBody] PhrasePut message, [FromHeader] string Authorization)
         {
             try
             {
@@ -378,26 +393,44 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
+                
                 var formatString = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
                 var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
 
-
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
 
-                var dialogues = _context.DialoguePhrases
-                .Include(p => p.Dialogue)
-                .Include(p => p.Dialogue.ApplicationUser)
-                .Where(p =>
-                    p.Dialogue.BegTime >= begTime &&
-                    p.Dialogue.EndTime <= endTime &&
-                    p.Dialogue.ApplicationUser.CompanyId == companyId &&
-                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.Dialogue.ApplicationUserId)) &&
-                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.Dialogue.ApplicationUser.WorkerTypeId)) &&
-                    (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId)) &&
-                    (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid)p.PhraseTypeId))
-                    ).Select(p => p.Dialogue).ToList();
+                var dialogues = _context.Dialogues
+                .Include(p => p.DialoguePhrase)
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.DialogueHint)
+                .Include(p => p.DialogueClientProfile)
+                .Where(p => 
+                    p.BegTime >= begTime &&
+                    p.EndTime <= endTime &&
+                    p.ApplicationUser.CompanyId == companyId &&
+                    p.StatusId == 3 && p.InStatistic == true &&
+                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
+                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
+                    (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid) q.PhraseId))) &&
+                    (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid) q.PhraseTypeId)))
+                )
+                .Select(p => new {
+                    DialogueId = p.DialogueId,
+                    Avatar = _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.First().Avatar}"),
+                    ApplicationUserId = p.ApplicationUserId,
+                    FullName = p.ApplicationUser.FullName,
+                    DialogueHints = p.DialogueHint,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    CreationTime = p.CreationTime,
+                    Comment = p.Comment,
+                    SysVersion = p.SysVersion,
+                    StatusId = p.StatusId,
+                    InStatistic = p.InStatistic
+                })
+                .ToList();
                 return Ok(dialogues);
             }
             catch (Exception e)
@@ -408,51 +441,44 @@ namespace UserOperations.Controllers
 
         [HttpGet("DialogueInclude")]
         [SwaggerOperation(Description = "Return collection of dialogues with relative data by filters")]
-        public IActionResult DialogueGetInclude([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization
-                                                        )
+        public IActionResult DialogueGetInclude([FromQuery(Name = "dialogueId")] List<Guid> dialogueIds,
+                                                [FromHeader] string Authorization)
         {
             try
             {
+                var begTime = DateTime.UtcNow.AddDays(-30);
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var formatString = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
-
-
-                begTime = begTime.Date;
-                endTime = endTime.Date.AddDays(1);
-
-                var dialogues = _context.Dialogues
-                .Include(p => p.DialogueAudio)
-                .Include(p => p.DialogueClientProfile)
-                .Include(p => p.DialogueClientSatisfaction)
-                .Include(p => p.DialogueFrame)
-                .Include(p => p.DialogueInterval)
-                .Include(p => p.DialoguePhrase)
-                .Include(p => p.DialoguePhraseCount)
-                .Include(p => p.DialogueSpeech)
-                .Include(p => p.DialogueVisual)
-                .Include(p => p.DialogueWord)
-                .Include(p => p.ApplicationUser)
-
-                .Where(p =>
+                var avgDialogueTime = _context.Dialogues.Where(p =>
                     p.BegTime >= begTime &&
-                    p.EndTime <= endTime &&
-                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
-                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
-                    (!phraseIds.Any() || p.DialoguePhrase.Where(q => phraseIds.Contains((Guid)q.PhraseId)).Any()) &&
-                    (!phraseTypeIds.Any() || p.DialoguePhrase.Where(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)).Any())
-                    ).ToList();
+                    p.StatusId == 3 && p.InStatistic == true &&
+                    p.ApplicationUser.CompanyId == companyId)
+                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
+                
+                var dialogue = _context.Dialogues
+                    .Include(p => p.DialogueAudio)
+                    .Include(p => p.DialogueClientProfile)
+                    .Include(p => p.DialogueClientSatisfaction)
+                    .Include(p => p.DialogueFrame)
+                    .Include(p => p.DialogueInterval)
+                    .Include(p => p.DialoguePhrase)
+                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialogueSpeech)
+                    .Include(p => p.DialogueVisual)
+                    .Include(p => p.DialogueWord)
+                    .Include(p => p.ApplicationUser)
+                    .Include(p => p.DialogueHint)
+                    .Where(p => p.ApplicationUser.CompanyId == companyId 
+                        && p.InStatistic == true 
+                        && p.StatusId == 3
+                        && (!dialogueIds.Any() || dialogueIds.Contains(p.DialogueId)))
+                    .FirstOrDefault();                
 
-                return Ok(dialogues);
+                var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
+                jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
+                jsonDialogue["DialogueAvgDurationLastMonth"] = avgDialogueTime;
+                return Ok(jsonDialogue);
             }
             catch (Exception e)
             {
@@ -526,6 +552,29 @@ namespace UserOperations.Controllers
     {
         public List<Guid> companyIds { get; set; }   
         public Guid phraseId { get; set; }       
+    }
+
+    public class PhrasePost
+    {
+        public string PhraseText;
+        public Guid PhraseTypeId;
+        public Int32? LanguageId;
+        public bool IsClient;
+        public Int32? WordsSpace;
+        public double? Accurancy;
+        public Boolean IsTemplate;
+    }
+
+    public class PhrasePut
+    {
+        public Guid PhraseId;
+        public string PhraseText;
+        public Guid PhraseTypeId;
+        public Int32? LanguageId;
+        public bool IsClient;
+        public Int32? WordsSpace;
+        public double? Accurancy;
+        public Boolean IsTemplate;
     }
 
 }

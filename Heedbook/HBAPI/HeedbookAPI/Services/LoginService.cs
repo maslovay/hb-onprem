@@ -53,7 +53,8 @@ namespace UserOperations.Services
         {
             try
             {
-                var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
+               // var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
+                var roleInfo = _context.ApplicationUserRoles.Include(x=>x.Role).Where( x => x.UserId == user.Id).FirstOrDefault();
                 var role = roleInfo.Role.Name;            
 
                 if (user.StatusId == 3)
