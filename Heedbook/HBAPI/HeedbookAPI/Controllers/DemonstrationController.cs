@@ -219,7 +219,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("GetContents")]
-        public async Task<IActionResult> GetContents( [FromHeader] string Authorization )
+        public async Task<IActionResult> GetContents([FromHeader] string Authorization)
         {
             try
             {
@@ -237,7 +237,8 @@ namespace UserOperations.Controllers
                     new
                     {
                         campaign = p,
-                        contents = p.CampaignContents.Select(c => new ContentWithId { content = c.Content })//.Select(x=>new {x.Content, HTML = Guid.NewGuid().ToString()}).ToList()                        
+                        contents = p.CampaignContents
+                                .Select(c => new ContentWithId() { contentWithId = c.Content }).ToList()                        
                     }
                 ).ToList();
 
@@ -250,63 +251,54 @@ namespace UserOperations.Controllers
                     IsSplashScreen = p.campaign.IsSplash,
                     Contents = p.contents.Select(q => new ContentModel
                     {
-                        Id = q.content.ContentId,
+                        Id = q.contentWithId.ContentId,
                         HTML = q.htmlId,
-                        Duration = q.content.Duration,
-                        Type = q.content.RawHTML.Contains("PollAnswer") ? "poll" : "media"
+                        Duration = q.contentWithId.Duration,
+                        Type = q.contentWithId.RawHTML.Contains("PollAnswer") ? "poll" : "media"
                     }).ToList()
                 }).ToList();
 
-                var htmlList = campaigns.SelectMany(x => x.contents.ToDictionary(v => v.htmlId, v => v.content.RawHTML));
-
-              //  var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, "yyyyMMdd", CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-
+                var htmlList = campaigns.SelectMany(x => x.contents.ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML));
 
                 string videoStrA = "<div id=\"panelsContentWrapper\" style=\"width: 100%; height: 100%; font-size: 16px;\"><div style=\"width: 100%; height: 100%;\"><div id=\"layoutPanel_0\" style=\"height: 100%; width: 100%; position: relative; background: rgb(0, 0, 0);\"><div class=\"BackgroundVideo \" tabindex=\"0\" style=\"position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; visibility: visible; overflow: hidden;\"><video autoplay muted src=\"";
                 string videoStrB = "\" preload=\"auto\" poster=\"\" loop=\"\" playsinline=\"\" width=\"1045\" height=\"588\" style=\"position: absolute; width: 1045.33px; height: 588px; top: 0px; left: -1.16667px;\"></video></div></div></div><script>let backgroundCover=(a,b)=>{let e,f,g,i,j,k=b.clientWidth,l=b.clientHeight;e=a instanceof HTMLVideoElement?a.width/a.height:a instanceof HTMLImageElement?void 0===a.naturalWidth?a.width/a.height:a.naturalWidth/a.naturalHeight:a.clientWidth/a.clientHeight,k/l>e?(f=k,g=k/e,i=-(g-l)*0.5,j=0):(f=l*e,g=l,i=0,j=-(f-k)*0.5),b.style.overflow='hidden',a.style.position='absolute',a.width=f,a.height=g,a.style.width=f+'px',a.style.height=g+'px',a.style.top=i+'px',a.style.left=j+'px'};document.addEventListener('DOMContentLoaded',function(){let a=document.querySelectorAll('video');a.forEach(b=>backgroundCover(b,b.parentElement))});</script></div><script>document.addEventListener(\"DOMContentLoaded\", function() {\n            var wrapperDom = document.getElementById(\"panelsContentWrapper\");\n            changeFontSizeScaleHandler (wrapperDom.offsetWidth, wrapperDom.offsetHeight, 1000, 600, 16, 0.016);\n        });\n        function changeFontSizeScaleHandler (width, height, startWidth, startHeight, startFontSize, stepFontSize) {\n            width = parseInt(width);\n            height = parseInt(height);\n            var additionalWidth = width - startWidth;\n            var additionalHeight = height - startHeight;\n            if (!additionalWidth && !additionalHeight)\n                return false;\n    \n            var changeValue = 0;\n            if ((additionalWidth > 0 && additionalHeight > 0) || (additionalWidth < 0 && additionalHeight < 0)) {\n                changeValue = additionalWidth;\n                if (additionalHeight < additionalWidth)\n                    changeValue = additionalHeight;\n            }\n    \n            if (additionalWidth > 0 && additionalHeight < 0)\n                changeValue = additionalHeight;\n            \n            if (additionalWidth < 0 && additionalHeight > 0)\n                changeValue = additionalWidth;\n    \n            var changeFontSizeValue = stepFontSize * changeValue;\n            var newEditorFontSize = parseInt(startFontSize) + changeFontSizeValue;\n            document.getElementById(\"panelsContentWrapper\").style.fontSize = newEditorFontSize + 'px';\n        };</script>";
-
-                var media = await _sftpClient.GetAllFilesUrl(containerName, new[] { companyId.ToString() });
+                IEnumerable<string> media = null;
+                try
+                {
+                    media = await _sftpClient.GetAllFilesUrl(containerName, new[] { companyId.ToString() });
+                }
+                catch
+                {
+                    return BadRequest("This company has no any content");
+                }
                 List<object> resultMedia = new List<object>();
-
-                //string oldSite = "hbpromoblobstorage.blob.core.windows.net";
-                //string newSite = "wantadblobstorage.blob.core.windows.net";
                 string unmutedVideo = "<video ";
                 string mutedVideo = "<video autoplay muted ";
+                
                 var htmlList2 = new Hashtable();
                 foreach (KeyValuePair<string, string> contains in htmlList)
                 {
                     string input = contains.Value.ToString();
-                    //string resultInput = Regex.Replace(input, oldSite, newSite);
                     string resultInput = Regex.Replace(input, unmutedVideo, mutedVideo);
                     resultInput = resultInput.Replace("&amp", "");
                     string pattern = @"(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,;@?^=%&:/~+#-]*[\w@?;^=%&/~+#-])?";
                     Regex regex = new Regex(pattern);
                     Match match = regex.Match(resultInput);
+                    string link = null;
                     while (match.Success)
                     {
-                        string link = match.Value;
-                        link = link.Replace("&amp", "");
-                        foreach (var mediaFile in media)
+                        link = match.Value;
+                        if(link.Contains(containerName))
                         {
-                            if (resultInput.Contains("<video"))
-                            {
-                                resultInput = videoStrA + mediaFile + videoStrB;
-                                resultMedia.Add(mediaFile);
-                                break;
-                            }
-                            else
-                            {
-                                var mediaName = link.Contains("&quot;") ? mediaFile + "&quot;" : mediaFile;
-                                var newResultInput = resultInput.Replace(link, mediaName);
-                                if (newResultInput != resultInput)
-                                {
-                                    resultInput = newResultInput;
-                                    resultMedia.Add(mediaFile);
-                                    break;
-                                }
-                            }
+                        link = link.Replace("&amp", "");
+                        link = link.Replace("&quot;", "");
+                        resultMedia.Add(link);
                         }
                         match = match.NextMatch();
+                    }
+                    if (resultInput.Contains("<video"))
+                    {
+                        resultInput = videoStrA + link + videoStrB;
                     }
                     htmlList2.Add(contains.Key, resultInput);
                 }
@@ -332,7 +324,7 @@ namespace UserOperations.Controllers
         {
             htmlId = Guid.NewGuid().ToString();
         }
-        public Content content;
+        public Content contentWithId;
         public string htmlId;
     }
     public class Result
