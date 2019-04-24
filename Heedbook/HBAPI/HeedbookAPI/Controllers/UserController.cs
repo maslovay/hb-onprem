@@ -441,54 +441,44 @@ namespace UserOperations.Controllers
 
         [HttpGet("DialogueInclude")]
         [SwaggerOperation(Description = "Return collection of dialogues with relative data by filters")]
-        public IActionResult DialogueGetInclude([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
-                                                        [FromQuery(Name = "dialogueId")] List<Guid> dialogueIds,
-                                                        [FromHeader] string Authorization
-                                                        )
+        public IActionResult DialogueGetInclude([FromQuery(Name = "dialogueId")] List<Guid> dialogueIds,
+                                                [FromHeader] string Authorization)
         {
             try
             {
+                var begTime = DateTime.UtcNow.AddDays(-30);
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                
-                var formatString = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
-                begTime = begTime.Date;
-                endTime = endTime.Date.AddDays(1);
-
-                var dialogues = _context.Dialogues
-                .Include(p => p.DialogueAudio)
-                .Include(p => p.DialogueClientProfile)
-                .Include(p => p.DialogueClientSatisfaction)
-                .Include(p => p.DialogueFrame)
-                .Include(p => p.DialogueInterval)
-                .Include(p => p.DialoguePhrase)
-                .Include(p => p.DialoguePhraseCount)
-                .Include(p => p.DialogueSpeech)
-                .Include(p => p.DialogueVisual)
-                .Include(p => p.DialogueWord)
-                .Include(p => p.ApplicationUser)
-                .Include(p => p.DialogueHint)
-                .Where(p =>
+                var avgDialogueTime = _context.Dialogues.Where(p =>
                     p.BegTime >= begTime &&
-                    p.EndTime <= endTime &&
                     p.StatusId == 3 && p.InStatistic == true &&
-                    (!dialogueIds.Any() || dialogueIds.Contains(p.DialogueId)) &&
-                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
-                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
-                    (!phraseIds.Any() || p.DialoguePhrase.Where(q => phraseIds.Contains((Guid)q.PhraseId)).Any()) &&
-                    (!phraseTypeIds.Any() || p.DialoguePhrase.Where(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)).Any())
-                    )
-                .ToList();
+                    p.ApplicationUser.CompanyId == companyId)
+                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
+                
+                var dialogue = _context.Dialogues
+                    .Include(p => p.DialogueAudio)
+                    .Include(p => p.DialogueClientProfile)
+                    .Include(p => p.DialogueClientSatisfaction)
+                    .Include(p => p.DialogueFrame)
+                    .Include(p => p.DialogueInterval)
+                    .Include(p => p.DialoguePhrase)
+                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialogueSpeech)
+                    .Include(p => p.DialogueVisual)
+                    .Include(p => p.DialogueWord)
+                    .Include(p => p.ApplicationUser)
+                    .Include(p => p.DialogueHint)
+                    .Where(p => p.ApplicationUser.CompanyId == companyId 
+                        && p.InStatistic == true 
+                        && p.StatusId == 3
+                        && (!dialogueIds.Any() || dialogueIds.Contains(p.DialogueId)))
+                    .FirstOrDefault();                
 
-                return Ok(dialogues);
+                var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
+                jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
+                jsonDialogue["DialogueAvgDurationLastMonth"] = avgDialogueTime;
+                return Ok(jsonDialogue);
             }
             catch (Exception e)
             {
