@@ -251,7 +251,7 @@ namespace UserOperations.Controllers
                     BegAge = p.campaign.BegAge,
                     EndAge = p.campaign.EndAge,
                     IsSplashScreen = p.campaign.IsSplash,
-                    Contents = p.contents.Select(q => new ContentModel
+                    Content = p.contents.Select(q => new ContentModel
                     {
                         Id = q.contentWithId.ContentId,
                         HTML = q.htmlId,
@@ -365,7 +365,7 @@ namespace UserOperations.Controllers
         public int Gender;
         public int? BegAge;
         public int? EndAge;
-        public List<ContentModel> Contents;
+        public List<ContentModel> Content;
         public bool IsSplashScreen;
     }
 }
