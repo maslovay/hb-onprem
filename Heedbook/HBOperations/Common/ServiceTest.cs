@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -20,15 +23,17 @@ namespace Common
         public ServiceCollection Services { get; private set; }
         public ServiceProvider ServiceProvider { get; private set; }
 
-        private Action _additionalInitialization;
+        private const string FileFrameWithDatePattern = @"(.*)_([0-9]*)";
 
-        private Guid testUserId;
+        private const string FileVideoWithDatePattern = @"(.*)_([0-9]*)_(.*)";
         
-        public void Setup( Action additionalInitialization, bool prepareTestData = false )
+        private Action _additionalInitialization;
+        
+        public Guid TestUserId => Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
+
+        public async Task Setup( Action additionalInitialization, bool prepareTestData = false )
             
         {
-            testUserId = Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
-         
             Config = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.test.json")
                 .Build();
@@ -40,28 +45,10 @@ namespace Common
             InitServices();
 
             if (prepareTestData)
-                PrepareTestData();
+                await PrepareTestData();
         }
 
-        private async void PrepareTestData()
-        {
-            var currentDir = Environment.CurrentDirectory;
-            var testVideoFilepath = Directory
-                .GetFiles(Path.Combine(currentDir, "Resources/videos"), "testid*.mkv").FirstOrDefault();
-
-            if (testVideoFilepath == null)
-                throw new Exception("Can't get a test video for preparing a testset!");
-            
-            var testVideoFilename = Path.GetFileName(testVideoFilepath);
-            
-            var testVideoCorrectFileName = testVideoFilename?.Replace("testid", testUserId.ToString());
-
-            if (!(await _sftpClient.IsFileExistsAsync("videos/" + testVideoCorrectFileName)))
-            {
-                _sftpClient.UploadAsync(testVideoFilename, "videos/", testVideoCorrectFileName);
-            }
-            // TODO: init db records....
-        }
+        protected abstract Task PrepareTestData();
         
         private void InitServiceProvider()
         {
@@ -74,7 +61,7 @@ namespace Common
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
 
-            Services.Configure<SftpSettings>(Config.GetSection(nameof(SftpSettings)));
+            Services.Configure<SftpSettings>(options => Config.GetSection(nameof(SftpSettings)).Bind(options));
             Services.AddTransient<SftpClient>();
             Services.AddScoped<IGenericRepository, GenericRepository>();
             
@@ -89,5 +76,26 @@ namespace Common
         }
         
         protected abstract void InitServices();
+
+        public DateTime GetDateTimeFromFileFrameName(string inputFilePath) =>
+            GetDateTimeUsingPattern(FileFrameWithDatePattern, inputFilePath);
+        public DateTime GetDateTimeFromFileVideoName(string inputFilePath) =>
+            GetDateTimeUsingPattern(FileVideoWithDatePattern, inputFilePath);
+
+        private DateTime GetDateTimeUsingPattern(string pattern, string inputFilePath)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(inputFilePath);
+
+            var dateTimeRegex = new Regex(pattern);
+            
+            if (dateTimeRegex.IsMatch(fileName))
+            {
+                var dateTimeString = dateTimeRegex.Match(inputFilePath).Groups[2].ToString();
+                return DateTime.ParseExact(dateTimeString, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);                
+            }
+            
+            throw new Exception("Incorrect filename for getting a DateTime!");
+        }
+        
     }
 }

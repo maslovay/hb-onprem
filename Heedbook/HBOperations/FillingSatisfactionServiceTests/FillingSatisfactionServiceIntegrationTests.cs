@@ -20,16 +20,30 @@ namespace FillingSatisfactionService.Tests
         private IGenericRepository _repository;
         private FillingSatisfaction _fillingSatisfactionService;
         private Startup startup;
-        
+        private Dialogue dialog;
         
         [SetUp]
-        public void Setup()
+        public async Task Setup()
         {
-            base.Setup(() =>
+            await base.Setup(() =>
             {
                 startup = new Startup(Config);
                 startup.ConfigureServices(Services);
-            });
+            }, true);
+        }
+
+        protected override async Task PrepareTestData()
+        {
+            dialog = _repository.Get<Dialogue>().FirstOrDefault();
+
+            var satisfaction = _repository.Get<DialogueClientSatisfaction>()
+                .FirstOrDefault(s => s.DialogueId == dialog.DialogueId);
+
+            if (satisfaction != null)
+            {
+                _repository.Delete(satisfaction);
+                await _repository.SaveAsync();
+            }
         }
 
         protected override void InitServices()
@@ -41,17 +55,6 @@ namespace FillingSatisfactionService.Tests
         [Test]
         public async Task EnsureCreatesSatisfactionRecord()
         {
-            var dialog = _repository.Get<Dialogue>().FirstOrDefault();
-
-            var satisfaction = _repository.Get<DialogueClientSatisfaction>()
-                .FirstOrDefault(s => s.DialogueId == dialog.DialogueId);
-
-            if (satisfaction != null)
-            {
-                _repository.Delete(satisfaction);
-                _repository.Save();
-            }
-
             await _fillingSatisfactionService.Run(dialog.DialogueId);        
             
             Assert.IsTrue(_repository.Get<DialogueClientSatisfaction>()

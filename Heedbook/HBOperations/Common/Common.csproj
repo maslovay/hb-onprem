@@ -27,11 +27,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Resources\Frames" />
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="Resources\Videos\testid_20190417100653_2.mkv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\Frames\testuser_20190416085301.jpg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\Frames\testid_20190416085258.jpg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\Frames\testid_20190416085301.jpg">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

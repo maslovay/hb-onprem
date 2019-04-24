@@ -45,11 +45,11 @@ namespace FillingFrameService
                         .ToList();
                 var emotions =
                     _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId),
-                        item => item.FileFrame);
+                        item => item.FileFrame).ToList();
 
                 var attributes =
                     _repository.GetWithInclude<FrameAttribute>(item => frameIds.Contains(item.FileFrameId),
-                        item => item.FileFrame);
+                        item => item.FileFrame).ToList();
 
                 if (emotions.Any() && attributes.Any())
                 {
