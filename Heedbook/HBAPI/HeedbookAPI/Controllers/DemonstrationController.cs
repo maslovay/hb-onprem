@@ -47,6 +47,7 @@ namespace UserOperations.Controllers
         private readonly SftpClient _sftpClient;
         // private readonly HbMlHttpClient _mlclient;
         private readonly ILoginService _loginService;
+        private Dictionary<string, string> userClaims;
 
         public DemonstrationController(
             RecordsContext context,
@@ -219,11 +220,13 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("GetContents")]
-        public async Task<IActionResult> GetContents([FromHeader] string Authorization)
+        public async Task<IActionResult> GetContents([FromQuery] string Authorization)
         {
             try
             {
-                var companyId = _loginService.GetDataFromToken(Authorization)["companyId"];
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");             
+                var companyId = userClaims["companyId"];
                 var curDate = DateTime.Now;
                 var containerName = "media";
 
@@ -274,7 +277,7 @@ namespace UserOperations.Controllers
                 List<object> resultMedia = new List<object>();
                 string unmutedVideo = "<video ";
                 string mutedVideo = "<video autoplay muted ";
-                
+
                 var htmlList2 = new Hashtable();
                 foreach (KeyValuePair<string, string> contains in htmlList)
                 {
