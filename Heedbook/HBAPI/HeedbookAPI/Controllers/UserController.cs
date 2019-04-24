@@ -214,19 +214,29 @@ namespace UserOperations.Controllers
 
         [HttpPost("PhraseLib")]
         [SwaggerOperation(Description = "Save new phrase to DB and attach it to loggined company (create new PhraseCompany)")]
-        public async Task<IActionResult> PhrasePost([FromBody] Phrase message, [FromHeader] string Authorization)
+        public async Task<IActionResult> PhrasePost([FromBody] PhrasePost message, [FromHeader] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
+                var phrase = new Phrase {
+                    PhraseId = Guid.NewGuid(),
+                    PhraseText = message.PhraseText,
+                    PhraseTypeId = message.PhraseTypeId,
+                    LanguageId = message.LanguageId,
+                    IsClient = message.IsClient,
+                    WordsSpace = message.WordsSpace,
+                    Accurancy = message.Accurancy,
+                    IsTemplate = message.IsTemplate
+                };
 
-                await _context.Phrases.AddAsync(message);
+                await _context.Phrases.AddAsync(phrase);
                 var phraseCompany = new PhraseCompany();
                 phraseCompany.CompanyId = companyId;
                 phraseCompany.PhraseCompanyId = Guid.NewGuid();
-                phraseCompany.PhraseId = message.PhraseId;
+                phraseCompany.PhraseId = phrase.PhraseId;
                 await _context.PhraseCompanys.AddAsync(phraseCompany);
                 await _context.SaveChangesAsync();
                 return Ok(message);
@@ -239,7 +249,7 @@ namespace UserOperations.Controllers
 
         [HttpPut("PhraseLib")]
         [SwaggerOperation(Description = "Edit phrase")]
-        public async Task<IActionResult> PhrasePut([FromBody] Phrase message, [FromHeader] string Authorization)
+        public async Task<IActionResult> PhrasePut([FromBody] PhrasePut message, [FromHeader] string Authorization)
         {
             try
             {
@@ -552,6 +562,29 @@ namespace UserOperations.Controllers
     {
         public List<Guid> companyIds { get; set; }   
         public Guid phraseId { get; set; }       
+    }
+
+    public class PhrasePost
+    {
+        public string PhraseText;
+        public Guid PhraseTypeId;
+        public Int32? LanguageId;
+        public bool IsClient;
+        public Int32? WordsSpace;
+        public double? Accurancy;
+        public Boolean IsTemplate;
+    }
+
+    public class PhrasePut
+    {
+        public Guid PhraseId;
+        public string PhraseText;
+        public Guid PhraseTypeId;
+        public Int32? LanguageId;
+        public bool IsClient;
+        public Int32? WordsSpace;
+        public double? Accurancy;
+        public Boolean IsTemplate;
     }
 
 }
