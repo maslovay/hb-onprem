@@ -68,7 +68,7 @@ namespace HBLib.Utils
             {
                 foreach (var dir in subDirs)
                 {
-                    files.AddRange(_client.ListDirectory(directory + "/" + dir));
+                    files.AddRange(_client.ListDirectory($"{directory}/{dir}"));
                 }
             }
             else
@@ -76,6 +76,27 @@ namespace HBLib.Utils
             return await Task.Run(() => files
                 .Where(f => !f.IsDirectory)
                 .Select(f => $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}"));
+        }
+
+          /// <summary>
+        /// Get urls to files. 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<FileInfoModel>> GetAllFilesData(String directory, string subDir)
+        {
+            await ConnectToSftpAsync();
+            List<Renci.SshNet.Sftp.SftpFile> files = new List<Renci.SshNet.Sftp.SftpFile>();  
+            files = _client.ListDirectory($"{directory}/{subDir}").ToList();
+            return await Task.Run(() => files
+                .Where(f => !f.IsDirectory)
+                .Select(f => 
+                    new FileInfoModel
+                    { 
+                        url = $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
+                        name = f.Name,
+                        date = f.Attributes.LastWriteTime
+                        }));
         }
 
         /// <summary>
@@ -107,6 +128,7 @@ namespace HBLib.Utils
         {
             await ConnectToSftpAsync();
             _client.BufferSize = 4 * 1024;
+            await CreateIfDirNoExistsAsync(_sftpSettings.DestinationPath + path);
             _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
             _client.UploadFile(stream, filename);
             if (toDestionationPath) _client.ChangeDirectory(_sftpSettings.DestinationPath);
@@ -206,6 +228,18 @@ namespace HBLib.Utils
             return await Task.Run(() => _client.Exists(path));
         }
 
+           /// <summary>
+        ///     Check file exists on server and create new if no exist
+        /// </summary>
+        /// <param name="path">Specified directory + filename</param>
+        /// <returns></returns>
+        public async Task CreateIfDirNoExistsAsync(String path)
+        {
+            await ConnectToSftpAsync();
+            if( ! await Task.Run(() => _client.Exists(path)))
+            _client.CreateDirectory(path);
+        }
+
         /// <summary>
         ///     Delete file from server
         /// </summary>
@@ -238,6 +272,13 @@ namespace HBLib.Utils
                 return _client.ListDirectory(path).Where(f => !f.IsDirectory && f.Name.Contains(patternToFind))
                               .Select(f => f.Name).ToList();
             return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();
+        }
+
+        public class FileInfoModel
+        {
+            public string url;
+            public string name;
+            public DateTime date;
         }
     }
 }
