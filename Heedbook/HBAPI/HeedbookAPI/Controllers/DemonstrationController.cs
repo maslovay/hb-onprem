@@ -164,52 +164,18 @@ namespace UserOperations.Controllers
         //     }
         // }
 
-
-        // [HttpPost("ContentSession")]
-        // public IActionResult ContentSession(
-        //     [FromBody] ContentInfoStructure content)
-        // {
-        //     try
-        //     {
-        //         var session  = new SlideShowSession {
-        //             SlideShowSessionId = Guid.NewGuid(),
-        //             ApplicationUserId = content.ApplicationUserId,
-        //             BegTime = DateTime.UtcNow,
-        //             CampaignContentId = content.CampaignContentId
-
-        //         };
-        //         _context.SlideShowSessions.Add(session);
-        //         _context.SaveChanges();
-        //         return Ok();
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         return BadRequest(e);
-        //     }
-
-        // }
+      
 
         [HttpPost("FlushStats")]
-        public IActionResult FlushStats(
-            [FromBody] List<ContentInfoStructure> stats)
+        public IActionResult FlushStats([FromBody] List<SlideShowSession> stats)
         {
             try
             {
-                foreach (ContentInfoStructure stat in stats)
+                foreach (SlideShowSession stat in stats)
                 {
-                    var campaignContentId = stat.CampaignContentId;
-                    var applicationUserId = stat.ApplicationUserId;
-
-                    var session = new SlideShowSession{
-                        SlideShowSessionId = Guid.NewGuid(),
-                        ApplicationUserId = applicationUserId,
-                        BegTime = DateTime.UtcNow,
-                        CampaignContentId = campaignContentId
-                    };
-
-                    _context.SlideShowSessions.Add(session);
+                    stat.SlideShowSessionId = Guid.NewGuid();
+                    _context.Add(stat);
                     _context.SaveChanges();
-
                 }
                 return Ok();
             }
@@ -327,14 +293,14 @@ namespace UserOperations.Controllers
             try
             {    
                 answer.CampaignContentAnswerId = Guid.NewGuid();
-                answer.Time = DateTime.Now;
-                _context.Add(answer);
-                _context.SaveChanges();
-                return Ok();       
+                answer.Time = DateTime.UtcNow;
+                await _context.AddAsync(answer);
+                await _context.SaveChangesAsync();
+                return Ok("Saved");       
             }
             catch
             {
-                return BadRequest("");
+                return BadRequest("Error");
             }
         }
     }
@@ -350,26 +316,21 @@ namespace UserOperations.Controllers
         public string htmlId;
         public Guid campaignContentId;
     }
-    public class Result
-    {
-        public string Gender;
-        public int? Age;
-        public List<ContentInfo> Content;
-    }
+    // public class Result
+    // {
+    //     public string Gender;
+    //     public int? Age;
+    //     public List<ContentInfo> Content;
+    // }
 
-    public class ContentInfo
-    {
-        public string CampaignContentId;
-        public int Duration;
-        public string RawHtml;
-        public int SequenceNumber;
-    }
+    // public class ContentInfo
+    // {
+    //     public string CampaignContentId;
+    //     public int Duration;
+    //     public string RawHtml;
+    //     public int SequenceNumber;
+    // }
 
-    public class ContentInfoStructure
-    {
-        public Guid CampaignContentId;
-        public Guid ApplicationUserId;
-    }
 
     public class ContentModel
     {
