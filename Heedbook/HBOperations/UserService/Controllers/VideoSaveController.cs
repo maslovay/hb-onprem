@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
 using HBLib.Utils;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -35,13 +36,13 @@ namespace UserService.Controllers
         public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId,
             [FromQuery] String begTime,
             [FromQuery] Double? duration,
-            [FromBody] String video)
+            [FromForm] IFormCollection formData)
         {
             try
             {
                 duration = duration == null ? 15 : duration;
-                var imgBytes = Convert.FromBase64String(video);
-                var memoryStream = new MemoryStream(imgBytes);
+                var memoryStream = formData.Files.FirstOrDefault().OpenReadStream();
+                if (memoryStream == null)   return BadRequest("No video file or file is empty");
                 var languageId = _context.ApplicationUsers
                                          .Include(p => p.Company)
                                          .Include(p => p.Company.Language)
