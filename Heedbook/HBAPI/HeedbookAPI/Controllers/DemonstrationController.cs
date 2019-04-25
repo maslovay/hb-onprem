@@ -189,35 +189,35 @@ namespace UserOperations.Controllers
 
         // }
 
-        // [HttpPost("FlushStats")]
-        // public IActionResult FlushStats(
-        //     [FromBody] List<ContentInfoStructure> stats)
-        // {
-        //     try
-        //     {
-        //         foreach (ContentInfoStructure stat in stats)
-        //         {
-        //             var campaignContentId = stat.CampaignContentId;
-        //             var applicationUserId = stat.ApplicationUserId;
+        [HttpPost("FlushStats")]
+        public IActionResult FlushStats(
+            [FromBody] List<ContentInfoStructure> stats)
+        {
+            try
+            {
+                foreach (ContentInfoStructure stat in stats)
+                {
+                    var campaignContentId = stat.CampaignContentId;
+                    var applicationUserId = stat.ApplicationUserId;
 
-        //             var session = new SlideShowSession{
-        //                 SlideShowSessionId = Guid.NewGuid(),
-        //                 ApplicationUserId = applicationUserId,
-        //                 BegTime = DateTime.UtcNow,
-        //                 CampaignContentId = campaignContentId
-        //             };
+                    var session = new SlideShowSession{
+                        SlideShowSessionId = Guid.NewGuid(),
+                        ApplicationUserId = applicationUserId,
+                        BegTime = DateTime.UtcNow,
+                        CampaignContentId = campaignContentId
+                    };
 
-        //             _context.SlideShowSessions.Add(session);
-        //             _context.SaveChanges();
+                    _context.SlideShowSessions.Add(session);
+                    _context.SaveChanges();
 
-        //         }
-        //         return Ok();
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         return BadRequest(e);
-        //     }
-        // }
+                }
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
 
 
         [HttpGet("GetContents")]
@@ -271,7 +271,7 @@ namespace UserOperations.Controllers
                 }
                 catch
                 {
-                    return BadRequest("This company has no any content");
+                   // return BadRequest("This company has no any content");
                 }
                 List<object> resultMedia = new List<object>();
                 string unmutedVideo = "<video ";
@@ -319,7 +319,21 @@ namespace UserOperations.Controllers
                 return BadRequest(e);
             }
         }
+    
+      [HttpGet("PollAnswer")]
+        public async Task<IActionResult> PollAnswer([FromBody] string message)
+        {
+            try
+            {      
+                return Ok("");       
+            }
+            catch
+            {
+                return BadRequest("");
+            }
+        }
     }
+
 
     public class ContentWithId
     {
