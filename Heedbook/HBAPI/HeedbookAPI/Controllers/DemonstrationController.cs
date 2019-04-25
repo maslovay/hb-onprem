@@ -240,7 +240,7 @@ namespace UserOperations.Controllers
                     {
                         campaign = p,
                         contents = p.CampaignContents
-                                .Select(c => new ContentWithId() { contentWithId = c.Content }).ToList()                        
+                                .Select(c => new ContentWithId() { contentWithId = c.Content, campaignContentId = c.CampaignContentId }).ToList()                        
                     }
                 ).ToList();
 
@@ -254,6 +254,7 @@ namespace UserOperations.Controllers
                     Content = p.contents.Select(q => new ContentModel
                     {
                         Id = q.contentWithId.ContentId,
+                        CampaignContentId = q.campaignContentId,
                         HTML = q.htmlId,
                         Duration = q.contentWithId.Duration,
                         Type = q.contentWithId.RawHTML.Contains("PollAnswer") ? "poll" : "media"
@@ -320,12 +321,16 @@ namespace UserOperations.Controllers
             }
         }
     
-      [HttpGet("PollAnswer")]
-        public async Task<IActionResult> PollAnswer([FromBody] string message)
+      [HttpPost("PollAnswer")]
+        public async Task<IActionResult> PollAnswer([FromBody] CampaignContentAnswer answer)
         {
             try
-            {      
-                return Ok("");       
+            {    
+                answer.CampaignContentAnswerId = Guid.NewGuid();
+                answer.Time = DateTime.Now;
+                _context.Add(answer);
+                _context.SaveChanges();
+                return Ok();       
             }
             catch
             {
@@ -343,6 +348,7 @@ namespace UserOperations.Controllers
         }
         public Content contentWithId;
         public string htmlId;
+        public Guid campaignContentId;
     }
     public class Result
     {
@@ -368,6 +374,7 @@ namespace UserOperations.Controllers
     public class ContentModel
     {
         public Guid Id;
+        public Guid CampaignContentId;
         public string HTML;
         public int Duration;
         public string Type;
