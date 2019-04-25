@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
 using HBLib.Utils;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -35,13 +36,17 @@ namespace UserService.Controllers
         public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId,
             [FromQuery] String begTime,
             [FromQuery] Double? duration,
-            [FromBody] String video)
+            [FromForm] IFormCollection formData)
         {
             try
-            {
+            {   
+                System.Console.WriteLine("1");
                 duration = duration == null ? 15 : duration;
-                var imgBytes = Convert.FromBase64String(video);
-                var memoryStream = new MemoryStream(imgBytes);
+                System.Console.WriteLine("2");
+                var memoryStream = formData.Files.FirstOrDefault().OpenReadStream();
+                System.Console.WriteLine("3");
+                if (memoryStream == null)   return BadRequest("No video file or file is empty");
+                System.Console.WriteLine("4");
                 var languageId = _context.ApplicationUsers
                                          .Include(p => p.Company)
                                          .Include(p => p.Company.Language)
@@ -51,7 +56,9 @@ namespace UserService.Controllers
                 var stringFormat = "yyyyMMddhhmmss";
                 var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var fileName = $"{applicationUserId}_{time.ToString(stringFormat)}_{languageId}.mkv";
+                System.Console.WriteLine("5");
                 await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, "videos/", fileName);
+                System.Console.WriteLine("6");
 
                 var videoFile = new FileVideo();
                 videoFile.ApplicationUserId = applicationUserId;
@@ -66,6 +73,7 @@ namespace UserService.Controllers
                 videoFile.StatusId = 6;
 
                 _context.FileVideos.Add(videoFile);
+                System.Console.WriteLine("7");
                 _context.SaveChanges();
 
 
