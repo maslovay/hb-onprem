@@ -29,19 +29,20 @@ namespace DialogueVideoMergeService
         public DialogueVideoMerge(
             INotificationPublisher notificationPublisher,
             IServiceScopeFactory factory,
+            IGenericRepository repository,
             SftpClient client,
             SftpSettings sftpSettings,
             ElasticClient log
         )
         {
-            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
+            _repository = repository;
             _sftpClient = client;
             _sftpSettings = sftpSettings;
             _log = log;
             _notificationPublisher = notificationPublisher;
         }
 
-        public static FileFrame LastFrame(FileVideo video, List<FileFrame> frames)
+        private static FileFrame LastFrame(FileVideo video, List<FileFrame> frames)
         {
             return frames.Where(p => p.Time >= video.BegTime && p.Time <= video.EndTime).OrderByDescending(p => p.Time)
                          .FirstOrDefault();
@@ -87,7 +88,7 @@ namespace DialogueVideoMergeService
                 if (!videos.Any())
                 {
                     _log.Error("No video files");
-                    throw new Exception("No video files");
+                    throw new DialogueVideoMergeException("No video files");
                 }
 
                 var commands = new List<FFMpegWrapper.FFmpegCommand>();
@@ -128,7 +129,6 @@ namespace DialogueVideoMergeService
                     });
                 }
 
-
                 _log.Info("Downloading all files");
                 foreach (var command in commands.GroupBy(p => p.FileName).Select(p => p.First()))
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync(
@@ -166,6 +166,7 @@ namespace DialogueVideoMergeService
             catch (Exception e)
             {
                 _log.Fatal($"Exception occured {e}");
+                throw new DialogueVideoMergeException(e.Message, e);
             }
         }
     }

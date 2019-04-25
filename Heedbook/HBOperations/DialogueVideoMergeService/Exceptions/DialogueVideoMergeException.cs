@@ -5,7 +5,7 @@ namespace DialogueVideoMergeService.Exceptions
     [Serializable]
     public class DialogueVideoMergeException : Exception
     {
-        public DialogueVideoMergeException(string message, Exception ex) : base(message, ex)
+        public DialogueVideoMergeException(string message, Exception ex = null) : base(message, ex)
         {
             
         }
