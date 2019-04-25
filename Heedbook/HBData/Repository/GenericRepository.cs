@@ -120,6 +120,13 @@ namespace HBData.Repository
             _context.Set<T>().Remove(entity);
         }
 
+        public void Delete<T>(Expression<Func<T, bool>> expr) where T : class
+        {
+            var dbSet = _context.Set<T>();
+            _context.Set<T>().RemoveRange(dbSet.Where(expr));
+        }
+
+        
         public IEnumerable<Object> ExecuteDbCommand(Type type, String sql, Dictionary<String, Object> @params = null)
         {
             using (var cmd = _context.Database.GetDbConnection().CreateCommand())

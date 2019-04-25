@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DialogueVideoMergeService.Exceptions;
 using HBData.Models;
 using HBData.Repository;
 using HBLib;
@@ -165,7 +166,6 @@ namespace DialogueVideoMergeService
             catch (Exception e)
             {
                 _log.Fatal($"Exception occured {e}");
-                throw;
             }
         }
     }

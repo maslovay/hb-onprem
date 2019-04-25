@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Common
 {
@@ -61,7 +63,8 @@ namespace Common
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
 
-            Services.Configure<SftpSettings>(options => Config.GetSection(nameof(SftpSettings)).Bind(options));
+            Services.Configure<SftpSettings>(Config.GetSection(nameof(SftpSettings)));
+            Services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             Services.AddTransient<SftpClient>();
             Services.AddScoped<IGenericRepository, GenericRepository>();
             

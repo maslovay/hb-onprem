@@ -50,7 +50,6 @@ namespace ExtractFramesFromVideoService.Tests
                 .UseInternalServiceProvider(serviceCollection);
             
             _context = new RecordsContext(builder.Options);
-            //_context.Database.Migrate();
                         
             _repository = new GenericRepository(_context);
             _elasticClient = new ElasticClient(new ElasticSettings()
