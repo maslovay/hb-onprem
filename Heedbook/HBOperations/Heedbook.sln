@@ -81,6 +81,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillingFrameServiceTests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueVideoMergeServiceTests", "DialogueVideoMergeServiceTests\DialogueVideoMergeServiceTests.csproj", "{B88F68C7-7B77-47F0-8F23-5EDB5610D76D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaceAnalyzeServiceTests", "FaceAnalyzeServiceTests\FaceAnalyzeServiceTests.csproj", "{6C3D7493-3577-478E-9469-8B73B88FF7F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -187,6 +189,10 @@ Global
 		{B88F68C7-7B77-47F0-8F23-5EDB5610D76D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B88F68C7-7B77-47F0-8F23-5EDB5610D76D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B88F68C7-7B77-47F0-8F23-5EDB5610D76D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C3D7493-3577-478E-9469-8B73B88FF7F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C3D7493-3577-478E-9469-8B73B88FF7F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C3D7493-3577-478E-9469-8B73B88FF7F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C3D7493-3577-478E-9469-8B73B88FF7F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -216,6 +222,7 @@ Global
 		{B272A808-9CE3-40F6-8BD4-188ED405DE1C} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{4FF6FB3E-E4A3-48CE-AEC4-3B7F442C8A37} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{B88F68C7-7B77-47F0-8F23-5EDB5610D76D} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
+		{6C3D7493-3577-478E-9469-8B73B88FF7F9} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}

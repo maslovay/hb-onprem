@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using FaceAnalyzeService.Exceptions;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
@@ -49,8 +50,7 @@ namespace FaceAnalyzeService
                         var faceResult = await _client.GetFaceResult(base64String);
                         _log.Info($"face result is {JsonConvert.SerializeObject(faceResult)}");
                         var fileName = localPath.Split('/').Last();
-                        var fileFrame =
-                            await _repository
+                        var fileFrame = await _repository
                                .FindOneByConditionAsync<FileFrame>(entity => entity.FileName == fileName);
 
                         if (fileFrame != null)
@@ -68,6 +68,7 @@ namespace FaceAnalyzeService
                                 SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
                                 YawShare = faceResult.Average(item => item.Headpose.Yaw)
                             };
+                            
                             var tasks = faceResult.Select(item => new FrameAttribute
                                                    {
                                                        Age = item.Attributes.Age,
@@ -82,10 +83,8 @@ namespace FaceAnalyzeService
                             fileFrame.IsFacePresent = true;
                             _repository.Update(fileFrame);
                             tasks.Add(_repository.CreateAsync(frameEmotion));
-                            _log.Info(
-                                "fileframe not null. Calculate average and insert frame emotion and frame attribute");
-                            await Task.WhenAll(
-                                tasks);
+                            _log.Info("fileframe not null. Calculate average and insert frame emotion and frame attribute");
+                            await Task.WhenAll(tasks);
                             await _repository.SaveAsync();
                         }
                     }
@@ -94,7 +93,7 @@ namespace FaceAnalyzeService
             catch (Exception e)
             {
                 _log.Fatal($"Exception occured {e}");
-                throw;
+                throw new FaceAnalyzeServiceException(e.Message, e);
             }
         }
     }
