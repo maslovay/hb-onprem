@@ -164,60 +164,26 @@ namespace UserOperations.Controllers
         //     }
         // }
 
+      
 
-        // [HttpPost("ContentSession")]
-        // public IActionResult ContentSession(
-        //     [FromBody] ContentInfoStructure content)
-        // {
-        //     try
-        //     {
-        //         var session  = new SlideShowSession {
-        //             SlideShowSessionId = Guid.NewGuid(),
-        //             ApplicationUserId = content.ApplicationUserId,
-        //             BegTime = DateTime.UtcNow,
-        //             CampaignContentId = content.CampaignContentId
-
-        //         };
-        //         _context.SlideShowSessions.Add(session);
-        //         _context.SaveChanges();
-        //         return Ok();
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         return BadRequest(e);
-        //     }
-
-        // }
-
-        // [HttpPost("FlushStats")]
-        // public IActionResult FlushStats(
-        //     [FromBody] List<ContentInfoStructure> stats)
-        // {
-        //     try
-        //     {
-        //         foreach (ContentInfoStructure stat in stats)
-        //         {
-        //             var campaignContentId = stat.CampaignContentId;
-        //             var applicationUserId = stat.ApplicationUserId;
-
-        //             var session = new SlideShowSession{
-        //                 SlideShowSessionId = Guid.NewGuid(),
-        //                 ApplicationUserId = applicationUserId,
-        //                 BegTime = DateTime.UtcNow,
-        //                 CampaignContentId = campaignContentId
-        //             };
-
-        //             _context.SlideShowSessions.Add(session);
-        //             _context.SaveChanges();
-
-        //         }
-        //         return Ok();
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         return BadRequest(e);
-        //     }
-        // }
+        [HttpPost("FlushStats")]
+        public IActionResult FlushStats([FromBody] List<SlideShowSession> stats)
+        {
+            try
+            {
+                foreach (SlideShowSession stat in stats)
+                {
+                    stat.SlideShowSessionId = Guid.NewGuid();
+                    _context.Add(stat);
+                    _context.SaveChanges();
+                }
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
 
 
         [HttpGet("GetContents")]
@@ -240,7 +206,7 @@ namespace UserOperations.Controllers
                     {
                         campaign = p,
                         contents = p.CampaignContents
-                                .Select(c => new ContentWithId() { contentWithId = c.Content }).ToList()                        
+                                .Select(c => new ContentWithId() { contentWithId = c.Content, campaignContentId = c.CampaignContentId }).ToList()                        
                     }
                 ).ToList();
 
@@ -254,6 +220,7 @@ namespace UserOperations.Controllers
                     Content = p.contents.Select(q => new ContentModel
                     {
                         Id = q.contentWithId.ContentId,
+                        CampaignContentId = q.campaignContentId,
                         HTML = q.htmlId,
                         Duration = q.contentWithId.Duration,
                         Type = q.contentWithId.RawHTML.Contains("PollAnswer") ? "poll" : "media"
@@ -271,7 +238,7 @@ namespace UserOperations.Controllers
                 }
                 catch
                 {
-                    return BadRequest("This company has no any content");
+                   // return BadRequest("This company has no any content");
                 }
                 List<object> resultMedia = new List<object>();
                 string unmutedVideo = "<video ";
@@ -319,7 +286,25 @@ namespace UserOperations.Controllers
                 return BadRequest(e);
             }
         }
+    
+      [HttpPost("PollAnswer")]
+        public async Task<IActionResult> PollAnswer([FromBody] CampaignContentAnswer answer)
+        {
+            try
+            {    
+                answer.CampaignContentAnswerId = Guid.NewGuid();
+                answer.Time = DateTime.UtcNow;
+                await _context.AddAsync(answer);
+                await _context.SaveChangesAsync();
+                return Ok("Saved");       
+            }
+            catch
+            {
+                return BadRequest("Error");
+            }
+        }
     }
+
 
     public class ContentWithId
     {
@@ -329,31 +314,28 @@ namespace UserOperations.Controllers
         }
         public Content contentWithId;
         public string htmlId;
+        public Guid campaignContentId;
     }
-    public class Result
-    {
-        public string Gender;
-        public int? Age;
-        public List<ContentInfo> Content;
-    }
+    // public class Result
+    // {
+    //     public string Gender;
+    //     public int? Age;
+    //     public List<ContentInfo> Content;
+    // }
 
-    public class ContentInfo
-    {
-        public string CampaignContentId;
-        public int Duration;
-        public string RawHtml;
-        public int SequenceNumber;
-    }
+    // public class ContentInfo
+    // {
+    //     public string CampaignContentId;
+    //     public int Duration;
+    //     public string RawHtml;
+    //     public int SequenceNumber;
+    // }
 
-    public class ContentInfoStructure
-    {
-        public Guid CampaignContentId;
-        public Guid ApplicationUserId;
-    }
 
     public class ContentModel
     {
         public Guid Id;
+        public Guid CampaignContentId;
         public string HTML;
         public int Duration;
         public string Type;
