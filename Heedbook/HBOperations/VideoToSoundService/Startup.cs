@@ -37,6 +37,11 @@ namespace VideoToSoundService
                 return new ElasticClient(settings);
             });
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            
+            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
+            services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
+            services.AddScoped<FFMpegWrapper>();
+            
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
