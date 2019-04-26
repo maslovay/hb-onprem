@@ -86,18 +86,19 @@ namespace DialogueVideoMergeService
                 if (!videos.Any())
                 {
                     _log.Error("No video files");
-                    throw new Exception("No video files");
                 }
 
-                var commands = new List<FFMpegWrapper.FFmpegCommand>();
-                commands.Add(new FFMpegWrapper.FFmpegCommand
+                var commands = new List<FFMpegWrapper.FFmpegCommand>
                 {
-                    Command = $"-i {Path.Combine(sessionDir, videos[0].FileName)}",
-                    Path = Path.Combine(sessionDir, videos[0].FileName),
-                    Type = VideoType,
-                    FileFolder = VideoFolder,
-                    FileName = videos[0].FileName
-                });
+                    new FFMpegWrapper.FFmpegCommand
+                    {
+                        Command = $"-i {Path.Combine(sessionDir, videos[0].FileName)}",
+                        Path = Path.Combine(sessionDir, videos[0].FileName),
+                        Type = VideoType,
+                        FileFolder = VideoFolder,
+                        FileName = videos[0].FileName
+                    }
+                };
 
                 for (var i = 1; i < videos.Count(); i++)
                 {
