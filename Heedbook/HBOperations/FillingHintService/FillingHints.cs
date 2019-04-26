@@ -34,9 +34,11 @@ namespace FillingHintService
                                           .Select(item => item.Language.LanguageName)
                                           .First();
                 var catalogueHints = await _repository.FindAllAsync<CatalogueHint>();
-
-                var hints = JsonConvert.DeserializeObject<List<Hint>>(JsonConvert.SerializeObject(catalogueHints));
-
+                var hints = catalogueHints.Select(item => new Hint()
+                {
+                    HintCondition = JsonConvert.DeserializeObject<List<HintCondition>>(item.HintCondition),
+                    HintText = JsonConvert.DeserializeObject<List<HintText>>(item.HintText)
+                }).ToList();
                 foreach (var hintConditions in hints)
                 foreach (var hintCondition in hintConditions.HintCondition)
                 {
@@ -139,7 +141,6 @@ namespace FillingHintService
                 throw;
             }
         }
-
         public static String BuildRequest(String tableName, String dialogueId, IEnumerable<Condition> conditions,
             List<String> fields)
         {
