@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HBData;
 using HBData.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FillingSatisfactionService.Helper
 {
@@ -11,10 +12,10 @@ namespace FillingSatisfactionService.Helper
         private readonly CalculationConfig _config;
         private readonly RecordsContext _context;
 
-        public Calculations(RecordsContext context,
+        public Calculations(IServiceScopeFactory factory,
             CalculationConfig config)
         {
-            _context = context;
+            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _config = config;
         }
 
@@ -201,7 +202,7 @@ namespace FillingSatisfactionService.Helper
 
                 if (satisfactionScore.MeetingExpectationsByNN != null)
                 {
-                    nNWeight = _config.NNWeightD;
+                    nNWeight = _config.NnWeight;
                     NNScore = satisfactionScore.MeetingExpectationsByNN;
                     if (satisfactionScore.BegMoodByNN != null) NNBegScore = satisfactionScore.BegMoodByNN;
 

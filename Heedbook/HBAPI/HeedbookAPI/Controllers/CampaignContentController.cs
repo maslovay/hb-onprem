@@ -22,25 +22,25 @@ namespace UserOperations.Controllers
     [ApiController]
     public class CampaignContentController : Controller
     {
-        private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
+        private readonly IConfiguration _config;
         private readonly SftpClient _sftpClient;
+        private readonly ILoginService _loginService;
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
 
 
         public CampaignContentController(
-            IConfiguration config,
-            ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient
+            IConfiguration config,
+            SftpClient sftpClient,
+            ILoginService loginService
             )
         {
-            _config = config;
-            _loginService = loginService;
             _context = context;
+            _config = config;
             _sftpClient = sftpClient;
+            _loginService = loginService;
             _containerName = "content-screenshots";
         }
         #region Campaign
