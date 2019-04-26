@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using FillingHintService.Model;
 using HBData.Models;
@@ -33,9 +34,11 @@ namespace FillingHintService
                                           .Select(item => item.Language.LanguageName)
                                           .First();
                 var catalogueHints = await _repository.FindAllAsync<CatalogueHint>();
-
-                var hints = JsonConvert.DeserializeObject<List<Hint>>(JsonConvert.SerializeObject(catalogueHints));
-
+                var hints = catalogueHints.Select(item => new Hint()
+                {
+                    HintCondition = JsonConvert.DeserializeObject<List<HintCondition>>(item.HintCondition),
+                    HintText = JsonConvert.DeserializeObject<List<HintText>>(item.HintText)
+                }).ToList();
                 foreach (var hintConditions in hints)
                 foreach (var hintCondition in hintConditions.HintCondition)
                 {
@@ -138,30 +141,29 @@ namespace FillingHintService
                 throw;
             }
         }
-
         public static String BuildRequest(String tableName, String dialogueId, IEnumerable<Condition> conditions,
             List<String> fields)
         {
-            String request;
+            StringBuilder request;
             if (fields.Any())
             {
-                request = "SELECT";
+                request = new StringBuilder("SELECT");
                 for (var i = 0; i < fields.Count(); i++)
                     if (i == fields.Count() - 1)
-                        request += $" {fields[i]}";
+                        request.Append($" {fields[i]}");
                     else
-                        request += $" {fields[i]},";
+                        request.Append($" {fields[i]},");
             }
             else
             {
-                request = "SELECT *";
+                request = new StringBuilder("SELECT *");
             }
 
-            request += $" FROM dbo.{tableName}";
-            request += $" WHERE CAST(DialogueId as uniqueidentifier) = CAST('{dialogueId}' as uniqueidentifier) ";
+            request.Append($" FROM public.{tableName}");
+            request.Append($" WHERE CAST(DialogueId as uuid) = CAST('{dialogueId}' as uuid) ");
             return !conditions.Any()
-                ? request
-                : conditions.Aggregate(request, (current, cond) => current + $"AND {cond.Field} = {cond.Value}");
+                ? request.ToString()
+                : conditions.Aggregate(request, (current, cond) => current.Append($"AND {cond.Field} = {cond.Value} ")).ToString();
         }
     }
 }

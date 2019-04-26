@@ -29,13 +29,16 @@ namespace VideoToSoundService
             services.AddTransient<VideoToSound>();
             services.AddTransient<VideoToSoundRunHandler>();
             services.AddTransient<SftpClient>();
+            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<FFMpegSettings>>().Value);
             services.AddTransient(provider =>
             {
                 var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
+            services.AddTransient<FFMpegWrapper>();
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
