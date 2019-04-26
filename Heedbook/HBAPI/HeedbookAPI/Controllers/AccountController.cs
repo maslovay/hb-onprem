@@ -52,8 +52,10 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("Register")]
-        [SwaggerOperation(Description = "Create new company, new user, add manager role, create ew Tariff and newTransaction if no exist ")]
-        public async Task<IActionResult> UserRegister([FromBody] UserRegister message)
+        [SwaggerOperation(Summary = "Create user, company, tariff", Description = "Create new company, new user, add manager role, create new Tariff and newTransaction if no exist ")]
+        public async Task<IActionResult> UserRegister([FromBody, 
+                        SwaggerParameter("User and company data", Required = true)] 
+                        UserRegister message)
         {
             if (_context.Companys.Where(x => x.CompanyName == message.CompanyName).Any() || _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                 return BadRequest("Company name or user email not unique");
@@ -140,8 +142,12 @@ namespace UserOperations.Controllers
 
         [AllowAnonymous]
         [HttpPost("GenerateToken")]
-        [SwaggerOperation(Description = "Loggin for user. Return jwt token")]
-        public IActionResult GenerateToken([FromBody]AccountAuthorization message)
+        [SwaggerOperation(Summary = "Loggin user", Description = "Loggin for user. Return jwt token")]
+        [SwaggerResponse(400, "The user data is invalid", typeof(string))]
+        [SwaggerResponse(200, "JWT token")]
+        public IActionResult GenerateToken([FromBody, 
+                        SwaggerParameter("User data", Required = true)]
+                        AccountAuthorization message)
         {
             try
             {
