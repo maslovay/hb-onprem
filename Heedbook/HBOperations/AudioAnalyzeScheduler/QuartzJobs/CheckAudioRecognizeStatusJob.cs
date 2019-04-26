@@ -117,13 +117,14 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         });
                         await _repository.CreateAsync(dialogueSpeech);
                         await _repository.BulkInsertAsync(phraseCount);
-
+                        
                         _log.Info("Asr stt results is not empty. Everything is ok!");
                     }
                     else
                     {
                         _log.Info("Asr stt results is empty");
                     }
+                    Console.WriteLine("status id 7 ");
                     item.StatusId = 7;
                     var @event = new FillingHintsRun
                     {
@@ -135,6 +136,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
             await Task.WhenAll(tasks);
             _repository.Save();
+            Console.WriteLine("Data saved.");
             _log.Info("Scheduler ended.");
         }
 
