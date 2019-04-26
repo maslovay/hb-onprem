@@ -36,14 +36,14 @@ namespace AudioAnalyzeScheduler.QuartzJobs
         public async Task Execute(IJobExecutionContext context)
         {
             _log.Info("Audion analyze scheduler started.");
-            var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 7);
+            var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 6);
             if (!audios.Any()) _log.Info("No audios found");
             var tasks = audios.Select(item =>
             {
                 return Task.Run(async () =>
                 {
                     var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(item.STTResult);
-                    Console.WriteLine($"{asrResults}");
+                    Console.WriteLine($"Has items: {asrResults.Any()}");
                     var recognized = new List<WordRecognized>();
                     if (asrResults.Any())
                     {
@@ -98,7 +98,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 PhraseCount = phraseCounter[key],
                                 IsClient = true
                             });
-                        item.StatusId = 7;
                         recognized.ForEach(r =>
                         {
                             if (words.All(w => w.Word != r.Word))
@@ -118,17 +117,19 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         });
                         await _repository.CreateAsync(dialogueSpeech);
                         await _repository.BulkInsertAsync(phraseCount);
-                        var @event = new FillingHintsRun
-                        {
-                            DialogueId = item.DialogueId
-                        };
-                        _notificationPublisher.Publish(@event);
-                        _log.Info("Everything is ok");
+
+                        _log.Info("Asr stt results is not empty. Everything is ok!");
                     }
                     else
                     {
                         _log.Info("Asr stt results is empty");
                     }
+                    item.StatusId = 7;
+                    var @event = new FillingHintsRun
+                    {
+                        DialogueId = item.DialogueId
+                    };
+                    _notificationPublisher.Publish(@event);
                 });
             }).ToList();
 
