@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Renci.SshNet.Messages.Transport;
 
 namespace HBLib.Utils
 {
@@ -29,7 +30,7 @@ namespace HBLib.Utils
             if (!_client.IsConnected)
                 await Task.Run(() => _client.Connect()).ContinueWith(t =>
                 {
-                    _client.ChangeDirectory(_sftpSettings.DestinationPath);
+                    ChangeDirectoryToDefault();
                 });
         }
         /// <summary>
@@ -54,6 +55,16 @@ namespace HBLib.Utils
             return $"http://{_sftpSettings.Host}/{path}";
         }
 
+        public void ChangeDirectory(String path)
+        {
+            _client.ChangeDirectory(path);
+        }
+
+        public void ChangeDirectoryToDefault()
+        {
+            _client.ChangeDirectory(_sftpSettings.DestinationPath);
+        }
+        
 
         /// <summary>
         /// Get urls to files. 
@@ -184,7 +195,7 @@ namespace HBLib.Utils
             var filename = remotePath.Split('/').Last();
 
             Console.WriteLine(localPath == null);
-            localPath = localPath == null ? localPath = _sftpSettings.DownloadPath + filename : localPath + filename;
+            localPath = localPath == null ? localPath = Path.Combine(_sftpSettings.DownloadPath, filename) : Path.Combine(localPath, filename);
             Console.WriteLine($"{localPath}, {remotePath}");
             using (var fs = File.OpenWrite(localPath))
             {
@@ -274,6 +285,18 @@ namespace HBLib.Utils
             return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();
         }
 
+        /// <summary>
+        /// Disconnects from a FTP server
+        /// </summary>
+        public async Task DisconnectAsync()
+        {
+            if (_client.IsConnected)
+                await Task.Run(() => _client.Connect()).ContinueWith(t =>
+                {
+                    _client.Disconnect();
+                });
+        }
+        
         public class FileInfoModel
         {
             public string url;

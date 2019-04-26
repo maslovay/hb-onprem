@@ -17,7 +17,8 @@ namespace FaceAnalyzeService.Tests
         private FaceAnalyze _faceAnalyzeService;
         private Startup _startup;
         private string frameFileRemotePath;
-        private Guid testfileFrameId;
+        private string testFrameCorrectFileName;
+        private Guid testFileFrameId;
     
         [SetUp]
         public async Task Setup()
@@ -27,6 +28,12 @@ namespace FaceAnalyzeService.Tests
                 _startup = new Startup(Config);
                 _startup.ConfigureServices(Services);
             }, true);
+        }
+        
+        [TearDown]
+        public async Task TearDown()
+        {
+            await base.TearDown();
         }
 
         protected override async Task PrepareTestData()
@@ -42,10 +49,11 @@ namespace FaceAnalyzeService.Tests
 
             // filling frames 
             var testFileFramePath = Path.GetFileName(testFramePath);
-            var testFrameCorrectFileName = testFileFramePath
-                .Replace("testid", TestUserId.ToString());
-
-            if (!(await _sftpClient.IsFileExistsAsync("frames/" + testFrameCorrectFileName)))
+            
+            testFrameCorrectFileName = testFileFramePath.Replace("testid", TestUserId.ToString());
+            frameFileRemotePath = "frames/" + testFrameCorrectFileName;
+           
+            if (!await _sftpClient.IsFileExistsAsync("frames/" + testFrameCorrectFileName))
                 await _sftpClient.UploadAsync(testFramePath, "frames/", testFrameCorrectFileName);
 
             // if frame doesn't exist => let's create it!
@@ -71,12 +79,19 @@ namespace FaceAnalyzeService.Tests
                 };
 
                 await _repository.CreateAsync(testFileFrame);
-                testfileFrameId = testFileFrame.FileFrameId;
+                testFileFrameId = testFileFrame.FileFrameId;
             }
             
-            frameFileRemotePath = "frames/" + testFrameCorrectFileName;
             await _repository.SaveAsync();
-            //await _sftpClient.DisconnectAsync();
+        }
+
+        protected override async Task CleanTestData()
+        {
+            await _sftpClient.DeleteFileIfExistsAsync(frameFileRemotePath);
+            
+            ClearFrameEmotions(testFileFrameId);
+            _repository.Delete<FileFrame>(ff => ff.FileName == testFrameCorrectFileName);
+            await _repository.SaveAsync();
         }
 
         protected override void InitServices()
@@ -89,7 +104,7 @@ namespace FaceAnalyzeService.Tests
         public void EnsureCreatesFrameEmotion()
         {
             _faceAnalyzeService.Run(frameFileRemotePath);
-            Assert.IsTrue(_repository.Get<FrameEmotion>().Any(ff => ff.FileFrameId == testfileFrameId));
+            Assert.IsTrue(_repository.Get<FrameEmotion>().Any(ff => ff.FileFrameId == testFileFrameId));
         }
 
         private void ClearFrameEmotions(Guid fileFrameId)

@@ -35,6 +35,11 @@ namespace FillingFrameService.Tests
             }, true);
         }
 
+        public async void TearDown()
+        {
+            await base.TearDown();
+        }
+
         protected override async Task PrepareTestData()
         {
             fileFrames.Clear();
@@ -159,7 +164,12 @@ namespace FillingFrameService.Tests
             await _repository.CreateAsync(newDialog);
             await _repository.SaveAsync();
         }
-        
+
+        protected override Task CleanTestData()
+        {
+            return null;
+        }
+
         protected override void InitServices()
         {
             resourceManager = new ResourceManager("FillingFrameServiceTests.Resources.StringResources", 

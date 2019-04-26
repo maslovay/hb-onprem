@@ -9,6 +9,7 @@ using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,7 +51,14 @@ namespace Common
                 await PrepareTestData();
         }
 
+        public async Task TearDown()
+        {
+            await CleanTestData();
+        }
+        
         protected abstract Task PrepareTestData();
+
+        protected abstract Task CleanTestData();
         
         private void InitServiceProvider()
         {

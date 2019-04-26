@@ -46,6 +46,11 @@ namespace FillingSatisfactionService.Tests
             }
         }
 
+        protected override Task CleanTestData()
+        {
+            return null; // temporary!
+        }
+
         protected override void InitServices()
         {
             _repository = ServiceProvider.GetService<IGenericRepository>();

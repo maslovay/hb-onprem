@@ -39,6 +39,9 @@
       <None Update="Resources\Frames\testid_20190416085301.jpg">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Resources\DialogueVideos\dialogueid.mkv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

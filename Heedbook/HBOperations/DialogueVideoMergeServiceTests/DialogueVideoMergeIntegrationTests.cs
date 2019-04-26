@@ -31,6 +31,12 @@ namespace DialogueVideoMerge.Tests
             }, true);
         }
 
+        [TearDown]
+        public async Task TearDown()
+        {
+            await base.TearDown();
+        }
+        
         protected override async Task PrepareTestData()
         {
             _dialogueVideoMergeRun = new DialogueVideoMergeRun()
@@ -135,6 +141,11 @@ namespace DialogueVideoMerge.Tests
 
             await _repository.CreateAsync(newDialog);
             await _repository.SaveAsync();
+        }
+
+        protected override async Task CleanTestData()
+        {
+            throw new NotImplementedException();
         }
 
         protected override void InitServices()
