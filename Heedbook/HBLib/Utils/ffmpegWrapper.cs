@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 
 // todo: try-catch-throw
 
@@ -304,42 +305,53 @@ namespace HBLib.Utils
 
             process.Start();
 
-            using (var inputStream = process.StandardInput.BaseStream)
-            {
-                sourceStream.Position = 0;
-                sourceStream.CopyToOptimized(inputStream);
-            }
+            Task inputTask, outputTask;
 
-            using (var outputStream = new MemoryStream())
+            inputTask = Task.Run(() =>
             {
-                bool isBegan = false;
-                bool checkPoint = false;
-
-                process.StandardOutput.BaseStream.CopyToOptimized(outputStream);
-                
-                outputStream.Position = 0;
-                
-                do
+                using (var inputStream = process.StandardInput.BaseStream)
                 {
-                    var uploadStream = new MemoryStream();
+                    sourceStream.Position = 0;
+                    sourceStream.CopyTo(inputStream);
+                }
+            });
 
-                    isBegan = outputStream.MoveToSequence(_jpegBegin);
+            outputTask = Task.Run(() =>
+            {
+                using (var outputStream = new MemoryStream())
+                {
+                    bool isBegan = false;
+                    bool checkPoint = false;
 
-                    if (!isBegan) break;
-                    
-                    uploadStream.Write(_jpegBegin);
+                    process.StandardOutput.BaseStream.CopyToOptimized(outputStream);
+                    outputStream.Position = 0;
 
-                    checkPoint = outputStream.WriteUntilSequence(uploadStream, _jpegEnd);
+                    do
+                    {
+                        var uploadStream = new MemoryStream();
 
-                    if (!checkPoint) break;
+                        isBegan = outputStream.MoveToSequence(_jpegBegin);
 
-                    var frameFile = GenerateFrameFileName(appUserId, dateTime);
-                    if (uploadStream.Length > 0) result[frameFile] = uploadStream;
+                        if (!isBegan) 
+                            break;
 
-                    dateTime = dateTime.AddSeconds(cutPeriod);
-                } while (isBegan);
-            }
+                        uploadStream.Write(_jpegBegin);
 
+                        checkPoint = outputStream.WriteUntilSequence(uploadStream, _jpegEnd);
+
+                        if (!checkPoint) break;
+                        var frameFile = GenerateFrameFileName(appUserId, dateTime);
+                        
+                        if (uploadStream.Length > 0) 
+                            result[frameFile] = uploadStream;
+
+                        dateTime = dateTime.AddSeconds(cutPeriod);
+                    } while (isBegan);
+                }
+            });
+
+            
+            Task.WaitAll(inputTask, outputTask);
             process.WaitForExit();
 
             return result;

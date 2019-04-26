@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Threading;
 using HBLib.Utils;
 
 namespace HBLib.Utils
@@ -33,8 +34,6 @@ namespace HBLib.Utils
         {
             int bufSize = 8192;
             var currentBuffer = src.GetBuffer();
-            
-            dest.Flush();
             
             if (currentBuffer.Length > bufSize)
             {
