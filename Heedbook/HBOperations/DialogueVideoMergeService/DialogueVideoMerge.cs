@@ -86,6 +86,7 @@ namespace DialogueVideoMergeService
                 if (!videos.Any())
                 {
                     _log.Error("No video files");
+                    return;
                 }
 
                 var commands = new List<FFMpegWrapper.FFmpegCommand>
