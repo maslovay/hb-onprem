@@ -86,7 +86,7 @@ namespace FillingSatisfactionService
                                .ToList(),
                             meetingExpectationsByNN);
 
-                    nNWeight = Convert.ToDouble(_config.NNWeightD);
+                    nNWeight = Convert.ToDouble(_config.NnWeight);
                 }
                 else
                 {

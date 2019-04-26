@@ -9,6 +9,6 @@ namespace FillingSatisfactionService
         public Double ClientWeight { get; set; }
         public Double EmployeeWeight { get; set; }
         public Double TeacherWeight { get; set; }
-        public Double NNWeightD { get; set; }
+        public Double NnWeight { get; set; }
     }
 }
