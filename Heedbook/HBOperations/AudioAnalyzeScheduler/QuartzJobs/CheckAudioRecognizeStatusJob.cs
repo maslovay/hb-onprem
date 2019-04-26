@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using AsrHttpClient;
+﻿using AsrHttpClient;
 using AudioAnalyzeScheduler.Model;
 using HBData.Models;
 using HBData.Repository;
@@ -15,6 +10,11 @@ using Newtonsoft.Json;
 using Quartz;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace AudioAnalyzeScheduler.QuartzJobs
 {
@@ -57,12 +57,10 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
                                 });
                             });
-                        //  var languageId = _repository
-                        //      .Get<Dialogue>()
-                        //      .Where(d => d.DialogueId == item.DialogueId)
-                        //      .Select(d => d.LanguageId ?? 1)
-                        //      .First();
-                        var languageId = 2;
+                        var languageId = _repository.GetWithInclude<Dialogue>(i => i.DialogueId == item.DialogueId,
+                                i => i.Language)
+                            .Select(i => i.Language.LanguageId)
+                            .First();
                         var speechSpeed = GetSpeechSpeed(recognized, languageId);
                         _log.Info($"Speech speed: {speechSpeed}");
                         var dialogueSpeech = new DialogueSpeech
@@ -117,7 +115,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         });
                         await _repository.CreateAsync(dialogueSpeech);
                         await _repository.BulkInsertAsync(phraseCount);
-                        
+
                         _log.Info("Asr stt results is not empty. Everything is ok!");
                     }
                     else
@@ -231,7 +229,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private static List<String> Separator(String text)
         {
-            return text.Split(new[] {' ', ',', '.', ')', '('}, StringSplitOptions.RemoveEmptyEntries).ToList();
+            return text.Split(new[] { ' ', ',', '.', ')', '(' }, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
     }
 }
