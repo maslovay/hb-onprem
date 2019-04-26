@@ -22,7 +22,7 @@ namespace FillingSatisfactionService
             CalculationConfig config,
             ElasticClient log)
         {
-            _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
+            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _calculations = calculations;
             _config = config;
             _log = log;
