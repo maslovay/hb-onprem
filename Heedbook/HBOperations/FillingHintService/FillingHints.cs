@@ -163,7 +163,7 @@ namespace FillingHintService
             request.Append($" WHERE CAST(\"DialogueId\" as uuid) = CAST('{dialogueId}' as uuid) ");
             return !conditions.Any()
                 ? request.ToString()
-                : conditions.Aggregate(request, (current, cond) => current.Append($"AND \"{cond.Field}\" = {cond.Value} ")).ToString();
+                : conditions.Aggregate(request, (current, cond) => current.Append($"AND \"{cond.Field}\" = '{cond.Value}' ")).ToString();
         }
     }
 }
