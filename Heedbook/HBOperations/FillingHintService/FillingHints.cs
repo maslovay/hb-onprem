@@ -159,7 +159,7 @@ namespace FillingHintService
             }
 
             request.Append($" FROM public.{tableName}");
-            request.Append($" WHERE CAST(DialogueId as uniqueidentifier) = CAST('{dialogueId}' as uniqueidentifier) ");
+            request.Append($" WHERE CAST(DialogueId as uuid) = CAST('{dialogueId}' as uuid) ");
             return !conditions.Any()
                 ? request.ToString()
                 : conditions.Aggregate(request, (current, cond) => current.Append($"AND {cond.Field} = {cond.Value} ")).ToString();
