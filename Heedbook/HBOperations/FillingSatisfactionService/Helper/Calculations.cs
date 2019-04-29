@@ -202,7 +202,7 @@ namespace FillingSatisfactionService.Helper
 
                 if (satisfactionScore.MeetingExpectationsByNN != null)
                 {
-                    nNWeight = _config.NNWeightD;
+                    nNWeight = _config.NnWeight;
                     NNScore = satisfactionScore.MeetingExpectationsByNN;
                     if (satisfactionScore.BegMoodByNN != null) NNBegScore = satisfactionScore.BegMoodByNN;
 

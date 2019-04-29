@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using AsrHttpClient;
+﻿using AsrHttpClient;
 using AudioAnalyzeScheduler.Model;
 using HBData.Models;
 using HBData.Repository;
@@ -15,35 +10,37 @@ using Newtonsoft.Json;
 using Quartz;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace AudioAnalyzeScheduler.QuartzJobs
 {
     public class CheckAudioRecognizeStatusJob : IJob
     {
         private readonly ElasticClient _log;
-        private readonly INotificationPublisher _notificationPublisher;
         private readonly IGenericRepository _repository;
 
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
-            INotificationPublisher notificationPublisher,
             ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
-            _notificationPublisher = notificationPublisher;
             _log = log;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             _log.Info("Audion analyze scheduler started.");
-            var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 7);
+            var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 6);
             if (!audios.Any()) _log.Info("No audios found");
             var tasks = audios.Select(item =>
             {
                 return Task.Run(async () =>
                 {
                     var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(item.STTResult);
-                    Console.WriteLine($"{asrResults}");
+                    Console.WriteLine($"Has items: {asrResults.Any()}");
                     var recognized = new List<WordRecognized>();
                     if (asrResults.Any())
                     {
@@ -57,12 +54,10 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
                                 });
                             });
-                        //  var languageId = _repository
-                        //      .Get<Dialogue>()
-                        //      .Where(d => d.DialogueId == item.DialogueId)
-                        //      .Select(d => d.LanguageId ?? 1)
-                        //      .First();
-                        var languageId = 2;
+                        var languageId = _repository.GetWithInclude<Dialogue>(i => i.DialogueId == item.DialogueId,
+                                i => i.Language)
+                            .Select(i => i.Language.LanguageId)
+                            .First();
                         var speechSpeed = GetSpeechSpeed(recognized, languageId);
                         _log.Info($"Speech speed: {speechSpeed}");
                         var dialogueSpeech = new DialogueSpeech
@@ -98,15 +93,14 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 PhraseCount = phraseCounter[key],
                                 IsClient = true
                             });
-                        item.StatusId = 7;
                         recognized.ForEach(r =>
                         {
                             if (words.All(w => w.Word != r.Word))
                                 words.Add(new PhraseResult
                                 {
                                     Word = r.Word,
-                                    BegTime = item.BegTime.AddSeconds(Double.Parse(r.StartTime)),
-                                    EndTime = item.BegTime.AddSeconds(Double.Parse(r.EndTime))
+                                    BegTime = item.BegTime.AddSeconds(Double.Parse(r.StartTime, CultureInfo.InvariantCulture)),
+                                    EndTime = item.BegTime.AddSeconds(Double.Parse(r.EndTime, CultureInfo.InvariantCulture))
                                 });
                         });
 
@@ -118,22 +112,21 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         });
                         await _repository.CreateAsync(dialogueSpeech);
                         await _repository.BulkInsertAsync(phraseCount);
-                        var @event = new FillingHintsRun
-                        {
-                            DialogueId = item.DialogueId
-                        };
-                        _notificationPublisher.Publish(@event);
-                        _log.Info("Everything is ok");
+
+                        _log.Info("Asr stt results is not empty. Everything is ok!");
                     }
                     else
                     {
                         _log.Info("Asr stt results is empty");
                     }
+                    Console.WriteLine("status id 7 ");
+                    item.StatusId = 7;
                 });
             }).ToList();
 
             await Task.WhenAll(tasks);
             _repository.Save();
+            Console.WriteLine("Data saved.");
             _log.Info("Scheduler ended.");
         }
 
@@ -152,7 +145,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private Double GetSilenceShare(List<WordRecognized> words, DateTime begTime, DateTime endTime)
         {
-            var wordsDuration = words.Sum(item => Double.Parse(item.EndTime) - Double.Parse(item.StartTime));
+            var wordsDuration = words.Sum(item => Double.Parse(item.EndTime, CultureInfo.InvariantCulture) - Double.Parse(item.StartTime, CultureInfo.InvariantCulture));
             return endTime.Subtract(begTime).TotalSeconds > 0
                 ? 100 * Math.Max(endTime.Subtract(begTime).TotalSeconds - wordsDuration, 0.01) /
                   endTime.Subtract(begTime).TotalSeconds
@@ -175,8 +168,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     var phraseResult = new PhraseResult
                     {
                         Word = w.Word,
-                        BegTime = begTime.AddSeconds(Double.Parse(w.StartTime)),
-                        EndTime = begTime.AddSeconds(Double.Parse(w.EndTime)),
+                        BegTime = begTime.AddSeconds(Double.Parse(w.StartTime, CultureInfo.InvariantCulture)),
+                        EndTime = begTime.AddSeconds(Double.Parse(w.EndTime, CultureInfo.InvariantCulture)),
                         PhraseId = phraseId,
                         PhraseTypeId = phraseTypeId,
                         Position = index
@@ -195,9 +188,9 @@ namespace AudioAnalyzeScheduler.QuartzJobs
         {
             var result = new List<List<PhraseResult>>();
             var wordPos = new List<PhraseResult>();
-            var phrases = await _repository.FindByConditionAsync<Phrase>(item => item.LanguageId == languageId);
             var phraseWords = Separator(phrase.PhraseText);
-            var minWords = Convert.ToInt32(Math.Round(phrase.Accurancy.Value * phraseWords.Count(), 0));
+            var accuracy = phrase.Accurancy ?? 0;
+            var minWords = Convert.ToInt32(Math.Round(accuracy * phraseWords.Count(), 0));
             if (minWords == 0) minWords = phraseWords.Count();
             var space = phrase.WordsSpace + minWords - 1;
             foreach (var phraseWord in phraseWords)
@@ -228,7 +221,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private static List<String> Separator(String text)
         {
-            return text.Split(new[] {' ', ',', '.', ')', '('}, StringSplitOptions.RemoveEmptyEntries).ToList();
+            return text.Split(new[] { ' ', ',', '.', ')', '(' }, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
     }
 }

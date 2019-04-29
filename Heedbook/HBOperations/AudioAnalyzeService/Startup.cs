@@ -44,6 +44,9 @@ namespace AudioAnalyzeService
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
+            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
+            services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
+            services.AddTransient<FFMpegWrapper>();
             services.AddTransient(provider =>
                 provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();

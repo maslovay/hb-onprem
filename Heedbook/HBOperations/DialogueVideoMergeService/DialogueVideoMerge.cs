@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DialogueVideoMergeService.Exceptions;
 using HBData.Models;
 using HBData.Repository;
 using HBLib;
@@ -29,20 +28,19 @@ namespace DialogueVideoMergeService
         public DialogueVideoMerge(
             INotificationPublisher notificationPublisher,
             IServiceScopeFactory factory,
-            IGenericRepository repository,
             SftpClient client,
             SftpSettings sftpSettings,
             ElasticClient log
         )
         {
-            _repository = repository;
+            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _sftpClient = client;
             _sftpSettings = sftpSettings;
             _log = log;
             _notificationPublisher = notificationPublisher;
         }
 
-        private static FileFrame LastFrame(FileVideo video, List<FileFrame> frames)
+        public static FileFrame LastFrame(FileVideo video, List<FileFrame> frames)
         {
             return frames.Where(p => p.Time >= video.BegTime && p.Time <= video.EndTime).OrderByDescending(p => p.Time)
                          .FirstOrDefault();
@@ -88,18 +86,20 @@ namespace DialogueVideoMergeService
                 if (!videos.Any())
                 {
                     _log.Error("No video files");
-                    throw new DialogueVideoMergeException("No video files");
+                    return;
                 }
 
-                var commands = new List<FFMpegWrapper.FFmpegCommand>();
-                commands.Add(new FFMpegWrapper.FFmpegCommand
+                var commands = new List<FFMpegWrapper.FFmpegCommand>
                 {
-                    Command = $"-i {Path.Combine(sessionDir, videos[0].FileName)}",
-                    Path = Path.Combine(sessionDir, videos[0].FileName),
-                    Type = VideoType,
-                    FileFolder = VideoFolder,
-                    FileName = videos[0].FileName
-                });
+                    new FFMpegWrapper.FFmpegCommand
+                    {
+                        Command = $"-i {Path.Combine(sessionDir, videos[0].FileName)}",
+                        Path = Path.Combine(sessionDir, videos[0].FileName),
+                        Type = VideoType,
+                        FileFolder = VideoFolder,
+                        FileName = videos[0].FileName
+                    }
+                };
 
                 for (var i = 1; i < videos.Count(); i++)
                 {
@@ -128,6 +128,7 @@ namespace DialogueVideoMergeService
                         FileName = videos[i].FileName
                     });
                 }
+
 
                 _log.Info("Downloading all files");
                 foreach (var command in commands.GroupBy(p => p.FileName).Select(p => p.First()))
@@ -166,7 +167,7 @@ namespace DialogueVideoMergeService
             catch (Exception e)
             {
                 _log.Fatal($"Exception occured {e}");
-                throw new DialogueVideoMergeException(e.Message, e);
+                throw;
             }
         }
     }

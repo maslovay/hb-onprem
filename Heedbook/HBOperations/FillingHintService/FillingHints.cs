@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using FillingHintService.Model;
 using HBData.Models;
@@ -29,107 +30,106 @@ namespace FillingHintService
             {
                 _log.Info("Function filling hints started.");
                 var language = _repository.GetWithInclude<Dialogue>(item => item.DialogueId == dialogueId,
-                        item => item.Language)
-                    .Select(item => item.Language.LanguageName)
-                    .First();
+                                               item => item.Language)
+                                          .Select(item => item.Language.LanguageShortName)
+                                          .First();
                 var catalogueHints = await _repository.FindAllAsync<CatalogueHint>();
-
-                var hints = JsonConvert.DeserializeObject<List<Hint>>(JsonConvert.SerializeObject(catalogueHints));
-
-                foreach (var hintConditions in hints)
+                var hints = catalogueHints.Select(item => new Hint()
                 {
-                    foreach (var hintCondition in hintConditions.HintCondition)
+                    HintCondition = JsonConvert.DeserializeObject<List<HintCondition>>(item.HintCondition),
+                    HintText = JsonConvert.DeserializeObject<List<HintText>>(item.HintText)
+                }).ToList();
+                foreach (var hintConditions in hints)
+                foreach (var hintCondition in hintConditions.HintCondition)
+                {
+                    var reqSql = BuildRequest(hintCondition.Table, dialogueId.ToString(), hintCondition.Condition,
+                        hintCondition.Indexes);
+
+                    var data = _repository.ExecuteDbCommand(hintCondition.Indexes, reqSql)
+                                          .ToList();
+
+                    Double? resValue = 0;
+                    switch (hintCondition.Operation)
                     {
-                        var reqSql = BuildRequest(hintCondition.Table, dialogueId.ToString(), hintCondition.Condition,
-                            hintCondition.Indexes);
-
-                        var data = _repository.ExecuteDbCommand(Tables.TablesDictionary[hintCondition.Table], reqSql)
-                            .ToList();
-
-                        Double? resValue = 0;
-                        switch (hintCondition.Operation)
-                        {
-                            case "sum":
-                                if (!data.Any())
-                                    resValue = 0;
-                                else
-                                    foreach (var index in hintCondition.Indexes)
-                                        resValue += data.Sum(item =>
-                                        {
-                                            var property = item.GetType().GetProperty(index);
-                                            if (property != null)
-                                                return Double.Parse(property.GetValue(item).ToString());
-
-                                            return 0;
-                                        });
-
-                                if ((resValue >= hintCondition.Min) & (resValue <= hintCondition.Max))
-                                {
-                                    var textInfo = hintConditions.HintText.Where(p => p.Language == language).ToList();
-                                    if (textInfo.Any())
+                        case "sum":
+                            if (!data.Any())
+                                resValue = 0;
+                            else
+                                foreach (var index in hintCondition.Indexes)
+                                    resValue += data.Sum(item =>
                                     {
-                                        var dialogueHint = new DialogueHint
-                                        {
-                                            DialogueId = dialogueId,
-                                            HintText = textInfo.First().Text,
-                                            IsAutomatic = true,
-                                            IsPositive = hintCondition.IsPositive,
-                                            Type = hintCondition.Type
-                                        };
-                                        _repository.Create(dialogueHint);
-                                    }
-                                }
+                                        var property = item.GetType().GetProperty(index);
+                                        if (property != null) return Double.Parse(property.GetValue(item).ToString());
 
-                                break;
-
-                            case "sub":
-                                if (data.Count() != 2)
-                                {
-                                    resValue = 0;
-                                }
-                                else
-                                {
-                                    resValue = data.Sum(item =>
-                                    {
-                                        var firstProperty = item.GetType().GetProperty(hintCondition.Indexes[0]);
-                                        var secondProperty = item.GetType().GetProperty(hintCondition.Indexes[1]);
-                                        Double first = 0;
-                                        Double second = 0;
-                                        if (firstProperty != null)
-                                            first = Double.Parse(firstProperty.GetValue(item).ToString());
-
-                                        if (secondProperty != null)
-                                            second = Double.Parse(secondProperty.GetValue(item).ToString());
-
-                                        return first - second;
+                                        return 0;
                                     });
-                                    ;
-                                }
 
-                                if ((resValue >= hintCondition.Min) & (resValue <= hintCondition.Max))
+                            if ((resValue >= hintCondition.Min) & (resValue <= hintCondition.Max))
+                            {
+                                var textInfo = hintConditions.HintText.Where(p => p.Language == language).ToList();
+                                if (textInfo.Any())
                                 {
-                                    var textInfo = hintConditions.HintText.Where(p => p.Language == language).ToList();
-                                    if (textInfo.Any())
+                                    var dialogueHint = new DialogueHint
                                     {
-                                        var dialogueHint = new DialogueHint
-                                        {
-                                            DialogueId = dialogueId,
-                                            HintText = textInfo.First().Text,
-                                            IsAutomatic = true,
-                                            IsPositive = hintCondition.IsPositive,
-                                            Type = hintCondition.Type
-                                        };
-                                        _repository.Create(dialogueHint);
-                                    }
+                                        DialogueId = dialogueId,
+                                        HintText = textInfo.First().Text,
+                                        IsAutomatic = true,
+                                        IsPositive = hintCondition.IsPositive,
+                                        Type = hintCondition.Type
+                                    };
+                                    _repository.Create(dialogueHint);
                                 }
+                            }
 
-                                break;
-                        }
+                            break;
 
-                        _log.Info($"Table: {hintCondition.Table}");
-                        _log.Info($"Conditions: {JsonConvert.SerializeObject(hintCondition.Condition)}");
-                        _log.Info($"Result value is {resValue.Value}");
+                        case "sub":
+                            if (data.Count() != 2)
+                            {
+                                resValue = 0;
+                            }
+                            else
+                            {
+                                resValue = data.Sum(item =>
+                                {
+                                    var firstProperty = item.GetType().GetProperty(hintCondition.Indexes[0]);
+                                    var secondProperty = item.GetType().GetProperty(hintCondition.Indexes[1]);
+                                    Double first = 0;
+                                    Double second = 0;
+                                    if (firstProperty != null)
+                                        first = Double.Parse(firstProperty.GetValue(item).ToString());
+
+                                    if (secondProperty != null)
+                                        second = Double.Parse(secondProperty.GetValue(item).ToString());
+
+                                    return first - second;
+                                });
+                                ;
+                            }
+
+                            if ((resValue >= hintCondition.Min) & (resValue <= hintCondition.Max))
+                            {
+                                var textInfo = hintConditions.HintText.Where(p => p.Language == language).ToList();
+                                if (textInfo.Any())
+                                {
+                                    var dialogueHint = new DialogueHint
+                                    {
+                                        DialogueId = dialogueId,
+                                        HintText = textInfo.First().Text,
+                                        IsAutomatic = true,
+                                        IsPositive = hintCondition.IsPositive,
+                                        Type = hintCondition.Type
+                                    };
+                                    _repository.Create(dialogueHint);
+                                }
+                            }
+
+                            break;
                     }
+
+                    _log.Info($"Table: {hintCondition.Table}");
+                    _log.Info($"Conditions: {JsonConvert.SerializeObject(hintCondition.Condition)}");
+                    _log.Info($"Result value is {resValue.Value}");
                 }
 
                 _repository.Save();
@@ -141,30 +141,29 @@ namespace FillingHintService
                 throw;
             }
         }
-
         public static String BuildRequest(String tableName, String dialogueId, IEnumerable<Condition> conditions,
             List<String> fields)
         {
-            String request;
+            StringBuilder request;
             if (fields.Any())
             {
-                request = "SELECT";
+                request = new StringBuilder("SELECT");
                 for (var i = 0; i < fields.Count(); i++)
                     if (i == fields.Count() - 1)
-                        request += $" {fields[i]}";
+                        request.Append($" \"{fields[i]}\"");
                     else
-                        request += $" {fields[i]},";
+                        request.Append($" \"{fields[i]}\",");
             }
             else
             {
-                request = "SELECT *";
+                request = new StringBuilder("SELECT *");
             }
 
-            request += $" FROM dbo.{tableName}";
-            request += $" WHERE CAST(DialogueId as uniqueidentifier) = CAST('{dialogueId}' as uniqueidentifier) ";
+            request.Append($" FROM public.\"{tableName}\"");
+            request.Append($" WHERE CAST(\"DialogueId\" as uuid) = CAST('{dialogueId}' as uuid) ");
             return !conditions.Any()
-                ? request
-                : conditions.Aggregate(request, (current, cond) => current + $"AND {cond.Field} = {cond.Value}");
+                ? request.ToString()
+                : conditions.Aggregate(request, (current, cond) => current.Append($"AND CAST(\"{cond.Field}\" as uuid) = CAST('{cond.Value}' as uuid) ")).ToString();
         }
     }
 }

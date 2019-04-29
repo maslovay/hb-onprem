@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using FillingSatisfactionService.Exceptions;
 using FillingSatisfactionService.Helper;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 
 namespace FillingSatisfactionService
 {
@@ -14,16 +15,19 @@ namespace FillingSatisfactionService
     {
         private readonly Calculations _calculations;
         private readonly CalculationConfig _config;
+        private readonly INotificationPublisher _notificationPublisher;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
 
         public FillingSatisfaction(IServiceScopeFactory factory,
             Calculations calculations,
+            INotificationPublisher notificationPublisher,
             CalculationConfig config,
             ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _calculations = calculations;
+            _notificationPublisher = notificationPublisher;
             _config = config;
             _log = log;
         }
@@ -45,7 +49,6 @@ namespace FillingSatisfactionService
                 }
                 catch
                 {
-                    _log.Warning("Couldn't get dialog audio metrics!");   
                     dialogueAudio = null;
                 }
 
@@ -56,7 +59,6 @@ namespace FillingSatisfactionService
                 }
                 catch
                 {
-                    _log.Warning("Couldn't get positivity of text tone metrics!");   
                     positiveTextTone = null;
                 }
 
@@ -64,7 +66,8 @@ namespace FillingSatisfactionService
                     await _repository.FindByConditionAsync<DialogueInterval>(p => p.DialogueId == dialogueId);
 
                 var meetingExpectationsByNN =
-                    _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio, positiveTextTone);
+                    _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio,
+                        positiveTextTone);
                 Double? begMoodByNN = 0;
                 Double? endMoodByNN = 0;
                 Double nNWeight = 0;
@@ -88,7 +91,7 @@ namespace FillingSatisfactionService
                                .ToList(),
                             meetingExpectationsByNN);
 
-                    nNWeight = Convert.ToDouble(_config.NNWeightD);
+                    nNWeight = Convert.ToDouble(_config.NnWeight);
                 }
                 else
                 {
@@ -106,7 +109,6 @@ namespace FillingSatisfactionService
                 }
                 catch
                 {
-                    _log.Warning("Couldn't get satisfaction score!");   
                     satisfactionScore = null;
                 }
 
@@ -210,12 +212,17 @@ namespace FillingSatisfactionService
                 }
 
                 _repository.Save();
-                _log.Info("Function filling satisfaction finished.");
+                var @event = new FillingHintsRun
+                {
+                    DialogueId = dialogueId
+                };
+                _notificationPublisher.Publish(@event);
+                _log.Info("Function filling satisfaction ended.");
             }
             catch (Exception e)
             {
                 _log.Fatal($"exception occured {e}");
-                throw new FillingSatisfactionException( e.Message, e );
+                throw;
             }
         }
     }

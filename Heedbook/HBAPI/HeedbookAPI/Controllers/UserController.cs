@@ -401,6 +401,12 @@ namespace UserOperations.Controllers
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
 
+                System.Console.WriteLine(companyId);
+                System.Console.WriteLine(begTime);
+                System.Console.WriteLine(endTime);
+
+
+
                 var dialogues = _context.Dialogues
                 .Include(p => p.DialoguePhrase)
                 .Include(p => p.ApplicationUser)
@@ -418,7 +424,7 @@ namespace UserOperations.Controllers
                 )
                 .Select(p => new {
                     DialogueId = p.DialogueId,
-                    Avatar = _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.First().Avatar}"),
+                    Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
                     ApplicationUserId = p.ApplicationUserId,
                     FullName = p.ApplicationUser.FullName,
                     DialogueHints = p.DialogueHint,
@@ -477,6 +483,8 @@ namespace UserOperations.Controllers
 
                 var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
                 jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
+                jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
+                jsonDialogue["Video"] = dialogue == null ? null :_sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
                 jsonDialogue["DialogueAvgDurationLastMonth"] = avgDialogueTime;
                 return Ok(jsonDialogue);
             }
