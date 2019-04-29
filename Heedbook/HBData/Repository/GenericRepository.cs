@@ -143,11 +143,14 @@ namespace HBData.Repository
                 using (var dataReader = cmd.ExecuteReader())
                 {
                     while (dataReader.Read())
+                    {
                         for (var fieldCount = 0; fieldCount < dataReader.FieldCount; fieldCount++)
                         {
                             type.GetRuntimeProperties().ToList()[fieldCount].SetValue(instance, dataReader[fieldCount]);
-                            yield return instance;
                         }
+
+                        yield return instance;
+                    }
                 }
             }
         }
