@@ -122,7 +122,8 @@ namespace HBData.Repository
             _context.Set<T>().Remove(entity);
         }
 
-        public IEnumerable<Object> ExecuteDbCommand(List<String> properties, String sql, Dictionary<String, Object> @params = null)
+        public IEnumerable<Object> ExecuteDbCommand(List<String> properties, String sql,
+            Dictionary<String, Object> @params = null)
         {
             using (var cmd = _context.Database.GetDbConnection().CreateCommand())
             {
@@ -144,9 +145,9 @@ namespace HBData.Repository
                     while (dataReader.Read())
                         for (var fieldCount = 0; fieldCount < dataReader.FieldCount; fieldCount++)
                         {
-                           type.GetRuntimeProperties().ToList()[fieldCount].SetValue(instance, dataReader[fieldCount]);
-                        }
+                            type.GetRuntimeProperties().ToList()[fieldCount].SetValue(instance, dataReader[fieldCount]);
                             yield return instance;
+                        }
                 }
             }
         }
@@ -186,7 +187,8 @@ namespace HBData.Repository
                     typeof(string),
                     FieldAttributes.Private);
 
-                var propertyBuilder = typeBuilder.DefineProperty(property, PropertyAttributes.HasDefault, typeof(Double), null);
+                var propertyBuilder =
+                    typeBuilder.DefineProperty(property, PropertyAttributes.HasDefault, typeof(Double), null);
                 var custNameGetPropMthdBldr =
                     typeBuilder.DefineMethod($"get_{property}",
                         getSetAttr,
@@ -202,7 +204,7 @@ namespace HBData.Repository
                     typeBuilder.DefineMethod($"set_{property}",
                         getSetAttr,
                         null,
-                        new Type[] { typeof(Double) });
+                        new Type[] {typeof(Double)});
                 ILGenerator custNameSetIL = custNameSetPropMthdBldr.GetILGenerator();
                 custNameSetIL.Emit(OpCodes.Ldarg_0);
                 custNameSetIL.Emit(OpCodes.Ldarg_1);
@@ -211,6 +213,7 @@ namespace HBData.Repository
                 propertyBuilder.SetGetMethod(custNameGetPropMthdBldr);
                 propertyBuilder.SetSetMethod(custNameSetPropMthdBldr);
             }
+
             type = typeBuilder.CreateType();
             return Activator.CreateInstance(type);
         }
