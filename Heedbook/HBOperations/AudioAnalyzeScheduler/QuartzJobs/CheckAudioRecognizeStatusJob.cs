@@ -21,15 +21,12 @@ namespace AudioAnalyzeScheduler.QuartzJobs
     public class CheckAudioRecognizeStatusJob : IJob
     {
         private readonly ElasticClient _log;
-        private readonly INotificationPublisher _notificationPublisher;
         private readonly IGenericRepository _repository;
 
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
-            INotificationPublisher notificationPublisher,
             ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
-            _notificationPublisher = notificationPublisher;
             _log = log;
         }
 
@@ -124,11 +121,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     }
                     Console.WriteLine("status id 7 ");
                     item.StatusId = 7;
-                    var @event = new FillingHintsRun
-                    {
-                        DialogueId = item.DialogueId
-                    };
-                    _notificationPublisher.Publish(@event);
                 });
             }).ToList();
 
