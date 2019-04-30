@@ -479,7 +479,10 @@ namespace UserOperations.Controllers
                         && p.InStatistic == true 
                         && p.StatusId == 3
                         && (!dialogueIds.Any() || dialogueIds.Contains(p.DialogueId)))
-                    .FirstOrDefault();                
+                    .FirstOrDefault();   
+                
+                if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
+
 
                 var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
                 jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
