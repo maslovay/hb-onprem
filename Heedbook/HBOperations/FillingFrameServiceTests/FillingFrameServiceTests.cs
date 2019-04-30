@@ -193,30 +193,5 @@ namespace FillingFrameService.Tests
 
             Assert.AreEqual(resultDialogFrames.Count(), resultEmotions.Count());
         }
-
-//        [Test]
-//        public async Task CheckThrowsAnExceptionIfFileNotExists()
-//        {
-//            var dialogCreationRun = new DialogueCreationRun()
-//            {
-//                ApplicationUserId = testFileFrame.ApplicationUserId,
-//                DialogueId = Guid.NewGuid(),
-//                BeginTime = testFileFrame.Time.AddMinutes(-5),
-//                EndTime = testFileFrame.Time.AddMinutes(5)
-//            };
-//
-//            var attributes = _repository.Get<FrameAttribute>().Where(a => a.FileFrameId == testFileFrame.FileFrameId);
-//
-//            foreach (var attribute in attributes)
-//            {
-//                if (attribute.FileFrame == null) 
-//                    continue;
-//
-//                await _sftpClient.DeleteFileIfExistsAsync("frames/" + attribute.FileFrame.FileName);
-//
-//                Assert.Throws<DialogueCreationException>(async () =>
-//                        await _fillingFrameService.Run(dialogCreationRun));
-//            }
-//        }
     }
 }

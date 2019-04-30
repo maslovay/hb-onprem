@@ -24,6 +24,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\HBData\HBData.csproj" />
       <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
+      <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -40,6 +41,12 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
       <None Update="Resources\DialogueVideos\dialogueid.mkv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\DialogueAudios\dialogueid.wav">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Resources\Videos\testid_20190417100658_2.mkv">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

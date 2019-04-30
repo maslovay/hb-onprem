@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,7 +8,6 @@ using HBData.Models;
 using HBData.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using DialogueVideoMergeService;
-using DialogueVideoMergeService.Exceptions;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 using RabbitMqEventBus.Events;
@@ -46,13 +46,16 @@ namespace DialogueVideoMerge.Tests
                 BeginTime = DateTime.MinValue,
                 EndTime = DateTime.MaxValue
             };
+
+            DateTime? prevVideoEndDate = null;
+            const int deltaSeconds = 15;
             
             var currentDir = Environment.CurrentDirectory;
             var testVideosFilepath = Directory
                 .GetFiles(Path.Combine(currentDir, "Resources/Videos"), "testid*.mkv");
 
             if (testVideosFilepath == null)
-                throw new Exception("Can't get a test video for preparing a testset!");
+                throw new Exception("Can't get test video for preparing a testset!");
 
             foreach (var filePath in testVideosFilepath)
             {
@@ -63,8 +66,7 @@ namespace DialogueVideoMerge.Tests
                 if (!(await _sftpClient.IsFileExistsAsync("videos/" + testVideoCorrectFileName)))
                     await _sftpClient.UploadAsync(filePath, "videos/", testVideoCorrectFileName);
             
-                var videoDateTime = GetDateTimeFromFileVideoName(testVideoCorrectFileName);
-
+                var videoDateTime = prevVideoEndDate ?? GetDateTimeFromFileVideoName(testVideoCorrectFileName);
                 
                 // Let's check if such video record already exists in db
                 if (_repository.Get<FileVideo>().Any( fv => fv.FileName == testVideoCorrectFileName ))
@@ -75,7 +77,7 @@ namespace DialogueVideoMerge.Tests
                     FileVideoId = Guid.NewGuid(),
                     ApplicationUserId = TestUserId,
                     BegTime = videoDateTime,
-                    EndTime = videoDateTime.AddDays(1),
+                    EndTime = videoDateTime.AddSeconds(deltaSeconds),
                     CreationTime = videoDateTime,
                     FileName = testVideoCorrectFileName,
                     FileContainer = "videos",
@@ -83,6 +85,8 @@ namespace DialogueVideoMerge.Tests
                     StatusId = 5,
                     Duration = null
                 };
+
+                prevVideoEndDate = fileVideo.EndTime;
 
                 await _repository.CreateAsync(fileVideo);
             }
@@ -94,19 +98,7 @@ namespace DialogueVideoMerge.Tests
                 throw new Exception("Can't get test frames for preparing a testset!");
             
             // Create a dialog object
-            var newDialog = new Dialogue
-            {
-                DialogueId = _dialogueVideoMergeRun.DialogueId,
-                CreationTime = DateTime.MinValue,
-                BegTime = DateTime.MinValue,
-                EndTime = DateTime.MaxValue,
-                ApplicationUserId = TestUserId,
-                LanguageId = null,
-                StatusId = null,
-                SysVersion = "",
-                InStatistic = false,
-                Comment = "test dialog!!!"
-            };
+            var newDialog = CreateNewTestDialog();
             
             // filling frames 
             foreach (var testFramePath in testFramesFilepath)
@@ -145,7 +137,13 @@ namespace DialogueVideoMerge.Tests
 
         protected override async Task CleanTestData()
         {
-            throw new NotImplementedException();
+            var taskList = await _sftpClient.DeleteFileIfExistsBulkAsync("videos/", $"*{TestUserId}*.mkv");
+            taskList.Concat(await _sftpClient.DeleteFileIfExistsBulkAsync("frames/", $"*{TestUserId}*.jpg"));
+
+            await CleanAllVideoFilesFromDb();
+            await CleanAllFileFramesFromDb();
+            
+            Task.WaitAll(taskList.ToArray());
         }
 
         protected override void InitServices()
@@ -155,23 +153,22 @@ namespace DialogueVideoMerge.Tests
         }
 
         [Test]
-        public async Task ThrowsAnExceptionIfNoVideo()
-        {
-            CleanAllVideoFilesFromDb();
-            Assert.ThrowsAsync<DialogueVideoMergeException>(async () =>
-                await _dialogueVideoMergeService.Run(_dialogueVideoMergeRun));
-        }
-
-        [Test]
         public async Task EnsureCreatesOutputVideoFile()
         {
+            _sftpClient.ChangeDirectoryToDefault();
             await _dialogueVideoMergeService.Run(_dialogueVideoMergeRun);
             Assert.IsTrue(await _sftpClient.IsFileExistsAsync($"dialoguevideos/{_dialogueVideoMergeRun.DialogueId}.mkv"));
         }
 
-        private async void CleanAllVideoFilesFromDb()
+        private async Task CleanAllVideoFilesFromDb()
         {
             _repository.Delete<FileVideo>( fv => fv.ApplicationUserId == TestUserId );
+            await _repository.SaveAsync();
+        }
+        
+        private async Task CleanAllFileFramesFromDb()
+        {
+            _repository.Delete<FileFrame>( ff => ff.ApplicationUserId == TestUserId );
             await _repository.SaveAsync();
         }
     }

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using ExtractFramesFromVideo;
 using HBData;
 using HBData.Models;
@@ -28,10 +29,11 @@ namespace ExtractFramesFromVideoService.Tests
         private ElasticClient _elasticClient;
         private FFMpegSettings _settings;
         private FFMpegWrapper _wrapper;
-        private string appUserId;
         private string videoFileName;
+        private string correctFileName;
         private DateTime minDate;
         private DateTime maxDate;
+        public Guid TestUserId => Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
         private const string _testFilePattern = "testuser*.mkv";
         
         [SetUp]
@@ -98,10 +100,11 @@ namespace ExtractFramesFromVideoService.Tests
                 throw new Exception("No video for testing!");
 
             videoFileName = Path.GetFileName(resourceVideos.First());
-            
-            await _ftpClient.UploadAsync(Path.Combine(rootDir, "Resources", videoFileName), "videos", videoFileName);
-            appUserId = videoFileName.Split(("_"))[0];
 
+            correctFileName = videoFileName.Replace("testuser", TestUserId.ToString());
+            
+            await _ftpClient.UploadAsync(Path.Combine(rootDir, "Resources", videoFileName), "videos", correctFileName);
+            
             var videoTimestampText = videoFileName.Split(("_"))[1];
             minDate = DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
             maxDate = minDate.AddSeconds(30);
@@ -110,7 +113,7 @@ namespace ExtractFramesFromVideoService.Tests
         private void CleanDatabaseRecords()
         {
             var fileFrames = _repository.Get<FileFrame>()
-                .Where(f => f.FileName.Contains(appUserId) && f.Time >= minDate && f.Time <= maxDate);
+                .Where(f => f.FileName.Contains(TestUserId.ToString()) && f.Time >= minDate && f.Time <= maxDate);
 
             foreach (var ff in fileFrames)
                 _repository.Delete(ff);
@@ -127,11 +130,11 @@ namespace ExtractFramesFromVideoService.Tests
         [Test(Description = "Framing test")]
         public async Task RunTest()
         {
-            var runTask = _framesFromVideo.Run("Videos/"+videoFileName);
+            var runTask = _framesFromVideo.Run(correctFileName);
             Task.WaitAll(runTask);
             Assert.True(_repository.Get<FileFrame>()
-                .Any(f => f.FileName.Contains(appUserId) && f.Time >= minDate && f.Time <= maxDate));
-            var checkTask = _ftpClient.ListDirectoryFiles("frames", "testuser*.jpg");
+                .Any(f => f.FileName.Contains(TestUserId.ToString()) && f.Time >= minDate && f.Time <= maxDate));
+            var checkTask = _ftpClient.ListDirectoryFiles("frames", TestUserId.ToString()+"*.jpg");
             Task.WaitAll(checkTask);
             var framesOnServer = checkTask.Result;
             Assert.True(framesOnServer.Count > 0);

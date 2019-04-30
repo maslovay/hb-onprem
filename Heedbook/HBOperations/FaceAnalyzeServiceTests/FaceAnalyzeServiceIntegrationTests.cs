@@ -29,12 +29,9 @@ namespace FaceAnalyzeService.Tests
                 _startup.ConfigureServices(Services);
             }, true);
         }
-        
+
         [TearDown]
-        public async Task TearDown()
-        {
-            await base.TearDown();
-        }
+        public async Task TearDown() => await base.TearDown();
 
         protected override async Task PrepareTestData()
         {
@@ -82,16 +79,19 @@ namespace FaceAnalyzeService.Tests
                 testFileFrameId = testFileFrame.FileFrameId;
             }
             
+            await _sftpClient.DisconnectAsync();
             await _repository.SaveAsync();
         }
 
         protected override async Task CleanTestData()
         {
-            await _sftpClient.DeleteFileIfExistsAsync(frameFileRemotePath);
+            var taskList = await _sftpClient.DeleteFileIfExistsBulkAsync("frames/", $"*{TestUserId}*.jpg");
             
             ClearFrameEmotions(testFileFrameId);
-            _repository.Delete<FileFrame>(ff => ff.FileName == testFrameCorrectFileName);
+            _repository.Delete<FileFrame>(ff => ff.ApplicationUserId == TestUserId);
             await _repository.SaveAsync();
+
+            Task.WaitAll(taskList.ToArray());
         }
 
         protected override void InitServices()
@@ -108,8 +108,6 @@ namespace FaceAnalyzeService.Tests
         }
 
         private void ClearFrameEmotions(Guid fileFrameId)
-        {
-            _repository.Delete<FrameEmotion>(fe => fe.FileFrameId == fileFrameId);
-        }
+            => _repository.Delete<FrameEmotion>(fe => fe.FileFrameId == fileFrameId);
     }
 }

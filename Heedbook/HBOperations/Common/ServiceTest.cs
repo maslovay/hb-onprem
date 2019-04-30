@@ -3,9 +3,11 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HBData;
+using HBData.Models;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
@@ -13,7 +15,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;
+using ServiceExtensions;
 
 namespace Common
 {
@@ -26,6 +31,8 @@ namespace Common
         public ServiceCollection Services { get; private set; }
         public ServiceProvider ServiceProvider { get; private set; }
 
+        public IServiceScopeFactory ScopeFactory { get; private set; }
+
         private const string FileFrameWithDatePattern = @"(.*)_([0-9]*)";
 
         private const string FileVideoWithDatePattern = @"(.*)_([0-9]*)_(.*)";
@@ -35,11 +42,11 @@ namespace Common
         public Guid TestUserId => Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
 
         public async Task Setup( Action additionalInitialization, bool prepareTestData = false )
-            
+
         {
             Config = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.test.json")
-                .Build();
+                    .ConfigureBuilderForTests()
+                    .Build();
 
             _additionalInitialization = additionalInitialization;
          
@@ -84,9 +91,28 @@ namespace Common
         {           
             _sftpClient = ServiceProvider.GetService<SftpClient>();
             _repository = ServiceProvider.GetService<IGenericRepository>();
+            ScopeFactory = ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         }
         
         protected abstract void InitServices();
+
+        protected Dialogue CreateNewTestDialog()
+            => CreateNewTestDialog(Guid.NewGuid());
+
+        protected Dialogue CreateNewTestDialog(Guid dialogId)
+            => new Dialogue
+            {
+                DialogueId = dialogId,
+                CreationTime = DateTime.Now.AddYears(-1),
+                BegTime = DateTime.Now.AddYears(-1),
+                EndTime = DateTime.Now.AddYears(1),
+                ApplicationUserId = TestUserId,
+                LanguageId = null,
+                StatusId = null,
+                SysVersion = "",
+                InStatistic = false,
+                Comment = "test dialog!!!"
+            };
 
         public DateTime GetDateTimeFromFileFrameName(string inputFilePath) =>
             GetDateTimeUsingPattern(FileFrameWithDatePattern, inputFilePath);
