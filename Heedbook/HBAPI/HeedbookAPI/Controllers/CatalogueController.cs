@@ -68,6 +68,18 @@ namespace UserOperations.Controllers
         {             
             return _context.ApplicationRoles.ToList();
         }     
+
+        [HttpGet("WorkerType")]
+        [SwaggerOperation(Summary = "Return worker types", Description = "Return all available worker types for company with id ('Кассир','Кредитный менеджер' и др). Require to transfer a token")]
+        [SwaggerResponse(200, "Content", typeof(WorkerType))]
+        public IEnumerable<object> WorkerTypeGet( [FromHeader] string Authorization )
+        {   
+            if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                    return null;
+            var companyId = Guid.Parse(userClaims["companyId"]);          
+            return _context.WorkerTypes.Where( p => p.CompanyId == companyId).Select( p => new { p.WorkerTypeId, p.WorkerTypeName }).ToList();
+        }   
+
         [HttpGet("Industry")]
         [SwaggerOperation(Description = "Return all industries. Does not require to transfer a token")]
         public IEnumerable<CompanyIndustry> IndustryGet()

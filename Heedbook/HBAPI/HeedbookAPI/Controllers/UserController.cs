@@ -138,7 +138,8 @@ namespace UserOperations.Controllers
                     FullName = message.FullName,
                     PasswordHash = _loginService.GeneratePasswordHash(message.Password),
                     StatusId = 3,
-                    EmpoyeeId = message.EmployeeId
+                    EmpoyeeId = message.EmployeeId,
+                    WorkerTypeId = message.WorkerTypeId
                 };
                 //string msg = GenerateEmailMsg(password, user);
                 //_loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
@@ -147,7 +148,7 @@ namespace UserOperations.Controllers
                 var userRole = new ApplicationUserRole()
                 {
                     UserId = user.Id,
-                    RoleId = Guid.Parse(message.RoleId) //Manager role
+                    RoleId = _context.Roles.FirstOrDefault(x=>x.Name == "Employee").Id //Manager role
                 };
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
@@ -303,7 +304,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(e.Message);         
             }
         }
 
@@ -525,8 +526,9 @@ namespace UserOperations.Controllers
         public string FullName;
         public string Email;
         public string EmployeeId;
-        public string RoleId;
+    //    public string RoleId;
         public string Password;
+        public Guid WorkerTypeId;
 
     }
 
