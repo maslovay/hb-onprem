@@ -100,7 +100,6 @@ namespace UserOperations
                             {"answer", new Schema{Type = "string"}},
                             {"time", new Schema{Type = "string", Format = "date-time"}}
                         }} );
-
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);

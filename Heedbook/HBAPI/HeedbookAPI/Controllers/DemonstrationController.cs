@@ -317,8 +317,5 @@ namespace UserOperations.Controllers
                 return BadRequest("Error");
             }
         }
-    }
-
-
-   
+    }   
 }
