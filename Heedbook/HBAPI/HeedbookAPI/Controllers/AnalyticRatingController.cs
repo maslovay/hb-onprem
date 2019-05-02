@@ -37,18 +37,21 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticRatingController : Controller
     {
+      private readonly IConfiguration _config;        
+        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
 
         public AnalyticRatingController(
-            RecordsContext context,
             IConfiguration config,
+            ILoginService loginService,
+            RecordsContext context,
             DBOperations dbOperation
             )
         {
-            _context = context;
             _config = config;
+            _loginService = loginService;
+            _context = context;
             _dbOperation = dbOperation;
         }
 
@@ -57,10 +60,15 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds)
+                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromHeader] string Authorization)
         {
             try
             {
+                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                    return BadRequest("Token wrong");
+                companyIds = companyIds?? new List<Guid> { Guid.Parse(userClaims["companyId"])};
+
                 var stringFormat = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
                 var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
@@ -137,10 +145,15 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds)
+                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromHeader] string Authorization)
         {
             try
             {
+                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                    return BadRequest("Token wrong");
+                companyIds = companyIds?? new List<Guid> { Guid.Parse(userClaims["companyId"])};
+
                 var stringFormat = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
                 var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);

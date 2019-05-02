@@ -78,7 +78,7 @@ namespace UserOperations.Services
                     var token = new JwtSecurityToken(_config["Tokens:Issuer"],
                         _config["Tokens:Issuer"],
                         claims,
-                        expires: remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
+                        expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
                         signingCredentials: creds);
 
                     var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);

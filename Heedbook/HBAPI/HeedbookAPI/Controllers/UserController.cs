@@ -288,17 +288,17 @@ namespace UserOperations.Controllers
 
         [HttpDelete("PhraseLib")]
         [SwaggerOperation(Description = "Delete phrase (if this phrase used in any company return Bad request")]
-        public async Task<IActionResult> PhraseDelete([FromQuery] Guid phraseId, [FromHeader] string Authorization)
+        public async Task<IActionResult> PhraseDelete([FromQuery (Name = "phraseId")] List<Guid> phraseIds, [FromHeader] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var phrase = _context.PhraseCompanys
+                var phrases = _context.PhraseCompanys
                     .Include(p => p.Phrase)
-                    .Where(p => p.Phrase.PhraseId == phraseId && p.CompanyId == companyId).FirstOrDefault();
-                _context.Remove(phrase);
+                    .Where(p => phraseIds.Contains(p.Phrase.PhraseId) && p.CompanyId == companyId);
+                _context.RemoveRange(phrases);
                 await _context.SaveChangesAsync();
                 return Ok();
             }
