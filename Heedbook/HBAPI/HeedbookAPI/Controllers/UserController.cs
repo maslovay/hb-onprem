@@ -326,20 +326,21 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("CompanyPhrase")]
-        [SwaggerOperation(Description = "Attach phrase to all companies sended in body (create new PhraseCompany entities)")]
-        public async Task<IActionResult> CompanyPhrasePost([FromBody] CompanyPhrasePostModel message, [FromHeader] string Authorization)
+        [SwaggerOperation(Description = "Attach phrases (ids) sended in body to loggined company  (create new PhraseCompany entities)")]
+        public async Task<IActionResult> CompanyPhrasePost([FromBody] List<Guid> phraseIds, [FromHeader] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                foreach (var companyId in message.companyIds)
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                foreach (var phraseId in phraseIds)
                 {
                     var phraseCompany = new PhraseCompany
                     {
                         PhraseCompanyId = Guid.NewGuid(),
                         CompanyId = companyId,
-                        PhraseId = message.phraseId
+                        PhraseId = phraseId
                     };
                     await _context.AddAsync(phraseCompany);
                 }
@@ -559,12 +560,6 @@ namespace UserOperations.Controllers
             WorkerTypeId = user.WorkerTypeId;
             RoleId = user.UserRoles.FirstOrDefault().RoleId.ToString();
         }
-    }
-
-    public class CompanyPhrasePostModel
-    {
-        public List<Guid> companyIds { get; set; }   
-        public Guid phraseId { get; set; }       
     }
 
     public class PhrasePost
