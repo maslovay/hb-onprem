@@ -50,7 +50,7 @@ namespace HBData.Repository
         void Delete<T>(T entity)
             where T : class;
 
-        IEnumerable<Object> ExecuteDbCommand(Type type, String sql, Dictionary<String, Object> @params = null);
+        IEnumerable<Object> ExecuteDbCommand(List<String> properties, String sql, Dictionary<String, Object> @params = null);
 
         void Save();
         void Dispose();

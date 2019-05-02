@@ -31,7 +31,7 @@ namespace FillingHintService
                 _log.Info("Function filling hints started.");
                 var language = _repository.GetWithInclude<Dialogue>(item => item.DialogueId == dialogueId,
                                                item => item.Language)
-                                          .Select(item => item.Language.LanguageName)
+                                          .Select(item => item.Language.LanguageShortName)
                                           .First();
                 var catalogueHints = await _repository.FindAllAsync<CatalogueHint>();
                 var hints = catalogueHints.Select(item => new Hint()
@@ -45,7 +45,7 @@ namespace FillingHintService
                     var reqSql = BuildRequest(hintCondition.Table, dialogueId.ToString(), hintCondition.Condition,
                         hintCondition.Indexes);
 
-                    var data = _repository.ExecuteDbCommand(Tables.TablesDictionary[hintCondition.Table], reqSql)
+                    var data = _repository.ExecuteDbCommand(hintCondition.Indexes, reqSql)
                                           .ToList();
 
                     Double? resValue = 0;
@@ -150,20 +150,20 @@ namespace FillingHintService
                 request = new StringBuilder("SELECT");
                 for (var i = 0; i < fields.Count(); i++)
                     if (i == fields.Count() - 1)
-                        request.Append($" {fields[i]}");
+                        request.Append($" \"{fields[i]}\"");
                     else
-                        request.Append($" {fields[i]},");
+                        request.Append($" \"{fields[i]}\",");
             }
             else
             {
                 request = new StringBuilder("SELECT *");
             }
 
-            request.Append($" FROM public.{tableName}");
-            request.Append($" WHERE CAST(DialogueId as uuid) = CAST('{dialogueId}' as uuid) ");
+            request.Append($" FROM public.\"{tableName}\"");
+            request.Append($" WHERE CAST(\"DialogueId\" as uuid) = CAST('{dialogueId}' as uuid) ");
             return !conditions.Any()
                 ? request.ToString()
-                : conditions.Aggregate(request, (current, cond) => current.Append($"AND {cond.Field} = {cond.Value} ")).ToString();
+                : conditions.Aggregate(request, (current, cond) => current.Append($"AND CAST(\"{cond.Field}\" as uuid) = CAST('{cond.Value}' as uuid) ")).ToString();
         }
     }
 }

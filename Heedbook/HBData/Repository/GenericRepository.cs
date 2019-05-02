@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -120,10 +122,12 @@ namespace HBData.Repository
             _context.Set<T>().Remove(entity);
         }
 
-        public IEnumerable<Object> ExecuteDbCommand(Type type, String sql, Dictionary<String, Object> @params = null)
+        public IEnumerable<Object> ExecuteDbCommand(List<String> properties, String sql,
+            Dictionary<String, Object> @params = null)
         {
             using (var cmd = _context.Database.GetDbConnection().CreateCommand())
             {
+                var instance = CreateType(properties, out var type);
                 cmd.CommandText = sql;
                 if (cmd.Connection.State != ConnectionState.Open) cmd.Connection.Open();
 
@@ -139,8 +143,14 @@ namespace HBData.Repository
                 using (var dataReader = cmd.ExecuteReader())
                 {
                     while (dataReader.Read())
+                    {
                         for (var fieldCount = 0; fieldCount < dataReader.FieldCount; fieldCount++)
-                            yield return JsonConvert.DeserializeObject(dataReader[fieldCount].ToString(), type);
+                        {
+                            type.GetRuntimeProperties().ToList()[fieldCount].SetValue(instance, dataReader[fieldCount]);
+                        }
+
+                        yield return instance;
+                    }
                 }
             }
         }
@@ -158,6 +168,57 @@ namespace HBData.Repository
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        private Object CreateType(List<String> properties, out Type type)
+        {
+            //TODO: replace it and make generic.
+            var asmName = new AssemblyName {Name = "MyDynamicAssembly"};
+            var asmBuilder = AssemblyBuilder.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndCollect);
+            var modBuilder =
+                asmBuilder.DefineDynamicModule(asmName.Name);
+
+            var typeBuilder = modBuilder.DefineType("CustomType",
+                TypeAttributes.Public);
+
+            MethodAttributes getSetAttr =
+                MethodAttributes.Public | MethodAttributes.SpecialName |
+                MethodAttributes.HideBySig;
+            foreach (var property in properties)
+            {
+                FieldBuilder customerNameBldr = typeBuilder.DefineField($"{property.ToLowerInvariant()}",
+                    typeof(string),
+                    FieldAttributes.Private);
+
+                var propertyBuilder =
+                    typeBuilder.DefineProperty(property, PropertyAttributes.HasDefault, typeof(Double), null);
+                var custNameGetPropMthdBldr =
+                    typeBuilder.DefineMethod($"get_{property}",
+                        getSetAttr,
+                        typeof(Double),
+                        Type.EmptyTypes);
+                ILGenerator custNameGetIL = custNameGetPropMthdBldr.GetILGenerator();
+
+                custNameGetIL.Emit(OpCodes.Ldarg_0);
+                custNameGetIL.Emit(OpCodes.Ldfld, customerNameBldr);
+                custNameGetIL.Emit(OpCodes.Ret);
+
+                MethodBuilder custNameSetPropMthdBldr =
+                    typeBuilder.DefineMethod($"set_{property}",
+                        getSetAttr,
+                        null,
+                        new Type[] {typeof(Double)});
+                ILGenerator custNameSetIL = custNameSetPropMthdBldr.GetILGenerator();
+                custNameSetIL.Emit(OpCodes.Ldarg_0);
+                custNameSetIL.Emit(OpCodes.Ldarg_1);
+                custNameSetIL.Emit(OpCodes.Stfld, customerNameBldr);
+                custNameSetIL.Emit(OpCodes.Ret);
+                propertyBuilder.SetGetMethod(custNameGetPropMthdBldr);
+                propertyBuilder.SetSetMethod(custNameSetPropMthdBldr);
+            }
+
+            type = typeBuilder.CreateType();
+            return Activator.CreateInstance(type);
         }
     }
 }

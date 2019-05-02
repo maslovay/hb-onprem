@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using AsrHttpClient;
+﻿using AsrHttpClient;
 using AudioAnalyzeScheduler.Model;
 using HBData.Models;
 using HBData.Repository;
@@ -15,21 +10,23 @@ using Newtonsoft.Json;
 using Quartz;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace AudioAnalyzeScheduler.QuartzJobs
 {
     public class CheckAudioRecognizeStatusJob : IJob
     {
         private readonly ElasticClient _log;
-        private readonly INotificationPublisher _notificationPublisher;
         private readonly IGenericRepository _repository;
 
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
-            INotificationPublisher notificationPublisher,
             ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
-            _notificationPublisher = notificationPublisher;
             _log = log;
         }
 
@@ -57,12 +54,10 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
                                 });
                             });
-                        //  var languageId = _repository
-                        //      .Get<Dialogue>()
-                        //      .Where(d => d.DialogueId == item.DialogueId)
-                        //      .Select(d => d.LanguageId ?? 1)
-                        //      .First();
-                        var languageId = 2;
+                        var languageId = _repository.GetWithInclude<Dialogue>(i => i.DialogueId == item.DialogueId,
+                                i => i.Language)
+                            .Select(i => i.Language.LanguageId)
+                            .First();
                         var speechSpeed = GetSpeechSpeed(recognized, languageId);
                         _log.Info($"Speech speed: {speechSpeed}");
                         var dialogueSpeech = new DialogueSpeech
@@ -117,7 +112,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         });
                         await _repository.CreateAsync(dialogueSpeech);
                         await _repository.BulkInsertAsync(phraseCount);
-                        
+
                         _log.Info("Asr stt results is not empty. Everything is ok!");
                     }
                     else
@@ -126,11 +121,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     }
                     Console.WriteLine("status id 7 ");
                     item.StatusId = 7;
-                    var @event = new FillingHintsRun
-                    {
-                        DialogueId = item.DialogueId
-                    };
-                    _notificationPublisher.Publish(@event);
                 });
             }).ToList();
 
@@ -231,7 +221,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private static List<String> Separator(String text)
         {
-            return text.Split(new[] {' ', ',', '.', ')', '('}, StringSplitOptions.RemoveEmptyEntries).ToList();
+            return text.Split(new[] { ' ', ',', '.', ')', '(' }, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
     }
 }

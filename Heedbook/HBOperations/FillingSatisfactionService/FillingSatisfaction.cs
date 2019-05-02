@@ -6,6 +6,8 @@ using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 
 namespace FillingSatisfactionService
 {
@@ -13,16 +15,19 @@ namespace FillingSatisfactionService
     {
         private readonly Calculations _calculations;
         private readonly CalculationConfig _config;
+        private readonly INotificationPublisher _notificationPublisher;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
 
         public FillingSatisfaction(IServiceScopeFactory factory,
             Calculations calculations,
+            INotificationPublisher notificationPublisher,
             CalculationConfig config,
             ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _calculations = calculations;
+            _notificationPublisher = notificationPublisher;
             _config = config;
             _log = log;
         }
@@ -207,6 +212,11 @@ namespace FillingSatisfactionService
                 }
 
                 _repository.Save();
+                var @event = new FillingHintsRun
+                {
+                    DialogueId = dialogueId
+                };
+                _notificationPublisher.Publish(@event);
                 _log.Info("Function filling satisfaction ended.");
             }
             catch (Exception e)
