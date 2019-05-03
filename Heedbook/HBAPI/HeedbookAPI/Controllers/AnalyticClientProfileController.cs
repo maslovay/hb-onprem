@@ -85,7 +85,7 @@ namespace UserOperations.Controllers
             {
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-                companyIds = companyIds?? new List<Guid> { Guid.Parse(userClaims["companyId"])};
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
 
                 var stringFormat = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);

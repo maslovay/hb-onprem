@@ -523,6 +523,28 @@ namespace UserOperations.Controllers
                 return BadRequest(e.Message);
             }
         }
+
+        [HttpPut("Dialogue")]
+        [SwaggerOperation(Summary = "Change status", Description = "Change status of dialogue")]
+        public IActionResult DialoguePut(
+                [FromBody] DialoguePut message,
+                [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
+        {
+            try
+            {
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                var dialogue = _context.Dialogues.FirstOrDefault( p => p.DialogueId == message.DialogueId );
+                dialogue.StatusId = message.StatusId;
+                _context.SaveChanges();
+                return Ok(message.StatusId);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 
   
@@ -588,6 +610,12 @@ namespace UserOperations.Controllers
         public Int32? WordsSpace;
         public double? Accurancy;
         public Boolean IsTemplate;
+    }
+
+    public class DialoguePut
+    {
+        public Guid DialogueId;
+        public int StatusId;
     }
 
 }

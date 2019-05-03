@@ -67,11 +67,11 @@ namespace UserOperations.Controllers
             {
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-                companyIds = companyIds?? new List<Guid> { Guid.Parse(userClaims["companyId"])};
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
 
                 var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
@@ -152,11 +152,11 @@ namespace UserOperations.Controllers
             {
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-                companyIds = companyIds?? new List<Guid> { Guid.Parse(userClaims["companyId"])};
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
 
                 var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
@@ -218,7 +218,8 @@ namespace UserOperations.Controllers
                         WorkingHoursDaily = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAverageDuration = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAveragePause = _dbOperation.DialogueAveragePause(sessions, p, begTime, endTime),
-                        ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime)
+                        //TODO: look at dbOperations -- error in this place -- important
+                        //ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime)
                     }).ToList();
                 result = result.OrderBy(p => p.EfficiencyIndex).ToList();
                 return Ok(JsonConvert.SerializeObject(result));
