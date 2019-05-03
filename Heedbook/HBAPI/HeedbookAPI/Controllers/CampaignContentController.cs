@@ -53,7 +53,9 @@ namespace UserOperations.Controllers
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
-            var campaigns = _context.Campaigns.Include(x => x.CampaignContents).Where(x=>x.CompanyId == companyId).ToList();
+            var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
+            var campaigns = _context.Campaigns.Include(x => x.CampaignContents)
+                    .Where( x => x.CompanyId == companyId && x.StatusId != statusInactiveId ).ToList();
             return Ok(campaigns);
         }
 

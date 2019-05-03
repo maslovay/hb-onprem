@@ -206,7 +206,8 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("PhraseLib")]
-        [SwaggerOperation(Description = "Return collections phrases for loggined company")]
+        [SwaggerOperation(Summary = "Library", 
+                Description = "Return collections phrases from library (only templates and only with language code = loggined company)")]
         public IActionResult PhraseGet(
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
@@ -215,7 +216,16 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyIdUser = Guid.Parse(userClaims["companyId"]);
-                return Ok(_context.Phrases.Where(p => p.PhraseText != null).ToList());
+                var languageId = userClaims["languageCode"];
+                var includedPhrases = _context.PhraseCompanys
+                    .Include(x=>x.Phrase)
+                    .Where(x=>x.CompanyId == companyIdUser && x.Phrase.IsTemplate == true).Select(x=>x.Phrase.PhraseId).ToList();
+                var res = _context.Phrases.Where(p => p.PhraseText != null 
+                                    && p.IsTemplate == true 
+                                    && p.LanguageId.ToString() == languageId
+                                    && !includedPhrases.Contains(p.PhraseId)).ToList();
+                
+                return Ok(res);
             }
             catch (Exception e)
             {
@@ -234,15 +244,16 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
+                var languageId = Int32.Parse(userClaims["languageCode"]);
                 var phrase = new Phrase {
                     PhraseId = Guid.NewGuid(),
                     PhraseText = message.PhraseText,
                     PhraseTypeId = message.PhraseTypeId,
-                    LanguageId = message.LanguageId,
+                    LanguageId = languageId,
                     IsClient = message.IsClient,
                     WordsSpace = message.WordsSpace,
                     Accurancy = message.Accurancy,
-                    IsTemplate = message.IsTemplate
+                    IsTemplate = false
                 };
 
                 await _context.Phrases.AddAsync(phrase);
@@ -274,7 +285,7 @@ namespace UserOperations.Controllers
 
                 var phrase = _context.PhraseCompanys
                     .Include(p => p.Phrase)
-                    .Where(p => p.Phrase.PhraseId == message.PhraseId && p.CompanyId == companyId)
+                    .Where(p => p.Phrase.PhraseId == message.PhraseId && p.CompanyId == companyId && p.Phrase.IsTemplate == false)
                     .Select(p => p.Phrase)
                     .FirstOrDefault();
 
@@ -282,7 +293,7 @@ namespace UserOperations.Controllers
                 {
                     foreach (var p in typeof(ApplicationUser).GetProperties())
                     {
-                        if (p.GetValue(message, null) != null)
+                        if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
                             p.SetValue(phrase, p.GetValue(message, null), null);
                     }
                     await _context.SaveChangesAsync();
@@ -301,7 +312,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("PhraseLib")]
-        [SwaggerOperation(Description = "Delete phrase (if this phrase used in any company return Bad request")]
+        [SwaggerOperation(Description = "Delete phrase (if this phrase is Template they can't be deleted, it only delete connection to company")]
         public async Task<IActionResult> PhraseDelete(
                     [FromQuery (Name = "phraseId"), SwaggerParameter("array ids to delete: id&id", Required = true)] List<Guid> phraseIds, 
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -311,10 +322,16 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var phrases = _context.PhraseCompanys
+                var phrasesCompany = _context.PhraseCompanys
                     .Include(p => p.Phrase)
-                    .Where(p => phraseIds.Contains(p.Phrase.PhraseId) && p.CompanyId == companyId);
-                _context.RemoveRange(phrases);
+                    .Where(p => phraseIds.Contains(p.Phrase.PhraseId) && p.CompanyId == companyId && p.Phrase.IsTemplate == false);
+                var phrases = phrasesCompany.Select( p => p.Phrase );
+                var phrasesCompanyTemplate = _context.PhraseCompanys
+                    .Include(p => p.Phrase)
+                    .Where(p => phraseIds.Contains(p.Phrase.PhraseId) && p.CompanyId == companyId && p.Phrase.IsTemplate == true);
+                _context.RemoveRange(phrasesCompanyTemplate);//--remove connections to template phrases in library
+                _context.RemoveRange(phrasesCompany);//--remove connections to own phrases in library
+                _context.RemoveRange(phrases);//--remove own phrases
                 await _context.SaveChangesAsync();
                 return Ok();
             }
@@ -325,7 +342,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("CompanyPhrase")]
-        [SwaggerOperation(Description = "Return phrase library ids collection for companies sended in params")]
+        [SwaggerOperation(Description = "Return own and template phrase library ids collection for companies sended in params")]
         public IActionResult CompanyPhraseGet(
                 [FromQuery(Name = "companyId")] List<Guid> companyIds, 
                 [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -336,8 +353,8 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
 
-                var companyPhrase = _context.PhraseCompanys.Where(p => companyIds.Contains((Guid)p.CompanyId));
-                return Ok(companyPhrase.Select(p => (Guid)p.PhraseId).ToList());
+                var companyPhrase = _context.PhraseCompanys.Include( p=>p.Phrase ).Where( p => companyIds.Contains((Guid)p.CompanyId));
+                return Ok(companyPhrase.Select(p => p.Phrase).ToList());
             }
             catch (Exception e)
             {
@@ -346,7 +363,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("CompanyPhrase")]
-        [SwaggerOperation(Summary = "Attach phrases to company", Description = "Attach phrases (ids) sended in body to loggined company  (create new PhraseCompany entities)")]
+        [SwaggerOperation(Summary = "Attach phrases to company", Description = "Attach phrases (ids) from lib sended in body to loggined company  (create new PhraseCompany entities)")]
         public async Task<IActionResult> CompanyPhrasePost(
                 [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds, 
                 [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -375,31 +392,31 @@ namespace UserOperations.Controllers
             }
         }
 
-        [HttpDelete("CompanyPhrase")]
-        [SwaggerOperation(Description = "Delete PhraseCompany from loggined company by Phrase Id")]
-        public async Task<IActionResult> CompanyPhraseDelete(
-                [FromQuery,  SwaggerParameter("Id (one)", Required = true)] Guid phraseId, 
-                [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
-        {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
+        // [HttpDelete("CompanyPhrase")]
+        // [SwaggerOperation(Description = "Delete PhraseCompany from loggined company by Phrase Id")]
+        // public async Task<IActionResult> CompanyPhraseDelete(
+        //         [FromQuery,  SwaggerParameter("Id (one)", Required = true)] Guid phraseId, 
+        //         [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
+        // {
+        //     try
+        //     {
+        //         if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+        //             return BadRequest("Token wrong");
+        //         var companyId = Guid.Parse(userClaims["companyId"]);
 
-                var phrase = _context.PhraseCompanys.Where(p => p.CompanyId == companyId && p.PhraseId == phraseId).FirstOrDefault();
-                if (phrase != null)
-                {
-                    _context.Remove(phrase);
-                    await _context.SaveChangesAsync();
-                }
-                return Ok("OK");
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
+        //         var phrase = _context.PhraseCompanys.Where(p => p.CompanyId == companyId && p.PhraseId == phraseId).FirstOrDefault();
+        //         if (phrase != null)
+        //         {
+        //             _context.Remove(phrase);
+        //             await _context.SaveChangesAsync();
+        //         }
+        //         return Ok("OK");
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         return BadRequest(e.Message);
+        //     }
+        // }
 
 
         // to do: add dialogue phrase and add make migration 
