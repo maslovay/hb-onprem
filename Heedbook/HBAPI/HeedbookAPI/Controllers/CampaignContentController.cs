@@ -190,7 +190,9 @@ namespace UserOperations.Controllers
         [HttpPut("Content")]
         [SwaggerOperation(Summary = "Edit content", Description = "Edit existing content, remove screenshot from sftp and save new screenshot(if you pass it in json body)")]
         [SwaggerResponse(200, "Edited content with screenshot link", typeof(ContentWithScreenModel))]
-        public async Task<IActionResult> ContentPut([FromBody] ContentWithScreenModel model, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<IActionResult> ContentPut(
+                    [FromBody] ContentWithScreenModel model, 
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");         

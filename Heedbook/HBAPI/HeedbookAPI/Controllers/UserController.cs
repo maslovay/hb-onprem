@@ -62,8 +62,10 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("User")]
-        [SwaggerOperation(Description = "Return all users for loggined company with role Ids")]
-        public IActionResult UserGet([FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "All company users", Description = "Return all users (array) for loggined company with role Id")]
+        [SwaggerResponse(200, "Users with role", typeof(List<UserModel>))]
+        public IActionResult UserGet(
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -81,8 +83,12 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("User")]
-        [SwaggerOperation(Description = "Edit user and return edited")]
-        public async Task<IActionResult> UserPut([FromBody] ApplicationUser message, [FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Edit user", 
+                Description = "Edit user (any from loggined company) and return edited. Don't send password and role (can't change). Email must been unique")]
+        [SwaggerResponse(200, "User", typeof(UserModel))]
+        public async Task<IActionResult> UserPut(
+                    [FromBody] ApplicationUser message, 
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -116,8 +122,11 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("User")]
-        [SwaggerOperation(Description = "Create new user with role Manager in loggined company (taked from token)/ Return new user")]
-        public async Task<IActionResult> UserPostAsync([FromBody] PostUser message, [FromHeader] string Authorization)
+        [SwaggerOperation(Description = "Create new user with role Employee in loggined company (taked from token)/ Return new user")]
+        [SwaggerResponse(200, "User", typeof(UserModel))]
+        public async Task<IActionResult> UserPostAsync(
+                    [FromBody] PostUser message, 
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -158,11 +167,13 @@ namespace UserOperations.Controllers
             {
                 return BadRequest(e.Message);
             }
-        }
+        }      
 
         [HttpDelete("User")]
         [SwaggerOperation(Description = "Delete user by Id if he hasn't any relations in DB or make status Disabled")]
-        public async Task<IActionResult> UserDelete([FromQuery] Guid applicationUserId, [FromHeader] string Authorization)
+        public async Task<IActionResult> UserDelete(
+                    [FromQuery] Guid applicationUserId, 
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -196,7 +207,8 @@ namespace UserOperations.Controllers
 
         [HttpGet("PhraseLib")]
         [SwaggerOperation(Description = "Return collections phrases for loggined company")]
-        public IActionResult PhraseGet([FromHeader] string Authorization)
+        public IActionResult PhraseGet(
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -215,7 +227,9 @@ namespace UserOperations.Controllers
 
         [HttpPost("PhraseLib")]
         [SwaggerOperation(Description = "Save new phrase to DB and attach it to loggined company (create new PhraseCompany)")]
-        public async Task<IActionResult> PhrasePost([FromBody] PhrasePost message, [FromHeader] string Authorization)
+        public async Task<IActionResult> PhrasePost(
+                    [FromBody] PhrasePost message, 
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -250,7 +264,9 @@ namespace UserOperations.Controllers
 
         [HttpPut("PhraseLib")]
         [SwaggerOperation(Description = "Edit phrase")]
-        public async Task<IActionResult> PhrasePut([FromBody] PhrasePut message, [FromHeader] string Authorization)
+        public async Task<IActionResult> PhrasePut(
+                    [FromBody] PhrasePut message, 
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -288,7 +304,9 @@ namespace UserOperations.Controllers
 
         [HttpDelete("PhraseLib")]
         [SwaggerOperation(Description = "Delete phrase (if this phrase used in any company return Bad request")]
-        public async Task<IActionResult> PhraseDelete([FromQuery (Name = "phraseId")] List<Guid> phraseIds, [FromHeader] string Authorization)
+        public async Task<IActionResult> PhraseDelete(
+                    [FromQuery (Name = "phraseId"), SwaggerParameter("array ids to delete: id&id", Required = true)] List<Guid> phraseIds, 
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -310,7 +328,9 @@ namespace UserOperations.Controllers
 
         [HttpGet("CompanyPhrase")]
         [SwaggerOperation(Description = "Return phrase library ids collection for companies sended in params")]
-        public IActionResult CompanyPhraseGet([FromQuery(Name = "companyId")] List<Guid> companyIds, [FromHeader] string Authorization)
+        public IActionResult CompanyPhraseGet(
+                [FromQuery(Name = "companyId")] List<Guid> companyIds, 
+                [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -326,8 +346,10 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("CompanyPhrase")]
-        [SwaggerOperation(Description = "Attach phrases (ids) sended in body to loggined company  (create new PhraseCompany entities)")]
-        public async Task<IActionResult> CompanyPhrasePost([FromBody] List<Guid> phraseIds, [FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Attach phrases to company", Description = "Attach phrases (ids) sended in body to loggined company  (create new PhraseCompany entities)")]
+        public async Task<IActionResult> CompanyPhrasePost(
+                [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds, 
+                [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -355,7 +377,9 @@ namespace UserOperations.Controllers
 
         [HttpDelete("CompanyPhrase")]
         [SwaggerOperation(Description = "Delete PhraseCompany from loggined company by Phrase Id")]
-        public async Task<IActionResult> CompanyPhraseDelete([FromQuery] Guid phraseId, [FromHeader] string Authorization)
+        public async Task<IActionResult> CompanyPhraseDelete(
+                [FromQuery,  SwaggerParameter("Id (one)", Required = true)] Guid phraseId, 
+                [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -388,7 +412,7 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
                                                 [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
-                                                [FromHeader] string Authorization)
+                                                [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -449,8 +473,9 @@ namespace UserOperations.Controllers
 
         [HttpGet("DialogueInclude")]
         [SwaggerOperation(Description = "Return collection of dialogues with relative data by filters")]
-        public IActionResult DialogueGetInclude([FromQuery(Name = "dialogueId")] List<Guid> dialogueIds,
-                                                [FromHeader] string Authorization)
+        public IActionResult DialogueGetInclude(
+                    [FromQuery(Name = "dialogueId")] List<Guid> dialogueIds,
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
@@ -500,27 +525,7 @@ namespace UserOperations.Controllers
         }
     }
 
-    // #region EmailSend
-    // public string GeneratePass(int x)
-    // {
-    //     string pass = "";
-    //     var r = new Random();
-    //     while (pass.Length < x)
-    //     {
-    //         Char c = (char)r.Next(33, 125);
-    //         if (Char.IsLetterOrDigit(c))
-    //             pass += c;
-    //     }
-    //     return pass;
-    // }
-    // public string GenerateEmailMsg(string pswd, ApplicationUser user)
-    //     {
-    //         string msg = "Login:    " + user.Email;
-    //         msg += "   Password: " + pswd + ".";
-    //         msg += " You were registred in Heedbook";
-    //         return msg;
-    //     }
-    // #endregion
+  
 
     public class PostUser
     {
