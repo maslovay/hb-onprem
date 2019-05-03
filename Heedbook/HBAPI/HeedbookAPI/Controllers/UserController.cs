@@ -215,9 +215,7 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyIdUser = Guid.Parse(userClaims["companyId"]);
-                return Ok(_context.PhraseCompanys
-                        .Include(p => p.Phrase)
-                        .Where(p => p.CompanyId == companyIdUser && p.Phrase.PhraseText != null).Select(p => p.Phrase).ToList());
+                return Ok(_context.Phrases.Where(p => p.PhraseText != null).ToList());
             }
             catch (Exception e)
             {
@@ -336,6 +334,8 @@ namespace UserOperations.Controllers
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+
                 var companyPhrase = _context.PhraseCompanys.Where(p => companyIds.Contains((Guid)p.CompanyId));
                 return Ok(companyPhrase.Select(p => (Guid)p.PhraseId).ToList());
             }
