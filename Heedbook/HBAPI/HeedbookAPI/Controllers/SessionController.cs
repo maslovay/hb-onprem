@@ -29,12 +29,14 @@ using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using HBData;
+using Microsoft.AspNetCore.Cors;
 using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors]
     public class SessionController : Controller
     {
         private readonly RecordsContext _context;

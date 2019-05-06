@@ -11,6 +11,7 @@ using HBData.Models;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using Microsoft.AspNetCore.Antiforgery.Internal;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -53,7 +54,8 @@ namespace Common
             InitServiceProvider();
             InitGeneralServices();
             InitServices();
-
+            PrepareDatabase();
+            
             if (prepareTestData)
                 await PrepareTestData();
         }
@@ -66,7 +68,32 @@ namespace Common
         protected abstract Task PrepareTestData();
 
         protected abstract Task CleanTestData();
-        
+
+        private void PrepareDatabase()
+        {
+            if (_repository.Get<ApplicationUser>().All(u => u.Id != TestUserId))
+            {
+                _repository.AddOrUpdate(new ApplicationUser()
+                {
+                    Id = TestUserId,
+                    UserName = "Test",
+                    NormalizedUserName = "TEST",
+                    FullName = "Test",
+                    AccessFailedCount = 1000,
+                    Avatar = null,
+                    CompanyId = null,
+                    Company = null,
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                    CreationDate = DateTime.Now,
+                    Email = "test@test.ru",
+                    EmailConfirmed = true,
+                    StatusId = 3,
+                    EmpoyeeId = "99999"
+                });
+                _repository.Save();
+            }
+        }
+
         private void InitServiceProvider()
         {
             Services = new ServiceCollection();
@@ -133,6 +160,5 @@ namespace Common
             
             throw new Exception("Incorrect filename for getting a DateTime!");
         }
-        
     }
 }
