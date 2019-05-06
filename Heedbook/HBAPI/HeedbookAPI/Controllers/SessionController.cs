@@ -57,14 +57,8 @@ namespace UserOperations.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    Console.WriteLine("Model is not valid");
-                }
-
-                Console.WriteLine($"app user id {data.ApplicationUserId}");
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) return BadRequest("ApplicationUser is empty");
-                if (data.Action != "open" || data.Action != "close") return BadRequest("Wrong action");
+                if (data.Action != "open" && data.Action != "close") return BadRequest("Wrong action");
                 var actionId = data.Action == "open" ? 6 : 7;
                 var curTime = DateTime.UtcNow;
                 var oldTime = DateTime.UtcNow.AddDays(-3);
