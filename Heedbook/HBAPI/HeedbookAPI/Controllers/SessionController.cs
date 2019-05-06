@@ -29,12 +29,14 @@ using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using HBData;
+using Microsoft.AspNetCore.Cors;
 using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors]
     public class SessionController : Controller
     {
         private readonly RecordsContext _context;
@@ -58,7 +60,7 @@ namespace UserOperations.Controllers
             try
             {
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) return BadRequest("ApplicationUser is empty");
-                if (data.Action != "open" || data.Action != "close") return BadRequest("ApplicationUser is empty");
+                if (data.Action != "open" && data.Action != "close") return BadRequest("Wrong action");
                 var actionId = data.Action == "open" ? 6 : 7;
                 var curTime = DateTime.UtcNow;
                 var oldTime = DateTime.UtcNow.AddDays(-3);
