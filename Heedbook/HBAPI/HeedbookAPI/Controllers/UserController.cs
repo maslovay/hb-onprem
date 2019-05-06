@@ -90,17 +90,22 @@ namespace UserOperations.Controllers
                 Description = "Edit user (any from loggined company) and return edited. Don't send password and role (can't change). Email must been unique")]
         [SwaggerResponse(200, "User", typeof(UserModel))]
         public async Task<IActionResult> UserPut(
-                    [FromBody] ApplicationUser message, 
+                 //   [FromBody] ApplicationUser message, 
+                    [FromForm] IFormCollection formData,
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
+
+                var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
+                ApplicationUser message = JsonConvert.DeserializeObject<ApplicationUser>(userDataJson);
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var user = _context.ApplicationUsers.Include(p => p.UserRoles)
                     .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
                     .FirstOrDefault();
+                var oldAvatar = user.Avatar;
                 if (user.Email != message.Email && _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                     return BadRequest("User email not unique");
                 if (user != null)
@@ -110,6 +115,16 @@ namespace UserOperations.Controllers
                         if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
                             p.SetValue(user, p.GetValue(message, null), null);
                     }
+                if(formData.Files.Count != 0)
+                {
+                    if(oldAvatar != null)
+                        await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync(oldAvatar));
+                    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                    var fn = Guid.NewGuid() + fileInfo.Extension;
+                    var memoryStream = formData.Files[0].OpenReadStream();
+                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
+                    user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
+                }
                     await _context.SaveChangesAsync();
                     return Ok(new UserModel(user));
                 }
