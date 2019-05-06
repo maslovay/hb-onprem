@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
@@ -72,5 +73,9 @@ namespace HBData.Models
         ///     Comment
         /// </summary>
         public String TariffComment { get; set; }
+        /// <summary>
+        ///     all Transactions attached to tariff
+        /// </summary>
+        public ICollection<Transaction> Transactions { get; set; }
     }
 }

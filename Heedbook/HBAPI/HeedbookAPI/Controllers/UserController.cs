@@ -392,31 +392,7 @@ namespace UserOperations.Controllers
             }
         }
 
-        // [HttpDelete("CompanyPhrase")]
-        // [SwaggerOperation(Description = "Delete PhraseCompany from loggined company by Phrase Id")]
-        // public async Task<IActionResult> CompanyPhraseDelete(
-        //         [FromQuery,  SwaggerParameter("Id (one)", Required = true)] Guid phraseId, 
-        //         [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
-        // {
-        //     try
-        //     {
-        //         if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-        //             return BadRequest("Token wrong");
-        //         var companyId = Guid.Parse(userClaims["companyId"]);
-
-        //         var phrase = _context.PhraseCompanys.Where(p => p.CompanyId == companyId && p.PhraseId == phraseId).FirstOrDefault();
-        //         if (phrase != null)
-        //         {
-        //             _context.Remove(phrase);
-        //             await _context.SaveChangesAsync();
-        //         }
-        //         return Ok("OK");
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         return BadRequest(e.Message);
-        //     }
-        // }
+       
 
 
         // to do: add dialogue phrase and add make migration 
@@ -477,7 +453,8 @@ namespace UserOperations.Controllers
                     Comment = p.Comment,
                     SysVersion = p.SysVersion,
                     StatusId = p.StatusId,
-                    InStatistic = p.InStatistic
+                    InStatistic = p.InStatistic,
+                    MeetingExpectationsTotal = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 })
                 .ToList();
                 return Ok(dialogues);
