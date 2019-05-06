@@ -57,5 +57,21 @@ namespace UserService.Controllers
             _publisher.Publish(message);
             Console.WriteLine("finished");
         }
+        
+        
+        [HttpPut("changeInStatistic/{dialogueId}/{inStatistic}")]
+        [SwaggerOperation(Description = "Changes InStatistic field for a dialog.")]
+        public async Task ChangeInStatistic(Guid dialogueId, bool inStatistic)
+        {
+            var dialog = _genericRepository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
+
+            if (dialog == default(Dialogue))
+                throw new Exception($"Can't find a dialog with ID = {dialogueId}!");
+
+            dialog.InStatistic = inStatistic;
+
+            _genericRepository.Update(dialog);
+            await _genericRepository.SaveAsync();
+        }
     }
 }
