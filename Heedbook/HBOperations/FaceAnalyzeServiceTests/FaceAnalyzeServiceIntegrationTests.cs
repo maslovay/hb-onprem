@@ -101,9 +101,9 @@ namespace FaceAnalyzeService.Tests
         }
 
         [Test]
-        public void EnsureCreatesFrameEmotion()
+        public async Task EnsureCreatesFrameEmotion()
         {
-            _faceAnalyzeService.Run(frameFileRemotePath);
+            await _faceAnalyzeService.Run(frameFileRemotePath);
             Assert.IsTrue(_repository.Get<FrameEmotion>().Any(ff => ff.FileFrameId == testFileFrameId));
         }
 

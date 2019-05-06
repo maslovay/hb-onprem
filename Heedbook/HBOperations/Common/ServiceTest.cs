@@ -89,8 +89,8 @@ namespace Common
 
         private void InitGeneralServices()
         {           
-            _sftpClient = ServiceProvider.GetService<SftpClient>();
-            _repository = ServiceProvider.GetService<IGenericRepository>();
+            _sftpClient = ServiceProvider.GetRequiredService<SftpClient>();
+            _repository = ServiceProvider.GetRequiredService<IGenericRepository>();
             ScopeFactory = ServiceProvider.GetRequiredService<IServiceScopeFactory>();
         }
         
