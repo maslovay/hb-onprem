@@ -31,6 +31,7 @@ using UserOperations.Services;
 using Microsoft.AspNetCore.Identity;
 using HBLib.Utils;
 using HBLib;
+using UserOperations.Extensions;
 
 namespace UserOperations
 {
@@ -128,14 +129,13 @@ namespace UserOperations
                // c.DisplayOperationId();
             });
             app.UseAuthentication();
-
+            app.UseCorsMiddleware();
             app.UseCors(
                     builder =>
                     {
                         builder.WithOrigins("http://localhost:3000",
                                     "https://hbreactapp.azurewebsites.net",
                                     "http://hbserviceplan-onprem.azurewebsites.net")
-                               .AllowAnyMethod()
                                .AllowCredentials()
                                .AllowAnyHeader();
                     });
