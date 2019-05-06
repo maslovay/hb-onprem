@@ -59,7 +59,7 @@ namespace UserService.Controllers
         }
         
         
-        [HttpPut("changeInStatistic/{dialogueId}/{inStatistic}")]
+        [HttpPut("changeInStatistic")]
         [SwaggerOperation(Description = "Changes InStatistic field for a dialog.")]
         public async Task ChangeInStatistic(Guid dialogueId, bool inStatistic)
         {
