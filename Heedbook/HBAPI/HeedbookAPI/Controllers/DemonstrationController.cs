@@ -35,6 +35,8 @@ using HBMLHttpClient;
 using System.Collections;
 using System.Text.RegularExpressions;
 using static HBLib.Utils.SftpClient;
+using Swashbuckle.AspNetCore.Annotations;
+using UserOperations.CommonModels;
 
 namespace UserOperations.Controllers
 {
@@ -167,17 +169,24 @@ namespace UserOperations.Controllers
       
 
         [HttpPost("FlushStats")]
-        public IActionResult FlushStats([FromBody] List<SlideShowSession> stats)
+        [SwaggerOperation(Summary = "Save contents display", Description = "Saves data about content display on device (content, user, content type, start and end date) for statistic")]
+        [SwaggerResponse(400, "Invalid parametrs or error in DB connection", typeof(string))]
+        [SwaggerResponse(200, "all sessions were saved")]
+        public IActionResult FlushStats([FromBody, 
+            SwaggerParameter("campaignContentId, begTime, applicationUserId", Required = true)] 
+            List<SlideShowSession> stats)
         {
             try
             {
                 foreach (SlideShowSession stat in stats)
                 {
+                    var html = _context.CampaignContents.Where(x=>x.CampaignContentId == stat.CampaignContentId).Select(x=>x.Content).FirstOrDefault().RawHTML;
+                    stat.ContentType = html.Contains("PollAnswer") ? "poll" : "media";
                     stat.SlideShowSessionId = Guid.NewGuid();
                     _context.Add(stat);
                     _context.SaveChanges();
                 }
-                return Ok();
+                return Ok("Saved");
             }
             catch (Exception e)
             {
@@ -187,7 +196,10 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("GetContents")]
-        public async Task<IActionResult> GetContents([FromQuery] string userId)
+        [SwaggerOperation(Summary = "Return content on device", Description = "Get all content for loggined company with RowHtml data and url on media. Specially  for device")]
+        [SwaggerResponse(400, "Invalid userId or error in DB connection", typeof(string))]
+        [SwaggerResponse(200, "Content", typeof(ContentReturnOnDeviceModel))]
+        public async Task<ActionResult> GetContents([FromQuery] string userId)
         {
             try
             {                        
@@ -278,7 +290,6 @@ namespace UserOperations.Controllers
                 responseContent.Add(new { campaigns = campaignsList });
                 responseContent.Add(new { htmlRaws = htmlList2 });
                 responseContent.Add(new { blobMedia = resultMedia });
-
                 return Ok(responseContent);
             }
             catch (Exception e)
@@ -287,7 +298,10 @@ namespace UserOperations.Controllers
             }
         }
     
-      [HttpPost("PollAnswer")]
+        [HttpPost("PollAnswer")]
+        [SwaggerOperation(Summary = "Save answer from poll", Description = "Receive answer from device ande save it connected to campaign and content")]
+        [SwaggerResponse(400, "Invalid data or error in DB connection", typeof(string))]
+        [SwaggerResponse(200, "Saved")]
         public async Task<IActionResult> PollAnswer([FromBody] CampaignContentAnswer answer)
         {
             try
@@ -303,51 +317,5 @@ namespace UserOperations.Controllers
                 return BadRequest("Error");
             }
         }
-    }
-
-
-    public class ContentWithId
-    {
-        public ContentWithId()
-        {
-            htmlId = Guid.NewGuid().ToString();
-        }
-        public Content contentWithId;
-        public string htmlId;
-        public Guid campaignContentId;
-    }
-    // public class Result
-    // {
-    //     public string Gender;
-    //     public int? Age;
-    //     public List<ContentInfo> Content;
-    // }
-
-    // public class ContentInfo
-    // {
-    //     public string CampaignContentId;
-    //     public int Duration;
-    //     public string RawHtml;
-    //     public int SequenceNumber;
-    // }
-
-
-    public class ContentModel
-    {
-        public Guid Id;
-        public Guid CampaignContentId;
-        public string HTML;
-        public int Duration;
-        public string Type;
-    }
-
-    public class CampaignModel
-    {
-        public Guid Id;
-        public int Gender;
-        public int? BegAge;
-        public int? EndAge;
-        public List<ContentModel> Content;
-        public bool IsSplashScreen;
-    }
+    }   
 }

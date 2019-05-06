@@ -13,8 +13,7 @@ using HBData;
 using HBLib.Utils;
 using Microsoft.Extensions.Primitives;
 using Swashbuckle.AspNetCore.Annotations;
-
-
+using UserOperations.CommonModels;
 
 namespace UserOperations.Controllers
 {
@@ -43,28 +42,29 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _containerName = "content-screenshots";
         }
-        #region Campaign
-          [HttpGet("Test")]
-        [SwaggerOperation(Description = "Return all camapigns for loggined company with content relations")]
-        public IActionResult Test()
-        {           
-            return Ok("Its working");
-        }
+        #region Campaign     
 
         [HttpGet("Campaign")]
-        [SwaggerOperation(Description = "Return all camapigns for loggined company with content relations")]
-        public IActionResult CampaignGet([FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Return campaigns with content", Description = "Return all campaigns for loggined company with content relations")]
+        [SwaggerResponse(200, "Campaigns list", typeof(List<CampaignGetModel>))]
+        public IActionResult CampaignGet([FromHeader,  
+                SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
-            var campaigns = _context.Campaigns.Include(x => x.CampaignContents).Where(x=>x.CompanyId == companyId).ToList();
+            var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
+            var campaigns = _context.Campaigns.Include(x => x.CampaignContents)
+                    .Where( x => x.CompanyId == companyId && x.StatusId != statusInactiveId ).ToList();
             return Ok(campaigns);
         }
 
         [HttpPost("Campaign")]
-        [SwaggerOperation(Description = "Create new campaign with content relations")]
-        public IActionResult CampaignPost([FromBody] CampaignModel model, [FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Create campaign with content", Description = "Create new campaign with content relations and return created one")]
+        [SwaggerResponse(200, "New campaign", typeof(CampaignGetModel))]
+        public IActionResult CampaignPost([FromBody,
+                 SwaggerParameter("Send content separately from the campaign", Required = true)] CampaignPutPostModel model, 
+                 [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
@@ -87,8 +87,12 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("Campaign")]
-        [SwaggerOperation(Description = "Edit existing campaign. Remove all content relations and create new")]
-        public IActionResult CampaignPut([FromBody] CampaignModel model, [FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Edit campaign with content", Description = "Edit existing campaign. Remove all content relations and create new")]
+        [SwaggerResponse(200, "Edited campaign", typeof(CampaignGetModel))]
+
+        public IActionResult CampaignPut([FromBody,
+                SwaggerParameter("Send content separately from the campaign or send CampaignContents:[] if you dont need to change content relations", Required = true)] 
+                CampaignPutPostModel model, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
              if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");           
@@ -121,8 +125,8 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("Campaign")]
-        [SwaggerOperation(Description = "Set camapign status Inactive and delete all content relations for this campaign")]
-        public IActionResult CampaignDelete([FromQuery] Guid campaignId, [FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Set campaign inactive", Description = "Set campaign status Inactive and delete all content relations for this campaign")]
+        public IActionResult CampaignDelete([FromQuery] Guid campaignId, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");  
@@ -141,26 +145,28 @@ namespace UserOperations.Controllers
 
         #region Content
         [HttpGet("Content")]
-        [SwaggerOperation(Description = "Get all content for loggined company with screenshot url links")]
-        public async Task<IActionResult> ContentGet([FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Get all content", Description = "Get all content for loggined company with screenshot url links")]
+        [SwaggerResponse(200, "Content list", typeof(List<ContentWithScreenModel>))]
+        public async Task<IActionResult> ContentGet([FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
             
             var contents = _context.Contents.Where(x => x.CompanyId == companyId).ToList();
-            var result = new List<ContentModel>();
+            var result = new List<ContentWithScreenModel>();
             foreach (var c in contents)
             {
                 var screenshotLink = await _sftpClient.GetFileUrl(_containerName + "/" + c.ContentId.ToString() + ".png");
-                result.Add(new ContentModel(c, screenshotLink));
+                result.Add(new ContentWithScreenModel(c, screenshotLink));
             }
             return Ok(result);
         }
 
         [HttpPost("Content")]
-        [SwaggerOperation(Description = "Create new content and save screenshot on sftp server")]
-        public async Task<IActionResult> ContentPost([FromBody] ContentModel model, [FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Save new content", Description = "Create new content and save screenshot on sftp server")]
+        [SwaggerResponse(200, "New content with screenshot link", typeof(ContentWithScreenModel))]
+        public async Task<IActionResult> ContentPost([FromBody] ContentWithScreenModel model, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
@@ -184,8 +190,11 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("Content")]
-        [SwaggerOperation(Description = "Edit existing content, remove screenshot from sftp and save new screenshot(if you pass it in json body)")]
-        public async Task<IActionResult> ContentPut([FromBody] ContentModel model, [FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Edit content", Description = "Edit existing content, remove screenshot from sftp and save new screenshot(if you pass it in json body)")]
+        [SwaggerResponse(200, "Edited content with screenshot link", typeof(ContentWithScreenModel))]
+        public async Task<IActionResult> ContentPut(
+                    [FromBody] ContentWithScreenModel model, 
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");         
@@ -212,8 +221,8 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("Content")]
-        [SwaggerOperation(Description = "DElete content and remove screenshot from sftp")]
-        public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId, [FromHeader] string Authorization)
+        [SwaggerOperation(Summary = "Remove content", Description = "Delete content and remove screenshot from sftp")]
+        public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
@@ -231,28 +240,6 @@ namespace UserOperations.Controllers
                 return Ok("OK");
             }
             return BadRequest("No such content");
-        }
-        #endregion
-        #region Helper classes
-        public class CampaignModel
-        {
-            public CampaignModel(Campaign cmp, List<CampaignContent> campaignContents)
-            {
-                Campaign = cmp;
-                CampaignContents = campaignContents;
-            }
-            public Campaign Campaign { get; set; }
-            public List<CampaignContent> CampaignContents { get; set; }
-        }
-        public class ContentModel
-        {
-            public ContentModel(Content cnt, string screen)
-            {
-                Content = cnt;
-                Screenshot = screen;
-            }
-            public Content Content { get; set; }
-            public string Screenshot { get; set; }
         }
         #endregion
     }

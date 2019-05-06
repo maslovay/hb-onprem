@@ -55,6 +55,6 @@ namespace HBData.Models
         /// </summary>
         public DateTime? UpdateDate { get; set; }
 
-        public ICollection<CampaignContent> CampaignContents { get; set; }
+        [JsonIgnore] public ICollection<CampaignContent> CampaignContents { get; set; }
     }
 }

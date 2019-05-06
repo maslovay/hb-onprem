@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
@@ -62,14 +63,14 @@ namespace HBData.Models
         /// </summary>
         public Guid CompanyId { get; set; }
 
-        public Company Company { get; set; }
+        [JsonIgnore] public Company Company { get; set; }
 
         /// <summary>
         ///     Status
         /// </summary>
         public Int32? StatusId { get; set; }
 
-        public Status Status { get; set; }
+        [JsonIgnore] public Status Status { get; set; }
 
         public ICollection<CampaignContent> CampaignContents { get; set; }
     }

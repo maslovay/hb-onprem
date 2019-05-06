@@ -53,7 +53,7 @@ namespace UserService.Controllers
                                          .Where(p => p.Id == applicationUserId)
                                          .First().Company.Language.LanguageId;
 
-                var stringFormat = "yyyyMMddhhmmss";
+                var stringFormat = "yyyyMMddHHmmss";
                 var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var fileName = $"{applicationUserId}_{time.ToString(stringFormat)}_{languageId}.mkv";
                 System.Console.WriteLine("5");

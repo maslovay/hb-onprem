@@ -37,18 +37,21 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticServiceQualityController : Controller
     {
+        private readonly IConfiguration _config;        
+        private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
 
         public AnalyticServiceQualityController(
-            RecordsContext context,
             IConfiguration config,
+            ILoginService loginService,
+            RecordsContext context,
             DBOperations dbOperation
             )
         {
-            _context = context;
             _config = config;
+            _loginService = loginService;
+            _context = context;
             _dbOperation = dbOperation;
         }
 
@@ -57,13 +60,18 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds)
+                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromHeader] string Authorization)
         {
             try
             {
+                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                    return BadRequest("Token wrong");
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+
                 var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
 
@@ -113,11 +121,16 @@ namespace UserOperations.Controllers
                         FearShare = p.DialogueVisual.Average(q => q.FearShare),
 
                         AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
-                        Cross = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == crossTypeId).Average(q => q.PhraseCount),
-                        Necessary = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == neccesaryTypeId).Average(q => q.PhraseCount),
-                        Loyalty = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Average(q => q.PhraseCount),
-                        Alert = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == alertTypeId).Average(q => q.PhraseCount),
-                        Fillers = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == fillersTypeId).Average(q => q.PhraseCount)
+                        Cross = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == crossTypeId).Count() != 0?
+                            p.DialoguePhraseCount.Where(q => q.PhraseTypeId == crossTypeId).Average(q => q.PhraseCount) : 0,
+                        Necessary = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == neccesaryTypeId).Count() != 0? 
+                            p.DialoguePhraseCount.Where(q => q.PhraseTypeId == neccesaryTypeId).Average(q => q.PhraseCount) : 0,
+                        Loyalty = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Count() != 0? 
+                            p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Average(q => q.PhraseCount) : 0,
+                        Alert = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == alertTypeId).Count() != 0? 
+                            p.DialoguePhraseCount.Where(q => q.PhraseTypeId == alertTypeId).Average(q => q.PhraseCount) : 0,
+                        Fillers = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == fillersTypeId).Count() != 0? 
+                                p.DialoguePhraseCount.Where(q => q.PhraseTypeId == fillersTypeId).Average(q => q.PhraseCount): 0
                     })
                     .ToList();
 
@@ -188,13 +201,18 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds)
+                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromHeader] string Authorization)
         {
             try
             {
+                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                    return BadRequest("Token wrong");
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+
                 var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
@@ -252,18 +270,23 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds)
+                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromHeader] string Authorization)
         {
             try
             {
+                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                    return BadRequest("Token wrong");
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+
                 var phrasesTypes = _context.PhraseTypes.ToList();
                 var typeIdCross = phrasesTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
                 var typeIdAlert = phrasesTypes.Where(p => p.PhraseTypeText == "Alert").Select(p => p.PhraseTypeId).First();
                 var typeIdNecessary = phrasesTypes.Where(p => p.PhraseTypeText == "Necessary").Select(p => p.PhraseTypeId).First();
                 
                 var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
@@ -331,13 +354,18 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds)
+                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromHeader] string Authorization)
         {
             try
             {
+                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                    return BadRequest("Token wrong");
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+
                 var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);

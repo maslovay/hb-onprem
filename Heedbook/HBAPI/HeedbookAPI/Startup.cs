@@ -77,7 +77,7 @@ namespace UserOperations
             
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
 
-              services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(c =>
             {
                 c.EnableAnnotations();
                 c.SwaggerDoc("v1", new Info
@@ -85,6 +85,21 @@ namespace UserOperations
                     Title = "User Service Api",
                     Version = "v1"
                 });
+                c.MapType<SlideShowSession>(() => new Schema{ 
+                        Type = "object",
+                        Properties = new Dictionary<string, Schema> {
+                            {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
+                            {"applicationUserId", new Schema{Type = "string", Format = "uuid"}},
+                            {"begTime", new Schema{Type = "string", Format = "date-time"}},
+                            {"endTime", new Schema{Type = "string", Format = "date-time"}}
+                        }} );
+                c.MapType<CampaignContentAnswer>(() => new Schema{ 
+                        Type = "object",
+                        Properties = new Dictionary<string, Schema> {
+                            {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
+                            {"answer", new Schema{Type = "string"}},
+                            {"time", new Schema{Type = "string", Format = "date-time"}}
+                        }} );
             });
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -118,6 +133,7 @@ namespace UserOperations
             {
                 c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
                 c.RoutePrefix = "api/swagger";
+               // c.DisplayOperationId();
             });
             app.UseAuthentication();
 

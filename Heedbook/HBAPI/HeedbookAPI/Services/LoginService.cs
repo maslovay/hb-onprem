@@ -78,7 +78,7 @@ namespace UserOperations.Services
                     var token = new JwtSecurityToken(_config["Tokens:Issuer"],
                         _config["Tokens:Issuer"],
                         claims,
-                        expires: remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
+                        expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
                         signingCredentials: creds);
 
                     var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
@@ -228,6 +228,25 @@ namespace UserOperations.Services
                 smtp.EnableSsl = true;
                 smtp.Send(m);
             }
+            public string GeneratePass(int x)
+            {
+                string pass = "";
+                var r = new Random();
+                while (pass.Length < x)
+                {
+                    Char c = (char)r.Next(33, 125);
+                    if (Char.IsLetterOrDigit(c))
+                        pass += c;
+                }
+                return pass;
+            }
+            public string GenerateEmailMsg(string pswd, ApplicationUser user)
+                {
+                    string msg = "Login:    " + user.Email;
+                    msg += "   Password: " + pswd + ".";
+                    msg += " You were registred in Heedbook";
+                    return msg;
+                }          
 
         #endregion
 

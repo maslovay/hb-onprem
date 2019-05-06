@@ -31,7 +31,6 @@ namespace HBData.Models
         public Guid CampaignId { get; set; }
 
         [JsonIgnore] public Campaign Campaign { get; set; }
-
-        public ICollection<SlideShowSession> SlideShowSession {get;set;}
+        [JsonIgnore] public ICollection<SlideShowSession> SlideShowSession {get;set;}
     }
 }
