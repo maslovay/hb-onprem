@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Notifications.Base;
 using Serilog;
@@ -42,6 +43,13 @@ namespace UserService
             });
             services.AddOptions();
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
+            
+            #if DEBUG
+            services.AddLogging(loggingBuilder => loggingBuilder.AddConsole());
+            services.AddLogging(loggingBuilder => loggingBuilder.AddDebug());
+            services.AddLogging(loggingBuilder => loggingBuilder.AddEventSourceLogger());
+            #endif
+            
             services.AddDbContext<RecordsContext>
             (options =>
             {

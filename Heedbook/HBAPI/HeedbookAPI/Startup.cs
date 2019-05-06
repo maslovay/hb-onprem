@@ -53,7 +53,10 @@ namespace UserOperations
                 builder =>
                 {
                     builder.WithOrigins("http://localhost:3000",
-                                        "https://hbreactapp.azurewebsites.net");
+                                "https://hbreactapp.azurewebsites.net",
+                                "http://hbserviceplan-onprem.azurewebsites.net")
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
                 });
             }); 
             services.AddOptions();
