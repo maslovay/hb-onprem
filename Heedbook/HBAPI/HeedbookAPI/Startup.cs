@@ -47,18 +47,7 @@ namespace UserOperations
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options =>
-            {
-                options.AddPolicy(MyAllowSpecificOrigins,
-                builder =>
-                {
-                    builder.WithOrigins("http://localhost:3000",
-                                "https://hbreactapp.azurewebsites.net",
-                                "http://hbserviceplan-onprem.azurewebsites.net")
-                           .AllowAnyMethod()
-                           .AllowAnyHeader();
-                });
-            }); 
+            services.AddCors(); 
             services.AddOptions();
             services.AddDbContext<RecordsContext>
             (options =>
@@ -140,8 +129,17 @@ namespace UserOperations
             });
             app.UseAuthentication();
 
+            app.UseCors(
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:3000",
+                                    "https://hbreactapp.azurewebsites.net",
+                                    "http://hbserviceplan-onprem.azurewebsites.net")
+                               .AllowAnyMethod()
+                               .AllowCredentials()
+                               .AllowAnyHeader();
+                    });
             app.UseHttpsRedirection();
-            app.UseCors(MyAllowSpecificOrigins); 
             app.UseMvc();
         }
         
