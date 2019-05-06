@@ -31,7 +31,6 @@ using UserOperations.Services;
 using Microsoft.AspNetCore.Identity;
 using HBLib.Utils;
 using HBLib;
-using UserOperations.Extensions;
 
 namespace UserOperations
 {
@@ -93,7 +92,18 @@ namespace UserOperations
                             {"time", new Schema{Type = "string", Format = "date-time"}}
                         }} );
             });
-            services.AddCors();
+            services.AddCors(options =>
+            {
+                options.AddPolicy(MyAllowSpecificOrigins,
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:3000",
+                                    "https://hbreactapp.azurewebsites.net",
+                                    "http://hbserviceplan-onprem.azurewebsites.net")
+                               .AllowAnyMethod()
+                               .AllowAnyHeader();
+                    });
+            });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
@@ -128,16 +138,7 @@ namespace UserOperations
                // c.DisplayOperationId();
             });
             app.UseAuthentication();
-            app.UseCors(
-                builder =>
-                {
-                    builder.WithOrigins("http://localhost:3000",
-                                "https://hbreactapp.azurewebsites.net",
-                                "http://hbserviceplan-onprem.azurewebsites.net")
-                           .AllowCredentials()
-                           .AllowAnyHeader();
-                });
-            app.UseCorsMiddleware();
+            app.UseCors(MyAllowSpecificOrigins);
             app.UseHttpsRedirection();
             app.UseMvc();
         }
