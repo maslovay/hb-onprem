@@ -45,7 +45,7 @@ namespace UserOperations.Controllers
 
         private readonly SftpClient _sftpClient;
         private Dictionary<string, string> userClaims;
-
+        private readonly string _containerName;
 
 
         public UserController(
@@ -59,12 +59,14 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
+            _containerName = "useravatars";
         }
 
+#region USER
         [HttpGet("User")]
         [SwaggerOperation(Summary = "All company users", Description = "Return all users (array) for loggined company with role Id")]
         [SwaggerResponse(200, "Users with role", typeof(List<UserModel>))]
-        public IActionResult UserGet(
+        public async Task<IActionResult> UserGet(
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -72,7 +74,8 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var users = _context.ApplicationUsers.Include(p => p.UserRoles).Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();
+                var users = _context.ApplicationUsers.Include(p => p.UserRoles)
+                    .Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();             
                 var result = users.Select(p => new UserModel(p));
                 return Ok(result);
             }
@@ -87,13 +90,17 @@ namespace UserOperations.Controllers
                 Description = "Edit user (any from loggined company) and return edited. Don't send password and role (can't change). Email must been unique")]
         [SwaggerResponse(200, "User", typeof(UserModel))]
         public async Task<IActionResult> UserPut(
-                    [FromBody] ApplicationUser message, 
+                 //   [FromBody] ApplicationUser message, 
+                    [FromForm] IFormCollection formData,
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
+
+                var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
+                ApplicationUser message = JsonConvert.DeserializeObject<ApplicationUser>(userDataJson);
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var user = _context.ApplicationUsers.Include(p => p.UserRoles)
                     .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
@@ -107,6 +114,15 @@ namespace UserOperations.Controllers
                         if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
                             p.SetValue(user, p.GetValue(message, null), null);
                     }
+                if(formData.Files.Count != 0)
+                {
+                    await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
+                    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                    var fn = user.Id + fileInfo.Extension;
+                    var memoryStream = formData.Files[0].OpenReadStream();
+                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
+                    user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
+                }
                     await _context.SaveChangesAsync();
                     return Ok(new UserModel(user));
                 }
@@ -125,15 +141,21 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Create new user with role Employee in loggined company (taked from token)/ Return new user")]
         [SwaggerResponse(200, "User", typeof(UserModel))]
         public async Task<IActionResult> UserPostAsync(
-                    [FromBody] PostUser message, 
+                  //  [FromBody] PostUser message,  
+                    [FromForm] IFormCollection formData,
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
+
+                var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
+                PostUser message = JsonConvert.DeserializeObject<PostUser>(userDataJson);
                 if (_context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                     return BadRequest("User email not unique");
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                
                 //string password = GeneratePass(6);
                 var user = new ApplicationUser
                 {
@@ -142,7 +164,7 @@ namespace UserOperations.Controllers
                     Email = message.Email,
                     NormalizedEmail = message.Email.ToUpper(),
                     Id = Guid.NewGuid(),
-                    CompanyId = Guid.Parse(userClaims["companyId"]),
+                    CompanyId = companyId,
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
                     PasswordHash = _loginService.GeneratePasswordHash(message.Password),
@@ -150,9 +172,18 @@ namespace UserOperations.Controllers
                     EmpoyeeId = message.EmployeeId,
                     WorkerTypeId = message.WorkerTypeId
                 };
+                await _context.AddAsync(user);
+                    //---save avatar---
+                if(formData.Files.Count != 0)
+                {
+                    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                    var fn = user.Id + fileInfo.Extension;
+                    var memoryStream = formData.Files[0].OpenReadStream();
+                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
+                    user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
+                }
                 //string msg = GenerateEmailMsg(password, user);
                 //_loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
-                await _context.AddAsync(user);
 
                 var userRole = new ApplicationUserRole()
                 {
@@ -161,6 +192,7 @@ namespace UserOperations.Controllers
                 };
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
+            
                 return Ok(new UserModel(user));
             }
             catch (Exception e)
@@ -186,6 +218,7 @@ namespace UserOperations.Controllers
                 {
                     try
                     {
+                        await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
                         _context.Remove(user);
                         await _context.SaveChangesAsync();
                     }
@@ -205,6 +238,9 @@ namespace UserOperations.Controllers
         }
 
 
+#endregion
+
+#region PHRASE
         [HttpGet("PhraseLib")]
         [SwaggerOperation(Summary = "Library", 
                 Description = "Return collections phrases from library (only templates and only with language code = loggined company)")]
@@ -274,7 +310,7 @@ namespace UserOperations.Controllers
         [HttpPut("PhraseLib")]
         [SwaggerOperation(Description = "Edit phrase")]
         public async Task<IActionResult> PhrasePut(
-                    [FromBody] PhrasePut message, 
+                    [FromBody] Phrase message, 
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -291,7 +327,7 @@ namespace UserOperations.Controllers
 
                 if (phrase != null)
                 {
-                    foreach (var p in typeof(ApplicationUser).GetProperties())
+                    foreach (var p in typeof(Phrase).GetProperties())
                     {
                         if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
                             p.SetValue(phrase, p.GetValue(message, null), null);
@@ -392,32 +428,10 @@ namespace UserOperations.Controllers
             }
         }
 
-        // [HttpDelete("CompanyPhrase")]
-        // [SwaggerOperation(Description = "Delete PhraseCompany from loggined company by Phrase Id")]
-        // public async Task<IActionResult> CompanyPhraseDelete(
-        //         [FromQuery,  SwaggerParameter("Id (one)", Required = true)] Guid phraseId, 
-        //         [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
-        // {
-        //     try
-        //     {
-        //         if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-        //             return BadRequest("Token wrong");
-        //         var companyId = Guid.Parse(userClaims["companyId"]);
+       
+#endregion
 
-        //         var phrase = _context.PhraseCompanys.Where(p => p.CompanyId == companyId && p.PhraseId == phraseId).FirstOrDefault();
-        //         if (phrase != null)
-        //         {
-        //             _context.Remove(phrase);
-        //             await _context.SaveChangesAsync();
-        //         }
-        //         return Ok("OK");
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         return BadRequest(e.Message);
-        //     }
-        // }
-
+#region DIALOGUE
 
         // to do: add dialogue phrase and add make migration 
         // format of datetime is yyyymmddhhmmss
@@ -477,7 +491,8 @@ namespace UserOperations.Controllers
                     Comment = p.Comment,
                     SysVersion = p.SysVersion,
                     StatusId = p.StatusId,
-                    InStatistic = p.InStatistic
+                    InStatistic = p.InStatistic,
+                    MeetingExpectationsTotal = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 })
                 .ToList();
                 return Ok(dialogues);
@@ -563,9 +578,9 @@ namespace UserOperations.Controllers
             }
         }
     }
-
+#endregion
   
-
+#region MODELS
     public class PostUser
     {
         public string FullName;
@@ -590,12 +605,12 @@ namespace UserOperations.Controllers
         public string OneSignalId;
         public Guid? WorkerTypeId;
         public string RoleId;
-        public UserModel(ApplicationUser user)
+        public UserModel(ApplicationUser user, string avatar = null)
         {
             Id = user.Id;
             FullName = user.FullName;
             Email = user.Email;
-            Avatar = user.Avatar;
+            Avatar = avatar?? user.Avatar;
             EmployeeId = user.EmpoyeeId;
             CreationDate = user.CreationDate.ToLongDateString();
             CompanyId = user.CompanyId.ToString();
@@ -617,22 +632,10 @@ namespace UserOperations.Controllers
         public Boolean IsTemplate;
     }
 
-    public class PhrasePut
-    {
-        public Guid PhraseId;
-        public string PhraseText;
-        public Guid PhraseTypeId;
-        public Int32? LanguageId;
-        public bool IsClient;
-        public Int32? WordsSpace;
-        public double? Accurancy;
-        public Boolean IsTemplate;
-    }
-
     public class DialoguePut
     {
         public Guid DialogueId;
         public int StatusId;
     }
-
+#endregion
 }
