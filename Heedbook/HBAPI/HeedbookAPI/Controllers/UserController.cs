@@ -105,7 +105,6 @@ namespace UserOperations.Controllers
                 var user = _context.ApplicationUsers.Include(p => p.UserRoles)
                     .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
                     .FirstOrDefault();
-                var oldAvatar = user.Avatar;
                 if (user.Email != message.Email && _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                     return BadRequest("User email not unique");
                 if (user != null)
@@ -117,10 +116,9 @@ namespace UserOperations.Controllers
                     }
                 if(formData.Files.Count != 0)
                 {
-                    if(oldAvatar != null)
-                        await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync(oldAvatar));
+                    await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
                     FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-                    var fn = Guid.NewGuid() + fileInfo.Extension;
+                    var fn = user.Id + fileInfo.Extension;
                     var memoryStream = formData.Files[0].OpenReadStream();
                     await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
                     user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
@@ -174,18 +172,18 @@ namespace UserOperations.Controllers
                     EmpoyeeId = message.EmployeeId,
                     WorkerTypeId = message.WorkerTypeId
                 };
+                await _context.AddAsync(user);
                     //---save avatar---
                 if(formData.Files.Count != 0)
                 {
                     FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-                    var fn = Guid.NewGuid() + fileInfo.Extension;
+                    var fn = user.Id + fileInfo.Extension;
                     var memoryStream = formData.Files[0].OpenReadStream();
                     await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
                     user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
                 }
                 //string msg = GenerateEmailMsg(password, user);
                 //_loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
-                await _context.AddAsync(user);
 
                 var userRole = new ApplicationUserRole()
                 {
@@ -220,6 +218,7 @@ namespace UserOperations.Controllers
                 {
                     try
                     {
+                        await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
                         _context.Remove(user);
                         await _context.SaveChangesAsync();
                     }
