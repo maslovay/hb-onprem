@@ -49,13 +49,14 @@ namespace UserOperations
         {
             services.AddCors(options =>
             {
-                options.AddPolicy(MyAllowSpecificOrigins,
+                options.AddDefaultPolicy(
                 builder =>
                 {
                     builder.WithOrigins("http://localhost:3000",
                                 "https://hbreactapp.azurewebsites.net",
                                 "http://hbserviceplan-onprem.azurewebsites.net")
                            .AllowAnyMethod()
+                           .AllowCredentials()
                            .AllowAnyHeader();
                 });
             }); 
@@ -140,8 +141,8 @@ namespace UserOperations
             });
             app.UseAuthentication();
 
+            app.UseCors(); 
             app.UseHttpsRedirection();
-            app.UseCors(MyAllowSpecificOrigins); 
             app.UseMvc();
         }
         
