@@ -8,7 +8,7 @@ namespace ServiceExtensions
 {
     public static class ServiceExtensions
     {
-        public static IWebHostBuilder ConfigureBuilderDueToEnvironment(this IWebHostBuilder builder)
+        public static IWebHostBuilder ConfigureBuilderDueToEnvironment(this IWebHostBuilder builder, int portToReassignForTests = 5000)
         {
             builder.ConfigureAppConfiguration((context, cfg) =>
             {
@@ -16,14 +16,23 @@ namespace ServiceExtensions
 
                 var configBuilder = cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
-                if (UnitTestDetector.IsRunningFromNUnit) 
+                if (UnitTestDetector.IsRunningFromNUnit)
+                {
+                    builder.UseUrls("http://127.0.0.1:" + portToReassignForTests);
+                    builder.UseConfiguration(configBuilder.Build());
                     return;
-                
+                }
+
                 if (env.IsDevelopment())
                     configBuilder.AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true,
                         reloadOnChange: true);
                 else
+                {
+                    builder.UseUrls("http://127.0.0.1:" + portToReassignForTests);
                     configBuilder.AddJsonFile($"appsettings.test.json", optional: true, reloadOnChange: true);
+                }
+
+                builder.UseConfiguration(configBuilder.Build());
             });
             return builder;
         }

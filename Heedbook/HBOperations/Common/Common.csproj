@@ -49,6 +49,9 @@
       <None Update="Resources\Videos\testid_20190417100658_2.mkv">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Resources\Videos\testid_20190426094725_2.mkv">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

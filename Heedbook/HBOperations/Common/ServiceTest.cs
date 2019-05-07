@@ -42,6 +42,8 @@ namespace Common
         
         public Guid TestUserId => Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
 
+        private string testCompanyName = "TESTCOMPANY_89083091293392183";
+
         public async Task Setup( Action additionalInitialization, bool prepareTestData = false )
 
         {
@@ -71,7 +73,24 @@ namespace Common
 
         private void PrepareDatabase()
         {
-            if (_repository.Get<ApplicationUser>().All(u => u.Id != TestUserId))
+            var company = _repository.Get<Company>().FirstOrDefault(c => c.CompanyName == testCompanyName);
+
+            if (company == default(Company))
+            {
+                company = new Company()
+                {
+                    CompanyId = Guid.NewGuid(),
+                    CompanyName = testCompanyName,
+                    CompanyIndustryId = Guid.NewGuid(),
+                    CreationDate = DateTime.Now
+                };
+
+                _repository.AddOrUpdate(company);
+            }
+
+            var appUser = _repository.Get<ApplicationUser>().FirstOrDefault(u => u.Id == TestUserId);
+            
+            if (appUser == default(ApplicationUser))
             {
                 _repository.AddOrUpdate(new ApplicationUser()
                 {
@@ -81,8 +100,7 @@ namespace Common
                     FullName = "Test",
                     AccessFailedCount = 1000,
                     Avatar = null,
-                    CompanyId = null,
-                    Company = null,
+                    CompanyId = company.CompanyId,
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                     CreationDate = DateTime.Now,
                     Email = "test@test.ru",
@@ -90,8 +108,14 @@ namespace Common
                     StatusId = 3,
                     EmpoyeeId = "99999"
                 });
-                _repository.Save();
             }
+            else
+            {
+                appUser.CompanyId = company.CompanyId;
+                _repository.Update(appUser);
+            }
+            
+            _repository.Save();
         }
 
         private void InitServiceProvider()

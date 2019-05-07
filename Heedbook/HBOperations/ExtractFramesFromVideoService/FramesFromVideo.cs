@@ -45,6 +45,7 @@ namespace ExtractFramesFromVideo
                 _log.Info("Function Extract Frames From Video Started");
                 _log.Info("Write blob to memory stream");
 
+
                 var targetVideoFileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
 
                 var appUserId = targetVideoFileName.Split(("_"))[0];

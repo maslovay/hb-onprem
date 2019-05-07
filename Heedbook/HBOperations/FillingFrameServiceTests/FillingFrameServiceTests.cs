@@ -72,7 +72,7 @@ namespace FillingFrameService.Tests
             {
                 ApplicationUserId = TestUserId,
                 DialogueId = Guid.NewGuid(),
-                BeginTime = videoDateTime.AddDays(-10),
+                BeginTime = DateTime.MinValue,
                 EndTime = videoDateTime.AddDays(10)
             };
             
