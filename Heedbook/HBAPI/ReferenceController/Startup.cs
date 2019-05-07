@@ -24,6 +24,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using HBData;
+using HBLib;
+using HBLib.Utils;
 
 namespace TeacherAPI
 {
@@ -49,7 +51,9 @@ namespace TeacherAPI
                 options.UseNpgsql(connectionString,
                 dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
-
+            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddTransient<SftpClient>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info

@@ -36,7 +36,6 @@ namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [EnableCors]
     public class SessionController : Controller
     {
         private readonly RecordsContext _context;

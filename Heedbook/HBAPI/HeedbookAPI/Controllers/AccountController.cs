@@ -52,7 +52,8 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("Register")]
-        [SwaggerOperation(Summary = "Create user, company, tariff", Description = "Create new company, new user, add manager role, create new Tariff and newTransaction if no exist ")]
+        [SwaggerOperation(Summary = "Create user, company, trial tariff", 
+            Description = "Create new active company, new active user, add manager role, create new trial Tariff on 5 days/2 employee and new finished Transaction if no exist")]
         public async Task<IActionResult> UserRegister([FromBody, 
                         SwaggerParameter("User and company data", Required = true)] 
                         UserRegister message)
@@ -69,7 +70,7 @@ namespace UserOperations.Controllers
                     LanguageId = message.LanguageId,
                     CreationDate = DateTime.UtcNow,
                     CountryId = message.CountryId,
-                    StatusId = 5
+                    StatusId = 5//---inactive
                 };
                 await _context.Companys.AddAsync(company);
 
@@ -83,7 +84,8 @@ namespace UserOperations.Controllers
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
                     PasswordHash =  _loginService.GeneratePasswordHash(message.Password),
-                    StatusId = 3};
+                    StatusId = 3//---active
+                    };
                 await _context.AddAsync(user);
 
                 var userRole = new ApplicationUserRole()
@@ -106,7 +108,7 @@ namespace UserOperations.Controllers
                         ExpirationDate = DateTime.UtcNow.AddDays(5),
                         isMonthly = false,
                         Rebillid = "",
-                        StatusId = 10
+                        StatusId = 10//---Trial
                     };
 
                 var transaction = new Transaction
@@ -116,11 +118,11 @@ namespace UserOperations.Controllers
                         OrderId = "",
                         PaymentId = "",
                         TariffId = tariff.TariffId,
-                        StatusId = 7,
+                        StatusId = 7,//---finished
                         PaymentDate = DateTime.UtcNow,
                         TransactionComment = "TRIAL TARIFF;FAKE TRANSACTION"
                     };
-                        company.StatusId = 3;
+                        company.StatusId = 3;//---Active
                         
                         await _context.Tariffs.AddAsync(tariff);
                         await _context.Transactions.AddAsync(transaction);
@@ -167,10 +169,10 @@ namespace UserOperations.Controllers
         }
    
         [HttpPost("ChangePassword")]
-        [SwaggerOperation(Description = "Change password for user. Receive email. Send new password on email")]
+        [SwaggerOperation(Summary = "two cases", Description = "Change password for user. Receive email. Receive new password for loggined user(with token) or send new password on email")]
         public async Task<IActionResult> UserChangePasswordAsync(
-                    [FromBody] AccountAuthorization message,  
-                    [FromHeader,  SwaggerParameter("JWT token", Required = false)] string Authorization)
+                    [FromBody, SwaggerParameter("email required, password only with token")] AccountAuthorization message,  
+                    [FromHeader,  SwaggerParameter("JWT token not required, if exist receive new password, if not - generate new password", Required = false)] string Authorization)
         {
             try
             {
