@@ -617,7 +617,7 @@ namespace UserOperations.Controllers
             Id = user.Id;
             FullName = user.FullName;
             Email = user.Email;
-            Avatar = avatar?? user.Avatar;
+            Avatar = avatar != null ? user.Avatar : String.Empty;
             EmployeeId = user.EmpoyeeId;
             CreationDate = user.CreationDate.ToLongDateString();
             CompanyId = user.CompanyId.ToString();

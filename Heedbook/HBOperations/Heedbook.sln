@@ -73,6 +73,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExtractFramesFromVideoServi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotMarckedImageScheduler", "NotMarckedImageScheduler\NotMarckedImageScheduler.csproj", "{677A2C95-00B1-4793-8C6F-75719FD84BC2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReferenceController", "..\HBAPI\ReferenceController\ReferenceController.csproj", "{A48E447A-3F76-42C3-836C-C396BFEDF20B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -163,6 +165,10 @@ Global
 		{677A2C95-00B1-4793-8C6F-75719FD84BC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{677A2C95-00B1-4793-8C6F-75719FD84BC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{677A2C95-00B1-4793-8C6F-75719FD84BC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A48E447A-3F76-42C3-836C-C396BFEDF20B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A48E447A-3F76-42C3-836C-C396BFEDF20B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A48E447A-3F76-42C3-836C-C396BFEDF20B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A48E447A-3F76-42C3-836C-C396BFEDF20B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -189,6 +195,7 @@ Global
 		{119B961F-2236-4BD2-820A-B9917D797FF3} = {A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}
 		{903DC45A-1337-4A38-A3DE-D403740B318A} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{677A2C95-00B1-4793-8C6F-75719FD84BC2} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
+		{A48E447A-3F76-42C3-836C-C396BFEDF20B} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
