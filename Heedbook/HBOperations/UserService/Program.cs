@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using ServiceExtensions;
 
 namespace UserService
 {
@@ -14,7 +15,8 @@ namespace UserService
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
-                          .UseStartup<Startup>();
+                .UseStartup<Startup>()
+                .ConfigureBuilderDueToEnvironment();
         }
     }
 }
