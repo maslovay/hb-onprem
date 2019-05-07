@@ -1,3 +1,4 @@
+#region USING
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +33,7 @@ using HBData;
 using System.Net.Http.Headers;
 using Swashbuckle.AspNetCore.Annotations;
 using HBLib.Utils;
+#endregion
 
 namespace UserOperations.Controllers
 {
@@ -64,7 +66,7 @@ namespace UserOperations.Controllers
 
 #region USER
         [HttpGet("User")]
-        [SwaggerOperation(Summary = "All company users", Description = "Return all users (array) for loggined company with role Id")]
+        [SwaggerOperation(Summary = "All company users", Description = "Return all active (status 3) users (array) for loggined company with role Id")]
         [SwaggerResponse(200, "Users with role", typeof(List<UserModel>))]
         public async Task<IActionResult> UserGet(
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -84,65 +86,13 @@ namespace UserOperations.Controllers
                 return BadRequest(e.Message);
             }
         }
-
-        [HttpPut("User")]
-        [SwaggerOperation(Summary = "Edit user", 
-                Description = "Edit user (any from loggined company) and return edited. Don't send password and role (can't change). Email must been unique")]
-        [SwaggerResponse(200, "User", typeof(UserModel))]
-        public async Task<IActionResult> UserPut(
-                 //   [FromBody] ApplicationUser message, 
-                    [FromForm] IFormCollection formData,
-                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
-        {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-
-                var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-                ApplicationUser message = JsonConvert.DeserializeObject<ApplicationUser>(userDataJson);
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                var user = _context.ApplicationUsers.Include(p => p.UserRoles)
-                    .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
-                    .FirstOrDefault();
-                if (user.Email != message.Email && _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
-                    return BadRequest("User email not unique");
-                if (user != null)
-                {
-                    foreach (var p in typeof(ApplicationUser).GetProperties())
-                    {
-                        if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
-                            p.SetValue(user, p.GetValue(message, null), null);
-                    }
-                if(formData.Files.Count != 0)
-                {
-                    await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
-                    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-                    var fn = user.Id + fileInfo.Extension;
-                    var memoryStream = formData.Files[0].OpenReadStream();
-                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
-                    user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
-                }
-                    await _context.SaveChangesAsync();
-                    return Ok(new UserModel(user));
-                }
-                else
-                {
-                    return BadRequest("No such user");
-                }
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
+   
         [HttpPost("User")]
-        [SwaggerOperation(Description = "Create new user with role Employee in loggined company (taked from token)/ Return new user")]
+        [SwaggerOperation(Description = "Create new user with role Employee in loggined company (taked from token) and can save avatar for user / Return new user")]
         [SwaggerResponse(200, "User", typeof(UserModel))]
         public async Task<IActionResult> UserPostAsync(
                   //  [FromBody] PostUser message,  
-                    [FromForm] IFormCollection formData,
+                    [FromForm, SwaggerParameter("json user (include password and unique email) in FormData with key 'data' + file avatar (not required)")] IFormCollection formData,
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -201,8 +151,61 @@ namespace UserOperations.Controllers
             }
         }      
 
+        [HttpPut("User")]
+        [SwaggerOperation(Summary = "Edit user", 
+                Description = "Edit user (any from loggined company) and return edited. Don't send password and role (can't change). Email must been unique. May contain avatar file")]
+        [SwaggerResponse(200, "Edited user", typeof(UserModel))]
+        public async Task<IActionResult> UserPut(
+                 //   [FromBody] ApplicationUser message, 
+                    [FromForm,  SwaggerParameter("Avatar file (not required) + json User with key 'data' in FormData")] IFormCollection formData,
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
+        {
+            try
+            {
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+
+                var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
+                ApplicationUser message = JsonConvert.DeserializeObject<ApplicationUser>(userDataJson);
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                var user = _context.ApplicationUsers.Include(p => p.UserRoles)
+                    .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
+                    .FirstOrDefault();
+                if (user.Email != message.Email && _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
+                    return BadRequest("User email not unique");
+                if (user != null)
+                {
+                    foreach (var p in typeof(ApplicationUser).GetProperties())
+                    {
+                        if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
+                            p.SetValue(user, p.GetValue(message, null), null);
+                    }
+                if(formData.Files.Count != 0)
+                {
+                    await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
+                    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                    var fn = user.Id + fileInfo.Extension;
+                    var memoryStream = formData.Files[0].OpenReadStream();
+                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
+                    user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
+                }
+                    await _context.SaveChangesAsync();
+                    return Ok(new UserModel(user));
+                }
+                else
+                {
+                    return BadRequest("No such user");
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+
         [HttpDelete("User")]
-        [SwaggerOperation(Description = "Delete user by Id if he hasn't any relations in DB or make status Disabled")]
+        [SwaggerOperation(Summary="Delete or make disabled", Description = "Delete user by Id if he hasn't any relations in DB or make status Disabled")]
         public async Task<IActionResult> UserDelete(
                     [FromQuery] Guid applicationUserId, 
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -212,13 +215,14 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var user = _context.ApplicationUsers.Where(p => p.Id == applicationUserId && p.CompanyId == companyId).FirstOrDefault();
+                var user = _context.ApplicationUsers.Include( x =>x.UserRoles ).Where(p => p.Id == applicationUserId && p.CompanyId == companyId).FirstOrDefault();
 
                 if (user != null)
                 {
                     try
                     {
                         await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
+                        _context.RemoveRange(user.UserRoles);
                         _context.Remove(user);
                         await _context.SaveChangesAsync();
                     }
@@ -243,7 +247,8 @@ namespace UserOperations.Controllers
 #region PHRASE
         [HttpGet("PhraseLib")]
         [SwaggerOperation(Summary = "Library", 
-                Description = "Return collections phrases from library (only templates and only with language code = loggined company)")]
+                Description = "Return collections phrases from library (only templates and only with language code = loggined company language code) which company has not yet used")]
+        [SwaggerResponse(200, "Library phrase collection", typeof(List<Phrase>))]
         public IActionResult PhraseGet(
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
@@ -270,7 +275,9 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("PhraseLib")]
-        [SwaggerOperation(Description = "Save new phrase to DB and attach it to loggined company (create new PhraseCompany)")]
+        [SwaggerOperation(Summary = "Create company phrase (not library!)", 
+            Description = "Save new phrase to DB and attach it to loggined company (create new PhraseCompany). Assigned that the phrase is not template")]
+        [SwaggerResponse(200, "New phrase", typeof(Phrase))]
         public async Task<IActionResult> PhrasePost(
                     [FromBody] PhrasePost message, 
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -299,7 +306,7 @@ namespace UserOperations.Controllers
                 phraseCompany.PhraseId = phrase.PhraseId;
                 await _context.PhraseCompanys.AddAsync(phraseCompany);
                 await _context.SaveChangesAsync();
-                return Ok(message);
+                return Ok(phrase);
             }
             catch (Exception e)
             {
@@ -308,7 +315,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("PhraseLib")]
-        [SwaggerOperation(Description = "Edit phrase")]
+        [SwaggerOperation(Summary = "Edit company phrase", Description = "Edit phrase. You can edit only your own phrase (not template from library)")]
         public async Task<IActionResult> PhrasePut(
                     [FromBody] Phrase message, 
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -348,7 +355,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("PhraseLib")]
-        [SwaggerOperation(Description = "Delete phrase (if this phrase is Template they can't be deleted, it only delete connection to company")]
+        [SwaggerOperation(Summary = "Delete company phrases", Description = "Delete phrases (if this phrases are Templates they can't be deleted, it only delete connection to company")]
         public async Task<IActionResult> PhraseDelete(
                     [FromQuery (Name = "phraseId"), SwaggerParameter("array ids to delete: id&id", Required = true)] List<Guid> phraseIds, 
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -378,9 +385,9 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("CompanyPhrase")]
-        [SwaggerOperation(Description = "Return own and template phrase library ids collection for companies sended in params")]
+        [SwaggerOperation(Summary="Return attached to company(-ies) phrases", Description = "Return own and template phrases collection for companies sended in params or for loggined company")]
         public IActionResult CompanyPhraseGet(
-                [FromQuery(Name = "companyId")] List<Guid> companyIds, 
+                [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds, 
                 [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -399,7 +406,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("CompanyPhrase")]
-        [SwaggerOperation(Summary = "Attach phrases to company", Description = "Attach phrases (ids) from lib sended in body to loggined company  (create new PhraseCompany entities)")]
+        [SwaggerOperation(Summary = "Attach library(template) phrases to company", Description = "Attach phrases  from library (ids sended in body) to loggined company  (create new PhraseCompany entities)")]
         public async Task<IActionResult> CompanyPhrasePost(
                 [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds, 
                 [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -617,7 +624,7 @@ namespace UserOperations.Controllers
             StatusId = user.StatusId;
             OneSignalId = user.OneSignalId;
             WorkerTypeId = user.WorkerTypeId;
-            RoleId = user.UserRoles.FirstOrDefault().RoleId.ToString();
+            RoleId = user.UserRoles.FirstOrDefault()?.RoleId.ToString();
         }
     }
 

@@ -153,13 +153,14 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
             
-            var contents = _context.Contents.Where(x => x.CompanyId == companyId).ToList();
-            var result = new List<ContentWithScreenModel>();
-            foreach (var c in contents)
-            {
-                var screenshotLink = await _sftpClient.GetFileUrl(_containerName + "/" + c.ContentId.ToString() + ".png");
-                result.Add(new ContentWithScreenModel(c, screenshotLink));
-            }
+            var contents = _context.Contents.Where(x => x.CompanyId == companyId || x.IsTemplate == true).ToList();
+            var result = contents.Select( x => new ContentWithScreenModel(x, null));
+            // var result = new List<ContentWithScreenModel>();
+            // foreach (var c in contents)
+            // {
+            //     var screenshotLink = await _sftpClient.GetFileUrl(_containerName + "/" + c.ContentId.ToString() + ".png");
+            //     result.Add(new ContentWithScreenModel(c, screenshotLink));
+            // }
             return Ok(result);
         }
 
@@ -176,16 +177,17 @@ namespace UserOperations.Controllers
             content.CompanyId = (Guid)companyId;
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
+            content.IsTemplate = false;
             //   content.StatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;;
             _context.Add(content);
             _context.SaveChanges();
 
-            string base64 = model.Screenshot;
-            Byte[] imgBytes = Convert.FromBase64String(base64);
-            Stream blobStream = new MemoryStream(imgBytes);
-            await _sftpClient.UploadAsMemoryStreamAsync(blobStream, _containerName, content.ContentId.ToString() + ".png");
+            // string base64 = model.Screenshot;
+            // Byte[] imgBytes = Convert.FromBase64String(base64);
+            // Stream blobStream = new MemoryStream(imgBytes);
+            // await _sftpClient.UploadAsMemoryStreamAsync(blobStream, _containerName, content.ContentId.ToString() + ".png");
             model.Content = content;
-            model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
+           // model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
             return Ok(model);
         }
 
@@ -205,18 +207,18 @@ namespace UserOperations.Controllers
                 if (p.GetValue(content, null) != null && p.GetValue(content, null).ToString() != Guid.Empty.ToString())
                     p.SetValue(contentEntity, p.GetValue(content, null), null);
             }
-            _context.SaveChanges();
             contentEntity.UpdateDate = DateTime.UtcNow;
-            if (model.Screenshot != null)
-            {
-                await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
-                string base64 = model.Screenshot;
-                Byte[] imgBytes = Convert.FromBase64String(base64);
-                Stream blobStream = new MemoryStream(imgBytes);
-                await _sftpClient.UploadAsMemoryStreamAsync(blobStream, _containerName, content.ContentId.ToString() + ".png");
-            }
+            _context.SaveChanges();
+            // if (model.Screenshot != null)
+            // {
+            //     await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
+            //     string base64 = model.Screenshot;
+            //     Byte[] imgBytes = Convert.FromBase64String(base64);
+            //     Stream blobStream = new MemoryStream(imgBytes);
+            //     await _sftpClient.UploadAsMemoryStreamAsync(blobStream, _containerName, content.ContentId.ToString() + ".png");
+            // }
             model.Content = contentEntity;
-            model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
+           // model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
             return Ok(model);
         }
 
@@ -224,6 +226,8 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Remove content", Description = "Delete content and remove screenshot from sftp")]
         public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
+            try
+            {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var contentEntity = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
@@ -231,15 +235,20 @@ namespace UserOperations.Controllers
             {
                 if (contentEntity.CampaignContents != null && contentEntity.CampaignContents.Count() != 0)
                 {
-                    _context.RemoveRange(contentEntity.CampaignContents);
+                    _context.RemoveRange( contentEntity.CampaignContents);
                     _context.SaveChanges();
                 }
                 _context.Remove(contentEntity);
                 _context.SaveChanges();
-                await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
+              //  await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
                 return Ok("OK");
             }
-            return BadRequest("No such content");
+                return BadRequest("No such content");
+            }
+            catch ( Exception ex )
+            {
+                return BadRequest("This content can be deleted. It has relations in DB (slide show)");
+            }
         }
         #endregion
     }
