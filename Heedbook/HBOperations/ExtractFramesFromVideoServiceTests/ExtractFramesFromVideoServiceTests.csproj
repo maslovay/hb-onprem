@@ -17,6 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Common\Common.csproj" />
       <ProjectReference Include="..\ExtractFramesFromVideoService\ExtractFramesFromVideoService.csproj" />
     </ItemGroup>
 
@@ -31,7 +32,7 @@
       <Content Include="appsettings.test.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <None Update="Resources\testuser_20190416085256_2.mkv">
+      <None Update="Resources\testuser_20190417100653_2.mkv">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Renci.SshNet.Messages.Transport;
 
 namespace HBLib.Utils
 {
@@ -29,9 +30,10 @@ namespace HBLib.Utils
             if (!_client.IsConnected)
                 await Task.Run(() => _client.Connect()).ContinueWith(t =>
                 {
-                    _client.ChangeDirectory(_sftpSettings.DestinationPath);
+                    ChangeDirectoryToDefault();
                 });
         }
+        
         /// <summary>
         /// Get url to file. 
         /// </summary>
@@ -44,6 +46,7 @@ namespace HBLib.Utils
                 return $"http://{_sftpSettings.Host}/{path}";
             return null;
         }
+        
         /// <summary>
         /// Get url to file. 
         /// </summary>
@@ -54,6 +57,16 @@ namespace HBLib.Utils
             return $"http://{_sftpSettings.Host}/{path}";
         }
 
+        public void ChangeDirectory(String path)
+        {
+            _client.ChangeDirectory(path);
+        }
+
+        public void ChangeDirectoryToDefault()
+        {
+            _client.ChangeDirectory(_sftpSettings.DestinationPath);
+        }
+        
 
         /// <summary>
         /// Get urls to files. 
@@ -78,7 +91,7 @@ namespace HBLib.Utils
                 .Select(f => $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}"));
         }
 
-          /// <summary>
+        /// <summary>
         /// Get urls to files. 
         /// </summary>
         /// <param name="path"></param>
@@ -184,7 +197,7 @@ namespace HBLib.Utils
             var filename = remotePath.Split('/').Last();
 
             Console.WriteLine(localPath == null);
-            localPath = localPath == null ? localPath = _sftpSettings.DownloadPath + filename : localPath + filename;
+            localPath = localPath == null ? localPath = Path.Combine(_sftpSettings.DownloadPath, filename) : Path.Combine(localPath, filename);
             Console.WriteLine($"{localPath}, {remotePath}");
             using (var fs = File.OpenWrite(localPath))
             {
@@ -228,7 +241,7 @@ namespace HBLib.Utils
             return await Task.Run(() => _client.Exists(path));
         }
 
-           /// <summary>
+        /// <summary>
         ///     Check file exists on server and create new if no exist
         /// </summary>
         /// <param name="path">Specified directory + filename</param>
@@ -253,6 +266,38 @@ namespace HBLib.Utils
         }
 
         /// <summary>
+        ///    Deletes files from a server using a pattern
+        /// </summary>
+        /// <param name="path">Specified directory</param>
+        /// <param name="pattern">Filename pattern</param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Task>> DeleteFileIfExistsBulkAsync(string path, string pattern)
+        {
+            var files = await ListDirectoryFiles(path, pattern);
+            return await DeleteFileIfExistsBulkAsync(files);
+        }
+
+        /// <summary>
+        ///    Deletes files from a server
+        /// </summary>
+        /// <param name="files">File paths</param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Task>> DeleteFileIfExistsBulkAsync(IEnumerable<string> files)
+        {
+            await ConnectToSftpAsync();
+            
+            var taskList = new List<Task>(files.Count());
+
+            foreach (var path in files)
+            {
+                if (_client.Exists(path))
+                    taskList.Add(Task.Run(() => _client.DeleteFile(path)));
+            }
+
+            return taskList.ToArray();
+        }
+
+        /// <summary>
         ///     Lists all files in a directory using a pattern
         /// </summary>
         /// <param name="path">dir path in FTP</param>
@@ -274,6 +319,15 @@ namespace HBLib.Utils
             return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();
         }
 
+        /// <summary>
+        /// Disconnects from a FTP server
+        /// </summary>
+        public async Task DisconnectAsync()
+        {
+            if (_client.IsConnected)
+                await Task.Run(() => _client.Disconnect());
+        }
+        
         public class FileInfoModel
         {
             public string url;

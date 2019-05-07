@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using ServiceExtensions;
 
 namespace VideoToSoundService
 {
@@ -14,7 +15,7 @@ namespace VideoToSoundService
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
-                          .UseStartup<Startup>();
+                .UseStartup<Startup>();
         }
     }
 }

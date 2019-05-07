@@ -1,10 +1,13 @@
 ﻿using NUnit.Framework;
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using ExtractFramesFromVideo;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
@@ -13,7 +16,8 @@ using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Notifications.Base;
+using Newtonsoft.Json;
+using RabbitMqEventBus.Events;
 
 namespace ExtractFramesFromVideoService.Tests
 {
@@ -21,18 +25,18 @@ namespace ExtractFramesFromVideoService.Tests
     public class FramesFromVideoIntegrationTests
     {
         private SftpClient _ftpClient;
-        private FramesFromVideo _framesFromVideo;
         private IConfiguration _config;
         private RecordsContext _context;
         private IGenericRepository _repository;
-        private ElasticClient _elasticClient;
-        private FFMpegSettings _settings;
-        private FFMpegWrapper _wrapper;
-        private string appUserId;
         private string videoFileName;
+        private string correctFileName;
         private DateTime minDate;
         private DateTime maxDate;
+        public Guid TestUserId => Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
         private const string _testFilePattern = "testuser*.mkv";
+        private Process _userServiceProcess;
+        private Process _extractServiceProcess;
+        private string _currentUri;
         
         [SetUp]
         public void Setup()
@@ -48,18 +52,12 @@ namespace ExtractFramesFromVideoService.Tests
             var builder = new DbContextOptionsBuilder<RecordsContext>();
             builder.UseNpgsql(_config.GetSection("ConnectionStrings")["DefaultConnection"])
                 .UseInternalServiceProvider(serviceCollection);
+
+            _currentUri = "http://localhost:5000";
             
             _context = new RecordsContext(builder.Options);
-            //_context.Database.Migrate();
-                        
             _repository = new GenericRepository(_context);
-            _elasticClient = new ElasticClient(new ElasticSettings()
-            {
-                Host = _config.GetSection("ElasticSettings")["Host"],
-                Port = int.Parse(_config.GetSection("ElasticSettings")["Port"]),
-                FunctionName = _config.GetSection("ElasticSettings")["FunctionName"]
-            });
-            
+
             _ftpClient = new SftpClient(new SftpSettings()
             {
                 Host = _config.GetSection("SftpSettings")["Host"],
@@ -71,22 +69,6 @@ namespace ExtractFramesFromVideoService.Tests
             });
             
             PrepareDirectories();
-
-            _settings = new FFMpegSettings()
-            {
-                FFMpegPath = _config.GetSection("FFMpegSettings")["FFMpegPath"],
-                LocalVideoPath = _config.GetSection("FFMpegSettings")["LocalVideoPath"]
-            };
-                
-            _wrapper = new FFMpegWrapper(_settings);
-            
-            _framesFromVideo = new FramesFromVideo(_ftpClient, 
-                _repository,
-                new NotificationHandler(), 
-                _elasticClient,
-                _settings,
-                _wrapper);
-            
             CleanDatabaseRecords();
         }
 
@@ -99,10 +81,11 @@ namespace ExtractFramesFromVideoService.Tests
                 throw new Exception("No video for testing!");
 
             videoFileName = Path.GetFileName(resourceVideos.First());
-            
-            await _ftpClient.UploadAsync(Path.Combine(rootDir, "Resources", videoFileName), "videos", videoFileName);
-            appUserId = videoFileName.Split(("_"))[0];
 
+            correctFileName = videoFileName.Replace("testuser", TestUserId.ToString());
+            
+            await _ftpClient.UploadAsync(Path.Combine(rootDir, "Resources", videoFileName), "videos", correctFileName);
+            
             var videoTimestampText = videoFileName.Split(("_"))[1];
             minDate = DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
             maxDate = minDate.AddSeconds(30);
@@ -111,7 +94,7 @@ namespace ExtractFramesFromVideoService.Tests
         private void CleanDatabaseRecords()
         {
             var fileFrames = _repository.Get<FileFrame>()
-                .Where(f => f.FileName.Contains(appUserId) && f.Time >= minDate && f.Time <= maxDate);
+                .Where(f => f.FileName.Contains(TestUserId.ToString()) && f.Time >= minDate && f.Time <= maxDate);
 
             foreach (var ff in fileFrames)
                 _repository.Delete(ff);
@@ -125,17 +108,62 @@ namespace ExtractFramesFromVideoService.Tests
             CleanDatabaseRecords();
         }
 
+        private void RunServices()
+        {
+            var config = "Release";
+            
+            #if DEBUG
+            config = "Debug";
+            #endif
+
+            _userServiceProcess = Process.Start("dotnet", $"../../../../UserService/bin/{config}/netcoreapp2.2/UserService.dll");
+            Thread.Sleep(500);
+                
+            _extractServiceProcess = Process.Start("dotnet", $"../../../../ExtractFramesFromVideoService/bin/{config}/netcoreapp2.2/ExtractFramesFromVideoService.dll");
+            Thread.Sleep(500);
+        }
+
+        private void StopServices()
+        {
+            _extractServiceProcess.Close();
+            _userServiceProcess.Close();
+        }
+
+        private void SendRequest(string body)
+        {
+            using (var wc = new WebClient())
+            {
+                wc.Headers.Add("Content-Type", "application/json");
+                wc.UploadData(_currentUri+"/user/FramesFromVideo", Encoding.UTF8.GetBytes(body.ToLower()));
+            }
+        }
+        
         [Test(Description = "Framing test")]
         public async Task RunTest()
         {
-            var runTask = _framesFromVideo.Run("Videos/"+videoFileName);
-            Task.WaitAll(runTask);
+            RunServices();
+
+            var framesFromVideoRun = new FramesFromVideoRun()
+            {
+                Path = $"videos/{correctFileName}"
+            };
+
+            var json = JsonConvert.SerializeObject(framesFromVideoRun);
+           
+            SendRequest(json);
+            
+            Thread.Sleep(20000);
+            
             Assert.True(_repository.Get<FileFrame>()
-                .Any(f => f.FileName.Contains(appUserId) && f.Time >= minDate && f.Time <= maxDate));
-            var checkTask = _ftpClient.ListDirectoryFiles("frames", "testuser*.jpg");
+                .Any(f => f.FileName.Contains(TestUserId.ToString()) && f.Time >= minDate && f.Time <= maxDate));
+                      
+           _ftpClient.ChangeDirectoryToDefault();
+            var checkTask = _ftpClient.ListDirectoryFiles("frames", TestUserId.ToString());
             Task.WaitAll(checkTask);
             var framesOnServer = checkTask.Result;
             Assert.True(framesOnServer.Count > 0);
+            
+            StopServices();
         }
     }
 }

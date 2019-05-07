@@ -47,6 +47,10 @@ namespace HBData.Repository
 
         void AddOrUpdate<T>(T entity) where T : class;
 
+        void Delete<T>(Expression<Func<T, bool>> expr)
+            where T : class;
+
+
         void Delete<T>(T entity)
             where T : class;
 
