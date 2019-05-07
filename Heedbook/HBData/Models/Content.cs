@@ -11,6 +11,8 @@ namespace HBData.Models
     public class Content
     {
         [Key] public Guid ContentId { get; set; }
+        public int? StatusId { get; set; }
+        //[JsonIgnore] public Status Status { get; set; }
 
         /// <summary>
         ///     html code of the content slide
@@ -31,7 +33,7 @@ namespace HBData.Models
         /// <summary>
         ///     Company of content
         /// </summary>
-        public Guid CompanyId { get; set; }
+        public Guid? CompanyId { get; set; }
 
         [JsonIgnore] public Company Company { get; set; }
 

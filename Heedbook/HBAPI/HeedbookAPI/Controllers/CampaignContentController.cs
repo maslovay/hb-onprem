@@ -174,11 +174,12 @@ namespace UserOperations.Controllers
             var companyId = Guid.Parse(userClaims["companyId"]);
             
             Content content = model.Content;
-            content.CompanyId = (Guid)companyId;
+            if ( !model.Content.IsTemplate ) content.CompanyId = (Guid)companyId; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
-            content.IsTemplate = false;
-            //   content.StatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;;
+            content.StatusId = 3;
+            // TODO: content.IsTemplate = false;
+            // content.StatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;;
             _context.Add(content);
             _context.SaveChanges();
 
@@ -226,29 +227,35 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Remove content", Description = "Delete content and remove screenshot from sftp")]
         public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-            try
-            {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var contentEntity = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
             if (contentEntity != null)
             {
-                if (contentEntity.CampaignContents != null && contentEntity.CampaignContents.Count() != 0)
+                try
                 {
-                    _context.RemoveRange( contentEntity.CampaignContents);
-                    _context.SaveChanges();
+                        if (contentEntity.CampaignContents != null && contentEntity.CampaignContents.Count() != 0)
+                        {
+                            var shownCampContentIds = _context.SlideShowSessions.Select(p => p.CampaignContentId).Distinct().ToList();
+                            var campContententForRemove = contentEntity.CampaignContents
+                                    .Where( x => !shownCampContentIds.Contains((Guid)x.CampaignContentId)).ToList();
+                            _context.RemoveRange(campContententForRemove);
+                            _context.SaveChanges();
+                        }
+                        if (contentEntity.CampaignContents != null && contentEntity.CampaignContents.Count() != 0)
+                            contentEntity.StatusId = 5;
+                        else
+                            _context.Remove(contentEntity);
+                            _context.SaveChanges();
+                    //  await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
+                        return Ok("OK");
                 }
-                _context.Remove(contentEntity);
-                _context.SaveChanges();
-              //  await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
-                return Ok("OK");
+                catch ( Exception ex )
+                {
+                    return BadRequest(ex.Message);
+                }
             }
-                return BadRequest("No such content");
-            }
-            catch ( Exception ex )
-            {
-                return BadRequest("This content can be deleted. It has relations in DB (slide show)");
-            }
+            return BadRequest("No such content");
         }
         #endregion
     }

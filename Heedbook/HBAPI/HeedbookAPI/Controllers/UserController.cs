@@ -171,8 +171,8 @@ namespace UserOperations.Controllers
                 var user = _context.ApplicationUsers.Include(p => p.UserRoles)
                     .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
                     .FirstOrDefault();
-                if (user.Email != message.Email && _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
-                    return BadRequest("User email not unique");
+                // if (user.Email != message.Email && _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
+                //     return BadRequest("User email not unique");
                 if (user != null)
                 {
                     foreach (var p in typeof(ApplicationUser).GetProperties())
