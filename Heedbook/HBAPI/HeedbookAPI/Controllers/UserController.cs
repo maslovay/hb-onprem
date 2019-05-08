@@ -446,18 +446,18 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Return collection of dialogues from dialogue phrases by filters")]
         public IActionResult DialogueGet([FromQuery(Name = "begTime")] string beg,
                                                 [FromQuery(Name = "endTime")] string end,
-                                                [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
-                                                [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
-                                                [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
+                                                [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
+                                                [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                 [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
                 var formatString = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
                 var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
@@ -465,7 +465,7 @@ namespace UserOperations.Controllers
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
 
-                System.Console.WriteLine(companyId);
+                System.Console.WriteLine(companyIds);
                 System.Console.WriteLine(begTime);
                 System.Console.WriteLine(endTime);
 
@@ -479,9 +479,9 @@ namespace UserOperations.Controllers
                 .Where(p => 
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
-                    p.ApplicationUser.CompanyId == companyId &&
                     p.StatusId == 3 && p.InStatistic == true &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
+                    (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
                     (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid) q.PhraseId))) &&
                     (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid) q.PhraseTypeId)))
@@ -511,9 +511,9 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("DialogueInclude")]
-        [SwaggerOperation(Description = "Return collection of dialogues with relative data by filters")]
+        [SwaggerOperation(Description = "Return dialogue with relative data by filters")]
         public IActionResult DialogueGetInclude(
-                    [FromQuery(Name = "dialogueId")] List<Guid> dialogueIds,
+                    [FromQuery(Name = "dialogueId")] Guid dialogueId,
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -521,7 +521,7 @@ namespace UserOperations.Controllers
                 var begTime = DateTime.UtcNow.AddDays(-30);
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var companyId = _context.Dialogues.Where(x=>x.DialogueId == dialogueId).FirstOrDefault().ApplicationUser.CompanyId;
                 var avgDialogueTime = _context.Dialogues.Where(p =>
                     p.BegTime >= begTime &&
                     p.StatusId == 3 && p.InStatistic == true &&
@@ -541,12 +541,10 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueWord)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
-                    .Where(p => p.ApplicationUser.CompanyId == companyId 
-                        && p.InStatistic == true 
+                    .Where(p => p.InStatistic == true 
                         && p.StatusId == 3
-                        && (!dialogueIds.Any() || dialogueIds.Contains(p.DialogueId)))
-                    .FirstOrDefault();   
-                
+                        && p.DialogueId == dialogueId)
+                    .FirstOrDefault();                   
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
 
 

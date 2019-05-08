@@ -216,7 +216,8 @@ namespace UserOperations.Controllers
                         WorkingHoursDaily = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAverageDuration = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAveragePause = _dbOperation.DialogueAveragePause(sessions, p, begTime, endTime),
-                        ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime),
+                    //---TODO -- not working in DB dateEnd less then dateBeg
+                    // ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime),
                         WorkingDaysCount = _dbOperation.WorkingDaysCount(p)
                     }).ToList();
                 result = result.OrderBy(p => p.LoadIndex).ToList();
@@ -398,7 +399,7 @@ namespace UserOperations.Controllers
                     ClientDayInfo = clientDay,
                     EmployeeTimeInfo = employeeTime
                 };
-                return Ok();
+                return Ok(result);
             }
             catch (Exception e)
             {
