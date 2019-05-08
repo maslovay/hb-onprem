@@ -10,7 +10,8 @@ docker build -t hbcontainerregistry.azurecr.io/dialoguestatuscheckerschecduler:l
 docker build -t hbcontainerregistry.azurecr.io/dialoguevideomergeservice:latest -f DialogueVideoMergeService.Dockerfile . &&
 docker build -t hbcontainerregistry.azurecr.io/fillinghintservice:latest -f FillingHintService.Dockerfile . &&
 docker build -t hbcontainerregistry.azurecr.io/fillingsatisfactionservice:latest -f FillingSatisfactionService.Dockerfile . &&
-
+docker build -t hbcontainerregistry.azurecr.io/userservicetests:latest -f UserService.Dockerfile.integration . && 
+                                                               
 docker push hbcontainerregistry.azurecr.io/faceanalyzeservice:latest &&
 docker push hbcontainerregistry.azurecr.io/userservice:latest && 
 docker push hbcontainerregistry.azurecr.io/useroperations:latest && 
@@ -22,4 +23,5 @@ docker push hbcontainerregistry.azurecr.io/dialoguestatuscheckerschecduler:lates
 docker push hbcontainerregistry.azurecr.io/audioanalyzescheduler:latest &&
 docker push hbcontainerregistry.azurecr.io/dialoguevideomergeservice:latest &&
 docker push hbcontainerregistry.azurecr.io/fillinghintservice:latest &&
-docker push hbcontainerregistry.azurecr.io/fillingsatisfactionservice:latest
+docker push hbcontainerregistry.azurecr.io/fillingsatisfactionservice:latest  &&
+docker push hbcontainerregistry.azurecr.io/userservicetests:latest
