@@ -58,9 +58,9 @@ namespace UserOperations.Controllers
         [HttpGet("Progress")]
         public IActionResult RatingProgress([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -143,9 +143,9 @@ namespace UserOperations.Controllers
         [HttpGet("RatingUsers")]
         public IActionResult RatingUsers([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try

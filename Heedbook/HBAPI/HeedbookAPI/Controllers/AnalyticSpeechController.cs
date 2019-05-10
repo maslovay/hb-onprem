@@ -59,9 +59,9 @@ namespace UserOperations.Controllers
         [HttpGet("CrossRating")]
         public IActionResult SpeechCrossRating([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -107,8 +107,7 @@ namespace UserOperations.Controllers
                     }).ToList();
                 result = result.OrderBy(p => p.CrossIndex).ToList();
                 var jsonToReturn = JsonConvert.SerializeObject(result);
-
-                return Ok();
+                return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
@@ -119,11 +118,11 @@ namespace UserOperations.Controllers
         [HttpGet("EmployeeRating")]
         public IActionResult SpeechEmployeeRating([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
-                                                        [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
+                                                        [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -188,11 +187,11 @@ namespace UserOperations.Controllers
         [HttpGet("PhraseTable")]
         public IActionResult SpeechPhraseTable([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
-                                                        [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
+                                                        [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -263,11 +262,11 @@ namespace UserOperations.Controllers
         [HttpGet("PhraseTypeCount")]
         public IActionResult SpeechPhraseTypeCount([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
-                                                        [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
+                                                        [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -372,7 +371,7 @@ namespace UserOperations.Controllers
                 totalInfo.Total = total;
 
 
-                return Ok();
+                return Ok(totalInfo);
             }
             catch (Exception e)
             {
@@ -384,11 +383,11 @@ namespace UserOperations.Controllers
         [HttpGet("WordCloud")]
         public IActionResult SpeechWordCloud([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
-                                                        [FromQuery(Name = "phraseId")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId")] List<Guid> phraseTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
+                                                        [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try

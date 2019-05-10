@@ -76,9 +76,9 @@ namespace UserOperations.Controllers
         [HttpGet("GenderAgeStructure")]
         public IActionResult EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try

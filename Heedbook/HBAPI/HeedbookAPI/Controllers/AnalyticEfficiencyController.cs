@@ -57,9 +57,9 @@ namespace UserOperations.Controllers
         [HttpGet("EfficiencyDashboard")]
         public IActionResult EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -147,9 +147,9 @@ namespace UserOperations.Controllers
         [HttpGet("EfficiencyRating")]
         public IActionResult EfficiencyRating([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -233,9 +233,9 @@ namespace UserOperations.Controllers
         [HttpGet("EfficiencyOptimization")]
         public IActionResult EfficiencyOptimization([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -316,9 +316,9 @@ namespace UserOperations.Controllers
         [HttpGet("EfficiencyLoad")]
         public IActionResult EfficiencyLoad([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "workerTypeId")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
