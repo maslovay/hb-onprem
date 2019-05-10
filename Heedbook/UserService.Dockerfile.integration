@@ -1,0 +1,13 @@
+FROM microsoft/dotnet:2.2-sdk AS test-env
+WORKDIR /app
+COPY . .
+
+RUN for testProj in ./HBOperations/*ServiceTests; do dotnet publish $testProj -c Release -o publish; done
+RUN mkdir /opt; exit 0;
+RUN chmod -R 777 /opt/; exit 0;
+RUN mkdir /opt/download; exit 0;
+RUN chmod -R 777 /opt/download; exit 0;
+
+WORKDIR /app/HBOperations
+RUN dotnet restore; exit 0;
+RUN dotnet test -r ./TestResults
