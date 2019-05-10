@@ -11,7 +11,7 @@ namespace HBData.Models
     public class Content
     {
         [Key] public Guid ContentId { get; set; }
-        public int? StatusId { get; set; }
+        //public int? StatusId { get; set; }
         //[JsonIgnore] public Status Status { get; set; }
 
         /// <summary>

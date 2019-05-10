@@ -177,7 +177,7 @@ namespace UserOperations.Controllers
             if ( !model.Content.IsTemplate ) content.CompanyId = (Guid)companyId; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
-            content.StatusId = 3;
+            //content.StatusId = 3;
             // TODO: content.IsTemplate = false;
             // content.StatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;;
             _context.Add(content);
@@ -243,7 +243,9 @@ namespace UserOperations.Controllers
                             _context.SaveChanges();
                         }
                         if (contentEntity.CampaignContents != null && contentEntity.CampaignContents.Count() != 0)
-                            contentEntity.StatusId = 5;
+                           {
+                                //contentEntity.StatusId = 5;
+                           } 
                         else
                             _context.Remove(contentEntity);
                             _context.SaveChanges();
