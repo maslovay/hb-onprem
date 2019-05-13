@@ -41,7 +41,7 @@ namespace HBLib.Utils
                 output = "";
                 return res;
             }
-            catch (Win32Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception($"{ex.Message} \r\n executable: {path}"); // for tests!
             }
