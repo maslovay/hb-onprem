@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
+using MongoDB.Driver.Core.Authentication.Sspi;
 
 // todo: try-catch-throw
 
@@ -72,11 +73,18 @@ namespace HBLib.Utils
 
         public async Task<String> VideoToWavAsync(String videoFn, String audioFn)
         {
-            videoFn = Path.GetFullPath(videoFn);
-            audioFn = Path.GetFullPath(audioFn);
-            var cmd = new CMDWithOutput();
-            return cmd.runCMD(FfPath,
-                $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
+            try
+            {
+                videoFn = Path.GetFullPath(videoFn);
+                audioFn = Path.GetFullPath(audioFn);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
+            }
         }
 
         public async Task<FileStream> VideoToWavAsync(MemoryStream videoStream)

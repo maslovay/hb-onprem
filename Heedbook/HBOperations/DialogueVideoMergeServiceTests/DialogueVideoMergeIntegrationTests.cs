@@ -11,6 +11,7 @@ using DialogueVideoMergeService;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 using RabbitMqEventBus.Events;
+using UnitTestExtensions;
 
 namespace DialogueVideoMerge.Tests
 {
@@ -28,6 +29,7 @@ namespace DialogueVideoMerge.Tests
             {
                 _startup = new Startup(Config);
                 _startup.ConfigureServices(Services);
+                StartupExtensions.MockRabbitPublisher(Services);
             }, true);
         }
 
