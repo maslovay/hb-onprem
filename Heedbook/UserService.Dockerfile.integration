@@ -8,10 +8,12 @@ RUN chmod -R 777 /opt/; exit 0;
 RUN mkdir /opt/download; exit 0;
 RUN chmod -R 777 /opt/download; exit 0;
 
-WORKDIR /app/HBOperations
-RUN dotnet restore; exit 0;
-RUN dotnet test -r ./TestResults
 
 RUN sudo apt-get install ffmpeg
 RUN sudo apt-get install libopenblas-base 
 
+
+WORKDIR /app/HBOperations
+RUN dotnet restore; exit 0;
+RUN dotnet test -r ./TestResults
+                                           
