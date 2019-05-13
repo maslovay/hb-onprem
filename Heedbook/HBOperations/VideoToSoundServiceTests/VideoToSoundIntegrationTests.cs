@@ -6,6 +6,7 @@ using Common;
 using HBData.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using UnitTestExtensions;
 
 namespace VideoToSoundService.Tests
 {
@@ -25,6 +26,7 @@ namespace VideoToSoundService.Tests
             {
                 _startup = new Startup(Config);
                 _startup.ConfigureServices(Services);
+                StartupExtensions.MockRabbitPublisher(Services);
             }, true);
         }
 

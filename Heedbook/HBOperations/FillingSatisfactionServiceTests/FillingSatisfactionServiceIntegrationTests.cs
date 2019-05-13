@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
+using UnitTestExtensions;
 
 namespace FillingSatisfactionService.Tests
 {
@@ -29,6 +30,7 @@ namespace FillingSatisfactionService.Tests
             {
                 startup = new Startup(Config);
                 startup.ConfigureServices(Services);
+                StartupExtensions.MockRabbitPublisher(Services);
             }, true);
         }
 

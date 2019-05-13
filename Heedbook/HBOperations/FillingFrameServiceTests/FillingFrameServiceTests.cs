@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using NUnit.Framework;
 using RabbitMqEventBus.Events;
 using Renci.SshNet.Messages;
+using UnitTestExtensions;
 
 namespace FillingFrameService.Tests
 {
@@ -32,6 +33,7 @@ namespace FillingFrameService.Tests
             {
                 startup = new Startup(Config);
                 startup.ConfigureServices(Services);
+                StartupExtensions.MockRabbitPublisher(Services);
             }, true);
         }
 
