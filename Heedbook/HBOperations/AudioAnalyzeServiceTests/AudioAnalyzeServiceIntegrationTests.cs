@@ -8,6 +8,7 @@ using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using UnitTestExtensions;
 
 namespace AudioAnalyzeService.Tests
 {
@@ -32,6 +33,7 @@ namespace AudioAnalyzeService.Tests
             {
                 _startup = new Startup(Config);
                 _startup.ConfigureServices(Services);
+                StartupExtensions.MockRabbitPublisher(Services);
             }, true);
         }
 

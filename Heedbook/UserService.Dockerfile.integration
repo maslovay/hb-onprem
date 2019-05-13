@@ -8,9 +8,11 @@ RUN chmod -R 777 /opt/; exit 0;
 RUN mkdir /opt/download; exit 0;
 RUN chmod -R 777 /opt/download; exit 0;
 
-
-RUN sudo apt-get install ffmpeg
-RUN sudo apt-get install libopenblas-base 
+RUN apt-get update
+RUN apt-get install libopenblas-base -y 
+RUN apt-get install ffmpeg -y
+RUN apt-get install libc6-dev -y
+RUN apt-get install libgdiplus -y
 
 
 WORKDIR /app/HBOperations

@@ -7,6 +7,7 @@ using HBData.Models;
 using HBData.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using UnitTestExtensions;
 
 
 namespace FaceAnalyzeService.Tests
@@ -27,6 +28,7 @@ namespace FaceAnalyzeService.Tests
             {
                 _startup = new Startup(Config);
                 _startup.ConfigureServices(Services);
+                StartupExtensions.MockRabbitPublisher(Services);
             }, true);
         }
 
