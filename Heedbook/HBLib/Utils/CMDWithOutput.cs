@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using MongoDB.Driver.Core.Authentication.Sspi;
 
 namespace HBLib.Utils
 {
@@ -17,26 +18,34 @@ namespace HBLib.Utils
 
         public String runCMD(String path, String arguments)
         {
-            using (var proc = new Process())
+            try
             {
-                proc.StartInfo.Arguments = arguments;
-                proc.StartInfo.FileName = path;
-                proc.StartInfo.UseShellExecute = false;
-                proc.StartInfo.RedirectStandardOutput = true;
-                proc.StartInfo.RedirectStandardError = true;
-                proc.StartInfo.CreateNoWindow = true;
-                proc.ErrorDataReceived += OutputHandler;
-                proc.OutputDataReceived += OutputHandler;
-                proc.EnableRaisingEvents = true;
-                proc.Start();
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
-                proc.WaitForExit();
+                using (var proc = new Process())
+                {
+                    proc.StartInfo.Arguments = arguments;
+                    proc.StartInfo.FileName = path;
+                    proc.StartInfo.UseShellExecute = false;
+                    proc.StartInfo.RedirectStandardOutput = true;
+                    proc.StartInfo.RedirectStandardError = true;
+                    proc.StartInfo.CreateNoWindow = true;
+                    proc.ErrorDataReceived += OutputHandler;
+                    proc.OutputDataReceived += OutputHandler;
+                    proc.EnableRaisingEvents = true;
+                    proc.Start();
+                    proc.BeginOutputReadLine();
+                    proc.BeginErrorReadLine();
+                    proc.WaitForExit();
+                }
+
+                var res = String.Copy(output);
+                output = "";
+                return res;
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {path}"); // for tests!
             }
 
-            var res = String.Copy(output);
-            output = "";
-            return res;
         }
     }
 }

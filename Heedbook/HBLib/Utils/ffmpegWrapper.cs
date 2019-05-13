@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
+using MongoDB.Driver.Core.Authentication.Sspi;
 
 // todo: try-catch-throw
 
