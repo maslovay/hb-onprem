@@ -399,6 +399,7 @@ namespace UserOperations.Controllers
                     ClientDayInfo = clientDay,
                     EmployeeTimeInfo = employeeTime
                 };
+                Console.WriteLine("result : \n" + JsonConvert.SerializeObject(result));
                 return Ok(result);
             }
             catch (Exception e)
