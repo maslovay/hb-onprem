@@ -5,7 +5,7 @@ https://disk.yandex.ru/client/disk/Heedbook_IT/HeedbookOnPrem
 
 # Файловое хранилище (FTP сервер)
 ### Подключение(основное хранилище).
-  - Host - 40.87.147.2
+  - Host - <s>40.87.147.2</s> 40.112.78.6
   - User - nkrokhmal
   - Password - kloppolk_2018
 
