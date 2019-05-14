@@ -4,10 +4,15 @@
 https://disk.yandex.ru/client/disk/Heedbook_IT/HeedbookOnPrem
 
 # Файловое хранилище (FTP сервер)
-### Подключение.
+### Подключение(основное хранилище).
   - Host - 40.87.147.2
   - User - nkrokhmal
   - Password - kloppolk_2018
+
+### Подключение(тестовое хранилище).
+  - Host - 13.74.41.199
+  - User - test
+  - Password - test
 
 Если хочется посмотреть на все файлы "вживую", можно скачать FileZilla, установить, после чего выполнить последовательность операций
 1. File ->  Site Manager
