@@ -8,7 +8,8 @@ namespace ServiceExtensions
 {
     public static class ServiceExtensions
     {
-        public static IWebHostBuilder ConfigureBuilderDueToEnvironment(this IWebHostBuilder builder, int portToReassignForTests = 5000)
+        public static IWebHostBuilder ConfigureBuilderDueToEnvironment(this IWebHostBuilder builder, 
+            string[] args = null, int portToReassignForTests = 5000)
         {
             builder.ConfigureAppConfiguration((context, cfg) =>
             {
@@ -32,6 +33,9 @@ namespace ServiceExtensions
                     configBuilder.AddJsonFile($"appsettings.test.json", optional: true, reloadOnChange: true);
                 }
 
+                if (args != null)
+                    configBuilder.AddCommandLine(args);
+                
                 builder.UseConfiguration(configBuilder.Build());
             });
             return builder;
