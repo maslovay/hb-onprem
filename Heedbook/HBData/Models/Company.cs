@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
@@ -14,10 +15,10 @@ namespace HBData.Models
         /// </summary>
         [Key]
         public Guid CompanyId { get; set; }
-
         /// <summary>
         ///     Company name
         /// </summary>
+        
         [Required]
         public String CompanyName { get; set; }
 
@@ -25,8 +26,7 @@ namespace HBData.Models
         ///     Id of company industry
         /// </summary>
         public Guid? CompanyIndustryId { get; set; }
-
-        public CompanyIndustry CompanyIndustry { get; set; }
+        [JsonIgnore] public CompanyIndustry CompanyIndustry { get; set; }
 
         /// <summary>
         ///     Company creation date
@@ -37,23 +37,19 @@ namespace HBData.Models
         ///     Company language id
         /// </summary>
         public Int32? LanguageId { get; set; }
-
-        public Language Language { get; set; }
+        [JsonIgnore] public Language Language { get; set; }
 
         /// <summary>
         ///     Company country id
         /// </summary>
         public Guid? CountryId { get; set; }
-
-        public Country Country { get; set; }
+        [JsonIgnore] public Country Country { get; set; }
 
         /// <summary>
         ///     Company status id
         /// </summary>
         public Int32? StatusId { get; set; }
-
-        public Status Status { get; set; }
-
+        [JsonIgnore] public Status Status { get; set; }
         /// <summary>
         ///     Link to application users
         /// </summary>
@@ -62,13 +58,12 @@ namespace HBData.Models
         /// <summary>
         ///     Link to payments
         /// </summary>
-        public ICollection<Payment> Payment { get; set; }
+        [JsonIgnore] public ICollection<Payment> Payment { get; set; }
 
         /// <summary>
         ///     Company corporation id
         /// </summary>
         public Guid? CorporationId { get; set; }
-
-        public Corporation Corporation { get; set; }
+        [JsonIgnore] public Corporation Corporation { get; set; }
     }
 }
