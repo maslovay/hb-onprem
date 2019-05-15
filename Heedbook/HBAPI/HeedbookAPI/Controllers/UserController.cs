@@ -244,6 +244,33 @@ namespace UserOperations.Controllers
 
 #endregion
 
+#region Corporation
+        [HttpGet("Corporation")]
+        [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for loggined corporation (only for role Supervisor)")]
+        [SwaggerResponse(200, "Companies", typeof(List<Company>))]
+        public async Task<IActionResult> CorporationGet(
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
+        {
+            try
+            {
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+                if(userClaims["role"] != "Supervisor") return null;
+
+                var corporationId = Guid.Parse(userClaims["corporationId"]);
+
+                var companies = _context.Companys
+                    .Where(p => p.CorporationId == corporationId && p.StatusId == 3).ToList();  
+                return Ok(companies);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+   
+#endregion
+
 #region PHRASE
         [HttpGet("PhraseLib")]
         [SwaggerOperation(Summary = "Library", 
@@ -562,7 +589,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("Dialogue")]
-        [SwaggerOperation(Summary = "Change status", Description = "Change status of dialogue")]
+        [SwaggerOperation(Summary = "Change InStatistic", Description = "Change InStatistic(true/false) of dialogue")]
         public IActionResult DialoguePut(
                 [FromBody] DialoguePut message,
                 [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -573,9 +600,9 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var dialogue = _context.Dialogues.FirstOrDefault( p => p.DialogueId == message.DialogueId );
-                dialogue.StatusId = message.StatusId;
+                dialogue.InStatistic = message.InStatistic;
                 _context.SaveChanges();
-                return Ok(message.StatusId);
+                return Ok(message.InStatistic);
             }
             catch (Exception e)
             {
@@ -640,7 +667,7 @@ namespace UserOperations.Controllers
     public class DialoguePut
     {
         public Guid DialogueId;
-        public int StatusId;
+        public bool InStatistic;
     }
 #endregion
 }
