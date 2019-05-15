@@ -73,7 +73,7 @@ namespace UserService
                 });
             });
 
-            if (isCalledFromUnitTest)
+            if (!isCalledFromUnitTest)
                 services.AddRabbitMqEventBus(Configuration);
             else
             {
