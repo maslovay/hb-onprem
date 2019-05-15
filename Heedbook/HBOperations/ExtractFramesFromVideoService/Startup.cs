@@ -1,4 +1,5 @@
-﻿using Configurations;
+﻿using System.Threading;
+using Configurations;
 using ExtractFramesFromVideo.Handler;
 using HBData;
 using HBData.Repository;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Options;
 using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using UnitTestExtensions;
 
 namespace ExtractFramesFromVideo
 {
@@ -47,9 +49,11 @@ namespace ExtractFramesFromVideo
                 var sftpSettings = provider.GetRequiredService<IOptions<SftpSettings>>().Value;
                 return new SftpClient(sftpSettings);
             });
+
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddTransient<FramesFromVideo>();
             services.AddRabbitMqEventBus(Configuration);
+
             services.AddTransient<FramesFromVideoRunHandler>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }

@@ -16,7 +16,7 @@ namespace UserService
         {
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .ConfigureBuilderDueToEnvironment();
+                .ConfigureBuilderDueToEnvironment(args: args);
         }
     }
 }

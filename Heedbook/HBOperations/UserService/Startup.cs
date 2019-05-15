@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Configurations;
 using HBData;
 using HBData.Repository;
@@ -15,16 +16,19 @@ using Microsoft.Extensions.Options;
 using Notifications.Base;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
+using UnitTestExtensions;
 
 namespace UserService
 {
     public class Startup
     {
         private readonly String MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+        private bool isCalledFromUnitTest;
 
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            isCalledFromUnitTest = Configuration["isCalledFromUnitTest"] != null && bool.Parse(Configuration["isCalledFromUnitTest"]);
         }
 
         private IConfiguration Configuration { get; }
@@ -68,7 +72,14 @@ namespace UserService
                     Version = "v1"
                 });
             });
-            services.AddRabbitMqEventBus(Configuration);
+
+            if (isCalledFromUnitTest)
+                services.AddRabbitMqEventBus(Configuration);
+            else
+            {
+                Thread.Sleep(12000);
+                StartupExtensions.MockRabbitPublisher(services);
+            }
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
