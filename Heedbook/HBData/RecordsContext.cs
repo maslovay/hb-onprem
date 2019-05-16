@@ -9,56 +9,17 @@ namespace HBData
     public class RecordsContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid, IdentityUserClaim<Guid>,
         ApplicationUserRole, IdentityUserLogin<Guid>, IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
     {
+        public RecordsContext() : base()
+        {
+        }
+
         public RecordsContext(DbContextOptions<RecordsContext> options) : base(options)
         {
         }
 
-        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
-        public DbSet<ApplicationRole> ApplicationRoles { get; set; }
-        public DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
-        public DbSet<Campaign> Campaigns { get; set; }
-        public DbSet<CampaignContent> CampaignContents { get; set; }
-        public DbSet<CampaignContentAnswer> CampaignContentAnswers {get;set;}
-        public DbSet<SlideShowSession> SlideShowSessions { get; set; }
-        public DbSet<CatalogueHint> CatalogueHints { get; set; }
-        public DbSet<Content> Contents { get; set; }
-        public DbSet<Company> Companys { get; set; }
-        public DbSet<Corporation> Corporations { get; set; }
-        public DbSet<CompanyIndustry> CompanyIndustrys { get; set; }
-        public DbSet<Country> Countrys { get; set; }
-        public DbSet<Dialogue> Dialogues { get; set; }
-        public DbSet<DialogueAudio> DialogueAudios { get; set; }
-        public DbSet<DialogueClientProfile> DialogueClientProfiles { get; set; }
-        public DbSet<DialogueHint> DialogueHints { get; set; }
-        public DbSet<DialogueClientSatisfaction> DialogueClientSatisfactions { get; set; }
-        public DbSet<DialogueFrame> DialogueFrames { get; set; }
-        public DbSet<DialogueInterval> DialogueIntervals { get; set; }
-        public DbSet<DialogueMarkup> DialogueMarkups { get; set; }
-        public DbSet<DialoguePhrase> DialoguePhrases { get; set; }
-        public DbSet<DialoguePhraseCount> DialoguePhraseCounts { get; set; }
-        public DbSet<DialogueSpeech> DialogueSpeechs { get; set; }
-        public DbSet<DialogueVisual> DialogueVisuals { get; set; }
-        public DbSet<DialogueWord> DialogueWords { get; set; }
-        public DbSet<FileAudioDialogue> FileAudioDialogues { get; set; }
-        public DbSet<FileAudioEmployee> FileAudioEmployees { get; set; }
-        public DbSet<FileFrame> FileFrames { get; set; }
-        public DbSet<FileVideo> FileVideos { get; set; }
-        public DbSet<FrameAttribute> FrameAttributes { get; set; }
-        public DbSet<FrameEmotion> FrameEmotions { get; set; }
-        public DbSet<GoogleAccount> GoogleAccounts { get; set; }
-        public DbSet<Language> Languages { get; set; }
-        public DbSet<Payment> Payments { get; set; }
-        public DbSet<Phrase> Phrases { get; set; }
-        public DbSet<PhraseCompany> PhraseCompanys { get; set; }
-        public DbSet<PhraseType> PhraseTypes { get; set; }
-        public DbSet<Session> Sessions { get; set; }
-        public DbSet<Status> Statuss { get; set; }
-        public DbSet<Tariff> Tariffs { get; set; }
-        public DbSet<Transaction> Transactions { get; set; }
-        public DbSet<WorkerType> WorkerTypes { get; set; }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+         //   optionsBuilder.UseNpgsql("User ID=test_user;Password=test_password;Host=13.79.230.20;Port=5432;Database=test_db; Pooling=true");
         }
 
 
@@ -114,5 +75,51 @@ namespace HBData
                 userRole.ToTable("AspNetUserRoles");
             });
         }
+        
+        
+        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+        public DbSet<ApplicationRole> ApplicationRoles { get; set; }
+        public DbSet<ApplicationUserRole> ApplicationUserRoles { get; set; }
+        public DbSet<Campaign> Campaigns { get; set; }
+        public DbSet<CampaignContent> CampaignContents { get; set; }
+        public DbSet<CampaignContentAnswer> CampaignContentAnswers {get;set;}
+        public DbSet<SlideShowSession> SlideShowSessions { get; set; }
+        public DbSet<CatalogueHint> CatalogueHints { get; set; }
+        public DbSet<Content> Contents { get; set; }
+        public DbSet<Company> Companys { get; set; }
+        public DbSet<Corporation> Corporations { get; set; }
+        public DbSet<CompanyIndustry> CompanyIndustrys { get; set; }
+        public DbSet<Country> Countrys { get; set; }
+        public DbSet<Dialogue> Dialogues { get; set; }
+        public DbSet<DialogueAudio> DialogueAudios { get; set; }
+        public DbSet<DialogueClientProfile> DialogueClientProfiles { get; set; }
+        public DbSet<DialogueHint> DialogueHints { get; set; }
+        public DbSet<DialogueClientSatisfaction> DialogueClientSatisfactions { get; set; }
+        public DbSet<DialogueFrame> DialogueFrames { get; set; }
+        public DbSet<DialogueInterval> DialogueIntervals { get; set; }
+        public DbSet<DialogueMarkup> DialogueMarkups { get; set; }
+        public DbSet<DialoguePhrase> DialoguePhrases { get; set; }
+        public DbSet<DialoguePhraseCount> DialoguePhraseCounts { get; set; }
+        public DbSet<DialogueSpeech> DialogueSpeechs { get; set; }
+        public DbSet<DialogueVisual> DialogueVisuals { get; set; }
+        public DbSet<DialogueWord> DialogueWords { get; set; }
+        public DbSet<FileAudioDialogue> FileAudioDialogues { get; set; }
+        public DbSet<FileAudioEmployee> FileAudioEmployees { get; set; }
+        public DbSet<FileFrame> FileFrames { get; set; }
+        public DbSet<FileVideo> FileVideos { get; set; }
+        public DbSet<FrameAttribute> FrameAttributes { get; set; }
+        public DbSet<FrameEmotion> FrameEmotions { get; set; }
+        public DbSet<GoogleAccount> GoogleAccounts { get; set; }
+        public DbSet<Language> Languages { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Phrase> Phrases { get; set; }
+        public DbSet<PhraseCompany> PhraseCompanys { get; set; }
+        public DbSet<PhraseType> PhraseTypes { get; set; }
+        public DbSet<Session> Sessions { get; set; }
+        public DbSet<Status> Statuss { get; set; }
+        public DbSet<Tariff> Tariffs { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<WorkerType> WorkerTypes { get; set; }
+
     }
 }
