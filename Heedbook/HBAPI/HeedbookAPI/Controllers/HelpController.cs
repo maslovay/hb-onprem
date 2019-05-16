@@ -68,74 +68,74 @@ namespace UserOperations.Controllers
             [FromQuery]string companyIndustryName = null, 
             [FromQuery]string corporationName = null, 
             [FromQuery]string languageName = null,
-            [FromQuery]string languageShortName = null
-            )
+            [FromQuery]string languageShortName = null)
         {
             // add country
-            if ( countryName != null )
+            if (countryName != null)
             {
-            var countryId = Guid.NewGuid();
-            var country = new Country{
-                CountryId = countryId,
-                CountryName = countryName,
-            };
-            _context.Countrys.Add(country);
-            _context.SaveChanges();
+                var countryId = Guid.NewGuid();
+                var country = new Country
+                {
+                    CountryId = countryId,
+                    CountryName = countryName,
+                };
+                _context.Countrys.Add(country);
+                _context.SaveChanges();
             }
 
             // add language
             if(languageName != null && languageShortName != null)
             {
-            var language = new Language{
-               // LanguageId = 1,
-                LanguageName = languageName,
-                LanguageLocalName = languageName,
-                LanguageShortName = languageShortName
-            };
-            _context.Languages.Add(language);
-            _context.SaveChanges();
+                var language = new Language{
+                   // LanguageId = 1,
+                    LanguageName = languageName,
+                    LanguageLocalName = languageName,
+                    LanguageShortName = languageShortName
+                };
+                _context.Languages.Add(language);
+                _context.SaveChanges();
             }
 
             // create company industry
             if(companyIndustryName != null )
             {
-            var companyIndustryId = Guid.NewGuid();
-            var companyIndustry = new CompanyIndustry{
-                CompanyIndustryId = companyIndustryId,
-                CompanyIndustryName = companyIndustryName,
-                CrossSalesIndex = 100,
-                LoadIndex = 100,
-                SatisfactionIndex = 100
-            };
-            _context.CompanyIndustrys.Add(companyIndustry);
-            _context.SaveChanges();
+                var companyIndustryId = Guid.NewGuid();
+                var companyIndustry = new CompanyIndustry{
+                    CompanyIndustryId = companyIndustryId,
+                    CompanyIndustryName = companyIndustryName,
+                    CrossSalesIndex = 100,
+                    LoadIndex = 100,
+                    SatisfactionIndex = 100
+                };
+                _context.CompanyIndustrys.Add(companyIndustry);
+                _context.SaveChanges();
             }
 
             // create new corporation
             if(corporationName != null)
             {
-            var corporationId = Guid.NewGuid(); 
-            var corp = new Corporation{
-                Id = corporationId,
-                Name = corporationName 
+                var corporationId = Guid.NewGuid(); 
+                var corp = new Corporation{
+                    Id = corporationId,
+                    Name = corporationName 
             };
             _context.Corporations.Add(corp);
             _context.SaveChanges();
             }
 
-            // add statuss
-            // List<string> statuses = new List<string>(new string[] { "Online", "Offline", "Active", "Disabled", "Inactive", "InProgress", "Finished", "Error", "Pending disabled", "Trial", "AutoActive", "AutoFinished", "AutoError" });
+       //     add statuss
+            List<string> statuses = new List<string>(new string[] { "Online", "Offline", "Active", "Disabled", "Inactive", "InProgress", "Finished", "Error", "Pending disabled", "Trial", "AutoActive", "AutoFinished", "AutoError" });
             
             
-            // for (int i = 1; i < statuses.Count() + 1; i++)
-            // {   
-            //     var status = new Status{
-            //         StatusId = i,
-            //         StatusName = statuses[i]
-            //     };
-            //     _context.Statuss.Add(status);
-            //     _context.SaveChanges();
-            // }
+            for (int i = 1; i < statuses.Count() + 1; i++)
+            {   
+                var status = new Status{
+                    StatusId = i,
+                    StatusName = statuses[i]
+                };
+                _context.Statuss.Add(status);
+                _context.SaveChanges();
+            }
             return "OK";
         }
 

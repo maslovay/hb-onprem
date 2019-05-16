@@ -44,6 +44,8 @@ namespace Common
 
         private string testCompanyName = "TESTCOMPANY_89083091293392183";
 
+        private string testIndustryName = "TESTINDUSTRY";
+
         public async Task Setup( Action additionalInitialization, bool prepareTestData = false )
 
         {
@@ -73,6 +75,22 @@ namespace Common
 
         private void PrepareDatabase()
         {
+            var industry = _repository.Get<CompanyIndustry>().FirstOrDefault(c => c.CompanyIndustryName == testIndustryName);
+
+            if (industry == default(CompanyIndustry))
+            {
+                industry = new CompanyIndustry()
+                {
+                    CompanyIndustryId = Guid.NewGuid(),
+                    CompanyIndustryName = testIndustryName,
+                    SatisfactionIndex = 0,
+                    LoadIndex = 0.5,
+                    CrossSalesIndex = 0.04
+                };
+
+                _repository.AddOrUpdate(industry);
+            }
+
             var company = _repository.Get<Company>().FirstOrDefault(c => c.CompanyName == testCompanyName);
 
             if (company == default(Company))
@@ -81,7 +99,7 @@ namespace Common
                 {
                     CompanyId = Guid.NewGuid(),
                     CompanyName = testCompanyName,
-                    CompanyIndustryId = Guid.NewGuid(),
+                    CompanyIndustryId = industry.CompanyIndustryId,
                     CreationDate = DateTime.Now
                 };
 
