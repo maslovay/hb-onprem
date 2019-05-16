@@ -22,7 +22,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using System.Net.Http;
 using System.Net;
-using FileRef.Models;
 using Newtonsoft.Json;
 using HBData;
 using HBData.Models;
@@ -32,6 +31,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Query.Expressions;
 using Microsoft.Extensions.DependencyInjection;
+using ReferenceController.Models;
 
 namespace ReferenceController
 {
@@ -56,44 +56,49 @@ namespace ReferenceController
         {
             string hash = Methods.MakeExpiryHash(exp);
             if (String.IsNullOrEmpty(token))
-                return BadRequest();
+                return Ok("Token is empty");
             if (token != hash) 
-                return BadRequest();
+                return Ok("Token is not valid");
             if (exp.ToUniversalTime() < DateTime.UtcNow)
-                return BadRequest();
+                return Ok("Time is over");
             if (!await _client.IsFileExistsAsync(path)) 
                 return BadRequest();
             try
             {
-                using (var ms = await _client.DownloadFromFtpAsMemoryStreamAsync(path))
-                {
-                    if (ms.Length == 0)
-                        return BadRequest();
-                    ms.Position = 0;
-                    var fileName = path.Split("/").LastOrDefault();
-                    var contentType = "application/octet-stream";
-                    return File(ms, contentType, fileName);
-                }
+                var ms = await _client.DownloadFromFtpAsMemoryStreamAsync(path);
+                
+                if (ms.Length == 0)
+                    return BadRequest();
+                ms.Position = 0;
+                var fileName = path.Split("/").LastOrDefault();
+                var contentType = "application/octet-stream";
+                return File(ms, contentType, fileName);
+                
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
-                return BadRequest();
+                return BadRequest(ex.ToString());
             }
         }
 
         [HttpGet("GetReference")]
-        public IActionResult GetReference()
+        public IActionResult GetReference([FromQuery(Name = "containerName")] string containerName,
+                                        [FromQuery(Name = "fileName")] string fileName,
+                                        [FromQuery(Name = "exp")] DateTime expirationDate)
         {
-            //https://localhost:5001/FileRef/GetFile?path=/test/2.png&exp=2019-04-26T16:15:02&token=c43b9dfd2ce23fd58cff5dacca50ccad
+            //https://localhost:5001/FileRef/GetFile?path=/home/nkrokhmal/storage/test/2.png&exp=2019-04-26T16:15:02&token=c43b9dfd2ce23fd58cff5dacca50ccad
 
+            if (String.IsNullOrEmpty(containerName))
+                return Ok("containerName is empty");
+            if (String.IsNullOrEmpty(fileName))
+                return Ok("fileName is empty");
+            if (expirationDate == default(DateTime))
+                return Ok("expirationDate is empty");
+                
             List<string> references = new List<string>();
-            DateTime expires = DateTime.Now + TimeSpan.FromMinutes(10);
-            string hash = Methods.MakeExpiryHash(expires);
-
-            string path = "/test/2.png";
-
-            string link = string.Format("https://localhost:5001/FileRef/GetFile?path={0}&exp={1}&token={2}", path, expires.ToString("s"), hash);
+            string hash = Methods.MakeExpiryHash(expirationDate);
+            string link = string.Format($"http://40.87.8.197/FileRef/GetFile?path=/heedbook/storage/{containerName}/{fileName}&exp={expirationDate.ToString("s")}&token={hash}");
             references.Add(link);
             return Ok(JsonConvert.SerializeObject(references));
         }        

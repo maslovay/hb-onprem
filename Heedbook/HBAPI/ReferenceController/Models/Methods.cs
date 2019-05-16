@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 
 
-namespace FileRef.Models
+namespace ReferenceController.Models
 {
     public static class Methods
     {
