@@ -271,7 +271,7 @@ namespace UserOperations.Migrations
                     b.Property<Guid>("ContentId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<Guid>("CompanyId");
+                    b.Property<Guid?>("CompanyId");
 
                     b.Property<DateTime?>("CreationDate");
 
@@ -1287,8 +1287,7 @@ namespace UserOperations.Migrations
                 {
                     b.HasOne("HBData.Models.Company", "Company")
                         .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("CompanyId");
                 });
 
             modelBuilder.Entity("HBData.Models.Dialogue", b =>
@@ -1556,7 +1555,7 @@ namespace UserOperations.Migrations
                         .HasForeignKey("StatusId");
 
                     b.HasOne("HBData.Models.Tariff", "Tariff")
-                        .WithMany()
+                        .WithMany("Transactions")
                         .HasForeignKey("TariffId");
                 });
 

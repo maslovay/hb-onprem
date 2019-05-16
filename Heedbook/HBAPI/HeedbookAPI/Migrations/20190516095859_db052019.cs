@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace UserOperations.Migrations
 {
-    public partial class InitialMigration : Migration
+    public partial class db052019 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -148,7 +148,7 @@ namespace UserOperations.Migrations
                     IsClient = table.Column<bool>(nullable: false),
                     WordsSpace = table.Column<int>(nullable: true),
                     Accurancy = table.Column<double>(nullable: true),
-                    Template = table.Column<bool>(nullable: false)
+                    IsTemplate = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -277,7 +277,7 @@ namespace UserOperations.Migrations
                     RawHTML = table.Column<string>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     Duration = table.Column<int>(nullable: false),
-                    CompanyId = table.Column<Guid>(nullable: false),
+                    CompanyId = table.Column<Guid>(nullable: true),
                     JSONData = table.Column<string>(nullable: true),
                     IsTemplate = table.Column<bool>(nullable: false),
                     CreationDate = table.Column<DateTime>(nullable: true),
@@ -291,7 +291,7 @@ namespace UserOperations.Migrations
                         column: x => x.CompanyId,
                         principalTable: "Companys",
                         principalColumn: "CompanyId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -510,6 +510,26 @@ namespace UserOperations.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CampaignContentAnswers",
+                columns: table => new
+                {
+                    CampaignContentAnswerId = table.Column<Guid>(nullable: false),
+                    Answer = table.Column<string>(nullable: true),
+                    CampaignContentId = table.Column<Guid>(nullable: false),
+                    Time = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CampaignContentAnswers", x => x.CampaignContentAnswerId);
+                    table.ForeignKey(
+                        name: "FK_CampaignContentAnswers_CampaignContents_CampaignContentId",
+                        column: x => x.CampaignContentId,
+                        principalTable: "CampaignContents",
+                        principalColumn: "CampaignContentId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
@@ -592,32 +612,6 @@ namespace UserOperations.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CampaignContentSessions",
-                columns: table => new
-                {
-                    CampaignContentSessionId = table.Column<Guid>(nullable: false),
-                    BegTime = table.Column<DateTime>(nullable: false),
-                    CampaignContentId = table.Column<Guid>(nullable: false),
-                    ApplicationUserId = table.Column<Guid>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CampaignContentSessions", x => x.CampaignContentSessionId);
-                    table.ForeignKey(
-                        name: "FK_CampaignContentSessions_AspNetUsers_ApplicationUserId",
-                        column: x => x.ApplicationUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_CampaignContentSessions_CampaignContents_CampaignContentId",
-                        column: x => x.CampaignContentId,
-                        principalTable: "CampaignContents",
-                        principalColumn: "CampaignContentId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -818,6 +812,34 @@ namespace UserOperations.Migrations
                         column: x => x.StatusId,
                         principalTable: "Statuss",
                         principalColumn: "StatusId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SlideShowSessions",
+                columns: table => new
+                {
+                    SlideShowSessionId = table.Column<Guid>(nullable: false),
+                    BegTime = table.Column<DateTime>(nullable: false),
+                    EndTime = table.Column<DateTime>(nullable: false),
+                    CampaignContentId = table.Column<Guid>(nullable: true),
+                    ContentType = table.Column<string>(nullable: true),
+                    ApplicationUserId = table.Column<Guid>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SlideShowSessions", x => x.SlideShowSessionId);
+                    table.ForeignKey(
+                        name: "FK_SlideShowSessions_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SlideShowSessions_CampaignContents_CampaignContentId",
+                        column: x => x.CampaignContentId,
+                        principalTable: "CampaignContents",
+                        principalColumn: "CampaignContentId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -1116,7 +1138,8 @@ namespace UserOperations.Migrations
                     FileContainer = table.Column<string>(nullable: true),
                     FileExist = table.Column<bool>(nullable: false),
                     StatusId = table.Column<int>(nullable: true),
-                    Duration = table.Column<double>(nullable: true)
+                    Duration = table.Column<double>(nullable: true),
+                    STTResult = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1237,6 +1260,11 @@ namespace UserOperations.Migrations
                 column: "WorkerTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CampaignContentAnswers_CampaignContentId",
+                table: "CampaignContentAnswers",
+                column: "CampaignContentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CampaignContents_CampaignId",
                 table: "CampaignContents",
                 column: "CampaignId");
@@ -1245,16 +1273,6 @@ namespace UserOperations.Migrations
                 name: "IX_CampaignContents_ContentId",
                 table: "CampaignContents",
                 column: "ContentId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CampaignContentSessions_ApplicationUserId",
-                table: "CampaignContentSessions",
-                column: "ApplicationUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CampaignContentSessions_CampaignContentId",
-                table: "CampaignContentSessions",
-                column: "CampaignContentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Campaigns_CompanyId",
@@ -1492,6 +1510,16 @@ namespace UserOperations.Migrations
                 column: "StatusId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SlideShowSessions_ApplicationUserId",
+                table: "SlideShowSessions",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SlideShowSessions_CampaignContentId",
+                table: "SlideShowSessions",
+                column: "CampaignContentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tariffs_CompanyId",
                 table: "Tariffs",
                 column: "CompanyId");
@@ -1535,7 +1563,7 @@ namespace UserOperations.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "CampaignContentSessions");
+                name: "CampaignContentAnswers");
 
             migrationBuilder.DropTable(
                 name: "CatalogueHints");
@@ -1604,13 +1632,13 @@ namespace UserOperations.Migrations
                 name: "Sessions");
 
             migrationBuilder.DropTable(
+                name: "SlideShowSessions");
+
+            migrationBuilder.DropTable(
                 name: "Transactions");
 
             migrationBuilder.DropTable(
                 name: "AspNetRole");
-
-            migrationBuilder.DropTable(
-                name: "CampaignContents");
 
             migrationBuilder.DropTable(
                 name: "Dialogues");
@@ -1622,19 +1650,22 @@ namespace UserOperations.Migrations
                 name: "Phrases");
 
             migrationBuilder.DropTable(
+                name: "CampaignContents");
+
+            migrationBuilder.DropTable(
                 name: "Tariffs");
-
-            migrationBuilder.DropTable(
-                name: "Campaigns");
-
-            migrationBuilder.DropTable(
-                name: "Contents");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "PhraseTypes");
+
+            migrationBuilder.DropTable(
+                name: "Campaigns");
+
+            migrationBuilder.DropTable(
+                name: "Contents");
 
             migrationBuilder.DropTable(
                 name: "WorkerTypes");

@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace UserOperations.Migrations
 {
     [DbContext(typeof(RecordsContext))]
-    [Migration("20190423130429_AddHintLink")]
-    partial class AddHintLink
+    [Migration("20190516095859_db052019")]
+    partial class db052019
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -183,6 +183,24 @@ namespace UserOperations.Migrations
                     b.ToTable("CampaignContents");
                 });
 
+            modelBuilder.Entity("HBData.Models.CampaignContentAnswer", b =>
+                {
+                    b.Property<Guid>("CampaignContentAnswerId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Answer");
+
+                    b.Property<Guid>("CampaignContentId");
+
+                    b.Property<DateTime>("Time");
+
+                    b.HasKey("CampaignContentAnswerId");
+
+                    b.HasIndex("CampaignContentId");
+
+                    b.ToTable("CampaignContentAnswers");
+                });
+
             modelBuilder.Entity("HBData.Models.CatalogueHint", b =>
                 {
                     b.Property<Guid>("CatalogueHintId")
@@ -255,7 +273,7 @@ namespace UserOperations.Migrations
                     b.Property<Guid>("ContentId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<Guid>("CompanyId");
+                    b.Property<Guid?>("CompanyId");
 
                     b.Property<DateTime?>("CreationDate");
 
@@ -1236,6 +1254,14 @@ namespace UserOperations.Migrations
                         .HasForeignKey("ContentId");
                 });
 
+            modelBuilder.Entity("HBData.Models.CampaignContentAnswer", b =>
+                {
+                    b.HasOne("HBData.Models.CampaignContent", "CampaignContent")
+                        .WithMany()
+                        .HasForeignKey("CampaignContentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("HBData.Models.Company", b =>
                 {
                     b.HasOne("HBData.Models.CompanyIndustry", "CompanyIndustry")
@@ -1263,8 +1289,7 @@ namespace UserOperations.Migrations
                 {
                     b.HasOne("HBData.Models.Company", "Company")
                         .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("CompanyId");
                 });
 
             modelBuilder.Entity("HBData.Models.Dialogue", b =>
@@ -1510,7 +1535,7 @@ namespace UserOperations.Migrations
                         .HasForeignKey("ApplicationUserId");
 
                     b.HasOne("HBData.Models.CampaignContent", "CampaignContent")
-                        .WithMany()
+                        .WithMany("SlideShowSession")
                         .HasForeignKey("CampaignContentId");
                 });
 
@@ -1532,7 +1557,7 @@ namespace UserOperations.Migrations
                         .HasForeignKey("StatusId");
 
                     b.HasOne("HBData.Models.Tariff", "Tariff")
-                        .WithMany()
+                        .WithMany("Transactions")
                         .HasForeignKey("TariffId");
                 });
 
