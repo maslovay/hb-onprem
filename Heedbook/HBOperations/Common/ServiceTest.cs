@@ -132,7 +132,23 @@ namespace Common
                 appUser.CompanyId = company.CompanyId;
                 _repository.Update(appUser);
             }
-            
+
+            if (!_repository.Get<Dialogue>().Any())
+            {
+                var dialog = new Dialogue()
+                {
+                    DialogueId = Guid.NewGuid(),
+                    CreationTime = DateTime.Now.AddHours(-1),
+                    BegTime = DateTime.Now.AddHours(-1),
+                    EndTime = DateTime.Now.AddMinutes(-45),
+                    ApplicationUserId = TestUserId,
+                    LanguageId = null,
+                    StatusId = null
+                };
+                
+                _repository.AddOrUpdate(dialog);
+            }
+
             _repository.Save();
         }
 
