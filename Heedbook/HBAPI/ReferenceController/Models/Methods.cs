@@ -22,17 +22,16 @@ namespace ReferenceController.Models
             Console.WriteLine(str1);
             return str1;                                                                                            
         }
-        public static Stream convertMemoryStreamToStream(MemoryStream MS)
+        public static Stream ConvertMemoryStreamToStream(MemoryStream ms)
         {
-            MemoryStream S = new MemoryStream();
-            byte[] buffer = new byte[32 * 1024]; // 32K buffer for example
+            var newStream = new MemoryStream();
+            var buffer = new byte[32 * 1024]; // 32K buffer for example
             int bytesRead;
-            while ((bytesRead = MS.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                S.Write(buffer, 0, bytesRead);
-            }
-            S.Position = 0;
-            return (Stream)S;
+            
+            while ((bytesRead = ms.Read(buffer, 0, buffer.Length)) > 0)
+                newStream.Write(buffer, 0, bytesRead);
+            newStream.Position = 0;
+            return (Stream)newStream;
         }       
     }
 }
