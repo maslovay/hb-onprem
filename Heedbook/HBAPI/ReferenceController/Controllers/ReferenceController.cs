@@ -48,7 +48,7 @@ namespace ReferenceController
             _conf = conf;
             _client = client;
         }
-        //https://localhost:5001/FileRef/GetFile?path=/test/2.png&exp=2019-04-25T18:10:29&token=3bf12646e0941dec6d81c3b35470425e
+        
         [HttpGet("GetFile")]
         public async Task<IActionResult> GetFile([FromQuery(Name = "path")] string path,
                                     [FromQuery(Name = "exp")] DateTime exp,
@@ -85,10 +85,8 @@ namespace ReferenceController
         [HttpGet("GetReference")]
         public IActionResult GetReference([FromQuery(Name = "containerName")] string containerName,
                                         [FromQuery(Name = "fileName")] string fileName,
-                                        [FromQuery(Name = "exp")] DateTime expirationDate)
+                                        [FromQuery(Name = "expirationDate")] DateTime expirationDate)
         {
-            //https://localhost:5001/FileRef/GetFile?path=/home/nkrokhmal/storage/test/2.png&exp=2019-04-26T16:15:02&token=c43b9dfd2ce23fd58cff5dacca50ccad
-
             if (String.IsNullOrEmpty(containerName))
                 return Ok("containerName is empty");
             if (String.IsNullOrEmpty(fileName))
@@ -98,7 +96,9 @@ namespace ReferenceController
                 
             List<string> references = new List<string>();
             string hash = Methods.MakeExpiryHash(expirationDate);
-            string link = string.Format($"http://40.87.8.197/FileRef/GetFile?path=/heedbook/storage/{containerName}/{fileName}&exp={expirationDate.ToString("s")}&token={hash}");
+            
+            string link = string.Format($"http://filereference.northeurope.cloudapp.azure.com/FileRef/GetFile?path=/home/nkrokhmal/storage/{containerName}/{fileName}&expirationDate={expirationDate.ToString("s")}&token={hash}");
+            
             references.Add(link);
             return Ok(JsonConvert.SerializeObject(references));
         }        
