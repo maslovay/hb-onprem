@@ -90,11 +90,11 @@ namespace ReferenceController
             //https://localhost:5001/FileRef/GetFile?path=/home/nkrokhmal/storage/test/2.png&exp=2019-04-26T16:15:02&token=c43b9dfd2ce23fd58cff5dacca50ccad
 
             if (string.IsNullOrEmpty(containerName))
-                return Ok("containerName is empty");
+                return BadRequest("containerName is empty");
             if (string.IsNullOrEmpty(fileName))
-                return Ok("fileName is empty");
+                return BadRequest("fileName is empty");
             if (expirationDate == default(DateTime))
-                return Ok("expirationDate is empty");
+                return BadRequest("expirationDate is empty");
                 
             var references = new List<string>();
             var hash = Methods.MakeExpiryHash(expirationDate);
