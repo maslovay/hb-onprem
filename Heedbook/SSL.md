@@ -43,4 +43,10 @@
   kubectl apply -f clusterissuer.yml
   kubectl apply -f certificates.yaml
   ```
+  
+### 5. Если нет доступа к flannel, то выполнить
+  ```
+  kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
+  sudo chown $(id -u):$(id -g) /run/flannel/subnet.env
+  ```
 
