@@ -31,7 +31,7 @@ namespace ReferenceController.Models
             while ((bytesRead = ms.Read(buffer, 0, buffer.Length)) > 0)
                 newStream.Write(buffer, 0, bytesRead);
             newStream.Position = 0;
-            return (Stream)newStream;
+            return newStream;
         }       
     }
 }
