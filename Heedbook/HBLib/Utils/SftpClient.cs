@@ -334,5 +334,11 @@ namespace HBLib.Utils
             public string name;
             public DateTime date;
         }
+
+        public string DestinationPath =>
+            _sftpSettings.DestinationPath;
+        
+        public string Host =>
+            _sftpSettings.Host;
     }
 }
