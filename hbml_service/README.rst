@@ -19,14 +19,14 @@ Heedbook Onprem FaceApi: Django-сервис вокруг OpenVino моделе�
 
   ::
 
-    docker pull hbcontainerregistry.azurecr.io/hbml_service:v2
+    docker pull containerregistryhb.azurecr.io/hbml_service:v2
 
 2. Запустить контейнер. Чтобы без nginx показывалась статика в документации, нужно передать DEBUG=true
 
 
   ::
 
-    docker run -e DEBUG='true' -p 8000:8000 hbcontainerregistry.azurecr.io/hbml_service:v2
+    docker run -e DEBUG='true' -p 8000:8000 containerregistryhb.azurecr.io/hbml_service:v2
 
 
 Запуск через docker-compose
