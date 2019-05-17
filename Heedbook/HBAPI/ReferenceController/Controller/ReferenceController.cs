@@ -49,7 +49,7 @@ namespace ReferenceController
             _client = client;
             
         }
-        //https://localhost:5001/FileRef/GetFile?path=/test/2.png&exp=2019-04-25T18:10:29&token=3bf12646e0941dec6d81c3b35470425e
+        
         [HttpGet("GetFile")]
         public async Task<IActionResult> GetFile([FromQuery(Name = "path")] string path,
                                     [FromQuery(Name = "exp")] DateTime exp,
@@ -85,21 +85,20 @@ namespace ReferenceController
         [HttpGet("GetReference")]
         public IActionResult GetReference([FromQuery(Name = "containerName")] string containerName,
                                         [FromQuery(Name = "fileName")] string fileName,
-                                        [FromQuery(Name = "exp")] DateTime expirationDate)
+                                        [FromQuery(Name = "expirationDate")] DateTime expirationDate)
         {
-            //https://localhost:5001/FileRef/GetFile?path=/home/nkrokhmal/storage/test/2.png&exp=2019-04-26T16:15:02&token=c43b9dfd2ce23fd58cff5dacca50ccad
-
             if (string.IsNullOrEmpty(containerName))
                 return BadRequest("containerName is empty");
             if (string.IsNullOrEmpty(fileName))
                 return BadRequest("fileName is empty");
             if (expirationDate == default(DateTime))
                 return BadRequest("expirationDate is empty");
-                
+
             var references = new List<string>();
             var hash = Methods.MakeExpiryHash(expirationDate);
             var link = string.Format($"http://{_client.Host}/FileRef/GetFile?path={_client.DestinationPath}/{containerName}/" +
-                                        $"{fileName}&exp={expirationDate:s}&token={hash}");
+                                        $"{fileName}&expirationDate={expirationDate:s}&token={hash}");
+
             references.Add(link);
             return Ok(JsonConvert.SerializeObject(references));
         }        

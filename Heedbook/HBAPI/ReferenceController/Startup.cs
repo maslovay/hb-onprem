@@ -84,13 +84,13 @@ namespace TeacherAPI
            
             app.UseSwagger(c =>
             {
-                c.RouteTemplate = "teacher/swagger/{documentName}/swagger.json";
+                c.RouteTemplate = "Reference/swagger/{documentName}/swagger.json";
             });
 
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/teacher/swagger/v1/swagger.json", "Sample API");
-                c.RoutePrefix = "teacher/swagger";
+                c.SwaggerEndpoint("/Reference/swagger/v1/swagger.json", "Sample API");
+                c.RoutePrefix = "Reference/swagger";
             });
             app.UseHttpsRedirection();
             app.UseMvc();
