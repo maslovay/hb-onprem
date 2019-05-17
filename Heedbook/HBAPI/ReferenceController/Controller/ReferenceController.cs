@@ -56,11 +56,11 @@ namespace ReferenceController
         {
             var hash = Methods.MakeExpiryHash(expirationDate);
             if (string.IsNullOrEmpty(token))
-                return Ok("Token is empty");
+                return BadRequest("Token is empty");
             if (token != hash) 
-                return Ok("Token is not valid");
+                return BadRequest("Token is not valid");
             if (expirationDate.ToUniversalTime() < DateTime.UtcNow)
-                return Ok("Time is over");
+                return BadRequest("Time is over");
             if (!await _client.IsFileExistsAsync(path)) 
                 return BadRequest();
             try

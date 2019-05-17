@@ -94,6 +94,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotMarckedImageScheduler", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReferenceController", "..\HBAPI\ReferenceController\ReferenceController.csproj", "{A48E447A-3F76-42C3-836C-C396BFEDF20B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReferenceControllerTests", "ReferenceControllerTests\ReferenceControllerTests.csproj", "{99BB51FD-9E25-444C-999D-8DE8E639C42A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -224,6 +226,10 @@ Global
 		{A48E447A-3F76-42C3-836C-C396BFEDF20B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A48E447A-3F76-42C3-836C-C396BFEDF20B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A48E447A-3F76-42C3-836C-C396BFEDF20B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99BB51FD-9E25-444C-999D-8DE8E639C42A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99BB51FD-9E25-444C-999D-8DE8E639C42A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99BB51FD-9E25-444C-999D-8DE8E639C42A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99BB51FD-9E25-444C-999D-8DE8E639C42A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -260,6 +266,7 @@ Global
 		{573C2E9B-F6D6-45B4-9FEA-4B5BBC841682} = {A8F9D74E-7957-4D0A-BEEF-8120988D2F9D}
 		{4FFD2961-2708-4576-9CB4-37085AD37A36} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{A48E447A-3F76-42C3-836C-C396BFEDF20B} = {F9312081-26B8-4651-ABC9-A32914105EBA}
+		{99BB51FD-9E25-444C-999D-8DE8E639C42A} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
