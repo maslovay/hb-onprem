@@ -16,7 +16,6 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Configuration;
-
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -52,15 +51,15 @@ namespace ReferenceController
         
         [HttpGet("GetFile")]
         public async Task<IActionResult> GetFile([FromQuery(Name = "path")] string path,
-                                    [FromQuery(Name = "exp")] DateTime exp,
+                                    [FromQuery(Name = "expirationDate")] DateTime expirationDate,
                                     [FromQuery(Name = "token")] string token)
         {
-            var hash = Methods.MakeExpiryHash(exp);
+            var hash = Methods.MakeExpiryHash(expirationDate);
             if (string.IsNullOrEmpty(token))
                 return Ok("Token is empty");
             if (token != hash) 
                 return Ok("Token is not valid");
-            if (exp.ToUniversalTime() < DateTime.UtcNow)
+            if (expirationDate.ToUniversalTime() < DateTime.UtcNow)
                 return Ok("Time is over");
             if (!await _client.IsFileExistsAsync(path)) 
                 return BadRequest();
@@ -92,7 +91,8 @@ namespace ReferenceController
             if (string.IsNullOrEmpty(fileName))
                 return BadRequest("fileName is empty");
             if (expirationDate == default(DateTime))
-                return BadRequest("expirationDate is empty");
+                expirationDate = DateTime.Now.AddDays(2);
+            
 
             var references = new List<string>();
             var hash = Methods.MakeExpiryHash(expirationDate);
