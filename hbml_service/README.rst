@@ -49,7 +49,7 @@ Heedbook Onprem FaceApi: Django-сервис вокруг OpenVino моделе�
 
   ::
 
-    docker pull hbcontainerregistry.azurecr.io/hbml_service:v2
+    docker pull containerregistryhb.azurecr.io/hbml_service:v2
 
 
 
