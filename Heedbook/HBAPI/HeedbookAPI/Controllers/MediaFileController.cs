@@ -119,8 +119,6 @@ namespace UserOperations.Controllers
                         result.Add( _fileRefService.GetFileUrl(f, _containerName+"/"+companyId, DateTime.UtcNow));
                     }
                     return Ok(result);
-                  //  var result = await _sftpClient.GetAllFilesUrl(containerName, new []{ companyId.ToString()});
-                  //  return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
                 }
             }
             catch (Exception e)
