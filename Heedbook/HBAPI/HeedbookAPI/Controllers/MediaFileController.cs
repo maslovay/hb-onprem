@@ -52,6 +52,7 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient
+        
             )
         {
             _config = config;
@@ -75,13 +76,28 @@ namespace UserOperations.Controllers
                 containerName = containerName ?? _containerName;
                 if (fileName != null)
                 {
+                       var data = new 
+                        {
+                        // expirationDate = null,
+                            containerName = _containerName+"/test",
+                            //"+companyId,
+                            fileName
+                        };
+                    return RedirectToAction("GetReference", "FileRef", data);
                     var result = new { path = await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fileName})"), ext = Path.GetExtension(fileName)};
                     return Ok(result);
                 }
                 else
                 {
-                    var result = await _sftpClient.GetAllFilesUrl(containerName, new []{ companyId.ToString()});
-                    return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
+                      var data = new 
+                        {
+                        // expirationDate = null,
+                            containerName = _containerName+"/"+companyId,
+                            fileName
+                        };
+                    return RedirectToAction("GetReference", "FileRef", data);
+                   // var result = await _sftpClient.GetAllFilesUrl(containerName, new []{ companyId.ToString()});
+                   // return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
                 }
             }
             catch (Exception e)

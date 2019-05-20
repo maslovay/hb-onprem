@@ -245,23 +245,49 @@ namespace UserOperations.Controllers
 #endregion
 
 #region Corporation
-        [HttpGet("Corporation")]
+        [HttpGet("Companies")]
         [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for loggined corporation (only for role Supervisor)")]
         [SwaggerResponse(200, "Companies", typeof(List<Company>))]
-        public async Task<IActionResult> CorporationGet(
+        public async Task<IActionResult> CompaniesGet(
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                if(userClaims["role"] != "Supervisor") return null;
+                if(userClaims["role"] == "Supervisor") // only for own corporation
+                {
+                    var corporationId = Guid.Parse(userClaims["corporationId"]);
+                    var companies = _context.Companys
+                        .Where(p => p.CorporationId == corporationId && p.StatusId == 3).ToList();  
+                    return Ok(companies);
+                }
+                if(userClaims["role"] == "Superuser") // very cool!
+                {
+                    var companies = _context.Companys.Where(p => p.StatusId == 3).ToList();  
+                    return Ok(companies);
+                }
+                return BadRequest("Not allowed access(role)");
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
 
-                var corporationId = Guid.Parse(userClaims["corporationId"]);
-
-                var companies = _context.Companys
-                    .Where(p => p.CorporationId == corporationId && p.StatusId == 3).ToList();  
-                return Ok(companies);
+        [HttpGet("Corporations")]
+        [SwaggerOperation(Summary = "All corporations", Description = "Return all corporations for loggined superuser (only for role Superuser)")]
+        [SwaggerResponse(200, "Corporations", typeof(List<Company>))]
+        public async Task<IActionResult> CorporationsGet(
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
+        {
+            try
+            {
+               if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                   return BadRequest("Token wrong");
+               if(userClaims["role"] != "Superuser") return BadRequest("Not allowed access(role)");;
+                var corporations = _context.Corporations.ToList();  
+                return Ok(corporations);
             }
             catch (Exception e)
             {
@@ -620,7 +646,7 @@ namespace UserOperations.Controllers
         public string EmployeeId;
     //    public string RoleId;
         public string Password;
-        public Guid WorkerTypeId;
+        public Guid? WorkerTypeId;
 
     }
 

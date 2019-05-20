@@ -29,6 +29,7 @@ using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using UserOperations.Utils;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -74,10 +75,13 @@ namespace UserOperations.Controllers
         
 
         [HttpGet("GenderAgeStructure")]
+        [SwaggerOperation(Summary = "Return data on dashboard", Description = "For superuser ignore companyId filter")]
+        [SwaggerResponse(200, "GenderAgeStructureResult", typeof(List<GenderAgeStructureResult>))]
         public IActionResult EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
@@ -85,7 +89,26 @@ namespace UserOperations.Controllers
             {
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+                var role = userClaims["role"];
+                var companyId = Guid.Parse(userClaims["companyId"]);               
+                if(!companyIds.Any())
+                {
+                    if ( role == "Supervisor" )
+                    {
+                      //  var corporation = _context.Companys.Where(x=>x.CompanyId == companyId).FirstOrDefault().Corporation;
+                      //  companyIds = corporation.Companies.Select(x=>x.CompanyId).ToList();
+                    }
+                    else if ( role == "Superuser" )
+                    {                    
+                       // var corporations = !corporationIds.Any()? _context.Corporations.ToList() :_context.Corporations.Where(x => corporationIds.Contains( x.Id )).ToList();
+                         //   companyIds =  corporations.Select( p => p.Companies).SelectMany(x=>x.CompanyId).ToList();
+                    }
+                    else 
+                    {
+                        companyIds = new List<Guid> { companyId };
+                    }
+                }
+
 
                 var stringFormat = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
