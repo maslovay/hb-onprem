@@ -42,9 +42,9 @@ namespace FaceAnalyzeService
                     var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath);
                     _log.Info($"Download to path - {localPath}");
 
+                    var fileStream = File.OpenRead(localPath);
                     var ms = new MemoryStream();
-                    var file = new FileStream(localPath, FileMode.Create, System.IO.FileAccess.Write);
-                    file.CopyTo(ms);
+                    fileStream.CopyTo(ms);
                     _log.Info($"File size in bytes -- {ms.ToArray().Count()}");
 
                     FaceDetection.IsFaceDetected(localPath, out var faceLength1);
