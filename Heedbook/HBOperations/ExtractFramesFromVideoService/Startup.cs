@@ -21,9 +21,12 @@ namespace ExtractFramesFromVideo
 {
     public class Startup
     {
+        private bool isCalledFromUnitTest;
+        
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            isCalledFromUnitTest = Configuration["isCalledFromUnitTest"] != null && bool.Parse(Configuration["isCalledFromUnitTest"]);
         }
 
         public IConfiguration Configuration { get; }
@@ -52,7 +55,15 @@ namespace ExtractFramesFromVideo
 
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddTransient<FramesFromVideo>();
-            services.AddRabbitMqEventBus(Configuration);
+            
+            if (!isCalledFromUnitTest)
+                services.AddRabbitMqEventBus(Configuration);
+            else
+            {
+                StartupExtensions.MockRabbitPublisher(services);
+                StartupExtensions.MockNotificationService(services);
+                StartupExtensions.MockNotificationHandler(services);
+            }
 
             services.AddTransient<FramesFromVideoRunHandler>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);

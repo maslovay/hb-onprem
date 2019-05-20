@@ -119,8 +119,8 @@ namespace ExtractFramesFromVideoService.Tests
             _userServiceProcess = Process.Start("dotnet", $"../../../../UserService/bin/{config}/netcoreapp2.2/UserService.dll --isCalledFromUnitTest true");
             Thread.Sleep(500);
                 
-            _extractServiceProcess = Process.Start("dotnet", $"../../../../ExtractFramesFromVideoService/bin/{config}/netcoreapp2.2/ExtractFramesFromVideoService.dll");
-            Thread.Sleep(500);
+           _extractServiceProcess = Process.Start("dotnet", $"../../../../ExtractFramesFromVideoService/bin/{config}/netcoreapp2.2/ExtractFramesFromVideoService.dll");
+           Thread.Sleep(500);
         }
 
         private void StopServices()

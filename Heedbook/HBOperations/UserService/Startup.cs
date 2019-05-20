@@ -41,18 +41,17 @@ namespace UserService
                 options.AddPolicy(MyAllowSpecificOrigins,
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:3000",
-                            "https://hbreactapp.azurewebsites.net");
+                        builder.WithOrigins("http://localhost:3000", "https://hbreactapp.azurewebsites.net");
                     });
             });
             services.AddOptions();
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
-            
-            #if DEBUG
+
+#if DEBUG
             services.AddLogging(loggingBuilder => loggingBuilder.AddConsole());
             services.AddLogging(loggingBuilder => loggingBuilder.AddDebug());
             services.AddLogging(loggingBuilder => loggingBuilder.AddEventSourceLogger());
-            #endif
+#endif
             
             services.AddDbContext<RecordsContext>
             (options =>
@@ -77,8 +76,9 @@ namespace UserService
                 services.AddRabbitMqEventBus(Configuration);
             else
             {
-                Thread.Sleep(12000);
                 StartupExtensions.MockRabbitPublisher(services);
+                StartupExtensions.MockNotificationService(services);
+                StartupExtensions.MockNotificationHandler(services);
             }
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
