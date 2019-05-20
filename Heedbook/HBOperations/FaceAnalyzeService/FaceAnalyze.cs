@@ -36,9 +36,21 @@ namespace FaceAnalyzeService
             try
             {
                 _log.Info("Function face analyze started");
+                _log.Info($"{remotePath}");
                 if (await _sftpClient.IsFileExistsAsync(remotePath))
                 {
                     var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath);
+                    _log.Info($"Download to path - {localPath}");
+
+                    var ms = new MemoryStream();
+                    var file = new FileStream(localPath, FileMode.Create, System.IO.FileAccess.Write);
+                    file.CopyTo(ms);
+                    _log.Info($"File size in bytes -- {ms.ToArray().Count()}");
+
+                    FaceDetection.IsFaceDetected(localPath, out var faceLength1);
+                    _log.Info($"Is face detected method1 -- {faceLength1}");
+                    FaceDetection.IsFaceDetected(ms.ToArray(), out var faceLength2);
+                    _log.Info($"Is face detected method2 -- {faceLength2}");
 
                     if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
                     {
@@ -88,10 +100,15 @@ namespace FaceAnalyzeService
                             await _repository.SaveAsync();
                         }
                     }
+                    else
+                    {
+                        _log.Info("No face detected!");
+                    }
+                    File.Delete(remotePath);
                 }
                 else
                 {
-                    _log.Info("No face detected!");
+                    _log.Info($"No such file {remotePath}");
                 }
                 _log.Info("Function face analyze finished");
 
