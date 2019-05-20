@@ -16,7 +16,7 @@ namespace ExtractFramesFromVideo
         {
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .ConfigureBuilderDueToEnvironment(portToReassignForTests: 5060);
+                .ConfigureBuilderDueToEnvironment();
         }
     }
 }
