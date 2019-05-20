@@ -11,12 +11,12 @@ using System.Text;
 public class FileReference
 {
     private static IConfiguration _config;
-    private readonly SftpClient _client;
+    //private readonly SftpClient _client;
     private readonly SftpSettings _sftpSettings;
 
     public FileReference(SftpSettings sftpSettings)
     {
-        _client = new SftpClient(sftpSettings);
+        //_client = new SftpClient(sftpSettings);
         _sftpSettings = sftpSettings;
     }    
 
@@ -55,7 +55,7 @@ public class FileReference
             expirationDate = DateTime.Now.AddDays(2);
         
         var hash = MakeExpiryHash(expirationDate);
-        var reference = string.Format($"http://{_client.Host}/FileRef/GetFile?path={_client.DestinationPath}/{containerName}/" +
+        var reference = string.Format($"http://{_sftpSettings.Host}/FileRef/GetFile?path={_sftpSettings.DestinationPath}/{containerName}/" +
                                     $"{fileName}&expirationDate={expirationDate:s}&token={hash}");
         
         return reference;

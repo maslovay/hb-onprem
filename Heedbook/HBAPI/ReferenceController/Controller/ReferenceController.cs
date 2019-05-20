@@ -80,5 +80,25 @@ namespace ReferenceController
                 return BadRequest(ex.ToString());
             }
         }
+        [HttpGet("GetNewReference")]
+        public IActionResult GetNewReference([FromQuery(Name = "containerName")] string containerName,
+                                        [FromQuery(Name = "fileName")] string fileName,
+                                        [FromQuery(Name = "expirationDate")] DateTime expirationDate)
+        {           
+
+            FileReference fileref = new FileReference(new SftpSettings()
+            {
+                Host = _conf.GetSection("SftpSettings")["Host"],
+                Port = int.Parse(_conf.GetSection("SftpSettings")["Port"]),
+                UserName = _conf.GetSection("SftpSettings")["UserName"],
+                Password = _conf.GetSection("SftpSettings")["Password"],
+                DestinationPath = _conf.GetSection("SftpSettings")["DestinationPath"],
+                DownloadPath = _conf.GetSection("SftpSettings")["DownloadPath"]
+            });
+
+            var link = fileref.GetReference(containerName, fileName, expirationDate);
+                        
+            return Ok(JsonConvert.SerializeObject(link));
+        }
     }
 }
