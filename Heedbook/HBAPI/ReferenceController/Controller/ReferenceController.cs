@@ -80,27 +80,25 @@ namespace ReferenceController
                 return BadRequest(ex.ToString());
             }
         }
-
-        [HttpGet("GetReference")]
-        public IActionResult GetReference([FromQuery(Name = "containerName")] string containerName,
+        [HttpGet("GetNewReference")]
+        public IActionResult GetNewReference([FromQuery(Name = "containerName")] string containerName,
                                         [FromQuery(Name = "fileName")] string fileName,
                                         [FromQuery(Name = "expirationDate")] DateTime expirationDate)
-        {
-            if (string.IsNullOrEmpty(containerName))
-                return BadRequest("containerName is empty");
-            if (string.IsNullOrEmpty(fileName))
-                return BadRequest("fileName is empty");
-            if (expirationDate == default(DateTime))
-                expirationDate = DateTime.Now.AddDays(2);
-            
+        {           
 
-            var references = new List<string>();
-            var hash = Methods.MakeExpiryHash(expirationDate);
-            var link = string.Format($"http://{_client.Host}/FileRef/GetFile?path={_client.DestinationPath}/{containerName}/" +
-                                        $"{fileName}&expirationDate={expirationDate:s}&token={hash}");
+            FileReference fileref = new FileReference(new SftpSettings()
+            {
+                Host = _conf.GetSection("SftpSettings")["Host"],
+                Port = int.Parse(_conf.GetSection("SftpSettings")["Port"]),
+                UserName = _conf.GetSection("SftpSettings")["UserName"],
+                Password = _conf.GetSection("SftpSettings")["Password"],
+                DestinationPath = _conf.GetSection("SftpSettings")["DestinationPath"],
+                DownloadPath = _conf.GetSection("SftpSettings")["DownloadPath"]
+            });
 
-            references.Add(link);
-            return Ok(JsonConvert.SerializeObject(references));
-        }        
+            var link = fileref.GetReference(containerName, fileName, expirationDate);
+                        
+            return Ok(JsonConvert.SerializeObject(link));
+        }
     }
 }

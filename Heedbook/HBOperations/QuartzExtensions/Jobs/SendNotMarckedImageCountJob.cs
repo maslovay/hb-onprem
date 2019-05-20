@@ -68,6 +68,13 @@ namespace QuartzExtensions.Jobs
                                  .ToList();
             return frames;
         }
+        public List<> OnlineUsers()
+        {
+            var onlineUsers = _context.ApplicationUsers
+                .Include(p => p.CompanyId)
+                .Where(c => c.CompanyId == 1 && c.Key.Status == 6)
+                .ToList();
+        }
     }
 
     public class CompanyFrameInformation
