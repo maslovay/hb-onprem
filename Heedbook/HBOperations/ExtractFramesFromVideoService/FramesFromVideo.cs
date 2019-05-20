@@ -90,7 +90,7 @@ namespace ExtractFramesFromVideo
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                throw;
+                //throw;
             }
         }
 
@@ -98,7 +98,7 @@ namespace ExtractFramesFromVideo
         {
             var message = new FaceAnalyzeRun
             {
-                Path = $"{FrameContainerName}{Path.PathSeparator}{filename}"
+                Path = $"{FrameContainerName}/{filename}"
             };
 
             _handler.EventRaised(message);
