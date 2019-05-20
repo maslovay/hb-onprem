@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
@@ -18,5 +20,6 @@ namespace HBData.Models
         ///     Corporation name
         /// </summary>
         public String Name { get; set; }
+        [JsonIgnore] public ICollection<Company> Companies { get; set; }
     }
 }

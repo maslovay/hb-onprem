@@ -44,6 +44,7 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
+        private readonly IFileRefService _fileRefService;
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
 
@@ -51,8 +52,8 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient
-        
+            SftpClient sftpClient,
+            IFileRefService fileRefService        
             )
         {
             _config = config;
@@ -60,6 +61,7 @@ namespace UserOperations.Controllers
             _context = context;
             _sftpClient = sftpClient;
             _containerName = "media";
+            _fileRefService = fileRefService;
         }
         #region File
         [HttpGet("File")]
@@ -76,28 +78,49 @@ namespace UserOperations.Controllers
                 containerName = containerName ?? _containerName;
                 if (fileName != null)
                 {
-                       var data = new 
-                        {
-                        // expirationDate = null,
-                            containerName = _containerName+"/test",
-                            //"+companyId,
-                            fileName
-                        };
-                    return RedirectToAction("GetReference", "FileRef", data);
                     var result = new { path = await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fileName})"), ext = Path.GetExtension(fileName)};
                     return Ok(result);
                 }
                 else
                 {
-                      var data = new 
-                        {
-                        // expirationDate = null,
-                            containerName = _containerName+"/"+companyId,
-                            fileName
-                        };
-                    return RedirectToAction("GetReference", "FileRef", data);
-                   // var result = await _sftpClient.GetAllFilesUrl(containerName, new []{ companyId.ToString()});
-                   // return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
+                   var result = await _sftpClient.GetAllFilesUrl(containerName, new []{ companyId.ToString()});
+                   return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
+                }
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpGet("FileEncrypt")]
+        [SwaggerOperation(Description = "Return all files from sftp. If no parameters are passed return files from 'media', for loggined company")]
+        public async Task<IActionResult> FileEncryptGet([FromHeader]string Authorization,
+                                                        [FromQuery]string containerName = null, 
+                                                        [FromQuery]string fileName = null)
+        {
+            try
+            {
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                        return BadRequest("Token wrong");
+                var companyId = userClaims["companyId"];
+                containerName = containerName ?? _containerName;
+                if (fileName != null)
+                {
+                    var result = _fileRefService.GetFileUrl(fileName, _containerName+"/"+companyId, DateTime.UtcNow);
+                    return Ok(result);
+                }
+                else
+                {
+                    var files = await _sftpClient.GetFileNames(_containerName+"/"+companyId);  
+                    List<string> result = new List<string>();        
+                    foreach(var f in files)         
+                    {
+                        result.Add( _fileRefService.GetFileUrl(f, _containerName+"/"+companyId, DateTime.UtcNow));
+                    }
+                    return Ok(result);
+                  //  var result = await _sftpClient.GetAllFilesUrl(containerName, new []{ companyId.ToString()});
+                  //  return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
                 }
             }
             catch (Exception e)
