@@ -67,7 +67,6 @@ namespace UserOperations
             .AddEntityFrameworkStores<RecordsContext>();
             
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
-            services.AddScoped(typeof(IFileRefService), typeof(FileRefService));
 
             services.AddSwaggerGen(c =>
             {

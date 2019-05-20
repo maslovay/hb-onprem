@@ -12,19 +12,30 @@ namespace HBLib.Utils
     {
         private readonly Renci.SshNet.SftpClient _client;
         private readonly SftpSettings _sftpSettings;
+        private readonly FileReference fileref;
 
         public SftpClient(SftpSettings sftpSettings)
         {
             _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
                 sftpSettings.Password);
             _sftpSettings = sftpSettings;
+
+            fileref = new FileReference(new SftpSettings()
+            {
+                Host = _sftpSettings.Host,
+                Port = _sftpSettings.Port,
+                UserName = _sftpSettings.UserName,
+                Password = _sftpSettings.Password,
+                DestinationPath = _sftpSettings.DestinationPath,
+                DownloadPath = _sftpSettings.DownloadPath
+            });         
         }
 
         public void Dispose()
         {
             _client.Dispose();
         }
-
+#region SFTP DIRECT
         private async Task ConnectToSftpAsync()
         {
             if (!_client.IsConnected)
@@ -333,6 +344,15 @@ namespace HBLib.Utils
                 await Task.Run(() => _client.Disconnect());
         }
         
+#endregion
+   public string GetFileLink(string directory, string file, DateTime exp = default(DateTime))
+        {
+           return fileref.GetReference(directory, file, exp);
+        }
+#region SECURE SFTP CONNECTION
+
+#endregion
+#region MODELS
         public class FileInfoModel
         {
             public string url;
@@ -346,4 +366,5 @@ namespace HBLib.Utils
         public string Host =>
             _sftpSettings.Host;
     }
+#endregion
 }

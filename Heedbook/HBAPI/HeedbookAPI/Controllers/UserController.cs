@@ -78,7 +78,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var users = _context.ApplicationUsers.Include(p => p.UserRoles)
                     .Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();             
-                var result = users.Select(p => new UserModel(p));
+                var result = users.Select(p => new UserModel(p, p.Avatar!= null? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)): null));
                 return Ok(result);
             }
             catch (Exception e)
@@ -123,6 +123,7 @@ namespace UserOperations.Controllers
                     WorkerTypeId = message.WorkerTypeId
                 };
                 await _context.AddAsync(user);
+                string avatarUrl = null;
                     //---save avatar---
                 if(formData.Files.Count != 0)
                 {
@@ -130,7 +131,8 @@ namespace UserOperations.Controllers
                     var fn = user.Id + fileInfo.Extension;
                     var memoryStream = formData.Files[0].OpenReadStream();
                     await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
-                    user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
+                    user.Avatar = fn;
+                    avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime));
                 }
                 //string msg = GenerateEmailMsg(password, user);
                 //_loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
@@ -142,8 +144,8 @@ namespace UserOperations.Controllers
                 };
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
-            
-                return Ok(new UserModel(user));
+                
+                return Ok(new UserModel(user, avatarUrl));
             }
             catch (Exception e)
             {
@@ -180,6 +182,7 @@ namespace UserOperations.Controllers
                         if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
                             p.SetValue(user, p.GetValue(message, null), null);
                     }
+                string avatarUrl = null;
                 if(formData.Files.Count != 0)
                 {
                     await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
@@ -187,10 +190,11 @@ namespace UserOperations.Controllers
                     var fn = user.Id + fileInfo.Extension;
                     var memoryStream = formData.Files[0].OpenReadStream();
                     await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
-                    user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
+                    user.Avatar = fn;
+                    avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime));
                 }
                     await _context.SaveChangesAsync();
-                    return Ok(new UserModel(user));
+                    return Ok(new UserModel(user, avatarUrl));
                 }
                 else
                 {
@@ -668,7 +672,7 @@ namespace UserOperations.Controllers
             Id = user.Id;
             FullName = user.FullName;
             Email = user.Email;
-            Avatar = avatar != null ? user.Avatar : String.Empty;
+            Avatar = avatar;
             EmployeeId = user.EmpoyeeId;
             CreationDate = user.CreationDate.ToLongDateString();
             CompanyId = user.CompanyId.ToString();
