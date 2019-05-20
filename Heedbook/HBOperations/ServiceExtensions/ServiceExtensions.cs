@@ -27,6 +27,11 @@ namespace ServiceExtensions
                 if (env.IsDevelopment())
                     configBuilder.AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true,
                         reloadOnChange: true);
+                else if (env.IsProduction())
+                {
+                    builder.UseUrls(Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
+                    return;
+                }
                 else
                 {
                     builder.UseUrls("http://127.0.0.1:" + portToReassignForTests);
