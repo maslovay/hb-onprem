@@ -42,13 +42,13 @@ namespace FaceAnalyzeService
 
                     if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
                     {
-                        _log.Info("face detected!");
+                        _log.Info("Face detected!");
 
                         var byteArray = await File.ReadAllBytesAsync(localPath);
                         var base64String = Convert.ToBase64String(byteArray);
 
                         var faceResult = await _client.GetFaceResult(base64String);
-                        _log.Info($"face result is {JsonConvert.SerializeObject(faceResult)}");
+                        _log.Info($"Face result is {JsonConvert.SerializeObject(faceResult)}");
                         var fileName = localPath.Split('/').Last();
                         var fileFrame = await _repository
                                .FindOneByConditionAsync<FileFrame>(entity => entity.FileName == fileName);
@@ -83,12 +83,18 @@ namespace FaceAnalyzeService
                             fileFrame.IsFacePresent = true;
                             _repository.Update(fileFrame);
                             tasks.Add(_repository.CreateAsync(frameEmotion));
-                            _log.Info("fileframe not null. Calculate average and insert frame emotion and frame attribute");
+                            _log.Info("Fileframe not null. Calculate average and insert frame emotion and frame attribute");
                             await Task.WhenAll(tasks);
                             await _repository.SaveAsync();
                         }
                     }
                 }
+                else
+                {
+                    _log.Info("No face detected!");
+                }
+                _log.Info("Function face analyze finished");
+
             }
             catch (Exception e)
             {
