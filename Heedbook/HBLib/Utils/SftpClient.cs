@@ -56,6 +56,11 @@ namespace HBLib.Utils
         {
             return $"http://{_sftpSettings.Host}/{path}";
         }
+        public async Task<List<string>> GetFileNames(String directory)
+        {
+             await ConnectToSftpAsync();
+            return  _client.ListDirectory(directory).Where(f => !f.IsDirectory).Select(f=>f.Name).ToList();
+        }
 
         public void ChangeDirectory(String path)
         {

@@ -93,17 +93,19 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);               
                 if(!companyIds.Any())
                 {
-                    if ( role == "Supervisor" )
+                    //---test-------
+                   if ( role == "Supervisor" )
                     {
-                      //  var corporation = _context.Companys.Where(x=>x.CompanyId == companyId).FirstOrDefault().Corporation;
-                      //  companyIds = corporation.Companies.Select(x=>x.CompanyId).ToList();
+                        var corporation = _context.Companys.Include(x=>x.Corporation).Where(x=>x.CompanyId == companyId).FirstOrDefault().Corporation;
+                        companyIds = corporation.Companies.Select(x=>x.CompanyId).ToList();
+                        var c = _context.Companys.Where(x=>x.CorporationId == corporation.Id ).ToList();
                     }
-                    else if ( role == "Superuser" )
+                   else if ( role == "Superuser" )
                     {                    
-                       // var corporations = !corporationIds.Any()? _context.Corporations.ToList() :_context.Corporations.Where(x => corporationIds.Contains( x.Id )).ToList();
-                         //   companyIds =  corporations.Select( p => p.Companies).SelectMany(x=>x.CompanyId).ToList();
+                        var corporations = !corporationIds.Any()? _context.Corporations.Include(x => x.Companies).ToList() :_context.Corporations.Include(x => x.Companies).Where(x => corporationIds.Contains( x.Id )).ToList();
+                        companyIds =  corporations.SelectMany( p => p.Companies).Select(x=>x.CompanyId).ToList();
                     }
-                    else 
+                   else 
                     {
                         companyIds = new List<Guid> { companyId };
                     }
