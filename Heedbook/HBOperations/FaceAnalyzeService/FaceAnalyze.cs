@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using FaceAnalyzeService.Exceptions;
 using HBData.Models;
@@ -42,15 +43,15 @@ namespace FaceAnalyzeService
                     var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath);
                     _log.Info($"Download to path - {localPath}");
 
-                    var ms = new MemoryStream();
-                    var file = new FileStream(localPath, FileMode.Create, System.IO.FileAccess.Write);
-                    file.CopyTo(ms);
-                    _log.Info($"File size in bytes -- {ms.ToArray().Count()}");
+
+                    var buffer = File.ReadAllBytes(localPath);
+                    _log.Info($"File size in bytes -- {buffer.ToArray().Count()}");
 
                     FaceDetection.IsFaceDetected(localPath, out var faceLength1);
                     _log.Info($"Is face detected method1 -- {faceLength1}");
-                    FaceDetection.IsFaceDetected(ms.ToArray(), out var faceLength2);
+                    FaceDetection.IsFaceDetected(buffer.ToArray(), out var faceLength2);
                     _log.Info($"Is face detected method2 -- {faceLength2}");
+         
 
                     if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
                     {
