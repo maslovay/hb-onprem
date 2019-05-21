@@ -351,7 +351,7 @@ namespace HBLib.Utils
 #region NEW FILE REFERENCES
         public FileResult GetFileLink(string directory, string file, DateTime exp = default(DateTime))
         {    
-           return new FileResult { path = $"{HttpFileUrl}{directory}/{file})", ext = Path.GetExtension(file).Trim('.') };
+           return new FileResult { path = $"{HttpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
           // return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
         }
 #endregion
