@@ -594,7 +594,7 @@ namespace UserOperations.Controllers
                     .ApplicationUser.CompanyId;
                 var avgDialogueTime = _context.Dialogues.Where(p =>
                     p.BegTime >= begTime &&
-                    p.StatusId == 2 && p.InStatistic == true &&
+                    p.StatusId == activeStatus && p.InStatistic == true &&
                     p.ApplicationUser.CompanyId == companyId)
                 .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
                 System.Console.WriteLine("3");
@@ -612,7 +612,7 @@ namespace UserOperations.Controllers
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
                     .Where(p => p.InStatistic == true 
-                        && p.StatusId == 2
+                        && p.StatusId == activeStatus
                         && p.DialogueId == dialogueId)
                     .FirstOrDefault();
                 System.Console.WriteLine("3");
