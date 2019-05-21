@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
@@ -37,6 +38,7 @@ namespace HBData.Models
 
         //статус пользователя
         public Int32? StatusId { get; set; }
+        [JsonIgnore]
         public Status Status { get; set; }
 
         //id пользователей в OneSignal
@@ -52,7 +54,7 @@ namespace HBData.Models
 
         //роли сотрудника
         public ICollection<ApplicationUserRole> UserRoles { get; set; }
-
+        [JsonIgnore]
         //диалоги сотрудника
         public ICollection<Dialogue> Dialogue { get; set; }
 

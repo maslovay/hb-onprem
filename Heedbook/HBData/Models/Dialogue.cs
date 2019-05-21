@@ -50,7 +50,7 @@ namespace HBData.Models
         ///     Dialogue status
         /// </summary>
         public Int32? StatusId { get; set; }
-
+        [JsonIgnore]
         public Status Status { get; set; }
 
         /// <summary>
