@@ -666,7 +666,7 @@ namespace UserOperations.Controllers
         public Int32? StatusId;
         public string OneSignalId;
         public Guid? WorkerTypeId;
-        public string RoleId;
+        public ApplicationRole Role;
         public UserModel(ApplicationUser user, string avatar = null)
         {
             Id = user.Id;
@@ -679,7 +679,7 @@ namespace UserOperations.Controllers
             StatusId = user.StatusId;
             OneSignalId = user.OneSignalId;
             WorkerTypeId = user.WorkerTypeId;
-            RoleId = user.UserRoles.FirstOrDefault()?.RoleId.ToString();
+            Role = user.UserRoles.FirstOrDefault()?.Role;
         }
     }
 
