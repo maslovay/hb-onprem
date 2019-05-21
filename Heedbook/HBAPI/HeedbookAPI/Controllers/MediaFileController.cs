@@ -69,18 +69,19 @@ namespace UserOperations.Controllers
         public async Task<IActionResult> FileGet([FromHeader]string Authorization,
                                                         [FromQuery(Name= "containerName")] string containerName = null, 
                                                         [FromQuery(Name = "fileName")] string fileName = null,
-                                                        [FromQuery(Name = "expirationDate")]  DateTime expirationDate = default(DateTime))
+                                                        [FromQuery(Name = "expirationDate")]  DateTime? expirationDate = null)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                         return BadRequest("Token wrong");
                 var companyId = userClaims["companyId"];
-                containerName = containerName ?? _containerName;           
+                containerName = containerName ?? _containerName; 
+                if (expirationDate == null) expirationDate = default(DateTime);     
 
                 if (fileName != null)
                 {
-                    var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fileName, expirationDate);
+                    var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fileName, (DateTime)expirationDate);
                     return Ok(JsonConvert.SerializeObject(result));
                 }
                 else
@@ -89,7 +90,7 @@ namespace UserOperations.Controllers
                     List<object> result = new List<object>();        
                     foreach(var file in files)         
                     {
-                        result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, expirationDate));
+                        result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
                     }
                     return Ok(JsonConvert.SerializeObject(result));
                 }
