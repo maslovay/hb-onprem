@@ -124,7 +124,9 @@ namespace HBLib.Utils
                 .Select(f => 
                     new FileInfoModel
                     { 
-                        url = $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
+                        url = $"{HttpFileUrl}{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
+
+                   //     url = $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
                         name = f.Name,
                         date = f.Attributes.LastWriteTime
                         }));
