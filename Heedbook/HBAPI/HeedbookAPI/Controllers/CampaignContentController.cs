@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
             Campaign campaign = model.Campaign;
             campaign.CompanyId = (Guid)companyId;
             campaign.CreationDate = DateTime.UtcNow;
-            campaign.StatusId = 2;
+            campaign.StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
             campaign.CampaignContents = new List<CampaignContent>();
             _context.Add(campaign);
             _context.SaveChanges();

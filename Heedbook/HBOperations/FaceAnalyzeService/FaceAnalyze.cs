@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using FaceAnalyzeService.Exceptions;
 using HBData.Models;
@@ -37,21 +36,21 @@ namespace FaceAnalyzeService
             try
             {
                 _log.Info("Function face analyze started");
-                _log.Info($"{remotePath}");
+                //_log.Info($"{remotePath}");
                 if (await _sftpClient.IsFileExistsAsync(remotePath))
                 {
                     var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath);
-                    _log.Info($"Download to path - {localPath}");
+                    // _log.Info($"Download to path - {localPath}");
 
+                    // var fileStream = File.OpenRead(localPath);
+                    // var ms = new MemoryStream();
+                    // fileStream.CopyTo(ms);
+                    // _log.Info($"File size in bytes -- {ms.ToArray().Count()}");
 
-                    var buffer = File.ReadAllBytes(localPath);
-                    _log.Info($"File size in bytes -- {buffer.ToArray().Count()}");
-
-                    FaceDetection.IsFaceDetected(localPath, out var faceLength1);
-                    _log.Info($"Is face detected method1 -- {faceLength1}");
-                    FaceDetection.IsFaceDetected(buffer.ToArray(), out var faceLength2);
-                    _log.Info($"Is face detected method2 -- {faceLength2}");
-         
+                    // FaceDetection.IsFaceDetected(localPath, out var faceLength1);
+                    // _log.Info($"Is face detected method1 -- {faceLength1}");
+                    // FaceDetection.IsFaceDetected(ms.ToArray(), out var faceLength2);
+                    // _log.Info($"Is face detected method2 -- {faceLength2}");
 
                     if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
                     {
