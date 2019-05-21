@@ -13,18 +13,18 @@
     <None Remove="Data\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="DlibDotNet" Version="19.16.0.20190223" />
-    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="3.0.1" />
-    <PackageReference Include="MongoDB.Driver" Version="2.7.2" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="DlibDotNet" Version="19.17.0.20190513" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="3.0.2" />
+    <PackageReference Include="MongoDB.Driver" Version="2.8.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Serilog" Version="2.8.0" />
     <PackageReference Include="Serilog.Sinks.Network" Version="2.0.1.64" />
     <PackageReference Include="Sparc.TagCloud" Version="0.0.1" />
     <PackageReference Include="SSH.NET" Version="2016.1.0" />
     <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.3.0" />
-    <PackageReference Include="WindowsAzure.ServiceBus" Version="3.4.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.4.0" />
+    <PackageReference Include="WindowsAzure.ServiceBus" Version="5.2.0" />
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.3" />
   </ItemGroup>
   <ItemGroup>

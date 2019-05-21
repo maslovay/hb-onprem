@@ -46,42 +46,53 @@ namespace UserOperations.Controllers
         private readonly SftpClient _sftpClient;
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
+      
 
         public MediaFileController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient
+            SftpClient sftpClient   
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-            _containerName = "media";
+            _containerName = "media";         
         }
-        #region File
+
+    #region File
+
         [HttpGet("File")]
         [SwaggerOperation(Description = "Return all files from sftp. If no parameters are passed return files from 'media', for loggined company")]
         public async Task<IActionResult> FileGet([FromHeader]string Authorization,
-                                                        [FromQuery]string containerName = null, 
-                                                        [FromQuery]string fileName = null)
+                                                        [FromQuery(Name= "containerName")] string containerName = null, 
+                                                        [FromQuery(Name = "fileName")] string fileName = null,
+                                                        [FromQuery(Name = "expirationDate")]  DateTime? expirationDate = null)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                         return BadRequest("Token wrong");
                 var companyId = userClaims["companyId"];
-                containerName = containerName ?? _containerName;
+                containerName = containerName ?? _containerName; 
+                if (expirationDate == null) expirationDate = default(DateTime);     
+
                 if (fileName != null)
                 {
-                    var result = new { path = await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fileName})"), ext = Path.GetExtension(fileName)};
-                    return Ok(result);
+                    var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fileName, (DateTime)expirationDate);
+                    return Ok(JsonConvert.SerializeObject(result));
                 }
                 else
                 {
-                    var result = await _sftpClient.GetAllFilesUrl(containerName, new []{ companyId.ToString()});
-                    return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
+                    var files = await _sftpClient.GetFileNames(_containerName+"/"+companyId);  
+                    List<object> result = new List<object>();        
+                    foreach(var file in files)         
+                    {
+                        result.Add(_config["FileRefPath:url"] + _sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
+                    }
+                    return Ok(JsonConvert.SerializeObject(result));
                 }
             }
             catch (Exception e)
@@ -90,6 +101,7 @@ namespace UserOperations.Controllers
             }
         }
 
+      
         [HttpPost("File")]
         [SwaggerOperation(Description = "Save file on sftp. Can take containerName in body or save to media container. Folder determined by company id in token")]
         public async Task<IActionResult> FilePost([FromHeader] string Authorization, [FromForm] IFormCollection formData)
@@ -110,17 +122,23 @@ namespace UserOperations.Controllers
                     var fn = Guid.NewGuid() + fileInfo.Extension;
                     var memoryStream = file.OpenReadStream();
                     tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}/{companyId}", fn, true));
-                    fileNames.Add($"{containerName}/{companyId}/{fn}");
+                    fileNames.Add(fn);
                 }
                 await Task.WhenAll(tasks);
             
-                var urlTasks = new List<Task<String>>();            
-                foreach (var fileName in fileNames)
+                // var urlTasks = new List<Task<String>>();            
+                // foreach (var fileName in fileNames)
+                // {
+                //     urlTasks.Add(_sftpClient.GetFileUrl(fileName));
+                // }
+                // var result = await Task.WhenAll(urlTasks);
+                // return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
+                List<object> result = new List<object>();   
+                foreach (var file in fileNames)
                 {
-                    urlTasks.Add(_sftpClient.GetFileUrl(fileName));
+                    result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, default(DateTime)));
                 }
-                var result = await Task.WhenAll(urlTasks);
-                return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
+                return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
@@ -147,9 +165,10 @@ namespace UserOperations.Controllers
                 var fn = Guid.NewGuid() + fileInfo.Extension;
                 var memoryStream = formData.Files[0].OpenReadStream();
                 await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}/{companyId}", fn, true);
-                var result = new { 
-                    path =  await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fn}"), 
-                    ext = Path.GetExtension(fileName.Trim('.'))};
+                // var result = new { 
+                //     path =  await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fn}"), 
+                //     ext = Path.GetExtension(fileName.Trim('.'))};
+                var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fn, default(DateTime));
                 return Ok(result);
             }
             catch (Exception e)

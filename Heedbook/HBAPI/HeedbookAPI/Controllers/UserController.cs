@@ -48,6 +48,9 @@ namespace UserOperations.Controllers
         private readonly SftpClient _sftpClient;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
+        private readonly int activeStatus;
+        private readonly int disabledStatus;
+
 
 
         public UserController(
@@ -62,6 +65,9 @@ namespace UserOperations.Controllers
             _context = context;
             _sftpClient = sftpClient;
             _containerName = "useravatars";
+
+            activeStatus = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;
+            disabledStatus = _context.Statuss.Where(p => p.StatusName == "Disabled").FirstOrDefault().StatusId;
         }
 
 #region USER
@@ -77,8 +83,8 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var users = _context.ApplicationUsers.Include(p => p.UserRoles)
-                    .Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();             
-                var result = users.Select(p => new UserModel(p));
+                    .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled        
+                var result = users.Select(p => new UserModel(p, p.Avatar!= null? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)).path: null));
                 return Ok(result);
             }
             catch (Exception e)
@@ -118,11 +124,12 @@ namespace UserOperations.Controllers
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
                     PasswordHash = _loginService.GeneratePasswordHash(message.Password),
-                    StatusId = 3,
+                    StatusId = activeStatus,//3
                     EmpoyeeId = message.EmployeeId,
                     WorkerTypeId = message.WorkerTypeId
                 };
                 await _context.AddAsync(user);
+                string avatarUrl = null;
                     //---save avatar---
                 if(formData.Files.Count != 0)
                 {
@@ -130,7 +137,8 @@ namespace UserOperations.Controllers
                     var fn = user.Id + fileInfo.Extension;
                     var memoryStream = formData.Files[0].OpenReadStream();
                     await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
-                    user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
+                    user.Avatar = fn;
+                    avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime)).path;
                 }
                 //string msg = GenerateEmailMsg(password, user);
                 //_loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
@@ -142,8 +150,8 @@ namespace UserOperations.Controllers
                 };
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
-            
-                return Ok(new UserModel(user));
+                
+                return Ok(new UserModel(user, avatarUrl));
             }
             catch (Exception e)
             {
@@ -168,8 +176,9 @@ namespace UserOperations.Controllers
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
                 ApplicationUser message = JsonConvert.DeserializeObject<ApplicationUser>(userDataJson);
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var user = _context.ApplicationUsers.Include(p => p.UserRoles)
-                    .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
+                var user = _context.ApplicationUsers.Include(p => p.UserRoles)// 2 - active, 3 - disabled
+                    .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] 
+                            && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
                     .FirstOrDefault();
                 // if (user.Email != message.Email && _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                 //     return BadRequest("User email not unique");
@@ -180,6 +189,7 @@ namespace UserOperations.Controllers
                         if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
                             p.SetValue(user, p.GetValue(message, null), null);
                     }
+                string avatarUrl = null;
                 if(formData.Files.Count != 0)
                 {
                     await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
@@ -187,10 +197,11 @@ namespace UserOperations.Controllers
                     var fn = user.Id + fileInfo.Extension;
                     var memoryStream = formData.Files[0].OpenReadStream();
                     await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
-                    user.Avatar = await _sftpClient.GetFileUrl($"{_containerName}/{fn}");
+                    user.Avatar = fn;
+                    avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime)).path;
                 }
                     await _context.SaveChangesAsync();
-                    return Ok(new UserModel(user));
+                    return Ok(new UserModel(user, avatarUrl));
                 }
                 else
                 {
@@ -228,7 +239,7 @@ namespace UserOperations.Controllers
                     }
                     catch
                     {
-                        user.StatusId = _context.Statuss.Where(p => p.StatusName == "Disabled").FirstOrDefault().StatusId;
+                        user.StatusId = disabledStatus;
                         await _context.SaveChangesAsync();
                     }
                     return Ok("Deleted");
@@ -245,23 +256,51 @@ namespace UserOperations.Controllers
 #endregion
 
 #region Corporation
-        [HttpGet("Corporation")]
+        [HttpGet("Companies")]
         [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for loggined corporation (only for role Supervisor)")]
         [SwaggerResponse(200, "Companies", typeof(List<Company>))]
-        public async Task<IActionResult> CorporationGet(
+        public async Task<IActionResult> CompaniesGet(
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
+               
+
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                if(userClaims["role"] != "Supervisor") return null;
+                if(userClaims["role"] == "Supervisor") // only for own corporation
+                {
+                    var corporationId = Guid.Parse(userClaims["corporationId"]);
+                    var companies = _context.Companys // 2 active, 3 - disabled
+                        .Where(p => p.CorporationId == corporationId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();  
+                    return Ok(companies);
+                }
+                if(userClaims["role"] == "Superuser") // very cool!
+                {
+                    var companies = _context.Companys.Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();  // 2 active, 3 - disabled
+                    return Ok(companies);
+                }
+                return BadRequest("Not allowed access(role)");
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
 
-                var corporationId = Guid.Parse(userClaims["corporationId"]);
-
-                var companies = _context.Companys
-                    .Where(p => p.CorporationId == corporationId && p.StatusId == 3).ToList();  
-                return Ok(companies);
+        [HttpGet("Corporations")]
+        [SwaggerOperation(Summary = "All corporations", Description = "Return all corporations for loggined superuser (only for role Superuser)")]
+        [SwaggerResponse(200, "Corporations", typeof(List<Company>))]
+        public async Task<IActionResult> CorporationsGet(
+                    [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
+        {
+            try
+            {
+               if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                   return BadRequest("Token wrong");
+               if(userClaims["role"] != "Superuser") return BadRequest("Not allowed access(role)");;
+                var corporations = _context.Corporations.ToList();  
+                return Ok(corporations);
             }
             catch (Exception e)
             {
@@ -506,7 +545,7 @@ namespace UserOperations.Controllers
                 .Where(p => 
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
-                    p.StatusId == 3 && p.InStatistic == true &&
+                    p.StatusId == activeStatus && p.InStatistic == true &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
@@ -545,16 +584,21 @@ namespace UserOperations.Controllers
         {
             try
             {
+                System.Console.WriteLine($"{activeStatus}");
                 var begTime = DateTime.UtcNow.AddDays(-30);
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var companyId = _context.Dialogues.Where(x=>x.DialogueId == dialogueId).FirstOrDefault().ApplicationUser.CompanyId;
+                var companyId = _context.Dialogues
+                    .Include(x => x.ApplicationUser)
+                    .Where(x=>x.DialogueId == dialogueId)
+                    .FirstOrDefault()
+                    .ApplicationUser.CompanyId;
                 var avgDialogueTime = _context.Dialogues.Where(p =>
                     p.BegTime >= begTime &&
-                    p.StatusId == 3 && p.InStatistic == true &&
+                    p.StatusId == activeStatus && p.InStatistic == true &&
                     p.ApplicationUser.CompanyId == companyId)
                 .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
-                
+                System.Console.WriteLine("3");
                 var dialogue = _context.Dialogues
                     .Include(p => p.DialogueAudio)
                     .Include(p => p.DialogueClientProfile)
@@ -569,13 +613,15 @@ namespace UserOperations.Controllers
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
                     .Where(p => p.InStatistic == true 
-                        && p.StatusId == 3
+                        && p.StatusId == activeStatus
                         && p.DialogueId == dialogueId)
-                    .FirstOrDefault();                   
+                    .FirstOrDefault();
+                System.Console.WriteLine("3");
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
 
-
+                System.Console.WriteLine("4");
                 var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
+                System.Console.WriteLine("5");
                 jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
                 jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
                 jsonDialogue["Video"] = dialogue == null ? null :_sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
@@ -620,7 +666,7 @@ namespace UserOperations.Controllers
         public string EmployeeId;
     //    public string RoleId;
         public string Password;
-        public Guid WorkerTypeId;
+        public Guid? WorkerTypeId;
 
     }
 
@@ -636,20 +682,20 @@ namespace UserOperations.Controllers
         public Int32? StatusId;
         public string OneSignalId;
         public Guid? WorkerTypeId;
-        public string RoleId;
+        public ApplicationRole Role;
         public UserModel(ApplicationUser user, string avatar = null)
         {
             Id = user.Id;
             FullName = user.FullName;
             Email = user.Email;
-            Avatar = avatar != null ? user.Avatar : String.Empty;
+            Avatar = avatar;
             EmployeeId = user.EmpoyeeId;
             CreationDate = user.CreationDate.ToLongDateString();
             CompanyId = user.CompanyId.ToString();
             StatusId = user.StatusId;
             OneSignalId = user.OneSignalId;
             WorkerTypeId = user.WorkerTypeId;
-            RoleId = user.UserRoles.FirstOrDefault()?.RoleId.ToString();
+            Role = user.UserRoles.FirstOrDefault()?.Role;
         }
     }
 

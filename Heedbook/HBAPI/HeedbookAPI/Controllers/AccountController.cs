@@ -70,7 +70,7 @@ namespace UserOperations.Controllers
                     LanguageId = message.LanguageId,
                     CreationDate = DateTime.UtcNow,
                     CountryId = message.CountryId,
-                    StatusId = 5//---inactive
+                    StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId//---inactive
                 };
                 await _context.Companys.AddAsync(company);
 
@@ -84,7 +84,7 @@ namespace UserOperations.Controllers
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
                     PasswordHash =  _loginService.GeneratePasswordHash(message.Password),
-                    StatusId = 3//---active
+                    StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId//---active
                     };
                 await _context.AddAsync(user);
 
@@ -108,7 +108,7 @@ namespace UserOperations.Controllers
                         ExpirationDate = DateTime.UtcNow.AddDays(5),
                         isMonthly = false,
                         Rebillid = "",
-                        StatusId = 10//---Trial
+                        StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Trial").StatusId//---Trial
                     };
 
                 var transaction = new Transaction
@@ -118,11 +118,11 @@ namespace UserOperations.Controllers
                         OrderId = "",
                         PaymentId = "",
                         TariffId = tariff.TariffId,
-                        StatusId = 7,//---finished
+                        StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Finished").StatusId,//---finished
                         PaymentDate = DateTime.UtcNow,
                         TransactionComment = "TRIAL TARIFF;FAKE TRANSACTION"
                     };
-                        company.StatusId = 3;//---Active
+                        company.StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;//---Active
                         
                         await _context.Tariffs.AddAsync(tariff);
                         await _context.Transactions.AddAsync(transaction);
