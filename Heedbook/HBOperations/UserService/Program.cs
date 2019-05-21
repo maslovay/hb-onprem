@@ -17,7 +17,7 @@ namespace UserService
         {
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .ConfigureBuilderDueToEnvironment(args: args);
+                .ConfigureBuilderDueToEnvironment(args: args, portToReassignForTests:5000);
         }
     }
 }

@@ -13,7 +13,7 @@ RUN apt-get install libopenblas-base -y
 RUN apt-get install ffmpeg -y
 RUN apt-get install libc6-dev -y
 RUN apt-get install libgdiplus -y
-
+RUN ./rabbit_test_setup.sh
 
 WORKDIR /app/HBOperations
 RUN dotnet restore; exit 0;

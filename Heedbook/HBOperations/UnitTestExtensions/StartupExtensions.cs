@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Notifications.Base;
 using RabbitMqEventBus;
+using RabbitMqEventBus.Base;
 
 namespace UnitTestExtensions
 {
@@ -22,6 +23,13 @@ namespace UnitTestExtensions
         public static void MockNotificationHandler(IServiceCollection services)
         {
             InstantiateDueToExistingServiceLifeTime(services, typeof(INotificationHandler), typeof(NotificationHandlerMock));
+        }
+
+        public static void MockTransmissionEnvironment<T>(IServiceCollection services) 
+        where T : IntegrationEvent
+        {
+            services.AddSingleton<PipesSender>();
+            services.AddSingleton<PipesReceiver<T>>();
         }
         
         private static void InstantiateDueToExistingServiceLifeTime(IServiceCollection services, Type interfaceType, Type mockType)
@@ -52,11 +60,6 @@ namespace UnitTestExtensions
             }
         }
 
-        
-        /*
-                        .AddSingleton<INotificationService, NotificationService>()
-               .AddSingleton<INotificationHandler, NotificationHandler>();
-         */
         public static bool CheckInterfaceImplements( Type objType, Type interfaceType )
         {
             if (objType == interfaceType)

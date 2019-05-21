@@ -9,36 +9,21 @@ namespace UnitTestExtensions
 {
     public class RabbitPublisherMock : INotificationPublisher
     {
-        private Dictionary<Type, INotificationHandler> subscriptions = new Dictionary<Type, INotificationHandler>(10);
+        private PipesSender _pipesSender;
         
-        public RabbitPublisherMock()
+        public RabbitPublisherMock(PipesSender pipesSender)
         {
-            
-        }
-
-        private INotificationHandler GetHandler(Type _type)
-        {
-            foreach (var type in subscriptions.Keys)
-            {
-                if (type == _type)
-                    return subscriptions[type];
-            }
-
-            return null;
+            _pipesSender = pipesSender;
         }
         
         public void Publish(IntegrationEvent @event)
         {
-            var concreteType = @event.GetType();
-            var handler = GetHandler(concreteType);
-
-            handler?.EventRaised(@event);
+            _pipesSender.SendEventMessage(@event);
         }
 
         public void Subscribe<T, TH>() where T : IntegrationEvent where TH : IIntegrationEventHandler<T>
         {
-            if (!subscriptions.Keys.Contains(typeof(T)))
-                subscriptions[typeof(T)] = new NotificationHandlerMock();
+            _pipesSender.RegisterPipe<T>();
         }
 
         public void SubscribeDynamic<TH>(string eventName) where TH : IDynamicIntegrationEventHandler

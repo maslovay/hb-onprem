@@ -84,7 +84,8 @@ namespace ExtractFramesFromVideoService.Tests
 
             correctFileName = videoFileName.Replace("testuser", TestUserId.ToString());
             
-            await _ftpClient.UploadAsync(Path.Combine(rootDir, "Resources", videoFileName), "videos", correctFileName);
+            if (!await _ftpClient.IsFileExistsAsync(Path.Combine("videos", correctFileName)))
+                await _ftpClient.UploadAsync(Path.Combine(rootDir, "Resources", videoFileName), "videos", correctFileName);
             
             var videoTimestampText = videoFileName.Split(("_"))[1];
             minDate = DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
@@ -111,28 +112,28 @@ namespace ExtractFramesFromVideoService.Tests
         private void RunServices()
         {
             var config = "Release";
-            
-            #if DEBUG
-            config = "Debug";
-            #endif
 
-            _userServiceProcess = Process.Start("dotnet", $"../../../../UserService/bin/{config}/netcoreapp2.2/UserService.dll --isCalledFromUnitTest true");
-            Thread.Sleep(500);
-                
-           _extractServiceProcess = Process.Start("dotnet", $"../../../../ExtractFramesFromVideoService/bin/{config}/netcoreapp2.2/ExtractFramesFromVideoService.dll");
-           Thread.Sleep(500);
+#if DEBUG
+            config = "Debug";
+#endif
+
+            _userServiceProcess = Process.Start("dotnet",
+                $"../../../../UserService/bin/{config}/netcoreapp2.2/UserService.dll --isCalledFromUnitTest true");
+            _extractServiceProcess = Process.Start("dotnet",
+                $"../../../../ExtractFramesFromVideoService/bin/{config}/netcoreapp2.2/ExtractFramesFromVideoService.dll --isCalledFromUnitTest true");
         }
 
         private void StopServices()
         {
-            _extractServiceProcess.Close();
-            _userServiceProcess.Close();
+            _extractServiceProcess.Kill();
+            _userServiceProcess.Kill();
         }
 
         private void SendRequest(string body)
         {
             using (var wc = new WebClient())
             {
+                wc.UseDefaultCredentials = true;
                 wc.Headers.Add("Content-Type", "application/json");
                 wc.UploadData(_currentUri+"/user/FramesFromVideo", Encoding.UTF8.GetBytes(body.ToLower()));
             }
@@ -149,20 +150,22 @@ namespace ExtractFramesFromVideoService.Tests
             };
 
             var json = JsonConvert.SerializeObject(framesFromVideoRun);
-           
+
+            Thread.Sleep(3000);
+            
             SendRequest(json);
-            
+
             Thread.Sleep(20000);
-            
+
             Assert.True(_repository.Get<FileFrame>()
                 .Any(f => f.FileName.Contains(TestUserId.ToString()) && f.Time >= minDate && f.Time <= maxDate));
-                      
-           _ftpClient.ChangeDirectoryToDefault();
+
+            _ftpClient.ChangeDirectoryToDefault();
             var checkTask = _ftpClient.ListDirectoryFiles("frames", TestUserId.ToString());
             Task.WaitAll(checkTask);
             var framesOnServer = checkTask.Result;
             Assert.True(framesOnServer.Count > 0);
-            
+
             StopServices();
         }
     }

@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Notifications.Base;
+using RabbitMqEventBus.Base;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
 using UnitTestExtensions;
@@ -72,14 +73,15 @@ namespace UserService
                 });
             });
 
-            if (!isCalledFromUnitTest)
+            // (!isCalledFromUnitTest)
                 services.AddRabbitMqEventBus(Configuration);
-            else
-            {
-                StartupExtensions.MockRabbitPublisher(services);
-                StartupExtensions.MockNotificationService(services);
-                StartupExtensions.MockNotificationHandler(services);
-            }
+//            else
+//            {
+//                StartupExtensions.MockRabbitPublisher(services);
+//                StartupExtensions.MockNotificationService(services);
+//                StartupExtensions.MockNotificationHandler(services);
+//                StartupExtensions.MockTransmissionEnvironment<IntegrationEvent>(services);                
+//            }
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
@@ -103,7 +105,7 @@ namespace UserService
                 c.RoutePrefix = "user/swagger";
             });
             app.UseCors(MyAllowSpecificOrigins);
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseMvc();
         }
     }

@@ -56,14 +56,15 @@ namespace ExtractFramesFromVideo
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddTransient<FramesFromVideo>();
             
-            if (!isCalledFromUnitTest)
-                services.AddRabbitMqEventBus(Configuration);
-            else
-            {
-                StartupExtensions.MockRabbitPublisher(services);
-                StartupExtensions.MockNotificationService(services);
-                StartupExtensions.MockNotificationHandler(services);
-            }
+//            if (!isCalledFromUnitTest)
+            services.AddRabbitMqEventBus(Configuration);
+//            else
+//            {
+//                StartupExtensions.MockRabbitPublisher(services);
+//                StartupExtensions.MockNotificationService(services);
+//                StartupExtensions.MockNotificationHandler(services);
+//                StartupExtensions.MockTransmissionEnvironment<FramesFromVideoRun>(services);    
+//            }
 
             services.AddTransient<FramesFromVideoRunHandler>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);

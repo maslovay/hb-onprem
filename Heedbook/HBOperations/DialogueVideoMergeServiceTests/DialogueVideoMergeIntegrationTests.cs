@@ -29,7 +29,6 @@ namespace DialogueVideoMerge.Tests
             {
                 _startup = new Startup(Config);
                 _startup.ConfigureServices(Services);
-                StartupExtensions.MockRabbitPublisher(Services);
             }, true);
         }
 

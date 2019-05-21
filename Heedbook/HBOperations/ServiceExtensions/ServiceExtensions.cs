@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Threading;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
@@ -16,10 +18,10 @@ namespace ServiceExtensions
                 var env = context.HostingEnvironment;
 
                 var configBuilder = cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-                if (UnitTestDetector.IsRunningFromNUnit)
+                if (UnitTestDetector.IsRunningFromNUnit || args.Contains("--isCalledFromUnitTest") && args.Contains("true"))
                 {
                     builder.UseUrls("http://127.0.0.1:" + portToReassignForTests);
+                    configBuilder.AddJsonFile($"appsettings.test.json", optional: true, reloadOnChange: true);
                     builder.UseConfiguration(configBuilder.Build());
                     return;
                 }
