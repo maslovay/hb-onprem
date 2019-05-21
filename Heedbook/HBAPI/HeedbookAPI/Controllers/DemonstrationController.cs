@@ -206,13 +206,14 @@ namespace UserOperations.Controllers
                 var companyId = _context.ApplicationUsers.Where(x => x.Id.ToString() == userId).FirstOrDefault().CompanyId;
                 var curDate = DateTime.Now;
                 var containerName = "media";
+                var active = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;
 
                 var campaigns = _context.Campaigns
                 .Where(p => p.CampaignContents != null && p.CampaignContents.Count() != 0
                     && p.CompanyId == companyId
                     && p.BegDate <= curDate
                     && p.EndDate >= curDate
-                    && p.StatusId == 2)
+                    && p.StatusId == active)
                 .Select(p =>
                     new
                     {
@@ -241,9 +242,6 @@ namespace UserOperations.Controllers
 
                 var htmlList = campaigns.SelectMany(x => x.contents.ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML))
                 .Union(_context.Contents.Where( c => c.CompanyId == companyId && (c.CampaignContents == null || c.CampaignContents.Count() == 0))
-                    .Select(c => new ContentWithId() { contentWithId = c }).ToList()
-                    .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable())
-                .Union(_context.Contents.Where( c => c.CompanyId == null)
                     .Select(c => new ContentWithId() { contentWithId = c }).ToList()
                     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable());
 

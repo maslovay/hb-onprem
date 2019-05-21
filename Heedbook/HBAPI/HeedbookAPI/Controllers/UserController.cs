@@ -48,6 +48,9 @@ namespace UserOperations.Controllers
         private readonly SftpClient _sftpClient;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
+        private readonly int activeStatus;
+        private readonly int disabledStatus;
+
 
 
         public UserController(
@@ -62,6 +65,9 @@ namespace UserOperations.Controllers
             _context = context;
             _sftpClient = sftpClient;
             _containerName = "useravatars";
+
+            activeStatus = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;
+            disabledStatus = _context.Statuss.Where(p => p.StatusName == "Disabled").FirstOrDefault().StatusId;
         }
 
 #region USER
@@ -77,7 +83,7 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var users = _context.ApplicationUsers.Include(p => p.UserRoles)
-                    .Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();             
+                    .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled        
                 var result = users.Select(p => new UserModel(p, p.Avatar!= null? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)).path: null));
                 return Ok(result);
             }
@@ -118,7 +124,7 @@ namespace UserOperations.Controllers
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
                     PasswordHash = _loginService.GeneratePasswordHash(message.Password),
-                    StatusId = 3,
+                    StatusId = activeStatus,//3
                     EmpoyeeId = message.EmployeeId,
                     WorkerTypeId = message.WorkerTypeId
                 };
@@ -170,8 +176,9 @@ namespace UserOperations.Controllers
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
                 ApplicationUser message = JsonConvert.DeserializeObject<ApplicationUser>(userDataJson);
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var user = _context.ApplicationUsers.Include(p => p.UserRoles)
-                    .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] && p.StatusId == 3)
+                var user = _context.ApplicationUsers.Include(p => p.UserRoles)// 2 - active, 3 - disabled
+                    .Where(p => p.Id == message.Id && p.CompanyId.ToString() == userClaims["companyId"] 
+                            && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
                     .FirstOrDefault();
                 // if (user.Email != message.Email && _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                 //     return BadRequest("User email not unique");
@@ -232,7 +239,7 @@ namespace UserOperations.Controllers
                     }
                     catch
                     {
-                        user.StatusId = _context.Statuss.Where(p => p.StatusName == "Disabled").FirstOrDefault().StatusId;
+                        user.StatusId = disabledStatus;
                         await _context.SaveChangesAsync();
                     }
                     return Ok("Deleted");
@@ -257,18 +264,20 @@ namespace UserOperations.Controllers
         {
             try
             {
+               
+
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 if(userClaims["role"] == "Supervisor") // only for own corporation
                 {
                     var corporationId = Guid.Parse(userClaims["corporationId"]);
-                    var companies = _context.Companys
-                        .Where(p => p.CorporationId == corporationId && p.StatusId == 3).ToList();  
+                    var companies = _context.Companys // 2 active, 3 - disabled
+                        .Where(p => p.CorporationId == corporationId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();  
                     return Ok(companies);
                 }
                 if(userClaims["role"] == "Superuser") // very cool!
                 {
-                    var companies = _context.Companys.Where(p => p.StatusId == 3).ToList();  
+                    var companies = _context.Companys.Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();  // 2 active, 3 - disabled
                     return Ok(companies);
                 }
                 return BadRequest("Not allowed access(role)");
@@ -536,7 +545,7 @@ namespace UserOperations.Controllers
                 .Where(p => 
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
-                    p.StatusId == 3 && p.InStatistic == true &&
+                    p.StatusId == activeStatus && p.InStatistic == true &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
@@ -581,7 +590,7 @@ namespace UserOperations.Controllers
                 var companyId = _context.Dialogues.Where(x=>x.DialogueId == dialogueId).FirstOrDefault().ApplicationUser.CompanyId;
                 var avgDialogueTime = _context.Dialogues.Where(p =>
                     p.BegTime >= begTime &&
-                    p.StatusId == 3 && p.InStatistic == true &&
+                    p.StatusId == 2 && p.InStatistic == true &&
                     p.ApplicationUser.CompanyId == companyId)
                 .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
                 
@@ -599,7 +608,7 @@ namespace UserOperations.Controllers
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
                     .Where(p => p.InStatistic == true 
-                        && p.StatusId == 3
+                        && p.StatusId == 2
                         && p.DialogueId == dialogueId)
                     .FirstOrDefault();                   
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
