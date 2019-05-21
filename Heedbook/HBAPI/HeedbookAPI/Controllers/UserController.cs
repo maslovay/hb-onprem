@@ -78,7 +78,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var users = _context.ApplicationUsers.Include(p => p.UserRoles)
                     .Where(p => p.CompanyId == companyId && p.StatusId == 3).ToList();             
-                var result = users.Select(p => new UserModel(p, p.Avatar!= null? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)): null));
+                var result = users.Select(p => new UserModel(p, p.Avatar!= null? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)).path: null));
                 return Ok(result);
             }
             catch (Exception e)
@@ -132,7 +132,7 @@ namespace UserOperations.Controllers
                     var memoryStream = formData.Files[0].OpenReadStream();
                     await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
                     user.Avatar = fn;
-                    avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime));
+                    avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime)).path;
                 }
                 //string msg = GenerateEmailMsg(password, user);
                 //_loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
@@ -191,7 +191,7 @@ namespace UserOperations.Controllers
                     var memoryStream = formData.Files[0].OpenReadStream();
                     await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
                     user.Avatar = fn;
-                    avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime));
+                    avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime)).path;
                 }
                     await _context.SaveChangesAsync();
                     return Ok(new UserModel(user, avatarUrl));

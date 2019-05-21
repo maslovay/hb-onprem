@@ -86,7 +86,7 @@ namespace UserOperations.Controllers
                 else
                 {
                     var files = await _sftpClient.GetFileNames(_containerName+"/"+companyId);  
-                    List<string> result = new List<string>();        
+                    List<object> result = new List<object>();        
                     foreach(var file in files)         
                     {
                         result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, expirationDate));
@@ -132,7 +132,7 @@ namespace UserOperations.Controllers
                 // }
                 // var result = await Task.WhenAll(urlTasks);
                 // return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
-                List<string> result = new List<string>();   
+                List<object> result = new List<object>();   
                 foreach (var file in fileNames)
                 {
                     result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, default(DateTime)));

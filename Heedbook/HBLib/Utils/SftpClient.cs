@@ -345,9 +345,9 @@ namespace HBLib.Utils
         }
         
 #endregion
-   public string GetFileLink(string directory, string file, DateTime exp = default(DateTime))
+   public FileResult GetFileLink(string directory, string file, DateTime exp = default(DateTime))
         {
-           return fileref.GetReference(directory, file, exp);
+           return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
         }
 #region SECURE SFTP CONNECTION
 
@@ -366,5 +366,12 @@ namespace HBLib.Utils
         public string Host =>
             _sftpSettings.Host;
     }
+
+    public class FileResult
+        {
+            public string path;
+            public string ext;
+        }
+    
 #endregion
 }
