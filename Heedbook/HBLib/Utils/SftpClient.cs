@@ -10,9 +10,10 @@ namespace HBLib.Utils
 {
     public class SftpClient : IDisposable
     {
+        private readonly string HttpFileUrl;
         private readonly Renci.SshNet.SftpClient _client;
         private readonly SftpSettings _sftpSettings;
-        private readonly FileReference fileref;
+        // private readonly FileReference fileref;
 
         public SftpClient(SftpSettings sftpSettings)
         {
@@ -20,15 +21,16 @@ namespace HBLib.Utils
                 sftpSettings.Password);
             _sftpSettings = sftpSettings;
 
-            fileref = new FileReference(new SftpSettings()
-            {
-                Host = _sftpSettings.Host,
-                Port = _sftpSettings.Port,
-                UserName = _sftpSettings.UserName,
-                Password = _sftpSettings.Password,
-                DestinationPath = _sftpSettings.DestinationPath,
-                DownloadPath = _sftpSettings.DownloadPath
-            });         
+            // fileref = new FileReference(new SftpSettings()
+            // {
+            //     Host = _sftpSettings.Host,
+            //     Port = _sftpSettings.Port,
+            //     UserName = _sftpSettings.UserName,
+            //     Password = _sftpSettings.Password,
+            //     DestinationPath = _sftpSettings.DestinationPath,
+            //     DownloadPath = _sftpSettings.DownloadPath
+            // });    
+            HttpFileUrl = @"http://filereference.northeurope.cloudapp.azure.com/";     
         }
 
         public void Dispose()
@@ -345,13 +347,15 @@ namespace HBLib.Utils
         }
         
 #endregion
-   public FileResult GetFileLink(string directory, string file, DateTime exp = default(DateTime))
-        {
-           return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
-        }
-#region SECURE SFTP CONNECTION
 
+#region NEW FILE REFERENCES
+        public FileResult GetFileLink(string directory, string file, DateTime exp = default(DateTime))
+        {    
+           return new FileResult { path = $"{HttpFileUrl}{directory}/{file})", ext = Path.GetExtension(file).Trim('.') };
+          // return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
+        }
 #endregion
+
 #region MODELS
         public class FileInfoModel
         {
