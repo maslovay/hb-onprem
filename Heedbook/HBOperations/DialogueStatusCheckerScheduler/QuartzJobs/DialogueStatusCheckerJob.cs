@@ -56,7 +56,7 @@ namespace QuartzExtensions.Jobs
                         dialogueClientProfiles)
                     {
                         _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
-                        dialogue.StatusId = 7;
+                        dialogue.StatusId = 3;
                         _repository.Update(dialogue);
                         var @event = new FillingSatisfactionRun
                         {
