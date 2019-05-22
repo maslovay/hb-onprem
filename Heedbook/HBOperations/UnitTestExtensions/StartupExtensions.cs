@@ -2,7 +2,9 @@ using System;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Notifications.Base;
 using RabbitMqEventBus;
+using RabbitMqEventBus.Base;
 
 namespace UnitTestExtensions
 {
@@ -11,6 +13,23 @@ namespace UnitTestExtensions
         public static void MockRabbitPublisher(IServiceCollection services)
         {
             InstantiateDueToExistingServiceLifeTime(services, typeof(INotificationPublisher), typeof(RabbitPublisherMock));
+        }
+        
+        public static void MockNotificationService(IServiceCollection services)
+        {
+            InstantiateDueToExistingServiceLifeTime(services, typeof(INotificationService), typeof(NotificationServiceMock));
+        }
+
+        public static void MockNotificationHandler(IServiceCollection services)
+        {
+            InstantiateDueToExistingServiceLifeTime(services, typeof(INotificationHandler), typeof(NotificationHandlerMock));
+        }
+
+        public static void MockTransmissionEnvironment<T>(IServiceCollection services) 
+        where T : IntegrationEvent
+        {
+            services.AddSingleton<PipesSender>();
+            services.AddSingleton<PipesReceiver<T>>();
         }
         
         private static void InstantiateDueToExistingServiceLifeTime(IServiceCollection services, Type interfaceType, Type mockType)

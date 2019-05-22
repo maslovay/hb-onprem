@@ -30,7 +30,6 @@ namespace FillingSatisfactionService.Tests
             {
                 startup = new Startup(Config);
                 startup.ConfigureServices(Services);
-                StartupExtensions.MockRabbitPublisher(Services);
             }, true);
         }
 

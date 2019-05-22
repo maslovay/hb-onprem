@@ -584,6 +584,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                System.Console.WriteLine($"{activeStatus}");
                 var begTime = DateTime.UtcNow.AddDays(-30);
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");

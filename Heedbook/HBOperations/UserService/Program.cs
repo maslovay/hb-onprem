@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using ServiceExtensions;
@@ -16,7 +17,7 @@ namespace UserService
         {
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .ConfigureBuilderDueToEnvironment(args: args);
+                .ConfigureBuilderDueToEnvironment(args: args, portToReassignForTests:5000);
         }
     }
 }

@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Notifications.Base;
+using RabbitMqEventBus.Base;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
 using UnitTestExtensions;
@@ -41,18 +42,17 @@ namespace UserService
                 options.AddPolicy(MyAllowSpecificOrigins,
                     builder =>
                     {
-                        builder.WithOrigins("http://localhost:3000",
-                            "https://hbreactapp.azurewebsites.net");
+                        builder.WithOrigins("http://localhost:3000", "https://hbreactapp.azurewebsites.net");
                     });
             });
             services.AddOptions();
             services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
-            
-            #if DEBUG
+
+#if DEBUG
             services.AddLogging(loggingBuilder => loggingBuilder.AddConsole());
             services.AddLogging(loggingBuilder => loggingBuilder.AddDebug());
             services.AddLogging(loggingBuilder => loggingBuilder.AddEventSourceLogger());
-            #endif
+#endif
             
             services.AddDbContext<RecordsContext>
             (options =>
@@ -73,13 +73,15 @@ namespace UserService
                 });
             });
 
-            if (!isCalledFromUnitTest)
+            // (!isCalledFromUnitTest)
                 services.AddRabbitMqEventBus(Configuration);
-            else
-            {
-                Thread.Sleep(12000);
-                StartupExtensions.MockRabbitPublisher(services);
-            }
+//            else
+//            {
+//                StartupExtensions.MockRabbitPublisher(services);
+//                StartupExtensions.MockNotificationService(services);
+//                StartupExtensions.MockNotificationHandler(services);
+//                StartupExtensions.MockTransmissionEnvironment<IntegrationEvent>(services);                
+//            }
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
@@ -103,7 +105,7 @@ namespace UserService
                 c.RoutePrefix = "user/swagger";
             });
             app.UseCors(MyAllowSpecificOrigins);
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseMvc();
         }
     }

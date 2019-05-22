@@ -20,6 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Notifications\Notifications.csproj" />
       <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
     </ItemGroup>
 
