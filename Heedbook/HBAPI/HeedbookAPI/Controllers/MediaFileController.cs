@@ -90,7 +90,7 @@ namespace UserOperations.Controllers
                     List<object> result = new List<object>();        
                     foreach(var file in files)         
                     {
-                        result.Add(_config["FileRefPath:url"] + _sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
+                        result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
                     }
                     return Ok(JsonConvert.SerializeObject(result));
                 }
