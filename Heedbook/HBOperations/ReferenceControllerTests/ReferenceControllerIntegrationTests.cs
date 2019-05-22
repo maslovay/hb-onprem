@@ -66,7 +66,7 @@ namespace ReferenceController.Tests
         public async Task CheckReferenceGeneration()
         {
             var _referenceController = new FileRefController(Config, _sftpClient);
-            var reference = _referenceController.GetReference("frames", _testFrameFilename, fileDateTime);
+            var reference = _referenceController.GetNewReference("frames", _testFrameFilename, fileDateTime);
             var value = ((OkObjectResult) reference).Value.ToString();
 
             Assert.NotNull(reference);
@@ -109,7 +109,7 @@ namespace ReferenceController.Tests
         private FileRefController InitReference(out string token)
         {
             var _referenceController = new FileRefController(Config, _sftpClient);
-            var reference = _referenceController.GetReference("frames", _testFrameFilename, fileDateTime);
+            var reference = _referenceController.GetNewReference("frames", _testFrameFilename, fileDateTime);
             var value = ((OkObjectResult) reference).Value.ToString();
 
             Assert.NotNull(reference);
