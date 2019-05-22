@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -36,11 +37,11 @@ namespace HBData.Models
         /// <summary>
         ///     Link to users
         /// </summary>
-        public ICollection<ApplicationUser> ApplicationUser { get; set; }
+        [JsonIgnore] public ICollection<ApplicationUser> ApplicationUser { get; set; }
 
         /// <summary>
         ///     Link to dialogues
         /// </summary>
-        public ICollection<Dialogue> Dialogue { get; set; }
+        [JsonIgnore] public ICollection<Dialogue> Dialogue { get; set; }
     }
 }
