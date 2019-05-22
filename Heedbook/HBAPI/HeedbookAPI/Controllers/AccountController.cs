@@ -153,11 +153,12 @@ namespace UserOperations.Controllers
         {
             try
             {
+                    ApplicationUser user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == message.UserName.ToUpper()).FirstOrDefault();
+                    if (user == null) return BadRequest("No such user");
+
                     if (message.UserName != null && message.Password != null && _loginService.CheckUserLogin(message.UserName, message.Password))
                     {
-                        ApplicationUser user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == message.UserName.ToUpper()).FirstOrDefault();
-                        if (user == null)
-                            return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "No such user");
+                        if (user.StatusId != _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId) return BadRequest("User not activated");
                         return Ok( _loginService.CreateTokenForUser(user, message.Remember) );
                     }
                     else return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Error in username or password");

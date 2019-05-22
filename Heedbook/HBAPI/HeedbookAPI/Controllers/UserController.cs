@@ -66,8 +66,8 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
             _containerName = "useravatars";
 
-            activeStatus = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;
-            disabledStatus = _context.Statuss.Where(p => p.StatusName == "Disabled").FirstOrDefault().StatusId;
+            activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
+            disabledStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Disabled").StatusId;
         }
 
 #region USER
