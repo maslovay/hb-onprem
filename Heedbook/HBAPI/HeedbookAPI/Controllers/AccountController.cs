@@ -157,10 +157,10 @@ namespace UserOperations.Controllers
                     {
                         ApplicationUser user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == message.UserName.ToUpper()).FirstOrDefault();
                         if (user == null)
-                            return BadRequest("No such user");
+                            return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "No such user");
                         return Ok( _loginService.CreateTokenForUser(user, message.Remember) );
                     }
-                    else return BadRequest("Error in username or password");
+                    else return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Error in username or password");
             }
             catch (Exception e)
             {
