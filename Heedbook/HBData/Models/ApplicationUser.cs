@@ -58,6 +58,7 @@ namespace HBData.Models
         //диалоги сотрудника
         public ICollection<Dialogue> Dialogue { get; set; }
 
+        [JsonIgnore]
         //сессии
         public ICollection<Session> Session { get; set; }
     }

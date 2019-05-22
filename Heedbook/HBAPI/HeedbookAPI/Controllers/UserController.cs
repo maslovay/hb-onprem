@@ -146,11 +146,11 @@ namespace UserOperations.Controllers
                 var userRole = new ApplicationUserRole()
                 {
                     UserId = user.Id,
-                    RoleId = _context.Roles.FirstOrDefault(x=>x.Name == "Employee").Id //Manager role
+                    RoleId = _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id //Manager role
                 };
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
-                
+             //    return Ok(JsonConvert.SerializeObject(new UserModel(user, avatarUrl)));
                 return Ok(new UserModel(user, avatarUrl));
             }
             catch (Exception e)

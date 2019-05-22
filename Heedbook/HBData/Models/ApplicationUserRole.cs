@@ -1,13 +1,14 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
     public class ApplicationUserRole : IdentityUserRole<Guid>
     {
-        [ForeignKey("UserId")] public ApplicationUser User { get; set; }
+        [JsonIgnore] [ForeignKey("UserId")] public ApplicationUser User { get; set; }
 
-        [ForeignKey("RoleId")] public ApplicationRole Role { get; set; }
+        [JsonIgnore] [ForeignKey("RoleId")] public ApplicationRole Role { get; set; }
     }
 }
