@@ -123,6 +123,7 @@ namespace UserOperations.Controllers
                     var memoryStream = file.OpenReadStream();
                     tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}/{companyId}", fn, true));
                     fileNames.Add(fn);
+                    memoryStream.Close();
                 }
                 await Task.WhenAll(tasks);
             
