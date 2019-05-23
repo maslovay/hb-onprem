@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace UserOperations.Migrations
 {
     [DbContext(typeof(RecordsContext))]
-    [Migration("20190516095859_db052019")]
-    partial class db052019
+    [Migration("20190523103057_NewMigration")]
+    partial class NewMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -752,6 +752,8 @@ namespace UserOperations.Migrations
 
                     b.Property<Guid>("ApplicationUserId");
 
+                    b.Property<Guid?>("FaceId");
+
                     b.Property<int?>("FaceLength");
 
                     b.Property<string>("FileContainer");
@@ -1269,7 +1271,7 @@ namespace UserOperations.Migrations
                         .HasForeignKey("CompanyIndustryId");
 
                     b.HasOne("HBData.Models.Corporation", "Corporation")
-                        .WithMany()
+                        .WithMany("Companies")
                         .HasForeignKey("CorporationId");
 
                     b.HasOne("HBData.Models.Country", "Country")
