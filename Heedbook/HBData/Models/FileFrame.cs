@@ -56,6 +56,11 @@ namespace HBData.Models
         public DateTime Time { get; set; }
 
         /// <summary>
+        ///     Face id in group of faces
+        /// </summary>
+        public Guid? FaceId {get; set;}
+
+        /// <summary>
         ///     Is face present on frame
         /// </summary>
         public Boolean IsFacePresent { get; set; }
