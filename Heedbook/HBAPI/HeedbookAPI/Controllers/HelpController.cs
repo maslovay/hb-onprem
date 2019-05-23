@@ -60,6 +60,12 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _context = context;
         }
+        
+        [HttpGet("Test")]
+        public IActionResult Test()
+        {
+            return Ok("I'm working");
+        }
 
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling

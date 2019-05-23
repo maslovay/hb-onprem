@@ -89,27 +89,35 @@ namespace UserOperations.Controllers
             {
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
+
+
+                    
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);               
-                if(!companyIds.Any())
-                {
-                    //---test-------
-                   if ( role == "Supervisor" )
-                    {
-                        var corporation = _context.Companys.Include(x=>x.Corporation).Where(x=>x.CompanyId == companyId).FirstOrDefault().Corporation;
-                        companyIds = corporation.Companies.Select(x=>x.CompanyId).ToList();
-                        var c = _context.Companys.Where(x=>x.CorporationId == corporation.Id ).ToList();
-                    }
-                   else if ( role == "Superuser" )
+                 //--- superuser can view any companies in any corporation
+                   if ( role == "Superuser" )
                     {                    
-                        var corporations = !corporationIds.Any()? _context.Corporations.Include(x => x.Companies).ToList() :_context.Corporations.Include(x => x.Companies).Where(x => corporationIds.Contains( x.Id )).ToList();
-                        companyIds =  corporations.SelectMany( p => p.Companies).Select(x=>x.CompanyId).ToList();
+                        corporationIds = !corporationIds.Any()? _context.Corporations.Select(x => x.Id).ToList() : corporationIds;
+                        //---take all companyIds in filter or all company ids in corporations
+                        companyIds =  !companyIds.Any()? _context.Companys
+                            .Where(x => x.CorporationId != null && corporationIds.Contains( (Guid)x.CorporationId ))
+                            .Select(x => x.CompanyId).ToList() : companyIds;
                     }
-                   else 
+                    //--- supervisor can view companies from filter or companies from own corporation -------
+                   else if ( role == "Supervisor" )
+                   {
+                        if (!companyIds.Any())//--- if filter by companies not set ---
+                        {//--- select own corporation
+                            var corporation = _context.Companys.Include(x=>x.Corporation).Where(x=>x.CompanyId == companyId).FirstOrDefault().Corporation;
+                        //--- return all companies from own corporation
+                            companyIds = _context.Companys.Where(x => x.CorporationId == corporation.Id ).Select(x => x.CompanyId).ToList();
+                        }
+                   }                 
+                    //--- for simple user return only for own company
+                   else
                     {
                         companyIds = new List<Guid> { companyId };
                     }
-                }
 
 
                 var stringFormat = "yyyyMMdd";
