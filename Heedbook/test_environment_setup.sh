@@ -1,2 +1,1 @@
-cp /app/HBOperations/AudioAnalyzeService/OpenVoka* /app/ 
-apt-get install wine-stable -y
+apt-get install wine64 -y
