@@ -24,6 +24,6 @@ apt-get update -y
 apt-get install esl-erlang -y
 
 ## Install rabbitmq-server and its dependencies
-apt-get install rabbitmq-server -y --fix-missing
+apt-get install rabbitmq-server -y --fix-missing --allow-unauthenticated
 apt-get install systemd -y
 
