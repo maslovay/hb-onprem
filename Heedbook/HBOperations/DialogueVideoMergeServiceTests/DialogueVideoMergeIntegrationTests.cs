@@ -153,7 +153,7 @@ namespace DialogueVideoMerge.Tests
             _dialogueVideoMergeService = ServiceProvider.GetService<DialogueVideoMergeService.DialogueVideoMerge>();
         }
 
-        [Test]
+        [Test, Retry(3)]
         public async Task EnsureCreatesOutputVideoFile()
         {
             _sftpClient.ChangeDirectoryToDefault();

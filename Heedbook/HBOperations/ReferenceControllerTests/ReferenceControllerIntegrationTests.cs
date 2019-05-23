@@ -62,7 +62,7 @@ namespace ReferenceController.Tests
         {
         }
 
-        [Test]
+        [Test, Retry(3)]
         public async Task CheckReferenceGeneration()
         {
             var _referenceController = new FileRefController(Config, _sftpClient);
@@ -73,7 +73,7 @@ namespace ReferenceController.Tests
             Assert.True(Regex.IsMatch(value, linkCheckRegex));
         }
         
-        [Test]
+        [Test, Retry(3)]
         public async Task CheckFileGetting()
         {
             var _referenceController = InitReference(out var token);
@@ -85,7 +85,7 @@ namespace ReferenceController.Tests
         }
 
 
-        [Test]
+        [Test, Retry(3)]
         public async Task CheckReturnsBadRequestOnWrongExpirationDate()
         {
             var _referenceController = InitReference(out var token);
@@ -95,7 +95,7 @@ namespace ReferenceController.Tests
             Assert.IsInstanceOf<BadRequestObjectResult>(result);
         }
 
-        [Test]
+        [Test, Retry(3)]
         public async Task CheckReturnsBadRequestOnWrongFilename()
         {
             var _referenceController = InitReference(out var token);

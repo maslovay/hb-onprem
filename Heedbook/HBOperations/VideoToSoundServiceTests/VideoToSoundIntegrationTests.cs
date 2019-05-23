@@ -69,7 +69,7 @@ namespace VideoToSoundService.Tests
             _videoToSoundService = ServiceProvider.GetService<VideoToSound>();
         }
 
-        [Test]
+        [Test, Retry(3)]
         public async Task CheckSoundFilePresents()
         {
             await _videoToSoundService.Run("dialoguevideos/" + testDialogVideoCorrectFileName);

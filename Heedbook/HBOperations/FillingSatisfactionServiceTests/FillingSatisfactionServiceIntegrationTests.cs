@@ -58,7 +58,7 @@ namespace FillingSatisfactionService.Tests
             _fillingSatisfactionService = ServiceProvider.GetService<FillingSatisfaction>();
         }
 
-        [Test]
+        [Test, Retry(3)]
         public async Task EnsureCreatesSatisfactionRecord()
         {
             await _fillingSatisfactionService.Run(dialog.DialogueId);        

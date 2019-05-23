@@ -100,7 +100,7 @@ namespace AudioAnalyzeService.Tests
             _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _elasticClient, _asrClient);
         }
         
-        [Test]
+        [Test, Retry(3)]
         public async Task ToneAnalyzerCreatesDbRecords()
         {
             _sftpClient.ChangeDirectoryToDefault();
@@ -114,7 +114,7 @@ namespace AudioAnalyzeService.Tests
             Assert.NotNull(dialogueAudio);
         }
         
-        [Test]
+        [Test, Retry(3)]
         public async Task AudioAnalyzerCreatesDbRecords()
         {
             _sftpClient.ChangeDirectoryToDefault();

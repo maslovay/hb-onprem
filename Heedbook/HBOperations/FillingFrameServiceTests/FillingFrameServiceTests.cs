@@ -211,7 +211,7 @@ namespace FillingFrameService.Tests
             _fillingFrameService = ServiceProvider.GetService<DialogueCreation>();
         }
 
-        [Test]
+        [Test, Retry(3)]
         public async Task EnsureCreatesDialogueFrameRecords()
         {
             await _fillingFrameService.Run(dialogCreationRun);
