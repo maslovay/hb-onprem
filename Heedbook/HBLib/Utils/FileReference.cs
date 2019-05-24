@@ -12,15 +12,18 @@ namespace HBLib.Utils
 {
     public class FileReference
     {
-        private static IConfiguration _config;
+        private readonly string _host;
+        private readonly string _destinationPath;
 
-        //private readonly SftpClient _client;
-        private readonly SftpSettings _sftpSettings;
-
-        public FileReference(SftpSettings sftpSettings)
+        public FileReference(string host, string destinationPath)
         {
-            //_client = new SftpClient(sftpSettings);
-            _sftpSettings = sftpSettings;
+            _host = host;
+            _destinationPath = destinationPath;
+        }
+        
+        public FileReference(SftpSettings sftpSettings)
+            : this(sftpSettings.Host, sftpSettings.DestinationPath)
+        {
         }
 
         private string MakeExpiryHash(DateTime expiry)
@@ -60,7 +63,7 @@ namespace HBLib.Utils
 
             var hash = MakeExpiryHash(expirationDate);
             var reference = string.Format(
-                $"http://{_sftpSettings.Host}/FileRef/GetFile?path={_sftpSettings.DestinationPath}/{containerName}/" +
+                $"http://{_host}/FileRef/GetFile?path={_destinationPath}/{containerName}/" +
                 $"{fileName}&expirationDate={expirationDate:s}&token={hash}");
 
             return reference;
