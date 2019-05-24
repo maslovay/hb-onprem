@@ -139,7 +139,7 @@ namespace ExtractFramesFromVideoService.Tests
             }
         }
         
-        [Test(Description = "Framing test")]
+        [Test(Description = "Framing test"), Retry(3)]
         public async Task RunTest()
         {
             RunServices();
