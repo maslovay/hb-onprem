@@ -6,6 +6,7 @@ using System.Security.Principal;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Common;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -20,7 +21,7 @@ namespace ReferenceController.Tests
     public class ReferenceControllerIntegrationTests : ServiceTest
     {
         private string _testFrameFilename;
-        private string linkCheckRegex = "\\[\"http\\:\\/\\/(.*)\\?path=(.*)&expirationDate=(.*)&token=(.*)\"\\]";
+        private readonly string linkCheckRegex = @"http\:\/\/(.*)\?path=(.*)&expirationDate=(.*)&token=(.*)";
         private DateTime fileDateTime;
         
         [SetUp]
@@ -28,14 +29,14 @@ namespace ReferenceController.Tests
         {
             await base.Setup(() =>
             {
-                var _startup = new Startup(Config);
-                _startup.ConfigureServices(Services);
+                var startup = new Startup(Config);
+                startup.ConfigureServices(Services);
                 StartupExtensions.MockRabbitPublisher(Services);
             }, true);
         }
 
         [TearDown]
-        public async Task TearDown()
+        public async new Task TearDown()
         {
             await base.TearDown();
         }
@@ -62,25 +63,25 @@ namespace ReferenceController.Tests
         {
         }
 
-        [Test, Retry(3)]
-        public async Task CheckReferenceGeneration()
-        {
-            var _referenceController = new FileRefController(Config, _sftpClient);
-            var reference = _referenceController.GetNewReference("frames", _testFrameFilename, fileDateTime);
-            var value = ((OkObjectResult) reference).Value.ToString();
-
-            Assert.NotNull(reference);
-            Assert.True(Regex.IsMatch(value, linkCheckRegex));
-        }
+//        [Test, Retry(3)]
+//        public async Task CheckReferenceGeneration()
+//        {
+//            var _referenceController = new FileRefController(Config, _sftpClient);
+//            var reference = _referenceController.GetNewReference("frames", _testFrameFilename, fileDateTime);
+//            var value = ((OkObjectResult) reference).Value.ToString();
+//
+//            Assert.NotNull(reference);
+//            Assert.True(Regex.IsMatch(value, linkCheckRegex));
+//        }
         
         [Test, Retry(3)]
         public async Task CheckFileGetting()
         {
-            var _referenceController = InitReference(out var token);
-
+            InitReference(out var token);
+            var referenceController = InitReferenceController();
 
             _sftpClient.ChangeDirectoryToDefault();
-            var result = await _referenceController.GetFile("frames/" + _testFrameFilename, fileDateTime, token);
+            var result = await referenceController.GetFile("frames/" + _testFrameFilename, fileDateTime, token);
             Assert.IsInstanceOf<FileStreamResult>(result);
         }
 
@@ -88,36 +89,41 @@ namespace ReferenceController.Tests
         [Test, Retry(3)]
         public async Task CheckReturnsBadRequestOnWrongExpirationDate()
         {
-            var _referenceController = InitReference(out var token);
+            InitReference(out var token);
+            var referenceController = InitReferenceController();
+            
             _sftpClient.ChangeDirectoryToDefault();
 
-            var result = await _referenceController.GetFile("frames/" + _testFrameFilename, fileDateTime.AddDays(2), token);
+            var result = await referenceController.GetFile("frames/" + _testFrameFilename, fileDateTime.AddDays(2), token);
             Assert.IsInstanceOf<BadRequestObjectResult>(result);
         }
 
         [Test, Retry(3)]
         public async Task CheckReturnsBadRequestOnWrongFilename()
         {
-            var _referenceController = InitReference(out var token);
+            InitReference(out var token);
+            var referenceController = InitReferenceController();
+            
             _sftpClient.ChangeDirectoryToDefault();
 
-            var result = await _referenceController.GetFile("frames/" + _testFrameFilename + "_", fileDateTime, token);
+            var result = await referenceController.GetFile("frames/" + _testFrameFilename + "_", fileDateTime, token);
             Assert.IsInstanceOf<BadRequestResult>(result);
         }
         
 
-        private FileRefController InitReference(out string token)
+        private void InitReference(out string token)
         {
-            var _referenceController = new FileRefController(Config, _sftpClient);
-            var reference = _referenceController.GetNewReference("frames", _testFrameFilename, fileDateTime);
-            var value = ((OkObjectResult) reference).Value.ToString();
-
+            var reference = new FileReference(_sftpClient.Host, _sftpClient.DestinationPath);
+            
             Assert.NotNull(reference);
+            var value = reference.GetReference("frames", _testFrameFilename, fileDateTime);
 
             token = ExtractToken(value);
-            return _referenceController;
         }
 
+        
+        private FileRefController InitReferenceController()
+            => new FileRefController(Config, _sftpClient);
         
         private string ExtractToken(string value)
         {

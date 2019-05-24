@@ -214,7 +214,7 @@ namespace FillingFrameService.Tests
         [Test, Retry(3)]
         public async Task EnsureCreatesDialogueFrameRecords()
         {
-            await _fillingFrameService.Run(dialogCreationRun);
+            Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRun));
             
             Assert.IsTrue(_repository.Get<DialogueVisual>().Any(dv => dv.DialogueId == dialogCreationRun.DialogueId));
             Assert.IsTrue(_repository.Get<DialogueClientProfile>().Any(pr => pr.DialogueId == dialogCreationRun.DialogueId));

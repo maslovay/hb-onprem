@@ -157,8 +157,10 @@ namespace DialogueVideoMerge.Tests
         public async Task EnsureCreatesOutputVideoFile()
         {
             _sftpClient.ChangeDirectoryToDefault();
-            await _dialogueVideoMergeService.Run(_dialogueVideoMergeRun);
-            Assert.IsTrue(await _sftpClient.IsFileExistsAsync($"dialoguevideos/{_dialogueVideoMergeRun.DialogueId}.mkv"));
+
+            Assert.DoesNotThrowAsync(() => _dialogueVideoMergeService.Run(_dialogueVideoMergeRun));
+            Assert.IsTrue(
+                await _sftpClient.IsFileExistsAsync($"dialoguevideos/{_dialogueVideoMergeRun.DialogueId}.mkv"));
         }
 
         private async Task CleanAllVideoFilesFromDb()
