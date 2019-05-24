@@ -11,18 +11,18 @@ namespace DialogueMarkUp.Extensions
     {
         public static void AddMarkUpQuartz(this IServiceCollection services)
         {
-            services.Add(new ServiceDescriptor(typeof(IJob), typeof(AddDialogueMarkUpScheduleJob),
+            services.Add(new ServiceDescriptor(typeof(IJob), typeof(CheckDialogueMarkUpJob),
                 ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
             services.AddSingleton(provider => JobBuilder.Create<CheckDialogueMarkUpJob>()
-                                                        .WithIdentity("CheckDialogueMarkUpJob.job", "Dialogues")
+                                                        .WithIdentity("CheckDialogueMarkUp.job", "Dialogues")
                                                         .Build());
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity("CheckDialogueMarkUpJob.trigger", "Dialogues")
+                                     .WithIdentity("CheckDialogueMarkUp.trigger", "Dialogues")
                                      .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInSeconds(2).RepeatForever())
+                                     .WithSimpleSchedule(s => s.WithIntervalInSeconds(30).RepeatForever())
                                      .Build();
             });
 

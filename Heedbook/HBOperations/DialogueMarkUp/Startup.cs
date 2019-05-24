@@ -1,7 +1,6 @@
 ﻿using AsrHttpClient;
-//using AudioAnalyzeScheduler.Extensions;
-using Configurations;
 using DialogueMarkUp.Extensions;
+using Configurations;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -25,8 +24,9 @@ namespace DialogueMarkUp
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration {get;}
-        
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
@@ -38,7 +38,7 @@ namespace DialogueMarkUp
                 var connectionString = Configuration.GetConnectionString("DefaultConnection");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
-            });
+            }, ServiceLifetime.Scoped);
             services.AddSingleton(provider => provider.GetService<IOptions<AsrSettings>>().Value);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider =>
@@ -55,17 +55,17 @@ namespace DialogueMarkUp
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
+            else
+                app.UseHsts();
 
-            app.Run(async (context) =>
-            {
-                await context.Response.WriteAsync("Hello World!");
-            });
+            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
+                app.ApplicationServices.GetService<ITrigger>());
+            app.UseHttpsRedirection();
+            app.UseMvc();
         }
     }
 }

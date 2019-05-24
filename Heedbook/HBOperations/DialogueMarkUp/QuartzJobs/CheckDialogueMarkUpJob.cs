@@ -14,25 +14,49 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using HBData;
+using Microsoft.EntityFrameworkCore;
+
+
 
 namespace DialogueMarkUp.QuartzJobs
 {
     public class CheckDialogueMarkUpJob : IJob
     {
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
+        private readonly RecordsContext _context;
 
-        public CheckDialogueMarkUpJob(IServiceScopeFactory factory,
-            ElasticClient log)
+        public CheckDialogueMarkUpJob(IServiceScopeFactory factory)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
-            _log = log;
+            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
         }
+        // {
+        //     _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
+        //     _log = log;
+        //    // _context = context;
+        // }
 
         public async Task Execute(IJobExecutionContext context)
         {
-           System.Console.WriteLine("start");
-           System.Console.WriteLine("end");
+            try
+            {
+                //_log.Info("Audion analyze scheduler started.");
+                Console.WriteLine("start");
+                var endTime = DateTime.UtcNow.AddMinutes(-30);
+
+                // var frames = _context.FrameAttributes
+                //     .Include(p => p.FileFrame)
+                //     .Where(p => p.FileFrame.StatusNNId == )
+
+                Console.WriteLine("end");
+                //_log.Info("Audion analyze scheduler finished.");
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine($"{e}");
+            }
         }
     }
 }

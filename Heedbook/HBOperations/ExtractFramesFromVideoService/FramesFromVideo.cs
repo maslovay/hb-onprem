@@ -64,7 +64,7 @@ namespace ExtractFramesFromVideo
                     foreach (var frameFilename in uploadStreams.Keys)
                     {
                         uploadStreams[frameFilename].Position = 0;
-
+1
                         var uploadTask = _client.UploadAsMemoryStreamAsync(uploadStreams[frameFilename],
                             FrameContainerName + "/", frameFilename);
 
@@ -117,8 +117,8 @@ namespace ExtractFramesFromVideo
                     FileExist = true,
                     FileName = filename,
                     IsFacePresent = false,
-                    StatusId = 1,
-                    StatusNNId = 1,
+                    StatusId = 6,
+                    StatusNNId = 6,
                     Time = new DateTime(timeStampForFrame.Year,
                         timeStampForFrame.Month,
                         timeStampForFrame.Day,
