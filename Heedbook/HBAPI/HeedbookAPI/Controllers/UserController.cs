@@ -545,7 +545,7 @@ namespace UserOperations.Controllers
                 .Where(p => 
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
-                    p.StatusId == activeStatus && p.InStatistic == true &&
+                    p.StatusId == activeStatus &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
