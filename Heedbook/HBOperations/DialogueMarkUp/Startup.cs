@@ -14,6 +14,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Quartz;
+using Notifications.Base;
+using RabbitMqEventBus.Base;
+
 
 namespace DialogueMarkUp
 {
@@ -48,6 +51,8 @@ namespace DialogueMarkUp
             });
             services.AddSingleton<AsrHttpClient.AsrHttpClient>();
             services.AddSingleton<SftpClient>();
+            services.AddRabbitMqEventBus(Configuration);
+
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddMarkUpQuartz();
@@ -57,6 +62,7 @@ namespace DialogueMarkUp
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
+            var service = app.ApplicationServices.GetRequiredService<INotificationService>();
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
             else
