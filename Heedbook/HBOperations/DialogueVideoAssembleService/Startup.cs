@@ -37,9 +37,17 @@ namespace DialogueVideoAssembleService
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddTransient<SftpClient>();
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
+                return new ElasticClient(settings);
+            });
             services.AddTransient<DialogueVideoMerge>();
+            services.AddTransient<FFMpegSettings>();
             services.AddTransient<DialogueVideoMergeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddRabbitMqEventBus(Configuration);

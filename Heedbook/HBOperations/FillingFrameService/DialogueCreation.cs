@@ -128,8 +128,7 @@ namespace FillingFrameService
             }
             catch (SftpPathNotFoundException e)
             {
-                _log.Info($"exception occured while trying to download file {e}");
-                throw new DialogueCreationException(e.Message, e);
+                _log.Fatal($"exception occured while trying to download file {e}");
             }
             catch (Exception e)
             {

@@ -7,6 +7,7 @@ using HBLib.Utils;
 using Microsoft.Extensions.Configuration;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using Renci.SshNet.Common;
 
 namespace VideoToSoundService
 {
@@ -37,7 +38,7 @@ namespace VideoToSoundService
             {
                 var dialogueId = Path.GetFileNameWithoutExtension(path.Split('/').Last());
                 var localVideoPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
-                var localAudioPath = Path.Combine(_sftpSettings.DownloadPath, dialogueId+".wav");
+                var localAudioPath = Path.Combine(_sftpSettings.DownloadPath, dialogueId + ".wav");
                 await _wrapper.VideoToWavAsync(localVideoPath, localAudioPath);
                 var uploadPath = Path.Combine("dialogueaudios", $"{dialogueId}.wav");
                 if (File.Exists(localAudioPath))
@@ -57,6 +58,10 @@ namespace VideoToSoundService
                     _publisher.Publish(toneAnalyzeEvent);
                     _log.Info("message sent to rabbit. Wait for tone analyze and audio analyze");
                 }
+            }
+            catch (SftpPathNotFoundException e)
+            {
+                _log.Fatal($"{e}");
             }
             catch (Exception e)
             {

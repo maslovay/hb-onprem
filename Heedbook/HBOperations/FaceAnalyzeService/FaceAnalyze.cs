@@ -9,6 +9,7 @@ using HBLib.Utils;
 using HBMLHttpClient;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using Renci.SshNet.Common;
 
 namespace FaceAnalyzeService
 {
@@ -63,7 +64,7 @@ namespace FaceAnalyzeService
                         _log.Info($"Face result is {JsonConvert.SerializeObject(faceResult)}");
                         var fileName = localPath.Split('/').Last();
                         var fileFrame = await _repository
-                               .FindOneByConditionAsync<FileFrame>(entity => entity.FileName == fileName);
+                           .FindOneByConditionAsync<FileFrame>(entity => entity.FileName == fileName);
 
                         if (fileFrame != null)
                         {
@@ -80,7 +81,7 @@ namespace FaceAnalyzeService
                                 SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
                                 YawShare = faceResult.Average(item => item.Headpose.Yaw)
                             };
-                            
+
                             var tasks = faceResult.Select(item => new FrameAttribute
                                                    {
                                                        Age = item.Attributes.Age,
@@ -95,7 +96,8 @@ namespace FaceAnalyzeService
                             fileFrame.IsFacePresent = true;
                             _repository.Update(fileFrame);
                             tasks.Add(_repository.CreateAsync(frameEmotion));
-                            _log.Info("Fileframe not null. Calculate average and insert frame emotion and frame attribute");
+                            _log.Info(
+                                "Fileframe not null. Calculate average and insert frame emotion and frame attribute");
                             await Task.WhenAll(tasks);
                             await _repository.SaveAsync();
                         }
@@ -104,14 +106,20 @@ namespace FaceAnalyzeService
                     {
                         _log.Info("No face detected!");
                     }
+
                     File.Delete(remotePath);
                 }
                 else
                 {
                     _log.Info($"No such file {remotePath}");
                 }
+
                 _log.Info("Function face analyze finished");
 
+            }
+            catch (SftpPathNotFoundException e)
+            {
+                _log.Fatal($"{e}");
             }
             catch (Exception e)
             {
