@@ -22,7 +22,7 @@ namespace DialogueMarkUp.Extensions
                 return TriggerBuilder.Create()
                                      .WithIdentity("CheckDialogueMarkUp.trigger", "Dialogues")
                                      .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInSeconds(120).RepeatForever())
+                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
                                      .Build();
             });
 
