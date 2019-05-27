@@ -23,20 +23,22 @@ namespace DialogueMarkUp.QuartzJobs
 {
     public class CheckDialogueMarkUpJob : IJob
     {
-        // private readonly ElasticClient _log;
+        private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly RecordsContext _context;
         private readonly INotificationPublisher _publisher;
 
-        public CheckDialogueMarkUpJob(IServiceScopeFactory factory, INotificationPublisher publisher)
+        public CheckDialogueMarkUpJob(IServiceScopeFactory factory, INotificationPublisher publisher, ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _publisher = publisher;
+            _log = log;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
+            _log.Info("Function DialogueMarkUp started");
             var periodTime = 5 * 60; 
             var periodFrame = 10;
             
@@ -48,13 +50,14 @@ namespace DialogueMarkUp.QuartzJobs
                     .Where(p => p.FileFrame.StatusNNId == 6 && p.FileFrame.Time < endTime)
                     .OrderBy(p => p.FileFrame.Time)
                     .ToList();
-                
-                foreach (var applicationUserId in frames.Select(p => p.FileFrame.ApplicationUserId).ToList())
+                _log.Info($"Processing {frames.Count()}");
+                foreach (var applicationUserId in frames.Select(p => p.FileFrame.ApplicationUserId).ToList().Distinct().ToList())
                 {
                     var framesUser = frames
                         .Where(p => p.FileFrame.ApplicationUserId == applicationUserId)
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
+
                     framesUser = FindAllFaceId(framesUser, periodFrame, periodTime);
                     var markUps = framesUser.GroupBy(p => p.FileFrame.FaceId)
                         .Where(p => p.Count() > 2)
@@ -68,13 +71,13 @@ namespace DialogueMarkUp.QuartzJobs
                         })
                         .OrderBy(p => p.EndTime)
                         .ToList();
-                    CreateMarkUp(markUps, framesUser, applicationUserId);
+                    if (markUps.Any()) CreateMarkUp(markUps, framesUser, applicationUserId);
                 }
-                System.Console.WriteLine("Function finished");                
+                _log.Info("Function DialogueMarkUp finished");                
             }
             catch (Exception e)
             {
-                System.Console.WriteLine($"{e}");
+                _log.Fatal($"Exception while executing DialogueMarkUp occured {e}");
                 throw;
             }
         }
@@ -91,9 +94,11 @@ namespace DialogueMarkUp.QuartzJobs
                 var dialogues = new List<Dialogue>();
                 foreach (var markup in markUps)
                 {
+                    var dialogueId = Guid.NewGuid();
                     var dialogue = new Dialogue
                     {
-                        DialogueId = (Guid) markup.FaceId,
+                        // DialogueId = (Guid) markup.FaceId,
+                        DialogueId = dialogueId,
                         ApplicationUserId = applicationUserId,
                         BegTime = markup.BegTime,
                         EndTime = markup.EndTime,
@@ -106,11 +111,11 @@ namespace DialogueMarkUp.QuartzJobs
                     var dialogueVideoMerge = new DialogueVideoMergeRun
                     {
                         ApplicationUserId = applicationUserId,
-                        DialogueId = (Guid) markup.FaceId,
+                        DialogueId = dialogueId,
                         BeginTime = markup.BegTime,
                         EndTime = markup.EndTime
                     };
-                    System.Console.WriteLine($"Send dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    _log.Info($" Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
                 }
                 _context.Dialogues.AddRange(dialogues);
@@ -128,9 +133,11 @@ namespace DialogueMarkUp.QuartzJobs
                 var dialogues = new List<Dialogue>();
                 for (int i = 0; i < markUps.Count() - 1; i++)
                 {
+                    var dialogueId = Guid.NewGuid();
                     var dialogue = new Dialogue
                     {
-                        DialogueId = (Guid) markUps[i].FaceId,
+                        // DialogueId = (Guid) markUps[i].FaceId,
+                        DialogueId = dialogueId,
                         ApplicationUserId = applicationUserId,
                         BegTime = markUps[i].BegTime,
                         EndTime = markUps[i].EndTime,
@@ -143,11 +150,12 @@ namespace DialogueMarkUp.QuartzJobs
                     var dialogueVideoMerge = new DialogueVideoMergeRun
                     {
                         ApplicationUserId = applicationUserId,
-                        DialogueId = (Guid) markUps[i].FaceId,
+                        // DialogueId = (Guid) markUps[i].FaceId,
+                        DialogueId = dialogueId,
                         BeginTime = markUps[i].BegTime,
                         EndTime = markUps[i].EndTime
                     };
-                    System.Console.WriteLine($"Send dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    _log.Info($"Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
                 }
                 _context.Dialogues.AddRange(dialogues);
