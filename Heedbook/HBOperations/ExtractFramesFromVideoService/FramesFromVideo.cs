@@ -82,14 +82,15 @@ namespace ExtractFramesFromVideo
 
                 _log.Info("Function Extract Frames From Video finished");
             }
-            catch (SftpPathNotFoundException)
+            catch (SftpPathNotFoundException e)
             {
                 Console.WriteLine("Path not found");
+                _log.Fatal($"{e}");
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                //throw;
+                throw;
             }
         }
 

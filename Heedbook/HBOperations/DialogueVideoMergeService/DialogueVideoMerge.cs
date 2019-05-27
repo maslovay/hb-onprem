@@ -10,6 +10,7 @@ using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using Renci.SshNet.Common;
 
 namespace DialogueVideoMergeService
 {
@@ -163,6 +164,10 @@ namespace DialogueVideoMergeService
                 };
                 _notificationPublisher.Publish(@event);
                 _log.Info("Function finished OnPremDialogueVideoMerge");
+            }
+            catch (SftpPathNotFoundException e)
+            {
+                _log.Fatal($"{e}");
             }
             catch (Exception e)
             {
