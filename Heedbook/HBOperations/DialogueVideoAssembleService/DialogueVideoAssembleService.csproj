@@ -15,6 +15,11 @@
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
     <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
+    <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Properties\launchSettings.json" />
   </ItemGroup>
 
 </Project>

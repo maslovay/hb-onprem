@@ -9,7 +9,8 @@ docker build -t containerregistryhb.azurecr.io/audioanalyzescheduler:latest -f A
 docker build -t containerregistryhb.azurecr.io/dialoguestatuscheckerscheduler:latest -f DialogueStatusCheckerScheduler.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/dialoguevideomergeservice:latest -f DialogueVideoMergeService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/fillinghintservice:latest -f FillingHintService.Dockerfile . &&
-docker build -t containerregistryhb.azurecr.io/fillingsatisfactionservice:latest -f FillingSatisfactionService.Dockerfile . 
+docker build -t containerregistryhb.azurecr.io/fillingsatisfactionservice:latest -f FillingSatisfactionService.Dockerfile . &&
+docker build -t containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest -f DialogueVideoAssembleService.Dockerfile . 
                                                                
 docker push containerregistryhb.azurecr.io/faceanalyzeservice:latest &&
 docker push containerregistryhb.azurecr.io/userservice:latest && 
@@ -22,4 +23,5 @@ docker push containerregistryhb.azurecr.io/dialoguestatuscheckerscheduler:latest
 docker push containerregistryhb.azurecr.io/audioanalyzescheduler:latest &&
 docker push containerregistryhb.azurecr.io/dialoguevideomergeservice:latest &&
 docker push containerregistryhb.azurecr.io/fillinghintservice:latest &&
-docker push containerregistryhb.azurecr.io/fillingsatisfactionservice:latest  
+docker push containerregistryhb.azurecr.io/fillingsatisfactionservice:latest &&
+docker push containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest
