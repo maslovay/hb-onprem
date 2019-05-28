@@ -70,6 +70,7 @@ namespace UserOperations.Controllers
                     LanguageId = message.LanguageId,
                     CreationDate = DateTime.UtcNow,
                     CountryId = message.CountryId,
+                    CorporationId = message.CorporationId,
                     StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId//---inactive
                 };
                 await _context.Companys.AddAsync(company);

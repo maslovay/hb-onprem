@@ -160,7 +160,8 @@ namespace HBLib.Utils
         public async Task UploadAsMemoryStreamAsync(Stream stream, String path, String filename, Boolean toDestionationPath = false)
         {
             await ConnectToSftpAsync();
-            _client.BufferSize = 4 * 1024;
+            _client.BufferSize = 4 * 1024;         
+            //_client.BufferSize = (uint)stream.Length;
             await CreateIfDirNoExistsAsync(_sftpSettings.DestinationPath + path);
             _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
             _client.UploadFile(stream, filename);
