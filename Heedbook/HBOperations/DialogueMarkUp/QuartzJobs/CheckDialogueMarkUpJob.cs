@@ -71,6 +71,7 @@ namespace DialogueMarkUp.QuartzJobs
                         })
                         .OrderBy(p => p.EndTime)
                         .ToList();
+                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}"); 
                     if (markUps.Any()) CreateMarkUp(markUps, framesUser, applicationUserId);
                 }
                 _log.Info("Function DialogueMarkUp finished");                
