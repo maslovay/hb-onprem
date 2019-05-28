@@ -34,8 +34,9 @@ namespace AudioAnalyzeScheduler.QuartzJobs
         {
             _log.Info("Audion analyze scheduler started.");
             var audios = await _repository.FindByConditionAsync<FileAudioDialogue>(item => item.StatusId == 6);
-            if (!audios.Any()) _log.Info("No audios found");
-            var tasks = audios.Select(item =>
+            var audiosArray = audios.ToArray();
+            if (!audiosArray.Any()) _log.Info("No audios found");
+            var tasks = audiosArray.Select(item =>
             {
                 return Task.Run(async () =>
                 {
@@ -68,17 +69,20 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             PositiveShare = default(Double),
                             SilenceShare = GetSilenceShare(recognized, item.BegTime, item.EndTime)
                         };
+                        
                         var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
                         var phrases = await _repository.FindAllAsync<Phrase>();
                         var phraseCount = new List<DialoguePhraseCount>();
                         var phraseCounter = new Dictionary<Guid, Int32>();
                         var words = new List<PhraseResult>();
+                        
                         foreach (var phrase in phrases)
                         {
                             var foundPhrases =
                                 await FindPhrases(recognized, phrase, item.BegTime, lemmatizer, languageId);
                             Console.WriteLine(JsonConvert.SerializeObject(phrases));
                             foundPhrases.ForEach(f => words.AddRange(f));
+                            
                             if (phraseCounter.Keys.Contains(phrase.PhraseTypeId.Value))
                                 phraseCounter[phrase.PhraseTypeId.Value] += foundPhrases.Count();
                             else
@@ -93,6 +97,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 PhraseCount = phraseCounter[key],
                                 IsClient = true
                             });
+                        
                         recognized.ForEach(r =>
                         {
                             if (words.All(w => w.Word != r.Word))
@@ -130,7 +135,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             _log.Info("Scheduler ended.");
         }
 
-        private Double GetSpeechSpeed(List<WordRecognized> words, Int32 languageId)
+        private Double GetSpeechSpeed(IReadOnlyCollection<WordRecognized> words, Int32 languageId)
         {
             var vowels = Vowels.VowelsDictionary[languageId];
             var sumTime = words.Sum(item =>
@@ -143,7 +148,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             return vowelsCount / sumTime;
         }
 
-        private Double GetSilenceShare(List<WordRecognized> words, DateTime begTime, DateTime endTime)
+        private Double GetSilenceShare(IEnumerable<WordRecognized> words, DateTime begTime, DateTime endTime)
         {
             var wordsDuration = words.Sum(item => Double.Parse(item.EndTime, CultureInfo.InvariantCulture) - Double.Parse(item.StartTime, CultureInfo.InvariantCulture));
             return endTime.Subtract(begTime).TotalSeconds > 0
@@ -152,7 +157,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 : 0;
         }
 
-        private List<PhraseResult> FindWord(List<WordRecognized> text, String word, ILemmatizer lemmatizer,
+        private List<PhraseResult> FindWord(IReadOnlyCollection<WordRecognized> text, String word, ILemmatizer lemmatizer,
             DateTime begTime, Guid phraseId, Guid phraseTypeId)
         {
             var result = new List<PhraseResult>();
@@ -204,6 +209,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 var end = el.Position + space;
                 var acceptWords = wordPos.Where(p => (p.Position >= beg) & (p.Position <= end)).GroupBy(p => p.Word)
                                          .Select(x => x.First()).ToList();
+                
                 if (acceptWords.Count() >= minWords)
                 {
                     result.Add(acceptWords);
