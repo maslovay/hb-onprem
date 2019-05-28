@@ -86,7 +86,7 @@ namespace UserOperations.Controllers
                         case 7:
                             return Ok("Can't close not opened session");
                         default:
-                            return BadRequest();
+                            return BadRequest("Wrong action");
                     }
                 }
                 else
@@ -116,13 +116,13 @@ namespace UserOperations.Controllers
                             _context.SaveChanges();
                             return Ok("Session successfully closed");
                         default:
-                            return BadRequest();
+                            return BadRequest("Wrong action");
                     }
                 }
             }
             catch (Exception e)
             {
-                return BadRequest(e);
+                return BadRequest($"Exception occured {e}");
             }
         }
     }
