@@ -11,6 +11,7 @@ using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Renci.SshNet.Common;
 
 namespace AudioAnalyzeService
 {
@@ -96,6 +97,10 @@ namespace AudioAnalyzeService
                 await _repository.SaveAsync();
                 OS.SafeDelete(localPath);
                 _log.Info("Function Tone analyze finished");
+            }
+            catch (SftpPathNotFoundException e)
+            {
+                _log.Fatal($"{e}");
             }
             catch (Exception e)
             {

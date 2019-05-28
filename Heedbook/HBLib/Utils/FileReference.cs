@@ -8,56 +8,65 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-public class FileReference
+namespace HBLib.Utils
 {
-    private static IConfiguration _config;
-    //private readonly SftpClient _client;
-    private readonly SftpSettings _sftpSettings;
-
-    public FileReference(SftpSettings sftpSettings)
+    public class FileReference
     {
-        //_client = new SftpClient(sftpSettings);
-        _sftpSettings = sftpSettings;
-    }    
+        private readonly string _host;
+        private readonly string _destinationPath;
 
-    private string MakeExpiryHash(DateTime expiry)
-    {
-        const string salt = "Secret Phrase";
-        string str1 = "";
-        byte[] bytes = Encoding.UTF8.GetBytes(salt + expiry.ToString("s"));
-        using (var sha = System.Security.Cryptography.SHA1.Create())
+        public FileReference(string host, string destinationPath)
         {
-            IEnumerable<string> listString = sha.ComputeHash(bytes).Select(b => b.ToString("x2"));
-            str1 = string.Concat(listString).Substring(8);
-        }        
-        return str1;
-    }
-
-    private Stream ConvertMemoryStreamToStream(MemoryStream ms)
-    {
-        var newStream = new MemoryStream();
-        var buffer = new byte[32 * 1024]; // 32K buffer for example
-        int bytesRead;
-
-        while ((bytesRead = ms.Read(buffer, 0, buffer.Length)) > 0)
-            newStream.Write(buffer, 0, bytesRead);
-        newStream.Position = 0;
-        return newStream;
-    }
-    
-    public string GetReference(string containerName, string fileName, DateTime expirationDate)
-    {
-        if (string.IsNullOrEmpty(containerName))
-            return null;
-        if (string.IsNullOrEmpty(fileName))
-            return null;
-        if (expirationDate == default(DateTime))
-            expirationDate = DateTime.Now.AddDays(2);
+            _host = host;
+            _destinationPath = destinationPath;
+        }
         
-        var hash = MakeExpiryHash(expirationDate);
-        var reference = string.Format($"http://{_sftpSettings.Host}/FileRef/GetFile?path={_sftpSettings.DestinationPath}/{containerName}/" +
-                                    $"{fileName}&expirationDate={expirationDate:s}&token={hash}");
-        
-        return reference;
+        public FileReference(SftpSettings sftpSettings)
+            : this(sftpSettings.Host, sftpSettings.DestinationPath)
+        {
+        }
+
+        private string MakeExpiryHash(DateTime expiry)
+        {
+            const string salt = "Secret Phrase";
+            string str1 = "";
+            byte[] bytes = Encoding.UTF8.GetBytes(salt + expiry.ToString("s"));
+            using (var sha = System.Security.Cryptography.SHA1.Create())
+            {
+                IEnumerable<string> listString = sha.ComputeHash(bytes).Select(b => b.ToString("x2"));
+                str1 = string.Concat(listString).Substring(8);
+            }
+
+            return str1;
+        }
+
+        private Stream ConvertMemoryStreamToStream(MemoryStream ms)
+        {
+            var newStream = new MemoryStream();
+            var buffer = new byte[32 * 1024]; // 32K buffer for example
+            int bytesRead;
+
+            while ((bytesRead = ms.Read(buffer, 0, buffer.Length)) > 0)
+                newStream.Write(buffer, 0, bytesRead);
+            newStream.Position = 0;
+            return newStream;
+        }
+
+        public string GetReference(string containerName, string fileName, DateTime expirationDate)
+        {
+            if (string.IsNullOrEmpty(containerName))
+                return null;
+            if (string.IsNullOrEmpty(fileName))
+                return null;
+            if (expirationDate == default(DateTime))
+                expirationDate = DateTime.Now.AddDays(2);
+
+            var hash = MakeExpiryHash(expirationDate);
+            var reference = string.Format(
+                $"http://{_host}/FileRef/GetFile?path={_destinationPath}/{containerName}/" +
+                $"{fileName}&expirationDate={expirationDate:s}&token={hash}");
+
+            return reference;
+        }
     }
 }

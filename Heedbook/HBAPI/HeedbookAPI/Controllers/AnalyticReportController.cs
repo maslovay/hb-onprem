@@ -56,9 +56,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("ActiveEmployee")]
-        public IActionResult ReportActiveEmployee([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+        public IActionResult ReportActiveEmployee([FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
@@ -69,17 +67,9 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
 
-                var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-                begTime = begTime.Date;
-                endTime = endTime.Date.AddDays(1);
-
-
                 var sessions = _context.Sessions
                     .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= begTime
-                            && p.StatusId == 6
+                    .Where(p => p.StatusId == 6
                             && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                             && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))

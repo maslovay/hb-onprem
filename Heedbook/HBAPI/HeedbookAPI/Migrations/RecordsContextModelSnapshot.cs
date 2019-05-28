@@ -750,6 +750,8 @@ namespace UserOperations.Migrations
 
                     b.Property<Guid>("ApplicationUserId");
 
+                    b.Property<Guid?>("FaceId");
+
                     b.Property<int?>("FaceLength");
 
                     b.Property<string>("FileContainer");
@@ -1267,7 +1269,7 @@ namespace UserOperations.Migrations
                         .HasForeignKey("CompanyIndustryId");
 
                     b.HasOne("HBData.Models.Corporation", "Corporation")
-                        .WithMany()
+                        .WithMany("Companies")
                         .HasForeignKey("CorporationId");
 
                     b.HasOne("HBData.Models.Country", "Country")

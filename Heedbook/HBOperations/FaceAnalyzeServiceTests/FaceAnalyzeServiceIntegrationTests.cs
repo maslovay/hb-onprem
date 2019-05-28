@@ -102,7 +102,7 @@ namespace FaceAnalyzeService.Tests
             _faceAnalyzeService = ServiceProvider.GetService<FaceAnalyze>();
         }
 
-        [Test]
+        [Test, Retry(3)]
         public async Task EnsureCreatesFrameEmotion()
         {
             await _faceAnalyzeService.Run(frameFileRemotePath);

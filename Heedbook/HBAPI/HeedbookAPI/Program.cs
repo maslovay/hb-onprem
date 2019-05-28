@@ -14,7 +14,6 @@ namespace UserOperations
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("start");
             CreateWebHostBuilder(args).Build().Run();
         }
 

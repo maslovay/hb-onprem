@@ -1,9 +1,10 @@
 FROM microsoft/dotnet:2.2-sdk AS test-env
 WORKDIR /app
 COPY . .
+COPY HBOperations/AudioAnalyzeService/*.exe /app/
 
-RUN dotnet restore ./HBOperations/; exit 0;
-RUN for testProj in ./HBOperations/*; do dotnet publish $testProj -c Release -o publish; done
+#RUN dotnet restore ./HBOperations/; exit 0;
+#RUN for testProj in ./HBOperations/*; do dotnet publish $testProj -c Release -o publish; done
 RUN mkdir /opt; exit 0;
 RUN chmod -R 777 /opt/; exit 0;
 RUN mkdir /opt/download; exit 0;
@@ -18,5 +19,11 @@ RUN ./rabbit_test_setup.sh; exit 0;
 RUN ./test_environment_setup.sh; exit 0;
 
 WORKDIR /app/HBOperations
-RUN dotnet test -r ./TestResults
-RUN killall -9 dotnet                                           
+RUN killall -9 dotnet; exit 0;   
+RUN dotnet restore ./HBOperations/; exit 0;
+RUN dotnet build
+
+#RUN service rabbitmq-server restart
+
+RUN ../rabbit_test_start.sh & dotnet test -r ./TestResults
+RUN killall -9 dotnet; exit 0;
