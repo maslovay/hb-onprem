@@ -103,6 +103,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueVideoAssembleServic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemoryCacheService", "MemoryCacheService\MemoryCacheService.csproj", "{A0A5797C-45F1-4A9C-9D66-0F523FD9434F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemoryCacheServiceTests", "MemoryCacheServiceTests\MemoryCacheServiceTests.csproj", "{B1576236-9520-40DC-B76B-59B3B4B062D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -245,6 +247,10 @@ Global
 		{A0A5797C-45F1-4A9C-9D66-0F523FD9434F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0A5797C-45F1-4A9C-9D66-0F523FD9434F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0A5797C-45F1-4A9C-9D66-0F523FD9434F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1576236-9520-40DC-B76B-59B3B4B062D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1576236-9520-40DC-B76B-59B3B4B062D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1576236-9520-40DC-B76B-59B3B4B062D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1576236-9520-40DC-B76B-59B3B4B062D1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -284,6 +290,7 @@ Global
 		{99BB51FD-9E25-444C-999D-8DE8E639C42A} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{8D27D7A9-0BC0-4917-8325-314445E9B9BA} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{A0A5797C-45F1-4A9C-9D66-0F523FD9434F} = {F9312081-26B8-4651-ABC9-A32914105EBA}
+		{B1576236-9520-40DC-B76B-59B3B4B062D1} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
