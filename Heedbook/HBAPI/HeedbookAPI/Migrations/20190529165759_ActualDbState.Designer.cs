@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace UserOperations.Migrations
 {
     [DbContext(typeof(RecordsContext))]
-    [Migration("20190523103057_NewMigration")]
-    partial class NewMigration
+    [Migration("20190529165759_ActualDbState")]
+    partial class ActualDbState
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
