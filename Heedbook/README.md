@@ -141,10 +141,17 @@ kubectl create secret tls tls-secret --key tls.key --cert tls.crt
 ```sh
 kubectl apply -f service-account.yaml
 ```
+
+##### Если нужно поменять контейнер-регистры, то делаем
+```sh
+find . -name "*.yaml" -exec sed -i 's/containerregistryhb/hbtestregistry/g' {} \;
+```
+
 ##### К деплою мы готовы. Теперь выполняем команду
 ```sh
 sh deploy.sh
 ```
+
 Затем проверяем как развернулись поды. Все ли ок.
 ```sh
 kubectl get pods
