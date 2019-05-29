@@ -33,6 +33,7 @@ using HBData;
 using System.Net.Http.Headers;
 using Swashbuckle.AspNetCore.Annotations;
 using HBLib.Utils;
+using UserOperations.Utils;
 #endregion
 
 namespace UserOperations.Controllers
@@ -44,6 +45,7 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
+        private readonly RequestFilters _requestFilters;
 
         private readonly SftpClient _sftpClient;
         private Dictionary<string, string> userClaims;
@@ -57,13 +59,15 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient
+            SftpClient sftpClient,
+            RequestFilters requestFilters
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
+            _requestFilters = requestFilters;
             _containerName = "useravatars";
 
             activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
@@ -514,6 +518,7 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "endTime")] string end,
                                                 [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                 [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
@@ -523,18 +528,11 @@ namespace UserOperations.Controllers
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
-                var formatString = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
-
-                begTime = begTime.Date;
-                endTime = endTime.Date.AddDays(1);
-
-                System.Console.WriteLine(companyIds);
-                System.Console.WriteLine(begTime);
-                System.Console.WriteLine(endTime);
-
+                var role = userClaims["role"];
+                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var begTime = _requestFilters.GetBegDate(beg);
+                var endTime = _requestFilters.GetEndDate(end);
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
 
 
                 var dialogues = _context.Dialogues
