@@ -1,10 +1,10 @@
 ﻿using AsrHttpClient;
-using AudioAnalyzeScheduler.Extensions;
 using Configurations;
 using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using MemoryCacheService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Quartz;
 
 namespace AudioAnalyzeScheduler
 {
@@ -48,21 +47,22 @@ namespace AudioAnalyzeScheduler
             services.AddSingleton<AsrHttpClient.AsrHttpClient>();
             services.AddSingleton<SftpClient>();
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+           
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddAudioRecognizeQuartz();
+            services.AddScoped<IMemoryCache, RedisMemoryCache>();
+            services.AddScoped<CheckAudioRecognizeStatus>();
+            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
 
-            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
-                app.ApplicationServices.GetService<ITrigger>());
             app.UseHttpsRedirection();
             app.UseMvc();
         }

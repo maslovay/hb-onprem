@@ -1,9 +1,9 @@
 ﻿using Configurations;
-using DialogueStatusCheckerScheduler.Extensions;
 using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using MemoryCacheService;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Quartz;
+using QuartzExtensions;
 
 namespace DialogueStatusCheckerScheduler
 {
@@ -42,7 +43,10 @@ namespace DialogueStatusCheckerScheduler
                 return new ElasticClient(settings);
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddDialogueStatusCheckerQuartz();
+            services.AddScoped<IGenericRepository, GenericRepository>();
+            services.AddScoped<IMemoryCache, RedisMemoryCache>();
+            services.AddScoped<DialogueStatusChecker>();
+
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

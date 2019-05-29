@@ -59,7 +59,6 @@ namespace MemoryCacheService
 
         private RedisKey GetValue<T>(IEnumerable<RedisKey> keys, out KeyValuePair<Guid, T> keyValuePair, bool deleteKey) where T : class
         {
-           
             foreach (var key in keys)
             {
                 if (key.Equals(default(RedisKey)))

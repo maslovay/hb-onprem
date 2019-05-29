@@ -1,45 +1,49 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
+using MemoryCacheService;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
-namespace QuartzExtensions.Jobs
+namespace DialogueStatusCheckerScheduler
 {
-    public class DialogueStatusCheckerJob : IJob
+    public class DialogueStatusChecker
     {
         private readonly ElasticClient _log;
         private readonly INotificationPublisher _notificationPublisher;
         private readonly IGenericRepository _repository;
-
-        public DialogueStatusCheckerJob(IServiceScopeFactory factory,
+        private readonly IMemoryCache _memoryCache;
+        
+        public DialogueStatusChecker(IServiceScopeFactory factory,
             INotificationPublisher notificationPublisher,
+            IMemoryCache memoryCache,
             ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _notificationPublisher = notificationPublisher;
             _log = log;
+            _memoryCache = memoryCache;
+            
+            Run();
         }
 
-        public async Task Execute(IJobExecutionContext context)
+        private async Task Run()
         {
             try
             {
                 _log.Info("Function dialogue status checker started.");
-                var dialogues = await _repository.FindByConditionAsync<Dialogue>(item => item.StatusId == 6);
-                if (!dialogues.Any())
+                while (true)
                 {
-                    _log.Info("No dialogues.");
-                    return;
-                }
+                    var (id, dialogue) = _memoryCache.Dequeue<Dialogue>(x => x.StatusId == 0);
+                    while (id == Guid.Empty) 
+                        Thread.Sleep(100);
 
-                foreach (var dialogue in dialogues)
-                {
                     var dialogueFrame = _repository
                                        .Get<DialogueFrame>().Any(item => item.DialogueId == dialogue.DialogueId);
                     var dialogueAudio = _repository
@@ -71,10 +75,9 @@ namespace QuartzExtensions.Jobs
                         dialogue.StatusId = 8;
                         _repository.Update(dialogue);
                     }
+              
+                    _repository.Save();
                 }
-
-                _repository.Save();
-                _log.Info("Function  ended.");
             }
             catch (Exception e)
             {
