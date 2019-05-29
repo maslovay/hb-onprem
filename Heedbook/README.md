@@ -88,6 +88,11 @@ kubectl get pods
 sudo kubeadm join <ip> --token ############## \
     --discovery-token-ca-cert-hash sha256:###############################################
 ```
+
+Если необходимо получить код повторно:
+```sh
+sudo kubeadm token create --print-join-command
+```
 Далее проверяем на мастер машине:
 ```sh
 kubectl get nodes
