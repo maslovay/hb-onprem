@@ -41,7 +41,7 @@ namespace DialogueMarkUp.QuartzJobs
             _log.Info("Function DialogueMarkUp started");
             var periodTime = 5 * 60; 
             var periodFrame = 10;
-            
+
             try
             {
                 var endTime = DateTime.UtcNow.AddMinutes(-30);

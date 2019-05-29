@@ -73,6 +73,13 @@ namespace UserService
                 });
             });
 
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
+                return new ElasticClient(settings);
+            });
+
             // (!isCalledFromUnitTest)
                 services.AddRabbitMqEventBus(Configuration);
 //            else
