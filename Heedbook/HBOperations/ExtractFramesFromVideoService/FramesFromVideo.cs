@@ -67,6 +67,8 @@ namespace ExtractFramesFromVideo
                         var uploadTask = _client.UploadAsMemoryStreamAsync(uploadStreams[frameFilename],
                             FrameContainerName + "/", frameFilename);
 
+                        _log.Info($"Creating file {frameFilename}");
+
                         uploadTasks.Add(uploadTask);
 
                         RaiseNewFrameEvent(frameFilename);
