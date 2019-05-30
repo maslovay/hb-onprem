@@ -62,7 +62,7 @@ namespace UserService.Controllers
                     Duration = duration,
                     EndTime = time.AddSeconds((Double) duration),
                     FileContainer = "videos",
-                    FileExist = await _sftpClient.IsFileExistsAsync($"{fileName}"),
+                    FileExist = await _sftpClient.IsFileExistsAsync($"videos/{fileName}"),
                     FileName = fileName,
                     FileVideoId = Guid.NewGuid(),
                     StatusId = 6

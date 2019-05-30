@@ -65,6 +65,15 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
         }
 
+        [HttpGet("Test0")]
+        public async Task<IActionResult> Test0([FromQuery]string fileName, [FromQuery] string containerName)
+        {
+            System.Console.WriteLine($"{containerName}/{fileName}");
+            var result = await _sftpClient.IsFileExistsAsync($"{containerName}/{fileName}");
+
+            return Ok(result);
+        }
+
         [HttpGet("Test")]
         public async Task<IActionResult> Test()
         {
