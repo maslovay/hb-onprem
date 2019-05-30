@@ -44,8 +44,8 @@ namespace AudioAnalyzeScheduler
             while (true)
             {
                 var (id, item) = _memoryCache.Dequeue<FileAudioDialogue>(x => x.StatusId == 6);
-                while (id == Guid.Empty) 
-                    Thread.Sleep(100);
+                if (id == Guid.Empty)
+                    continue;
 
                 await Task.Run(async () =>
                 {

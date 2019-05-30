@@ -41,23 +41,20 @@ namespace DialogueStatusCheckerScheduler
                 while (true)
                 {
                     var (id, dialogue) = _memoryCache.Dequeue<Dialogue>(x => x.StatusId == 0);
-                    while (id == Guid.Empty) 
-                        Thread.Sleep(100);
+                    if (id == Guid.Empty) continue;
 
-                    var dialogueFrame = _repository
-                                       .Get<DialogueFrame>().Any(item => item.DialogueId == dialogue.DialogueId);
-                    var dialogueAudio = _repository
-                                       .Get<DialogueAudio>().Any(item => item.DialogueId == dialogue.DialogueId);
-                    var dialogueInterval = _repository
-                                          .Get<DialogueInterval>().Any(item => item.DialogueId == dialogue.DialogueId);
-                    var dialogueVisual = _repository
-                                        .Get<DialogueVisual>().Any(item => item.DialogueId == dialogue.DialogueId);
-                    var dialogueClientProfiles = _repository
-                                                .Get<DialogueClientProfile>().Any(item =>
-                                                     item.DialogueId == dialogue.DialogueId);
+                    var dialogueFrame = _repository.Get<DialogueFrame>()
+                        .Any(item => item.DialogueId == dialogue.DialogueId);
+                    var dialogueAudio = _repository.Get<DialogueAudio>()
+                        .Any(item => item.DialogueId == dialogue.DialogueId);
+                    var dialogueInterval = _repository.Get<DialogueInterval>()
+                        .Any(item => item.DialogueId == dialogue.DialogueId);
+                    var dialogueVisual = _repository.Get<DialogueVisual>()
+                        .Any(item => item.DialogueId == dialogue.DialogueId);
+                    var dialogueClientProfiles = _repository.Get<DialogueClientProfile>()
+                        .Any(item => item.DialogueId == dialogue.DialogueId);
 
-                    if (dialogueFrame && dialogueAudio && dialogueInterval && dialogueVisual &&
-                        dialogueClientProfiles)
+                    if (dialogueFrame && dialogueAudio && dialogueInterval && dialogueVisual && dialogueClientProfiles)
                     {
                         _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
                         dialogue.StatusId = 3;

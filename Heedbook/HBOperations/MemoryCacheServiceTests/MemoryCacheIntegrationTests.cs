@@ -93,6 +93,8 @@ namespace MemoryCacheService.Tests
         
         private void FillDatabase()
         {
+            memCache.Clear();
+            
             foreach (var key in testValues1.Keys)
                 memCache.Enqueue(key, testValues1[key]);
 
