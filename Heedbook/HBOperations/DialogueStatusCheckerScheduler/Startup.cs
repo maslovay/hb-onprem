@@ -4,6 +4,8 @@ using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using MemoryCacheService;
+using MemoryDbEventBus;
+using MemoryDbEventBus.Events;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -43,11 +45,10 @@ namespace DialogueStatusCheckerScheduler
                 return new ElasticClient(settings);
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddScoped<IMemoryCache, RedisMemoryCache>();
             services.AddScoped<DialogueStatusChecker>();
 
             services.AddRabbitMqEventBus(Configuration);
+            services.AddMemoryDbEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -59,10 +60,9 @@ namespace DialogueStatusCheckerScheduler
             else
                 app.UseHsts();
 
-            var job = app.ApplicationServices.GetService<IJobDetail>();
-            var trigger = app.ApplicationServices.GetService<ITrigger>();
-            scheduler.ScheduleJob(job,
-                trigger);
+            var service = app.ApplicationServices.GetRequiredService<IMemoryDbPublisher>();
+            service.Subscribe<DialogueCreatedEvent, Handler.DialogueStatusCheckerScheduler>();
+            
             app.UseHttpsRedirection();
             app.UseMvc();
         }

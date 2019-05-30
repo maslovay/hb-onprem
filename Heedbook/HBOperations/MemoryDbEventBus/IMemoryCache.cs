@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MemoryCacheService
+namespace MemoryDbEventBus
 {
     public interface IMemoryCache
     {
@@ -33,5 +33,7 @@ namespace MemoryCacheService
         Task ClearAsync();
         
         int Count();
+
+        bool HasRecords();
     }
 }

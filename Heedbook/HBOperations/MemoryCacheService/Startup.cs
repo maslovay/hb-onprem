@@ -33,14 +33,7 @@ namespace MemoryCacheService
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddOptions();
 
-            var memDbHost = Configuration.GetSection("MemoryCacheDb").GetValue<string>("Host");
-                        var memDbPort = Configuration.GetSection("MemoryCacheDb").GetValue<int>("Port");
-                        var memAllowAdmin = Configuration.GetSection("MemoryCacheDb").GetValue<bool>("AllowAdmin");
-                        var connString = $"{memDbHost}:{memDbPort}, _allowAdmin:{memAllowAdmin}";
-                        
-            services.AddTransient<IMemoryCache, RedisMemoryCache>( opt => new RedisMemoryCache( connString ));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

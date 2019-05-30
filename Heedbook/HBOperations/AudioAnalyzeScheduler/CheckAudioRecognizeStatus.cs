@@ -24,123 +24,116 @@ namespace AudioAnalyzeScheduler
     {
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
-        private readonly IMemoryCache _memoryCache;
 
         public CheckAudioRecognizeStatus(IServiceScopeFactory factory,
-            IMemoryCache memoryCache,
             ElasticClient log)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _log = log;
-            _memoryCache = memoryCache;
-
-            Run();
         }
 
-        private async void Run()
+        public async Task Run(Guid fileAudioDialogueId)
         {
             _log.Info("Audio analyze service started.");
 
-            while (true)
+            var item = _repository.Get<FileAudioDialogue>().FirstOrDefault(fad => fad.FileAudioDialogueId == fileAudioDialogueId);
+
+            if (item == null || item.StatusId != 6)
+                return;
+
+            await Task.Run(async () =>
             {
-                var (id, item) = _memoryCache.Dequeue<FileAudioDialogue>(x => x.StatusId == 6);
-                if (id == Guid.Empty)
-                    continue;
-
-                await Task.Run(async () =>
+                var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(item.STTResult);
+                Console.WriteLine($"Has items: {asrResults.Any()}");
+                var recognized = new List<WordRecognized>();
+                if (asrResults.Any())
                 {
-                    var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(item.STTResult);
-                    Console.WriteLine($"Has items: {asrResults.Any()}");
-                    var recognized = new List<WordRecognized>();
-                    if (asrResults.Any())
+                    asrResults.ForEach(word =>
                     {
-                        asrResults.ForEach(word =>
+                        recognized.Add(new WordRecognized
                         {
-                            recognized.Add(new WordRecognized
-                            {
-                                Word = word.Word,
-                                StartTime = word.Time.ToString(CultureInfo.InvariantCulture),
-                                EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
-                            });
+                            Word = word.Word,
+                            StartTime = word.Time.ToString(CultureInfo.InvariantCulture),
+                            EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
                         });
-                        var languageId = _repository.GetWithInclude<Dialogue>(i => i.DialogueId == item.DialogueId,
-                                i => i.Language)
-                            .Select(i => i.Language.LanguageId)
-                            .First();
-                        var speechSpeed = GetSpeechSpeed(recognized, languageId);
-                        _log.Info($"Speech speed: {speechSpeed}");
-                        var dialogueSpeech = new DialogueSpeech
-                        {
-                            DialogueId = item.DialogueId,
-                            IsClient = true,
-                            SpeechSpeed = speechSpeed,
-                            PositiveShare = default(double),
-                            SilenceShare = GetSilenceShare(recognized, item.BegTime, item.EndTime)
-                        };
-
-                        var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
-                        var phrases = await _repository.FindAllAsync<Phrase>();
-                        var phraseCount = new List<DialoguePhraseCount>();
-                        var phraseCounter = new Dictionary<Guid, int>();
-                        var words = new List<PhraseResult>();
-
-                        foreach (var phrase in phrases)
-                        {
-                            var foundPhrases =
-                                await FindPhrases(recognized, phrase, item.BegTime, lemmatizer, languageId);
-                            Console.WriteLine(JsonConvert.SerializeObject(phrases));
-                            foundPhrases.ForEach(f => words.AddRange(f));
-
-                            if (phraseCounter.Keys.Contains(phrase.PhraseTypeId.Value))
-                                phraseCounter[phrase.PhraseTypeId.Value] += foundPhrases.Count();
-                            else
-                                phraseCounter[phrase.PhraseTypeId.Value] = foundPhrases.Count();
-                        }
-
-                        foreach (var key in phraseCounter.Keys)
-                            phraseCount.Add(new DialoguePhraseCount
-                            {
-                                DialogueId = item.DialogueId,
-                                PhraseTypeId = key,
-                                PhraseCount = phraseCounter[key],
-                                IsClient = true
-                            });
-
-                        recognized.ForEach(r =>
-                        {
-                            if (words.All(w => w.Word != r.Word))
-                                words.Add(new PhraseResult
-                                {
-                                    Word = r.Word,
-                                    BegTime = item.BegTime.AddSeconds(double.Parse(r.StartTime,
-                                        CultureInfo.InvariantCulture)),
-                                    EndTime = item.BegTime.AddSeconds(double.Parse(r.EndTime,
-                                        CultureInfo.InvariantCulture))
-                                });
-                        });
-
-                        await _repository.CreateAsync(new DialogueWord
-                        {
-                            DialogueId = item.DialogueId,
-                            IsClient = true,
-                            Words = JsonConvert.SerializeObject(words)
-                        });
-                        await _repository.CreateAsync(dialogueSpeech);
-                        await _repository.BulkInsertAsync(phraseCount);
-
-                        _log.Info("Asr stt results is not empty. Everything is ok!");
-                    }
-                    else
+                    });
+                    var languageId = _repository.GetWithInclude<Dialogue>(i => i.DialogueId == item.DialogueId,
+                            i => i.Language)
+                        .Select(i => i.Language.LanguageId)
+                        .First();
+                    var speechSpeed = GetSpeechSpeed(recognized, languageId);
+                    _log.Info($"Speech speed: {speechSpeed}");
+                    var dialogueSpeech = new DialogueSpeech
                     {
-                        _log.Info("Asr stt results is empty");
+                        DialogueId = item.DialogueId,
+                        IsClient = true,
+                        SpeechSpeed = speechSpeed,
+                        PositiveShare = default(double),
+                        SilenceShare = GetSilenceShare(recognized, item.BegTime, item.EndTime)
+                    };
+
+                    var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
+                    var phrases = await _repository.FindAllAsync<Phrase>();
+                    var phraseCount = new List<DialoguePhraseCount>();
+                    var phraseCounter = new Dictionary<Guid, int>();
+                    var words = new List<PhraseResult>();
+
+                    foreach (var phrase in phrases)
+                    {
+                        var foundPhrases =
+                            await FindPhrases(recognized, phrase, item.BegTime, lemmatizer, languageId);
+                        Console.WriteLine(JsonConvert.SerializeObject(phrases));
+                        foundPhrases.ForEach(f => words.AddRange(f));
+
+                        if (phraseCounter.Keys.Contains(phrase.PhraseTypeId.Value))
+                            phraseCounter[phrase.PhraseTypeId.Value] += foundPhrases.Count();
+                        else
+                            phraseCounter[phrase.PhraseTypeId.Value] = foundPhrases.Count();
                     }
 
-                    Console.WriteLine("status id 7 ");
-                    item.StatusId = 7;
+                    foreach (var key in phraseCounter.Keys)
+                        phraseCount.Add(new DialoguePhraseCount
+                        {
+                            DialogueId = item.DialogueId,
+                            PhraseTypeId = key,
+                            PhraseCount = phraseCounter[key],
+                            IsClient = true
+                        });
 
-                    _repository.Save();
-                });
-            }
+                    recognized.ForEach(r =>
+                    {
+                        if (words.All(w => w.Word != r.Word))
+                            words.Add(new PhraseResult
+                            {
+                                Word = r.Word,
+                                BegTime = item.BegTime.AddSeconds(double.Parse(r.StartTime,
+                                    CultureInfo.InvariantCulture)),
+                                EndTime = item.BegTime.AddSeconds(double.Parse(r.EndTime,
+                                    CultureInfo.InvariantCulture))
+                            });
+                    });
+
+                    await _repository.CreateAsync(new DialogueWord
+                    {
+                        DialogueId = item.DialogueId,
+                        IsClient = true,
+                        Words = JsonConvert.SerializeObject(words)
+                    });
+                    await _repository.CreateAsync(dialogueSpeech);
+                    await _repository.BulkInsertAsync(phraseCount);
+
+                    _log.Info("Asr stt results is not empty. Everything is ok!");
+                }
+                else
+                {
+                    _log.Info("Asr stt results is empty");
+                }
+
+                Console.WriteLine("status id 7 ");
+                item.StatusId = 7;
+
+                _repository.Save();
+            });
         }
 
         private double GetSpeechSpeed(IReadOnlyCollection<WordRecognized> words, int languageId)

@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
     <ProjectReference Include="..\MemoryCacheService\MemoryCacheService.csproj" />
+    <ProjectReference Include="..\MemoryDbEventBus\MemoryDbEventBus.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
+using MemoryDbEventBus;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 

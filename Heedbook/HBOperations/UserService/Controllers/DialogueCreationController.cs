@@ -3,6 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
+using MemoryDbEventBus;
+using MemoryDbEventBus.Events;
 using Microsoft.AspNetCore.Mvc;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
@@ -16,12 +18,15 @@ namespace UserService.Controllers
     {
         private readonly IGenericRepository _genericRepository;
         private readonly INotificationPublisher _publisher;
+        private readonly IMemoryDbPublisher _memoryDbPublisher;
 
         public DialogueCreationController(INotificationPublisher publisher,
+            IMemoryDbPublisher memoryPublisher,
             IGenericRepository genericRepository)
         {
             _publisher = publisher;
             _genericRepository = genericRepository;
+            _memoryDbPublisher = memoryPublisher;
         }
 
         [HttpPost("dialogueCreation")]
@@ -53,8 +58,16 @@ namespace UserService.Controllers
                 BeginTime = message.BeginTime,
                 EndTime = message.EndTime
             };
-            _publisher.Publish(dialogueVideoMerge);
-            _publisher.Publish(message);
+           // _publisher.Publish(dialogueVideoMerge);
+           // _publisher.Publish(message);
+
+
+            var dialogueCreatedEvent = new DialogueCreatedEvent()
+            {
+                Id = message.DialogueId
+            };
+            
+            _memoryDbPublisher.Publish(dialogueCreatedEvent);
             Console.WriteLine("finished");
         }
         

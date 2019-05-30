@@ -1,10 +1,13 @@
 ﻿using AsrHttpClient;
+using AudioAnalyzeScheduler.Handler;
 using Configurations;
 using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using MemoryCacheService;
+using MemoryDbEventBus;
+using MemoryDbEventBus.Events;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +52,8 @@ namespace AudioAnalyzeScheduler
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
            
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddScoped<IMemoryCache, RedisMemoryCache>();
+            services.AddMemoryDbEventBus(Configuration);
+            
             services.AddScoped<CheckAudioRecognizeStatus>();
             
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -62,7 +66,11 @@ namespace AudioAnalyzeScheduler
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
-
+            
+            
+            var service = app.ApplicationServices.GetRequiredService<IMemoryDbPublisher>();
+            service.Subscribe<FileAudioDialogueCreatedEvent, AudioAnalyzeSchedulerHandler>();
+            
             app.UseHttpsRedirection();
             app.UseMvc();
         }

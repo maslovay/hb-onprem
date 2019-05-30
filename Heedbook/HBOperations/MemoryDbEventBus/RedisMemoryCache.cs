@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StackExchange.Redis;
-using StackRedis.L1.Notifications;
 
-namespace MemoryCacheService
+namespace MemoryDbEventBus
 {
 
     /// <summary>
@@ -110,6 +109,7 @@ namespace MemoryCacheService
             return ret;
         }
 
+
         public void Clear()
         {
             var keys = _server.Keys();
@@ -128,5 +128,8 @@ namespace MemoryCacheService
 
         public int Count()
             => _server.Keys().Count();
+
+        public bool HasRecords()
+            => _server.Keys().Any();
     }
 }

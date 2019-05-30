@@ -15,6 +15,7 @@
     <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
     <ProjectReference Include="..\MemoryCacheService\MemoryCacheService.csproj" />
+    <ProjectReference Include="..\MemoryDbEventBus\MemoryDbEventBus.csproj" />
     <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
   </ItemGroup>
 

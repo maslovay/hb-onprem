@@ -17,6 +17,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Common\Common.csproj" />
       <ProjectReference Include="..\MemoryCacheService\MemoryCacheService.csproj" />
+      <ProjectReference Include="..\MemoryDbEventBus\MemoryDbEventBus.csproj" />
     </ItemGroup>
 
     <ItemGroup>
