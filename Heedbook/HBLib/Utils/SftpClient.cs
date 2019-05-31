@@ -214,12 +214,9 @@ namespace HBLib.Utils
         public async Task<String> DownloadFromFtpToLocalDiskAsync(String remotePath, String localPath = null)
         {
             await ConnectToSftpAsync();
-            Console.WriteLine("Successfully connected");
             var filename = remotePath.Split('/').Last();
 
-            Console.WriteLine(localPath == null);
             localPath = localPath == null ? localPath = Path.Combine(_sftpSettings.DownloadPath, filename) : Path.Combine(localPath, filename);
-            Console.WriteLine($"{localPath}, {remotePath}");
             using (var fs = File.OpenWrite(localPath))
             {
                 await Task.Run(() => _client.DownloadFile(remotePath, fs));

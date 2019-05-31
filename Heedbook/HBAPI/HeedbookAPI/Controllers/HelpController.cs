@@ -65,6 +65,14 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
         }
 
+       [HttpGet("Test11")]
+        public async Task<IActionResult> Test11()
+        {
+            var dialogues = _context.Dialogues.Where(p => p.StatusId == 6 || p.StatusId == null).ToList();
+
+            return Ok(dialogues.Count());
+        }
+
         [HttpGet("Test0")]
         public async Task<IActionResult> Test0([FromQuery]string fileName, [FromQuery] string containerName)
         {
