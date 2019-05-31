@@ -31,7 +31,6 @@ using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Annotations;
-using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -42,17 +41,14 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;     
         private Dictionary<string, string> userClaims; 
-        private readonly ElasticClient _log;
 
         public AccountController(
             ILoginService loginService,
-            RecordsContext context,
-            ElasticClient log
+            RecordsContext context
             )
         {
             _loginService = loginService;
             _context = context;
-            _log = log;
         }
 
         [HttpPost("Register")]
@@ -62,7 +58,6 @@ namespace UserOperations.Controllers
                         SwaggerParameter("User and company data", Required = true)] 
                         UserRegister message)
         {
-            _log.Info("Function Register started");
             if (_context.Companys.Where(x => x.CompanyName == message.CompanyName).Any() || _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                 return BadRequest("Company name or user email not unique");
             try
@@ -75,7 +70,6 @@ namespace UserOperations.Controllers
                     LanguageId = message.LanguageId,
                     CreationDate = DateTime.UtcNow,
                     CountryId = message.CountryId,
-                    CorporationId = message.CorporationId,
                     StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId//---inactive
                 };
                 await _context.Companys.AddAsync(company);
@@ -140,12 +134,10 @@ namespace UserOperations.Controllers
                     {
                         
                     }
-                _log.Info("Function Register finished");
                 return Ok("Registred");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occured while executing Register {e}");
                 return BadRequest(e.ToString());
             }
         }
@@ -159,7 +151,6 @@ namespace UserOperations.Controllers
                         SwaggerParameter("User data", Required = true)]
                         AccountAuthorization message)
         {
-            _log.Info("Function GenerateToken started");
             try
             {
                     ApplicationUser user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == message.UserName.ToUpper()).FirstOrDefault();
@@ -168,18 +159,12 @@ namespace UserOperations.Controllers
                     if (message.UserName != null && message.Password != null && _loginService.CheckUserLogin(message.UserName, message.Password))
                     {
                         if (user.StatusId != _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId) return BadRequest("User not activated");
-                        _log.Info("Function GenerateToken finished");
                         return Ok( _loginService.CreateTokenForUser(user, message.Remember) );
                     }
-                    else 
-                    {
-                        _log.Info("Function GenerateToken finished");
-                        return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Error in username or password");
-                    }
+                    else return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Error in username or password");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occured while executing GenerateToken {e}");
                 return BadRequest($"Could not create token {e}");
             }
         }
@@ -192,7 +177,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-                 _log.Info("Function ChangePassword started");
                 ApplicationUser user = null;
                 //---FOR LOGGINED USER CHANGE PASSWORD WITH INPUT (receive new password in body message.Password)
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
@@ -213,12 +197,10 @@ namespace UserOperations.Controllers
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
                 }
                 await _context.SaveChangesAsync();
-                _log.Info("Function ChangePassword finished");
                 return Ok("password changed");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occured while executing ChangePassword {e}");
                 return BadRequest(e.Message);
             }
         }

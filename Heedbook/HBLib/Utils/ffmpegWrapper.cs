@@ -242,14 +242,6 @@ namespace HBLib.Utils
             return cmd.runCMD(FfPath, arguments);
         }
 
-        public string SplitToFrames(string path, string sessionPath, int framesPerSecond = 3)
-        {
-            var cmd = new CMDWithOutput();
-            var arguments = $"-i {path} -r 1/{framesPerSecond} -f image2 {sessionPath}/%01d.jpg";
-            var res = cmd.runCMD(FfPath, arguments);
-            return res;
-        }
-
         public String ConcatSameCodecsAndFrames(List<FFmpegCommand> fns, String outputFn, String dir = null)
         {
             // https://trac.ffmpeg.org/wiki/Concatenate

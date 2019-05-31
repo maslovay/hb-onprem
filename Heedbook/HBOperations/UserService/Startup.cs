@@ -5,6 +5,7 @@ using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using MemoryDbEventBus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -73,6 +74,7 @@ namespace UserService
                 });
             });
 
+            services.AddRabbitMqEventBus(Configuration);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddTransient(provider =>
             {
@@ -80,18 +82,11 @@ namespace UserService
                 return new ElasticClient(settings);
             });
 
-            // (!isCalledFromUnitTest)
-                services.AddRabbitMqEventBus(Configuration);
-//            else
-//            {
-//                StartupExtensions.MockRabbitPublisher(services);
-//                StartupExtensions.MockNotificationService(services);
-//                StartupExtensions.MockNotificationHandler(services);
-//                StartupExtensions.MockTransmissionEnvironment<IntegrationEvent>(services);                
-//            }
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
+            
+            services.AddMemoryDbEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

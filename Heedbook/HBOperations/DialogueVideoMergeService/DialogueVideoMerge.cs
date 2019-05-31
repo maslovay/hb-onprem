@@ -130,7 +130,6 @@ namespace DialogueVideoMergeService
                     });
                 }
 
-
                 _log.Info("Downloading all files");
                 foreach (var command in commands.GroupBy(p => p.FileName).Select(p => p.First()))
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync(

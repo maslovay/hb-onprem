@@ -1,10 +1,13 @@
 ﻿using AsrHttpClient;
-using AudioAnalyzeScheduler.Extensions;
+using AudioAnalyzeScheduler.Handler;
 using Configurations;
 using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using MemoryCacheService;
+using MemoryDbEventBus;
+using MemoryDbEventBus.Events;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +15,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Quartz;
 
 namespace AudioAnalyzeScheduler
 {
@@ -48,21 +50,28 @@ namespace AudioAnalyzeScheduler
             services.AddSingleton<AsrHttpClient.AsrHttpClient>();
             services.AddSingleton<SftpClient>();
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+           
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddAudioRecognizeQuartz();
+            services.AddMemoryDbEventBus(Configuration);
+            
+            services.AddScoped<CheckAudioRecognizeStatus>();
+            services.AddScoped<AudioAnalyzeSchedulerHandler>();
+            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
-
-            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
-                app.ApplicationServices.GetService<ITrigger>());
+            
+            
+            var service = app.ApplicationServices.GetRequiredService<IMemoryDbPublisher>();
+            service.Subscribe<FileAudioDialogueCreatedEvent, AudioAnalyzeSchedulerHandler>();
+            
             app.UseHttpsRedirection();
             app.UseMvc();
         }
