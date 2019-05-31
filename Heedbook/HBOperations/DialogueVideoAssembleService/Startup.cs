@@ -48,6 +48,7 @@ namespace DialogueVideoAssembleService
             });
             services.AddTransient<DialogueVideoMerge>();
             services.AddTransient<FFMpegSettings>();
+            services.AddTransient<FFMpegWrapper>();
             services.AddTransient<DialogueVideoMergeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddRabbitMqEventBus(Configuration);
