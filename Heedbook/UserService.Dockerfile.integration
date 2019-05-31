@@ -21,7 +21,7 @@ RUN ./test_environment_setup.sh; exit 0;
 
 WORKDIR /app/HBOperations
 RUN killall -9 dotnet; exit 0;   
-RUN dotnet restore ./HBOperations/; exit 0;
+RUN dotnet restore /app/HBOperations/; exit 0;
 RUN dotnet build
 
 #RUN service rabbitmq-server restart
