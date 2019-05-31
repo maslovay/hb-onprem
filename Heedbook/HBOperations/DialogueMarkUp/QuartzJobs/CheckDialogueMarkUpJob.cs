@@ -24,13 +24,11 @@ namespace DialogueMarkUp.QuartzJobs
     public class CheckDialogueMarkUpJob : IJob
     {
         private readonly ElasticClient _log;
-        private readonly IGenericRepository _repository;
         private readonly RecordsContext _context;
         private readonly INotificationPublisher _publisher;
 
         public CheckDialogueMarkUpJob(IServiceScopeFactory factory, INotificationPublisher publisher, ElasticClient log)
         {
-            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _publisher = publisher;
             _log = log;
@@ -185,28 +183,19 @@ namespace DialogueMarkUp.QuartzJobs
                 frameAttribute = frameAttribute.Where(p => p.FileFrame.Time >= frameCompare.FileFrame.Time.AddMinutes(-periodTime)).ToList();
                 var index = frameAttribute.Count() - 1;
                 var lastFrame = frameAttribute[index];
-
-                var i = index - 1;
+                
                 var faceIds = new List<Guid?>();
-                while (i >= 0)
+                for (var i = index - 1; i == 0; i--)
                 {
                     var cos = Cos(JsonConvert.DeserializeObject<List<double>>(lastFrame.Descriptor),
-                                JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
+                        JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
                     // System.Console.WriteLine($"{cos}, {i}");
                     if (cos > treshold) //return frameAttribute[i].FileFrame.FaceId;
                     {
                         faceIds.Add(frameAttribute[i].FileFrame.FaceId);
                     }
-                    i --;
                 }
-                if (faceIds.Any())
-                {
-                    return faceIds.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key;
-                }
-                else
-                {
-                    return Guid.NewGuid();
-                }
+                return faceIds.Any() ? faceIds.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key : Guid.NewGuid();
             }
         }
 
@@ -229,16 +218,6 @@ namespace DialogueMarkUp.QuartzJobs
         private double? Cos(List<double> vector1, List<double> vector2)
         {
             return VectorMult(vector1, vector2) / VectorNorm(vector1) / VectorNorm(vector2);
-        }
-
-        private class MarkUp
-        {
-            public Guid? ApplicationUserId;
-            public Guid? FaceId;
-            public DateTime BegTime;
-            public DateTime EndTime;
-            public string BegFileName;
-            public string EndFileName;
         }
     }
 }
