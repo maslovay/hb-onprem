@@ -54,7 +54,6 @@ namespace DialogueMarkUp
             services.AddRabbitMqEventBus(Configuration);
 
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddMarkUpQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
