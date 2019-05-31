@@ -3,9 +3,9 @@ using RabbitMqEventBus.Base;
 
 namespace MemoryDbEventBus.Events
 {
-    public class DialogueCreatedEvent : IMemoryDbEvent
+    public class DialogueCreatedEvent : MemoryDbEvent
     {
-        public Guid Id { get; set; }
         public int Status { get; set; }
+        public new string EventType { get; private set; } = "DialogueCreatedEvent";
     }
 }

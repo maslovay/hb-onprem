@@ -1,6 +1,7 @@
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
+using Newtonsoft.Json;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
 using Renci.SshNet.Common;
@@ -56,7 +57,9 @@ namespace ExtractFramesFromVideo
                 using (var ftpDownloadStream =
                     await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobRelativePath))
                 {
+                    _log.Info($"File length - {ftpDownloadStream.Length}, File time stamp - {videoTimeStamp}");
                     var uploadStreams = await _wrapper.CutVideo(ftpDownloadStream, videoTimeStamp, appUserId, 10, 3);
+                    _log.Info($"Keys - {JsonConvert.SerializeObject(uploadStreams.Keys)}");
 
                     var uploadTasks = new List<Task>();
                     var insertToDbTasks = new List<Task>();
@@ -65,6 +68,8 @@ namespace ExtractFramesFromVideo
                         uploadStreams[frameFilename].Position = 0;
                         var uploadTask = _client.UploadAsMemoryStreamAsync(uploadStreams[frameFilename],
                             FrameContainerName + "/", frameFilename);
+
+                        _log.Info($"Creating file {frameFilename}");
 
                         uploadTasks.Add(uploadTask);
 

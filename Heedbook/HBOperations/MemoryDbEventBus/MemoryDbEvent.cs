@@ -2,8 +2,9 @@ using System;
 
 namespace MemoryDbEventBus
 {
-    public interface IMemoryDbEvent
+    public class MemoryDbEvent : IMemoryDbEvent
     {
-        Guid Id { get; set; }
+        public Guid Id { get; set; }
+        public string EventType { get; private set; } = "MemoryDbEvent";
     }
 }

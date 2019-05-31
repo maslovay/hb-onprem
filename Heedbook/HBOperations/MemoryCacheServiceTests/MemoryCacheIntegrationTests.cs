@@ -48,10 +48,10 @@ namespace MemoryCacheService.Tests
             FillDatabase();
             int originalCount = memCache.Count();
 
-            var kvp1 = memCache.Dequeue<FirstTestType>();
+            var kvp1 = memCache.Dequeue();
             Assert.IsFalse(kvp1.Key == Guid.Empty);
             
-            var kvp2 = memCache.Dequeue<SecondTestType>();
+            var kvp2 = memCache.Dequeue();
             Assert.IsFalse(kvp2.Key == Guid.Empty);
             
             Assert.AreEqual( memCache.Count(), originalCount - 2 );
@@ -65,7 +65,7 @@ namespace MemoryCacheService.Tests
             
             FillDatabase();
 
-            var dequeued = memCache.Dequeue<FirstTestType>(x => x.Status >= 5);
+            var dequeued = memCache.Dequeue(x => x.Status >= 5);
             
             Assert.AreNotEqual(dequeued.Key, Guid.Empty);
         }

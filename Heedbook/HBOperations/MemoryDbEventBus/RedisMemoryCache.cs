@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -32,10 +33,15 @@ namespace MemoryDbEventBus
         /// <param name="newObject">Object</param>
         /// <typeparam name="T"></typeparam>
         public void Enqueue<T>(Guid id, T newObject)
-            where T : class
+            where T : IMemoryDbEvent
         {
             var ser = JsonConvert.SerializeObject(newObject).ToString();
             _memoryDatabase.StringSetAsync(id.ToString(), ser);
+        }
+
+        public void Enqueue(Guid id, JObject jObject)
+        {
+            _memoryDatabase.StringSetAsync(id.ToString(), jObject.ToString());
         }
 
         /// <summary>
@@ -45,18 +51,23 @@ namespace MemoryDbEventBus
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public KeyValuePair<Guid, T> Dequeue<T>()
-            where T : class
+//        public KeyValuePair<Guid, T> Dequeue<T>()
+//            where T : IMemoryDbEvent
+//        {
+//
+//        }
+
+        public KeyValuePair<Guid, dynamic> Dequeue()
         {
             var keys = _server.Keys().Reverse();
             
-            if (GetValue(keys, out KeyValuePair<Guid, T> keyValuePair, true) != default(RedisKey)) 
+            if (GetValue(keys, out KeyValuePair<Guid, dynamic> keyValuePair, true) != default(RedisKey)) 
                 return keyValuePair;
 
-            return new KeyValuePair<Guid, T>(Guid.Empty, default(T));
+            return new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
         }
 
-        private RedisKey GetValue<T>(IEnumerable<RedisKey> keys, out KeyValuePair<Guid, T> keyValuePair, bool deleteKey) where T : class
+        private RedisKey GetValue(IEnumerable<RedisKey> keys, out KeyValuePair<Guid, dynamic> keyValuePair, bool deleteKey) 
         {
             foreach (var key in keys)
             {
@@ -69,12 +80,12 @@ namespace MemoryDbEventBus
 
                 try
                 {
-                    var origValue = JsonConvert.DeserializeObject<T>(RedisValue.Unbox(val));
+                    var origValue = JsonConvert.DeserializeObject(RedisValue.Unbox(val));
 
                     if (deleteKey)
                         _memoryDatabase.KeyDelete(key);
                     
-                    keyValuePair = new KeyValuePair<Guid, T>(Guid.Parse(key), (T) origValue);
+                    keyValuePair = new KeyValuePair<Guid, dynamic>(Guid.Parse(key), (dynamic) origValue);
                     return key;
                 }
                 catch (Exception ex)
@@ -83,7 +94,7 @@ namespace MemoryDbEventBus
                 }
             }
             
-            keyValuePair = new KeyValuePair<Guid, T>(Guid.Empty, default(T));
+            keyValuePair = new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
             return default(RedisKey);
         }
 
@@ -93,10 +104,9 @@ namespace MemoryDbEventBus
         /// <param name="expr"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public KeyValuePair<Guid, T> Dequeue<T>(Func<T,bool> expr)
-            where T : class
+        public KeyValuePair<Guid, dynamic> Dequeue(Func<dynamic,bool> expr)
         {
-            var ret = new KeyValuePair<Guid, T>( Guid.Empty, default(T) );
+            var ret = new KeyValuePair<Guid, dynamic>( Guid.Empty, null );
             var keys = _server.Keys().Reverse().ToArray();
             RedisKey key;
             

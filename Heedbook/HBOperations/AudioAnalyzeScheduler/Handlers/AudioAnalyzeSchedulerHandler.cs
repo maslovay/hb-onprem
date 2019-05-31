@@ -21,15 +21,13 @@ namespace AudioAnalyzeScheduler.Handler
         {
             try
             {
-                await _checkAudioRecognizeStatus.Run(@event.Id);
+                EventStatus = await _checkAudioRecognizeStatus.Run(@event.Id);
             }
             catch (Exception ex)
             {
                 EventStatus = EventStatus.Fail;
                 throw;
             }
-
-            EventStatus = EventStatus.Passed;
         }
 
         public EventStatus EventStatus { get; set; }

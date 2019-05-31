@@ -75,6 +75,13 @@ namespace UserService
             });
 
             services.AddRabbitMqEventBus(Configuration);
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
+                return new ElasticClient(settings);
+            });
+
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();

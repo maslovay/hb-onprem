@@ -55,6 +55,7 @@ namespace AudioAnalyzeScheduler
             services.AddMemoryDbEventBus(Configuration);
             
             services.AddScoped<CheckAudioRecognizeStatus>();
+            services.AddScoped<AudioAnalyzeSchedulerHandler>();
             
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

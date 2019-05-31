@@ -41,7 +41,7 @@ namespace DialogueMarkUp.QuartzJobs
             _log.Info("Function DialogueMarkUp started");
             var periodTime = 5 * 60; 
             var periodFrame = 10;
-            
+
             try
             {
                 var endTime = DateTime.UtcNow.AddMinutes(-30);
@@ -71,6 +71,7 @@ namespace DialogueMarkUp.QuartzJobs
                         })
                         .OrderBy(p => p.EndTime)
                         .ToList();
+                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}"); 
                     if (markUps.Any()) CreateMarkUp(markUps, framesUser, applicationUserId);
                 }
                 _log.Info("Function DialogueMarkUp finished");                

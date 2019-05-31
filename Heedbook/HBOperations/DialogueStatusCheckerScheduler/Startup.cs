@@ -13,8 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Quartz;
-using QuartzExtensions;
 
 namespace DialogueStatusCheckerScheduler
 {
@@ -46,6 +44,7 @@ namespace DialogueStatusCheckerScheduler
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<DialogueStatusChecker>();
+            services.AddScoped<Handler.DialogueStatusCheckerSchedulerHandler>();
 
             services.AddRabbitMqEventBus(Configuration);
             services.AddMemoryDbEventBus(Configuration);
@@ -53,7 +52,7 @@ namespace DialogueStatusCheckerScheduler
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
@@ -61,7 +60,7 @@ namespace DialogueStatusCheckerScheduler
                 app.UseHsts();
 
             var service = app.ApplicationServices.GetRequiredService<IMemoryDbPublisher>();
-            service.Subscribe<DialogueCreatedEvent, Handler.DialogueStatusCheckerScheduler>();
+            service.Subscribe<DialogueCreatedEvent, Handler.DialogueStatusCheckerSchedulerHandler>();
             
             app.UseHttpsRedirection();
             app.UseMvc();

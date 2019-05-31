@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using MemoryDbEventBus.Handlers;
+using MemoryDbEventBus.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Base;
@@ -53,27 +54,41 @@ namespace MemoryDbEventBus
         {
             while (true)
             {
-                if (!_memoryCache.HasRecords())
+                if (!_subscriptions.Keys.Any() || !_memoryCache.HasRecords())
+                {
                     Thread.Sleep(100);
+                    continue;
+                }
 
-                var (key, value) = _memoryCache.Dequeue<IMemoryDbEvent>();
+                var (key, value) = _memoryCache.Dequeue();
 
                 if (value == null)
                     continue;
 
-                var handler = GetHandler(value);
-                handler?.Handle(value);
+                var matchingValue = TypeChecker.MatchAndConvert(value, _subscriptions.Keys.ToArray());
 
-                if (handler.EventStatus == EventStatus.Fail)
+                if (matchingValue == null) 
+                    continue;
+
+                if (matchingValue.GetType() == typeof(MemoryDbEvent))
+                {
+                    _memoryCache.Enqueue(((IMemoryDbEvent)matchingValue).Id, value);
+                    continue;
+                }
+
+                var handler = GetHandler(matchingValue);
+                handler?.Handle(matchingValue);
+
+                if (handler == null || handler.EventStatus != EventStatus.Passed) 
                     _memoryCache.Enqueue(key, value);
             }
         }
 
-        private IMemoryDbEventHandler<IMemoryDbEvent> GetHandler(IMemoryDbEvent evt)
+        private IIntegrationEventHandler GetHandler(IMemoryDbEvent evt)
         {
             var realType = evt.GetType();
 
-            return _subscriptions[realType.Name] as IMemoryDbEventHandler<IMemoryDbEvent>;
+            return _subscriptions[realType.Name];
         }
 
         private bool CheckExistance(Type eventType)

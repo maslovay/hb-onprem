@@ -17,6 +17,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MemoryCacheService;
+using MemoryDbEventBus.Handlers;
 
 namespace AudioAnalyzeScheduler
 {
@@ -32,14 +33,14 @@ namespace AudioAnalyzeScheduler
             _log = log;
         }
 
-        public async Task Run(Guid fileAudioDialogueId)
+        public async Task<EventStatus> Run(Guid fileAudioDialogueId)
         {
             _log.Info("Audio analyze service started.");
 
             var item = _repository.Get<FileAudioDialogue>().FirstOrDefault(fad => fad.FileAudioDialogueId == fileAudioDialogueId);
 
             if (item == null || item.StatusId != 6)
-                return;
+                return EventStatus.InQueue;
 
             await Task.Run(async () =>
             {
@@ -134,6 +135,8 @@ namespace AudioAnalyzeScheduler
 
                 _repository.Save();
             });
+
+            return EventStatus.Passed;
         }
 
         private double GetSpeechSpeed(IReadOnlyCollection<WordRecognized> words, int languageId)

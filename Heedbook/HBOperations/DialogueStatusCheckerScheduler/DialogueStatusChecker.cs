@@ -6,6 +6,7 @@ using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
 using MemoryCacheService;
+using MemoryDbEventBus.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using RabbitMqEventBus;
@@ -28,7 +29,7 @@ namespace DialogueStatusCheckerScheduler
             _log = log;
         }
 
-        public async Task Run(Guid dialogueId)
+        public async Task<EventStatus> Run(Guid dialogueId)
         {
             try
             {
@@ -36,7 +37,7 @@ namespace DialogueStatusCheckerScheduler
 
                 var dialogue = _repository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
                 if (dialogue == null)
-                    return;
+                    return EventStatus.Fail;
 
                 var dialogueFrame = _repository.Get<DialogueFrame>()
                     .Any(item => item.DialogueId == dialogue.DialogueId);
@@ -63,7 +64,7 @@ namespace DialogueStatusCheckerScheduler
                 else
                 {
                     if ((DateTime.Now - dialogue.CreationTime).Hours < 2) 
-                        return;
+                        return EventStatus.InQueue;
                     
                     _log.Error($"Error dialogue. Dialogue id {dialogue.DialogueId}");
                     dialogue.StatusId = 8;
@@ -71,11 +72,15 @@ namespace DialogueStatusCheckerScheduler
                 }
 
                 _repository.Save();
+
+                return EventStatus.Passed;
             }
             catch (Exception e)
             {
                 _log.Fatal($"exception occurs {e}");
             }
+
+            return EventStatus.Fail;
         }
     }
 }

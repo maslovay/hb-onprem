@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace MemoryDbEventBus
 {
@@ -13,8 +14,11 @@ namespace MemoryDbEventBus
         /// <param name="newObject">Object</param>
         /// <typeparam name="T"></typeparam>
         void Enqueue<T>(Guid id, T newObject)
-            where T : class;
+            where T : IMemoryDbEvent;
 
+        void Enqueue(Guid id, JObject jObject);
+
+        
         /// <summary>
         /// Gets last object of type T from a database
         /// Returns KeyValuePair
@@ -22,11 +26,10 @@ namespace MemoryDbEventBus
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        KeyValuePair<Guid, T> Dequeue<T>()
-            where T : class;
+      
+        KeyValuePair<Guid, dynamic> Dequeue();
 
-        KeyValuePair<Guid, T> Dequeue<T>(Func<T, bool> expr)
-            where T : class;
+        KeyValuePair<Guid, dynamic> Dequeue(Func<dynamic, bool> expr);
 
         void Clear();
 

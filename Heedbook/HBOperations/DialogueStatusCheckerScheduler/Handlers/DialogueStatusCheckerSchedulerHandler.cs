@@ -8,11 +8,11 @@ using MemoryDbEventBus.Handlers;
 
 namespace DialogueStatusCheckerScheduler.Handler
 {
-    public class DialogueStatusCheckerScheduler : IMemoryDbEventHandler<DialogueCreatedEvent>
+    public class DialogueStatusCheckerSchedulerHandler : IMemoryDbEventHandler<DialogueCreatedEvent>
     {
         private readonly DialogueStatusChecker _dialogueStatusChecker;
 
-        public DialogueStatusCheckerScheduler(DialogueStatusChecker dialogueStatusChecker)
+        public DialogueStatusCheckerSchedulerHandler(DialogueStatusChecker dialogueStatusChecker)
         {
             _dialogueStatusChecker = dialogueStatusChecker;
             EventStatus = EventStatus.InQueue;
@@ -22,15 +22,13 @@ namespace DialogueStatusCheckerScheduler.Handler
         {
             try
             {
-                await _dialogueStatusChecker.Run(@event.Id);
+                EventStatus = await _dialogueStatusChecker.Run(@event.Id);
             }
             catch (Exception ex)
             {
                 EventStatus = EventStatus.Fail;
                 throw;
             }
-
-            EventStatus = EventStatus.Passed;
         }
 
         public EventStatus EventStatus { get; set; }

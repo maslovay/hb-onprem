@@ -23,4 +23,8 @@
       <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="TypeFilter" />
+    </ItemGroup>
+
 </Project>
