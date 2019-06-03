@@ -34,20 +34,20 @@ namespace DialogueStatusCheckerScheduler
             {
                 _log.Info("Function dialogue status checker started.");
 
-                var dialogue = _repository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
+                var dialogue = _repository.GetWithInclude<Dialogue>(d => d.DialogueId == dialogueId, 
+                    d => d.DialogueFrame, 
+                    d => d.DialogueAudio, 
+                    d => d.DialogueInterval, 
+                    d => d.DialogueVisual, 
+                    d => d.DialogueClientProfile).FirstOrDefault();
                 if (dialogue == null)
                     return EventStatus.Fail;
 
-                var dialogueFrame = _repository.Get<DialogueFrame>()
-                    .Any(item => item.DialogueId == dialogue.DialogueId);
-                var dialogueAudio = _repository.Get<DialogueAudio>()
-                    .Any(item => item.DialogueId == dialogue.DialogueId);
-                var dialogueInterval = _repository.Get<DialogueInterval>()
-                    .Any(item => item.DialogueId == dialogue.DialogueId);
-                var dialogueVisual = _repository.Get<DialogueVisual>()
-                    .Any(item => item.DialogueId == dialogue.DialogueId);
-                var dialogueClientProfiles = _repository.Get<DialogueClientProfile>()
-                    .Any(item => item.DialogueId == dialogue.DialogueId);
+                var dialogueFrame = dialogue.DialogueFrame?.Any() ?? false;
+                var dialogueAudio = dialogue.DialogueAudio?.Any() ?? false;
+                var dialogueInterval = dialogue.DialogueInterval?.Any() ?? false;
+                var dialogueVisual = dialogue.DialogueVisual?.Any() ?? false;
+                var dialogueClientProfiles = dialogue.DialogueClientProfile?.Any() ?? false;
 
                 if (dialogueFrame && dialogueAudio && dialogueInterval && dialogueVisual && dialogueClientProfiles)
                 {

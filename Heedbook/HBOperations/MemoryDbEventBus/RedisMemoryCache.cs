@@ -60,42 +60,53 @@ namespace MemoryDbEventBus
         public KeyValuePair<Guid, dynamic> Dequeue()
         {
             var keys = _server.Keys().Reverse();
-            
-            if (GetValue(keys, out KeyValuePair<Guid, dynamic> keyValuePair, true) != default(RedisKey)) 
+
+            if (GetValue(keys, out KeyValuePair<Guid, dynamic> keyValuePair, true) != default(RedisKey))
                 return keyValuePair;
 
             return new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
         }
 
-        private RedisKey GetValue(IEnumerable<RedisKey> keys, out KeyValuePair<Guid, dynamic> keyValuePair, bool deleteKey) 
+        private RedisKey GetValue(IEnumerable<RedisKey> keys, out KeyValuePair<Guid, dynamic> keyValuePair,
+            bool deleteKey)
         {
+            keyValuePair = new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
             foreach (var key in keys)
             {
-                if (key.Equals(default(RedisKey)))
-                    continue;
+                if (GetValueForKey(out keyValuePair, deleteKey, key, out var redisKey)) return redisKey;
+            }
 
-                var val = _memoryDatabase.StringGet(key);
-                if (!val.HasValue)
-                    continue;
+            return default(RedisKey);
+        }
 
-                try
+        private bool GetValueForKey(out KeyValuePair<Guid, dynamic> keyValuePair, bool deleteKey, RedisKey key, out RedisKey redisKey)
+        {
+            keyValuePair = new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
+            
+            if (key.Equals(default(RedisKey)))
+                return false;
+
+            var val = _memoryDatabase.StringGet(key);
+            if (!val.HasValue)
+                return false;
+
+            try
+            {
+                var origValue = JsonConvert.DeserializeObject(RedisValue.Unbox(val));
+
+                if (deleteKey)
+                    _memoryDatabase.KeyDelete(key);
+
+                keyValuePair = new KeyValuePair<Guid, dynamic>(Guid.Parse(key), (dynamic) origValue);
                 {
-                    var origValue = JsonConvert.DeserializeObject(RedisValue.Unbox(val));
-
-                    if (deleteKey)
-                        _memoryDatabase.KeyDelete(key);
-                    
-                    keyValuePair = new KeyValuePair<Guid, dynamic>(Guid.Parse(key), (dynamic) origValue);
-                    return key;
-                }
-                catch (Exception ex)
-                {
-                    continue;
+                    redisKey = key;
+                    return true;
                 }
             }
-            
-            keyValuePair = new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
-            return default(RedisKey);
+            catch (Exception ex)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -104,18 +115,18 @@ namespace MemoryDbEventBus
         /// <param name="expr"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public KeyValuePair<Guid, dynamic> Dequeue(Func<dynamic,bool> expr)
+        public KeyValuePair<Guid, dynamic> Dequeue(Func<dynamic, bool> expr)
         {
-            var ret = new KeyValuePair<Guid, dynamic>( Guid.Empty, null );
+            var ret = new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
             var keys = _server.Keys().Reverse().ToArray();
             RedisKey key;
-            
+
             while (ret.Value == null || !expr(ret.Value))
                 key = GetValue(keys, out ret, false);
-            
+
             if (key != default(RedisKey))
                 _memoryDatabase.KeyDelete(key);
-            
+
             return ret;
         }
 
@@ -127,7 +138,7 @@ namespace MemoryDbEventBus
             foreach (var key in keys)
                 _memoryDatabase.KeyDelete(key);
         }
-        
+
         public async Task ClearAsync()
         {
             var keys = _server.Keys();
@@ -141,5 +152,20 @@ namespace MemoryDbEventBus
 
         public bool HasRecords()
             => _server.Keys().Any();
+
+        public bool HasRecords<T>(Func<T, bool> expr)
+        {
+                var ret = new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
+
+
+                foreach (var key in  _server.Keys())
+                {
+                    GetValueForKey(out var keyValuePair, false, key, out var redisKey);
+                    if (expr(keyValuePair.Value))
+                        return true;
+                }
+                
+                return false;
+        }
     }
 }

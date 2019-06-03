@@ -38,5 +38,7 @@ namespace MemoryDbEventBus
         int Count();
 
         bool HasRecords();
+        
+        bool HasRecords<T>(Func<T ,bool> expr);
     }
 }

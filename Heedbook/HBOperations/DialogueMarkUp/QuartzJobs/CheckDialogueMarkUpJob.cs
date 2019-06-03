@@ -135,7 +135,8 @@ namespace DialogueMarkUp.QuartzJobs
 
                     var dialogueCreatedEvent = new DialogueCreatedEvent()
                     {
-                        Id = dialogueId
+                        Id = dialogueId,
+                        Status = dialogue.StatusId.Value
                     };
                     _memoryDbPublisher.Publish(dialogueCreatedEvent);
 

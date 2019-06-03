@@ -14,7 +14,8 @@ namespace DialogueStatusCheckerScheduler
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
-                          .UseStartup<Startup>();
+
+                .UseStartup<Startup>();
         }
     }
 }
