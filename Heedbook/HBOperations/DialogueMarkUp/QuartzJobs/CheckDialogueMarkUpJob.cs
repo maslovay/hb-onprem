@@ -116,6 +116,16 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _log.Info($" Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
+
+                    var dialogueCreation = new DialogueCreationRun {
+                        ApplicationUserId = applicationUserId,
+                        DialogueId = dialogueId,
+                        BeginTime = markup.BegTime,
+                        EndTime = markup.EndTime
+                    };
+                    _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    _publisher.Publish(dialogueCreation);
+
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
@@ -156,6 +166,19 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _log.Info($"Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
+
+                    var dialogueCreation = new DialogueCreationRun {
+                       ApplicationUserId = applicationUserId,
+                        // DialogueId = (Guid) markUps[i].FaceId,
+                        DialogueId = dialogueId,
+                        BeginTime = markUps[i].BegTime,
+                        EndTime = markUps[i].EndTime
+                    };
+                    _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    _publisher.Publish(dialogueCreation);
+
+
+                    
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();

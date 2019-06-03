@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMqEventBus", "RabbitM
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498-9934-4664-B888-F24989B01059}"
 	ProjectSection(SolutionItems) = preProject
-		AudioAnalyzeScheduler.Dockerfile = AudioAnalyzeScheduler.Dockerfile
+		AudioAnalyzeScheduler.Dockerfile = AudioAnalyzeScheduler.DockeHeedbook/HBAPI/HeedbookAPI/Utils/Filters.cs rfile
 		AudioAnalyzeService.Dockerfile = AudioAnalyzeService.Dockerfile
 		build.sh = build.sh
 		DialogueStatusCheckerScheduler.Dockerfile = DialogueStatusCheckerScheduler.Dockerfile

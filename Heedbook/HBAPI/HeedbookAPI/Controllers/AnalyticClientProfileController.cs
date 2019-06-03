@@ -30,7 +30,6 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
-using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -44,22 +43,19 @@ namespace UserOperations.Controllers
         private readonly DBOperations _dbOperation;
         private readonly List<AgeBoarder> _ageBoarders;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
 
         public AnalyticClientProfileController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _dbOperation = dbOperation;
-            _log = log;
             _ageBoarders = new List<AgeBoarder>{ 
                 new AgeBoarder{
                     BegAge = 0,
@@ -94,7 +90,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Function GenderAgeStructure started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");                    
                 var role = userClaims["role"];
@@ -144,12 +139,10 @@ namespace UserOperations.Controllers
                             .Average()
                     });
                 }
-                _log.Info("Function GenderAgeStructure finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal("Function GenderAgeStructure finished");
                 return BadRequest(e);
             }
 
