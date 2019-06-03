@@ -1,10 +1,6 @@
 FROM microsoft/dotnet:2.2-sdk-alpine AS build-env
 WORKDIR /app
 COPY . .
-
-RUN dotnet restore ./HBOperations/AudioAnalyzeScheduler/
-RUN dotnet build ./HBOperations/AudioAnalyzeScheduler/
-
 # Copy everything else and build
 RUN dotnet publish ./HBOperations/AudioAnalyzeScheduler -c Release -o publish
 

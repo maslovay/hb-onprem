@@ -33,7 +33,6 @@ using HBData;
 using System.Net.Http.Headers;
 using Swashbuckle.AspNetCore.Annotations;
 using HBLib.Utils;
-using UserOperations.Utils;
 #endregion
 
 namespace UserOperations.Controllers
@@ -45,7 +44,6 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly RequestFilters _requestFilters;
 
         private readonly SftpClient _sftpClient;
         private Dictionary<string, string> userClaims;
@@ -59,15 +57,13 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient,
-            RequestFilters requestFilters
+            SftpClient sftpClient
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-            _requestFilters = requestFilters;
             _containerName = "useravatars";
 
             activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
@@ -518,7 +514,6 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "endTime")] string end,
                                                 [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                 [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
@@ -528,11 +523,18 @@ namespace UserOperations.Controllers
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+                var formatString = "yyyyMMdd";
+                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
+
+                begTime = begTime.Date;
+                endTime = endTime.Date.AddDays(1);
+
+                System.Console.WriteLine(companyIds);
+                System.Console.WriteLine(begTime);
+                System.Console.WriteLine(endTime);
+
 
 
                 var dialogues = _context.Dialogues
@@ -543,7 +545,7 @@ namespace UserOperations.Controllers
                 .Where(p => 
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
-                    p.StatusId == activeStatus &&
+                    p.StatusId == activeStatus && p.InStatistic == true &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
@@ -582,21 +584,8 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var begTime = DateTime.UtcNow.AddDays(-30);
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var companyId = _context.Dialogues
-                    .Include(x => x.ApplicationUser)
-                    .Where(x=>x.DialogueId == dialogueId)
-                    .FirstOrDefault()
-                    .ApplicationUser.CompanyId;
-                
-                var avgDialogueTime = _context.Dialogues.Where(p =>
-                    p.BegTime >= begTime &&
-                    p.StatusId == activeStatus &&
-                    p.ApplicationUser.CompanyId == companyId)
-                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
-
                 var dialogue = _context.Dialogues
                     .Include(p => p.DialogueAudio)
                     .Include(p => p.DialogueClientProfile)
@@ -610,12 +599,23 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueWord)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
-                    .Where(p =>  p.StatusId == activeStatus
+                    .Where(p => p.InStatistic == true 
+                        && p.StatusId == activeStatus
                         && p.DialogueId == dialogueId)
                     .FirstOrDefault();
+                System.Console.WriteLine("3");
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
 
+                var endTime = dialogue.EndTime.AddDays(1);
+                var begTime = endTime.AddDays(-30);
+                var avgDialogueTime = _context.Dialogues.Include(x => x.ApplicationUser).Where(p =>
+                    p.BegTime >= begTime && p.EndTime <= endTime &&
+                    p.StatusId == activeStatus && p.InStatistic == true &&
+                    p.ApplicationUser.CompanyId == dialogue.ApplicationUser.CompanyId)
+                    .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
+                    
                 var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
+              
                 jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
                 jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
                 jsonDialogue["Video"] = dialogue == null ? null :_sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");

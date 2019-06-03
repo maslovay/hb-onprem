@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -42,18 +43,23 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly List<AgeBoarder> _ageBoarders;
+        private readonly RequestFilters _requestFilters;
+        private readonly ElasticClient _log;
 
         public AnalyticClientProfileController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation
+            DBOperations dbOperation,
+            RequestFilters requestFilters,
+            ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _dbOperation = dbOperation;
+            _log = log;
             _ageBoarders = new List<AgeBoarder>{ 
                 new AgeBoarder{
                     BegAge = 0,
@@ -71,6 +77,7 @@ namespace UserOperations.Controllers
                     BegAge = 55,
                     EndAge = 100
                 }};
+                _requestFilters = requestFilters;
         }
         
 
@@ -87,44 +94,14 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("Function GenderAgeStructure started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-
-
-                    
+                    return BadRequest("Token wrong");                    
                 var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);               
-                 //--- superuser can view any companies in any corporation
-                   if ( role == "Superuser" )
-                    {                    
-                        corporationIds = !corporationIds.Any()? _context.Corporations.Select(x => x.Id).ToList() : corporationIds;
-                        //---take all companyIds in filter or all company ids in corporations
-                        companyIds =  !companyIds.Any()? _context.Companys
-                            .Where(x => x.CorporationId != null && corporationIds.Contains( (Guid)x.CorporationId ))
-                            .Select(x => x.CompanyId).ToList() : companyIds;
-                    }
-                    //--- supervisor can view companies from filter or companies from own corporation -------
-                   else if ( role == "Supervisor" )
-                   {
-                        if (!companyIds.Any())//--- if filter by companies not set ---
-                        {//--- select own corporation
-                            var corporation = _context.Companys.Include(x=>x.Corporation).Where(x=>x.CompanyId == companyId).FirstOrDefault().Corporation;
-                        //--- return all companies from own corporation
-                            companyIds = _context.Companys.Where(x => x.CorporationId == corporation.Id ).Select(x => x.CompanyId).ToList();
-                        }
-                   }                 
-                    //--- for simple user return only for own company
-                   else
-                    {
-                        companyIds = new List<Guid> { companyId };
-                    }
-
-
-                var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-                begTime = begTime.Date;
-                endTime = endTime.Date.AddDays(1);
+                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var begTime = _requestFilters.GetBegDate(beg);
+                var endTime = _requestFilters.GetEndDate(end);
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
 
                 
                 var data = _context.Dialogues
@@ -167,10 +144,12 @@ namespace UserOperations.Controllers
                             .Average()
                     });
                 }
+                _log.Info("Function GenderAgeStructure finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal("Function GenderAgeStructure finished");
                 return BadRequest(e);
             }
 
