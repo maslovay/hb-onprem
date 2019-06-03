@@ -64,7 +64,40 @@ namespace UserOperations.Controllers
         [HttpGet("Test")]
         public IActionResult Test()
         {
-            return Ok("I'm working");
+            // var frames= _context.FileFrames.Where(p => p.StatusNNId != 6).ToList();
+            // frames.ForEach(p => p.StatusNNId = 6);
+            // _context.SaveChanges();
+            var dialogues = _context.Dialogues
+            .Include(p => p.DialogueAudio)
+                    .Include(p => p.DialogueClientProfile)
+                    .Include(p => p.DialogueClientSatisfaction)
+                    .Include(p => p.DialogueFrame)
+                    .Include(p => p.DialogueInterval)
+                    .Include(p => p.DialoguePhrase)
+                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialogueSpeech)
+                    .Include(p => p.DialogueVisual)
+                    .Include(p => p.DialogueWord)
+                    .Include(p => p.ApplicationUser)
+                    .Include(p => p.DialogueHint)
+            .Where(p => p.DialogueId.ToString() == "a54b3bc8-d948-4f28-99fe-98f232f65ef4").ToList();
+            return Ok(dialogues);
+        }
+
+
+        [HttpGet("Test2")]
+        public IActionResult Test2()
+        {
+            var frames= _context.FileFrames.Where(p => p.StatusNNId != 6).ToList();
+            frames.ForEach(p => p.StatusNNId = 6);
+            // _context.SaveChanges();
+            // var frames = _context.FileFrames.Where(p => p.StatusNNId != 6).ToList();
+            // System.Console.WriteLine($"{frames.Count()}");
+            // frames.ForEach(p => p.StatusNNId = 6);
+            // _context.SaveChanges();
+            // var frames = _context.FileFrames.Where( p => p.StatusNNId == 6).ToList();
+            // System.Console.WriteLine($"{frames.Count()}");
+            return Ok();
         }
 
         [HttpGet("DatabaseFilling")]

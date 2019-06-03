@@ -17,6 +17,8 @@ using System.Threading.Tasks;
 using HBData;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
+using MemoryDbEventBus;
+using MemoryDbEventBus.Events;
 
 
 namespace DialogueMarkUp.QuartzJobs
@@ -26,12 +28,17 @@ namespace DialogueMarkUp.QuartzJobs
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly INotificationPublisher _publisher;
+        private readonly IMemoryDbPublisher _memoryDbPublisher;
 
-        public CheckDialogueMarkUpJob(IServiceScopeFactory factory, INotificationPublisher publisher, ElasticClient log)
+        public CheckDialogueMarkUpJob(IServiceScopeFactory factory,
+            INotificationPublisher publisher,
+            ElasticClient log,
+            IMemoryDbPublisher memoryPublisher)
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _publisher = publisher;
             _log = log;
+            _memoryDbPublisher = memoryPublisher;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -126,6 +133,12 @@ namespace DialogueMarkUp.QuartzJobs
                     _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
 
+                    var dialogueCreatedEvent = new DialogueCreatedEvent()
+                    {
+                        Id = dialogueId
+                    };
+                    _memoryDbPublisher.Publish(dialogueCreatedEvent);
+
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
@@ -177,8 +190,12 @@ namespace DialogueMarkUp.QuartzJobs
                     _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
 
+                    var dialogueCreatedEvent = new DialogueCreatedEvent()
+                    {
+                        Id = dialogueId
+                    };
 
-                    
+                    _memoryDbPublisher.Publish(dialogueCreatedEvent);
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
