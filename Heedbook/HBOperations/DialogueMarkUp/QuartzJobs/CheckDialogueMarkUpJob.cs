@@ -177,8 +177,6 @@ namespace DialogueMarkUp.QuartzJobs
                     _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
 
-
-                    
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
