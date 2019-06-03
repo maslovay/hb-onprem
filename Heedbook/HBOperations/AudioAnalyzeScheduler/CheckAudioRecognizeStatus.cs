@@ -16,7 +16,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MemoryCacheService;
 using MemoryDbEventBus.Handlers;
 
 namespace AudioAnalyzeScheduler
