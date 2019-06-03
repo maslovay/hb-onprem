@@ -34,12 +34,14 @@ namespace DialogueStatusCheckerScheduler
             {
                 _log.Info("Function dialogue status checker started.");
 
-                var dialogue = _repository.GetWithInclude<Dialogue>(d => d.DialogueId == dialogueId, 
-                    d => d.DialogueFrame, 
-                    d => d.DialogueAudio, 
-                    d => d.DialogueInterval, 
-                    d => d.DialogueVisual, 
+                var dialogue = _repository.GetWithInclude<Dialogue>(
+                    d => d.DialogueId == dialogueId,
+                    d => d.DialogueFrame,
+                    d => d.DialogueAudio,
+                    d => d.DialogueInterval,
+                    d => d.DialogueVisual,
                     d => d.DialogueClientProfile).FirstOrDefault();
+                
                 if (dialogue == null)
                     return EventStatus.Fail;
 

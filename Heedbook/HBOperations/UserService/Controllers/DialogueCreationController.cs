@@ -58,8 +58,8 @@ namespace UserService.Controllers
                 BeginTime = message.BeginTime,
                 EndTime = message.EndTime
             };
-           /// _publisher.Publish(dialogueVideoMerge);
-           // _publisher.Publish(message);
+            _publisher.Publish(dialogueVideoMerge);
+            _publisher.Publish(message);
 
 
             var dialogueCreatedEvent = new DialogueCreatedEvent()

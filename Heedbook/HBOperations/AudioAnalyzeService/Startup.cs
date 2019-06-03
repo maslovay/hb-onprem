@@ -5,6 +5,7 @@ using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using MemoryDbEventBus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -59,6 +60,7 @@ namespace AudioAnalyzeService
             services.AddTransient<AudioAnalyzeRunHandler>();
             services.AddTransient<ToneAnalyzeRunHandler>();
             services.AddRabbitMqEventBus(Configuration);
+            services.AddMemoryDbEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
