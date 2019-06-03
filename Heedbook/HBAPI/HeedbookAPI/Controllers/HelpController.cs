@@ -22,6 +22,9 @@ using UserOperations.Services;
 using UserOperations.AccountModels;
 using HBData;
 
+///REMOVE IT
+using System.Data.SqlClient;
+
 
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
@@ -64,7 +67,80 @@ namespace UserOperations.Controllers
             _context = context;
             _sftpClient = sftpClient;
         }
+        [HttpGet("GetWords")]
+        public async Task<IActionResult> GetWords()
+        {
+            string connectionString = @"Server=tcp:hbrestoreserver.database.windows.net,1433;Initial Catalog=hbmssqldb;Persist Security Info=False;User ID=test_user;Password=password_123;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
+               SqlConnection connection = new SqlConnection(connectionString);
+                 int i = 0;
+                 Guid id = default(Guid);
+            try
+            {
+                string sqlExpression = "SELECT * FROM JsonTable order by DialogueId";
+                // Открываем подключение
+            //    using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                  
+                    connection.Open();
+                    SqlCommand command = new SqlCommand(sqlExpression, connection);
+                    SqlDataReader reader = command.ExecuteReader();
 
+                    if (reader.HasRows) // если есть данные
+                    {
+                        // выводим названия столбцов
+                      
+                        while (reader.Read()) // построчно считываем данные
+                        {
+                          
+                            id = (Guid)reader.GetValue(0);
+                            object word = reader.GetValue(1);
+                            object isClient = reader.GetValue(2);
+try{
+                            var dialogueWord = _context.DialogueWords.FirstOrDefault(x => x.DialogueId.ToString() == id.ToString());
+                            if(dialogueWord != null)
+                            {
+                                dialogueWord.Words = dialogueWord.Words+","+word.ToString();
+                            }
+                            else{
+                                DialogueWord newWord = new DialogueWord();
+                                newWord.DialogueWordId = Guid.NewGuid();
+                                newWord.DialogueId = id;
+                                newWord.Words ="["+ word.ToString();
+                                newWord.IsClient = (bool)isClient;
+                                _context.Add(newWord);
+                            }
+                            _context.SaveChanges();
+}
+catch
+{
+     Console.WriteLine("{0} \t{1} \t{2}","error  ---- ", i++, id);
+}
+                             Console.WriteLine("----------------------------------------------------------");
+                             Console.WriteLine("{0} \t{1} \t{2}","saved ---- ", i++, id);
+                        }
+                    }
+
+                    reader.Close();
+                }
+
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine("----------------------------------------------------------");
+                Console.WriteLine("{0} \t{1} \t{2}","error  ---- ", i++, id);
+            }
+            finally
+            {
+                // закрываем подключение
+                connection.Close();
+                Console.WriteLine("Подключение закрыто...");
+            }
+
+            return Ok("I've done");
+        }
+
+        #region VideoAdd
         [HttpGet("Test")]
         public async Task<IActionResult> Test()
         {
@@ -816,6 +892,135 @@ namespace UserOperations.Controllers
         }
 
 
+        #endregion
+        //         [HttpGet("UserRegister")]
+        //         public async Task<IActionResult> UserRegister()
+        //         {
+        //             List<UserRegister2> messages = new List<UserRegister2>{
+        // //new UserRegister2{Id="0450a19a-3679-43c7-8822-5f70e9a142ea",FullName="Alina Ochirova",Email="ochirova@heedbook.com",Password="password_123",CompanyName="Heedbook",LanguageId=2,CountryId="BE6A6509-7C9E-4D63-B787-5725BBBB2F26",CompanyIndustryId="A49EC5F5-DCB7-478B-8058-692AE8D26946",CorporationId="52402355-ef7c-41bd-b28e-4234a889c3ba", StatusId=3,CompanyId="5F4BE5EE-4342-42F9-A8D8-658CAAB8415A",CreationDate="2017-11-29 15:12:46.2717119",UserName="ochirova@heedbook.com"},
+        //               };
+
+        //             foreach (var message in messages)
+        //             {
+
+        //                 // if (_context.Companys.Where(x => x.CompanyName == message.CompanyName).Any() || _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
+        //                 //     return BadRequest("Company name or user email not unique");
+        //                 try
+        //                 {
+        //                     var companyId = Guid.Parse(message.CompanyId);
+        //                     Console.WriteLine("1--try---" + companyId);
+        //                     if (!_context.Companys.Any(x => x.CompanyId == companyId))
+        //                     {
+        //                         var company = new Company
+        //                         {
+        //                             CompanyId = companyId,
+        //                             CompanyIndustryId = message.CompanyIndustryId != null ?(Guid?) Guid.Parse(message.CompanyIndustryId) : null,
+        //                             CompanyName = message.CompanyName,
+        //                             LanguageId = message.LanguageId,
+        //                             CreationDate = DateTime.Parse(message.CreationDate),
+        //                             CountryId = message.CountryId != null ? (Guid?)Guid.Parse(message.CountryId) : null,
+        //                             CorporationId = message.CorporationId != null ?(Guid?) Guid.Parse(message.CorporationId) : null,
+        //                             StatusId = message.StatusId//---inactive
+        //                         };
+        //                         await _context.Companys.AddAsync(company);
+        //                       //   await _context.SaveChangesAsync();
+        //                         Console.WriteLine("2--added---" + companyId);
+        //                     }
+        //                     if( _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
+        //                     {
+        //                        var m =  message.Email.Split('@');//+="2";
+        //                        message.Email = m[0]+"2@"+m[1];                       
+        //                     }
+        //                      if( _context.ApplicationUsers.Where(x => x.UserName == message.UserName.ToUpper()).Any())
+        //                     {
+        //                        var m =  message.UserName.Split('@');//+="2";
+        //                        if(m.Length>1)
+        //                        message.UserName = m[0]+"2@"+m[1];  
+        //                        else
+        //                               message.UserName+="2";               
+        //                     }
+
+
+        //                     var user = new ApplicationUser
+        //                     {
+        //                         UserName = message.UserName,
+        //                         NormalizedUserName = message.Email.ToUpper(),
+        //                         Email = message.Email,
+        //                         NormalizedEmail = message.Email.ToUpper(),
+        //                         Id = Guid.Parse(message.Id),
+        //                         CompanyId = companyId,
+        //                         CreationDate = DateTime.Parse(message.CreationDate),
+        //                         FullName = message.FullName,
+        //                         PasswordHash = _loginService.GeneratePasswordHash(message.Password),
+        //                         StatusId = message.StatusId
+        //                     };
+        //                     await _context.AddAsync(user);
+        //                  //    await _context.SaveChangesAsync();
+        //                     Console.WriteLine("3--user---" + user.Id);
+
+        //                     var userRole = new ApplicationUserRole()
+        //                     {
+        //                         UserId = user.Id,
+        //                         RoleId = _context.Roles.First(p => p.Name == "Manager").Id //Manager role
+        //                     };
+        //                     await _context.ApplicationUserRoles.AddAsync(userRole);
+        //                    //  await _context.SaveChangesAsync();
+
+        //                     if (_context.Tariffs.Where(item => item.CompanyId == companyId).ToList().Count() == 0)
+        //                     {
+        //                         var tariff = new Tariff
+        //                         {
+        //                             TariffId = Guid.NewGuid(),
+        //                             TotalRate = 0,
+        //                             CompanyId = companyId,
+        //                             CreationDate = DateTime.UtcNow,
+        //                             CustomerKey = "",
+        //                             EmployeeNo = 2,
+        //                             ExpirationDate = DateTime.UtcNow.AddDays(5),
+        //                             isMonthly = false,
+        //                             Rebillid = "",
+        //                             StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Trial").StatusId//---Trial
+        //                         };
+
+        //                         var transaction = new Transaction
+        //                         {
+        //                             TransactionId = Guid.NewGuid(),
+        //                             Amount = 0,
+        //                             OrderId = "",
+        //                             PaymentId = "",
+        //                             TariffId = tariff.TariffId,
+        //                             StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Finished").StatusId,//---finished
+        //                             PaymentDate = DateTime.UtcNow,
+        //                             TransactionComment = "TRIAL TARIFF;FAKE TRANSACTION"
+        //                         };
+        //                         //  company.StatusId = message.StatusId;
+
+        //                         await _context.Tariffs.AddAsync(tariff);
+        //                         await _context.Transactions.AddAsync(transaction);
+        //                         // var ids = _context.ApplicationUsers.Where(p => p.Id == user.Id).ToList();
+
+        //                     }
+        //                     else
+        //                     {
+
+        //                     }
+        //                     await _context.SaveChangesAsync();
+
+        //                     Console.WriteLine("4--complite---");
+        //                 }
+        //                 catch (Exception e)
+        //                 {
+        //                     Console.WriteLine(e.InnerException.Message);
+        //                     //  return BadRequest(e.ToString());
+        //                 }
+        //             }
+        //                         _context.Dispose();
+
+        //             return Ok("Registred");
+
+        //         }
+
+        #region DatabaseFilling
 
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling
@@ -914,5 +1119,6 @@ namespace UserOperations.Controllers
         //     }
 
         // }
+        #endregion
     }
 }
