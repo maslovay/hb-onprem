@@ -34,9 +34,9 @@ namespace UserOperations.AccountModels
         //--------FOR DELETE-------
          public int? StatusId; 
         public string WorkerTypeId; 
-        public string CompanyId; 
-        public string UserName;
-        public string CreationDate;
+           public string CompanyId; 
+             public string UserName;
+               public string CreationDate;
 
     }
 

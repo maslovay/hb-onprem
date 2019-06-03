@@ -33,8 +33,9 @@ using System.Net.Http;
 using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
-
-
+using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.WindowsAzure.Storage;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -47,6 +48,7 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
+        private readonly SftpClient _sftpClient;
 
 
         public HelpController(
@@ -54,7 +56,8 @@ namespace UserOperations.Controllers
             SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
             ILoginService loginService,
-            RecordsContext context
+            RecordsContext context,
+              SftpClient sftpClient
             )
         {
             _userManager = userManager;
@@ -62,6 +65,7 @@ namespace UserOperations.Controllers
             _config = config;
             _loginService = loginService;
             _context = context;
+            _sftpClient = sftpClient;
         }
 
         [HttpGet("PasswordHistoryTest")]
@@ -151,17 +155,14 @@ namespace UserOperations.Controllers
             return Ok("I've done");
         }
 
-        #region VideoAdd
 
-
-        [HttpGet("Test")]
-        public IActionResult Test()
+         [HttpGet("test123")]
+        public IActionResult test123()
         {
-            // var frames= _context.FileFrames.Where(p => p.StatusNNId != 6).ToList();
-            // frames.ForEach(p => p.StatusNNId = 6);
-            // _context.SaveChanges();
-            var dialogues = _context.Dialogues
-            .Include(p => p.DialogueAudio)
+            try
+            {
+                var dialogue = _context.Dialogues
+                 .Include(p => p.DialogueAudio)
                     .Include(p => p.DialogueClientProfile)
                     .Include(p => p.DialogueClientSatisfaction)
                     .Include(p => p.DialogueFrame)
@@ -173,12 +174,15 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueWord)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
-            .Where(p => p.DialogueId.ToString() == "a54b3bc8-d948-4f28-99fe-98f232f65ef4").ToList();
-            return Ok(dialogues);
+                .Where(p => p.DialogueId.ToString() == "a54b3bc8-d948-4f28-99fe-98f232f65ef4").ToList();
+                return Ok(dialogue);
+            }   
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }
 
-
-        #endregion
         //         [HttpGet("UserRegister")]
         //         public async Task<IActionResult> UserRegister()
         //         {
@@ -390,21 +394,33 @@ namespace UserOperations.Controllers
             return "OK";
         }
 
-        // [HttpGet("test")]
-        // public string test()
-        // {
-        //     try
-        //     {
-        //         var videos = Json
+        [HttpGet("test123")]
+        public IActionResult test123()
+        {
+            try
+            {
+                var dialogue = _context.Dialogues
+                 .Include(p => p.DialogueAudio)
+                    .Include(p => p.DialogueClientProfile)
+                    .Include(p => p.DialogueClientSatisfaction)
+                    .Include(p => p.DialogueFrame)
+                    .Include(p => p.DialogueInterval)
+                    .Include(p => p.DialoguePhrase)
+                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialogueSpeech)
+                    .Include(p => p.DialogueVisual)
+                    .Include(p => p.DialogueWord)
+                    .Include(p => p.ApplicationUser)
+                    .Include(p => p.DialogueHint)
+                .Where(p => p.DialogueId.ToString() == "a54b3bc8-d948-4f28-99fe-98f232f65ef4").ToList();
+                return Ok(dialogue);
+            }   
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
 
-        //         return "OK";
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         return e.ToString();
-        //     }
-
-        // }
+        }
         #endregion
     }
 }

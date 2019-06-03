@@ -25,29 +25,22 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMqEventBus", "RabbitM
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498-9934-4664-B888-F24989B01059}"
 	ProjectSection(SolutionItems) = preProject
+		AudioAnalyzeScheduler.Dockerfile = AudioAnalyzeScheduler.DockeHeedbook/HBAPI/HeedbookAPI/Utils/Filters.cs rfile
+		AudioAnalyzeService.Dockerfile = AudioAnalyzeService.Dockerfile
+		build.sh = build.sh
+		DialogueStatusCheckerScheduler.Dockerfile = DialogueStatusCheckerScheduler.Dockerfile
+		DialogueVideoMergeService.Dockerfile = DialogueVideoMergeService.Dockerfile
+		ExtractFramesFromVideoService.Dockerfile = ExtractFramesFromVideoService.Dockerfile
+		FaceAnalyzeService.Dockerfile = FaceAnalyzeService.Dockerfile
+		FillingFrameService.Dockerfile = FillingFrameService.Dockerfile
+		FillingHintService.Dockerfile = FillingHintService.Dockerfile
+		FillingSatisfactionService.Dockerfile = FillingSatisfactionService.Dockerfile
+		UserService.Dockerfile = UserService.Dockerfile
+		VideoToSoundService.Dockerfile = VideoToSoundService.Dockerfile
 		..\UserService.Dockerfile.integration = ..\UserService.Dockerfile.integration
 		..\rabbit_test_setup.sh = ..\rabbit_test_setup.sh
 		..\test_environment_setup.sh = ..\test_environment_setup.sh
 		..\rabbit_test_start.sh = ..\rabbit_test_start.sh
-		..\AudioAnalyzeScheduler.Dockerfile = ..\AudioAnalyzeScheduler.Dockerfile
-		..\AudioAnalyzeService.Dockerfile = ..\AudioAnalyzeService.Dockerfile
-		..\build.sh = ..\build.sh
-		..\DialogueMarkUpService.Dockerfile = ..\DialogueMarkUpService.Dockerfile
-		..\DialogueStatusCheckerScheduler.Dockerfile = ..\DialogueStatusCheckerScheduler.Dockerfile
-		..\DialogueVideoAssembleService.Dockerfile = ..\DialogueVideoAssembleService.Dockerfile
-		..\DialogueVideoMergeService.Dockerfile = ..\DialogueVideoMergeService.Dockerfile
-		..\ExtractFramesFromVideoService.Dockerfile = ..\ExtractFramesFromVideoService.Dockerfile
-		..\ExtractFramesFromVideoService.Dockerfile.Integration = ..\ExtractFramesFromVideoService.Dockerfile.Integration
-		..\FaceAnalyzeService.Dockerfile = ..\FaceAnalyzeService.Dockerfile
-		..\FillingFrameService.Dockerfile = ..\FillingFrameService.Dockerfile
-		..\FillingHintService.Dockerfile = ..\FillingHintService.Dockerfile
-		..\FillingSatisfactionService.Dockerfile = ..\FillingSatisfactionService.Dockerfile
-		..\README.md = ..\README.md
-		..\ReferenceController.Dockerfile = ..\ReferenceController.Dockerfile
-		..\SSL.md = ..\SSL.md
-		..\UserOperations.Dockerfile = ..\UserOperations.Dockerfile
-		..\UserService.Dockerfile = ..\UserService.Dockerfile
-		..\VideoToSoundService.Dockerfile = ..\VideoToSoundService.Dockerfile
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceAnalyzeService", "FaceAnalyzeService\FaceAnalyzeService.csproj", "{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}"
@@ -107,10 +100,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReferenceControllerTests", "ReferenceControllerTests\ReferenceControllerTests.csproj", "{99BB51FD-9E25-444C-999D-8DE8E639C42A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueVideoAssembleService", "DialogueVideoAssembleService\DialogueVideoAssembleService.csproj", "{8D27D7A9-0BC0-4917-8325-314445E9B9BA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemoryCacheServiceTests", "MemoryCacheServiceTests\MemoryCacheServiceTests.csproj", "{B1576236-9520-40DC-B76B-59B3B4B062D1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemoryDbEventBus", "MemoryDbEventBus\MemoryDbEventBus.csproj", "{8721C918-73BB-4CE5-A2D6-D654E61C57B6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueMarkUp", "DialogueMarkUp\DialogueMarkUp.csproj", "{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}"
 EndProject
@@ -252,14 +241,6 @@ Global
 		{8D27D7A9-0BC0-4917-8325-314445E9B9BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D27D7A9-0BC0-4917-8325-314445E9B9BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D27D7A9-0BC0-4917-8325-314445E9B9BA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B1576236-9520-40DC-B76B-59B3B4B062D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B1576236-9520-40DC-B76B-59B3B4B062D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B1576236-9520-40DC-B76B-59B3B4B062D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B1576236-9520-40DC-B76B-59B3B4B062D1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8721C918-73BB-4CE5-A2D6-D654E61C57B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8721C918-73BB-4CE5-A2D6-D654E61C57B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8721C918-73BB-4CE5-A2D6-D654E61C57B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8721C918-73BB-4CE5-A2D6-D654E61C57B6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -302,8 +283,6 @@ Global
 		{A48E447A-3F76-42C3-836C-C396BFEDF20B} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{99BB51FD-9E25-444C-999D-8DE8E639C42A} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{8D27D7A9-0BC0-4917-8325-314445E9B9BA} = {F9312081-26B8-4651-ABC9-A32914105EBA}
-		{B1576236-9520-40DC-B76B-59B3B4B062D1} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
-		{8721C918-73BB-4CE5-A2D6-D654E61C57B6} = {5ACD64F0-851F-4971-A6F7-0B51DB7429E1}
 		{49EF1AD2-7D9C-46D2-855F-D92A2C40119A} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

@@ -1,10 +1,9 @@
 ﻿using Configurations;
+using DialogueStatusCheckerScheduler.Extensions;
 using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
-using MemoryDbEventBus;
-using MemoryDbEventBus.Events;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Quartz;
 
 namespace DialogueStatusCheckerScheduler
 {
@@ -42,25 +42,23 @@ namespace DialogueStatusCheckerScheduler
                 return new ElasticClient(settings);
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddScoped<DialogueStatusChecker>();
-            services.AddScoped<Handler.DialogueStatusCheckerSchedulerHandler>();
-
+            services.AddDialogueStatusCheckerQuartz();
             services.AddRabbitMqEventBus(Configuration);
-            services.AddMemoryDbEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
 
-            var service = app.ApplicationServices.GetRequiredService<IMemoryDbPublisher>();
-            service.Subscribe<DialogueCreatedEvent, Handler.DialogueStatusCheckerSchedulerHandler>();
-            
+            var job = app.ApplicationServices.GetService<IJobDetail>();
+            var trigger = app.ApplicationServices.GetService<ITrigger>();
+            scheduler.ScheduleJob(job,
+                trigger);
             app.UseHttpsRedirection();
             app.UseMvc();
         }
