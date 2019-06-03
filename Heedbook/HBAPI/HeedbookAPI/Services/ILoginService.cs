@@ -16,5 +16,6 @@ namespace UserOperations.Services
         void SendEmail(string email, string messageTitle, string messageText, string senderName = null);
         string GeneratePass(int x);
         string GenerateEmailMsg(string pswd, ApplicationUser user);
+        bool SavePasswordHistory(Guid userId, string passwordHash);
     }
 }

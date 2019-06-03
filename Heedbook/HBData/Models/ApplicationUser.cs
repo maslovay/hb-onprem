@@ -61,5 +61,8 @@ namespace HBData.Models
         [JsonIgnore]
         //сессии
         public ICollection<Session> Session { get; set; }
+        [JsonIgnore]
+        //пароли
+        public ICollection<PasswordHistory> PasswordHistorys { get; set; }
     }
 }

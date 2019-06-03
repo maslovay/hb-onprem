@@ -63,81 +63,96 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _context = context;
         }
+
+        [HttpGet("PasswordHistoryTest")]
+        public async Task<IActionResult> PasswordHistoryTest()
+        {
+            Guid userId = new Guid("d1918ef5-fad4-4678-b48f-87908093520c");
+            _loginService.SavePasswordHistory(userId, "4I95gSV7j/vb2MB9PMtFbSvR1ShYlALSKB5u78u+bDd=");
+            return Ok(_context.PasswordHistorys.ToList());
+        }
+
+
         [HttpGet("GetWords")]
         public async Task<IActionResult> GetWords()
         {
-            string connectionString = @"Server=tcp:hbrestoreserver.database.windows.net,1433;Initial Catalog=hbmssqldb;Persist Security Info=False;User ID=test_user;Password=password_123;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
-               SqlConnection connection = new SqlConnection(connectionString);
-                 int i = 0;
-                 Guid id = default(Guid);
-            try
+            var words = _context.DialogueWords.Take(10);//.ToList();
+            foreach (DialogueWord w in words)
             {
-                string sqlExpression = "SELECT * FROM JsonTable order by DialogueId";
-                // Открываем подключение
-            //    using (SqlConnection connection = new SqlConnection(connectionString))
+                if(w.Words.Contains("\"NULL\""))
                 {
-                  
-                    connection.Open();
-                    SqlCommand command = new SqlCommand(sqlExpression, connection);
-                    SqlDataReader reader = command.ExecuteReader();
-
-                    if (reader.HasRows) // если есть данные
-                    {
-                        // выводим названия столбцов
-                      
-                        while (reader.Read()) // построчно считываем данные
-                        {
-                          
-                            id = (Guid)reader.GetValue(0);
-                            object word = reader.GetValue(1);
-                            object isClient = reader.GetValue(2);
-try{
-                            var dialogueWord = _context.DialogueWords.FirstOrDefault(x => x.DialogueId.ToString() == id.ToString());
-                            if(dialogueWord != null)
-                            {
-                                dialogueWord.Words = dialogueWord.Words+","+word.ToString();
-                            }
-                            else{
-                                DialogueWord newWord = new DialogueWord();
-                                newWord.DialogueWordId = Guid.NewGuid();
-                                newWord.DialogueId = id;
-                                newWord.Words ="["+ word.ToString();
-                                newWord.IsClient = (bool)isClient;
-                                _context.Add(newWord);
-                            }
-                            _context.SaveChanges();
-}
-catch
-{
-     Console.WriteLine("{0} \t{1} \t{2}","error  ---- ", i++, id);
-}
-                             Console.WriteLine("----------------------------------------------------------");
-                             Console.WriteLine("{0} \t{1} \t{2}","saved ---- ", i++, id);
-                        }
-                    }
-
-                    reader.Close();
+                w.Words = w.Words.Replace("\"NULL\"", "null");
+                _context.SaveChanges();
                 }
+            }
 
-            }
-            catch (SqlException ex)
-            {
-                Console.WriteLine(ex.Message);
-                Console.WriteLine("----------------------------------------------------------");
-                Console.WriteLine("{0} \t{1} \t{2}","error  ---- ", i++, id);
-            }
-            finally
-            {
-                // закрываем подключение
-                connection.Close();
-                Console.WriteLine("Подключение закрыто...");
-            }
+            // string connectionString = @"Server=tcp:hbrestoreserver.database.windows.net,1433;Initial Catalog=hbmssqldb;Persist Security Info=False;User ID=test_user;Password=password_123;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
+            // SqlConnection connection = new SqlConnection(connectionString);
+            // int i = 0;
+            // Guid id = default(Guid);
+            // try
+            // {
+            //     string sqlExpression = "SELECT * FROM ResultTable";
+            //     // Открываем подключение
+            //     //    using (SqlConnection connection = new SqlConnection(connectionString))
+            //     {
+
+            //         connection.Open();
+            //         SqlCommand command = new SqlCommand(sqlExpression, connection);
+            //         SqlDataReader reader = command.ExecuteReader();
+
+            //         if (reader.HasRows) // если есть данные
+            //         {
+            //             // выводим названия столбцов
+
+            //             while (reader.Read()) // построчно считываем данные
+            //             {
+
+
+            //                 id = (Guid)reader.GetValue(0);
+            //                 object word = reader.GetValue(1);
+            //                 object isClient = reader.GetValue(2);
+            //                 try
+            //                 {
+            //                         DialogueWord newWord = new DialogueWord();
+            //                         newWord.DialogueWordId = Guid.NewGuid();
+            //                         newWord.DialogueId = id;
+            //                         newWord.Words = "[" + word.ToString()+"]";
+            //                         newWord.IsClient = (bool)isClient;
+            //                         _context.Add(newWord);
+            //                     _context.SaveChanges();
+            //                 }
+            //                 catch
+            //                 {
+            //                     Console.WriteLine("{0} \t{1} \t{2}", "error  ---- ", i++, id);
+            //                 }
+            //                 Console.WriteLine("----------------------------------------------------------");
+            //                 Console.WriteLine("{0} \t{1} \t{2}", "saved ---- ", i++, id);
+            //             }
+            //         }
+
+            //         reader.Close();
+            //     }
+
+            // }
+            // catch (SqlException ex)
+            // {
+            //  //   Console.WriteLine(ex.Message);
+            //     Console.WriteLine("----------------------------------------------------------");
+            //     Console.WriteLine("{0} \t{1} \t{2}", "error  ---- ", i++, id);
+            // }
+            // finally
+            // {
+            //     // закрываем подключение
+            //     connection.Close();
+            //     Console.WriteLine("Подключение закрыто...");
+            // }
 
             return Ok("I've done");
         }
 
         #region VideoAdd
-        
+
 
         [HttpGet("Test")]
         public IActionResult Test()
@@ -296,9 +311,9 @@ catch
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling
         (
-            [FromQuery]string countryName = null, 
-            [FromQuery]string companyIndustryName = null, 
-            [FromQuery]string corporationName = null, 
+            [FromQuery]string countryName = null,
+            [FromQuery]string companyIndustryName = null,
+            [FromQuery]string corporationName = null,
             [FromQuery]string languageName = null,
             [FromQuery]string languageShortName = null)
         {
@@ -316,10 +331,11 @@ catch
             }
 
             // add language
-            if(languageName != null && languageShortName != null)
+            if (languageName != null && languageShortName != null)
             {
-                var language = new Language{
-                   // LanguageId = 1,
+                var language = new Language
+                {
+                    // LanguageId = 1,
                     LanguageName = languageName,
                     LanguageLocalName = languageName,
                     LanguageShortName = languageShortName
@@ -329,10 +345,11 @@ catch
             }
 
             // create company industry
-            if(companyIndustryName != null )
+            if (companyIndustryName != null)
             {
                 var companyIndustryId = Guid.NewGuid();
-                var companyIndustry = new CompanyIndustry{
+                var companyIndustry = new CompanyIndustry
+                {
                     CompanyIndustryId = companyIndustryId,
                     CompanyIndustryName = companyIndustryName,
                     CrossSalesIndex = 100,
@@ -344,24 +361,26 @@ catch
             }
 
             // create new corporation
-            if(corporationName != null)
+            if (corporationName != null)
             {
-                var corporationId = Guid.NewGuid(); 
-                var corp = new Corporation{
+                var corporationId = Guid.NewGuid();
+                var corp = new Corporation
+                {
                     Id = corporationId,
-                    Name = corporationName 
-            };
-            _context.Corporations.Add(corp);
-            _context.SaveChanges();
+                    Name = corporationName
+                };
+                _context.Corporations.Add(corp);
+                _context.SaveChanges();
             }
 
-       //     add statuss
+            //     add statuss
             List<string> statuses = new List<string>(new string[] { "Online", "Offline", "Active", "Disabled", "Inactive", "InProgress", "Finished", "Error", "Pending disabled", "Trial", "AutoActive", "AutoFinished", "AutoError" });
-            
-            
+
+
             for (int i = 1; i < statuses.Count() + 1; i++)
-            {   
-                var status = new Status{
+            {
+                var status = new Status
+                {
                     StatusId = i,
                     StatusName = statuses[i]
                 };

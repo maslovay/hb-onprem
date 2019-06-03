@@ -200,6 +200,28 @@ namespace UserOperations.Services
             //reject if non succeded request
             return false;
         }
+        #region  Password history
+        public bool SavePasswordHistory(Guid userId, string passwordHash)
+                {
+                     PasswordHistory newPswd = null;
+                    var passwords = _context.PasswordHistorys.Where(x => x.UserId == userId).OrderBy(x =>x.CreationDate).ToList();
+                    if( passwords.Any(x => x.PasswordHash == passwordHash ))
+                        return false;
+                    if( passwords.Count() < 5 )
+                    {
+                        newPswd = new PasswordHistory();
+                        newPswd.PasswordHistoryId = Guid.NewGuid();
+                        newPswd.UserId = userId;
+                        _context.Add(newPswd);
+                    }
+                    else newPswd = passwords.First();
+
+                    newPswd.CreationDate = DateTime.UtcNow;
+                    newPswd.PasswordHash = passwordHash;
+                    _context.SaveChanges();                
+                    return true;
+                }
+        #endregion
 
         #region Email
             private string emailAddressSender = "heedbookmailagent@gmail.com";

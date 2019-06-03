@@ -120,6 +120,7 @@ namespace HBData
         public DbSet<Tariff> Tariffs { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<WorkerType> WorkerTypes { get; set; }
+        public DbSet<PasswordHistory> PasswordHistorys { get; set; }
 
     }
 }
