@@ -156,34 +156,7 @@ namespace UserOperations.Controllers
         }
 
 
-         [HttpGet("test123")]
-        public IActionResult test123()
-        {
-            try
-            {
-                var dialogue = _context.Dialogues
-                 .Include(p => p.DialogueAudio)
-                    .Include(p => p.DialogueClientProfile)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialogueFrame)
-                    .Include(p => p.DialogueInterval)
-                    .Include(p => p.DialoguePhrase)
-                    .Include(p => p.DialoguePhraseCount)
-                    .Include(p => p.DialogueSpeech)
-                    .Include(p => p.DialogueVisual)
-                    .Include(p => p.DialogueWord)
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialogueHint)
-                .Where(p => p.DialogueId.ToString() == "a54b3bc8-d948-4f28-99fe-98f232f65ef4").ToList();
-                return Ok(dialogue);
-            }   
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
-        }
-
-        //         [HttpGet("UserRegister")]
+        //[HttpGet("UserRegister")]
         //         public async Task<IActionResult> UserRegister()
         //         {
         //             List<UserRegister2> messages = new List<UserRegister2>{
