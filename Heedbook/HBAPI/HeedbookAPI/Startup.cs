@@ -57,7 +57,6 @@ namespace UserOperations
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<Utils.DBOperations>();
-            services.AddScoped<Utils.RequestFilters>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(p => {
                 p.Password.RequireDigit = true;
                 p.Password.RequireLowercase = true;

@@ -16,6 +16,8 @@ using Microsoft.Extensions.Options;
 using Quartz;
 using Notifications.Base;
 using RabbitMqEventBus.Base;
+using MemoryDbEventBus;
+
 
 
 namespace DialogueMarkUp
@@ -54,9 +56,10 @@ namespace DialogueMarkUp
             services.AddRabbitMqEventBus(Configuration);
 
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddMarkUpQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMemoryDbEventBus(Configuration);
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

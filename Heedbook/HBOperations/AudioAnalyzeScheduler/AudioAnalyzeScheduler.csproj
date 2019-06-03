@@ -16,7 +16,7 @@
     <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
-    <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
+    <ProjectReference Include="..\MemoryDbEventBus\MemoryDbEventBus.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -543,7 +543,7 @@ namespace UserOperations.Controllers
                 .Where(p => 
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
-                    p.StatusId == activeStatus && p.InStatistic == true &&
+                    p.StatusId == activeStatus &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
@@ -582,8 +582,21 @@ namespace UserOperations.Controllers
         {
             try
             {
+                var begTime = DateTime.UtcNow.AddDays(-30);
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
+                var companyId = _context.Dialogues
+                    .Include(x => x.ApplicationUser)
+                    .Where(x=>x.DialogueId == dialogueId)
+                    .FirstOrDefault()
+                    .ApplicationUser.CompanyId;
+                
+                var avgDialogueTime = _context.Dialogues.Where(p =>
+                    p.BegTime >= begTime &&
+                    p.StatusId == activeStatus &&
+                    p.ApplicationUser.CompanyId == companyId)
+                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
+
                 var dialogue = _context.Dialogues
                     .Include(p => p.DialogueAudio)
                     .Include(p => p.DialogueClientProfile)
@@ -597,23 +610,12 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueWord)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
-                    .Where(p => p.InStatistic == true 
-                        && p.StatusId == activeStatus
+                    .Where(p =>  p.StatusId == activeStatus
                         && p.DialogueId == dialogueId)
                     .FirstOrDefault();
-                System.Console.WriteLine("3");
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
 
-                var endTime = dialogue.EndTime.AddDays(1);
-                var begTime = endTime.AddDays(-30);
-                var avgDialogueTime = _context.Dialogues.Include(x => x.ApplicationUser).Where(p =>
-                    p.BegTime >= begTime && p.EndTime <= endTime &&
-                    p.StatusId == activeStatus && p.InStatistic == true &&
-                    p.ApplicationUser.CompanyId == dialogue.ApplicationUser.CompanyId)
-                    .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
-                    
                 var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
-              
                 jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
                 jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
                 jsonDialogue["Video"] = dialogue == null ? null :_sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");

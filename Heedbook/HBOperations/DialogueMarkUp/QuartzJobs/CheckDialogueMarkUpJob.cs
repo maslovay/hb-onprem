@@ -17,6 +17,8 @@ using System.Threading.Tasks;
 using HBData;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
+using MemoryDbEventBus;
+using MemoryDbEventBus.Events;
 
 
 namespace DialogueMarkUp.QuartzJobs
@@ -24,16 +26,19 @@ namespace DialogueMarkUp.QuartzJobs
     public class CheckDialogueMarkUpJob : IJob
     {
         private readonly ElasticClient _log;
-        private readonly IGenericRepository _repository;
         private readonly RecordsContext _context;
         private readonly INotificationPublisher _publisher;
+        private readonly IMemoryDbPublisher _memoryDbPublisher;
 
-        public CheckDialogueMarkUpJob(IServiceScopeFactory factory, INotificationPublisher publisher, ElasticClient log)
+        public CheckDialogueMarkUpJob(IServiceScopeFactory factory,
+            INotificationPublisher publisher,
+            ElasticClient log,
+            IMemoryDbPublisher memoryPublisher)
         {
-            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _publisher = publisher;
             _log = log;
+            _memoryDbPublisher = memoryPublisher;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -41,7 +46,7 @@ namespace DialogueMarkUp.QuartzJobs
             _log.Info("Function DialogueMarkUp started");
             var periodTime = 5 * 60; 
             var periodFrame = 10;
-            
+
             try
             {
                 var endTime = DateTime.UtcNow.AddMinutes(-30);
@@ -118,6 +123,22 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _log.Info($" Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
+
+                    var dialogueCreation = new DialogueCreationRun {
+                        ApplicationUserId = applicationUserId,
+                        DialogueId = dialogueId,
+                        BeginTime = markup.BegTime,
+                        EndTime = markup.EndTime
+                    };
+                    _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    _publisher.Publish(dialogueCreation);
+
+                    var dialogueCreatedEvent = new DialogueCreatedEvent()
+                    {
+                        Id = dialogueId
+                    };
+                    _memoryDbPublisher.Publish(dialogueCreatedEvent);
+
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
@@ -158,6 +179,23 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _log.Info($"Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
+
+                    var dialogueCreation = new DialogueCreationRun {
+                       ApplicationUserId = applicationUserId,
+                        // DialogueId = (Guid) markUps[i].FaceId,
+                        DialogueId = dialogueId,
+                        BeginTime = markUps[i].BegTime,
+                        EndTime = markUps[i].EndTime
+                    };
+                    _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    _publisher.Publish(dialogueCreation);
+
+                    var dialogueCreatedEvent = new DialogueCreatedEvent()
+                    {
+                        Id = dialogueId
+                    };
+
+                    _memoryDbPublisher.Publish(dialogueCreatedEvent);
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
@@ -185,28 +223,19 @@ namespace DialogueMarkUp.QuartzJobs
                 frameAttribute = frameAttribute.Where(p => p.FileFrame.Time >= frameCompare.FileFrame.Time.AddMinutes(-periodTime)).ToList();
                 var index = frameAttribute.Count() - 1;
                 var lastFrame = frameAttribute[index];
-
-                var i = index - 1;
+                
                 var faceIds = new List<Guid?>();
-                while (i >= 0)
+                for (var i = index - 1; i == 0; i--)
                 {
                     var cos = Cos(JsonConvert.DeserializeObject<List<double>>(lastFrame.Descriptor),
-                                JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
+                        JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
                     // System.Console.WriteLine($"{cos}, {i}");
                     if (cos > treshold) //return frameAttribute[i].FileFrame.FaceId;
                     {
                         faceIds.Add(frameAttribute[i].FileFrame.FaceId);
                     }
-                    i --;
                 }
-                if (faceIds.Any())
-                {
-                    return faceIds.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key;
-                }
-                else
-                {
-                    return Guid.NewGuid();
-                }
+                return faceIds.Any() ? faceIds.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key : Guid.NewGuid();
             }
         }
 
@@ -229,16 +258,6 @@ namespace DialogueMarkUp.QuartzJobs
         private double? Cos(List<double> vector1, List<double> vector2)
         {
             return VectorMult(vector1, vector2) / VectorNorm(vector1) / VectorNorm(vector2);
-        }
-
-        private class MarkUp
-        {
-            public Guid? ApplicationUserId;
-            public Guid? FaceId;
-            public DateTime BegTime;
-            public DateTime EndTime;
-            public string BegFileName;
-            public string EndFileName;
         }
     }
 }

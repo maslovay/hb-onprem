@@ -34,40 +34,31 @@ namespace ExtractFramesFromVideo
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddOptions();
-            services.AddDbContext<RecordsContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+             services.AddOptions();
+            services.AddDbContext<RecordsContext>
+            (options =>
+            {
+                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                options.UseNpgsql(connectionString,
+                    dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
+            });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
-            services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
-            services.AddTransient<FFMpegWrapper>();
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddTransient<SftpClient>();
             services.AddTransient(provider =>
             {
                 var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
-            services.AddTransient(provider =>
-            {
-                var sftpSettings = provider.GetRequiredService<IOptions<SftpSettings>>().Value;
-                return new SftpClient(sftpSettings);
-            });
-
-            services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddTransient<FramesFromVideo>();
-            
-//            if (!isCalledFromUnitTest)
+            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
+            services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
+            services.AddTransient<FFMpegWrapper>();
             services.AddRabbitMqEventBus(Configuration);
-//            else
-//            {
-//                StartupExtensions.MockRabbitPublisher(services);
-//                StartupExtensions.MockNotificationService(services);
-//                StartupExtensions.MockNotificationHandler(services);
-//                StartupExtensions.MockTransmissionEnvironment<FramesFromVideoRun>(services);    
-//            }
-
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddTransient<FramesFromVideo>();
             services.AddTransient<FramesFromVideoRunHandler>();
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
