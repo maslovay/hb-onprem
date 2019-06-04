@@ -23,7 +23,6 @@ namespace UserService.Controllers
         private readonly IMemoryDbPublisher _memoryPublisher;
         private readonly INotificationPublisher _notificationPublisher;
         
-        
         public MemoryDatabaseTestController(INotificationHandler handler, IGenericRepository repository, 
             IMemoryCache memoryCache, IMemoryDbPublisher memoryPublisher, INotificationPublisher notificationPublisher)
         {
@@ -34,7 +33,7 @@ namespace UserService.Controllers
             _notificationPublisher = notificationPublisher;
         }
 
-        [HttpGet("[action]/{count}")]
+        [HttpGet("CheckMemoryDb/{count}")]
         [SwaggerOperation(Description = "Creates some messages to test redis")]
         public async Task<ObjectResult> CheckMemoryDbRun(int count)
         {
@@ -55,9 +54,9 @@ namespace UserService.Controllers
             return Ok($"Messages sent: {count} Messages received: {memCached}");
         }
         
-        [HttpGet("[action]/{appUserId}/{count}")]
+        [HttpGet("CreateTestDialogues/{appUserId}/{dateTime}/{count}")]
         [SwaggerOperation(Description = "Creates some dialogs to test redis")]
-        public async Task<ObjectResult> CreateTestDialogues(Guid appUserId, int count)
+        public async Task<ObjectResult> CreateTestDialogues(Guid appUserId, DateTime dateTime, int count)
         {
             _memoryCache.Clear();
             if (count <= 0)
@@ -73,18 +72,18 @@ namespace UserService.Controllers
                 {
                     DialogueId = Guid.NewGuid(),
                     ApplicationUserId = appUserId,
-                    BeginTime = DateTime.Now.AddDays(-2),
-                    EndTime = DateTime.Now.AddHours(1)
+                    BeginTime = dateTime.AddMinutes(-30),
+                    EndTime = dateTime.AddHours(1)
                 };
 
                 CreateDialog(newDialog);
             }
             
-            _memoryCache.Clear();
+
             return Ok($"Dialogs creation procedure finished");
         }
 
-        public void CreateDialog(DialogueCreationRun message)
+        private void CreateDialog(DialogueCreationRun message)
         {
             var languageId = _repository.GetWithInclude<ApplicationUser>(p =>
                         p.Id == message.ApplicationUserId,

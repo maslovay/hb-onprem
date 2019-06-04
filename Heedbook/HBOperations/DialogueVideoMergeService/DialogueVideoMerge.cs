@@ -41,7 +41,7 @@ namespace DialogueVideoMergeService
             _notificationPublisher = notificationPublisher;
         }
 
-        public static FileFrame LastFrame(FileVideo video, List<FileFrame> frames)
+        public static FileFrame LastFrame(FileVideo video, IEnumerable<FileFrame> frames)
         {
             return frames.Where(p => p.Time >= video.BegTime && p.Time <= video.EndTime).OrderByDescending(p => p.Time)
                          .FirstOrDefault();
@@ -105,7 +105,7 @@ namespace DialogueVideoMergeService
                 for (var i = 1; i < videos.Count(); i++)
                 {
                     var timeGap = videos[i].BegTime.Subtract(videos[i - 1].EndTime).TotalSeconds;
-                    if (timeGap > 1)
+                    if (timeGap > 1 && frames.Any())
                     {
                         var lastFrame = LastFrame(videos[i - 1], frames);
                         var frameDir = Path.Combine(sessionDir, lastFrame.FileName);
@@ -161,6 +161,7 @@ namespace DialogueVideoMergeService
                 {
                     Path = "dialoguevideos/" + filename
                 };
+                
                 _notificationPublisher.Publish(@event);
                 _log.Info("Function finished OnPremDialogueVideoMerge");
             }

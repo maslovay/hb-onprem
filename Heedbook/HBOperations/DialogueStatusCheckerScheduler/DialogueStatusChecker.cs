@@ -35,7 +35,7 @@ namespace DialogueStatusCheckerScheduler
                 _log.Info("Function dialogue status checker started.");
 
                 var dialogue = _repository.GetWithInclude<Dialogue>(
-                    d => d.DialogueId == dialogueId,
+                    d => d.DialogueId == dialogueId && d.StatusId == 6,
                     d => d.DialogueFrame,
                     d => d.DialogueAudio,
                     d => d.DialogueInterval,

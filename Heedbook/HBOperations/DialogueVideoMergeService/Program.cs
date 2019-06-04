@@ -14,7 +14,7 @@ namespace DialogueVideoMergeService
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
-                .UseUrls("http://localhost:5432")
+                .UseUrls("http://localhost:5132")
                           .UseStartup<Startup>();
         }
     }
