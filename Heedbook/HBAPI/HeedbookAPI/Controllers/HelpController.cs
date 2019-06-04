@@ -368,7 +368,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("test123")]
-        public IActionResult test123()
+        public IActionResult test123([FromQuery]Guid? dialogueId)
         {
             try
             {
@@ -386,11 +386,26 @@ namespace UserOperations.Controllers
                 //     .Include(p => p.ApplicationUser)
                 //     .Include(p => p.DialogueHint)
                 // .Where(p => p.DialogueId.ToString() == "a54b3bc8-d948-4f28-99fe-98f232f65ef4").ToList();
-                var frames  = _context.FileFrames.Where(p => p.ApplicationUserId.ToString() == "11d6284f-f9b4-47e7-981a-daa14d5a35ca").ToList();
-                frames.ForEach(p => p.FaceId = null);
-                frames.ForEach(p => p.StatusNNId = 6);
-                _context.SaveChanges();
-                return Ok(frames);
+                // var frames  = _context.FileFrames.Where(p => p.StatusNNId == 7).ToList();
+                // frames.ForEach(p => p.FaceId = null);
+                // frames.ForEach(p => p.StatusNNId = 6);
+                // _context.SaveChanges();
+
+                var dialogue = _context.Dialogues
+                    .Include(p => p.DialogueAudio)
+                    .Include(p => p.DialogueClientProfile)
+                    .Include(p => p.DialogueClientSatisfaction)
+                    .Include(p => p.DialogueFrame)
+                    .Include(p => p.DialogueInterval)
+                    .Include(p => p.DialoguePhrase)
+                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialogueSpeech)
+                    .Include(p => p.DialogueVisual)
+                    .Include(p => p.DialogueWord)
+                    .Include(p => p.ApplicationUser)
+                    .Include(p => p.DialogueHint)
+                    .Where(p => p.DialogueId == dialogueId).ToList();
+                return Ok(dialogue);
             }   
             catch (Exception e)
             {

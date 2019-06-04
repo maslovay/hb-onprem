@@ -67,6 +67,7 @@ namespace DialogueMarkUp.QuartzJobs
                             BegFileName = x.Min(q => q.FileFrame.FileName),
                             EndFileName = x.Max(q => q.FileFrame.FileName),
                         })
+                        .Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 10)
                         .OrderBy(p => p.EndTime)
                         .ToList();
                     _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}"); 
