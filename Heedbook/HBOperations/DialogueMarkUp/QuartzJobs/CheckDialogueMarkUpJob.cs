@@ -191,6 +191,7 @@ namespace DialogueMarkUp.QuartzJobs
                 var takeFrame = Math.Min(i + 1, periodFrame); 
                 var framesCompare = frameAttribute.Skip(skipFrames).Take(takeFrame).ToList();
                 var faceId = FindFaceId(framesCompare, periodTime);
+                // System.Console.WriteLine($"Face id -- {faceId}");
                 frameAttribute[i].FileFrame.FaceId = faceId;
             }
             return frameAttribute;
@@ -198,7 +199,11 @@ namespace DialogueMarkUp.QuartzJobs
         private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double treshold = 0.5)
         {
             var frameCompare = frameAttribute.Last();
-            if (frameCompare.FileFrame.FaceId != null) return frameCompare.FileFrame.FaceId;
+            if (frameCompare.FileFrame.FaceId != null) 
+            {
+                // System.Console.WriteLine("Face id exist");
+                return frameCompare.FileFrame.FaceId;
+            }
             else
             {
                 frameAttribute = frameAttribute.Where(p => p.FileFrame.Time >= frameCompare.FileFrame.Time.AddMinutes(-periodTime)).ToList();
@@ -206,17 +211,20 @@ namespace DialogueMarkUp.QuartzJobs
                 var lastFrame = frameAttribute[index];
                 
                 var faceIds = new List<Guid?>();
-                for (var i = index - 1; i == 0; i--)
+
+                var i = index - 1;
+                while (i >= 0)
                 {
                     var cos = Cos(JsonConvert.DeserializeObject<List<double>>(lastFrame.Descriptor),
-                        JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
+                                JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
                     // System.Console.WriteLine($"{cos}, {i}");
                     if (cos > treshold) //return frameAttribute[i].FileFrame.FaceId;
                     {
                         faceIds.Add(frameAttribute[i].FileFrame.FaceId);
                     }
+                    i --;
                 }
-                return faceIds.Any() ? faceIds.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key : Guid.NewGuid();
+                return (faceIds.Any()) ?  faceIds.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key : Guid.NewGuid();
             }
         }
 
