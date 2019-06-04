@@ -133,18 +133,32 @@ namespace MemoryDbEventBus
 
         public void Clear()
         {
-            var keys = _server.Keys();
+            try
+            {
+                _server.FlushDatabase(_memoryDatabase.Database);
+            }
+            catch (RedisCommandException ex)
+            {
+                var keys = _server.Keys();
 
-            foreach (var key in keys)
-                _memoryDatabase.KeyDelete(key);
+                foreach (var key in keys)
+                    _memoryDatabase.KeyDelete(key);
+            }
         }
 
         public async Task ClearAsync()
         {
-            var keys = _server.Keys();
+            try
+            {
+                _server.FlushDatabase(_memoryDatabase.Database);
+            }
+            catch (RedisCommandException ex)
+            {
+                var keys = _server.Keys();
 
-            foreach (var key in keys)
-                _memoryDatabase.KeyDeleteAsync(key);
+                foreach (var key in keys)
+                    _memoryDatabase.KeyDeleteAsync(key);
+            }
         }
 
         public int Count()
@@ -157,14 +171,26 @@ namespace MemoryDbEventBus
         {
                 var ret = new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
 
-
-                foreach (var key in  _server.Keys())
+                foreach (var key in _server.Keys())
                 {
-                    GetValueForKey(out var keyValuePair, false, key, out var redisKey);
-                    if (expr(keyValuePair.Value))
-                        return true;
+                    try
+                    {
+                        GetValueForKey(out var keyValuePair, false, key, out var redisKey);
+
+                        if (keyValuePair.Key == Guid.Empty || keyValuePair.Value == null)
+                            continue;
+
+                        var deserialized = JsonConvert.DeserializeObject<T>(keyValuePair.Value.ToString());
+
+                        if (expr(deserialized))
+                            return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        // doing nothing
+                    }
                 }
-                
+
                 return false;
         }
     }
