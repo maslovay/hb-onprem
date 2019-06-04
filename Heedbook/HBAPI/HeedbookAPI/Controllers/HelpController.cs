@@ -391,21 +391,22 @@ namespace UserOperations.Controllers
                 // frames.ForEach(p => p.StatusNNId = 6);
                 // _context.SaveChanges();
 
-                var dialogue = _context.Dialogues
-                    .Include(p => p.DialogueAudio)
-                    .Include(p => p.DialogueClientProfile)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialogueFrame)
-                    .Include(p => p.DialogueInterval)
-                    .Include(p => p.DialoguePhrase)
-                    .Include(p => p.DialoguePhraseCount)
-                    .Include(p => p.DialogueSpeech)
-                    .Include(p => p.DialogueVisual)
-                    .Include(p => p.DialogueWord)
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialogueHint)
-                    .Where(p => p.DialogueId == dialogueId).ToList();
-                return Ok(dialogue);
+                // var dialogue = _context.Dialogues
+                //     .Include(p => p.DialogueAudio)
+                //     .Include(p => p.DialogueClientProfile)
+                //     .Include(p => p.DialogueClientSatisfaction)
+                //     .Include(p => p.DialogueFrame)
+                //     .Include(p => p.DialogueInterval)
+                //     .Include(p => p.DialoguePhrase)
+                //     .Include(p => p.DialoguePhraseCount)
+                //     .Include(p => p.DialogueSpeech)
+                //     .Include(p => p.DialogueVisual)
+                //     .Include(p => p.DialogueWord)
+                //     .Include(p => p.ApplicationUser)
+                //     .Include(p => p.DialogueHint)
+                //     .Where(p => p.DialogueId == dialogueId).ToList();
+                var fileFrame = _context.FileVideos.Where(p => p.FileVideoId.ToString() == "b52238b9-fae2-43c7-9a6d-fdea1fe00cd1").ToList();
+                return Ok(fileFrame);
             }   
             catch (Exception e)
             {
