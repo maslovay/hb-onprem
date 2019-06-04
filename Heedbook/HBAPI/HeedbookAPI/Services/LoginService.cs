@@ -203,11 +203,11 @@ namespace UserOperations.Services
         #region  Password history
         public bool SavePasswordHistory(Guid userId, string passwordHash)
                 {
-                     PasswordHistory newPswd = null;
+                    PasswordHistory newPswd = null;
                     var passwords = _context.PasswordHistorys.Where(x => x.UserId == userId).OrderBy(x =>x.CreationDate).ToList();
                     if( passwords.Any(x => x.PasswordHash == passwordHash ))
                         return false;
-                    if( passwords.Count() < 5 )
+                    if( passwords.Count() < 5 )//---save five last used passwords
                     {
                         newPswd = new PasswordHistory();
                         newPswd.PasswordHistoryId = Guid.NewGuid();

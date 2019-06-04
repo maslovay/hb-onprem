@@ -87,6 +87,7 @@ namespace UserOperations.Controllers
                     StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId//---active
                     };
                 await _context.AddAsync(user);
+                _loginService.SavePasswordHistory(user.Id, user.PasswordHash);
 
                 var userRole = new ApplicationUserRole()
                     {
@@ -184,6 +185,8 @@ namespace UserOperations.Controllers
                     var userId = Guid.Parse(userClaims["applicationUserId"]);
                     user = _context.ApplicationUsers.FirstOrDefault(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper());
                     user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
+                    if(! _loginService.SavePasswordHistory(user.Id, user.PasswordHash))//---check 5 last passwords
+                        return BadRequest("password was used");
                 }
                 //---IF USER NOT LOGGINED HE RECEIVE GENERATED PASSWORD ON EMAIL
                 else
@@ -195,8 +198,8 @@ namespace UserOperations.Controllers
                     string msg = _loginService.GenerateEmailMsg(password, user);
                     _loginService.SendEmail(user.Email, "Password changed", msg);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
-                }
-                await _context.SaveChangesAsync();
+                }               
+                await _context.SaveChangesAsync();              
                 return Ok("password changed");
             }
             catch (Exception e)

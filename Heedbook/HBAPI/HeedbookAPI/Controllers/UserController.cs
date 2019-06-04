@@ -104,8 +104,7 @@ namespace UserOperations.Controllers
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-
+                    return BadRequest("Token wrong");              
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
                 PostUser message = JsonConvert.DeserializeObject<PostUser>(userDataJson);
                 if (_context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
@@ -129,6 +128,7 @@ namespace UserOperations.Controllers
                     WorkerTypeId = message.WorkerTypeId
                 };
                 await _context.AddAsync(user);
+                _loginService.SavePasswordHistory(user.Id, user.PasswordHash);//---save password
                 string avatarUrl = null;
                     //---save avatar---
                 if(formData.Files.Count != 0)
@@ -226,7 +226,10 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var user = _context.ApplicationUsers.Include( x =>x.UserRoles ).Where(p => p.Id == applicationUserId && p.CompanyId == companyId).FirstOrDefault();
+                var user = _context.ApplicationUsers
+                    .Include( x =>x.UserRoles )
+                    .Include(x => x.PasswordHistorys)
+                    .Where(p => p.Id == applicationUserId && p.CompanyId == companyId).FirstOrDefault();
 
                 if (user != null)
                 {
@@ -234,6 +237,7 @@ namespace UserOperations.Controllers
                     {
                         await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
                         _context.RemoveRange(user.UserRoles);
+                        _context.RemoveRange(user.PasswordHistorys);
                         _context.Remove(user);
                         await _context.SaveChangesAsync();
                     }
@@ -584,21 +588,8 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var begTime = DateTime.UtcNow.AddDays(-30);
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var companyId = _context.Dialogues
-                    .Include(x => x.ApplicationUser)
-                    .Where(x=>x.DialogueId == dialogueId)
-                    .FirstOrDefault()
-                    .ApplicationUser.CompanyId;
-                
-                var avgDialogueTime = _context.Dialogues.Where(p =>
-                    p.BegTime >= begTime &&
-                    p.StatusId == activeStatus &&
-                    p.ApplicationUser.CompanyId == companyId)
-                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
-
                 var dialogue = _context.Dialogues
                     .Include(p => p.DialogueAudio)
                     .Include(p => p.DialogueClientProfile)
@@ -612,12 +603,23 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueWord)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
-                    .Where(p =>  p.StatusId == activeStatus
+                    .Where(p => p.InStatistic == true 
+                        && p.StatusId == activeStatus
                         && p.DialogueId == dialogueId)
                     .FirstOrDefault();
+                System.Console.WriteLine("3");
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
 
+                var endTime = dialogue.EndTime.AddDays(1);
+                var begTime = endTime.AddDays(-30);
+                var avgDialogueTime = _context.Dialogues.Include(x => x.ApplicationUser).Where(p =>
+                    p.BegTime >= begTime && p.EndTime <= endTime &&
+                    p.StatusId == activeStatus && p.InStatistic == true &&
+                    p.ApplicationUser.CompanyId == dialogue.ApplicationUser.CompanyId)
+                    .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
+                    
                 var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
+              
                 jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
                 jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
                 jsonDialogue["Video"] = dialogue == null ? null :_sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
