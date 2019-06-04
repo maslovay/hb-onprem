@@ -66,7 +66,7 @@ namespace FaceAnalyzeService
                         var fileFrame = await _repository
                            .FindOneByConditionAsync<FileFrame>(entity => entity.FileName == fileName);
 
-                        if (fileFrame != null)
+                        if (fileFrame != null && faceResult.Any())
                         {
                             var frameEmotion = new FrameEmotion
                             {
