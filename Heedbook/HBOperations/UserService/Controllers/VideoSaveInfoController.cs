@@ -44,7 +44,7 @@ namespace UserService.Controllers
             try
             {   
                 _log.Info("Function Video save info started");
-                duration = duration == null ? 15 : duration;
+                duration = duration == null ? 15 * 1000 : duration;
                 var languageId = _context.ApplicationUsers
                                          .Include(p => p.Company)
                                          .Include(p => p.Company.Language)
@@ -59,7 +59,7 @@ namespace UserService.Controllers
                     ApplicationUserId = applicationUserId,
                     BegTime = time,
                     CreationTime = DateTime.UtcNow,
-                    Duration = duration,
+                    Duration = duration / 1000,
                     EndTime = time.AddMilliseconds((Double) duration),
                     FileContainer = "videos",
                     FileExist = await _sftpClient.IsFileExistsAsync($"videos/{fileName}"),
