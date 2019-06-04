@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Notifications.Base;
+using RabbitMqEventBus;
 using RabbitMqEventBus.Base;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
@@ -105,7 +106,8 @@ namespace UserService
                 app.UseHsts();
 
             app.UseSwagger(c => { c.RouteTemplate = "user/swagger/{documentName}/swagger.json"; });
-
+            var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
+            
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/user/swagger/v1/swagger.json", "Sample API");
