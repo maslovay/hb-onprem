@@ -368,25 +368,45 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("test123")]
-        public IActionResult test123()
+        public IActionResult test123([FromQuery]Guid? dialogueId)
         {
             try
             {
-                var dialogue = _context.Dialogues
-                 .Include(p => p.DialogueAudio)
-                    .Include(p => p.DialogueClientProfile)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialogueFrame)
-                    .Include(p => p.DialogueInterval)
-                    .Include(p => p.DialoguePhrase)
-                    .Include(p => p.DialoguePhraseCount)
-                    .Include(p => p.DialogueSpeech)
-                    .Include(p => p.DialogueVisual)
-                    .Include(p => p.DialogueWord)
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialogueHint)
-                .Where(p => p.DialogueId.ToString() == "a54b3bc8-d948-4f28-99fe-98f232f65ef4").ToList();
-                return Ok(dialogue);
+                // var dialogue = _context.Dialogues
+                //  .Include(p => p.DialogueAudio)
+                //     .Include(p => p.DialogueClientProfile)
+                //     .Include(p => p.DialogueClientSatisfaction)
+                //     .Include(p => p.DialogueFrame)
+                //     .Include(p => p.DialogueInterval)
+                //     .Include(p => p.DialoguePhrase)
+                //     .Include(p => p.DialoguePhraseCount)
+                //     .Include(p => p.DialogueSpeech)
+                //     .Include(p => p.DialogueVisual)
+                //     .Include(p => p.DialogueWord)
+                //     .Include(p => p.ApplicationUser)
+                //     .Include(p => p.DialogueHint)
+                // .Where(p => p.DialogueId.ToString() == "a54b3bc8-d948-4f28-99fe-98f232f65ef4").ToList();
+                // var frames  = _context.FileFrames.Where(p => p.StatusNNId == 7).ToList();
+                // frames.ForEach(p => p.FaceId = null);
+                // frames.ForEach(p => p.StatusNNId = 6);
+                // _context.SaveChanges();
+
+                // var dialogue = _context.Dialogues
+                //     .Include(p => p.DialogueAudio)
+                //     .Include(p => p.DialogueClientProfile)
+                //     .Include(p => p.DialogueClientSatisfaction)
+                //     .Include(p => p.DialogueFrame)
+                //     .Include(p => p.DialogueInterval)
+                //     .Include(p => p.DialoguePhrase)
+                //     .Include(p => p.DialoguePhraseCount)
+                //     .Include(p => p.DialogueSpeech)
+                //     .Include(p => p.DialogueVisual)
+                //     .Include(p => p.DialogueWord)
+                //     .Include(p => p.ApplicationUser)
+                //     .Include(p => p.DialogueHint)
+                //     .Where(p => p.DialogueId == dialogueId).ToList();
+                var fileFrame = _context.FileVideos.Where(p => p.FileVideoId.ToString() == "b52238b9-fae2-43c7-9a6d-fdea1fe00cd1").ToList();
+                return Ok(fileFrame);
             }   
             catch (Exception e)
             {

@@ -34,6 +34,7 @@ namespace RabbitMqEventBus
             _retryCount = retryCount;
             _serviceProvider = serviceProvider;
             _deliveryCount = deliveryCount;
+            _persistentConnection.TryConnect();
         }
 
         public void Publish(IntegrationEvent @event)
