@@ -174,7 +174,7 @@ namespace UserOperations.Controllers
                         {
                             user.StatusId =  _context.Statuss.FirstOrDefault(x => x.StatusName == "Inactive").StatusId;
                             _context.SaveChanges();
-                            return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "3 attempts");
+                            return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Blocked");
                         }
                     }
             }
@@ -212,6 +212,33 @@ namespace UserOperations.Controllers
                     string msg = _loginService.GenerateEmailMsg(password, user);
                     _loginService.SendEmail(user.Email, "Password changed", msg);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
+                }               
+                await _context.SaveChangesAsync();              
+                return Ok("password changed");
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpPost("Unblock")]
+        [SwaggerOperation(Summary = "Unblock in case failed attempts to log in", Description = "Unblock, zero counter of failed log in, hange password for user. Send email with new password")]
+        public async Task<IActionResult> Unblock(
+                    [FromBody, SwaggerParameter("email required")] string email,  
+                    [FromHeader,  SwaggerParameter("JWT token required ( token of admin or manager )", Required = true)] string Authorization)
+        {
+            try
+            {
+                ApplicationUser user = _context.ApplicationUsers.FirstOrDefault(x => x.NormalizedEmail == email.ToUpper());
+                if (_loginService.GetDataFromToken(Authorization, out userClaims))
+                {
+                    string password = _loginService. GeneratePass(6);               
+                    string msg = _loginService.GenerateEmailMsg(password, user);
+                    _loginService.SendEmail(user.Email, "Password changed", msg);
+                    user.PasswordHash = _loginService.GeneratePasswordHash(password);
+                    user.StatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
+                    _loginService.SaveErrorLoginHistory(user.Id, "success");
                 }               
                 await _context.SaveChangesAsync();              
                 return Ok("password changed");

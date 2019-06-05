@@ -62,8 +62,6 @@ namespace UserOperations.Controllers
             _containerName = "media";         
         }
 
-    #region File
-
         [HttpGet("File")]
         [SwaggerOperation(Description = "Return all files from sftp. If no parameters are passed return files from 'media', for loggined company")]
         public async Task<IActionResult> FileGet([FromHeader]string Authorization,
@@ -126,14 +124,7 @@ namespace UserOperations.Controllers
                     //memoryStream.Close();
                 }
                 await Task.WhenAll(tasks);
-            
-                // var urlTasks = new List<Task<String>>();            
-                // foreach (var fileName in fileNames)
-                // {
-                //     urlTasks.Add(_sftpClient.GetFileUrl(fileName));
-                // }
-                // var result = await Task.WhenAll(urlTasks);
-                // return Ok(result.Select(x => new {path = x, ext = Path.GetExtension(x).Trim('.')}));
+
                 List<object> result = new List<object>();   
                 foreach (var file in fileNames)
                 {
@@ -197,8 +188,6 @@ namespace UserOperations.Controllers
             {
                  return BadRequest(e.Message);
             }
-
         }
-        #endregion
     }
 }

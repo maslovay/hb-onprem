@@ -1,4 +1,3 @@
-#region USING
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +32,6 @@ using HBData;
 using System.Net.Http.Headers;
 using Swashbuckle.AspNetCore.Annotations;
 using HBLib.Utils;
-#endregion
 
 namespace UserOperations.Controllers
 {
@@ -69,8 +67,7 @@ namespace UserOperations.Controllers
             activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
             disabledStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Disabled").StatusId;
         }
-
-#region USER
+        
         [HttpGet("User")]
         [SwaggerOperation(Summary = "All company users", Description = "Return all active (status 3) users (array) for loggined company with role Id")]
         [SwaggerResponse(200, "Users with role", typeof(List<UserModel>))]
@@ -140,8 +137,6 @@ namespace UserOperations.Controllers
                     user.Avatar = fn;
                     avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime)).path;
                 }
-                //string msg = GenerateEmailMsg(password, user);
-                //_loginService.SendEmail(message.Email, "Registration on Heedbook", msg);
 
                 var userRole = new ApplicationUserRole()
                 {
@@ -164,7 +159,6 @@ namespace UserOperations.Controllers
                 Description = "Edit user (any from loggined company) and return edited. Don't send password and role (can't change). Email must been unique. May contain avatar file")]
         [SwaggerResponse(200, "Edited user", typeof(UserModel))]
         public async Task<IActionResult> UserPut(
-                 //   [FromBody] ApplicationUser message, 
                     [FromForm,  SwaggerParameter("Avatar file (not required) + json User with key 'data' in FormData")] IFormCollection formData,
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
@@ -255,11 +249,7 @@ namespace UserOperations.Controllers
                 return BadRequest(e.Message);
             }
         }
-
-
-#endregion
-
-#region Corporation
+        
         [HttpGet("Companies")]
         [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for loggined corporation (only for role Supervisor)")]
         [SwaggerResponse(200, "Companies", typeof(List<Company>))]
@@ -311,10 +301,8 @@ namespace UserOperations.Controllers
                 return BadRequest(e.Message);
             }
         }
-   
-#endregion
 
-#region PHRASE
+
         [HttpGet("PhraseLib")]
         [SwaggerOperation(Summary = "Library", 
                 Description = "Return collections phrases from library (only templates and only with language code = loggined company language code) which company has not yet used")]
@@ -505,11 +493,6 @@ namespace UserOperations.Controllers
             }
         }
 
-       
-#endregion
-
-#region DIALOGUE
-
         // to do: add dialogue phrase and add make migration 
         // format of datetime is yyyymmddhhmmss
         [HttpGet("Dialogue")]
@@ -662,9 +645,7 @@ namespace UserOperations.Controllers
             }
         }
     }
-#endregion
-  
-#region MODELS
+
     public class PostUser
     {
         public string FullName;
@@ -721,5 +702,4 @@ namespace UserOperations.Controllers
         public Guid DialogueId;
         public bool InStatistic;
     }
-#endregion
 }

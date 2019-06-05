@@ -26,6 +26,8 @@ namespace UserOperations.Services
         private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
         private readonly RecordsContext _context;
+        private const int PASSWORDS_TO_SAVE = 5;
+        private const int ATTEMPT_TO_FAIL_LOG_IN = 5;
 
         public LoginService(IGenericRepository repository, IConfiguration config, RecordsContext context)
         {
@@ -202,14 +204,13 @@ namespace UserOperations.Services
             return false;
         }
         
-#region  Password and login history
         public bool SavePasswordHistory(Guid userId, string passwordHash)
         {
             PasswordHistory newPswd = null;
             var passwords = _context.PasswordHistorys.Where(x => x.UserId == userId).OrderBy(x => x.CreationDate).ToList();
             if (passwords.Any(x => x.PasswordHash == passwordHash))
                 return false;
-            if (passwords.Count() < 5)//---save five last used passwords
+            if (passwords.Count() < PASSWORDS_TO_SAVE)//---save five last used passwords
             {
                 newPswd = new PasswordHistory();
                 newPswd.PasswordHistoryId = Guid.NewGuid();
@@ -244,7 +245,7 @@ namespace UserOperations.Services
             newErrLogin.UserId = userId;
             newErrLogin.LoginTime = DateTime.UtcNow;         
             _context.Add(newErrLogin);
-             if( lastlogin == null || lastlogin.Attempt < 2)
+             if( lastlogin == null || lastlogin.Attempt < ATTEMPT_TO_FAIL_LOG_IN - 1)//---5 attempt, if last was 3 - save as 4
             {
                 newErrLogin.Attempt = lastlogin!= null? lastlogin.Attempt + 1 : 1;
                 newErrLogin.Message = "Wrong password";
@@ -253,16 +254,13 @@ namespace UserOperations.Services
             }
             else 
             {
-                newErrLogin.Attempt = 3;
+                newErrLogin.Attempt = ATTEMPT_TO_FAIL_LOG_IN;//---5 attempt, if last was 4 - save as 5 and block user
                 newErrLogin.Message = "Wrong password. Blocked";
                 _context.SaveChanges();
                 return false;//---user has no any attempts
             }               
            
         }
-#endregion
-
-#region Email
         private string emailAddressSender = "heedbookmailagent@gmail.com";
         private string emailServerSender = "smtp.gmail.com";
         private string emailSenderPassword = "Test_User12345";
@@ -308,8 +306,6 @@ namespace UserOperations.Services
             msg += " You were registred in Heedbook";
             return msg;
         }
-
-#endregion
 
         public bool _disposed;
 

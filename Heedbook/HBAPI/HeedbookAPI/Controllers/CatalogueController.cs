@@ -55,7 +55,7 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _context = context;
         }
-        #region Catalogue
+        
         [HttpGet("Country")]
         [SwaggerOperation(Description = "Return all countries. Does not require to transfer a token")]
         public IEnumerable<Country> CountrysGet()
@@ -98,6 +98,5 @@ namespace UserOperations.Controllers
         {             
             return _context.PhraseTypes.ToList();
         }     
-        #endregion
     }
 }
