@@ -222,6 +222,22 @@ namespace UserOperations.Controllers
         [HttpGet("test123")]
         public IActionResult test123([FromQuery]Guid? dialogueId)
         {
+                 var dialogue = _context.Dialogues
+                    .Include(p => p.DialogueAudio)
+                    .Include(p => p.DialogueClientProfile)
+                    .Include(p => p.DialogueClientSatisfaction)
+                    .Include(p => p.DialogueFrame)
+                    .Include(p => p.DialogueInterval)
+                    .Include(p => p.DialoguePhrase)
+                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialogueSpeech)
+                    .Include(p => p.DialogueVisual)
+                    .Include(p => p.DialogueWord)
+                    .Include(p => p.ApplicationUser)
+                    .Include(p => p.DialogueHint)
+                    .Where(p => p.DialogueId == dialogueId)
+                    .FirstOrDefault();
+                    return Ok(dialogue);
             try
             {
                 // var dialogue = _context.Dialogues
