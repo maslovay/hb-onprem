@@ -586,7 +586,7 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueWord)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
-                    .Where(p => p.StatusId == activeStatus
+                    .Where(p => p.StatusId == 3
                         && p.DialogueId == dialogueId)
                     .FirstOrDefault();
                 System.Console.WriteLine("3");
