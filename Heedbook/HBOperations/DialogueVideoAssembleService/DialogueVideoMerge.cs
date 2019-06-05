@@ -11,6 +11,7 @@ using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using Renci.SshNet.Common;
@@ -53,19 +54,20 @@ namespace DialogueVideoAssembleService
 
         public async Task Run(DialogueVideoMergeRun message)
         {
+            System.Console.WriteLine("Function started");
             _log.SetFormat("{ApplicationUserId}, {DialogueId}");
             _log.SetArgs(message.ApplicationUserId, message.DialogueId);
             try
             {
-                var cmd = new CMDWithOutput();
+                var cmd = new CMDWithOutput();               
 
                 var fileVideos = _context.FileVideos.Where(p => p.ApplicationUserId == message.ApplicationUserId
                                                                 && p.EndTime >= message.BeginTime
                                                                 && p.BegTime <= message.EndTime
                                                                 && p.FileExist)
                                          .OrderBy(p => p.BegTime)
-                                         .ToList();
-
+                                         .ToList();                            
+                
                 if (!fileVideos.Any())
                 {
                     _log.Error("No video files");
@@ -78,7 +80,7 @@ namespace DialogueVideoAssembleService
                                                                 && p.FileExist)
                                          .OrderBy(p => p.Time)
                                          .ToList();
-
+                
                 if (!fileFrames.Any())
                 {
                     _log.Error("No frame files");
@@ -121,20 +123,27 @@ namespace DialogueVideoAssembleService
                 };
                 
                 BuildFFmpegCommands(fileVideos, fileFrames, ref videoMergeCommands, ref frameCommands);
-                
-                videoMergeCommands.Add(new FFMpegWrapper.FFmpegCommand
+
+                if(fileVideos.Count > 1)
                 {
-                    Command = $"-i {tempLastVideoPath}",
-                    Path = tempLastVideoPath,
-                    Type = VideoType,
-                    FileFolder = _videosFolder,
-                    FileName = fileVideos[fileVideos.Count - 1].FileName
-                });
+                    videoMergeCommands.Add(new FFMpegWrapper.FFmpegCommand
+                    {
+                        Command = $"-i {tempLastVideoPath}",
+                        Path = tempLastVideoPath,
+                        Type = VideoType,
+                        FileFolder = _videosFolder,
+                        FileName = fileVideos[fileVideos.Count - 1].FileName
+                    });
+                }
+                
                 _log.Info("Downloading all files");
 
                 foreach (var command in videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First()))
+                {                        
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync(
-                        $"{_sftpSettings.DestinationPath}{command.FileFolder}/{command.FileName}", sessionDir);
+                        $"{_sftpSettings.DestinationPath}{command.FileFolder}/{command.FileName}", sessionDir);                    
+                }
+                    
 
                 var outputCutFirstVideo = _wrapper.CutBlob(
                     Path.Combine(sessionDir, fileVideos[0].FileName),
@@ -142,11 +151,14 @@ namespace DialogueVideoAssembleService
                     message.BeginTime.Subtract(fileVideos[0].BegTime).ToString(@"hh\:mm\:ss\.ff"),
                     (fileVideos[0].EndTime.Subtract(fileVideos[0].BegTime)).ToString(@"hh\:mm\:ss\.ff"));
 
-                var outputCutLastVideo = _wrapper.CutBlob(
-                    Path.Combine(sessionDir, fileVideos[fileVideos.Count - 1].FileName),
-                    tempLastVideoPath,
-                    "00:00:00.00",
-                    (message.EndTime - fileVideos[fileVideos.Count - 1].BegTime).ToString(@"hh\:mm\:ss\.ff"));
+                if(fileVideos.Count > 1)
+                {
+                    var outputCutLastVideo = _wrapper.CutBlob(
+                        Path.Combine(sessionDir, fileVideos[fileVideos.Count - 1].FileName),
+                        tempLastVideoPath,
+                        "00:00:00.00",
+                        (message.EndTime - fileVideos[fileVideos.Count - 1].BegTime).ToString(@"hh\:mm\:ss\.ff"));
+                }                
 
                 foreach (var frameCommand in frameCommands)
                 {
@@ -156,10 +168,10 @@ namespace DialogueVideoAssembleService
 
                 var extension = Path.GetExtension(fileVideos.Select(item => item.FileName).First());
                 var outputFn = Path.Combine(sessionDir, $"{message.DialogueId}{extension}");
-
+                
                 _log.Info("Concat videos and frames");
                 var outputDialogueMerge = _wrapper.ConcatSameCodecsAndFrames(videoMergeCommands, outputFn, sessionDir);
-
+                
                 _log.Info("Uploading to FTP server result dialogue video");
                 await _sftpClient.UploadAsync(outputFn, "dialoguevideos", $"{message.DialogueId}{extension}");
 
@@ -175,8 +187,8 @@ namespace DialogueVideoAssembleService
                         Path = $"dialoguevideos/{message.DialogueId}{extension}"
                     };
                     _notificationPublisher.Publish(@event);
-                }
-
+                }                
+                
                 _log.Info("Delete all local files");
                 Directory.Delete(sessionDir, true);
                 _log.Info("Function finished OnPremDialogueAssembleMerge");
@@ -197,10 +209,12 @@ namespace DialogueVideoAssembleService
             ref List<FFMpegWrapper.FFmpegCommand> videoMergeCommands,
             ref List<FFMpegWrapper.FFmpegCommand> frameCommands)
         {
+
             for (var i = 1; i < fileVideos.Count(); i++)
             {
+                // System.Console.WriteLine($"Time gap is {fileVideos[i].BegTime.Subtract(fileVideos[i - 1].EndTime).TotalSeconds}");
                 var timeGap =
-                    Convert.ToInt16(fileVideos[i].BegTime.Subtract(fileVideos[i - 1].EndTime).TotalSeconds);
+                    Convert.ToInt32(fileVideos[i].BegTime.Subtract(fileVideos[i - 1].EndTime).TotalSeconds);
                 if (timeGap > 1)
                 {
                     var lastFrame = LastFrame(fileVideos[i - 1], fileFrames);
