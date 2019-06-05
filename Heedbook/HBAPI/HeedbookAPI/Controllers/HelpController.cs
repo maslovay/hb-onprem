@@ -49,6 +49,7 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
+        private readonly int activeStatus;
 
 
         public HelpController(
@@ -66,6 +67,7 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
+            activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
         }
 
         [HttpGet("GetWords")]
@@ -235,7 +237,7 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueWord)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
-                    .Where(p => p.DialogueId == dialogueId)
+                    .Where(p => p.StatusId == activeStatus && p.DialogueId == dialogueId)
                     .FirstOrDefault();
                     return Ok(dialogue);
             try
