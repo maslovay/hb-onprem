@@ -47,6 +47,8 @@ namespace DialogueMarkUp.QuartzJobs
                     .Include(p => p.FileFrame)
                     .Where(p => p.FileFrame.StatusNNId == 6 && p.FileFrame.Time < endTime)
                     .OrderBy(p => p.FileFrame.Time)
+                    .GroupBy(p => p.FileFrame.FileName)
+                    .Select(p => p.First())
                     .ToList();
                 _log.Info($"Processing {frames.Count()}");
                 foreach (var applicationUserId in frames.Select(p => p.FileFrame.ApplicationUserId).ToList().Distinct().ToList())
@@ -55,6 +57,9 @@ namespace DialogueMarkUp.QuartzJobs
                         .Where(p => p.FileFrame.ApplicationUserId == applicationUserId)
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
+
+                    // System.Console.WriteLine(JsonConvert.SerializeObject(framesUser.Select(p => p.FileFrame.FileName)));
+                    System.Console.WriteLine($"Count -------------------- {framesUser.Count()}");
 
                     framesUser = FindAllFaceId(framesUser, periodFrame, periodTime);
                     var markUps = framesUser.GroupBy(p => p.FileFrame.FaceId)
@@ -70,7 +75,8 @@ namespace DialogueMarkUp.QuartzJobs
                         .Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 10)
                         .OrderBy(p => p.EndTime)
                         .ToList();
-                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}"); 
+                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}");
+                    Console.WriteLine($"Creating markup {JsonConvert.SerializeObject(markUps)}");  
                     if (markUps.Any()) CreateMarkUp(markUps, framesUser, applicationUserId);
                 }
                 _log.Info("Function DialogueMarkUp finished");                
@@ -192,17 +198,18 @@ namespace DialogueMarkUp.QuartzJobs
                 var takeFrame = Math.Min(i + 1, periodFrame); 
                 var framesCompare = frameAttribute.Skip(skipFrames).Take(takeFrame).ToList();
                 var faceId = FindFaceId(framesCompare, periodTime);
-                // System.Console.WriteLine($"Face id -- {faceId}");
+                // System.Console.WriteLine($"Index ---- {i}, Face id -- {faceId}, Time - {frameAttribute[i].FileFrame.Time}, FileName - {frameAttribute[i].FileFrame.FileName}");
                 frameAttribute[i].FileFrame.FaceId = faceId;
             }
+            _log.Info($"Face ids - {JsonConvert.SerializeObject(frameAttribute.Select(p => new {FaceId = p.FileFrame.FaceId, FileName = p.FileFrame.FaceId}).ToList())}");
             return frameAttribute;
         }
-        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double treshold = 0.5)
+        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double treshold = 0.4)
         {
             var frameCompare = frameAttribute.Last();
             if (frameCompare.FileFrame.FaceId != null) 
             {
-                // System.Console.WriteLine("Face id exist");
+                System.Console.WriteLine("Face id exist");
                 return frameCompare.FileFrame.FaceId;
             }
             else
@@ -218,7 +225,7 @@ namespace DialogueMarkUp.QuartzJobs
                 {
                     var cos = Cos(JsonConvert.DeserializeObject<List<double>>(lastFrame.Descriptor),
                                 JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
-                    // System.Console.WriteLine($"{cos}, {i}");
+                //    System.Console.WriteLine($"{cos}, {i}");
                     if (cos > treshold) //return frameAttribute[i].FileFrame.FaceId;
                     {
                         faceIds.Add(frameAttribute[i].FileFrame.FaceId);
