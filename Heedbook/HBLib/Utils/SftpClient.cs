@@ -31,15 +31,14 @@ namespace HBLib.Utils
             // });
 
             HttpFileUrl = @"http://filereference.northeurope.cloudapp.azure.com/";
-            var connect = ConnectToSftpAsync();
-            connect.Wait();
+            ConnectToSftpAsync().Wait();
         }
 
         public void Dispose()
         {
             _client.Dispose();
         }
-#region SFTP DIRECT
+        #region SFTP DIRECT
         private async Task ConnectToSftpAsync()
         {
             if (!_client.IsConnected)
@@ -48,7 +47,7 @@ namespace HBLib.Utils
                     ChangeDirectoryToDefault();
                 });
         }
-        
+
         /// <summary>
         /// Get url to file. 
         /// </summary>
@@ -61,7 +60,7 @@ namespace HBLib.Utils
                 return $"http://{_sftpSettings.Host}/{path}";
             return null;
         }
-        
+
         /// <summary>
         /// Get url to file. 
         /// </summary>
@@ -73,24 +72,22 @@ namespace HBLib.Utils
         }
         public async Task<List<string>> GetFileNames(String directory)
         {
-             await ConnectToSftpAsync();
-            return  _client.ListDirectory(directory).Where(f => !f.IsDirectory).Select(f=>f.Name).ToList();
+            await ConnectToSftpAsync();
+            return _client.ListDirectory(directory).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();
         }
 
         public void ChangeDirectory(String path)
         {
-            var connect = ConnectToSftpAsync();
-            connect.Wait();
+            ConnectToSftpAsync().Wait();
             _client.ChangeDirectory(path);
         }
 
         public void ChangeDirectoryToDefault()
         {
-            var connect = ConnectToSftpAsync();
-            connect.Wait();
+            ConnectToSftpAsync().Wait();
             _client.ChangeDirectory(_sftpSettings.DestinationPath);
         }
-        
+
 
         /// <summary>
         /// Get urls to files. 
@@ -123,19 +120,19 @@ namespace HBLib.Utils
         public async Task<IEnumerable<FileInfoModel>> GetAllFilesData(String directory, string subDir)
         {
             await ConnectToSftpAsync();
-            List<Renci.SshNet.Sftp.SftpFile> files = new List<Renci.SshNet.Sftp.SftpFile>();  
+            List<Renci.SshNet.Sftp.SftpFile> files = new List<Renci.SshNet.Sftp.SftpFile>();
             files = _client.ListDirectory($"{directory}/{subDir}").ToList();
             return await Task.Run(() => files
                 .Where(f => !f.IsDirectory)
-                .Select(f => 
+                .Select(f =>
                     new FileInfoModel
-                    { 
+                    {
                         url = $"{HttpFileUrl}{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
 
-                   //     url = $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
+                        //     url = $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
                         name = f.Name,
                         date = f.Attributes.LastWriteTime
-                        }));
+                    }));
         }
 
         /// <summary>
@@ -166,7 +163,7 @@ namespace HBLib.Utils
         public async Task UploadAsMemoryStreamAsync(Stream stream, String path, String filename, Boolean toDestionationPath = false)
         {
             await ConnectToSftpAsync();
-            _client.BufferSize = 4 * 1024;         
+            _client.BufferSize = 4 * 1024;
             //_client.BufferSize = (uint)stream.Length;
             await CreateIfDirNoExistsAsync(_sftpSettings.DestinationPath + path);
             _client.ChangeDirectory(_sftpSettings.DestinationPath + path);
@@ -273,8 +270,8 @@ namespace HBLib.Utils
         public async Task CreateIfDirNoExistsAsync(String path)
         {
             await ConnectToSftpAsync();
-            if( ! await Task.Run(() => _client.Exists(path)))
-            _client.CreateDirectory(path);
+            if (!await Task.Run(() => _client.Exists(path)))
+                _client.CreateDirectory(path);
         }
 
         /// <summary>
@@ -309,7 +306,7 @@ namespace HBLib.Utils
         public async Task<IEnumerable<Task>> DeleteFileIfExistsBulkAsync(IEnumerable<string> files)
         {
             await ConnectToSftpAsync();
-            
+
             var taskList = new List<Task>(files.Count());
 
             foreach (var path in files)
@@ -351,18 +348,18 @@ namespace HBLib.Utils
             if (_client.IsConnected)
                 await Task.Run(() => _client.Disconnect());
         }
-        
-#endregion
 
-#region NEW FILE REFERENCES
+        #endregion
+
+        #region NEW FILE REFERENCES
         public FileResult GetFileLink(string directory, string file, DateTime exp = default(DateTime))
-        {    
-           return new FileResult { path = $"{HttpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
-          // return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
+        {
+            return new FileResult { path = $"{HttpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
+            // return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
         }
-#endregion
+        #endregion
 
-#region MODELS
+        #region MODELS
         public class FileInfoModel
         {
             public string url;
@@ -372,16 +369,16 @@ namespace HBLib.Utils
 
         public string DestinationPath =>
             _sftpSettings.DestinationPath;
-        
+
         public string Host =>
             _sftpSettings.Host;
     }
 
     public class FileResult
-        {
-            public string path;
-            public string ext;
-        }
-    
-#endregion
+    {
+        public string path;
+        public string ext;
+    }
+
+    #endregion
 }
