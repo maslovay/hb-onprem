@@ -114,6 +114,20 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     dialogues.Add(dialogue);
 
+                    var markUpNew = new HBData.Models.DialogueMarkup{
+                        DialogueMarkUpId = Guid.NewGuid(),
+                        ApplicationUserId = applicationUserId,
+                        BegTime = markup.BegTime,
+                        BegTimeMarkup = markup.BegTime,
+                        EndTime = markup.EndTime,
+                        EndTimeMarkup = markup.EndTime,
+                        IsDialogue = true,
+                        CreationTime = DateTime.UtcNow,
+                        StatusId = 7,
+                        TeacherId = "NN"
+                    };
+                    _context.DialogueMarkups.Add(markUpNew);
+
                     var dialogueVideoMerge = new DialogueVideoMergeRun
                     {
                         ApplicationUserId = applicationUserId,
@@ -162,6 +176,20 @@ namespace DialogueMarkUp.QuartzJobs
                         StatusId = 6
                     };
                     dialogues.Add(dialogue);
+
+                    var markUpNew = new HBData.Models.DialogueMarkup{
+                        DialogueMarkUpId = Guid.NewGuid(),
+                        ApplicationUserId = applicationUserId,
+                        BegTime = markUps[i].BegTime,
+                        BegTimeMarkup = markUps[i].BegTime,
+                        EndTime = markUps[i].EndTime,
+                        EndTimeMarkup = markUps[i].EndTime,
+                        IsDialogue = true,
+                        CreationTime = DateTime.UtcNow,
+                        StatusId = 7,
+                        TeacherId = "NN"
+                    };
+                    _context.DialogueMarkups.Add(markUpNew);
 
                     var dialogueVideoMerge = new DialogueVideoMergeRun
                     {
