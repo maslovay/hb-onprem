@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -12,6 +13,8 @@ namespace UserService
         {
             CreateWebHostBuilder(args).Build().Run();
         }
+
+
 
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
