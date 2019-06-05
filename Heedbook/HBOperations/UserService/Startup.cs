@@ -5,6 +5,7 @@ using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using MemoryDbEventBus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +15,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Notifications.Base;
-using RabbitMqEventBus;
 using RabbitMqEventBus.Base;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
@@ -74,6 +74,7 @@ namespace UserService
                 });
             });
 
+            services.AddRabbitMqEventBus(Configuration);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddTransient(provider =>
             {
@@ -81,18 +82,11 @@ namespace UserService
                 return new ElasticClient(settings);
             });
 
-            // (!isCalledFromUnitTest)
-                services.AddRabbitMqEventBus(Configuration);
-//            else
-//            {
-//                StartupExtensions.MockRabbitPublisher(services);
-//                StartupExtensions.MockNotificationService(services);
-//                StartupExtensions.MockNotificationHandler(services);
-//                StartupExtensions.MockTransmissionEnvironment<IntegrationEvent>(services);                
-//            }
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
+            
+            services.AddMemoryDbEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -106,8 +100,7 @@ namespace UserService
                 app.UseHsts();
 
             app.UseSwagger(c => { c.RouteTemplate = "user/swagger/{documentName}/swagger.json"; });
-            var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            
+
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/user/swagger/v1/swagger.json", "Sample API");

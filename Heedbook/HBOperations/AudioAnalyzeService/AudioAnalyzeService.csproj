@@ -15,6 +15,7 @@
     <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
+    <ProjectReference Include="..\MemoryDbEventBus\MemoryDbEventBus.csproj" />
     <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
   </ItemGroup>
 

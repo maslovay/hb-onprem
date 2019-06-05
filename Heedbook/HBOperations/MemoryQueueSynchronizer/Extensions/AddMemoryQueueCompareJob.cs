@@ -1,28 +1,28 @@
-using AudioAnalyzeScheduler.QuartzJobs;
+using MemoryQueueSynchronizer.QuartzJobs;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions;
 
-namespace AudioAnalyzeScheduler.Extensions
+namespace MemoryQueueSynchronizer.Extensions
 {
-    public static class AddAudioAnalyzeSchedulerJob
+    public static class AddMemoryQueueCompareJob
     {
-        public static void AddAudioRecognizeQuartz(this IServiceCollection services)
+        public static void AddMemoryQueueCompareQuartz(this IServiceCollection services)
         {
-            services.Add(new ServiceDescriptor(typeof(IJob), typeof(CheckAudioRecognizeStatusJob),
+            services.Add(new ServiceDescriptor(typeof(IJob), typeof(CheckMemoryAndDbConsistenceJob),
                 ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
-            services.AddSingleton(provider => JobBuilder.Create<CheckAudioRecognizeStatusJob>()
-                                                        .WithIdentity("CheckAudioRecognizeStatus.job", "Audios")
+            services.AddSingleton(provider => JobBuilder.Create<CheckMemoryAndDbConsistenceJob>()
+                                                        .WithIdentity("CheckMemoryAndDbConsistence.Job", "Check")
                                                         .Build());
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity("CheckAudioRecognizeStatus.trigger", "Audios")
+                                     .WithIdentity("CheckMemoryAndDbConsistence.trigger", "Check")
                                      .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
+                                     .WithSimpleSchedule(s => s.WithIntervalInHours(2).RepeatForever())
                                      .Build();
             });
 

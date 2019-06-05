@@ -6,9 +6,10 @@ using Common;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
+using MemoryDbEventBus;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using UnitTestExtensions;
+using StartupExtensions = UnitTestExtensions.StartupExtensions;
 
 namespace AudioAnalyzeService.Tests
 {
@@ -20,6 +21,7 @@ namespace AudioAnalyzeService.Tests
         private Startup _startup;
         private ElasticClient _elasticClient;
         private FFMpegWrapper _ffmpegWrapper;
+        private IMemoryDbPublisher _memoryDbPublisher;
         private AsrHttpClient.AsrHttpClient _asrClient;
         private string testDialogVideoCorrectFileName;
         private string testDialogAudioCorrectFileName;
@@ -95,9 +97,10 @@ namespace AudioAnalyzeService.Tests
             _repository = ServiceProvider.GetService<IGenericRepository>();
             _elasticClient = ServiceProvider.GetService<ElasticClient>();
             _ffmpegWrapper = ServiceProvider.GetService<FFMpegWrapper>();
+            _memoryDbPublisher = ServiceProvider.GetService<IMemoryDbPublisher>();
             _toneAnalyzeService = new ToneAnalyze( _sftpClient, this.Config, ScopeFactory, _elasticClient, _ffmpegWrapper );
             _asrClient = ServiceProvider.GetService<AsrHttpClient.AsrHttpClient>();
-            _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _elasticClient, _asrClient);
+            _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _elasticClient, _asrClient, _memoryDbPublisher);
         }
         
         [Test, Retry(3)]
