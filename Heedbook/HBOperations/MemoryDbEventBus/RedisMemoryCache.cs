@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -24,6 +25,8 @@ namespace MemoryDbEventBus
             var connectionMultiplexer = ConnectionMultiplexer.Connect(connString);
             _memoryDatabase = connectionMultiplexer.GetDatabase();
             _server = connectionMultiplexer.GetServer(connectionMultiplexer.GetEndPoints().First());
+
+            ThreadPool.SetMinThreads(10, 10); // Against a TIMEOUT error
         }
 
         /// <summary>
@@ -59,7 +62,7 @@ namespace MemoryDbEventBus
 
         public KeyValuePair<Guid, dynamic> Dequeue()
         {
-            var keys = _server.Keys().Reverse();
+            var keys = _server.Keys().ToArray();
 
             if (GetValue(keys, out KeyValuePair<Guid, dynamic> keyValuePair, true) != default(RedisKey))
                 return keyValuePair;
@@ -118,7 +121,7 @@ namespace MemoryDbEventBus
         public KeyValuePair<Guid, dynamic> Dequeue(Func<dynamic, bool> expr)
         {
             var ret = new KeyValuePair<Guid, dynamic>(Guid.Empty, null);
-            var keys = _server.Keys().Reverse().ToArray();
+            var keys = _server.Keys().ToArray();
             RedisKey key;
 
             while (ret.Value == null || !expr(ret.Value))

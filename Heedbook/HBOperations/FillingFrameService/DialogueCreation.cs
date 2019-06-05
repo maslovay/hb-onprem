@@ -9,6 +9,8 @@ using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
 using HBMLHttpClient.Model;
+using MemoryDbEventBus;
+using MemoryDbEventBus.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using RabbitMqEventBus.Events;
@@ -21,14 +23,17 @@ namespace FillingFrameService
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
+        private readonly IMemoryDbPublisher _memoryPublisher;
 
         public DialogueCreation(IServiceScopeFactory factory,
             SftpClient client,
-            ElasticClient log)
+            ElasticClient log,
+            IMemoryDbPublisher memoryPublisher)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _sftpClient = client;
             _log = log;
+            _memoryPublisher = memoryPublisher;
         }
 
         public async Task Run(DialogueCreationRun message)
@@ -123,6 +128,14 @@ namespace FillingFrameService
                     stream.Close();
                     await Task.WhenAll(insertTasks);
                     await _repository.SaveAsync();
+                    
+                    var dialogueCreatedEvent = new DialogueCreatedEvent()
+                    {
+                        Id = message.DialogueId,
+                        Status = 6
+                    };
+                    _memoryPublisher.Publish(dialogueCreatedEvent);
+                    
                     _log.Info("Function finished");
                 }
             }

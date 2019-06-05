@@ -72,8 +72,8 @@ namespace UserService.Controllers
                 {
                     DialogueId = Guid.NewGuid(),
                     ApplicationUserId = appUserId,
-                    BeginTime = dateTime.AddMinutes(-30),
-                    EndTime = dateTime.AddHours(1)
+                    BeginTime = dateTime.AddMinutes(-5),
+                    EndTime = dateTime.AddMinutes(5)
                 };
 
                 CreateDialog(newDialog);

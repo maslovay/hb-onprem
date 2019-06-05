@@ -4,6 +4,7 @@ using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using MemoryDbEventBus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -48,6 +49,7 @@ namespace FillingFrameService
             services.AddTransient<DialogueCreation>();
             services.AddTransient<DialogueCreationRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
+            services.AddMemoryDbEventBus(Configuration);
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

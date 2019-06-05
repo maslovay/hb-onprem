@@ -17,6 +17,8 @@ using System.Threading.Tasks;
 using HBData;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
+using MemoryDbEventBus;
+using MemoryDbEventBus.Events;
 
 
 namespace DialogueMarkUp.QuartzJobs
@@ -26,12 +28,17 @@ namespace DialogueMarkUp.QuartzJobs
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly INotificationPublisher _publisher;
+        private readonly IMemoryDbPublisher _memoryDbPublisher;
 
-        public CheckDialogueMarkUpJob(IServiceScopeFactory factory, INotificationPublisher publisher, ElasticClient log)
+        public CheckDialogueMarkUpJob(IServiceScopeFactory factory,
+            INotificationPublisher publisher,
+            ElasticClient log,
+            IMemoryDbPublisher memoryPublisher)
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _publisher = publisher;
             _log = log;
+            _memoryDbPublisher = memoryPublisher;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -47,8 +54,6 @@ namespace DialogueMarkUp.QuartzJobs
                     .Include(p => p.FileFrame)
                     .Where(p => p.FileFrame.StatusNNId == 6 && p.FileFrame.Time < endTime)
                     .OrderBy(p => p.FileFrame.Time)
-                    .GroupBy(p => p.FileFrame.FileName)
-                    .Select(p => p.First())
                     .ToList();
                 _log.Info($"Processing {frames.Count()}");
                 foreach (var applicationUserId in frames.Select(p => p.FileFrame.ApplicationUserId).ToList().Distinct().ToList())
@@ -57,9 +62,6 @@ namespace DialogueMarkUp.QuartzJobs
                         .Where(p => p.FileFrame.ApplicationUserId == applicationUserId)
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
-
-                    // System.Console.WriteLine(JsonConvert.SerializeObject(framesUser.Select(p => p.FileFrame.FileName)));
-                    System.Console.WriteLine($"Count -------------------- {framesUser.Count()}");
 
                     framesUser = FindAllFaceId(framesUser, periodFrame, periodTime);
                     var markUps = framesUser.GroupBy(p => p.FileFrame.FaceId)
@@ -75,8 +77,7 @@ namespace DialogueMarkUp.QuartzJobs
                         .Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 10)
                         .OrderBy(p => p.EndTime)
                         .ToList();
-                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}");
-                    Console.WriteLine($"Creating markup {JsonConvert.SerializeObject(markUps)}");  
+                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}"); 
                     if (markUps.Any()) CreateMarkUp(markUps, framesUser, applicationUserId);
                 }
                 _log.Info("Function DialogueMarkUp finished");                
@@ -114,20 +115,6 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     dialogues.Add(dialogue);
 
-                    var markUpNew = new HBData.Models.DialogueMarkup{
-                        DialogueMarkUpId = Guid.NewGuid(),
-                        ApplicationUserId = applicationUserId,
-                        BegTime = markup.BegTime,
-                        BegTimeMarkup = markup.BegTime,
-                        EndTime = markup.EndTime,
-                        EndTimeMarkup = markup.EndTime,
-                        IsDialogue = true,
-                        CreationTime = DateTime.UtcNow,
-                        StatusId = 7,
-                        TeacherId = "NN"
-                    };
-                    _context.DialogueMarkups.Add(markUpNew);
-
                     var dialogueVideoMerge = new DialogueVideoMergeRun
                     {
                         ApplicationUserId = applicationUserId,
@@ -146,7 +133,6 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
-
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
@@ -177,20 +163,6 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     dialogues.Add(dialogue);
 
-                    var markUpNew = new HBData.Models.DialogueMarkup{
-                        DialogueMarkUpId = Guid.NewGuid(),
-                        ApplicationUserId = applicationUserId,
-                        BegTime = markUps[i].BegTime,
-                        BegTimeMarkup = markUps[i].BegTime,
-                        EndTime = markUps[i].EndTime,
-                        EndTimeMarkup = markUps[i].EndTime,
-                        IsDialogue = true,
-                        CreationTime = DateTime.UtcNow,
-                        StatusId = 7,
-                        TeacherId = "NN"
-                    };
-                    _context.DialogueMarkups.Add(markUpNew);
-
                     var dialogueVideoMerge = new DialogueVideoMergeRun
                     {
                         ApplicationUserId = applicationUserId,
@@ -211,7 +183,6 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
-
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
@@ -226,18 +197,17 @@ namespace DialogueMarkUp.QuartzJobs
                 var takeFrame = Math.Min(i + 1, periodFrame); 
                 var framesCompare = frameAttribute.Skip(skipFrames).Take(takeFrame).ToList();
                 var faceId = FindFaceId(framesCompare, periodTime);
-                // System.Console.WriteLine($"Index ---- {i}, Face id -- {faceId}, Time - {frameAttribute[i].FileFrame.Time}, FileName - {frameAttribute[i].FileFrame.FileName}");
+                // System.Console.WriteLine($"Face id -- {faceId}");
                 frameAttribute[i].FileFrame.FaceId = faceId;
             }
-            _log.Info($"Face ids - {JsonConvert.SerializeObject(frameAttribute.Select(p => new {FaceId = p.FileFrame.FaceId, FileName = p.FileFrame.FaceId}).ToList())}");
             return frameAttribute;
         }
-        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double treshold = 0.4)
+        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double treshold = 0.5)
         {
             var frameCompare = frameAttribute.Last();
             if (frameCompare.FileFrame.FaceId != null) 
             {
-                System.Console.WriteLine("Face id exist");
+                // System.Console.WriteLine("Face id exist");
                 return frameCompare.FileFrame.FaceId;
             }
             else
@@ -253,7 +223,7 @@ namespace DialogueMarkUp.QuartzJobs
                 {
                     var cos = Cos(JsonConvert.DeserializeObject<List<double>>(lastFrame.Descriptor),
                                 JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
-                //    System.Console.WriteLine($"{cos}, {i}");
+                    // System.Console.WriteLine($"{cos}, {i}");
                     if (cos > treshold) //return frameAttribute[i].FileFrame.FaceId;
                     {
                         faceIds.Add(frameAttribute[i].FileFrame.FaceId);

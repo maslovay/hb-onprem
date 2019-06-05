@@ -14,7 +14,6 @@ namespace AudioAnalyzeScheduler
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
-                .UseUrls("http://localhost:4894")
                           .UseStartup<Startup>();
         }
     }
