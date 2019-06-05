@@ -20,7 +20,6 @@ namespace HBLib.Utils
             _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
                 sftpSettings.Password);
             _sftpSettings = sftpSettings;
-
             // fileref = new FileReference(new SftpSettings()
             // {
             //     Host = _sftpSettings.Host,
@@ -29,8 +28,11 @@ namespace HBLib.Utils
             //     Password = _sftpSettings.Password,
             //     DestinationPath = _sftpSettings.DestinationPath,
             //     DownloadPath = _sftpSettings.DownloadPath
-            // });    
-            HttpFileUrl = @"http://filereference.northeurope.cloudapp.azure.com/";     
+            // });
+
+            HttpFileUrl = @"http://filereference.northeurope.cloudapp.azure.com/";
+            var connect = ConnectToSftpAsync();
+            connect.Wait();
         }
 
         public void Dispose()
@@ -77,11 +79,15 @@ namespace HBLib.Utils
 
         public void ChangeDirectory(String path)
         {
+            var connect = ConnectToSftpAsync();
+            connect.Wait();
             _client.ChangeDirectory(path);
         }
 
         public void ChangeDirectoryToDefault()
         {
+            var connect = ConnectToSftpAsync();
+            connect.Wait();
             _client.ChangeDirectory(_sftpSettings.DestinationPath);
         }
         
