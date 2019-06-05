@@ -145,7 +145,7 @@ namespace UserOperations.Controllers
 
         [AllowAnonymous]
         [HttpPost("GenerateToken")]
-        [SwaggerOperation(Summary = "Loggin user", Description = "Loggin for user. Return jwt token")]
+        [SwaggerOperation(Summary = "Loggin user", Description = "Loggin for user. Return jwt token. Save errors passwords history (Block user)")]
         [SwaggerResponse(400, "The user data is invalid", typeof(string))]
         [SwaggerResponse(200, "JWT token")]
         public IActionResult GenerateToken([FromBody, 
@@ -155,14 +155,28 @@ namespace UserOperations.Controllers
             try
             {
                     ApplicationUser user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == message.UserName.ToUpper()).FirstOrDefault();
+                    //---wrong email?
                     if (user == null) return BadRequest("No such user");
-
-                    if (message.UserName != null && message.Password != null && _loginService.CheckUserLogin(message.UserName, message.Password))
+                    //---blocked?
+                    if (user.StatusId != _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId) return BadRequest("User not activated");
+                    //---success?
+                    if ( _loginService.CheckUserLogin(message.UserName, message.Password))
                     {
-                        if (user.StatusId != _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId) return BadRequest("User not activated");
+                        _loginService.SaveErrorLoginHistory(user.Id, "success");
                         return Ok( _loginService.CreateTokenForUser(user, message.Remember) );
                     }
-                    else return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Error in username or password");
+                    //---failed?
+                    else 
+                    {
+                        if (_loginService.SaveErrorLoginHistory(user.Id, "error"))//---save failed attempt to log in and check amount of attempts (<3)
+                            return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Error in username or password");
+                        else//---block user if this is the 3-rd failed attempt to log in
+                        {
+                            user.StatusId =  _context.Statuss.FirstOrDefault(x => x.StatusName == "Inactive").StatusId;
+                            _context.SaveChanges();
+                            return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "3 attempts");
+                        }
+                    }
             }
             catch (Exception e)
             {

@@ -17,5 +17,6 @@ namespace UserOperations.Services
         string GeneratePass(int x);
         string GenerateEmailMsg(string pswd, ApplicationUser user);
         bool SavePasswordHistory(Guid userId, string passwordHash);
+        bool SaveErrorLoginHistory(Guid userId, string type);
     }
 }

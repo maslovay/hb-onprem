@@ -121,6 +121,7 @@ namespace HBData
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<WorkerType> WorkerTypes { get; set; }
         public DbSet<PasswordHistory> PasswordHistorys { get; set; }
+        public DbSet<LoginHistory> LoginHistorys { get; set; }
 
     }
 }

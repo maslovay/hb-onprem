@@ -278,7 +278,8 @@ namespace UserOperations.Controllers
                             link = link.Replace("&amp", "");
                             link = link.Replace("&quot;", "");
                             var fileInfo = media.Where(x=>x.url == link).FirstOrDefault();
-                            resultMedia.Add(fileInfo);
+                            if(fileInfo != null)
+                                resultMedia.Add(fileInfo);
                         }
                         match = match.NextMatch();
                     }

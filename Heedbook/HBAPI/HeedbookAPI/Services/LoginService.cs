@@ -26,7 +26,7 @@ namespace UserOperations.Services
         private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
         private readonly RecordsContext _context;
-        
+
         public LoginService(IGenericRepository repository, IConfiguration config, RecordsContext context)
         {
             _repository = repository;
@@ -44,6 +44,7 @@ namespace UserOperations.Services
 
         public bool CheckUserLogin(string login, string password)
         {
+            if(password == null || login == null) return false;
             login = login.ToUpper();
             password = GeneratePasswordHash(password);
             return _context.ApplicationUsers.Count(p => p.NormalizedEmail == login && p.PasswordHash == password) == 1;
@@ -53,14 +54,14 @@ namespace UserOperations.Services
         {
             try
             {
-               // var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
-                var roleInfo = _context.ApplicationUserRoles.Include(x=>x.Role).Where( x => x.UserId == user.Id).FirstOrDefault();
-                var role = roleInfo.Role.Name;            
+                // var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
+                var roleInfo = _context.ApplicationUserRoles.Include(x => x.Role).Where(x => x.UserId == user.Id).FirstOrDefault();
+                var role = roleInfo.Role.Name;
 
                 if (user.StatusId == 3)
                 {
                     var claims = new[]
-                    {       
+                    {
                         new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim("applicationUserId", user.Id.ToString()),
@@ -108,7 +109,7 @@ namespace UserOperations.Services
                 sign = _config["Tokens:Key"];
             try
             {
-                
+
                 var pureToken = token.Split(' ')[1];
                 if (CheckToken(pureToken, sign))
                 {
@@ -126,7 +127,7 @@ namespace UserOperations.Services
             }
         }
 
-           // <summary>
+        // <summary>
         /// Parse JWT token 
         /// </summary>
         /// <param name="token">JWT token in request</param>
@@ -138,11 +139,11 @@ namespace UserOperations.Services
                 sign = _config["Tokens:Key"];
             try
             {
-                
+
                 var pureToken = token.Split(' ')[1];
                 if (CheckToken(pureToken, sign))
                 {
-                    var jwt = new JwtSecurityToken(pureToken);                
+                    var jwt = new JwtSecurityToken(pureToken);
                     claims = jwt.Payload.ToDictionary(key => key.Key.ToString(), value => value.Value.ToString());
                     return true;
                 }
@@ -187,90 +188,128 @@ namespace UserOperations.Services
         {
             //manager with one company in request
             var managerRoles = _config["Roles:ManagerRoles"].Split(',');
-            if (companyIds.Contains(claims["companyId"]) 
-                && companyIds.Count() == 1 
+            if (companyIds.Contains(claims["companyId"])
+                && companyIds.Count() == 1
                 && managerRoles.Contains(claims["role"]))
                 return true;
             //Supervisor or Admin with one company in request
             var supervisorRoles = _config["Roles:SupervisorRoles"].Split(',');
-            if (companyIds.Contains(claims["companyId"]) 
-                && companyIds.Count() == 1 && supervisorRoles.Contains(claims["role"]) 
-                && _context.Companys.Where(p => companyIds.Contains(p.CompanyId.ToString())).All(p => p.CorporationId.ToString()  == claims["corporationId"]))
+            if (companyIds.Contains(claims["companyId"])
+                && companyIds.Count() == 1 && supervisorRoles.Contains(claims["role"])
+                && _context.Companys.Where(p => companyIds.Contains(p.CompanyId.ToString())).All(p => p.CorporationId.ToString() == claims["corporationId"]))
                 return true;
             //reject if non succeded request
             return false;
         }
-        #region  Password history
+        
+#region  Password and login history
         public bool SavePasswordHistory(Guid userId, string passwordHash)
-                {
-                    PasswordHistory newPswd = null;
-                    var passwords = _context.PasswordHistorys.Where(x => x.UserId == userId).OrderBy(x =>x.CreationDate).ToList();
-                    if( passwords.Any(x => x.PasswordHash == passwordHash ))
-                        return false;
-                    if( passwords.Count() < 5 )//---save five last used passwords
-                    {
-                        newPswd = new PasswordHistory();
-                        newPswd.PasswordHistoryId = Guid.NewGuid();
-                        newPswd.UserId = userId;
-                        _context.Add(newPswd);
-                    }
-                    else newPswd = passwords.First();
-
-                    newPswd.CreationDate = DateTime.UtcNow;
-                    newPswd.PasswordHash = passwordHash;
-                    _context.SaveChanges();                
-                    return true;
-                }
-        #endregion
-
-        #region Email
-            private string emailAddressSender = "heedbookmailagent@gmail.com";
-            private string emailServerSender = "smtp.gmail.com";
-            private string emailSenderPassword = "Test_User12345";
-            private int emailSenderPort = 587;
-
-            // //sendgrid account settings
-            // private static string sendGridApiKey = "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";
-            // private static string sendGridSenderEmail = "info@wantad.club";
-            // private static string sendGridSenderName = "WantAd";
-
-            //create and email notification 
-            public void SendEmail(string email, string messageTitle, string messageText, string senderName = "Heedbook")
+        {
+            PasswordHistory newPswd = null;
+            var passwords = _context.PasswordHistorys.Where(x => x.UserId == userId).OrderBy(x => x.CreationDate).ToList();
+            if (passwords.Any(x => x.PasswordHash == passwordHash))
+                return false;
+            if (passwords.Count() < 5)//---save five last used passwords
             {
-                MailAddress from = new MailAddress(emailAddressSender, senderName);
-                MailAddress to = new MailAddress(email);
-                // create mail object 
-                MailMessage m = new MailMessage(from, to);
-                // list text
-                m.Body = messageText;
-                m.Subject = messageTitle;
-                m.IsBodyHtml = true;
-                SmtpClient smtp = new SmtpClient(emailServerSender, emailSenderPort);
-                smtp.Credentials = new NetworkCredential(emailAddressSender, emailSenderPassword);
-                smtp.EnableSsl = true;
-                smtp.Send(m);
+                newPswd = new PasswordHistory();
+                newPswd.PasswordHistoryId = Guid.NewGuid();
+                newPswd.UserId = userId;
+                _context.Add(newPswd);
             }
-            public string GeneratePass(int x)
-            {
-                string pass = "";
-                var r = new Random();
-                while (pass.Length < x)
-                {
-                    Char c = (char)r.Next(33, 125);
-                    if (Char.IsLetterOrDigit(c))
-                        pass += c;
-                }
-                return pass;
-            }
-            public string GenerateEmailMsg(string pswd, ApplicationUser user)
-                {
-                    string msg = "Login:    " + user.Email;
-                    msg += "   Password: " + pswd + ".";
-                    msg += " You were registred in Heedbook";
-                    return msg;
-                }          
+            else newPswd = passwords.First();
 
-        #endregion
+            newPswd.CreationDate = DateTime.UtcNow;
+            newPswd.PasswordHash = passwordHash;
+            _context.SaveChanges();
+            return true;
+        }
+        // make error logins counter zero(if success) or create new line in error logins
+        public bool SaveErrorLoginHistory(Guid userId, string type)
+        {
+           
+            var lastlogin = _context.LoginHistorys.Where(x => x.UserId == userId).OrderByDescending(x => x.LoginTime).FirstOrDefault(); 
+            //---if user make success login we need make counter of failed logins to zero
+            if( type == "success" )
+            {
+                if ( lastlogin != null && lastlogin.Attempt != 0 )
+                {
+                    lastlogin.Attempt = 0;
+                    _context.SaveChanges();
+                }
+                return true;
+            }
+            //---if failed login - save in magazine
+            LoginHistory newErrLogin = new LoginHistory();
+            newErrLogin.LoginHistoryId = Guid.NewGuid();
+            newErrLogin.UserId = userId;
+            newErrLogin.LoginTime = DateTime.UtcNow;         
+            _context.Add(newErrLogin);
+             if( lastlogin == null || lastlogin.Attempt < 2)
+            {
+                newErrLogin.Attempt = lastlogin!= null? lastlogin.Attempt + 1 : 1;
+                newErrLogin.Message = "Wrong password";
+                _context.SaveChanges();
+                return true;//---user has attempts
+            }
+            else 
+            {
+                newErrLogin.Attempt = 3;
+                newErrLogin.Message = "Wrong password. Blocked";
+                _context.SaveChanges();
+                return false;//---user has no any attempts
+            }               
+           
+        }
+#endregion
+
+#region Email
+        private string emailAddressSender = "heedbookmailagent@gmail.com";
+        private string emailServerSender = "smtp.gmail.com";
+        private string emailSenderPassword = "Test_User12345";
+        private int emailSenderPort = 587;
+
+        // //sendgrid account settings
+        // private static string sendGridApiKey = "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";
+        // private static string sendGridSenderEmail = "info@wantad.club";
+        // private static string sendGridSenderName = "WantAd";
+
+        //create and email notification 
+        public void SendEmail(string email, string messageTitle, string messageText, string senderName = "Heedbook")
+        {
+            MailAddress from = new MailAddress(emailAddressSender, senderName);
+            MailAddress to = new MailAddress(email);
+            // create mail object 
+            MailMessage m = new MailMessage(from, to);
+            // list text
+            m.Body = messageText;
+            m.Subject = messageTitle;
+            m.IsBodyHtml = true;
+            SmtpClient smtp = new SmtpClient(emailServerSender, emailSenderPort);
+            smtp.Credentials = new NetworkCredential(emailAddressSender, emailSenderPassword);
+            smtp.EnableSsl = true;
+            smtp.Send(m);
+        }
+        public string GeneratePass(int x)
+        {
+            string pass = "";
+            var r = new Random();
+            while (pass.Length < x)
+            {
+                Char c = (char)r.Next(33, 125);
+                if (Char.IsLetterOrDigit(c))
+                    pass += c;
+            }
+            return pass;
+        }
+        public string GenerateEmailMsg(string pswd, ApplicationUser user)
+        {
+            string msg = "Login:    " + user.Email;
+            msg += "   Password: " + pswd + ".";
+            msg += " You were registred in Heedbook";
+            return msg;
+        }
+
+#endregion
 
         public bool _disposed;
 
