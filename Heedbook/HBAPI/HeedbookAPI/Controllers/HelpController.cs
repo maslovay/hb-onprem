@@ -36,6 +36,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage;
 using HBLib.Utils;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -49,6 +50,7 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
+        private readonly RedisProvider _redisProvider;
         private readonly int activeStatus;
 
 
@@ -58,7 +60,8 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-              SftpClient sftpClient
+            SftpClient sftpClient,
+            RedisProvider redisProvider
             )
         {
             _userManager = userManager;
@@ -67,7 +70,15 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
+            _redisProvider = redisProvider;
             activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
+        }
+
+         [HttpGet("TestRedis")]
+        public async Task<IActionResult> TestRedis()
+        {
+            var data = _redisProvider.Get();
+            return Ok(data);
         }
 
         [HttpGet("GetWords")]
@@ -221,10 +232,10 @@ namespace UserOperations.Controllers
             return "OK";
         }
 
-        [HttpGet("test123")]
-        public IActionResult test123([FromQuery]Guid? dialogueId)
+        [HttpGet("test")]
+        public IActionResult test([FromQuery]Guid? dialogueId)
         {
-                 var dialogue = _context.Dialogues
+                var dialogue = _context.Dialogues
                     .Include(p => p.DialogueAudio)
                     .Include(p => p.DialogueClientProfile)
                     .Include(p => p.DialogueClientSatisfaction)
@@ -237,9 +248,12 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueWord)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
-                    .Where(p => p.StatusId == activeStatus && p.DialogueId == dialogueId)
+                    .Where(p => p.StatusId == 3
+                        && p.DialogueId == dialogueId)
                     .FirstOrDefault();
-                    return Ok(dialogue);
+                System.Console.WriteLine("3");
+                if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
+                return Ok(dialogue);
             try
             {
                 // var dialogue = _context.Dialogues

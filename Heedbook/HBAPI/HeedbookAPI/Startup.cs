@@ -31,6 +31,7 @@ using UserOperations.Services;
 using Microsoft.AspNetCore.Identity;
 using HBLib.Utils;
 using HBLib;
+using UserOperations.Utils;
 
 namespace UserOperations
 {
@@ -57,6 +58,8 @@ namespace UserOperations
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<Utils.DBOperations>();
+            services.AddScoped<RequestFilters>();
+            services.AddScoped<RedisProvider>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(p => {
                 p.Password.RequireDigit = true;
                 p.Password.RequireLowercase = true;
@@ -67,6 +70,20 @@ namespace UserOperations
             .AddEntityFrameworkStores<RecordsContext>();
             
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
+            services.AddDistributedRedisCache(option =>
+            {
+                option.Configuration = $"{Configuration.GetSection("MemoryCacheDb")["Host"]}:{Configuration.GetSection("MemoryCacheDb")["Port"]}";
+                //"52.236.81.14:6379";
+                option.InstanceName = "master";
+            });
+
+//             services.AddStackExchangeRedisCache(options =>
+// {
+//     options.Configuration = "localhost:52431";
+//     options.InstanceName = "SampleInstance";
+// });
+
+            
 
             services.AddSwaggerGen(c =>
             {
@@ -108,6 +125,7 @@ namespace UserOperations
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
+          
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
