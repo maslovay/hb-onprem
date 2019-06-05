@@ -109,6 +109,7 @@ namespace ExtractFramesFromVideo
         private async Task<FileFrame> CreateFileFrameAsync(string applicationUserId, string frameTime, string fileName)
         {
             var fileFrame = new FileFrame {
+                FileFrameId = Guid.NewGuid(),
                 ApplicationUserId = Guid.Parse(applicationUserId),
                 FaceLength = 0,
                 FileContainer = "frames",
