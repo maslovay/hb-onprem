@@ -74,10 +74,10 @@ namespace UserOperations.Controllers
             activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
         }
 
-         [HttpGet("TestRedis")]
+        [HttpGet("TestRedis")]
         public async Task<IActionResult> TestRedis()
         {
-            var data = _redisProvider.Get();
+            var data = await _redisProvider.GetAsync();
             return Ok(data);
         }
 

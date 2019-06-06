@@ -30,40 +30,48 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
-using Microsoft.Extensions.Caching.Distributed;
-// using StackExchange.Redis;
+// using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace UserOperations.Utils
 {
     public class RedisProvider
     {
-     //   private readonly RecordsContext _context;
-    //    private readonly IConfiguration _config;
-        private readonly IDistributedCache _distributedCache;
+        //   private readonly RecordsContext _context;
+        //    private readonly IConfiguration _config;
+        // private readonly IDistributedCache _distributedCache;
 
         //  public RedisProvider(RecordsContext context, IConfiguration config, IDistributedCache distributedCache)
-        public RedisProvider(IDistributedCache distributedCache)
+        public RedisProvider()//(IDistributedCache distributedCache)
         {
-      //      _context = context; 
-       //     _config = config;
-            _distributedCache = distributedCache;
-        } 
+            //      _context = context; 
+            //     _config = config;
+            // _distributedCache = distributedCache;
+        }
 
-    	public string Get()
+        public string Get()
         {
-            var cacheKey = "TheTime";
             var redis = StackExchange.Redis.ConnectionMultiplexer.Connect("52.236.81.14:6379");
-            var existingTime = _distributedCache.GetString(cacheKey);
-            if (!string.IsNullOrEmpty(existingTime))
+            IDatabase db = redis.GetDatabase();
+            string value = db.StringGet("mykey");
+            if (value == null)
             {
-                return "Fetched from cache : " + existingTime;
+                value = "hello";
+                db.StringSet("mykey", value);
             }
-            else
+            return value;
+        }
+        public async Task<string> GetAsync()
+        {
+            var redis = StackExchange.Redis.ConnectionMultiplexer.Connect("52.236.81.14:6379");
+            IDatabase db = redis.GetDatabase();
+            string value = await db.StringGetAsync("mykey");
+            if (value == null)
             {
-                existingTime = DateTime.UtcNow.ToString();
-                _distributedCache.SetString(cacheKey, existingTime);
-                return "Added to cache : " + existingTime;
+                value = "abcdefg";
+                await db.StringSetAsync("mykey", value);
             }
-	    }        
+            return value;
+        }
     }
 }

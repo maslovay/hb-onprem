@@ -27,20 +27,31 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
+        private readonly ElasticClient _log;
 
 
         public CampaignContentController(
             RecordsContext context,
             IConfiguration config,
             SftpClient sftpClient,
-            ILoginService loginService
+            ILoginService loginService,
+            ElasticClient log
             )
         {
+            try
+            {
             _context = context;
             _config = config;
             _sftpClient = sftpClient;
             _loginService = loginService;
+            _log = log;
             _containerName = "content-screenshots";
+             _log.Info("Constructor of CampaignContent controller done");
+            }
+            catch
+            {
+                log.Info("Error in constructor");
+            }
         }
         #region Campaign     
 
@@ -50,13 +61,26 @@ namespace UserOperations.Controllers
         public IActionResult CampaignGet([FromHeader,  
                 SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
+            try
+            {
+            _log.Info("Campaign get started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");             
+                    return BadRequest("Token wrong");       
+             _log.Info("Token wrong");      
             var companyId = Guid.Parse(userClaims["companyId"]);
+            _log.Info("Try connect to DB"); 
             var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
+            _log.Info("Try extract campaigns");
             var campaigns = _context.Campaigns.Include(x => x.CampaignContents)
                     .Where( x => x.CompanyId == companyId && x.StatusId != statusInactiveId ).ToList();
+             _log.Info("Campaigns extracted. End campaign get");
             return Ok(campaigns);
+            }
+            catch
+            {
+                 _log.Info("Error in campaign get");
+                 return BadRequest("Error");
+            }
         }
 
         [HttpPost("Campaign")]
@@ -149,19 +173,23 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Content list", typeof(List<ContentWithScreenModel>))]
         public async Task<IActionResult> ContentGet([FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
+            try
+            {
+             _log.Info("Content get started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
-            
+             _log.Info("Try connect to DB");
             var contents = _context.Contents.Where(x => x.CompanyId == companyId || x.IsTemplate == true).ToList();
             var result = contents.Select( x => new ContentWithScreenModel(x, null));
-            // var result = new List<ContentWithScreenModel>();
-            // foreach (var c in contents)
-            // {
-            //     var screenshotLink = await _sftpClient.GetFileUrl(_containerName + "/" + c.ContentId.ToString() + ".png");
-            //     result.Add(new ContentWithScreenModel(c, screenshotLink));
-            // }
+             _log.Info("End content get");
             return Ok(result);
+            }
+              catch
+            {
+                 _log.Info("Error in content get");
+                 return BadRequest("Error");
+            }
         }
 
         [HttpPost("Content")]
