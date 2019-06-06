@@ -39,12 +39,13 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
         public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId,
             [FromQuery] String begTime,
-            [FromQuery] Double? duration)
+            [FromQuery] Double? duration,
+            [FromQuery] String endTime = null)
         {
             try
             {   
                 _log.Info("Function Video save info started");
-                duration = duration == null ? 15 * 1000 : duration;
+                duration = duration == null ? 15 : duration;
                 var languageId = _context.ApplicationUsers
                                          .Include(p => p.Company)
                                          .Include(p => p.Company.Language)
@@ -53,14 +54,15 @@ namespace UserService.Controllers
 
                 var stringFormat = "yyyyMMddHHmmss";
                 var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
+                var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): time.AddSeconds((double)duration);
                 var fileName = $"{applicationUserId}_{time.ToString(stringFormat)}_{languageId}.mkv";
 
                 var videoFile = new FileVideo{
                     ApplicationUserId = applicationUserId,
                     BegTime = time,
                     CreationTime = DateTime.UtcNow,
-                    Duration = duration / 1000,
-                    EndTime = time.AddMilliseconds((Double) duration),
+                    Duration = duration,
+                    EndTime = timeEnd,
                     FileContainer = "videos",
                     FileExist = await _sftpClient.IsFileExistsAsync($"videos/{fileName}"),
                     FileName = fileName,

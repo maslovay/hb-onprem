@@ -103,7 +103,10 @@ namespace FaceAnalyzeService
                             _log.Info(
                                 "Fileframe not null. Calculate average and insert frame emotion and frame attribute");
                             await Task.WhenAll(tasks);
-                            await _repository.SaveAsync();
+                            lock (_syncRoot)
+                            {
+                                _repository.Save();
+                            }
                         }
                     }
                     else
