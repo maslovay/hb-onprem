@@ -128,7 +128,7 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _context.DialogueMarkups.Add(markUpNew);
 
-                    var dialogueVideoMerge = new DialogueVideoMergeRun
+                    var dialogueVideoMerge = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = applicationUserId,
                         DialogueId = dialogueId,
@@ -191,7 +191,7 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _context.DialogueMarkups.Add(markUpNew);
 
-                    var dialogueVideoMerge = new DialogueVideoMergeRun
+                    var dialogueVideoMerge = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = applicationUserId,
                         // DialogueId = (Guid) markUps[i].FaceId,
