@@ -105,7 +105,7 @@ namespace DialogueVideoMergeService
                 for (var i = 1; i < videos.Count(); i++)
                 {
                     var timeGap = videos[i].BegTime.Subtract(videos[i - 1].EndTime).TotalSeconds;
-                    if (timeGap > 1)
+                    if (timeGap > 1 && frames.Any())
                     {
                         var lastFrame = LastFrame(videos[i - 1], frames);
                         var frameDir = Path.Combine(sessionDir, lastFrame.FileName);
