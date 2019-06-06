@@ -31,6 +31,7 @@ using UserOperations.Services;
 using Microsoft.AspNetCore.Identity;
 using HBLib.Utils;
 using HBLib;
+using UserOperations.Utils;
 
 namespace UserOperations
 {
@@ -57,7 +58,10 @@ namespace UserOperations
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<Utils.DBOperations>();
-            services.AddIdentity<ApplicationUser, ApplicationRole>(p => {
+            services.AddScoped<RequestFilters>();
+            services.AddScoped<RedisProvider>();
+            services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
+            {
                 p.Password.RequireDigit = true;
                 p.Password.RequireLowercase = true;
                 p.Password.RequireUppercase = true;
@@ -65,8 +69,22 @@ namespace UserOperations
                 p.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<RecordsContext>();
-            
+
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
+            // services.AddDistributedRedisCache(option =>
+            // {
+            //     option.Configuration = $"{Configuration.GetSection("MemoryCacheDb")["Host"]}:{Configuration.GetSection("MemoryCacheDb")["Port"]}";
+            //     //"52.236.81.14:6379";
+            //     option.InstanceName = "master";
+            // });
+
+            //             services.AddStackExchangeRedisCache(options =>
+            // {
+            //     options.Configuration = "localhost:52431";
+            //     options.InstanceName = "SampleInstance";
+            // });
+
+
 
             services.AddSwaggerGen(c =>
             {
@@ -76,21 +94,25 @@ namespace UserOperations
                     Title = "User Service Api",
                     Version = "v1"
                 });
-                c.MapType<SlideShowSession>(() => new Schema{ 
-                        Type = "object",
-                        Properties = new Dictionary<string, Schema> {
+                c.MapType<SlideShowSession>(() => new Schema
+                {
+                    Type = "object",
+                    Properties = new Dictionary<string, Schema> {
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
                             {"applicationUserId", new Schema{Type = "string", Format = "uuid"}},
                             {"begTime", new Schema{Type = "string", Format = "date-time"}},
                             {"endTime", new Schema{Type = "string", Format = "date-time"}}
-                        }} );
-                c.MapType<CampaignContentAnswer>(() => new Schema{ 
-                        Type = "object",
-                        Properties = new Dictionary<string, Schema> {
+                        }
+                });
+                c.MapType<CampaignContentAnswer>(() => new Schema
+                {
+                    Type = "object",
+                    Properties = new Dictionary<string, Schema> {
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
                             {"answer", new Schema{Type = "string"}},
                             {"time", new Schema{Type = "string", Format = "date-time"}}
-                        }} );
+                        }
+                });
             });
             services.AddCors(options =>
             {
@@ -108,6 +130,15 @@ namespace UserOperations
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
+
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddTransient(provider =>
+                       {
+                           var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
+                           return new ElasticClient(settings);
+                       });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -123,9 +154,9 @@ namespace UserOperations
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-            
-           
-           
+
+
+
             app.UseSwagger(c =>
             {
                 c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
@@ -135,13 +166,13 @@ namespace UserOperations
             {
                 c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
                 c.RoutePrefix = "api/swagger";
-               // c.DisplayOperationId();
+                // c.DisplayOperationId();
             });
             app.UseAuthentication();
             app.UseCors(MyAllowSpecificOrigins);
             app.UseHttpsRedirection();
             app.UseMvc();
         }
-        
+
     }
 }
