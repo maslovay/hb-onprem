@@ -39,8 +39,8 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
         public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId,
             [FromQuery] String begTime,
-            [FromQuery] String endTime,
-            [FromQuery] Double? duration)
+            [FromQuery] Double? duration,
+            [FromQuery] String endTime = null)
         {
             try
             {   
