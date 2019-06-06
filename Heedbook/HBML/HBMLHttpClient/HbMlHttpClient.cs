@@ -25,6 +25,7 @@ namespace HBMLHttpClient
                 : _hbMlSettings.HbMlUri + "/" + FaceEmotionsPath;
             var uri = new Uri(path);
             var client = new HttpClient();
+            client.Timeout = TimeSpan.FromMinutes(5);
             var content = new StringContent(base64StringFile);
             content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
             var response = await client.PostAsync(uri, content);
