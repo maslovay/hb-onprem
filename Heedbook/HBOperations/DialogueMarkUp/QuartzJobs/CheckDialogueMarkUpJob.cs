@@ -114,7 +114,21 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     dialogues.Add(dialogue);
 
-                    var dialogueVideoMerge = new DialogueVideoMergeRun
+                    var markUpNew = new HBData.Models.DialogueMarkup{
+                        DialogueMarkUpId = Guid.NewGuid(),
+                        ApplicationUserId = applicationUserId,
+                        BegTime = markup.BegTime,
+                        BegTimeMarkup = markup.BegTime,
+                        EndTime = markup.EndTime,
+                        EndTimeMarkup = markup.EndTime,
+                        IsDialogue = true,
+                        CreationTime = DateTime.UtcNow,
+                        StatusId = 7,
+                        TeacherId = "NN"
+                    };
+                    _context.DialogueMarkups.Add(markUpNew);
+
+                    var dialogueVideoMerge = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = applicationUserId,
                         DialogueId = dialogueId,
@@ -163,7 +177,21 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     dialogues.Add(dialogue);
 
-                    var dialogueVideoMerge = new DialogueVideoMergeRun
+                    var markUpNew = new HBData.Models.DialogueMarkup{
+                        DialogueMarkUpId = Guid.NewGuid(),
+                        ApplicationUserId = applicationUserId,
+                        BegTime = markUps[i].BegTime,
+                        BegTimeMarkup = markUps[i].BegTime,
+                        EndTime = markUps[i].EndTime,
+                        EndTimeMarkup = markUps[i].EndTime,
+                        IsDialogue = true,
+                        CreationTime = DateTime.UtcNow,
+                        StatusId = 7,
+                        TeacherId = "NN"
+                    };
+                    _context.DialogueMarkups.Add(markUpNew);
+
+                    var dialogueVideoMerge = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = applicationUserId,
                         // DialogueId = (Guid) markUps[i].FaceId,

@@ -289,7 +289,12 @@ namespace UserOperations.Controllers
                 //     .Include(p => p.ApplicationUser)
                 //     .Include(p => p.DialogueHint)
                 //     .Where(p => p.DialogueId == dialogueId).ToList();
-                var fileFrame = _context.FileVideos.Where(p => p.FileVideoId.ToString() == "b52238b9-fae2-43c7-9a6d-fdea1fe00cd1").ToList();
+                // var time = DateTime.UtcNow.AddDays(-1);
+                // var fileFrame = _context.FileFrames.Where(p => p.Time > time).ToList();
+                // fileFrame.ForEach(p => p.StatusNNId = 6);
+                // fileFrame.ForEach(p => p.FaceId = null);
+                // _context.SaveChanges();
+                var fileFrame = _context.DialogueMarkups.ToList();
                 return Ok(fileFrame);
             }   
             catch (Exception e)

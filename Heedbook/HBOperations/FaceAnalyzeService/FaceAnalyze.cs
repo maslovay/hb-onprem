@@ -19,7 +19,8 @@ namespace FaceAnalyzeService
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
-
+        private readonly Object _syncRoot = new Object();
+        
         public FaceAnalyze(
             SftpClient sftpClient,
             IServiceScopeFactory factory,
@@ -40,7 +41,10 @@ namespace FaceAnalyzeService
                 //_log.Info($"{remotePath}");
                 if (await _sftpClient.IsFileExistsAsync(remotePath))
                 {
-                    var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath);
+                    string localPath;
+                    lock (_syncRoot) {
+                        localPath = _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath).GetAwaiter().GetResult();
+                    }
                     // _log.Info($"Download to path - {localPath}");
 
                     // var fileStream = File.OpenRead(localPath);
