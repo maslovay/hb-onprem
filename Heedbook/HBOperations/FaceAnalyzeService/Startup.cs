@@ -56,8 +56,8 @@ namespace FaceAnalyzeService
                 var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
-            services.AddTransient<FaceAnalyze>();
-            services.AddTransient<FaceAnalyzeRunHandler>();
+            services.AddSingleton<FaceAnalyze>();
+            services.AddSingleton<FaceAnalyzeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddLogging(provider => provider.AddSerilog());
             services.AddRabbitMqEventBus(Configuration);
