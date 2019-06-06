@@ -54,7 +54,7 @@ namespace UserService.Controllers
 
                 var stringFormat = "yyyyMMddHHmmss";
                 var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
-                var timeEnd = endTime != String.Empty ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): time.AddSeconds((double)duration);
+                var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): time.AddSeconds((double)duration);
                 var fileName = $"{applicationUserId}_{time.ToString(stringFormat)}_{languageId}.mkv";
 
                 var videoFile = new FileVideo{
