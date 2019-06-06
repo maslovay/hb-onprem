@@ -17,7 +17,7 @@ namespace UserService
 
 
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
-        {
+        {           
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
                 .ConfigureBuilderDueToEnvironment(args: args, portToReassignForTests:5000);

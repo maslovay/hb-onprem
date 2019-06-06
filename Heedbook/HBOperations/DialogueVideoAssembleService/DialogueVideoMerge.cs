@@ -195,10 +195,14 @@ namespace DialogueVideoAssembleService
             }
             catch (SftpPathNotFoundException e)
             {
+                _log.Fatal($"Exception occured with this input parameters\n"
+                + $"ApplicationUserId: {message.ApplicationUserId}, \n{message.DialogueId}, \n{message.BeginTime}, \n{message.EndTime}");
                 _log.Fatal($"{e}");
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occured with this input parameters\n"
+                + $"ApplicationUserId: {message.ApplicationUserId}, \n{message.DialogueId}, \n{message.BeginTime}, \n{message.EndTime}");
                 _log.Fatal($"Exception occured {e}");
                 throw;
             }
