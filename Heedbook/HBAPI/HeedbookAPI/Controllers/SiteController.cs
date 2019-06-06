@@ -31,6 +31,7 @@ using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Annotations;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -39,12 +40,15 @@ namespace UserOperations.Controllers
     public class SiteController : Controller
     {
         private readonly ILoginService _loginService;
+        private readonly ElasticClient _log;
 
         public SiteController(
-            ILoginService loginService
+            ILoginService loginService,
+            ElasticClient log
             )
         {
             _loginService = loginService;
+            _log = log;
         }
    
 
@@ -57,6 +61,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("Site/Feedback started"); 
                 if (string.IsNullOrEmpty(feedback.name)
                       || string.IsNullOrEmpty(feedback.phone)
                       || string.IsNullOrEmpty(feedback.email)
@@ -71,10 +76,12 @@ namespace UserOperations.Controllers
                     "<tr><td>message:</td><td> {3}</td></tr>" +
                     "</table>", feedback.name, feedback.email, feedback.phone, feedback.body);
                 _loginService.SendEmail("info@heedbook.com", "Message from site", text);
+                 _log.Info("Site/Feedback finished"); 
                 return Ok("Sended");
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest($"Could not send email {e}");
             }
         }        

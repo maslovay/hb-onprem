@@ -32,6 +32,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using static UserOperations.Utils.DBOperations;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -43,17 +44,20 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
+        private readonly ElasticClient _log;
         public AnalyticHomeController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _dbOperation = dbOperation;
+            _log = log;
         }
 
         [HttpGet("Dashboard")]
@@ -66,6 +70,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticHome/Dashboard started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -185,11 +190,13 @@ namespace UserOperations.Controllers
                 result.SatisfactionIndexBranch = companyIndusrtys.SatisfactionIndex;
 
 
-                var jsonToReturn = JsonConvert.SerializeObject(result);            
+                var jsonToReturn = JsonConvert.SerializeObject(result);  
+                _log.Info("AnalyticHome/Dashboard finished");          
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -203,6 +210,7 @@ namespace UserOperations.Controllers
                                                         [FromHeader] string Authorization)
 
         {
+            _log.Info("AnalyticHome/Recomendation started");
             if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
             companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -260,7 +268,7 @@ namespace UserOperations.Controllers
                 IsPositive = false,
                 Hints = negativeTopHints
             });
-
+            _log.Info("AnalyticHome/Recomendation finished");
             return Ok(JsonConvert.SerializeObject(topHints));
         }                                                
     }

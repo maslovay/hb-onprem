@@ -29,6 +29,7 @@ using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -36,27 +37,30 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticEfficiencyController : Controller
     {
-        private readonly IConfiguration _config;        
+        private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
+        private readonly ElasticClient _log;
 
         public AnalyticEfficiencyController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _dbOperation = dbOperation;
+            _log = log;
         }
 
         [HttpGet("EfficiencyDashboard")]
         public IActionResult EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
+                                                        [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
@@ -64,9 +68,10 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticEfficiency/EfficiencyDashboard started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+                companyIds = !companyIds.Any() ? new List<Guid> { Guid.Parse(userClaims["companyId"]) } : companyIds;
 
                 var stringFormat = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
@@ -80,16 +85,15 @@ namespace UserOperations.Controllers
                     .Where(p => p.BegTime >= prevBeg
                             && p.EndTime <= endTime
                             && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new SessionInfo
                     {
                         ApplicationUserId = p.ApplicationUserId,
                         BegTime = p.BegTime,
                         EndTime = p.EndTime
-                    })
-                    .ToList();
+                    }).ToList();
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
@@ -100,17 +104,16 @@ namespace UserOperations.Controllers
                             && p.EndTime <= endTime
                             && p.StatusId == 3
                             && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new DialogueInfo
                     {
                         DialogueId = p.DialogueId,
                         ApplicationUserId = p.ApplicationUserId,
                         BegTime = p.BegTime,
                         EndTime = p.EndTime
-                    })
-                    .ToList();
+                    }).ToList();
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
@@ -118,11 +121,11 @@ namespace UserOperations.Controllers
                 var result = new EfficiencyDashboardInfo
                 {
                     LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime),
-                    LoadIndexDelta = - _dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                    LoadIndexDelta = -_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
                     DialoguesCount = _dbOperation.DialoguesCount(dialoguesCur),
                     EmployeeCount = _dbOperation.EmployeeCount(dialoguesCur),
                     WorkingHours = _dbOperation.SessionAverageHours(sessionCur, begTime, endTime),
-                    WorkingHoursDelta = - _dbOperation.SessionAverageHours(sessionOld, prevBeg, begTime),
+                    WorkingHoursDelta = -_dbOperation.SessionAverageHours(sessionOld, prevBeg, begTime),
                     DialogueAveragePause = _dbOperation.DialogueAveragePause(sessionCur, dialoguesCur, begTime, endTime),
                     DialogueAverageDuration = _dbOperation.DialogueAverageDuration(dialoguesCur, begTime, endTime)
                 };
@@ -133,12 +136,14 @@ namespace UserOperations.Controllers
                 //result.DialoguesPerEmployee = (result.EmployeeCount != null & result.EmployeeCount != 0) ? result.DialoguesCount / result.EmployeeCount: 0;
                 result.DialoguesPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / result.EmployeeCount : 0;
                 result.EmployeeOptimalCount = (result.LoadIndex != null & result.LoadIndex != 0) ?
-                    (Int32?)(Math.Ceiling( (double) (result.EmployeeCount * optimalLoad / result.LoadIndex))) : null;
+                    (Int32?)(Math.Ceiling((double)(result.EmployeeCount * optimalLoad / result.LoadIndex))) : null;
 
+                _log.Info("AnalyticEfficiency/EfficiencyDashboard finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
 
@@ -146,7 +151,7 @@ namespace UserOperations.Controllers
 
         [HttpGet("EfficiencyRating")]
         public IActionResult EfficiencyRating([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
+                                                        [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
@@ -154,9 +159,10 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticEfficiency/EfficiencyRating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+                companyIds = !companyIds.Any() ? new List<Guid> { Guid.Parse(userClaims["companyId"]) } : companyIds;
 
                 var stringFormat = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
@@ -170,16 +176,15 @@ namespace UserOperations.Controllers
                     .Where(p => p.BegTime >= prevBeg
                             && p.EndTime <= endTime
                             && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new SessionInfo
                     {
                         ApplicationUserId = p.ApplicationUserId,
                         BegTime = p.BegTime,
                         EndTime = p.EndTime
-                    })
-                    .ToList();
+                    }).ToList();
 
                 var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
 
@@ -191,9 +196,9 @@ namespace UserOperations.Controllers
                             && p.EndTime <= endTime
                             && p.StatusId == 3
                             && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new DialogueInfo
                     {
                         DialogueId = p.DialogueId,
@@ -203,8 +208,7 @@ namespace UserOperations.Controllers
                         EndTime = p.EndTime,
                         CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count(),
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
-                    })
-                    .ToList();
+                    }).ToList();
 
                 var result = dialogues
                     .GroupBy(p => p.ApplicationUserId)
@@ -216,23 +220,25 @@ namespace UserOperations.Controllers
                         WorkingHoursDaily = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAverageDuration = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAveragePause = _dbOperation.DialogueAveragePause(sessions, p, begTime, endTime),
-                    //---TODO -- not working in DB dateEnd less then dateBeg
-                    // ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime),
+                        //---TODO -- not working in DB dateEnd less then dateBeg
+                        // ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime),
                         WorkingDaysCount = _dbOperation.WorkingDaysCount(p)
                     }).ToList();
                 result = result.OrderBy(p => p.LoadIndex).ToList();
 
+                _log.Info("AnalyticEfficiency/EfficiencyRating finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
 
         [HttpGet("EfficiencyOptimization")]
         public IActionResult EfficiencyOptimization([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
+                                                        [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
@@ -240,9 +246,10 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticEfficiency/EfficiencyOptimization started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
+                companyIds = !companyIds.Any() ? new List<Guid> { Guid.Parse(userClaims["companyId"]) } : companyIds;
 
                 var maxLoad = 0.8;
                 var maxPercent = 0.3;
@@ -258,16 +265,15 @@ namespace UserOperations.Controllers
                     .Where(p => p.BegTime >= prevBeg
                             && p.EndTime <= endTime
                             && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new SessionInfo
                     {
                         ApplicationUserId = p.ApplicationUserId,
                         BegTime = p.BegTime,
                         EndTime = p.EndTime
-                    })
-                    .ToList();
+                    }).ToList();
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
@@ -275,16 +281,15 @@ namespace UserOperations.Controllers
                             && p.EndTime <= endTime
                             && p.StatusId == 3
                             && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new DialogueInfo
                     {
                         DialogueId = p.DialogueId,
                         BegTime = p.BegTime,
                         EndTime = p.EndTime,
-                    })
-                    .ToList();
+                    }).ToList();
 
                 var dailyInfo = dialogues
                     .GroupBy(p => p.BegTime.Date)
@@ -303,11 +308,12 @@ namespace UserOperations.Controllers
                         RealEmployeeCount = (dailyInfo.Count() > 0) ? dailyInfo.Average(p => p.DayLoads[i].UsersCount) : 0
                     });
                 }
-
+                _log.Info("AnalyticEfficiency/EfficiencyOptimization finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
 
@@ -315,7 +321,7 @@ namespace UserOperations.Controllers
 
         [HttpGet("EfficiencyLoad")]
         public IActionResult EfficiencyLoad([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
+                                                        [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
@@ -323,10 +329,11 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticEfficiency/EfficiencyLoad started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
-                
+                companyIds = !companyIds.Any() ? new List<Guid> { Guid.Parse(userClaims["companyId"]) } : companyIds;
+
                 var stringFormat = "yyyyMMdd";
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
                 var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
@@ -339,16 +346,15 @@ namespace UserOperations.Controllers
                     .Where(p => p.BegTime >= prevBeg
                             && p.EndTime <= endTime
                             && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new SessionInfo
                     {
                         ApplicationUserId = p.ApplicationUserId,
                         BegTime = p.BegTime,
                         EndTime = p.EndTime
-                    })
-                    .ToList();
+                    }).ToList();
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
@@ -358,9 +364,9 @@ namespace UserOperations.Controllers
                             && p.EndTime <= endTime
                             && p.StatusId == 3
                             && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new DialogueInfo
                     {
                         DialogueId = p.DialogueId,
@@ -369,9 +375,7 @@ namespace UserOperations.Controllers
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                         SessionBegTime = (p.ApplicationUser.Session.FirstOrDefault().BegTime != null) ? p.ApplicationUser.Session.FirstOrDefault().BegTime : p.BegTime,
                         SessionEndTime = (p.ApplicationUser.Session.FirstOrDefault().EndTime != null) ? p.ApplicationUser.Session.FirstOrDefault().EndTime : p.EndTime
-
-                    })
-                    .ToList();
+                    }).ToList();
 
                 var employeeTime = _dbOperation.EmployeeTimeCalculation(dialogues, sessions);
                 var clientTime = dialogues
@@ -400,10 +404,12 @@ namespace UserOperations.Controllers
                     EmployeeTimeInfo = employeeTime
                 };
                 Console.WriteLine("result : \n" + JsonConvert.SerializeObject(result));
+                _log.Info("AnalyticEfficiency/EfficiencyLoad finished");
                 return Ok(result);
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

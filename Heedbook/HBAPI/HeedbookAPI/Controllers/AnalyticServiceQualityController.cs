@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -41,18 +42,21 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
+        private readonly ElasticClient _log;
 
         public AnalyticServiceQualityController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _dbOperation = dbOperation;
+            _log = log;
         }
 
         [HttpGet("Components")]
@@ -65,6 +69,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticServiceQuality/Components started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -188,10 +193,12 @@ namespace UserOperations.Controllers
                 };
 
                 result.PhraseComponent = Normalization(result.PhraseComponent);
+                _log.Info("AnalyticServiceQuality/Components finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e )
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -206,6 +213,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticServiceQuality/Dashboard started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -256,11 +264,12 @@ namespace UserOperations.Controllers
                     BestProgressiveEmployeeDelta = _dbOperation.BestProgressiveEmployeeDelta(dialogues, begTime)
                 };
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
-
+                _log.Info("AnalyticServiceQuality/Dashboard finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -275,6 +284,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticServiceQuality/Rating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -340,11 +350,12 @@ namespace UserOperations.Controllers
                     }).ToList();
                
                 result = result.OrderBy(p => p.SatisfactionIndex).ToList();
-
+                _log.Info("AnalyticServiceQuality/Rating finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -359,6 +370,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticServiceQuality/SatisfactionStats started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -400,10 +412,12 @@ namespace UserOperations.Controllers
                 };
                 
                 result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
+                _log.Info("AnalyticServiceQuality/SatisfactionStats finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

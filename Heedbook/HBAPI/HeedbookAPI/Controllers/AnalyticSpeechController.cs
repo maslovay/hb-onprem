@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -41,19 +42,22 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
+        private readonly ElasticClient _log;
 
 
         public AnalyticSpeechController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _dbOperation = dbOperation;
+            _log = log;
         }
 
         [HttpGet("CrossRating")]
@@ -66,6 +70,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticSpeech/CrossRating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -107,6 +112,7 @@ namespace UserOperations.Controllers
                     }).ToList();
                 result = result.OrderBy(p => p.CrossIndex).ToList();
                 var jsonToReturn = JsonConvert.SerializeObject(result);
+                _log.Info("AnalyticSpeech/CrossRating finished");
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
@@ -127,6 +133,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticSpeech/EmployeeRating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -176,6 +183,7 @@ namespace UserOperations.Controllers
                         100 * Convert.ToDouble(p.Where(q => q.PhraseTypeId == typeIdAlert).Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) :
                         0
                     });
+                _log.Info("AnalyticSpeech/EmployeeRating finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
@@ -196,6 +204,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticSpeech/PhraseTable started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -250,7 +259,7 @@ namespace UserOperations.Controllers
                             Math.Round(Convert.ToDouble(p.GroupBy(q => q.ApplicationUserId).Max(q => q.Count())) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()), 2) :
                             0
                     });
-
+                _log.Info("AnalyticSpeech/PhraseTable finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
@@ -271,6 +280,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticSpeech/PhraseTypeCount started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -370,13 +380,13 @@ namespace UserOperations.Controllers
                 totalInfo.Employee = employee;
                 totalInfo.Total = total;
 
-
+                _log.Info("AnalyticSpeech/PhraseTypeCount finished");
                 return Ok(totalInfo);
             }
             catch (Exception e)
             {
-                return BadRequest(e);
-            
+                _log.Fatal($"Exception occurred {e}");
+                return BadRequest(e);            
             }
         }
 
@@ -392,6 +402,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticSpeech/WordCloud started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -429,10 +440,12 @@ namespace UserOperations.Controllers
                         Weight = 2 * p.Count(),
                         Colour = p.First().PhraseColor});
 
+                _log.Info("AnalyticSpeech/WordCloud finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
