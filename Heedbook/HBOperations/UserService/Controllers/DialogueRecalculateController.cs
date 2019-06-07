@@ -65,6 +65,11 @@ namespace UserService.Controllers
                     EndTime = dialogue.EndTime
                 }; 
 
+                dialogue.StatusId = 6;
+                dialogue.Comment = null;
+                dialogue.CreationTime =DateTime.UtcNow;
+                _context.SaveChanges();
+
                 _handler.EventRaised(fillingFrame);
                 _log.Info("Function Dialogue recalculation finished");
                 return Ok();
