@@ -1,0 +1,23 @@
+FROM microsoft/dotnet:2.2-sdk AS test-env
+WORKDIR /app
+COPY . .
+
+RUN mkdir /opt; exit 0;
+RUN chmod -R 777 /opt/; exit 0;
+RUN mkdir /opt/download; exit 0;
+RUN chmod -R 777 /opt/download; exit 0;
+
+RUN apt-get update
+RUN apt-get install ffmpeg -y
+RUN ./rabbit_test_setup.sh; exit 0;
+RUN ./test_environment_setup.sh; exit 0;
+
+WORKDIR /app/HBOperations
+RUN killall -9 dotnet; exit 0;   
+RUN dotnet restore /app/HBOperations/; exit 0;
+RUN dotnet build
+  
+WORKDIR /app/HBOperations/DialogueVideoMergeServiceTests/
+
+RUN ../../rabbit_test_start.sh & dotnet test -r ./TestResults
+RUN killall -9 dotnet; exit 0;
