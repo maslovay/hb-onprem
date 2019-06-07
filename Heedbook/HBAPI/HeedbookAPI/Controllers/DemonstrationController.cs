@@ -51,7 +51,6 @@ namespace UserOperations.Controllers
         // private readonly HbMlHttpClient _mlclient;
         private readonly ILoginService _loginService;
         private Dictionary<string, string> userClaims;
-        private readonly ElasticClient _log;
 
         public DemonstrationController(
             RecordsContext context,
@@ -59,8 +58,7 @@ namespace UserOperations.Controllers
             DBOperations dbOperation,
             SftpClient sftpClient,
             //     HbMlHttpClient mlclient,
-            ILoginService loginService,
-            ElasticClient log
+            ILoginService loginService
             )
         {
             _context = context;
@@ -69,7 +67,6 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
             //   _mlclient = mlclient;
             _loginService = loginService;
-            _log = log;
         }
 
         // [HttpPost("AnalyzeFrames")]
@@ -180,22 +177,19 @@ namespace UserOperations.Controllers
             List<SlideShowSession> stats)
         {
             try
-            {
-                _log.Info("FlushStats started");          
+            {      
                 foreach (SlideShowSession stat in stats)
                 {
                     var html = _context.CampaignContents.Where(x=>x.CampaignContentId == stat.CampaignContentId).Select(x=>x.Content).FirstOrDefault().RawHTML;
                     stat.ContentType = html.Contains("PollAnswer") ? "poll" : "media";
-                    stat.SlideShowSessionId = Guid.NewGuid();
+                    stat.SlideShowSessionId = Guid.NewGuid();                    
                     _context.Add(stat);
                     _context.SaveChanges();
                 }
-                _log.Info("FlushStats finished");    
                 return Ok("Saved");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -208,8 +202,7 @@ namespace UserOperations.Controllers
         public async Task<ActionResult> GetContents([FromQuery] string userId)
         {
             try
-            {   
-                _log.Info("GetContents started");                       
+            {                         
                 var companyId = _context.ApplicationUsers.Where(x => x.Id.ToString() == userId).FirstOrDefault().CompanyId;
                 var curDate = DateTime.Now;
                 var containerName = "media";
@@ -302,12 +295,10 @@ namespace UserOperations.Controllers
                 responseContent.Add(new { campaigns = campaignsList });
                 responseContent.Add(new { htmlRaws = htmlList2 });
                 responseContent.Add(new { blobMedia = resultMedia });
-                _log.Info("GetContents finished");           
                 return Ok(responseContent);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -320,17 +311,14 @@ namespace UserOperations.Controllers
         {
             try
             {    
-                _log.Info("PollAnswer started");    
                 answer.CampaignContentAnswerId = Guid.NewGuid();
                 answer.Time = DateTime.UtcNow;
                 await _context.AddAsync(answer);
                 await _context.SaveChangesAsync();
-                _log.Info("PollAnswer finished");    
                 return Ok("Saved");       
             }
             catch( Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
                 return BadRequest("Error");
             }
         }
