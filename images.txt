@@ -9,3 +9,5 @@ containerregistryhb.azurecr.io/audioanalyzescheduler:latest
 containerregistryhb.azurecr.io/dialoguevideomergeservice:latest
 containerregistryhb.azurecr.io/fillinghintservice:latest
 containerregistryhb.azurecr.io/fillingsatisfactionservice:latest
+containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest
+containerregistryhb.azurecr.io/dialoguemarkupservice:latest

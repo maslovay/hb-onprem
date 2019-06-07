@@ -3,8 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FaceAnalyzeService.Exceptions;
+using HBData;
 using HBData.Models;
 using HBData.Repository;
+using HBLib;
 using HBLib.Utils;
 using HBMLHttpClient;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,25 +18,26 @@ namespace FaceAnalyzeService
     public class FaceAnalyze
     {
         private readonly HbMlHttpClient _client;
-        private readonly ElasticClient _log;
-        private readonly IGenericRepository _repository;
+        private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly Object _syncRoot = new Object();
-        
+        private readonly ElasticClientFactory _elasticClientFactory;
         public FaceAnalyze(
             SftpClient sftpClient,
             IServiceScopeFactory factory,
             HbMlHttpClient client,
-            ElasticClient log)
+            ElasticClientFactory elasticClientFactory
+            )
         {
             _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
-            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
+            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         public async Task Run(String remotePath)
         {
+            var _log = _elasticClientFactory.GetElasticClient();
             try
             {
                 _log.Info("Function face analyze started");
@@ -42,7 +45,8 @@ namespace FaceAnalyzeService
                 if (await _sftpClient.IsFileExistsAsync(remotePath))
                 {
                     string localPath;
-                    lock (_syncRoot) {
+                    lock (_syncRoot)
+                    {
                         localPath = _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath).GetAwaiter().GetResult();
                     }
                     // _log.Info($"Download to path - {localPath}");
@@ -67,9 +71,11 @@ namespace FaceAnalyzeService
                         var faceResult = await _client.GetFaceResult(base64String);
                         _log.Info($"Face result is {JsonConvert.SerializeObject(faceResult)}");
                         var fileName = localPath.Split('/').Last();
-                        var fileFrame = await _repository
-                           .FindOneByConditionAsync<FileFrame>(entity => entity.FileName == fileName);
-
+                        FileFrame fileFrame;
+                        lock (_context)
+                        {
+                            fileFrame = _context.FileFrames.Where(entity => entity.FileName == fileName).FirstOrDefault();
+                        }
                         if (fileFrame != null && faceResult.Any())
                         {
                             var frameEmotion = new FrameEmotion
@@ -86,26 +92,22 @@ namespace FaceAnalyzeService
                                 YawShare = faceResult.Average(item => item.Headpose.Yaw)
                             };
 
-                            var tasks = faceResult.Select(item => new FrameAttribute
-                                                   {
-                                                       Age = item.Attributes.Age,
-                                                       Gender = item.Attributes.Gender,
-                                                       Descriptor = JsonConvert.SerializeObject(item.Descriptor),
-                                                       FileFrameId = fileFrame.FileFrameId,
-                                                       Value = JsonConvert.SerializeObject(item.Rectangle)
-                                                   }).Select(item => _repository.CreateAsync(item))
-                                                  .ToList();
+                            var frameAttribute = faceResult.Select(item => new FrameAttribute
+                            {
+                                Age = item.Attributes.Age,
+                                Gender = item.Attributes.Gender,
+                                Descriptor = JsonConvert.SerializeObject(item.Descriptor),
+                                FileFrameId = fileFrame.FileFrameId,
+                                Value = JsonConvert.SerializeObject(item.Rectangle)
+                            }).FirstOrDefault();
 
                             fileFrame.FaceLength = faceLength;
                             fileFrame.IsFacePresent = true;
-                            _repository.Update(fileFrame);
-                            tasks.Add(_repository.CreateAsync(frameEmotion));
-                            _log.Info(
-                                "Fileframe not null. Calculate average and insert frame emotion and frame attribute");
-                            await Task.WhenAll(tasks);
-                            lock (_syncRoot)
+
+                            if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
+                            lock (_context)
                             {
-                                _repository.Save();
+                                _context.SaveChanges();
                             }
                         }
                     }
@@ -113,6 +115,7 @@ namespace FaceAnalyzeService
                     {
                         _log.Info("No face detected!");
                     }
+                    _log.Info("Function finished");
 
                     File.Delete(remotePath);
                 }

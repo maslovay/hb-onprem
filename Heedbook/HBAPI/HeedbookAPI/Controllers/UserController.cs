@@ -32,6 +32,7 @@ using HBData;
 using System.Net.Http.Headers;
 using Swashbuckle.AspNetCore.Annotations;
 using HBLib.Utils;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -42,7 +43,7 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-
+        private readonly RequestFilters _requestFilters;
         private readonly SftpClient _sftpClient;
         private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
@@ -57,6 +58,7 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
+            RequestFilters requestFilters,
             ElasticClient log
             )
         {
@@ -64,6 +66,7 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
+            _requestFilters = requestFilters;
             _log = log;
             _containerName = "useravatars";
 
@@ -276,14 +279,14 @@ namespace UserOperations.Controllers
                 _log.Info("User/Companies GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
+                var corporationId = Guid.Parse(userClaims["corporationId"]);
                 if(userClaims["role"] == "Supervisor") // only for own corporation
                 {
-                    var corporationId = Guid.Parse(userClaims["corporationId"]);
                     var companies = _context.Companys // 2 active, 3 - disabled
                         .Where(p => p.CorporationId == corporationId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();  
                     return Ok(companies);
                 }
-                if(userClaims["role"] == "Superuser") // very cool!
+                if(userClaims["role"] == "Admin") // very cool!
                 {
                     var companies = _context.Companys.Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();  // 2 active, 3 - disabled
                     return Ok(companies);
@@ -298,7 +301,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Corporations")]
-        [SwaggerOperation(Summary = "All corporations", Description = "Return all corporations for loggined superuser (only for role Superuser)")]
+        [SwaggerOperation(Summary = "All corporations", Description = "Return all corporations for loggined admins (only for role Admin)")]
         [SwaggerResponse(200, "Corporations", typeof(List<Company>))]
         public async Task<IActionResult> CorporationsGet(
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -308,7 +311,7 @@ namespace UserOperations.Controllers
                 _log.Info("User/Corporations GET started");
                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                    return BadRequest("Token wrong");
-               if(userClaims["role"] != "Superuser") return BadRequest("Not allowed access(role)");;
+               if(userClaims["role"] != "Admin") return BadRequest("Not allowed access(role)");;
                 var corporations = _context.Corporations.ToList(); 
                  _log.Info("User/Corporations GET finished");
                 return Ok(corporations);
@@ -535,6 +538,7 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "endTime")] string end,
                                                 [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                 [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
@@ -545,13 +549,11 @@ namespace UserOperations.Controllers
                 _log.Info("User/Dialogue GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
-                var formatString = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, formatString, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, formatString, CultureInfo.InvariantCulture) : DateTime.Now;
-
-                begTime = begTime.Date;
-                endTime = endTime.Date.AddDays(1);
+                var role = userClaims["role"];
+                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var begTime = _requestFilters.GetBegDate(beg);
+                var endTime = _requestFilters.GetEndDate(end);
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
 
                 System.Console.WriteLine(companyIds);
                 System.Console.WriteLine(begTime);

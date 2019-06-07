@@ -18,7 +18,7 @@ using Renci.SshNet.Common;
 
 namespace DialogueVideoAssembleService
 {
-    public class DialogueVideoMerge
+    public class DialogueVideoAssemble
     {
         private const String VideoFolder = "videos";
         private const String FrameFolder = "frames";
@@ -35,7 +35,7 @@ namespace DialogueVideoAssembleService
         private readonly RecordsContext _context;
         private readonly FFMpegWrapper _wrapper;
 
-        public DialogueVideoMerge(
+        public DialogueVideoAssemble(
             INotificationPublisher notificationPublisher,
             SftpClient client,
             SftpSettings sftpSettings,
@@ -52,22 +52,20 @@ namespace DialogueVideoAssembleService
             _wrapper = wrapper;
         }
 
-        public async Task Run(DialogueVideoMergeRun message)
+        public async Task Run(DialogueVideoAssembleRun message)
         {
-            System.Console.WriteLine("Function started");
             _log.SetFormat("{ApplicationUserId}, {DialogueId}");
             _log.SetArgs(message.ApplicationUserId, message.DialogueId);
             try
             {
-                var cmd = new CMDWithOutput();               
-
+                var cmd = new CMDWithOutput();   
+                
                 var fileVideos = _context.FileVideos.Where(p => p.ApplicationUserId == message.ApplicationUserId
                                                                 && p.EndTime >= message.BeginTime
                                                                 && p.BegTime <= message.EndTime
                                                                 && p.FileExist)
                                          .OrderBy(p => p.BegTime)
                                          .ToList();                            
-                
                 if (!fileVideos.Any())
                 {
                     _log.Error("No video files");
@@ -80,7 +78,7 @@ namespace DialogueVideoAssembleService
                                                                 && p.FileExist)
                                          .OrderBy(p => p.Time)
                                          .ToList();
-                
+
                 if (!fileFrames.Any())
                 {
                     _log.Error("No frame files");
@@ -122,7 +120,7 @@ namespace DialogueVideoAssembleService
                     }
                 };
                 
-                BuildFFmpegCommands(fileVideos, fileFrames, ref videoMergeCommands, ref frameCommands);
+                BuildFFmpegCommands(fileVideos, fileFrames, sessionDir, ref videoMergeCommands, ref frameCommands);
 
                 if(fileVideos.Count > 1)
                 {
@@ -210,27 +208,27 @@ namespace DialogueVideoAssembleService
 
         private void BuildFFmpegCommands(List<FileVideo> fileVideos,
             List<FileFrame> fileFrames,
+            string sessionDir,
             ref List<FFMpegWrapper.FFmpegCommand> videoMergeCommands,
             ref List<FFMpegWrapper.FFmpegCommand> frameCommands)
         {
 
             for (var i = 1; i < fileVideos.Count(); i++)
             {
-                // System.Console.WriteLine($"Time gap is {fileVideos[i].BegTime.Subtract(fileVideos[i - 1].EndTime).TotalSeconds}");
                 var timeGap =
                     Convert.ToInt32(fileVideos[i].BegTime.Subtract(fileVideos[i - 1].EndTime).TotalSeconds);
                 if (timeGap > 1)
                 {
                     var lastFrame = LastFrame(fileVideos[i - 1], fileFrames);
                     if(lastFrame == null) continue;
-                    var frameDir = Path.Combine(_sessionId, lastFrame.FileName);
+                    var frameDir = Path.Combine(sessionDir, lastFrame.FileName);
                     var baseName = Path.GetFileNameWithoutExtension(lastFrame.FileName);
                     var tempImageVideoName = $"_tmp_{baseName}.mkv";
-                    var tempImageVideoPath = Path.Combine(_sessionId, tempImageVideoName);
-
+                    var tempImageVideoPath = Path.Combine(sessionDir, tempImageVideoName);
                     videoMergeCommands.Add(new FFMpegWrapper.FFmpegCommand
                     {
                         Command = $"-i {tempImageVideoPath}",
+                        //Path = Path.GetFullPath(tempImageVideoPath),
                         Path = tempImageVideoPath,
                         Type = VideoType,
                         FileFolder = FrameFolder,
