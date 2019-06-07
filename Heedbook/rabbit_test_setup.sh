@@ -1,6 +1,6 @@
 export DEBIAN_FRONTEND=noninteractive
-wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
-dpkg -i erlang-solutions_1.0_all.deb
+#wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
+#dpkg -i erlang-solutions_1.0_all.deb
 
 
 ## Install RabbitMQ signing key
