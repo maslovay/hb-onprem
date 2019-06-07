@@ -26,7 +26,7 @@ namespace FaceAnalyzeService
         public FaceAnalyze(
             SftpClient sftpClient,
             IServiceScopeFactory factory,
-            HbMlHttpClient client,
+            HbMlHttpClient client
             // ElasticClient log
             )
         {
