@@ -40,24 +40,21 @@ namespace FaceAnalyzeService
             });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
-            services.AddTransient(provider =>
+            services.AddScoped(provider =>
             {
                 var settings = provider.GetRequiredService<IOptions<SftpSettings>>().Value;
                 return new SftpClient(settings);
             });
-            services.AddTransient(provider =>
+            services.AddScoped(provider =>
             {
                 var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
                 return new HbMlHttpClient(settings);
             });
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddTransient(provider =>
-            {
-                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
-                return new ElasticClient(settings);
-            });
-            services.AddSingleton<FaceAnalyze>();
-            services.AddSingleton<FaceAnalyzeRunHandler>();
+            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddScoped<ElasticClient>();
+            services.AddScoped<FaceAnalyze>();
+            services.AddScoped<FaceAnalyzeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddLogging(provider => provider.AddSerilog());
             services.AddRabbitMqEventBus(Configuration);
