@@ -81,7 +81,7 @@ namespace QuartzExtensions.Jobs
                             comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
                             comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
                             comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
-
+                            dialogue.Comment = comment;
                             _context.SaveChanges();
                         }
                         else
