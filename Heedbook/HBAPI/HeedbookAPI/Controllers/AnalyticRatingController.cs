@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -41,18 +42,21 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
+        private readonly ElasticClient _log;
 
         public AnalyticRatingController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _dbOperation = dbOperation;
+            _log = log;
         }
 
         [HttpGet("Progress")]
@@ -65,6 +69,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticRating/Progress started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -130,11 +135,12 @@ namespace UserOperations.Controllers
                             }).ToList()
                     }).ToList();
 
-
+                _log.Info("AnalyticRating/Progress finished");
                 return Ok(JsonConvert.SerializeObject(results));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -150,6 +156,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticRating/RatingUsers started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -222,10 +229,12 @@ namespace UserOperations.Controllers
                         //ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime)
                     }).ToList();
                 result = result.OrderBy(p => p.EfficiencyIndex).ToList();
+                _log.Info("AnalyticRating/RatingUsers finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }       

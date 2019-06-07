@@ -31,6 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using Microsoft.AspNetCore.Cors;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -41,16 +42,19 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
+        private readonly ElasticClient _log;
 
         public SessionController(
             RecordsContext context,
             IConfiguration config,
-            DBOperations dbOperation
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _context = context;
             _config = config;
             _dbOperation = dbOperation;
+            _log = log;
         }
 
         [HttpPost("SessionStatus")]
@@ -58,6 +62,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("Session/SessionStatus started"); 
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) return BadRequest("ApplicationUser is empty");
                 if (data.Action != "open" && data.Action != "close") return BadRequest("Wrong action");
                 var actionId = data.Action == "open" ? 6 : 7;
@@ -122,6 +127,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest($"Exception occured {e}");
             }
         }

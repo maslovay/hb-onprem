@@ -23,7 +23,6 @@ namespace UserOperations.Controllers
     {
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
-        private readonly SftpClient _sftpClient;
         private readonly ILoginService _loginService;
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
@@ -33,7 +32,6 @@ namespace UserOperations.Controllers
         public CampaignContentController(
             RecordsContext context,
             IConfiguration config,
-            SftpClient sftpClient,
             ILoginService loginService,
             ElasticClient log
             )
@@ -42,15 +40,14 @@ namespace UserOperations.Controllers
             {
             _context = context;
             _config = config;
-            _sftpClient = sftpClient;
             _loginService = loginService;
             _log = log;
             _containerName = "content-screenshots";
              _log.Info("Constructor of CampaignContent controller done");
             }
-            catch
+            catch(Exception e)
             {
-                log.Info("Error in constructor");
+                log.Fatal($"Exception occurred {e}");
             }
         }
         #region Campaign     
@@ -65,20 +62,17 @@ namespace UserOperations.Controllers
             {
             _log.Info("Campaign get started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");       
-             _log.Info("Token wrong");      
+                    return BadRequest("Token wrong");  
             var companyId = Guid.Parse(userClaims["companyId"]);
-            _log.Info("Try connect to DB"); 
             var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
-            _log.Info("Try extract campaigns");
             var campaigns = _context.Campaigns.Include(x => x.CampaignContents)
                     .Where( x => x.CompanyId == companyId && x.StatusId != statusInactiveId ).ToList();
-             _log.Info("Campaigns extracted. End campaign get");
+             _log.Info("campaign get finished");
             return Ok(campaigns);
             }
-            catch
+            catch(Exception e)
             {
-                 _log.Info("Error in campaign get");
+                 _log.Fatal($"Exception occurred {e}");
                  return BadRequest("Error");
             }
         }
@@ -90,6 +84,7 @@ namespace UserOperations.Controllers
                  SwaggerParameter("Send content separately from the campaign", Required = true)] CampaignPutPostModel model, 
                  [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
+            _log.Info("Campaign POST started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
@@ -107,6 +102,7 @@ namespace UserOperations.Controllers
                 _context.Add(campCont);
             }
             _context.SaveChanges();
+            _log.Info("Campaign POST finished");
             return Ok(campaign);
         }
 
@@ -118,6 +114,7 @@ namespace UserOperations.Controllers
                 SwaggerParameter("Send content separately from the campaign or send CampaignContents:[] if you dont need to change content relations", Required = true)] 
                 CampaignPutPostModel model, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
+             _log.Info("Campaign PUT started");
              if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");           
                 Campaign modelCampaign = model.Campaign;
@@ -145,6 +142,7 @@ namespace UserOperations.Controllers
                     }
                     _context.SaveChanges();
                 }
+                _log.Info("Campaign PUT finished");
                 return Ok(campaignEntity);
         }
 
@@ -152,6 +150,7 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Set campaign inactive", Description = "Set campaign status Inactive and delete all content relations for this campaign")]
         public IActionResult CampaignDelete([FromQuery] Guid campaignId, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
+                _log.Info("Campaign DELETE started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");  
                 var campaign = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == campaignId).FirstOrDefault();
@@ -160,6 +159,7 @@ namespace UserOperations.Controllers
                     campaign.StatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
                     _context.RemoveRange(campaign.CampaignContents);
                     _context.SaveChanges();
+                    _log.Info("Campaign DELETE finished");
                     return Ok("OK");
                 }
                 return BadRequest("No such campaign");
@@ -175,28 +175,28 @@ namespace UserOperations.Controllers
         {
             try
             {
-             _log.Info("Content get started");
+             _log.Info("Content GET started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
-             _log.Info("Try connect to DB");
             var contents = _context.Contents.Where(x => x.CompanyId == companyId || x.IsTemplate == true).ToList();
             var result = contents.Select( x => new ContentWithScreenModel(x, null));
-             _log.Info("End content get");
+             _log.Info("Content get finished");
             return Ok(result);
             }
-              catch
+            catch(Exception e)
             {
-                 _log.Info("Error in content get");
+                 _log.Fatal($"Exception occurred {e}");
                  return BadRequest("Error");
             }
         }
 
         [HttpPost("Content")]
-        [SwaggerOperation(Summary = "Save new content", Description = "Create new content and save screenshot on sftp server")]
+        [SwaggerOperation(Summary = "Save new content", Description = "Create new content")]
         [SwaggerResponse(200, "New content with screenshot link", typeof(ContentWithScreenModel))]
         public async Task<IActionResult> ContentPost([FromBody] ContentWithScreenModel model, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
+            _log.Info("Content POST started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
@@ -210,23 +210,19 @@ namespace UserOperations.Controllers
             // content.StatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;;
             _context.Add(content);
             _context.SaveChanges();
-
-            // string base64 = model.Screenshot;
-            // Byte[] imgBytes = Convert.FromBase64String(base64);
-            // Stream blobStream = new MemoryStream(imgBytes);
-            // await _sftpClient.UploadAsMemoryStreamAsync(blobStream, _containerName, content.ContentId.ToString() + ".png");
             model.Content = content;
-           // model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
+            _log.Info("Content POST finished");
             return Ok(model);
         }
 
         [HttpPut("Content")]
-        [SwaggerOperation(Summary = "Edit content", Description = "Edit existing content, remove screenshot from sftp and save new screenshot(if you pass it in json body)")]
+        [SwaggerOperation(Summary = "Edit content", Description = "Edit existing content")]
         [SwaggerResponse(200, "Edited content with screenshot link", typeof(ContentWithScreenModel))]
         public async Task<IActionResult> ContentPut(
                     [FromBody] ContentWithScreenModel model, 
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
+            _log.Info("Content PUT started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");         
             Content content = model.Content;
@@ -238,23 +234,16 @@ namespace UserOperations.Controllers
             }
             contentEntity.UpdateDate = DateTime.UtcNow;
             _context.SaveChanges();
-            // if (model.Screenshot != null)
-            // {
-            //     await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
-            //     string base64 = model.Screenshot;
-            //     Byte[] imgBytes = Convert.FromBase64String(base64);
-            //     Stream blobStream = new MemoryStream(imgBytes);
-            //     await _sftpClient.UploadAsMemoryStreamAsync(blobStream, _containerName, content.ContentId.ToString() + ".png");
-            // }
             model.Content = contentEntity;
-           // model.Screenshot = await _sftpClient.GetFileUrl(_containerName + "/" + content.ContentId.ToString() + ".png");
+            _log.Info("Content PUT finished");
             return Ok(model);
         }
 
         [HttpDelete("Content")]
-        [SwaggerOperation(Summary = "Remove content", Description = "Delete content and remove screenshot from sftp")]
+        [SwaggerOperation(Summary = "Remove content", Description = "Delete content")]
         public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
+            _log.Info("Content DELETE started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var contentEntity = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
@@ -277,12 +266,13 @@ namespace UserOperations.Controllers
                         else
                             _context.Remove(contentEntity);
                             _context.SaveChanges();
-                    //  await _sftpClient.DeleteFileIfExistsAsync(_containerName +"/"+ contentEntity.ContentId.ToString() + ".png");
+                        _log.Info("Content DELETE finished");
                         return Ok("OK");
                 }
-                catch ( Exception ex )
+                catch ( Exception e )
                 {
-                    return BadRequest(ex.Message);
+                    _log.Fatal($"Exception occurred {e}");
+                    return BadRequest(e.Message);
                 }
             }
             return BadRequest("No such content");

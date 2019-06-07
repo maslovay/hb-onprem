@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -41,18 +42,21 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
+        private readonly ElasticClient _log;
 
         public AnalyticReportController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _dbOperation = dbOperation;
+            _log = log;
         }
 
         [HttpGet("ActiveEmployee")]
@@ -63,6 +67,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticReport/ActiveEmployee started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -79,12 +84,13 @@ namespace UserOperations.Controllers
                         FullName = p.ApplicationUser.FullName
                     })
                     .ToList().Distinct().ToList();
-
+                _log.Info("AnalyticReport/ActiveEmployee finished");
                 return Ok(JsonConvert.SerializeObject(sessions));
             }
             catch (Exception e)
             {
-               return BadRequest(e); 
+                _log.Fatal($"Exception occurred {e}");
+                return BadRequest(e); 
             }
         }
 
@@ -98,6 +104,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticReport/UserPartial started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -169,11 +176,13 @@ namespace UserOperations.Controllers
                             DialogueCount = _dbOperation.DialoguesCount(dialogues, p.Key, q.Key)
                         }).ToList()
                     }).ToList();
+                _log.Info("AnalyticReport/UserPartial finished");
                 return Ok(JsonConvert.SerializeObject(result));
 
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -188,6 +197,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticReport/UserFull started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
@@ -269,11 +279,12 @@ namespace UserOperations.Controllers
                         }
                     }
                 }
-
+                _log.Info("AnalyticReport/UserFull finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

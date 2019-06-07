@@ -13,13 +13,15 @@ namespace HBLib.Utils
         private readonly string HttpFileUrl;
         private readonly Renci.SshNet.SftpClient _client;
         private readonly SftpSettings _sftpSettings;
-        // private readonly FileReference fileref;
+        private readonly  ElasticClient _log;
 
-        public SftpClient(SftpSettings sftpSettings)
+        public SftpClient(SftpSettings sftpSettings, ElasticClient log)
         {
+
             _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
                 sftpSettings.Password);
             _sftpSettings = sftpSettings;
+            _log = log;
             // fileref = new FileReference(new SftpSettings()
             // {
             //     Host = _sftpSettings.Host,
@@ -38,14 +40,22 @@ namespace HBLib.Utils
         {
             _client.Dispose();
         }
-        #region SFTP DIRECT
         private async Task ConnectToSftpAsync()
         {
+            try
+            {
+            _log.Info("Start connect to SFTP");
             if (!_client.IsConnected)
                 await Task.Run(() => _client.Connect()).ContinueWith(t =>
                 {
                     ChangeDirectoryToDefault();
                 });
+             _log.Info("Connected to SFTP");
+            }
+            catch (Exception e)
+            {
+                _log.Fatal($"Exception occurred {e.Message}");
+            }
         }
 
         /// <summary>
@@ -349,17 +359,11 @@ namespace HBLib.Utils
                 await Task.Run(() => _client.Disconnect());
         }
 
-        #endregion
-
-        #region NEW FILE REFERENCES
         public FileResult GetFileLink(string directory, string file, DateTime exp = default(DateTime))
         {
             return new FileResult { path = $"{HttpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
             // return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
         }
-        #endregion
-
-        #region MODELS
         public class FileInfoModel
         {
             public string url;
@@ -379,6 +383,4 @@ namespace HBLib.Utils
         public string path;
         public string ext;
     }
-
-    #endregion
 }

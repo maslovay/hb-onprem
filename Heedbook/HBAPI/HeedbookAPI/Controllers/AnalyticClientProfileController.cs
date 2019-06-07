@@ -30,6 +30,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -37,24 +38,27 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticClientProfileController : Controller
     {
-        private readonly IConfiguration _config;             
+        private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly List<AgeBoarder> _ageBoarders;
+        private readonly ElasticClient _log;
 
         public AnalyticClientProfileController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _dbOperation = dbOperation;
-            _ageBoarders = new List<AgeBoarder>{ 
+            _log = log;
+            _ageBoarders = new List<AgeBoarder>{
                 new AgeBoarder{
                     BegAge = 0,
                     EndAge = 21
@@ -72,13 +76,13 @@ namespace UserOperations.Controllers
                     EndAge = 100
                 }};
         }
-        
+
 
         [HttpGet("GenderAgeStructure")]
         [SwaggerOperation(Summary = "Return data on dashboard", Description = "For superuser ignore companyId filter")]
         [SwaggerResponse(200, "GenderAgeStructureResult", typeof(List<GenderAgeStructureResult>))]
         public IActionResult EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
+                                                        [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
@@ -87,37 +91,35 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.Info("AnalyticClientProfile/GenderAgeStructure started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-
-
-                    
                 var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);               
-                 //--- superuser can view any companies in any corporation
-                   if ( role == "Superuser" )
-                    {                    
-                        corporationIds = !corporationIds.Any()? _context.Corporations.Select(x => x.Id).ToList() : corporationIds;
-                        //---take all companyIds in filter or all company ids in corporations
-                        companyIds =  !companyIds.Any()? _context.Companys
-                            .Where(x => x.CorporationId != null && corporationIds.Contains( (Guid)x.CorporationId ))
-                            .Select(x => x.CompanyId).ToList() : companyIds;
-                    }
-                    //--- supervisor can view companies from filter or companies from own corporation -------
-                   else if ( role == "Supervisor" )
-                   {
-                        if (!companyIds.Any())//--- if filter by companies not set ---
-                        {//--- select own corporation
-                            var corporation = _context.Companys.Include(x=>x.Corporation).Where(x=>x.CompanyId == companyId).FirstOrDefault().Corporation;
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                //--- superuser can view any companies in any corporation
+                if (role == "Superuser")
+                {
+                    corporationIds = !corporationIds.Any() ? _context.Corporations.Select(x => x.Id).ToList() : corporationIds;
+                    //---take all companyIds in filter or all company ids in corporations
+                    companyIds = !companyIds.Any() ? _context.Companys
+                        .Where(x => x.CorporationId != null && corporationIds.Contains((Guid)x.CorporationId))
+                        .Select(x => x.CompanyId).ToList() : companyIds;
+                }
+                //--- supervisor can view companies from filter or companies from own corporation -------
+                else if (role == "Supervisor")
+                {
+                    if (!companyIds.Any())//--- if filter by companies not set ---
+                    {//--- select own corporation
+                        var corporation = _context.Companys.Include(x => x.Corporation).Where(x => x.CompanyId == companyId).FirstOrDefault().Corporation;
                         //--- return all companies from own corporation
-                            companyIds = _context.Companys.Where(x => x.CorporationId == corporation.Id ).Select(x => x.CompanyId).ToList();
-                        }
-                   }                 
-                    //--- for simple user return only for own company
-                   else
-                    {
-                        companyIds = new List<Guid> { companyId };
+                        companyIds = _context.Companys.Where(x => x.CorporationId == corporation.Id).Select(x => x.CompanyId).ToList();
                     }
+                }
+                //--- for simple user return only for own company
+                else
+                {
+                    companyIds = new List<Guid> { companyId };
+                }
 
 
                 var stringFormat = "yyyyMMdd";
@@ -126,7 +128,6 @@ namespace UserOperations.Controllers
                 begTime = begTime.Date;
                 endTime = endTime.Date.AddDays(1);
 
-                
                 var data = _context.Dialogues
                     .Include(p => p.DialogueClientProfile)
                     .Include(p => p.ApplicationUser)
@@ -134,14 +135,14 @@ namespace UserOperations.Controllers
                         p.EndTime <= endTime &&
                         p.StatusId == 3 &&
                         p.InStatistic == true &&
-                        (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId)) &&
-                        (!applicationUserIds.Any() || applicationUserIds.Contains((Guid) p.ApplicationUserId)) &&
-                        (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)) )
-                    .Select(p => new {
+                        (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
+                        (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
+                        (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    .Select(p => new
+                    {
                         Age = p.DialogueClientProfile.FirstOrDefault().Age,
                         Gender = p.DialogueClientProfile.FirstOrDefault().Gender
-                    })
-                    .ToList();
+                    }).ToList();
 
                 var result = new List<GenderAgeStructureResult>();
                 foreach (var ageBoarder in _ageBoarders)
@@ -149,7 +150,8 @@ namespace UserOperations.Controllers
                     var dataBoarders = data
                         .Where(p => p.Age > ageBoarder.BegAge && p.Age <= ageBoarder.EndAge)
                         .ToList();
-                    result.Add(new GenderAgeStructureResult{
+                    result.Add(new GenderAgeStructureResult
+                    {
                         Age = $"{ageBoarder.BegAge}-{ageBoarder.EndAge}",
                         MaleCount = dataBoarders
                             .Where(p => p.Gender == "male")
@@ -167,10 +169,12 @@ namespace UserOperations.Controllers
                             .Average()
                     });
                 }
+                _log.Info("AnalyticClientProfile/GenderAgeStructure finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
 
@@ -186,13 +190,9 @@ namespace UserOperations.Controllers
     public class GenderAgeStructureResult
     {
         public string Age { get; set; }
-
         public int MaleCount { get; set; }
-
         public int FemaleCount { get; set; }
-
         public double? MaleAverageAge { get; set; }
-
         public double? FemaleAverageAge { get; set; }
     }
 }
