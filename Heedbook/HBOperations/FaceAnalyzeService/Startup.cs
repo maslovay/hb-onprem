@@ -52,7 +52,7 @@ namespace FaceAnalyzeService
             });
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddScoped<ElasticClient>();
+            services.AddScoped<ElasticClientFactory>();
             services.AddScoped<FaceAnalyze>();
             services.AddScoped<FaceAnalyzeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
