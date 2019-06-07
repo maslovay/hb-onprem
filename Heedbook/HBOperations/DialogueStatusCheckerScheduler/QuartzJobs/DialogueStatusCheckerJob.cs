@@ -66,7 +66,6 @@ namespace QuartzExtensions.Jobs
                         {
                             DialogueId = dialogue.DialogueId
                         };
-                         _context.SaveChanges();
                         _notificationPublisher.Publish(@event);
                     }
                     else
@@ -82,7 +81,6 @@ namespace QuartzExtensions.Jobs
                             comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
                             comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
                             dialogue.Comment = comment;
-                            _context.SaveChanges();
                         }
                         else
                         {
@@ -90,6 +88,7 @@ namespace QuartzExtensions.Jobs
                         }
                     }
                 }
+                _context.SaveChanges();
                 _log.Info("Function  finished.");
             }
             catch (Exception e)
