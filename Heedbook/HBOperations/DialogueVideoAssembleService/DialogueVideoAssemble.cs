@@ -54,6 +54,7 @@ namespace DialogueVideoAssembleService
 
         public async Task Run(DialogueVideoAssembleRun message)
         {
+            System.Console.WriteLine("Function started");
             _log.SetFormat("{ApplicationUserId}, {DialogueId}");
             _log.SetArgs(message.ApplicationUserId, message.DialogueId);
             try

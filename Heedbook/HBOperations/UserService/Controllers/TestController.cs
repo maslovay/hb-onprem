@@ -50,15 +50,15 @@ namespace UserService.Controllers
                    request.Method = "GET";
                    request.ContentType = "application/json-patch+json";
 
-                   var responce = await request.GetResponseAsync();
-                   System.Console.WriteLine($"Response -- {responce}");
+                   var response = await request.GetResponseAsync();
+                   System.Console.WriteLine($"Response -- {response}");
 
                    Thread.Sleep(1000);
                }
                dialogues.ForEach(p=>p.StatusId = 6);
                dialogues.ForEach(p => p.CreationTime = DateTime.UtcNow);
                _context.SaveChanges();
-               System.Console.WriteLine("Конец");
+               System.Console.WriteLine("Function finished");
                return Ok();
            }
            catch (Exception e)
