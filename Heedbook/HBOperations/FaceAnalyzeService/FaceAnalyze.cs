@@ -18,32 +18,26 @@ namespace FaceAnalyzeService
     public class FaceAnalyze
     {
         private readonly HbMlHttpClient _client;
-        // private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly Object _syncRoot = new Object();
-
+        private readonly ElasticClientFactory _elasticClientFactory;
         public FaceAnalyze(
             SftpClient sftpClient,
             IServiceScopeFactory factory,
-            HbMlHttpClient client
-            // ElasticClient log
+            HbMlHttpClient client,
+            ElasticClientFactory elasticClientFactory
             )
         {
             _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            // _log = log;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         public async Task Run(String remotePath)
         {
-            var settings = new ElasticSettings{
-                Host = "13.74.249.78",
-                Port = 5000,
-                FunctionName = "OnPremExtractFaceAnalyzeTest"
-            };
-            var _log = new ElasticClient(settings);
+            var _log = _elasticClientFactory.GetElasticClient();
             try
             {
                 _log.Info("Function face analyze started");
