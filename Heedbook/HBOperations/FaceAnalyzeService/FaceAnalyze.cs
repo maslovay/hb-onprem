@@ -6,6 +6,7 @@ using FaceAnalyzeService.Exceptions;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
+using HBLib;
 using HBLib.Utils;
 using HBMLHttpClient;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,16 +27,23 @@ namespace FaceAnalyzeService
             SftpClient sftpClient,
             IServiceScopeFactory factory,
             HbMlHttpClient client,
-            ElasticClient log)
+            // ElasticClient log
+            )
         {
             _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            _log = log;
+            // _log = log;
         }
 
         public async Task Run(String remotePath)
         {
+            var settings = new ElasticSettings{
+                Host = "13.74.249.78",
+                Port = 5000,
+                FunctionName = "OnPremExtractFaceAnalyzeTest"
+            };
+            var _log = new ElasticClient(settings);
             try
             {
                 _log.Info("Function face analyze started");
