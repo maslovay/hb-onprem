@@ -69,8 +69,11 @@ namespace FaceAnalyzeService
                         var faceResult = await _client.GetFaceResult(base64String);
                         _log.Info($"Face result is {JsonConvert.SerializeObject(faceResult)}");
                         var fileName = localPath.Split('/').Last();
-                        var fileFrame = _context.FileFrames.Where(entity => entity.FileName == fileName).FirstOrDefault();
-
+                        FileFrame fileFrame;
+                        lock (_context)
+                        {
+                            fileFrame = _context.FileFrames.Where(entity => entity.FileName == fileName).FirstOrDefault();
+                        }
                         if (fileFrame != null && faceResult.Any())
                         {
                             var frameEmotion = new FrameEmotion
@@ -100,8 +103,10 @@ namespace FaceAnalyzeService
                             fileFrame.IsFacePresent = true;
 
                             if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
-                            _context.SaveChanges();
-
+                            lock (_context)
+                            {
+                                _context.SaveChanges();
+                            }
                         }
                     }
                     else
