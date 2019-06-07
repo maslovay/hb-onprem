@@ -35,10 +35,10 @@ namespace UserService.Controllers
            try
            {
                //var applicationUserId = "010039d5-895b-47ad-bd38-eb28685ab9aa";
-               var begTime = DateTime.Now.AddDays(-2);
+               var begTime = DateTime.Now.AddDays(-3);
 
                var dialogues = _context.Dialogues
-                   .Where(p => p.BegTime > begTime ).ToList();
+                   .Where(p => p.BegTime > begTime  && (p.StatusId ==6 || p.StatusId == 3) ).ToList();
 
                System.Console.WriteLine(dialogues.Count());
                foreach (var dialogue in dialogues)
@@ -55,7 +55,7 @@ namespace UserService.Controllers
 
                    Thread.Sleep(1000);
                }
-               dialogues.ForEach(p=>p.StatusId = 6);
+            //    dialogues.ForEach(p=>p.StatusId = 6);
                dialogues.ForEach(p => p.CreationTime = DateTime.UtcNow);
                _context.SaveChanges();
                System.Console.WriteLine("Конец");
