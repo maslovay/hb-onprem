@@ -190,11 +190,11 @@ namespace DialogueVideoAssembleService
                     {
                         Path = $"dialoguevideos/{message.DialogueId}{extension}"
                     };
-                    //_notificationPublisher.Publish(@event);
+                    _notificationPublisher.Publish(@event);
                 }                
                 
                 _log.Info("Delete all local files");
-                //Directory.Delete(sessionDir, true);
+                Directory.Delete(sessionDir, true);
                 _log.Info("Function finished OnPremDialogueAssembleMerge");
             }
             catch (SftpPathNotFoundException e)
