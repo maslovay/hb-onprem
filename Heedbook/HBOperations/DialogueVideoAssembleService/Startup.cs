@@ -46,10 +46,10 @@ namespace DialogueVideoAssembleService
                 var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
-            services.AddTransient<DialogueVideoMerge>();
+            services.AddTransient<DialogueVideoAssemble>();
             services.AddTransient<FFMpegSettings>();
             services.AddTransient<FFMpegWrapper>();
-            services.AddTransient<DialogueVideoMergeRunHandler>();
+            services.AddTransient<DialogueVideoAssembleRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -59,7 +59,7 @@ namespace DialogueVideoAssembleService
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             var handlerService = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            handlerService.Subscribe<DialogueVideoMergeRun, DialogueVideoMergeRunHandler>();
+            handlerService.Subscribe<DialogueVideoAssembleRun, DialogueVideoAssembleRunHandler>();
 
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
