@@ -13,15 +13,13 @@ namespace HBLib.Utils
         private readonly string HttpFileUrl;
         private readonly Renci.SshNet.SftpClient _client;
         private readonly SftpSettings _sftpSettings;
-        private readonly  ElasticClient _log;
 
-        public SftpClient(SftpSettings sftpSettings, ElasticClient log)
+        public SftpClient(SftpSettings sftpSettings)
         {
 
             _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
                 sftpSettings.Password);
             _sftpSettings = sftpSettings;
-            _log = log;
             // fileref = new FileReference(new SftpSettings()
             // {
             //     Host = _sftpSettings.Host,
@@ -42,20 +40,11 @@ namespace HBLib.Utils
         }
         private async Task ConnectToSftpAsync()
         {
-            try
-            {
-            _log.Info("Start connect to SFTP");
             if (!_client.IsConnected)
                 await Task.Run(() => _client.Connect()).ContinueWith(t =>
                 {
                     ChangeDirectoryToDefault();
                 });
-             _log.Info("Connected to SFTP");
-            }
-            catch (Exception e)
-            {
-                _log.Fatal($"Exception occurred {e.Message}");
-            }
         }
 
         /// <summary>
