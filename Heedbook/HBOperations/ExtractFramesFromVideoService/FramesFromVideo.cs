@@ -113,7 +113,7 @@ namespace ExtractFramesFromVideo
                 ApplicationUserId = Guid.Parse(applicationUserId),
                 FaceLength = 0,
                 FileContainer = "frames",
-                FileExist = await _sftpClient.IsFileExistsAsync($"frames/{fileName}"),
+                FileExist = true,
                 FileName = fileName,
                 IsFacePresent = false,
                 StatusId = 6,
