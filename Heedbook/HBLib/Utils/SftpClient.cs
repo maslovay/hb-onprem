@@ -14,7 +14,7 @@ namespace HBLib.Utils
         private readonly Renci.SshNet.SftpClient _client;
         private readonly SftpSettings _sftpSettings;
 
-        public SftpClient(SftpSettings sftpSettings, ElasticClient log)
+        public SftpClient(SftpSettings sftpSettings)
         {
 
             _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
