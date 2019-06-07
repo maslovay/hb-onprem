@@ -18,7 +18,7 @@ namespace FaceAnalyzeService
     public class FaceAnalyze
     {
         private readonly HbMlHttpClient _client;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly Object _syncRoot = new Object();
@@ -26,7 +26,7 @@ namespace FaceAnalyzeService
         public FaceAnalyze(
             SftpClient sftpClient,
             IServiceScopeFactory factory,
-            HbMlHttpClient client,
+            HbMlHttpClient client
             // ElasticClient log
             )
         {
