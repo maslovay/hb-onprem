@@ -59,15 +59,19 @@ namespace DialogueVideoAssembleService
             _log.SetArgs(message.ApplicationUserId, message.DialogueId);
             try
             {
-                var cmd = new CMDWithOutput();               
-
+                var cmd = new CMDWithOutput();   
+                
                 var fileVideos = _context.FileVideos.Where(p => p.ApplicationUserId == message.ApplicationUserId
                                                                 && p.EndTime >= message.BeginTime
                                                                 && p.BegTime <= message.EndTime
                                                                 && p.FileExist)
                                          .OrderBy(p => p.BegTime)
                                          .ToList();                            
-                
+                foreach(var v in fileVideos)
+                {
+                    System.Console.WriteLine($"{v.BegTime} - {v.EndTime} - {v.FileName}");
+                }  
+                System.Console.WriteLine($"V:{fileVideos.Count}");
                 if (!fileVideos.Any())
                 {
                     _log.Error("No video files");
@@ -80,7 +84,7 @@ namespace DialogueVideoAssembleService
                                                                 && p.FileExist)
                                          .OrderBy(p => p.Time)
                                          .ToList();
-                
+                System.Console.WriteLine($"F:{fileFrames.Count}");
                 if (!fileFrames.Any())
                 {
                     _log.Error("No frame files");
@@ -122,7 +126,7 @@ namespace DialogueVideoAssembleService
                     }
                 };
                 
-                BuildFFmpegCommands(fileVideos, fileFrames, ref videoMergeCommands, ref frameCommands);
+                BuildFFmpegCommands(fileVideos, fileFrames, sessionDir, ref videoMergeCommands, ref frameCommands);
 
                 if(fileVideos.Count > 1)
                 {
@@ -137,7 +141,7 @@ namespace DialogueVideoAssembleService
                 }
                 
                 _log.Info("Downloading all files");
-
+                System.Console.WriteLine($"Commands - {JsonConvert.SerializeObject(videoMergeCommands)}");
                 foreach (var command in videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First()))
                 {                        
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync(
@@ -159,7 +163,7 @@ namespace DialogueVideoAssembleService
                         "00:00:00.00",
                         (message.EndTime - fileVideos[fileVideos.Count - 1].BegTime).ToString(@"hh\:mm\:ss\.ff"));
                 }                
-
+                System.Console.WriteLine($"{frameCommands.Count}");
                 foreach (var frameCommand in frameCommands)
                 {
                     var output = cmd.runCMD(_wrapper.FfPath,
@@ -186,11 +190,11 @@ namespace DialogueVideoAssembleService
                     {
                         Path = $"dialoguevideos/{message.DialogueId}{extension}"
                     };
-                    _notificationPublisher.Publish(@event);
+                    //_notificationPublisher.Publish(@event);
                 }                
                 
                 _log.Info("Delete all local files");
-                Directory.Delete(sessionDir, true);
+                //Directory.Delete(sessionDir, true);
                 _log.Info("Function finished OnPremDialogueAssembleMerge");
             }
             catch (SftpPathNotFoundException e)
@@ -210,6 +214,7 @@ namespace DialogueVideoAssembleService
 
         private void BuildFFmpegCommands(List<FileVideo> fileVideos,
             List<FileFrame> fileFrames,
+            string sessionDir,
             ref List<FFMpegWrapper.FFmpegCommand> videoMergeCommands,
             ref List<FFMpegWrapper.FFmpegCommand> frameCommands)
         {
@@ -223,19 +228,21 @@ namespace DialogueVideoAssembleService
                 {
                     var lastFrame = LastFrame(fileVideos[i - 1], fileFrames);
                     if(lastFrame == null) continue;
-                    var frameDir = Path.Combine(_sessionId, lastFrame.FileName);
+                    var frameDir = Path.Combine(sessionDir, lastFrame.FileName);
                     var baseName = Path.GetFileNameWithoutExtension(lastFrame.FileName);
                     var tempImageVideoName = $"_tmp_{baseName}.mkv";
-                    var tempImageVideoPath = Path.Combine(_sessionId, tempImageVideoName);
-
+                    var tempImageVideoPath = Path.Combine(sessionDir, tempImageVideoName);
+                    System.Console.WriteLine($"image videopath:{tempImageVideoPath}");
                     videoMergeCommands.Add(new FFMpegWrapper.FFmpegCommand
                     {
                         Command = $"-i {tempImageVideoPath}",
+                        //Path = Path.GetFullPath(tempImageVideoPath),
                         Path = tempImageVideoPath,
                         Type = VideoType,
                         FileFolder = FrameFolder,
                         FileName = lastFrame.FileName
                     });
+                    System.Console.WriteLine($"image videopath:{tempImageVideoPath}");
 
                     frameCommands.Add(new FFMpegWrapper.FFmpegCommand
                     {
