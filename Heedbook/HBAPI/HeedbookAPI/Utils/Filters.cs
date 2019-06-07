@@ -61,8 +61,8 @@ namespace UserOperations.Utils
         public void CheckRoles(ref List<Guid> companyIds, List<Guid> corporationIds, string role, Guid companyId)
         {
             List<Guid> compIds = companyIds;
-            //--- superuser can view any companies in any corporation
-                   if ( role == "Superuser" )
+            //--- admin can view any companies in any corporation
+                   if ( role == "Admin" )
                     {                    
                         corporationIds = !corporationIds.Any()? _context.Corporations.Select(x => x.Id).ToList() : corporationIds;
                         //---take all companyIds in filter or all company ids in corporations
