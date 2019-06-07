@@ -18,7 +18,7 @@ using Renci.SshNet.Common;
 
 namespace DialogueVideoAssembleService
 {
-    public class DialogueVideoMerge
+    public class DialogueVideoAssemble
     {
         private const String VideoFolder = "videos";
         private const String FrameFolder = "frames";
@@ -35,7 +35,7 @@ namespace DialogueVideoAssembleService
         private readonly RecordsContext _context;
         private readonly FFMpegWrapper _wrapper;
 
-        public DialogueVideoMerge(
+        public DialogueVideoAssemble(
             INotificationPublisher notificationPublisher,
             SftpClient client,
             SftpSettings sftpSettings,
@@ -52,9 +52,8 @@ namespace DialogueVideoAssembleService
             _wrapper = wrapper;
         }
 
-        public async Task Run(DialogueVideoMergeRun message)
+        public async Task Run(DialogueVideoAssembleRun message)
         {
-            System.Console.WriteLine("Function started");
             _log.SetFormat("{ApplicationUserId}, {DialogueId}");
             _log.SetArgs(message.ApplicationUserId, message.DialogueId);
             try
@@ -67,11 +66,6 @@ namespace DialogueVideoAssembleService
                                                                 && p.FileExist)
                                          .OrderBy(p => p.BegTime)
                                          .ToList();                            
-                foreach(var v in fileVideos)
-                {
-                    System.Console.WriteLine($"{v.BegTime} - {v.EndTime} - {v.FileName}");
-                }  
-                System.Console.WriteLine($"V:{fileVideos.Count}");
                 if (!fileVideos.Any())
                 {
                     _log.Error("No video files");
@@ -84,7 +78,7 @@ namespace DialogueVideoAssembleService
                                                                 && p.FileExist)
                                          .OrderBy(p => p.Time)
                                          .ToList();
-                System.Console.WriteLine($"F:{fileFrames.Count}");
+
                 if (!fileFrames.Any())
                 {
                     _log.Error("No frame files");
@@ -141,7 +135,7 @@ namespace DialogueVideoAssembleService
                 }
                 
                 _log.Info("Downloading all files");
-                System.Console.WriteLine($"Commands - {JsonConvert.SerializeObject(videoMergeCommands)}");
+
                 foreach (var command in videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First()))
                 {                        
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync(
@@ -163,7 +157,7 @@ namespace DialogueVideoAssembleService
                         "00:00:00.00",
                         (message.EndTime - fileVideos[fileVideos.Count - 1].BegTime).ToString(@"hh\:mm\:ss\.ff"));
                 }                
-                System.Console.WriteLine($"{frameCommands.Count}");
+
                 foreach (var frameCommand in frameCommands)
                 {
                     var output = cmd.runCMD(_wrapper.FfPath,
@@ -221,7 +215,6 @@ namespace DialogueVideoAssembleService
 
             for (var i = 1; i < fileVideos.Count(); i++)
             {
-                // System.Console.WriteLine($"Time gap is {fileVideos[i].BegTime.Subtract(fileVideos[i - 1].EndTime).TotalSeconds}");
                 var timeGap =
                     Convert.ToInt32(fileVideos[i].BegTime.Subtract(fileVideos[i - 1].EndTime).TotalSeconds);
                 if (timeGap > 1)
@@ -232,7 +225,6 @@ namespace DialogueVideoAssembleService
                     var baseName = Path.GetFileNameWithoutExtension(lastFrame.FileName);
                     var tempImageVideoName = $"_tmp_{baseName}.mkv";
                     var tempImageVideoPath = Path.Combine(sessionDir, tempImageVideoName);
-                    System.Console.WriteLine($"image videopath:{tempImageVideoPath}");
                     videoMergeCommands.Add(new FFMpegWrapper.FFmpegCommand
                     {
                         Command = $"-i {tempImageVideoPath}",
@@ -242,7 +234,6 @@ namespace DialogueVideoAssembleService
                         FileFolder = FrameFolder,
                         FileName = lastFrame.FileName
                     });
-                    System.Console.WriteLine($"image videopath:{tempImageVideoPath}");
 
                     frameCommands.Add(new FFMpegWrapper.FFmpegCommand
                     {

@@ -66,7 +66,7 @@ namespace UserService.Controllers
             }
            
             Console.WriteLine("start send message to rabbit");
-            var dialogueVideoMerge = new DialogueVideoMergeRun
+            var dialogueVideoMerge = new DialogueVideoAssembleRun
             {
                 ApplicationUserId = message.ApplicationUserId,
                 DialogueId = message.DialogueId,
