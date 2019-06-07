@@ -66,17 +66,30 @@ namespace QuartzExtensions.Jobs
                         {
                             DialogueId = dialogue.DialogueId
                         };
+                         _context.SaveChanges();
                         _notificationPublisher.Publish(@event);
                     }
                     else
                     {
-                        if ((DateTime.Now - dialogue.CreationTime).Hours < 2) continue;
-                        _log.Error($"Error dialogue. Dialogue id {dialogue.DialogueId}");
-                        dialogue.StatusId = 8;
+                        if ((DateTime.UtcNow - dialogue.CreationTime).Hours > 2)
+                        {
+                            _log.Error($"Error dialogue. Dialogue id {dialogue.DialogueId}");
+                            dialogue.StatusId = 8;
+                            var comment = "";
+                            comment += !dialogue.DialogueAudio.Any() ? "DialogueAudio is unfilled ," : "";
+                            comment += !dialogue.DialogueInterval.Any() ? "DialogueInterval is unfilled ," : "";
+                            comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
+                            comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
+                            comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
+
+                            _context.SaveChanges();
+                        }
+                        else
+                        {
+                            _log.Info($"Dialogue {dialogue.DialogueId} not proceeded");
+                        }
                     }
                 }
-
-                _context.SaveChanges();
                 _log.Info("Function  finished.");
             }
             catch (Exception e)
