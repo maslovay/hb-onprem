@@ -21,7 +21,7 @@ namespace FaceAnalyzeService
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly Object _syncRoot = new Object();
-        
+
         public FaceAnalyze(
             SftpClient sftpClient,
             IServiceScopeFactory factory,
@@ -43,7 +43,8 @@ namespace FaceAnalyzeService
                 if (await _sftpClient.IsFileExistsAsync(remotePath))
                 {
                     string localPath;
-                    lock (_syncRoot) {
+                    lock (_syncRoot)
+                    {
                         localPath = _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath).GetAwaiter().GetResult();
                     }
                     // _log.Info($"Download to path - {localPath}");
@@ -98,8 +99,9 @@ namespace FaceAnalyzeService
                             fileFrame.FaceLength = faceLength;
                             fileFrame.IsFacePresent = true;
 
-                            if (frameAttribute != null)  _context.FrameAttributes.Add(frameAttribute);
+                            if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
                             _context.SaveChanges();
+
                         }
                     }
                     else
