@@ -222,7 +222,7 @@ namespace HBLib.Utils
                 args += $"-i {fn} -ss {sTime} ";
             else
                 args += $"-ss {sTime} -i {fn} ";
-            args += $"-to {eTime} -acodec copy -vcodec copy -avoid_negative_ts 1 {outFn}";
+            args += $"-to {eTime} -acodec copy -vcodec copy {outFn}";
 
             return cmd.runCMD(FfPath, args);
         }
