@@ -178,11 +178,13 @@ namespace DialogueVideoAssembleService
 
                 if (badDialogue)
                 {
+                    _log.Info("Bad dialogue");
                     _context.Dialogues.First(p => p.DialogueId == message.DialogueId).StatusId = 8;
                     _context.SaveChanges();
                 }
                 else
                 {
+                    _log.Info("Send message to video to sound");
                     var @event = new VideoToSoundRun
                     {
                         Path = $"dialoguevideos/{message.DialogueId}{extension}"
