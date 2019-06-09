@@ -191,7 +191,7 @@ namespace DialogueVideoAssembleService
                 }                
                 
                 _log.Info("Delete all local files");
-                // Directory.Delete(sessionDir, true);
+                Directory.Delete(sessionDir, true);
                 _log.Info("Function finished OnPremDialogueAssembleMerge");
             }
             catch (SftpPathNotFoundException e)
