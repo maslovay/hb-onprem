@@ -100,7 +100,8 @@ namespace DialogueVideoAssembleService
                 
                 var pathClient = new PathClient();
                 var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
-                var tempFirstVideoName = $"_tmp_{fileVideos[0].FileName}";
+                // var tempFirstVideoName = $"_tmp_{fileVideos[0].FileName}";
+                var tempFirstVideoName = fileVideos[0].FileName;
                 var tempFirstVideoPath = Path.Combine(sessionDir, tempFirstVideoName);
 
                 var tempLastVideoName = $"_tmp_{fileVideos[fileVideos.Count - 1].FileName}";
@@ -143,11 +144,11 @@ namespace DialogueVideoAssembleService
                 }
                     
 
-                var outputCutFirstVideo = _wrapper.CutBlob(
-                    Path.Combine(sessionDir, fileVideos[0].FileName),
-                    tempFirstVideoPath,
-                    message.BeginTime.Subtract(fileVideos[0].BegTime).ToString(@"hh\:mm\:ss\.ff"),
-                    (fileVideos[0].EndTime.Subtract(fileVideos[0].BegTime)).ToString(@"hh\:mm\:ss\.ff"));
+                // var outputCutFirstVideo = _wrapper.CutBlob(
+                //     Path.Combine(sessionDir, fileVideos[0].FileName),
+                //     tempFirstVideoPath,
+                //     message.BeginTime.Subtract(fileVideos[0].BegTime).ToString(@"hh\:mm\:ss\.ff"),
+                //     (fileVideos[0].EndTime.Subtract(fileVideos[0].BegTime)).ToString(@"hh\:mm\:ss\.ff"));
 
                 if(fileVideos.Count > 1)
                 {
@@ -156,7 +157,9 @@ namespace DialogueVideoAssembleService
                         tempLastVideoPath,
                         "00:00:00.00",
                         (message.EndTime - fileVideos[fileVideos.Count - 1].BegTime).ToString(@"hh\:mm\:ss\.ff"));
-                }                
+                }      
+
+                System.Console.WriteLine($"{JsonConvert.SerializeObject(frameCommands)}");          
 
                 foreach (var frameCommand in frameCommands)
                 {
@@ -188,7 +191,7 @@ namespace DialogueVideoAssembleService
                 }                
                 
                 _log.Info("Delete all local files");
-                Directory.Delete(sessionDir, true);
+                // Directory.Delete(sessionDir, true);
                 _log.Info("Function finished OnPremDialogueAssembleMerge");
             }
             catch (SftpPathNotFoundException e)
@@ -244,7 +247,7 @@ namespace DialogueVideoAssembleService
                 }
 
                 if (i >= fileVideos.Count() - 1) continue;
-                var videoDir = Path.Combine(_sessionId, fileVideos[i].FileName);
+                var videoDir = Path.Combine(sessionDir, fileVideos[i].FileName);
                 videoMergeCommands.Add(new FFMpegWrapper.FFmpegCommand
                 {
                     Command = $"-i {videoDir}",
