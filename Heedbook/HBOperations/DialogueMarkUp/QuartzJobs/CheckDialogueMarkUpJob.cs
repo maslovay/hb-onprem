@@ -110,7 +110,8 @@ namespace DialogueMarkUp.QuartzJobs
                         EndTime = markup.EndTime,
                         CreationTime = DateTime.UtcNow,
                         LanguageId = 1,
-                        StatusId = 6
+                        StatusId = 6,
+                        InStatistic = true
                     };
                     dialogues.Add(dialogue);
 
@@ -173,7 +174,9 @@ namespace DialogueMarkUp.QuartzJobs
                         EndTime = markUps[i].EndTime,
                         CreationTime = DateTime.UtcNow,
                         LanguageId = 1,
-                        StatusId = 6
+                        StatusId = 6,
+                        InStatistic = true
+
                     };
                     dialogues.Add(dialogue);
 
