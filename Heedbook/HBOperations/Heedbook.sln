@@ -110,6 +110,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueVideoAssembleServic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueMarkUp", "DialogueMarkUp\DialogueMarkUp.csproj", "{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueVideoAssembleServiceTests", "DialogueVideoAssembleServiceTests\DialogueVideoAssembleServiceTests.csproj", "{4226D9C7-F324-47E3-B8C2-CB8F16114995}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -252,6 +254,10 @@ Global
 		{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4226D9C7-F324-47E3-B8C2-CB8F16114995}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4226D9C7-F324-47E3-B8C2-CB8F16114995}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4226D9C7-F324-47E3-B8C2-CB8F16114995}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4226D9C7-F324-47E3-B8C2-CB8F16114995}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -291,6 +297,7 @@ Global
 		{99BB51FD-9E25-444C-999D-8DE8E639C42A} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{8D27D7A9-0BC0-4917-8325-314445E9B9BA} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{49EF1AD2-7D9C-46D2-855F-D92A2C40119A} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
+		{4226D9C7-F324-47E3-B8C2-CB8F16114995} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
