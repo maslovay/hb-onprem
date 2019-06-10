@@ -6,7 +6,7 @@ WORKDIR /app/HBOperations
 RUN killall -9 dotnet; exit 0;   
   
 WORKDIR /app/HBOperations/ReferenceControllerServiceTests/
-RUN dotnet restore /app/HBOperations/; exit 0;
+RUN dotnet restore .; exit 0;
 RUN dotnet build
 RUN dotnet test -r ./TestResults
 RUN killall -9 dotnet; exit 0;

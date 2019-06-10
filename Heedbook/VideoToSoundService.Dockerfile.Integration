@@ -16,6 +16,7 @@ WORKDIR /app/HBOperations
 RUN killall -9 dotnet; exit 0;   
   
 WORKDIR /app/HBOperations/VideoToSoundServiceTests/
+
 RUN dotnet restore .; exit 0;
 RUN dotnet build
 RUN ../../rabbit_test_start.sh & dotnet test -r ./TestResults
