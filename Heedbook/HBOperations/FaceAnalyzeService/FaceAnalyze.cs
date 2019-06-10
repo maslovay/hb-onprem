@@ -40,16 +40,17 @@ namespace FaceAnalyzeService
             var _log = _elasticClientFactory.GetElasticClient();
             try
             {
-                _log.Info("Function face analyze started");
+                _log.Info($"Function face analyze started {remotePath}");
                 //_log.Info($"{remotePath}");
                 if (await _sftpClient.IsFileExistsAsync(remotePath))
                 {
+
                     string localPath;
                     lock (_syncRoot)
                     {
                         localPath = _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath).GetAwaiter().GetResult();
                     }
-                    // _log.Info($"Download to path - {localPath}");
+                    _log.Info($"Download to path - {localPath}");
 
                     // var fileStream = File.OpenRead(localPath);
                     // var ms = new MemoryStream();
