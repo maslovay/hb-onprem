@@ -7,6 +7,11 @@ RUN chmod -R 777 /opt/; exit 0;
 RUN mkdir /opt/download; exit 0;
 RUN chmod -R 777 /opt/download; exit 0;
 
+RUN apt-get update
+RUN apt-get install libopenblas-base -y 
+RUN apt-get install libc6-dev -y
+RUN apt-get install libgdiplus -y
+
 RUN ./rabbit_test_setup.sh; exit 0;
 RUN ./test_environment_setup.sh; exit 0;
 

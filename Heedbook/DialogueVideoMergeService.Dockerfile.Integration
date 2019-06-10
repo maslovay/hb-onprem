@@ -17,7 +17,7 @@ RUN killall -9 dotnet; exit 0;
   
 WORKDIR /app/HBOperations/DialogueVideoMergeServiceTests/
 
-RUN dotnet restore /app/HBOperations/; exit 0;
+RUN dotnet restore .; exit 0;
 RUN dotnet build
 RUN ../../rabbit_test_start.sh & dotnet test -r ./TestResults
 RUN killall -9 dotnet; exit 0;
