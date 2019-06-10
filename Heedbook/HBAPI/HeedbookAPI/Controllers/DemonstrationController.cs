@@ -177,15 +177,22 @@ namespace UserOperations.Controllers
             List<SlideShowSession> stats)
         {
             try
-            {      
+            {          
                 foreach (SlideShowSession stat in stats)
                 {
-                    var html = _context.CampaignContents.Where(x=>x.CampaignContentId == stat.CampaignContentId).Select(x=>x.Content).FirstOrDefault().RawHTML;
-                    stat.ContentType = html.Contains("PollAnswer") ? "poll" : "media";
-                    stat.SlideShowSessionId = Guid.NewGuid();                    
+                    if(stat.ContentType == "url")
+                    {
+                        stat.IsPoll = false;
+                    }
+                    else
+                    {
+                        var html = _context.CampaignContents.Where(x=>x.CampaignContentId == stat.CampaignContentId).Select(x=>x.Content).FirstOrDefault().RawHTML;
+                        stat.IsPoll = html.Contains("PollAnswer") ? true : false;
+                    }
+                    stat.SlideShowSessionId = Guid.NewGuid();
                     _context.Add(stat);
                     _context.SaveChanges();
-                }
+                }    
                 return Ok("Saved");
             }
             catch (Exception e)
@@ -202,7 +209,7 @@ namespace UserOperations.Controllers
         public async Task<ActionResult> GetContents([FromQuery] string userId)
         {
             try
-            {                         
+            {                        
                 var companyId = _context.ApplicationUsers.Where(x => x.Id.ToString() == userId).FirstOrDefault().CompanyId;
                 var curDate = DateTime.Now;
                 var containerName = "media";
