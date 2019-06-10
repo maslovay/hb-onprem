@@ -18,6 +18,8 @@ namespace DialogueVideoAssembleService.Tests
         private DialogueVideoAssemble _dialogueVideoAssembleService;
         private Startup _startup;
         private DialogueVideoAssembleRun _dialogueVideoAssembleRun;
+        private DateTime beginTime = DateTime.MaxValue;
+        private DateTime endTime = DateTime.MinValue;
         
         [SetUp]
         public async Task Setup()
@@ -26,26 +28,11 @@ namespace DialogueVideoAssembleService.Tests
             {
                 _startup = new Startup(Config);
                 _startup.ConfigureServices(Services);
-                Services.AddTransient<INotificationPublisher, RabbitPublisherMock>();
             }, true);
-        }
-
-        [Test]
-        public void Test1()
-        {
-            Assert.Pass();
         }
 
         protected override async Task PrepareTestData()
         {
-            _dialogueVideoAssembleRun = new DialogueVideoAssembleRun()
-            {
-                ApplicationUserId = TestUserId,
-                DialogueId = Guid.NewGuid(),
-                BeginTime = DateTime.MinValue,
-                EndTime = DateTime.MaxValue
-            };
-
             DateTime? prevVideoEndDate = null;
             const int deltaSeconds = 15;
             
@@ -66,11 +53,14 @@ namespace DialogueVideoAssembleService.Tests
                     await _sftpClient.UploadAsync(filePath, "videos/", testVideoCorrectFileName);
             
                 var videoDateTime = prevVideoEndDate ?? GetDateTimeFromFileVideoName(testVideoCorrectFileName);
-                
-                // Let's check if such video record already exists in db
-                if (_repository.Get<FileVideo>().Any( fv => fv.FileName == testVideoCorrectFileName ))
-                    continue;
-                
+
+                // Let's check if such video record already exists in db and delete it if exists
+                if (_repository.Get<FileVideo>().Any(fv => fv.FileName == testVideoCorrectFileName))
+                {
+                    _repository.Delete<FileVideo>(fv => fv.FileName == testVideoFilename);
+                    _repository.Save();
+                }
+
                 var fileVideo = new FileVideo()
                 {
                     FileVideoId = Guid.NewGuid(),
@@ -84,6 +74,12 @@ namespace DialogueVideoAssembleService.Tests
                     StatusId = 5,
                     Duration = null
                 };
+
+                if (beginTime > fileVideo.BegTime)
+                    beginTime = fileVideo.BegTime;
+                
+                if (endTime < fileVideo.EndTime)
+                    endTime = fileVideo.EndTime;
 
                 prevVideoEndDate = fileVideo.EndTime;
 
@@ -155,6 +151,14 @@ namespace DialogueVideoAssembleService.Tests
         public async Task EnsureCreatesOutputVideoFile()
         {
             _sftpClient.ChangeDirectoryToDefault();
+            
+            _dialogueVideoAssembleRun = new DialogueVideoAssembleRun()
+            {
+                ApplicationUserId = TestUserId,
+                DialogueId = Guid.NewGuid(),
+                BeginTime = beginTime,
+                EndTime = endTime
+            };
 
             Assert.DoesNotThrowAsync(() => _dialogueVideoAssembleService.Run(_dialogueVideoAssembleRun));
             Assert.IsTrue(
