@@ -29,9 +29,18 @@ namespace HBData.Models
         public CampaignContent CampaignContent { get; set; }
 
         /// <summary>
-        ///     Content type
+        ///     Content type (media or poll)
+        /// </summary>
+        public bool IsPoll { get; set; }
+          /// <summary>
+        ///     Content type (content, localContent, url)
         /// </summary>
         public String ContentType { get; set; }
+
+        /// <summary>
+        ///     if content is url save link
+        /// </summary>
+        public String Url { get; set; }
 
         /// <summary>
         ///     Place where the content was shown

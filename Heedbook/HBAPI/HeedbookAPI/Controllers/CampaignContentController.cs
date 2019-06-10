@@ -49,8 +49,7 @@ namespace UserOperations.Controllers
             {
                 log.Fatal($"Exception occurred {e}");
             }
-        }
-        #region Campaign     
+        } 
 
         [HttpGet("Campaign")]
         [SwaggerOperation(Summary = "Return campaigns with content", Description = "Return all campaigns for loggined company with content relations")]
@@ -164,13 +163,10 @@ namespace UserOperations.Controllers
                 }
                 return BadRequest("No such campaign");
         }       
-        #endregion
 
-
-        #region Content
         [HttpGet("Content")]
         [SwaggerOperation(Summary = "Get all content", Description = "Get all content for loggined company with screenshot url links")]
-        [SwaggerResponse(200, "Content list", typeof(List<ContentWithScreenModel>))]
+        [SwaggerResponse(200, "Content list", typeof(List<Content>))]
         public async Task<IActionResult> ContentGet([FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -180,9 +176,8 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
             var contents = _context.Contents.Where(x => x.CompanyId == companyId || x.IsTemplate == true).ToList();
-            var result = contents.Select( x => new ContentWithScreenModel(x, null));
              _log.Info("Content get finished");
-            return Ok(result);
+            return Ok(contents);
             }
             catch(Exception e)
             {
@@ -193,16 +188,15 @@ namespace UserOperations.Controllers
 
         [HttpPost("Content")]
         [SwaggerOperation(Summary = "Save new content", Description = "Create new content")]
-        [SwaggerResponse(200, "New content with screenshot link", typeof(ContentWithScreenModel))]
-        public async Task<IActionResult> ContentPost([FromBody] ContentWithScreenModel model, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
+        [SwaggerResponse(200, "New content", typeof(Content))]
+        public async Task<IActionResult> ContentPost([FromBody] Content content, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             _log.Info("Content POST started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
             
-            Content content = model.Content;
-            if ( !model.Content.IsTemplate ) content.CompanyId = (Guid)companyId; // only for not templates we create content for partiqular company/ Templates have no any compane relations
+            if ( !content.IsTemplate ) content.CompanyId = (Guid)companyId; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
             //content.StatusId = 3;
@@ -210,22 +204,20 @@ namespace UserOperations.Controllers
             // content.StatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;;
             _context.Add(content);
             _context.SaveChanges();
-            model.Content = content;
             _log.Info("Content POST finished");
-            return Ok(model);
+            return Ok(content);
         }
 
         [HttpPut("Content")]
         [SwaggerOperation(Summary = "Edit content", Description = "Edit existing content")]
-        [SwaggerResponse(200, "Edited content with screenshot link", typeof(ContentWithScreenModel))]
+        [SwaggerResponse(200, "Edited content", typeof(Content))]
         public async Task<IActionResult> ContentPut(
-                    [FromBody] ContentWithScreenModel model, 
+                    [FromBody] Content content, 
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             _log.Info("Content PUT started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");         
-            Content content = model.Content;
+                    return BadRequest("Token wrong");  
             Content contentEntity = _context.Contents.Where(p => p.ContentId == content.ContentId).FirstOrDefault();
             foreach (var p in typeof(Content).GetProperties())
             {
@@ -234,9 +226,8 @@ namespace UserOperations.Controllers
             }
             contentEntity.UpdateDate = DateTime.UtcNow;
             _context.SaveChanges();
-            model.Content = contentEntity;
             _log.Info("Content PUT finished");
-            return Ok(model);
+            return Ok(contentEntity);
         }
 
         [HttpDelete("Content")]
@@ -277,6 +268,5 @@ namespace UserOperations.Controllers
             }
             return BadRequest("No such content");
         }
-        #endregion
     }
 }
