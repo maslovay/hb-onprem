@@ -106,7 +106,8 @@ namespace FaceAnalyzeService.Tests
         public async Task EnsureCreatesFrameEmotion()
         {
             await _faceAnalyzeService.Run(frameFileRemotePath);
-            Assert.IsTrue(_repository.Get<FrameEmotion>().Any(ff => ff.FileFrameId == testFileFrameId));
+            Assert.IsTrue(_repository.GetWithInclude<FrameEmotion>(f => f.FileFrameId != Guid.Empty, opt => opt.FileFrame)
+                .Any(ff => ff.FileFrame.FileName == testFrameCorrectFileName));
         }
 
         private void ClearFrameEmotions(Guid fileFrameId)

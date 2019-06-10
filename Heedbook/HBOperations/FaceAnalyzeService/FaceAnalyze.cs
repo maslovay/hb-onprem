@@ -105,6 +105,7 @@ namespace FaceAnalyzeService
                             fileFrame.IsFacePresent = true;
 
                             if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
+                            _context.FrameEmotions.Add(frameEmotion);
                             lock (_context)
                             {
                                 _context.SaveChanges();
