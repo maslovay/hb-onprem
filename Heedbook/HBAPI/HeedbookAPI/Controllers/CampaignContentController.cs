@@ -36,11 +36,19 @@ namespace UserOperations.Controllers
             ElasticClient log
             )
         {
+            try
+            {
             _context = context;
             _config = config;
             _loginService = loginService;
             _log = log;
             _containerName = "content-screenshots";
+             _log.Info("Constructor of CampaignContent controller done");
+            }
+            catch(Exception e)
+            {
+                log.Fatal($"Exception occurred {e}");
+            }
         } 
 
         [HttpGet("Campaign")]
@@ -157,7 +165,7 @@ namespace UserOperations.Controllers
         }       
 
         [HttpGet("Content")]
-        [SwaggerOperation(Summary = "Get all content", Description = "Get all content for loggined company")]
+        [SwaggerOperation(Summary = "Get all content", Description = "Get all content for loggined company with screenshot url links")]
         [SwaggerResponse(200, "Content list", typeof(List<Content>))]
         public async Task<IActionResult> ContentGet([FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
@@ -219,7 +227,7 @@ namespace UserOperations.Controllers
             contentEntity.UpdateDate = DateTime.UtcNow;
             _context.SaveChanges();
             _log.Info("Content PUT finished");
-            return Ok(content);
+            return Ok(contentEntity);
         }
 
         [HttpDelete("Content")]
@@ -242,7 +250,6 @@ namespace UserOperations.Controllers
                             _context.RemoveRange(campContententForRemove);
                             _context.SaveChanges();
                         }
-                        //---if there any content wich was shown it will not be removed
                         if (contentEntity.CampaignContents != null && contentEntity.CampaignContents.Count() != 0)
                            {
                                 //contentEntity.StatusId = 5;
