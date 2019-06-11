@@ -17,83 +17,85 @@ namespace QuartzExtensions.Jobs
     {
         private readonly ElasticClient _log;
         private readonly INotificationPublisher _notificationPublisher;
-        private readonly IGenericRepository _repository;
-        private readonly RecordsContext _context;
-
+        private RecordsContext _context;
+        private readonly IServiceScopeFactory _scopeFactory;
         public DialogueStatusCheckerJob(IServiceScopeFactory factory,
             INotificationPublisher notificationPublisher,
-            ElasticClient log,
-            RecordsContext context)
+            ElasticClient log)
         {
-            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _notificationPublisher = notificationPublisher;
             _log = log;
-            _context = context;
+            _scopeFactory = factory;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            try
+            using (var scope = _scopeFactory.CreateScope())
             {
-                _log.Info("Function dialogue status checker started.");
-                var dialogues = _context.Dialogues
-                    .Include(p => p.DialogueFrame)
-                    .Include(p => p.DialogueAudio)
-                    .Include(p => p.DialogueInterval)
-                    .Include(p => p.DialogueVisual)
-                    .Include(p => p.DialogueClientProfile)
-                    .Where(item => item.StatusId == 6)
-                    .ToList();
-
-                if (!dialogues.Any())
+                try
                 {
-                    _log.Info("No dialogues.");
-                    return;
-                }
+                    _log.Info("Function dialogue status checker started.");
+                    _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
 
-                foreach (var dialogue in dialogues)
-                {
-                   
-                    if (dialogue.DialogueAudio.Any() &&
-                        dialogue.DialogueInterval.Any() && 
-                        dialogue.DialogueVisual.Any() &&
-                        dialogue.DialogueClientProfile.Any() &&
-                        dialogue.DialogueFrame.Any())
+                    var dialogues = _context.Dialogues
+                        .Include(p => p.DialogueFrame)
+                        .Include(p => p.DialogueAudio)
+                        .Include(p => p.DialogueInterval)
+                        .Include(p => p.DialogueVisual)
+                        .Include(p => p.DialogueClientProfile)
+                        .Where(item => item.StatusId == 6)
+                        .ToList();
+
+                    if (!dialogues.Any())
                     {
-                        _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
-                        dialogue.StatusId = 3;
-                        var @event = new FillingSatisfactionRun
-                        {
-                            DialogueId = dialogue.DialogueId
-                        };
-                        _notificationPublisher.Publish(@event);
+                        _log.Info("No dialogues.");
+                        return;
                     }
-                    else
+
+                    foreach (var dialogue in dialogues)
                     {
-                        if ((DateTime.UtcNow - dialogue.CreationTime).Hours > 2)
+
+                        if (dialogue.DialogueAudio.Any() &&
+                            dialogue.DialogueInterval.Any() &&
+                            dialogue.DialogueVisual.Any() &&
+                            dialogue.DialogueClientProfile.Any() &&
+                            dialogue.DialogueFrame.Any())
                         {
-                            _log.Error($"Error dialogue. Dialogue id {dialogue.DialogueId}");
-                            dialogue.StatusId = 8;
-                            var comment = "";
-                            comment += !dialogue.DialogueAudio.Any() ? "DialogueAudio is unfilled ," : "";
-                            comment += !dialogue.DialogueInterval.Any() ? "DialogueInterval is unfilled ," : "";
-                            comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
-                            comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
-                            comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
-                            dialogue.Comment = comment;
+                            _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
+                            dialogue.StatusId = 3;
+                            var @event = new FillingSatisfactionRun
+                            {
+                                DialogueId = dialogue.DialogueId
+                            };
+                            _notificationPublisher.Publish(@event);
                         }
                         else
                         {
-                            _log.Info($"Dialogue {dialogue.DialogueId} not proceeded");
+                            if ((DateTime.UtcNow - dialogue.CreationTime).Hours > 2)
+                            {
+                                _log.Error($"Error dialogue. Dialogue id {dialogue.DialogueId}");
+                                dialogue.StatusId = 8;
+                                var comment = "";
+                                comment += !dialogue.DialogueAudio.Any() ? "DialogueAudio is unfilled ," : "";
+                                comment += !dialogue.DialogueInterval.Any() ? "DialogueInterval is unfilled ," : "";
+                                comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
+                                comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
+                                comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
+                                dialogue.Comment = comment;
+                            }
+                            else
+                            {
+                                _log.Info($"Dialogue {dialogue.DialogueId} not proceeded");
+                            }
                         }
                     }
+                    _context.SaveChanges();
+                    _log.Info("Function  finished.");
                 }
-                _context.SaveChanges();
-                _log.Info("Function  finished.");
-            }
-            catch (Exception e)
-            {
-                _log.Fatal($"Exception occured {e}");
+                catch (Exception e)
+                {
+                    _log.Fatal($"Exception occured {e}");
+                }
             }
         }
 
