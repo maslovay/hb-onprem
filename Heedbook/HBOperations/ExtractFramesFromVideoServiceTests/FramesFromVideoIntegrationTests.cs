@@ -70,6 +70,8 @@ namespace ExtractFramesFromVideoService.Tests
             
             PrepareDirectories();
             CleanDatabaseRecords();
+            
+            RunServices();
         }
 
         private async void PrepareDirectories()
@@ -116,14 +118,11 @@ namespace ExtractFramesFromVideoService.Tests
 #if DEBUG
             config = "Debug";
 #endif
-
-            _extractServiceProcess = Process.Start("dotnet",
-                $"../../../../ExtractFramesFromVideoService/bin/{config}/netcoreapp2.2/ExtractFramesFromVideoService.dll --isCalledFromUnitTest true");
-            
-            
             _userServiceProcess = Process.Start("dotnet",
                 $"../../../../UserService/bin/{config}/netcoreapp2.2/UserService.dll --isCalledFromUnitTest true");
-
+            _extractServiceProcess = Process.Start("dotnet",
+                $"../../../../ExtractFramesFromVideoService/bin/{config}/netcoreapp2.2/ExtractFramesFromVideoService.dll --isCalledFromUnitTest true");
+            Thread.Sleep(8000);
         }
 
         private void StopServices()
@@ -145,8 +144,6 @@ namespace ExtractFramesFromVideoService.Tests
         [Test(Description = "Framing test"), Retry(3)]
         public async Task RunTest()
         {
-            RunServices();
-
             var framesFromVideoRun = new FramesFromVideoRun()
             {
                 Path = $"videos/{correctFileName}"
