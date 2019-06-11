@@ -1,9 +1,12 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using HBData;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AudioAnalyzeService
@@ -12,7 +15,8 @@ namespace AudioAnalyzeService
     {
         private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
         private readonly ElasticClient _log;
-        private readonly IGenericRepository _repository;
+        private readonly RecordsContext _context;
+        // private readonly IGenericRepository _repository;
 
         public AudioAnalyze(
             IServiceScopeFactory factory,
@@ -20,7 +24,8 @@ namespace AudioAnalyzeService
             AsrHttpClient.AsrHttpClient asrHttpClient
         )
         {
-            _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
+            // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
+            _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
             _log = log;
             _asrHttpClient = asrHttpClient;
         }
@@ -35,11 +40,19 @@ namespace AudioAnalyzeService
                     var splitedString = path.Split('/');
                     var fileName = splitedString[1];
                     var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
-                    var dialogue =
-                        await _repository.FindOneByConditionAsync<Dialogue>(item =>
-                            item.DialogueId == dialogueId);
+                    var dialogue = _context.Dialogues
+                        .Where(p => p.DialogueId == dialogueId)
+                        .FirstOrDefault();
+
+                        // await _repository.FindOneByConditionAsync<Dialogue>(item =>
+                        //     item.DialogueId == dialogueId);
                     if (dialogue != null)
                     {
+                        var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId).ToList();
+                        fileAudios.Where(p => p.StatusId != 6)
+                            .ToList()
+                            .ForEach(p => p.StatusId = 8);
+                        
                         var fileAudio = new FileAudioDialogue
                         {
                             DialogueId = dialogueId,
@@ -51,10 +64,11 @@ namespace AudioAnalyzeService
                             EndTime = dialogue.EndTime,
                             Duration = 15.0
                         };
-                        await _repository.CreateAsync(fileAudio);
-                        _repository.Save();
+                        _context.FileAudioDialogues.Add(fileAudio);
+                        _context.SaveChanges();
                         await _asrHttpClient.StartAudioRecognize(dialogueId);
                         _log.Info("Started recognize audio");
+                        
                     }
                 }
 
