@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Notifications.Base;
+using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
@@ -22,9 +23,13 @@ namespace UserService.Controllers
     public class TestController : Controller
     {
         private readonly RecordsContext _context;
-        public TestController(RecordsContext context)
+        private readonly SftpClient _sftpClient;
+        private readonly INotificationPublisher _notificationPublisher;
+        public TestController(RecordsContext context, SftpClient sftpClient, INotificationPublisher notificationPublisher)
         {
             _context = context;
+            _sftpClient = sftpClient;
+            _notificationPublisher = notificationPublisher;
         }
 
 
@@ -65,9 +70,8 @@ namespace UserService.Controllers
            {
                return BadRequest(e);
            }
-       }
+       }       
     }
-
 }
 
 
