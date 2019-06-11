@@ -210,7 +210,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                //  _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
                 Console.WriteLine("-----------------------------1----------------------");
                 var sessions = _context.Sessions
                     .Include(p => p.ApplicationUser)
