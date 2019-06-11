@@ -22,7 +22,7 @@ namespace AudioAnalyzeScheduler.Extensions
                 return TriggerBuilder.Create()
                                      .WithIdentity("CheckAudioRecognizeStatus.trigger", "Audios")
                                      .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
+                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(5).RepeatForever())
                                      .Build();
             });
 
