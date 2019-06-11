@@ -40,11 +40,8 @@ namespace AudioAnalyzeScheduler
             });
             services.AddSingleton(provider => provider.GetService<IOptions<AsrSettings>>().Value);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddSingleton(provider =>
-            {
-                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
-                return new ElasticClient(settings);
-            });
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddSingleton<ElasticClientFactory>();
             services.AddSingleton<AsrHttpClient.AsrHttpClient>();
             services.AddSingleton<SftpClient>();
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
