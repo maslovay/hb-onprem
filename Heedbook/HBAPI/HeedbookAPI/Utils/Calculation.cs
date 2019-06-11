@@ -522,6 +522,8 @@ namespace UserOperations.Utils
          public List<ReportFullDayInfo> Sum(List<ReportFullDayInfo> curRes, ReportFullDayInfo newInterval)
         {
             var intervals = curRes;
+            try
+            {
             newInterval.End = MinTime(newInterval.End, intervals.Max(p => p.End));
             newInterval.Beg = MaxTime(newInterval.Beg, intervals.Min(p => p.Beg));
 
@@ -543,7 +545,8 @@ namespace UserOperations.Utils
                 begInterval.First().End = newInterval.Beg;
 
                 newInterval.ActivityType = type + newInterval.ActivityType;
-                newInterval.DialogueId = Guid.Parse(dialogueId.ToString() + newInterval.DialogueId.ToString());
+                if(dialogueId != null || newInterval.DialogueId != null)
+                    newInterval.DialogueId = Guid.Parse(dialogueId.ToString() + newInterval.DialogueId.ToString());
                 intervals.Add(newInterval);
 
                 intervals.Add(new ReportFullDayInfo
@@ -569,7 +572,9 @@ namespace UserOperations.Utils
                     {
                         Beg = newInterval.Beg,
                         End = end,
-                        DialogueId = Guid.Parse(dialogueId.ToString() + newInterval.DialogueId.ToString()),
+                        DialogueId = dialogueId!= null || newInterval.DialogueId != null? 
+                                Guid.Parse(dialogueId.ToString() + newInterval.DialogueId.ToString())
+                                : dialogueId,
                         ActivityType = type + newInterval.ActivityType
                     });
                 }
@@ -584,7 +589,8 @@ namespace UserOperations.Utils
 
                     var endIntervalNew = endInterval.First();
                     endIntervalNew.End = newInterval.End;
-                    endIntervalNew.DialogueId =Guid.Parse(endIntervalNew.DialogueId.ToString() + newInterval.DialogueId.ToString());
+                    if(endIntervalNew.DialogueId != null || newInterval.DialogueId != null)
+                        endIntervalNew.DialogueId =Guid.Parse(endIntervalNew.DialogueId.ToString() + newInterval.DialogueId.ToString());
                     endIntervalNew.ActivityType += newInterval.ActivityType;
 
                     intervals.Add(new ReportFullDayInfo
@@ -596,7 +602,11 @@ namespace UserOperations.Utils
                     });
                 }
             }
-
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("SUM Ex"+e.Message);
+            }
 
             return intervals;
         }
@@ -604,6 +614,7 @@ namespace UserOperations.Utils
         public List<ReportFullDayInfo> TimeTable(List<SessionInfo> sessions, List<DialogueInfo> dialogues, Guid applicationUserId, DateTime date)
         {
             var result = new List<ReportFullDayInfo>();
+      
             result.Add(new ReportFullDayInfo
             {
                 Beg = date.Date,
@@ -611,6 +622,7 @@ namespace UserOperations.Utils
                 ActivityType = 0,
                 DialogueId = null
             });
+
             if (sessions.Count() != 0)
             {
                 foreach (var session in sessions.Where(p => p.BegTime.Date == date && p.ApplicationUserId == applicationUserId))
@@ -624,7 +636,7 @@ namespace UserOperations.Utils
                     });
                 }
             }
-
+    
             if (dialogues.Count() != 0)
             {
                 foreach (var dialogue in dialogues)
@@ -638,17 +650,22 @@ namespace UserOperations.Utils
                     });
                 }
             }
+          
             result = result.OrderBy(p => p.Beg).ToList();
             foreach (var element in result.Where(p => p.ActivityType != 0 && p.ActivityType != 1 && p.ActivityType != 2 ))
             {
                 element.ActivityType = 0;
             }
+           
             foreach (var element in result.Where(p =>p.DialogueId != null))
             {
                 element.ActivityType = 2;
-            }
+            }            
             return result;
         }
+
+        //------------------FOR CONTENT ANALYTIC------------------------
+
 
         
     }

@@ -7,6 +7,7 @@ RUN chmod -R 777 /opt/; exit 0;
 RUN mkdir /opt/download; exit 0;
 RUN chmod -R 777 /opt/download; exit 0;
 
+RUN apt-get update
 RUN apt-get install libopenblas-base -y 
 RUN apt-get install libc6-dev -y
 RUN apt-get install libgdiplus -y
@@ -16,10 +17,10 @@ RUN ./test_environment_setup.sh; exit 0;
 
 WORKDIR /app/HBOperations
 RUN killall -9 dotnet; exit 0;   
-RUN dotnet restore /app/HBOperations/; exit 0;
-RUN dotnet build
   
 WORKDIR /app/HBOperations/FaceAnalyzeServiceTests/
+RUN dotnet restore .; exit 0;
+RUN dotnet build
 
 RUN ../../rabbit_test_start.sh & dotnet test -r ./TestResults
 RUN killall -9 dotnet; exit 0;

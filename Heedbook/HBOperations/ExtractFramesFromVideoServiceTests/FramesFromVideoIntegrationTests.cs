@@ -53,7 +53,7 @@ namespace ExtractFramesFromVideoService.Tests
             builder.UseNpgsql(_config.GetSection("ConnectionStrings")["DefaultConnection"])
                 .UseInternalServiceProvider(serviceCollection);
 
-            _currentUri = "http://localhost:5000";
+            _currentUri = "http://localhost:5133";
             
             _context = new RecordsContext(builder.Options);
             _repository = new GenericRepository(_context);
@@ -117,10 +117,13 @@ namespace ExtractFramesFromVideoService.Tests
             config = "Debug";
 #endif
 
-            _userServiceProcess = Process.Start("dotnet",
-                $"../../../../UserService/bin/{config}/netcoreapp2.2/UserService.dll --isCalledFromUnitTest true");
             _extractServiceProcess = Process.Start("dotnet",
                 $"../../../../ExtractFramesFromVideoService/bin/{config}/netcoreapp2.2/ExtractFramesFromVideoService.dll --isCalledFromUnitTest true");
+            
+            
+            _userServiceProcess = Process.Start("dotnet",
+                $"../../../../UserService/bin/{config}/netcoreapp2.2/UserService.dll --isCalledFromUnitTest true");
+
         }
 
         private void StopServices()
