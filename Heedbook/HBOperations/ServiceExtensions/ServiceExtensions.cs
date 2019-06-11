@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -18,24 +19,33 @@ namespace ServiceExtensions
                 var env = context.HostingEnvironment;
 
                 var configBuilder = cfg.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                
+                Console.WriteLine($">>>>>>>>>>>>>>>>>>>> SERVICE {Assembly.GetCallingAssembly().GetName().Name} RUNNING");
+                
                 if (UnitTestDetector.IsRunningFromNUnit || args.Contains("--isCalledFromUnitTest") && args.Contains("true"))
                 {
+                    Console.WriteLine($">>>>>>>>>>>>>>>>>>>> TEST RUNNING Port: {portToReassignForTests}");
                     builder.UseUrls("http://127.0.0.1:" + portToReassignForTests);
                     configBuilder.AddJsonFile($"appsettings.test.json", optional: true, reloadOnChange: true);
                     builder.UseConfiguration(configBuilder.Build());
                     return;
                 }
-
+                
+                Console.WriteLine($">>>>>>>>>>>>>>>>>>>> IsDevelopment: {env.IsDevelopment()}");
+                Console.WriteLine($">>>>>>>>>>>>>>>>>>>> IsProduction: {env.IsDevelopment()}");
+                
                 if (env.IsDevelopment())
                     configBuilder.AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true,
                         reloadOnChange: true);
                 else if (env.IsProduction())
                 {
+                    Console.WriteLine($">>>>>>>>>>>>>>>>>>>> URLS: {Environment.GetEnvironmentVariable("ASPNETCORE_URLS")}");
                     builder.UseUrls(Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
                     return;
                 }
                 else
                 {
+                    Console.WriteLine($">>>>>>>>>>>>>>>>>>>> URLS: {"http://127.0.0.1:" + portToReassignForTests}");
                     builder.UseUrls("http://127.0.0.1:" + portToReassignForTests);
                     configBuilder.AddJsonFile($"appsettings.test.json", optional: true, reloadOnChange: true);
                 }
