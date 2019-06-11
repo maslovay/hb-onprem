@@ -3,6 +3,7 @@ using AudioAnalyzeScheduler.Model;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
+using HBLib;
 using HBLib.Model;
 using HBLib.Utils;
 using LemmaSharp;
@@ -22,58 +23,63 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 {
     public class CheckAudioRecognizeStatusJob : IJob
     {
-        private readonly ElasticClient _log;
-        private readonly RecordsContext _context;
+        private ElasticClient _log;
+        private RecordsContext _context;
+        private readonly IServiceScopeFactory _factory;
+        private readonly ElasticClientFactory _elasticClientFactory;
         // private readonly IGenericRepository _repository;
 
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
-            ElasticClient log)
+                ElasticClientFactory elasticClientFactory)
         {
             // _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
-            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
-            _log = log;
+            _factory = factory;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-
-            _log.Info("Audion analyze scheduler started.");
-            try
+            using (var scope = _factory.CreateScope())
             {
-                var audios = _context.FileAudioDialogues
-                    .Include(p => p.Dialogue)
-                    .Include(p => p.Dialogue.ApplicationUser)
-                    .Include(p => p.Dialogue.ApplicationUser.Company)
-                    .Where(p => p.StatusId == 6)
-                    .ToList();
-
-                var phrases = _context.Phrases.ToList();
-                
-                var dialogueSpeeches = new List<DialogueSpeech>();
-                var dialogueWords = new List<DialogueWord>();
-                var phraseCounts = new List<DialoguePhraseCount>();
-                // System.Console.WriteLine($"Audios count - {audios.Count()}");
-                foreach(var audio in audios)
+                _log = _elasticClientFactory.GetElasticClient();
+                _log.Info("Audion analyze scheduler started.");
+                try
                 {
-                    _log.Info($"Processing {audio.DialogueId}");
-                    var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(audio.STTResult);
-                    _log.Info($"Has items: {asrResults.Any()}");
-                    var recognized = new List<WordRecognized>();
-                    if (asrResults.Any())
+                    _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
+                    var audios = _context.FileAudioDialogues
+                        .Include(p => p.Dialogue)
+                        .Include(p => p.Dialogue.ApplicationUser)
+                        .Include(p => p.Dialogue.ApplicationUser.Company)
+                        .Where(p => p.StatusId == 6)
+                        .ToList();
+
+                    var phrases = _context.Phrases.ToList();
+
+                    var dialogueSpeeches = new List<DialogueSpeech>();
+                    var dialogueWords = new List<DialogueWord>();
+                    var phraseCounts = new List<DialoguePhraseCount>();
+                    // System.Console.WriteLine($"Audios count - {audios.Count()}");
+                    foreach (var audio in audios)
                     {
-                        asrResults.ForEach(word =>
-                            {
-                                recognized.Add(new WordRecognized
+                        _log.Info($"Processing {audio.DialogueId}");
+                        var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(audio.STTResult);
+                        _log.Info($"Has items: {asrResults.Any()}");
+                        var recognized = new List<WordRecognized>();
+                        if (asrResults.Any())
+                        {
+                            asrResults.ForEach(word =>
                                 {
-                                    Word = word.Word,
-                                    StartTime = word.Time.ToString(CultureInfo.InvariantCulture),
-                                    EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
+                                    recognized.Add(new WordRecognized
+                                    {
+                                        Word = word.Word,
+                                        StartTime = word.Time.ToString(CultureInfo.InvariantCulture),
+                                        EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
+                                    });
                                 });
-                            });
-                            var languageId = (int) audio.Dialogue.ApplicationUser.Company.LanguageId;
+                            var languageId = (int)audio.Dialogue.ApplicationUser.Company.LanguageId;
                             var speechSpeed = GetSpeechSpeed(recognized, languageId);
                             _log.Info($"Speech speed: {speechSpeed}");
-                            dialogueSpeeches.Add( new DialogueSpeech
+                            dialogueSpeeches.Add(new DialogueSpeech
                             {
                                 DialogueId = audio.DialogueId,
                                 IsClient = true,
@@ -125,23 +131,24 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             });
                             phraseCounts.AddRange(phraseCount);
                             _log.Info("Asr stt results is not empty. Everything is ok!");
+                        }
+                        else
+                        {
+                            _log.Info("Asr stt results is empty");
+                        }
+                        audio.StatusId = 7;
                     }
-                    else
-                    {
-                        _log.Info("Asr stt results is empty");
-                    }
-                    audio.StatusId = 7;
-                }
 
-                _context.DialogueSpeechs.AddRange(dialogueSpeeches);
-                _context.DialogueWords.AddRange(dialogueWords);
-                _context.DialoguePhraseCounts.AddRange(phraseCounts);
-                _context.SaveChanges();
-                _log.Info("Scheduler ended.");
-            }
-            catch (Exception e)
-            {
-                _log.Fatal($"Exception occured {e}");
+                    _context.DialogueSpeechs.AddRange(dialogueSpeeches);
+                    _context.DialogueWords.AddRange(dialogueWords);
+                    _context.DialoguePhraseCounts.AddRange(phraseCounts);
+                    _context.SaveChanges();
+                    _log.Info("Scheduler ended.");
+                }
+                catch (Exception e)
+                {
+                    _log.Fatal($"Exception occured {e}");
+                }
             }
         }
 
