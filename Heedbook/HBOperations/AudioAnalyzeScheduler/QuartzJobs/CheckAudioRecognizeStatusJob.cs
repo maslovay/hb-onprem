@@ -38,6 +38,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 var audios = _repository.GetWithInclude<FileAudioDialogue>(item => item.StatusId == 6,
                     item => item.Dialogue,
                     item => item.Dialogue.Language);
+                var phrases = await _repository.FindAllAsync<Phrase>();
                 if (!audios.Any()) _log.Info("No audios found");
                 var tasks = audios.Select(item =>
                 {
@@ -71,7 +72,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 SilenceShare = GetSilenceShare(recognized, item.BegTime, item.EndTime)
                             };
                             var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
-                            var phrases = await _repository.FindAllAsync<Phrase>();
                             var phraseCount = new List<DialoguePhraseCount>();
                             var phraseCounter = new Dictionary<Guid, Int32>();
                             var words = new List<PhraseResult>();
