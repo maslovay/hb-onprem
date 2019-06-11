@@ -10,7 +10,7 @@
         {
             "taskName": "build",
             "args": [ ],
-            "isBuildCommand": true,
+            "isBuildCommand": true ,
             "problemMatcher": "$msCompile"
         }
     ]

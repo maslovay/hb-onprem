@@ -38,97 +38,121 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticContentController : Controller
     {
-        private readonly IConfiguration _config;        
+        //  private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly DBOperations _dbOperation;
-        private readonly RequestFilters _requestFilters;
+        //  private readonly DBOperations _dbOperation;
+        // private readonly RequestFilters _requestFilters;
         private readonly ElasticClient _log;
 
 
         public AnalyticContentController(
-            IConfiguration config,
+            // IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation,
-            RequestFilters requestFilters,
+            //  DBOperations dbOperation,
+            // RequestFilters requestFilters,
             ElasticClient log
             )
         {
-            _config = config;
+            //_config = config;
             _loginService = loginService;
             _context = context;
-            _dbOperation = dbOperation;
-            _requestFilters = requestFilters;
+            //  _dbOperation = dbOperation;
+            //  _requestFilters = requestFilters;
             _log = log;
         }
 
         [HttpGet("ContentShows")]
         public IActionResult ContentShows([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "dialogueId")] Guid dialogueId,
                                                         [FromHeader] string Authorization)
         {
             try
             {
-                _log.Info("AnalyticSpeech/CrossRating started");
+                _log.Info("ContentShows/ContentShows started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
 
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
-                //Dialogues info
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfo
+                var dialogue = _context.Dialogues.Where(p => p.StatusId == 3 && p.DialogueId == dialogueId).FirstOrDefault();
+                Console.WriteLine("----------1----------------");
+                //-----------------------------------BY CONTENT --------------------------------
+                var contentsShownAmount = _context.SlideShowSessions
+                    .Include(p => p.CampaignContent)
+                    .Where(p => p.BegTime >= dialogue.BegTime
+                            && p.BegTime <= dialogue.EndTime
+                            && p.ApplicationUserId == dialogue.ApplicationUserId)
+                    .GroupBy(p => new { p.ContentType, p.CampaignContent.ContentId, p.Url }, (key, group) => new
                     {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        FullName = p.ApplicationUser.FullName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                        Key1 = key.ContentType,
+                        Key2 = key.ContentId,
+                        key3 = key.Url,
+                        Result = group.ToList()
+                    });
+                var amountShows = _context.SlideShowSessions.Where(p => p.BegTime >= dialogue.BegTime && p.BegTime <= dialogue.EndTime).Count();
+                Console.WriteLine("----------3----------------");
+                var contentInfo = new ContentTotalInfo
+                {
+                    ContentsShowsAmount = amountShows,
+                    ContentOneInfos = contentsShownAmount.Where(x => x.Key2 != null).Select(x => new ContentOneInfo
+                    {
+                        Content = x.Key2.ToString(),
+                        AmountShowsOneContent = x.Result.Count(),
+                        ContentType = x.Key1
                     })
-                    .ToList();
-                //Result
-                var result = dialogues
-                    .GroupBy(p => p.ApplicationUserId)
-                    .Select(p => new
+                    .Union(contentsShownAmount.Where(x => x.Key2 == null).Select(x => new ContentOneInfo
                     {
-                        FullName = p.First().FullName,
-                        CrossIndex = p.Any() ? (double?) p.Average(q => Math.Min(q.CrossCout, 1)) : null
-                    }).ToList();
-                result = result.OrderBy(p => p.CrossIndex).ToList();
-                var jsonToReturn = JsonConvert.SerializeObject(result);
-                _log.Info("AnalyticSpeech/CrossRating finished");
+                        Content = x.Result.Select(c => c.Url).FirstOrDefault(),
+                        AmountShowsOneContent = x.Result.Count(),
+                        ContentType = x.Key1
+                    }
+                    ))
+                    .ToList()
+                };
+                Console.WriteLine("----------4----------------");
+                //-----------------------------------BY TIME ON LINE--------------------------------
+                var contentsShowsTime = _context.SlideShowSessions
+                                  .Include(p => p.CampaignContent)
+                                  .Where(p => p.BegTime >= dialogue.BegTime && p.BegTime <= dialogue.EndTime)
+                                  .Select(p => new
+                                  {
+                                      p.CampaignContentId,
+                                      p.BegTime,
+                                      p.EndTime,
+                                      ContentId = p.CampaignContent != null ? p.CampaignContent.ContentId : null,
+                                      p.ApplicationUserId,
+                                      p.Url,
+                                      p.ContentType
+                                  })
+                                        .OrderBy(p => p.BegTime).ToList();
+                Console.WriteLine("----------5----------------");
+                var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
+
+                jsonToReturn["contentsShowsTime"] = contentsShowsTime;
+                jsonToReturn["dialogue"] = dialogue;
+                _log.Info("ContentShows/ContentShows finished");
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
                 return BadRequest(e);
             }
-        
-        }}
-       
+
+        }
+    }
+
 
     public class ContentTotalInfo
     {
-        public List<SpeechPhrasesInfo> Client { get; set; }
-        public List<SpeechPhrasesInfo> Employee { get; set; }
-        public List<SpeechPhrasesInfo> Total{ get; set; }
+        // the total number of demonstrated content, images, videos, URLs 
+        // within the campaigns and the employees themselves during the dialogue
+        public int ContentsShowsAmount { get; set; }
+        public List<ContentOneInfo> ContentOneInfos { get; set; }
+    }
+    public class ContentOneInfo
+    {
+        public string Content { get; set; }
+        public string ContentType { get; set; }
+        public int AmountShowsOneContent { get; set; }
     }
 }
