@@ -35,15 +35,4 @@ namespace UserOperations.CommonModels
         public Campaign Campaign { get; set; }
         public List<CampaignContent> CampaignContents { get; set; }
     }
-
-    public class ContentWithScreenModel
-    {
-        public ContentWithScreenModel(Content cnt, string screen)
-        {
-            Content = cnt;
-            Screenshot = screen;
-        }
-        public Content Content { get; set; }
-        public string Screenshot { get; set; }
-    }
 }
