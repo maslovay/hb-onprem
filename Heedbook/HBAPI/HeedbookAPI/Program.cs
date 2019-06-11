@@ -16,12 +16,14 @@ namespace UserOperations
         {
             CreateWebHostBuilder(args).Build().Run();
         }
-
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+     public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-.UseKestrel()
-.UseContentRoot(Directory.GetCurrentDirectory())
-.UseUrls("http://localhost:5000/")
-.UseStartup<Startup>();
+                .UseStartup<Startup>();
+        //         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+        //             WebHost.CreateDefaultBuilder(args)
+        // .UseKestrel()
+        // .UseContentRoot(Directory.GetCurrentDirectory())
+        // .UseUrls("http://localhost:5000/")
+        // .UseStartup<Startup>();
     }
 }
