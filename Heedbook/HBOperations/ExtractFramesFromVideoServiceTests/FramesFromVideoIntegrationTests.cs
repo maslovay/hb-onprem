@@ -122,7 +122,7 @@ namespace ExtractFramesFromVideoService.Tests
                 $"../../../../UserService/bin/{config}/netcoreapp2.2/UserService.dll --isCalledFromUnitTest true");
             _extractServiceProcess = Process.Start("dotnet",
                 $"../../../../ExtractFramesFromVideoService/bin/{config}/netcoreapp2.2/ExtractFramesFromVideoService.dll --isCalledFromUnitTest true");
-            Thread.Sleep(8000);
+            Thread.Sleep(60000);
         }
 
         private void StopServices()
