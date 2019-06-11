@@ -1,10 +1,12 @@
 ﻿using AsrHttpClient;
 using AudioAnalyzeScheduler.Model;
+using HBData;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Model;
 using HBLib.Utils;
 using LemmaSharp;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Quartz;
@@ -21,65 +23,74 @@ namespace AudioAnalyzeScheduler.QuartzJobs
     public class CheckAudioRecognizeStatusJob : IJob
     {
         private readonly ElasticClient _log;
-        private readonly IGenericRepository _repository;
+        private readonly RecordsContext _context;
+        // private readonly IGenericRepository _repository;
 
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
             ElasticClient log)
         {
-            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
+            // _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
+            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _log = log;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
+
+            _log.Info("Audion analyze scheduler started.");
             try
             {
-                _log.Info("Audion analyze scheduler started.");
-                var audios = _repository.GetWithInclude<FileAudioDialogue>(item => item.StatusId == 6,
-                    item => item.Dialogue,
-                    item => item.Dialogue.Language);
-                var phrases = await _repository.FindAllAsync<Phrase>();
-                if (!audios.Any()) _log.Info("No audios found");
-                var tasks = audios.Select(item =>
+                var audios = _context.FileAudioDialogues
+                    .Include(p => p.Dialogue)
+                    .Include(p => p.Dialogue.ApplicationUser)
+                    .Include(p => p.Dialogue.ApplicationUser.Company)
+                    .Where(p => p.StatusId == 6)
+                    .ToList();
+
+                var phrases = _context.Phrases.ToList();
+                
+                var dialogueSpeeches = new List<DialogueSpeech>();
+                var dialogueWords = new List<DialogueWord>();
+                var phraseCounts = new List<DialoguePhraseCount>();
+                // System.Console.WriteLine($"Audios count - {audios.Count()}");
+                foreach(var audio in audios)
                 {
-                    return Task.Run(async () =>
+                    _log.Info($"Processing {audio.DialogueId}");
+                    var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(audio.STTResult);
+                    _log.Info($"Has items: {asrResults.Any()}");
+                    var recognized = new List<WordRecognized>();
+                    if (asrResults.Any())
                     {
-                        var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(item.STTResult);
-                        Console.WriteLine($"Has items: {asrResults.Any()}");
-                        _log.Info($"Has items: {asrResults.Any()}");
-                        var recognized = new List<WordRecognized>();
-                        if (asrResults.Any())
-                        {
-                            asrResults
-                                .ForEach(word =>
+                        asrResults.ForEach(word =>
+                            {
+                                recognized.Add(new WordRecognized
                                 {
-                                    recognized.Add(new WordRecognized
-                                    {
-                                        Word = word.Word,
-                                        StartTime = word.Time.ToString(CultureInfo.InvariantCulture),
-                                        EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
-                                    });
+                                    Word = word.Word,
+                                    StartTime = word.Time.ToString(CultureInfo.InvariantCulture),
+                                    EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
                                 });
-                            var languageId = item.Dialogue.Language.LanguageId;
+                            });
+                            var languageId = (int) audio.Dialogue.ApplicationUser.Company.LanguageId;
                             var speechSpeed = GetSpeechSpeed(recognized, languageId);
                             _log.Info($"Speech speed: {speechSpeed}");
-                            var dialogueSpeech = new DialogueSpeech
+                            dialogueSpeeches.Add( new DialogueSpeech
                             {
-                                DialogueId = item.DialogueId,
+                                DialogueId = audio.DialogueId,
                                 IsClient = true,
                                 SpeechSpeed = speechSpeed,
                                 PositiveShare = default(Double),
-                                SilenceShare = GetSilenceShare(recognized, item.BegTime, item.EndTime)
-                            };
+                                SilenceShare = GetSilenceShare(recognized, audio.BegTime, audio.EndTime)
+                            });
+
                             var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
                             var phraseCount = new List<DialoguePhraseCount>();
                             var phraseCounter = new Dictionary<Guid, Int32>();
                             var words = new List<PhraseResult>();
+
                             foreach (var phrase in phrases)
                             {
                                 var foundPhrases =
-                                    await FindPhrases(recognized, phrase, item.BegTime, lemmatizer, languageId);
-                                Console.WriteLine(JsonConvert.SerializeObject(phrases));
+                                    await FindPhrases(recognized, phrase, audio.BegTime, lemmatizer, languageId);
                                 foundPhrases.ForEach(f => words.AddRange(f));
                                 if (phraseCounter.Keys.Contains(phrase.PhraseTypeId.Value))
                                     phraseCounter[phrase.PhraseTypeId.Value] += foundPhrases.Count();
@@ -90,7 +101,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             foreach (var key in phraseCounter.Keys)
                                 phraseCount.Add(new DialoguePhraseCount
                                 {
-                                    DialogueId = item.DialogueId,
+                                    DialogueId = audio.DialogueId,
                                     PhraseTypeId = key,
                                     PhraseCount = phraseCounter[key],
                                     IsClient = true
@@ -101,39 +112,36 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     words.Add(new PhraseResult
                                     {
                                         Word = r.Word,
-                                        BegTime = item.BegTime.AddSeconds(Double.Parse(r.StartTime, CultureInfo.InvariantCulture)),
-                                        EndTime = item.BegTime.AddSeconds(Double.Parse(r.EndTime, CultureInfo.InvariantCulture))
+                                        BegTime = audio.BegTime.AddSeconds(Double.Parse(r.StartTime, CultureInfo.InvariantCulture)),
+                                        EndTime = audio.BegTime.AddSeconds(Double.Parse(r.EndTime, CultureInfo.InvariantCulture))
                                     });
                             });
 
-                            await _repository.CreateAsync(new DialogueWord
+                            dialogueWords.Add(new DialogueWord
                             {
-                                DialogueId = item.DialogueId,
+                                DialogueId = audio.DialogueId,
                                 IsClient = true,
                                 Words = JsonConvert.SerializeObject(words)
                             });
-                            await _repository.CreateAsync(dialogueSpeech);
-                            await _repository.BulkInsertAsync(phraseCount);
-
+                            phraseCounts.AddRange(phraseCount);
                             _log.Info("Asr stt results is not empty. Everything is ok!");
-                        }
-                        else
-                        {
-                            _log.Info("Asr stt results is empty");
-                        }
-                        Console.WriteLine("status id 7 ");
-                        item.StatusId = 7;
-                    });
-                }).ToList();
+                    }
+                    else
+                    {
+                        _log.Info("Asr stt results is empty");
+                    }
+                    audio.StatusId = 7;
+                }
 
-                await Task.WhenAll(tasks);
-                _repository.Save();
-                Console.WriteLine("Data saved.");
+                _context.DialogueSpeechs.AddRange(dialogueSpeeches);
+                _context.DialogueWords.AddRange(dialogueWords);
+                _context.DialoguePhraseCounts.AddRange(phraseCounts);
+                _context.SaveChanges();
                 _log.Info("Scheduler ended.");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                _log.Fatal(e.ToString());
+                _log.Fatal($"Exception occured {e}");
             }
         }
 
@@ -165,8 +173,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             var result = new List<PhraseResult>();
             word = lemmatizer.Lemmatize(word.ToLower());
             var index = 0;
-            Console.WriteLine(JsonConvert.SerializeObject(text));
-            Console.WriteLine(JsonConvert.SerializeObject(word));
+            // Console.WriteLine(JsonConvert.SerializeObject(text));
+            // Console.WriteLine(JsonConvert.SerializeObject(word));
 
             foreach (var w in text)
             {
