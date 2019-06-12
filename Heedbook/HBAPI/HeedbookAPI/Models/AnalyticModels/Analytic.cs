@@ -36,13 +36,16 @@ namespace UserOperations.Models.AnalyticModels
 
     class DashboardInfo
     {
-        public double? EfficiencyIndex;
-        public double? EfficiencyIndexDelta;
-        public double? EfficiencyIndexPeak;
+        //public double? EfficiencyIndex;
+        //public double? EfficiencyIndexDelta;
+        //public double? EfficiencyIndexPeak;
         public double? SatisfactionIndex;
         public double? SatisfactionIndexDelta;
-        public double? SatisfactionIndexDeltaBranch;
-        public double? SatisfactionIndexBranch;
+        //public double? SatisfactionIndexDeltaBranch;
+        public double? SatisfactionIndexTotalAverage;
+        public double? SatisfactionIndexIndustryAverage;
+        public double? SatisfactionIndexIndustryBenchmark;
+
         public double? LoadIndex;
         public double? LoadIndexDelta;
         public double? LoadIndexDeltaBranch;

@@ -87,6 +87,48 @@ namespace UserOperations.Utils
                     }
                     companyIds = compIds;
         }
+
+        public List<Guid> IndustryIdsForCompany(List<Guid> companyIds)
+        {
+            return _context.Companys
+                    .Include(x => x.CompanyIndustry)
+                    .Where(x => companyIds.Contains( x.CompanyId ) 
+                    && x.CompanyIndustryId != null)
+                    .Select(x => (Guid)x.CompanyIndustryId)
+                    .Distinct()
+                    .ToList();            
+        }
+
+        public List<Guid> CompanyIdsInIndustryExceptSelected(List<Guid> companyIds)
+        {
+            List<Guid> companyIndustryIds = IndustryIdsForCompany(companyIds);
+            return _context.Companys                    
+                    .Where(x => !companyIds.Contains( x.CompanyId ) 
+                     && x.CompanyIndustryId != null
+                    && companyIndustryIds.Contains((Guid)x.CompanyIndustryId))
+                    .Select(x => x.CompanyId)
+                    .ToList();            
+        }
+
+        public List<Guid> CompanyIdsInIndustry(List<Guid> companyIds)
+        {
+            List<Guid> companyIndustryIds = IndustryIdsForCompany(companyIds);
+            return _context.Companys                    
+                    .Where(x => 
+                    x.CompanyIndustryId != null
+                    && companyIndustryIds.Contains((Guid)x.CompanyIndustryId))
+                    .Select(x => x.CompanyId)
+                    .ToList();            
+        }
+
+        public List<Guid> CompanyIdsInHeedbookExceptSelected(List<Guid> companyIds)
+        {
+            List<Guid> companyIndustryIds = IndustryIdsForCompany(companyIds);
+            return _context.Companys                    
+                    .Where(x => !companyIds.Contains( x.CompanyId ))
+                    .Select(x => x.CompanyId)
+                    .ToList();            
+        }
         
     }
 }

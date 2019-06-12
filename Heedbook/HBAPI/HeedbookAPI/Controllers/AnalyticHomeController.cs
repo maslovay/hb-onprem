@@ -84,7 +84,7 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                // to do: add authorization
+                Console.WriteLine("---------------1------------------");
 
                 var sessions = _context.Sessions
                         .Include(p => p.ApplicationUser)
@@ -135,35 +135,37 @@ namespace UserOperations.Controllers
                         })
                         .ToList(); 
 
+//-----------------FOR BRANCH---------------------------------------------------------------
+                var companyIdsInIndustryExceptSelected = _requestFilters.CompanyIdsInIndustryExceptSelected(companyIds);  
+                var companyIdsInIndustry = _requestFilters.CompanyIdsInIndustry(companyIds);  
+                var companyIdsInHeedbookExceptSelected = _requestFilters.CompanyIdsInHeedbookExceptSelected(companyIds);  
+
+                var satisfactionByCompanysDaysInIndustry = _context.VSatisfactionIndexesByCompanysDays
+                    .Where(p => companyIdsInIndustryExceptSelected.Contains (p.CompanyId)
+                    && p.Day > begTime && p.Day < endTime
+                    ).ToList();
+                Console.WriteLine($"--ind---{satisfactionByCompanysDaysInIndustry.Sum(p => p.SatisfactionIndex)}----"); 
+                Console.WriteLine($"--begTime---{begTime}----");   
+                Console.WriteLine($"--compId---{companyIds[0]}----");   
+
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
-                var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
-
-
-                var companyIndusrtys = _context.Companys
-                        .Include(p => p.CompanyIndustry)
-                        .Where(p => (!companyIds.Any() || companyIds.Contains(p.CompanyId)))
-                        .Select(p => new
-                        {
-                            LoadIndex = p.CompanyIndustry.LoadIndex,
-                            SatisfactionIndex = p.CompanyIndustry.SatisfactionIndex,
-                            CrossIndex = p.CompanyIndustry.CrossSalesIndex
-                        })
-                        .FirstOrDefault();
+                var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();             
 
                 var result =  new DashboardInfo()
+
                 {
-                    EfficiencyIndex = _dbOperation.EfficiencyIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
-                    EfficiencyIndexDelta = -_dbOperation.EfficiencyIndex(sessionOld, dialoguesOld, prevBeg, begTime),
-                    EfficiencyIndexPeak = 0,
+                  //  EfficiencyIndex = _dbOperation.EfficiencyIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
+                  //  EfficiencyIndexDelta = -_dbOperation.EfficiencyIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                  //  EfficiencyIndexPeak = 0,
                     SatisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur),
                     SatisfactionIndexDelta = - _dbOperation.SatisfactionIndex(dialoguesOld),
-                    SatisfactionIndexDeltaBranch = 0,
+                   // SatisfactionIndexDeltaBranch = 0,
                     LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
                     LoadIndexDelta = - _dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, endTime),
-                    LoadIndexDeltaBranch = 0,
+                   // LoadIndexDeltaBranch = 0,
                     CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
                     CrossIndexDelta = - _dbOperation.CrossIndex(dialoguesOld),
-                    CrossIndexDeltaBranch = 0,
+                   // CrossIndexDeltaBranch = 0,
                     DialoguesCount = _dbOperation.DialoguesCount(dialoguesCur),
                     DialoguesCountDelta = -_dbOperation.DialoguesCount(dialoguesOld),
                     EmployeeCount = _dbOperation.EmployeeCount(dialoguesCur),
@@ -172,24 +174,29 @@ namespace UserOperations.Controllers
                     BestEmployeeEfficiency = _dbOperation.BestEmployeeEfficiency(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
                     BestProgressiveEmployee = _dbOperation.BestProgressiveEmployee(dialogues, begTime),
                     BestProgressiveEmployeeDelta = _dbOperation.BestProgressiveEmployeeDelta(dialogues, begTime),
-                    SatisfactionDialogueDelta = _dbOperation.SatisfactionDialogueDelta(dialogues)
+                    SatisfactionDialogueDelta = _dbOperation.SatisfactionDialogueDelta(dialogues),                  
+                    SatisfactionIndexIndustryAverage = satisfactionByCompanysDaysInIndustry.Sum(p => p.SatisfactionIndex) 
+                                    / satisfactionByCompanysDaysInIndustry.Count()   
                 };
+
+              
+                Console.WriteLine($"--comp---{companyIdsInIndustryExceptSelected.Count()}----");
 
                 result.EmployeeCountDelta += result.EmployeeCount;
                 result.CrossIndexDelta += result.CrossIndex;
                 result.LoadIndexDelta += result.LoadIndex;
-                result.EfficiencyIndexDelta += result.EfficiencyIndex;
+               // result.EfficiencyIndexDelta += result.EfficiencyIndex;
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.DialoguesCountDelta += result.DialoguesCount;
-                result.LoadIndexDeltaBranch = (result.LoadIndex != 0 & result.LoadIndex != null) ?
-                    result.LoadIndex - companyIndusrtys.LoadIndex: result.LoadIndex;
-                result.SatisfactionIndexDeltaBranch = (result.SatisfactionIndex != 0 & result.SatisfactionIndex != null) ?
-                    result.SatisfactionIndex - companyIndusrtys.SatisfactionIndex : 0;
-                result.CrossIndexDeltaBranch = (result.CrossIndex != 0 & result.CrossIndex != null) ?
-                    result.CrossIndex - companyIndusrtys.CrossIndex: 0;
-                result.CrossIndexBranch = companyIndusrtys.CrossIndex;
-                result.LoadIndexBranch = companyIndusrtys.LoadIndex;
-                result.SatisfactionIndexBranch = companyIndusrtys.SatisfactionIndex;
+                // result.LoadIndexDeltaBranch = (result.LoadIndex != 0 & result.LoadIndex != null) ?
+                //     result.LoadIndex - companyIndusrtys.LoadIndex: result.LoadIndex;
+                // result.SatisfactionIndexDeltaBranch = (result.SatisfactionIndex != 0 & result.SatisfactionIndex != null) ?
+                //     result.SatisfactionIndex - companyIndusrtys.SatisfactionIndex : 0;
+                // result.CrossIndexDeltaBranch = (result.CrossIndex != 0 & result.CrossIndex != null) ?
+                //     result.CrossIndex - companyIndusrtys.CrossIndex: 0;
+                // result.CrossIndexBranch = companyIndusrtys.CrossIndex;
+                // result.LoadIndexBranch = companyIndusrtys.LoadIndex;
+                // result.SatisfactionIndexBranch = companyIndusrtys.SatisfactionIndex;
 
 
                 var jsonToReturn = JsonConvert.SerializeObject(result);  
@@ -222,7 +229,7 @@ namespace UserOperations.Controllers
             var endTime = _requestFilters.GetEndDate(end);
             _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
             var hintCount = !String.IsNullOrEmpty(_config["hint : hintCount"]) ? Convert.ToInt32(_config["hint : hintCount"]): 3;
-            // to do: add authorization
+          
 
             var hints =_context.DialogueHints
                     .Include(p => p.Dialogue)
