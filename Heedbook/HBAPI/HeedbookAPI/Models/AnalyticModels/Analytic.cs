@@ -34,6 +34,32 @@ namespace UserOperations.Models.AnalyticModels
         public string WorkerType;
     }
 
+        public class SessionInfoCompany
+    {
+        public Guid CompanyId;
+        public DateTime BegTime;
+        public DateTime EndTime;
+
+        public string FullName;
+    }
+
+    public class DialogueInfoCompany
+    {
+        public Guid DialogueId;
+        public Guid CompanyId;
+        public DateTime BegTime;
+        public DateTime EndTime;
+        public string FullName;
+        public int CrossCout;
+        public double? SatisfactionScore;
+        public double? SatisfactionScoreBeg;
+        public double? SatisfactionScoreEnd;
+        public DateTime SessionBegTime;
+        public DateTime SessionEndTime; 
+        public string WorkerType;
+    }
+
+
     class DashboardInfo
     {
         public double? SatisfactionIndex;

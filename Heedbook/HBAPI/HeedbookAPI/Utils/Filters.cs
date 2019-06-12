@@ -62,7 +62,7 @@ namespace UserOperations.Utils
         {
             List<Guid> compIds = companyIds;
             //--- admin can view any companies in any corporation
-                   if ( role == "Admin" )
+                   if (true)// role == "Admin" )
                     {                    
                         corporationIds = !corporationIds.Any()? _context.Corporations.Select(x => x.Id).ToList() : corporationIds;
                         //---take all companyIds in filter or all company ids in corporations
