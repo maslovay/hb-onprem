@@ -66,7 +66,6 @@ namespace UserOperations.Controllers
         [HttpGet("Dashboard")]
         public IActionResult GetDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
@@ -92,7 +91,6 @@ namespace UserOperations.Controllers
                                 && p.EndTime <= endTime
                                 && p.StatusId == 7
                                 && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                                && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                                 && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
                         .Select(p => new SessionInfo
                         {
@@ -119,7 +117,6 @@ namespace UserOperations.Controllers
                                 && p.StatusId == 3
                                 && p.InStatistic == true
                                 && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                                && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                                 && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
                         .Select(p => new DialogueInfo
                         {
