@@ -189,7 +189,8 @@ namespace UserOperations.Controllers
                     SatisfactionDialogueDelta = _dbOperation.SatisfactionDialogueDelta(dialogues),                  
                     SatisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur),
                     SatisfactionIndexDelta = - _dbOperation.SatisfactionIndex(dialoguesOld),
-                    SatisfactionIndexIndustryAverage = indexesInIndustryExeptSelectedComp.Count() != 0? indexesInIndustryExeptSelectedComp.Sum(p => p.SatisfactionIndex)
+                    SatisfactionIndexIndustryAverage = indexesInIndustryExeptSelectedComp.Count() != 0? 
+                                    indexesInIndustryExeptSelectedComp.Sum(p => p.SatisfactionIndex)
                                     / indexesInIndustryExeptSelectedComp.Count() : 0,
                     SatisfactionIndexIndustryBenchmark = indexesInIndustryAllForBenchmark.Max(p => p.SatisfactionIndex),
                     SatisfactionIndexTotalAverage = indexesInHeedbook.Sum(p => p.SatisfactionIndex) 
@@ -197,9 +198,10 @@ namespace UserOperations.Controllers
 
                     LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
                     LoadIndexDelta = - _dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, endTime),
-                    LoadIndexIndustryAverage = indexesInIndustryExeptSelectedComp.Count() !=0 ? 100 * indexesInIndustryExeptSelectedComp
+                    LoadIndexIndustryAverage = indexesInIndustryExeptSelectedComp.Count() !=0 ? 
+                                    100 * indexesInIndustryExeptSelectedComp
                                     .Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)
-                                    / indexesInIndustryExeptSelectedComp.Count() : 0,
+                                    / indexesInIndustryExeptSelectedComp.Where(p => p.SessionHours != 0).Count() : 0,
                     LoadIndexIndustryBenchmark = 100 * indexesInIndustryAllForBenchmark.Max(p => p.DialoguesHours/ p.SessionHours),
                     LoadIndexTotalAverage = 100 * indexesInHeedbook.Sum(p => p.DialoguesHours / p.SessionHours)/ indexesInHeedbook.Count(),
                     
