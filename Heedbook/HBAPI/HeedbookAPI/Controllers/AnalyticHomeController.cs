@@ -140,13 +140,24 @@ namespace UserOperations.Controllers
                 var companyIdsInIndustry = _requestFilters.CompanyIdsInIndustry(companyIds);  
                 var companyIdsInHeedbookExceptSelected = _requestFilters.CompanyIdsInHeedbookExceptSelected(companyIds);  
 
-                var satisfactionByCompanysDaysInIndustry = _context.VSatisfactionIndexesByCompanysDays
+                //---for selected period in industries except selected companies
+                var satisfactionByCompanysDaysInIndustry = _context.VIndexesByCompanysDays
                     .Where(p => companyIdsInIndustryExceptSelected.Contains (p.CompanyId)
                     && p.Day > begTime && p.Day < endTime
                     ).ToList();
-                Console.WriteLine($"--ind---{satisfactionByCompanysDaysInIndustry.Sum(p => p.SatisfactionIndex)}----"); 
-                Console.WriteLine($"--begTime---{begTime}----");   
-                Console.WriteLine($"--compId---{companyIds[0]}----");   
+                //---for all period in industries
+                var satisfactionByCompanysDaysBenchmark = _context.VIndexesByCompanysDays
+                    .Where(p => companyIdsInIndustry.Contains (p.CompanyId)
+                    ).ToList();
+                 //---for selected period in industries except selected companies
+                var satisfactionByCompanysDaysInHeedbook = _context.VIndexesByCompanysDays
+                    .Where(p => companyIdsInHeedbookExceptSelected.Contains (p.CompanyId)
+                    && p.Day > begTime && p.Day < endTime
+                     ).ToList();
+
+                // Console.WriteLine($"--ind---{satisfactionByCompanysDaysInIndustry.Sum(p => p.SatisfactionIndex)}----"); 
+                // Console.WriteLine($"--begTime---{begTime}----");   
+                // Console.WriteLine($"--compId---{companyIds[0]}----");   
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();             
@@ -157,8 +168,7 @@ namespace UserOperations.Controllers
                   //  EfficiencyIndex = _dbOperation.EfficiencyIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
                   //  EfficiencyIndexDelta = -_dbOperation.EfficiencyIndex(sessionOld, dialoguesOld, prevBeg, begTime),
                   //  EfficiencyIndexPeak = 0,
-                    SatisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur),
-                    SatisfactionIndexDelta = - _dbOperation.SatisfactionIndex(dialoguesOld),
+                    
                    // SatisfactionIndexDeltaBranch = 0,
                     LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
                     LoadIndexDelta = - _dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, endTime),
@@ -174,13 +184,19 @@ namespace UserOperations.Controllers
                     BestEmployeeEfficiency = _dbOperation.BestEmployeeEfficiency(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
                     BestProgressiveEmployee = _dbOperation.BestProgressiveEmployee(dialogues, begTime),
                     BestProgressiveEmployeeDelta = _dbOperation.BestProgressiveEmployeeDelta(dialogues, begTime),
+
                     SatisfactionDialogueDelta = _dbOperation.SatisfactionDialogueDelta(dialogues),                  
-                    SatisfactionIndexIndustryAverage = satisfactionByCompanysDaysInIndustry.Sum(p => p.SatisfactionIndex) 
-                                    / satisfactionByCompanysDaysInIndustry.Count()   
+                    SatisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur),
+                    SatisfactionIndexDelta = - _dbOperation.SatisfactionIndex(dialoguesOld),
+                    SatisfactionIndexIndustryAverage = satisfactionByCompanysDaysInIndustry.Sum(p => p.SatisfactionIndex)
+                                    / satisfactionByCompanysDaysInIndustry.Count(),
+                    SatisfactionIndexIndustryBenchmark = satisfactionByCompanysDaysBenchmark.Max(p => p.SatisfactionIndex),
+                    SatisfactionIndexTotalAverage = satisfactionByCompanysDaysInHeedbook.Sum(p => p.SatisfactionIndex) 
+                                    / satisfactionByCompanysDaysInHeedbook.Count()   
                 };
 
               
-                Console.WriteLine($"--comp---{companyIdsInIndustryExceptSelected.Count()}----");
+               // Console.WriteLine($"--comp---{companyIdsInIndustryExceptSelected.Count()}----");
 
                 result.EmployeeCountDelta += result.EmployeeCount;
                 result.CrossIndexDelta += result.CrossIndex;

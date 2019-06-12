@@ -6,7 +6,7 @@ namespace HBData.Models
     /// <summary>
     ///     View table
     /// </summary>
-    public class VSatisfactionIndexByCompanysDays
+    public class VIndexByCompanyDay
     {
         [Key]
         public Guid Id { get; set; }
