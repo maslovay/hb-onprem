@@ -123,5 +123,7 @@ namespace HBData
         public DbSet<PasswordHistory> PasswordHistorys { get; set; }
         public DbSet<LoginHistory> LoginHistorys { get; set; }
         public DbSet<VIndexByCompanyDay> VIndexesByCompanysDays { get; set; }
+        public DbSet<VIndexByDialogueDay> VIndexesByDialoguesDays { get; set; }
+        
     }
 }

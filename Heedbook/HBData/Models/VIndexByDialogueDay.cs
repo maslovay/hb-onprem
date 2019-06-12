@@ -6,7 +6,7 @@ namespace HBData.Models
     /// <summary>
     ///     View table
     /// </summary>
-    public class VIndexByCompanyDay
+    public class VIndexByDialogueDay
     {
         [Key]
         public Guid Id { get; set; }
@@ -26,8 +26,7 @@ namespace HBData.Models
         ///     Industry
         /// </summary>
         public Guid CompanyIndustryId { get; set; }
-        public double? SatisfactionIndex { get; set; }
-        public double? DialoguesHours { get; set; }
-        public double? SessionHours { get; set; }
+        public int DialoguesCount { get; set; }
+        public int CrossCount { get; set; }
     }
 }
