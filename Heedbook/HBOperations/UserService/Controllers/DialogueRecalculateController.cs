@@ -112,8 +112,7 @@ namespace UserService.Controllers
                 else
                 {      
                     System.Console.WriteLine($"DialogueVideoAssemble \t\tnot Success");
-                    result += $"DialogueVideoAssemble - not Success | ";
-                    System.Console.WriteLine($"{dialogue.BegTime} - {dialogue.EndTime} - {dialogue.DialogueId} - {dialogue.ApplicationUserId}");
+                    result += $"DialogueVideoAssemble - not Success | ";                    
                     var @event = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = dialogue.ApplicationUserId,
@@ -132,62 +131,67 @@ namespace UserService.Controllers
                     &&dialogueAudioFileExist)
                 {
                     System.Console.WriteLine($"VideoToSound \t\t\tSuccess");           
-                    result += $"VideoToSound - Success | ";         
+                    result += $"VideoToSound - Success | ";     
+                    
+                    var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
+
+                    if(speechResult!=null && speechResult.STTResult!=null)
+                    {
+                        System.Console.WriteLine($"GoogleRecognition \t\tSuccess");   
+                        result += $"GoogleRecognition - Success | ";                 
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"GoogleRecognition \t\tnot success");
+                        result += $"GoogleRecognition - not success | ";
+                        var @event = new AudioAnalyzeRun
+                        {
+                            Path = $"dialogueaudios/{DialogueId}.wav"
+                        };
+                        _notificationPublisher.Publish(@event);
+                    }
+
+                    var dialogueIntervals = _context.DialogueIntervals.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
+                    var dialogueAudioResult = _context.DialogueAudios.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
+
+                    if(dialogueIntervals != null && dialogueAudioResult!=null)
+                    {
+                        System.Console.WriteLine($"TonAnalyze \t\t\tSuccess");    
+                        result += $"TonAnalyze - Success | ";                
+                    }
+                    else
+                    {
+                        System.Console.WriteLine($"TonAnalyze \t\t\tnot Success");
+                        result += $"TonAnalyze - not Success | ";
+                        var @event = new ToneAnalyzeRun
+                        {
+                            Path = $"dialogueaudios/{DialogueId}.wav"
+                        };
+                        _notificationPublisher.Publish(@event);
+                    }    
                 }
                 else
                 {
                     System.Console.WriteLine($"VideoToSound \t\t\tnot Success");
                     result += $"VideoToSound - not Success | ";
+                    System.Console.WriteLine($"GoogleRecognition \t\tnot success");
+                    result += $"GoogleRecognition - not success | ";
+                    System.Console.WriteLine($"TonAnalyze \t\t\tnot Success");
+                    result += $"TonAnalyze - not Success | ";
+
                     var @event = new VideoToSoundRun
                     {
                         Path = $"dialoguevideos/{DialogueId}.mkv"
                     };
                     _notificationPublisher.Publish(@event);
-                }
-
-                var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-
-                if(speechResult!=null && speechResult.STTResult!=String.Empty)
-                {
-                    System.Console.WriteLine($"GoogleRecognition \t\tSuccess");   
-                    result += $"GoogleRecognition - Success | ";                 
-                }
-                else
-                {
-                    System.Console.WriteLine($"GoogleRecognition \t\tnot success");
-                    result += $"GoogleRecognition - not success | ";
-                    var @event = new AudioAnalyzeRun
-                    {
-                        Path = $"dialogueaudios/{DialogueId}.wav"
-                    };
-                    _notificationPublisher.Publish(@event);
-                }
-
-                var dialogueIntervals = _context.DialogueIntervals.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                var dialogueAudioResult = _context.DialogueAudios.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-
-                if(dialogueIntervals != null && dialogueAudioResult!=null)
-                {
-                    System.Console.WriteLine($"TonAnalyze \t\t\tSuccess");    
-                    result += $"TonAnalyze - Success | ";                
-                }
-                else
-                {
-                    System.Console.WriteLine($"TonAnalyze \t\t\tnot Success");
-                    result += $"TonAnalyze - not Success | ";
-                    var @event = new ToneAnalyzeRun
-                    {
-                        Path = $"dialogueaudios/{DialogueId}.wav"
-                    };
-                    _notificationPublisher.Publish(@event);
-                }
+                }                
 
                 var dialogueAvatarExist = await _sftpClient.IsFileExistsAsync($"/home/nkrokhmal/storage/useravatars/{DialogueId}.jpg");
                 var dialogueVisuals = _context.DialogueVisuals.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
                 var dialogueClientProfiles = _context.DialogueClientProfiles.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                var dialogueFrames = _context.DialogueFrames.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                
-                if(!dialogueAvatarExist
+                var dialogueFrames = _context.DialogueFrames.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));   
+
+                if(dialogueAvatarExist
                     && dialogueVisuals!=null
                     && dialogueClientProfiles!=null
                     && dialogueFrames!=null)
@@ -207,8 +211,7 @@ namespace UserService.Controllers
                         EndTime = dialogue.EndTime
                     };
                     _notificationPublisher.Publish(@event);
-                }                
-                
+                }
                 return Ok(result);
             }
             catch(Exception ex)
