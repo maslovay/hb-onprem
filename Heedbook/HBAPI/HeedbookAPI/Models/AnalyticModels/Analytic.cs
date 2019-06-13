@@ -34,27 +34,60 @@ namespace UserOperations.Models.AnalyticModels
         public string WorkerType;
     }
 
+        public class SessionInfoCompany
+    {
+        public Guid CompanyId;
+        public DateTime BegTime;
+        public DateTime EndTime;
+
+        public string FullName;
+    }
+
+    public class DialogueInfoCompany
+    {
+        public Guid DialogueId;
+        public Guid CompanyId;
+        public DateTime BegTime;
+        public DateTime EndTime;
+        public string FullName;
+        public int CrossCout;
+        public double? SatisfactionScore;
+        public double? SatisfactionScoreBeg;
+        public double? SatisfactionScoreEnd;
+        public DateTime SessionBegTime;
+        public DateTime SessionEndTime; 
+        public string WorkerType;
+    }
+
+
     class DashboardInfo
     {
-        public double? EfficiencyIndex;
-        public double? EfficiencyIndexDelta;
-        public double? EfficiencyIndexPeak;
         public double? SatisfactionIndex;
         public double? SatisfactionIndexDelta;
-        public double? SatisfactionIndexDeltaBranch;
-        public double? SatisfactionIndexBranch;
+        public double? SatisfactionIndexTotalAverage;
+        public double? SatisfactionIndexIndustryAverage;
+        public double? SatisfactionIndexIndustryBenchmark;
+
         public double? LoadIndex;
         public double? LoadIndexDelta;
-        public double? LoadIndexDeltaBranch;
-        public double? LoadIndexBranch;
+        public double? LoadIndexTotalAverage;
+        public double? LoadIndexIndustryAverage;
+        public double? LoadIndexIndustryBenchmark;
+
         public double? CrossIndex;
         public double? CrossIndexDelta;
-        public double? CrossIndexDeltaBranch;
-        public double? CrossIndexBranch;
+        public double? CrossIndexTotalAverage;
+        public double? CrossIndexIndustryAverage;
+        public double? CrossIndexIndustryBenchmark;
+
         public int? EmployeeCount;
         public int? EmployeeCountDelta;
         public int? DialoguesCount;
         public int? DialoguesCountDelta;
+        public int? NumberOfDialoguesPerEmployees;
+        public int? NumberOfDialoguesPerEmployeesDelta;
+        public double? AvgWorkingTimeEmployees;
+        public double? AvgWorkingTimeEmployeesDelta;
         public string BestEmployee;
         public double? BestEmployeeEfficiency;
         public string BestProgressiveEmployee;
