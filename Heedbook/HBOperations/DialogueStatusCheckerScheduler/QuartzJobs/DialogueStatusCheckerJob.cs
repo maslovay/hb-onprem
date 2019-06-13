@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using HBData;
+using HBLib;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
@@ -15,16 +16,19 @@ namespace QuartzExtensions.Jobs
 {
     public class DialogueStatusCheckerJob : IJob
     {
-        private readonly ElasticClient _log;
+        private ElasticClient _log;
         private readonly INotificationPublisher _notificationPublisher;
         private RecordsContext _context;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly ElasticClientFactory _elasticClientFactory;
+
         public DialogueStatusCheckerJob(IServiceScopeFactory factory,
             INotificationPublisher notificationPublisher,
-            ElasticClient log)
+            ElasticClientFactory elasticClientFactory
+            )
         {
             _notificationPublisher = notificationPublisher;
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
             _scopeFactory = factory;
         }
 
@@ -32,9 +36,11 @@ namespace QuartzExtensions.Jobs
         {
             using (var scope = _scopeFactory.CreateScope())
             {
+                _log = _elasticClientFactory.GetElasticClient();
+                _log.Info("Audion analyze scheduler started.");
                 try
                 {
-                    _log.Info("Function dialogue status checker started.");
+                    _log.Info("Function started.");
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
 
                     var dialogues = _context.Dialogues
