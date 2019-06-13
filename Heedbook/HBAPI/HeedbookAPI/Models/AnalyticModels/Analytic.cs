@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using HBData.Models;
 
 namespace UserOperations.Models.AnalyticModels
 {
@@ -32,6 +33,27 @@ namespace UserOperations.Models.AnalyticModels
         public DateTime SessionBegTime;
         public DateTime SessionEndTime; 
         public string WorkerType;
+    }
+
+    public class DialogueInfoWithFrames
+    {
+        public Guid DialogueId;
+        public Guid ApplicationUserId;
+        public DateTime BegTime;
+        public DateTime EndTime;
+        public DateTime SessionBegTime;
+        public DateTime SessionEndTime; 
+        public List<DialogueFrame> DialogueFrame; 
+        public double? Age; 
+        public string Gender; 
+    }
+
+     public class EmotionAttention
+    {
+        public double? Positive { get; set; }
+        public double? Negative { get; set; }
+        public double? Neutral { get; set; }
+        public double? Attention { get; set; }
     }
 
         public class SessionInfoCompany
@@ -197,5 +219,21 @@ namespace UserOperations.Models.AnalyticModels
         public double? DialoguesTime;
         public double? Load;
         public List<ReportFullDayInfo> PeriodInfo;
+    }
+
+    public class SlideShowInfo
+    {
+        public DateTime BegTime { get; set; }
+        public Guid? ContentId { get; set; }
+        public CampaignContent CampaignContent { get; set; }
+        public string ContentType { get; set; }
+        public string ContentName { get; set; }
+        public DateTime EndTime { get; set; }
+        public bool IsPoll { get; set; }
+        public string Url { get; set; }
+        public Guid ApplicationUserId { get; set; }
+        public Guid? DialogueId { get; set; }
+        public double? Age { get; set; }
+        public string Gender { get; set; }
     }
 }
