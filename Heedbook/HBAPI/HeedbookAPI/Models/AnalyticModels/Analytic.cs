@@ -225,6 +225,7 @@ namespace UserOperations.Models.AnalyticModels
     {
         public DateTime BegTime { get; set; }
         public Guid? ContentId { get; set; }
+        public Guid? CampaignContentId { get; set; }
         public CampaignContent CampaignContent { get; set; }
         public string ContentType { get; set; }
         public string ContentName { get; set; }
@@ -235,5 +236,6 @@ namespace UserOperations.Models.AnalyticModels
         public Guid? DialogueId { get; set; }
         public double? Age { get; set; }
         public string Gender { get; set; }
+        public EmotionAttention EmotionAttention { get; set; }
     }
 }

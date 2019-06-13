@@ -117,6 +117,7 @@ namespace UserOperations.Controllers
              if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");           
                 Campaign modelCampaign = model.Campaign;
+                try{
                 var campaignEntity = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == modelCampaign.CampaignId).FirstOrDefault();
                 if (campaignEntity == null)
                 {
@@ -143,6 +144,12 @@ namespace UserOperations.Controllers
                 }
                 _log.Info("Campaign PUT finished");
                 return Ok(campaignEntity);
+                }
+                catch
+                {
+                    _log.Fatal("Cant update");
+                    return Ok("This campaign can be changed");
+                }
         }
 
         [HttpDelete("Campaign")]
