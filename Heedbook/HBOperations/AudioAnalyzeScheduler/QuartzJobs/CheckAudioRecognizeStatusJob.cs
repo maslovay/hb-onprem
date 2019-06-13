@@ -122,7 +122,13 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                         EndTime = audio.BegTime.AddSeconds(Double.Parse(r.EndTime, CultureInfo.InvariantCulture))
                                     });
                             });
-
+                            words = words.GroupBy(item => new
+                            {
+                                item.BegTime,
+                                item.Word
+                            })
+                            .Select(item => item.FirstOrDefault())
+                            .ToList();
                             dialogueWords.Add(new DialogueWord
                             {
                                 DialogueId = audio.DialogueId,
