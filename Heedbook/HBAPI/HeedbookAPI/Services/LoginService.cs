@@ -206,60 +206,60 @@ namespace UserOperations.Services
         
         public bool SavePasswordHistory(Guid userId, string passwordHash)
         {
-            PasswordHistory newPswd = null;
-            var passwords = _context.PasswordHistorys.Where(x => x.UserId == userId).OrderBy(x => x.CreationDate).ToList();
-            if (passwords.Any(x => x.PasswordHash == passwordHash))
-                return false;
-            if (passwords.Count() < PASSWORDS_TO_SAVE)//---save five last used passwords
-            {
-                newPswd = new PasswordHistory();
-                newPswd.PasswordHistoryId = Guid.NewGuid();
-                newPswd.UserId = userId;
-                _context.Add(newPswd);
-            }
-            else newPswd = passwords.First();
+            // PasswordHistory newPswd = null;
+            // var passwords = _context.PasswordHistorys.Where(x => x.UserId == userId).OrderBy(x => x.CreationDate).ToList();
+            // if (passwords.Any(x => x.PasswordHash == passwordHash))
+            //     return false;
+            // if (passwords.Count() < PASSWORDS_TO_SAVE)//---save five last used passwords
+            // {
+            //     newPswd = new PasswordHistory();
+            //     newPswd.PasswordHistoryId = Guid.NewGuid();
+            //     newPswd.UserId = userId;
+            //     _context.Add(newPswd);
+            // }
+            // else newPswd = passwords.First();
 
-            newPswd.CreationDate = DateTime.UtcNow;
-            newPswd.PasswordHash = passwordHash;
-            _context.SaveChanges();
+            // newPswd.CreationDate = DateTime.UtcNow;
+            // newPswd.PasswordHash = passwordHash;
+            // _context.SaveChanges();
             return true;
         }
         // make error logins counter zero(if success) or create new line in error logins
         public bool SaveErrorLoginHistory(Guid userId, string type)
         {
            
-            var lastlogin = _context.LoginHistorys.Where(x => x.UserId == userId).OrderByDescending(x => x.LoginTime).FirstOrDefault(); 
-            //---if user make success login we need make counter of failed logins to zero
-            if( type == "success" )
-            {
-                if ( lastlogin != null && lastlogin.Attempt != 0 )
-                {
-                    lastlogin.Attempt = 0;
-                    _context.SaveChanges();
-                }
-                return true;
-            }
-            //---if failed login - save in magazine
-            LoginHistory newErrLogin = new LoginHistory();
-            newErrLogin.LoginHistoryId = Guid.NewGuid();
-            newErrLogin.UserId = userId;
-            newErrLogin.LoginTime = DateTime.UtcNow;         
-            _context.Add(newErrLogin);
-             if( lastlogin == null || lastlogin.Attempt < ATTEMPT_TO_FAIL_LOG_IN - 1)//---5 attempt, if last was 3 - save as 4
-            {
-                newErrLogin.Attempt = lastlogin!= null? lastlogin.Attempt + 1 : 1;
-                newErrLogin.Message = "Wrong password";
-                _context.SaveChanges();
-                return true;//---user has attempts
-            }
-            else 
-            {
-                newErrLogin.Attempt = ATTEMPT_TO_FAIL_LOG_IN;//---5 attempt, if last was 4 - save as 5 and block user
-                newErrLogin.Message = "Wrong password. Blocked";
-                _context.SaveChanges();
-                return false;//---user has no any attempts
-            }               
-           
+            // var lastlogin = _context.LoginHistorys.Where(x => x.UserId == userId).OrderByDescending(x => x.LoginTime).FirstOrDefault(); 
+            // //---if user make success login we need make counter of failed logins to zero
+            // if( type == "success" )
+            // {
+            //     if ( lastlogin != null && lastlogin.Attempt != 0 )
+            //     {
+            //         lastlogin.Attempt = 0;
+            //         _context.SaveChanges();
+            //     }
+            //     return true;
+            // }
+            // //---if failed login - save in magazine
+            // LoginHistory newErrLogin = new LoginHistory();
+            // newErrLogin.LoginHistoryId = Guid.NewGuid();
+            // newErrLogin.UserId = userId;
+            // newErrLogin.LoginTime = DateTime.UtcNow;         
+            // _context.Add(newErrLogin);
+            //  if( lastlogin == null || lastlogin.Attempt < ATTEMPT_TO_FAIL_LOG_IN - 1)//---5 attempt, if last was 3 - save as 4
+            // {
+            //     newErrLogin.Attempt = lastlogin!= null? lastlogin.Attempt + 1 : 1;
+            //     newErrLogin.Message = "Wrong password";
+            //     _context.SaveChanges();
+            //     return true;//---user has attempts
+            // }
+            // else 
+            // {
+            //     newErrLogin.Attempt = ATTEMPT_TO_FAIL_LOG_IN;//---5 attempt, if last was 4 - save as 5 and block user
+            //     newErrLogin.Message = "Wrong password. Blocked";
+            //     _context.SaveChanges();
+            //     return false;//---user has no any attempts
+            // }               
+           return true;
         }
         private string emailAddressSender = "heedbookmailagent@gmail.com";
         private string emailServerSender = "smtp.gmail.com";
