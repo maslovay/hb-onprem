@@ -112,8 +112,7 @@ namespace UserService.Controllers
                 else
                 {      
                     System.Console.WriteLine($"DialogueVideoAssemble \t\tnot Success");
-                    result += $"DialogueVideoAssemble - not Success | ";
-                    System.Console.WriteLine($"{dialogue.BegTime} - {dialogue.EndTime} - {dialogue.DialogueId} - {dialogue.ApplicationUserId}");
+                    result += $"DialogueVideoAssemble - not Success | ";                    
                     var @event = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = dialogue.ApplicationUserId,
@@ -147,7 +146,7 @@ namespace UserService.Controllers
 
                 var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
 
-                if(speechResult!=null && speechResult.STTResult!=String.Empty)
+                if(speechResult?.STTResult!=null)
                 {
                     System.Console.WriteLine($"GoogleRecognition \t\tSuccess");   
                     result += $"GoogleRecognition - Success | ";                 
@@ -185,9 +184,9 @@ namespace UserService.Controllers
                 var dialogueAvatarExist = await _sftpClient.IsFileExistsAsync($"/home/nkrokhmal/storage/useravatars/{DialogueId}.jpg");
                 var dialogueVisuals = _context.DialogueVisuals.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
                 var dialogueClientProfiles = _context.DialogueClientProfiles.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                var dialogueFrames = _context.DialogueFrames.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                
-                if(!dialogueAvatarExist
+                var dialogueFrames = _context.DialogueFrames.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));   
+
+                if(dialogueAvatarExist
                     && dialogueVisuals!=null
                     && dialogueClientProfiles!=null
                     && dialogueFrames!=null)
@@ -207,8 +206,7 @@ namespace UserService.Controllers
                         EndTime = dialogue.EndTime
                     };
                     _notificationPublisher.Publish(@event);
-                }                
-                
+                }
                 return Ok(result);
             }
             catch(Exception ex)
