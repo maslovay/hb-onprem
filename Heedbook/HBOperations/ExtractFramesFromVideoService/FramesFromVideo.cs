@@ -126,7 +126,7 @@ namespace ExtractFramesFromVideo
         private List<FrameInfo> GetLocalFilesInformation(string applicationUserId, string sessionDir, DateTime videoTimeStamp)
         {
             var frames = Directory.GetFiles(sessionDir, "*.jpg")
-                .OrderBy(p => p)
+                .OrderBy(p => Convert.ToInt32((Path.GetFileNameWithoutExtension(p))))
                 .Select(p => new FrameInfo 
                 {
                     FramePath = p,
