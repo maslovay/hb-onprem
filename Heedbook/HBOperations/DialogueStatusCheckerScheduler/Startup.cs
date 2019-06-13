@@ -36,11 +36,9 @@ namespace DialogueStatusCheckerScheduler
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddSingleton(provider =>
-            {
-                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
-                return new ElasticClient(settings);
-            });
+            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddScoped<ElasticClientFactory>();
+
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddDialogueStatusCheckerQuartz();
             services.AddRabbitMqEventBus(Configuration);
