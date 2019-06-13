@@ -35,12 +35,13 @@ namespace VideoToSoundService
         public async Task Run(String path)
         {
             try
-            {
-                var dialogueId = Path.GetFileNameWithoutExtension(path.Split('/').Last());
-                var localVideoPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
+            {                
+                var dialogueId = Path.GetFileNameWithoutExtension(path.Split('/').Last());                
+                var localVideoPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);    
+                System.Console.WriteLine($"{path}");            
                 var localAudioPath = Path.Combine(_sftpSettings.DownloadPath, dialogueId + ".wav");
                 await _wrapper.VideoToWavAsync(localVideoPath, localAudioPath);
-                var uploadPath = Path.Combine("dialogueaudios", $"{dialogueId}.wav");
+                var uploadPath = Path.Combine("dialogueaudios", $"{dialogueId}.wav");  
                 if (File.Exists(localAudioPath))
                 {
                     await _sftpClient.UploadAsync(localAudioPath, "dialogueaudios", $"{dialogueId}.wav");
