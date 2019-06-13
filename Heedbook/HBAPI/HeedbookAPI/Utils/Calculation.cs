@@ -749,5 +749,52 @@ namespace UserOperations.Utils
             }
             return null;
         }
+
+         public EmotionAttention SatisfactionDuringAdv (List<SlideShowInfo> sessions, Dialogue dialogue )
+        {
+            EmotionAttention result = new EmotionAttention();
+            if(dialogue != null)
+            {
+            foreach( var session in sessions )
+            {              
+               List<DialogueFrame> frames = dialogue.DialogueFrame.ToList();
+                var beg = session.BegTime;
+                var end = session.EndTime;
+                frames = frames != null? frames.Where(x =>x.Time >= beg && x.Time <= end).ToList() : null;
+                if (frames != null && frames.Count() != 0)
+                {
+                    Console.WriteLine("---"+frames.FirstOrDefault().SurpriseShare);
+                     result.Attention = frames.Average(x =>Math.Abs((decimal)x.YawShare) <= 20? 100 : 20 );
+                     result.Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare);
+                     result.Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare)+ frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare);
+                     result.Neutral = frames.Average(x => x.NeutralShare);
+                    return result;
+                }
+                }
+            }
+            return null;
+        }
+
+            public EmotionAttention SatisfactionDuringAdv (SlideShowSession session, Dialogue dialogue )
+        {
+            EmotionAttention result = new EmotionAttention();
+            if(dialogue != null)
+            {      
+               List<DialogueFrame> frames = dialogue.DialogueFrame.ToList();
+                var beg = session.BegTime;
+                var end = session.EndTime;
+                frames = frames != null? frames.Where(x =>x.Time >= beg && x.Time <= end).ToList() : null;
+                if (frames != null && frames.Count() != 0)
+                {
+                    Console.WriteLine("---"+frames.FirstOrDefault().SurpriseShare);
+                     result.Attention = frames.Average(x =>Math.Abs((decimal)x.YawShare) <= 20? 100 : 20 );
+                     result.Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare);
+                     result.Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare)+ frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare);
+                     result.Neutral = frames.Average(x => x.NeutralShare);
+                    return result;
+                }
+            }
+            return null;
+        }
     }
 }
