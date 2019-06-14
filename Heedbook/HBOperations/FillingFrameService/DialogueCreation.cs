@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using RabbitMqEventBus.Events;
 using Renci.SshNet.Common;
+using HBLib;
 
 namespace FillingFrameService
 {
@@ -21,21 +22,27 @@ namespace FillingFrameService
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
+        private readonly ElasticClientFactory _elasticClientFactory;
+
 
         public DialogueCreation(IServiceScopeFactory factory,
             SftpClient client,
-            ElasticClient log)
+            ElasticClientFactory elasticClientFactory)
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _sftpClient = client;
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         public async Task Run(DialogueCreationRun message)
         {
+            var _log = _elasticClientFactory.GetElasticClient();
+            _log.SetFormat("{DialogueId}");
+            _log.SetArgs(message.DialogueId);
+            _log.Info("Function started");
+
             try
             {
-                _log.Info("Function started");
                 var frameIds =
                     _repository.Get<FileFrame>().Where(item =>
                             item.ApplicationUserId == message.ApplicationUserId
@@ -104,9 +111,10 @@ namespace FillingFrameService
                     };
 
                     var attribute = attributes.First();
+                    var avatarFileName = message.AvatarFileName == String.Empty ? attribute.FileFrame.FileName : message.AvatarFileName;
 
                     var localPath =
-                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + avatarFileName);
 
                     var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
                     var rectangle = new Rectangle

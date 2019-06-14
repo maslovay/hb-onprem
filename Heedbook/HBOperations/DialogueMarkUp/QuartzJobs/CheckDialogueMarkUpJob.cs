@@ -15,6 +15,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using HBData;
+using HBLib;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -26,17 +27,21 @@ namespace DialogueMarkUp.QuartzJobs
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly INotificationPublisher _publisher;
+        private readonly ElasticClientFactory _elasticClientFactory;
 
-        public CheckDialogueMarkUpJob(IServiceScopeFactory factory, INotificationPublisher publisher, ElasticClient log)
+        public CheckDialogueMarkUpJob(IServiceScopeFactory factory,
+            INotificationPublisher publisher,
+            ElasticClientFactory elasticClientFactory)
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _publisher = publisher;
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            _log.Info("Function DialogueMarkUp started");
+            var _log = _elasticClientFactory.GetElasticClient();
+            _log.Info("Function started");
             var periodTime = 5 * 60; 
             var periodFrame = 10;
 
@@ -58,9 +63,6 @@ namespace DialogueMarkUp.QuartzJobs
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
 
-                    // System.Console.WriteLine(JsonConvert.SerializeObject(framesUser.Select(p => p.FileFrame.FileName)));
-                    System.Console.WriteLine($"Count -------------------- {framesUser.Count()}");
-
                     framesUser = FindAllFaceId(framesUser, periodFrame, periodTime);
                     var markUps = framesUser.GroupBy(p => p.FileFrame.FaceId)
                         .Where(p => p.Count() > 2)
@@ -75,8 +77,7 @@ namespace DialogueMarkUp.QuartzJobs
                         .Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 10)
                         .OrderBy(p => p.EndTime)
                         .ToList();
-                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}");
-                    Console.WriteLine($"Creating markup {JsonConvert.SerializeObject(markUps)}");  
+                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}");  
                     if (markUps.Any()) CreateMarkUp(markUps, framesUser, applicationUserId);
                 }
                 _log.Info("Function DialogueMarkUp finished");                
@@ -143,7 +144,8 @@ namespace DialogueMarkUp.QuartzJobs
                         ApplicationUserId = applicationUserId,
                         DialogueId = dialogueId,
                         BeginTime = markup.BegTime,
-                        EndTime = markup.EndTime
+                        EndTime = markup.EndTime,
+                        AvatarFileName = markup.BegFileName
                     };
                     _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
@@ -210,7 +212,8 @@ namespace DialogueMarkUp.QuartzJobs
                         // DialogueId = (Guid) markUps[i].FaceId,
                         DialogueId = dialogueId,
                         BeginTime = markUps[i].BegTime,
-                        EndTime = markUps[i].EndTime
+                        EndTime = markUps[i].EndTime,
+                        AvatarFileName = markUps[i].BegFileName
                     };
                     _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);

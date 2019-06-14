@@ -9,6 +9,7 @@ using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using HBLib;
 
 namespace FillingHintService
 {
@@ -16,19 +17,25 @@ namespace FillingHintService
     {
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
+        private readonly ElasticClientFactory _elasticClientFactory;
+
 
         public FillingHints(IServiceScopeFactory factory,
-            ElasticClient log)
+            ElasticClientFactory elasticClientFactory
+            )
         {
             _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         public async Task Run(Guid dialogueId)
         {
+            var _log = _elasticClientFactory.GetElasticClient();
+            _log.SetFormat("{DialogueId}");
+            _log.SetArgs(dialogueId);
+            _log.Info("Function started");
             try
             {
-                _log.Info("Function filling hints started.");
                 var language = _repository.GetWithInclude<Dialogue>(item => item.DialogueId == dialogueId,
                                                item => item.Language)
                                           .Select(item => item.Language.LanguageShortName)

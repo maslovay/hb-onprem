@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
+using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,36 +19,36 @@ namespace AudioAnalyzeService
     public class ToneAnalyze
     {
         private static String output = "";
-
         private readonly IConfiguration _configuration;
-
         private readonly ElasticClient _log;
-
         private readonly IGenericRepository _repository;
-
         private readonly SftpClient _sftpClient;
-
         private readonly FFMpegWrapper _wrapper;
+        private readonly ElasticClientFactory _elasticClientFactory;
+
 
         public ToneAnalyze(SftpClient sftpClient,
             IConfiguration configuration,
             IServiceScopeFactory factory,
-            ElasticClient log,
+            ElasticClientFactory elasticClientFactory,
             FFMpegWrapper wrapper)
         {
             _sftpClient = sftpClient;
             _configuration = configuration;
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
             _wrapper = wrapper;
         }
 
 
         public async Task Run(String path)
         {
+            var _log = _elasticClientFactory.GetElasticClient();
+            _log.SetFormat("{Path}");
+            _log.SetArgs(path);
             try
             {
-                _log.Info("Function Tone analyze started");
+                _log.Info("Function started");
                 var dialogueId =
                     Guid.Parse((ReadOnlySpan<Char>) Path.GetFileNameWithoutExtension(path.Split('/').Last()));
                 var seconds = 3;
