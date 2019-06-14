@@ -41,7 +41,6 @@ namespace DialogueVideoAssembleService
             INotificationPublisher notificationPublisher,
             SftpClient client,
             SftpSettings sftpSettings,
-            ElasticClient log,
             RecordsContext context,
             FFMpegWrapper wrapper,
             ElasticClientFactory elasticClientFactory

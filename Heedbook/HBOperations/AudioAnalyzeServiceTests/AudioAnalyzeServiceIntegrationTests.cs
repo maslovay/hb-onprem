@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common;
 using HBData.Models;
 using HBData.Repository;
+using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -18,7 +19,7 @@ namespace AudioAnalyzeService.Tests
         private ToneAnalyze _toneAnalyzeService;
         private AudioAnalyze _audioAnalyzeService;
         private Startup _startup;
-        private ElasticClient _elasticClient;
+        private ElasticClientFactory _elasticClientFactory;
         private FFMpegWrapper _ffmpegWrapper;
         private AsrHttpClient.AsrHttpClient _asrClient;
         private string testDialogVideoCorrectFileName;
@@ -93,11 +94,11 @@ namespace AudioAnalyzeService.Tests
         protected override void InitServices()
         {
             _repository = ServiceProvider.GetService<IGenericRepository>();
-            _elasticClient = ServiceProvider.GetService<ElasticClient>();
+            _elasticClientFactory = ServiceProvider.GetService<ElasticClientFactory>();
             _ffmpegWrapper = ServiceProvider.GetService<FFMpegWrapper>();
-            _toneAnalyzeService = new ToneAnalyze( _sftpClient, this.Config, ScopeFactory, _elasticClient, _ffmpegWrapper );
+            _toneAnalyzeService = new ToneAnalyze( _sftpClient, this.Config, ScopeFactory, _elasticClientFactory, _ffmpegWrapper );
             _asrClient = ServiceProvider.GetService<AsrHttpClient.AsrHttpClient>();
-            _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _elasticClient, _asrClient);
+            _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _asrClient, _elasticClientFactory);
         }
         
         [Test, Retry(3)]
