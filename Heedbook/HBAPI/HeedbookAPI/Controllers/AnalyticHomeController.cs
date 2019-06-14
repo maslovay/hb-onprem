@@ -196,8 +196,8 @@ namespace UserOperations.Controllers
                     SatisfactionIndexTotalAverage = indexesInHeedbook.Sum(p => p.SatisfactionIndex) 
                                     / indexesInHeedbook.Count(),
 
-                    LoadIndex = Math.Max((double)_dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)) * 4, 100),
-                    LoadIndexDelta = - Math.Max((double)_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, endTime) * 4, 100),
+                    LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)) * 4,
+                    LoadIndexDelta = - _dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, endTime) * 4,
                     LoadIndexIndustryAverage = indexesInIndustryExeptSelectedComp.Count() !=0 ? 
                                     100 * indexesInIndustryExeptSelectedComp
                                     .Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)
@@ -216,12 +216,9 @@ namespace UserOperations.Controllers
                     CrossIndexTotalAverage = (double)indexesByDialogueHeedbook.GroupBy(x => x.CompanyId)
                         .Sum(x => (double)x.Count(p => p.CrossCount != 0) /(double)x.Count())
                         / (double)indexesByDialogueHeedbook.GroupBy(x => x.CompanyId).Count(),
-                    // SessionAverageHours
 
-                    //AvgWorkingTimeEmployees = _dbOperation.LoadPeriod(begTime, endTime, dialoguesCur, sessionCur),
-                    //AvgWorkingTimeEmployeesDelta = _dbOperation.LoadPeriod(prevBeg, endTime, dialoguesOld, sessionOld)
                     AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime) / 2,
-                    AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours(sessionOld, prevBeg, endTime) / 2
+                    AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime)
                 };
 
               
