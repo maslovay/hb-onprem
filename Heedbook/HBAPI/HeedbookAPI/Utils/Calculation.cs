@@ -39,6 +39,22 @@ namespace UserOperations.Utils
             else return y;
         }
         
+        public double? DialoguesPerUser(List<DialogueInfo> dialogues)
+        {
+            if (dialogues.Any())
+            {
+                return dialogues.GroupBy(p => p.BegTime.Date).Select(p => new {
+                    Count = p.Count(),
+                    UsersCount = p.Select(q => q.ApplicationUserId).Distinct().Count()
+                })
+                .Average(p => p.Count / p.UsersCount );
+            }
+            else
+            {
+                return 0;
+            }
+
+        }
 
 
         public double? SatisfactionDialogueDelta(List<DialogueInfo> dialogues)
