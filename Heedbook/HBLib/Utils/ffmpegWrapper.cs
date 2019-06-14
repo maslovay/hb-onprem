@@ -133,6 +133,9 @@ namespace HBLib.Utils
                 if (directory != null) newFn = Path.Combine(directory, newFn);
                 newFn = Path.GetFullPath(newFn);
 
+                if  (File.Exists(newFn))
+                    File.Delete(newFn);
+                
                 var arguments = $"-loglevel panic -i {fn} -ss {a} -to {b} -c copy";
 
                 if (convertToWebm && oldExtension != ".webm")
