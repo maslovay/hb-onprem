@@ -218,15 +218,19 @@ namespace UserOperations.Controllers
                         / (double)indexesByDialogueHeedbook.GroupBy(x => x.CompanyId).Count(),
 
                     AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime) / 2,
-                    AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime) / 2
+                    AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime) / 2,
+                    NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
+                    NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld))
                 };
 
               
                 Console.WriteLine($"--comp---{indexesByDialogueExeptSelectedComp.Count(x => x.CrossCount != 0)}----");
                 Console.WriteLine($"--comp---{indexesByDialogueExeptSelectedComp.Count()}----");
-                result.NumberOfDialoguesPerEmployees = result.DialoguesCount / result.EmployeeCount;   
-                result.NumberOfDialoguesPerEmployeesDelta =  - result.DialoguesCountDelta 
-                    / (result.EmployeeCountDelta != 0? result.EmployeeCountDelta : 1) + result.NumberOfDialoguesPerEmployees; 
+                // result.NumberOfDialoguesPerEmployees = result.DialoguesCount / result.EmployeeCount;   
+                // result.NumberOfDialoguesPerEmployeesDelta =  - result.DialoguesCountDelta 
+                //     / (result.EmployeeCountDelta != 0? result.EmployeeCountDelta : 1) + result.NumberOfDialoguesPerEmployees; 
+
+                result.NumberOfDialoguesPerEmployeesDelta += result.NumberOfDialoguesPerEmployees;
                 
                 result.AvgWorkingTimeEmployeesDelta +=result.AvgWorkingTimeEmployees;
                 result.EmployeeCountDelta += result.EmployeeCount;
