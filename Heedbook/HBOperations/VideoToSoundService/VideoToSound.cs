@@ -18,30 +18,35 @@ namespace VideoToSoundService
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly FFMpegWrapper _wrapper;
+        private readonly ElasticClientFactory _elasticClientFactory;
+
 
         public VideoToSound(SftpClient sftpClient,
             INotificationPublisher publisher,
             SftpSettings sftpSettings,
-            ElasticClient log,
+            ElasticClientFactory elasticClientFactory,
             FFMpegWrapper wrapper)
         {
             _sftpClient = sftpClient;
             _publisher = publisher;
             _sftpSettings = sftpSettings;
             _wrapper = wrapper;
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         public async Task Run(String path)
         {
+            var _log = _elasticClientFactory.GetElasticClient();
+            _log.SetFormat("{Path}");
+            _log.SetArgs(path);
             try
-            {                
-                var dialogueId = Path.GetFileNameWithoutExtension(path.Split('/').Last());                
-                var localVideoPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);    
-                System.Console.WriteLine($"{path}");            
+            {
+                _log.Info("Function started");
+                var dialogueId = Path.GetFileNameWithoutExtension(path.Split('/').Last());
+                var localVideoPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
                 var localAudioPath = Path.Combine(_sftpSettings.DownloadPath, dialogueId + ".wav");
                 await _wrapper.VideoToWavAsync(localVideoPath, localAudioPath);
-                var uploadPath = Path.Combine("dialogueaudios", $"{dialogueId}.wav");  
+                var uploadPath = Path.Combine("dialogueaudios", $"{dialogueId}.wav");
                 if (File.Exists(localAudioPath))
                 {
                     await _sftpClient.UploadAsync(localAudioPath, "dialogueaudios", $"{dialogueId}.wav");
@@ -59,6 +64,8 @@ namespace VideoToSoundService
                     _publisher.Publish(toneAnalyzeEvent);
                     _log.Info("message sent to rabbit. Wait for tone analyze and audio analyze");
                 }
+                _log.Info("Function finished");
+
             }
             catch (SftpPathNotFoundException e)
             {

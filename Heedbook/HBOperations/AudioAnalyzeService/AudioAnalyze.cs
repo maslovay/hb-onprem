@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
+using HBLib;
 using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,25 +17,29 @@ namespace AudioAnalyzeService
         private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
-        // private readonly IGenericRepository _repository;
+         private readonly ElasticClientFactory _elasticClientFactory;
 
         public AudioAnalyze(
             IServiceScopeFactory factory,
-            ElasticClient log,
-            AsrHttpClient.AsrHttpClient asrHttpClient
+            AsrHttpClient.AsrHttpClient asrHttpClient,
+            ElasticClientFactory elasticClientFactory
         )
         {
             // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
             _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
-            _log = log;
             _asrHttpClient = asrHttpClient;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         public async Task Run(String path)
         {
+            var _log = _elasticClientFactory.GetElasticClient();
+            _log.SetFormat("{Path}");
+            _log.SetArgs(path);
+            _log.Info("Function started");
+
             try
             {
-                _log.Info("Function Audio STT started");
                 if (!String.IsNullOrWhiteSpace(path))
                 {
                     var splitedString = path.Split('/');
@@ -44,8 +49,6 @@ namespace AudioAnalyzeService
                         .Where(p => p.DialogueId == dialogueId)
                         .FirstOrDefault();
 
-                        // await _repository.FindOneByConditionAsync<Dialogue>(item =>
-                        //     item.DialogueId == dialogueId);
                     if (dialogue != null)
                     {
                         var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId).ToList();
@@ -62,7 +65,7 @@ namespace AudioAnalyzeService
                             FileContainer = "dialogueaudios",
                             BegTime = dialogue.BegTime,
                             EndTime = dialogue.EndTime,
-                            Duration = 15.0
+                            Duration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds
                         };
                         _context.FileAudioDialogues.Add(fileAudio);
                         _context.SaveChanges();

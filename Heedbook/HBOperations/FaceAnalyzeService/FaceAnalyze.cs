@@ -38,10 +38,12 @@ namespace FaceAnalyzeService
         public async Task Run(String remotePath)
         {
             var _log = _elasticClientFactory.GetElasticClient();
+            _log.SetFormat("{Path}");
+            _log.SetArgs(remotePath);
+            
             try
             {
-                _log.Info($"Function face analyze started {remotePath}");
-                //_log.Info($"{remotePath}");
+                _log.Info($"Function started");
                 if (await _sftpClient.IsFileExistsAsync(remotePath))
                 {
 
@@ -51,17 +53,6 @@ namespace FaceAnalyzeService
                         localPath = _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath).GetAwaiter().GetResult();
                     }
                     _log.Info($"Download to path - {localPath}");
-
-                    // var fileStream = File.OpenRead(localPath);
-                    // var ms = new MemoryStream();
-                    // fileStream.CopyTo(ms);
-                    // _log.Info($"File size in bytes -- {ms.ToArray().Count()}");
-
-                    // FaceDetection.IsFaceDetected(localPath, out var faceLength1);
-                    // _log.Info($"Is face detected method1 -- {faceLength1}");
-                    // FaceDetection.IsFaceDetected(ms.ToArray(), out var faceLength2);
-                    // _log.Info($"Is face detected method2 -- {faceLength2}");
-
                     if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
                     {
                         _log.Info("Face detected!");

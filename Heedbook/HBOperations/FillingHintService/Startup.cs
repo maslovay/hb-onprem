@@ -38,11 +38,8 @@ namespace FillingHintService
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddTransient(provider =>
-            {
-                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
-                return new ElasticClient(settings);
-            });
+            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddScoped<ElasticClientFactory>();
             services.AddTransient<FillingHints>();
             services.AddTransient<FillingHintsRunHandler>();
             services.AddRabbitMqEventBus(Configuration);

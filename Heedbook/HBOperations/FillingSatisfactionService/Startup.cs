@@ -40,11 +40,8 @@ namespace FillingSatisfactionService
             services.Configure<CalculationConfig>(Configuration.GetSection(nameof(CalculationConfig)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<CalculationConfig>>().Value);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddTransient(provider =>
-            {
-                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
-                return new ElasticClient(settings);
-            });
+            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddScoped<ElasticClientFactory>();
             services.AddTransient<Calculations>();
             services.AddTransient<FillingSatisfaction>();
             services.AddTransient<FillingSatisfactionRunHandler>();

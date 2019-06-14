@@ -34,6 +34,8 @@ namespace DialogueVideoAssembleService
         private readonly RecordsContext _context;
         private readonly FFMpegWrapper _wrapper;
         private DialogueVideoAssembleRun _message;
+        private readonly ElasticClientFactory _elasticClientFactory;
+
 
         public DialogueVideoAssemble(
             INotificationPublisher notificationPublisher,
@@ -41,12 +43,13 @@ namespace DialogueVideoAssembleService
             SftpSettings sftpSettings,
             ElasticClient log,
             RecordsContext context,
-            FFMpegWrapper wrapper
+            FFMpegWrapper wrapper,
+            ElasticClientFactory elasticClientFactory
         )
         {
             _sftpClient = client;
             _sftpSettings = sftpSettings;
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
             _notificationPublisher = notificationPublisher;
             _context = context;
             _wrapper = wrapper;
@@ -54,9 +57,10 @@ namespace DialogueVideoAssembleService
 
         public async Task Run(DialogueVideoAssembleRun message)
         {
+            var _log = _elasticClientFactory.GetElasticClient();
             _message = message;
-            _log.SetFormat("{ApplicationUserId}, {DialogueId}");
-            _log.SetArgs(message.ApplicationUserId, message.DialogueId);
+            _log.SetFormat("{DialogueId}");
+            _log.SetArgs(message.DialogueId);
             try
             {
                 var cmd = new CMDWithOutput();   

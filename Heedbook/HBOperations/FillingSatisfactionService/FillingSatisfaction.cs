@@ -8,6 +8,7 @@ using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using HBLib;
 
 namespace FillingSatisfactionService
 {
@@ -18,25 +19,32 @@ namespace FillingSatisfactionService
         private readonly INotificationPublisher _notificationPublisher;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
+        private readonly ElasticClientFactory _elasticClientFactory;
+
 
         public FillingSatisfaction(IServiceScopeFactory factory,
             Calculations calculations,
             INotificationPublisher notificationPublisher,
             CalculationConfig config,
-            ElasticClient log)
+            ElasticClientFactory elasticClientFactory
+            )
         {
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _calculations = calculations;
             _notificationPublisher = notificationPublisher;
             _config = config;
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         public async Task Run(Guid dialogueId)
         {
+             var _log = _elasticClientFactory.GetElasticClient();
+            _log.SetFormat("{DialogueId}");
+            _log.SetArgs(dialogueId);
+
             try
             {
-                _log.Info("Function filling satisfaction started.");
+                _log.Info("Function started");
                 var dialogueFrame =
                     await _repository.FindByConditionAsync<DialogueFrame>(p => p.DialogueId == dialogueId);
                 var dialogueAudio = new DialogueAudio();
