@@ -233,74 +233,74 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("test")]
-        public IActionResult test([FromQuery]Guid? dialogueId)
+        public IActionResult test()
         {
-                var dialogue = _context.Dialogues
-                    .Include(p => p.DialogueAudio)
-                    .Include(p => p.DialogueClientProfile)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialogueFrame)
-                    .Include(p => p.DialogueInterval)
-                    .Include(p => p.DialoguePhrase)
-                    .Include(p => p.DialoguePhraseCount)
-                    .Include(p => p.DialogueSpeech)
-                    .Include(p => p.DialogueVisual)
-                    .Include(p => p.DialogueWord)
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialogueHint)
-                    .Where(p => p.StatusId == 3
-                        && p.DialogueId == dialogueId)
-                    .FirstOrDefault();
-                System.Console.WriteLine("3");
-                if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
-                return Ok(dialogue);
-            try
-            {
-                // var dialogue = _context.Dialogues
-                //  .Include(p => p.DialogueAudio)
-                //     .Include(p => p.DialogueClientProfile)
-                //     .Include(p => p.DialogueClientSatisfaction)
-                //     .Include(p => p.DialogueFrame)
-                //     .Include(p => p.DialogueInterval)
-                //     .Include(p => p.DialoguePhrase)
-                //     .Include(p => p.DialoguePhraseCount)
-                //     .Include(p => p.DialogueSpeech)
-                //     .Include(p => p.DialogueVisual)
-                //     .Include(p => p.DialogueWord)
-                //     .Include(p => p.ApplicationUser)
-                //     .Include(p => p.DialogueHint)
-                // .Where(p => p.DialogueId.ToString() == "a54b3bc8-d948-4f28-99fe-98f232f65ef4").ToList();
-                // var frames  = _context.FileFrames.Where(p => p.StatusNNId == 7).ToList();
-                // frames.ForEach(p => p.FaceId = null);
-                // frames.ForEach(p => p.StatusNNId = 6);
-                // _context.SaveChanges();
+            var dialogueId = Guid.Parse("03c81407-8ae2-4351-9d90-ab955f530584");
+            var dialogue = _context.Dialogues
+                .Where(p => p.StatusId == 3
+                    && p.DialogueId == dialogueId)
+                .FirstOrDefault();
 
-                // var dialogue = _context.Dialogues
-                //     .Include(p => p.DialogueAudio)
-                //     .Include(p => p.DialogueClientProfile)
-                //     .Include(p => p.DialogueClientSatisfaction)
-                //     .Include(p => p.DialogueFrame)
-                //     .Include(p => p.DialogueInterval)
-                //     .Include(p => p.DialoguePhrase)
-                //     .Include(p => p.DialoguePhraseCount)
-                //     .Include(p => p.DialogueSpeech)
-                //     .Include(p => p.DialogueVisual)
-                //     .Include(p => p.DialogueWord)
-                //     .Include(p => p.ApplicationUser)
-                //     .Include(p => p.DialogueHint)
-                //     .Where(p => p.DialogueId == dialogueId).ToList();
-                // var time = DateTime.UtcNow.AddDays(-1);
-                // var fileFrame = _context.FileFrames.Where(p => p.Time > time).ToList();
-                // fileFrame.ForEach(p => p.StatusNNId = 6);
-                // fileFrame.ForEach(p => p.FaceId = null);
-                // _context.SaveChanges();
-                var fileFrame = _context.DialogueMarkups.ToList();
-                return Ok(fileFrame);
-            }   
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
+            var frames = _context.DialogueSpeechs.Where(p => p.DialogueId == dialogueId).FirstOrDefault();
+            frames.PositiveShare = 55;
+
+
+
+
+            // var res = frames.GroupBy(p => p.Time).Select(p => new {
+            //     Time = p.Key,
+            //     Count = p.Count()
+            // });
+
+            // var dialogueHint = new DialogueHint{
+            //     DialogueHintId = Guid.NewGuid(),
+            //     DialogueId = dialogueId,
+            //     HintText = "Следите за настроением клиента. Если возникла негативная обстановка, постарайтесь ее разрядить.",
+            //     IsAutomatic = true,
+            //     Type = "Text",
+            //     IsPositive = false
+            // };
+
+            // var dialogueHint2 = new DialogueHint{
+            //     DialogueHintId = Guid.NewGuid(),
+            //     DialogueId = dialogueId,
+            //     HintText = "Делайте дополнительные предложения. Ищите подход к клиенту. Попробуйте расположить к себе клиента.",
+            //     IsAutomatic = true,
+            //     Type = "Text",
+            //     IsPositive = false
+            // };
+
+            // _context.DialogueHints.Add(dialogueHint);
+            // _context.DialogueHints.Add(dialogueHint2);
+            // _context.SaveChanges();
+
+      
+
+            // var frames = _context.FileFrames.Where(p => p.Time >= dialogue.BegTime && p.Time <= dialogue.EndTime).ToList();
+            // var framesIds = frames.Select(p => p.FileFrameId).ToList();
+            // var framesAtr = _context.FrameAttributes.Where(p => framesIds.Contains(p.FileFrameId)).ToList();
+            // var framesEm = _context.FrameEmotions.Where(p => framesIds.Contains(p.FileFrameId)).ToList();
+
+            // _context.FrameAttributes.RemoveRange(framesAtr);
+            // _context.SaveChanges();
+
+            // _context.FrameEmotions.RemoveRange(framesEm);
+            // _context.SaveChanges();
+
+            //  _context.FileFrames.RemoveRange(frames);
+            // var words = _context.DialogueWords.Where(p => p.DialogueWordId.ToString() == "176b5d3a-2804-4cf5-91fd-3a609651e0f6").ToList();
+            // _context.RemoveRange(words);
+            
+            
+            // var mood = _context.DialogueClientSatisfactions.Where(p => p.DialogueId == dialogueId).First();
+            // mood.MeetingExpectationsTotal = 46;
+
+            _context.SaveChanges();
+
+
+
+            return Ok();
+            
         }
     }
 }
