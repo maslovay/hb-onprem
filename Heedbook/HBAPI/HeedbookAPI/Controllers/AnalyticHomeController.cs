@@ -218,7 +218,7 @@ namespace UserOperations.Controllers
                         / (double)indexesByDialogueHeedbook.GroupBy(x => x.CompanyId).Count(),
 
                     AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime) / 2,
-                    AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime)
+                    AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime) / 2
                 };
 
               
