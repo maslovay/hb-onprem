@@ -111,7 +111,7 @@ namespace FillingFrameService
                     };
 
                     var attribute = attributes.First();
-                    var avatarFileName = message.AvatarFileName == String.Empty ? attribute.FileFrame.FileName : message.AvatarFileName;
+                    var avatarFileName = string.IsNullOrEmpty(message.AvatarFileName) ? attribute.FileFrame.FileName : message.AvatarFileName;
 
                     var localPath =
                         await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + avatarFileName);
