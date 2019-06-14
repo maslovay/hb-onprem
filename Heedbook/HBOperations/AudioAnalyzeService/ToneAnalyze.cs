@@ -62,7 +62,7 @@ namespace AudioAnalyzeService
                     var fileName = currentMetadata["fn"];
 
                     _log.Info(fileName);
-                    var result = RecognizeTone(_configuration["VokaturiPath"], fileName);
+                    var result = RecognizeTone(_configuration["VokaturiPath"], fileName, _log);
                     var beginTime = begTime;
                     var endTime = beginTime.AddSeconds(seconds);
                     intervals.Add(new DialogueInterval
@@ -118,7 +118,7 @@ namespace AudioAnalyzeService
                 output += String.Concat(strMessage, "\n");
         }
 
-        private Dictionary<String, Double> RecognizeTone(String vokaturiPath, String fileName)
+        private Dictionary<String, Double> RecognizeTone(String vokaturiPath, String fileName, ElasticClient _log)
         {
             /***********
             WAV files analyzed with:
