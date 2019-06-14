@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
+using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,14 +22,48 @@ namespace UserService.Controllers
     [ApiController]
     public class TestController : Controller
     {
+        private readonly IGenericRepository _repository;
         private readonly RecordsContext _context;
-        public TestController(RecordsContext context)
+        
+        public TestController(RecordsContext context, IGenericRepository repository
+        )
         {
             _context = context;
+            _repository = repository;
+        }
+
+        [HttpPost("[action]")]
+        public async Task Test2()
+        {
+            
         }
 
 
-        [HttpPost]
+        [HttpPost("[action]")]
+        public async Task Test1(DialogueCreationRun message)
+        {
+            var frameIds =
+                _repository.Get<FileFrame>().Where(item =>
+                        item.ApplicationUserId == message.ApplicationUserId
+                        && item.Time >= message.BeginTime
+                        && item.Time <= message.EndTime)
+                    .Select(item => item.FileFrameId)
+                    .ToList();
+            var emotions =
+                _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId),
+                    item => item.FileFrame).ToList();
+
+            var dt1 = DateTime.Now;
+            var attributes =
+                _repository.GetWithInclude<FrameAttribute>(item => frameIds.Contains(item.FileFrameId),
+                    item => item.FileFrame).ToList();
+
+            var dt2 = DateTime.Now;
+            
+            Console.WriteLine($"Delta: {dt2-dt1}");
+        }
+
+       [HttpPost]
        [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
        public async Task<IActionResult> Test()
        {
@@ -38,7 +73,13 @@ namespace UserService.Controllers
                var begTime = DateTime.Now.AddDays(-3);
 
                var dialogues = _context.Dialogues
-                   .Where(p => p.BegTime > begTime  && (p.StatusId ==6 || p.StatusId == 3) ).ToList();
+                   .Include(p => p.DialogueFrame)
+                   .Include(p => p.DialogueAudio)
+                   .Include(p => p.DialogueInterval)
+                   .Include(p => p.DialogueVisual)
+                   .Include(p => p.DialogueClientProfile)
+                   .Where(item => item.StatusId == 6)
+                   .ToList();
 
                System.Console.WriteLine(dialogues.Count());
                foreach (var dialogue in dialogues)
