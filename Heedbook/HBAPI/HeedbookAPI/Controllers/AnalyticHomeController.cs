@@ -77,7 +77,8 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var companyId = Guid.Parse(userClaims["companyId"]);   
+                Console.WriteLine($"---------------{companyId}------------------");  
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
@@ -137,35 +138,43 @@ namespace UserOperations.Controllers
                 var companyIdsInIndustry = _requestFilters.CompanyIdsInIndustry(companyIds);  
                 var companyIdsInHeedbookExceptSelected = _requestFilters.CompanyIdsInHeedbookExceptSelected(companyIds);  
 //-----------------ALL-----------------------
+                var indexesInIndustryAll = _context.VIndexesByCompanysDays.ToList();
                 //---for selected period in industries except selected companies
-                var indexesInIndustryExeptSelectedComp = _context.VIndexesByCompanysDays
+                var indexesInIndustryExeptSelectedComp = indexesInIndustryAll
                     .Where(p => companyIdsInIndustryExceptSelected.Contains (p.CompanyId)
-                    && p.Day > begTime && p.Day < endTime
+                    && p.Day >= begTime && p.Day <= endTime
                     ).ToList();
                 //---for all period in industries
-                var indexesInIndustryAllForBenchmark = _context.VIndexesByCompanysDays
+                var indexesInIndustryAllForBenchmark = indexesInIndustryAll
                     .Where(p => companyIdsInIndustry.Contains (p.CompanyId)
                     ).ToList();
                  //---for selected period in industries except selected companies
-                var indexesInHeedbook = _context.VIndexesByCompanysDays
+                var indexesInHeedbook = indexesInIndustryAll
                     .Where(p => companyIdsInHeedbookExceptSelected.Contains (p.CompanyId)
-                    && p.Day > begTime && p.Day < endTime
+                    && p.Day >= begTime && p.Day <= endTime
                      ).ToList();
 
 //-----------------DIALOGUES INDEXES-----------------------
+                var indexesByDialogueAll = _context.VIndexesByDialoguesDays.ToList();
+                var indexesByDialogueOwn = indexesByDialogueAll.Where(p => companyIds.Contains (p.CompanyId)
+                    && p.Day >= begTime && p.Day <= endTime
+                    ).ToList();
+                var indexesByDialogueOwnOld = indexesByDialogueAll.Where(p => companyIds.Contains (p.CompanyId)
+                    && p.Day >= prevBeg && p.Day <= endTime
+                    ).ToList();
                 //---for selected period in industries except selected companies
-                var indexesByDialogueExeptSelectedComp = _context.VIndexesByDialoguesDays
+                var indexesByDialogueExeptSelectedComp = indexesByDialogueAll
                     .Where(p => companyIdsInIndustryExceptSelected.Contains (p.CompanyId)
-                    && p.Day > begTime && p.Day < endTime
+                    && p.Day >= begTime && p.Day <= endTime
                     ).ToList();
                 //---for all period in industries
-                var indexesByDialogueAllForBenchmark = _context.VIndexesByDialoguesDays
+                var indexesByDialogueAllForBenchmark = indexesByDialogueAll
                     .Where(p => companyIdsInIndustry.Contains (p.CompanyId)
                     ).ToList();
                  //---for selected period in industries except selected companies
-                var indexesByDialogueHeedbook = _context.VIndexesByDialoguesDays
+                var indexesByDialogueHeedbook = indexesByDialogueAll
                     .Where(p => companyIdsInHeedbookExceptSelected.Contains (p.CompanyId)
-                    && p.Day > begTime && p.Day < endTime
+                    && p.Day >= begTime && p.Day <= endTime
                      ).ToList();
 
                 // Console.WriteLine($"--ind---{satisfactionByCompanysDaysInIndustry.Sum(p => p.SatisfactionIndex)}----"); 
@@ -203,19 +212,21 @@ namespace UserOperations.Controllers
                                     .Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)
                                     / indexesInIndustryExeptSelectedComp.Where(p => p.SessionHours != 0).Count() : 0,
                     LoadIndexIndustryBenchmark = 100 * indexesInIndustryAllForBenchmark.Max(p => p.DialoguesHours/ p.SessionHours),
-                    LoadIndexTotalAverage = 100 * indexesInHeedbook.Sum(p => p.DialoguesHours / p.SessionHours)/ indexesInHeedbook.Count(),
+                    LoadIndexTotalAverage = 100 * indexesInHeedbook.Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)/ indexesInHeedbook.Count(),
                     
-                    CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
-                    CrossIndexDelta = - _dbOperation.CrossIndex(dialoguesOld),
-                    CrossIndexIndustryAverage = indexesByDialogueExeptSelectedComp.GroupBy(x => x.CompanyId).Count() != 0?
-                         (double)indexesByDialogueExeptSelectedComp.GroupBy(x => x.CompanyId)
-                        .Sum(x => (double)x.Count(p => p.CrossCount != 0) /(double)x.Count())
-                        / (double)indexesByDialogueExeptSelectedComp.GroupBy(x => x.CompanyId).Count() : 0,
-                    CrossIndexIndustryBenchmark = (double)indexesByDialogueAllForBenchmark.GroupBy(x => x.CompanyId)
-                        .Max(x => (double)x.Count(p => p.CrossCount != 0) /(double)x.Count()), 
-                    CrossIndexTotalAverage = (double)indexesByDialogueHeedbook.GroupBy(x => x.CompanyId)
-                        .Sum(x => (double)x.Count(p => p.CrossCount != 0) /(double)x.Count())
-                        / (double)indexesByDialogueHeedbook.GroupBy(x => x.CompanyId).Count(),
+                   // CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
+                    CrossIndex =  indexesByDialogueOwn.Count() != 0 ? 100 * indexesByDialogueOwn
+                        .Average(x => (double)x.CrossCount /(double)x.DialoguesCount) : 0,
+                    CrossIndexDelta = - 100 * indexesByDialogueOwnOld.Count() != 0 ? indexesByDialogueOwn
+                        .Average(x => (double)x.CrossCount /(double)x.DialoguesCount) : 0,
+                    CrossIndexIndustryAverage = indexesByDialogueExeptSelectedComp.Count() != 0 ?
+                        100 * (double)indexesByDialogueExeptSelectedComp.Sum(p => (double)p.CrossCount)
+                        /(double)indexesByDialogueExeptSelectedComp.Sum(p =>(double)p.DialoguesCount) : 0,
+                    CrossIndexIndustryBenchmark = (double)indexesByDialogueAllForBenchmark
+                        .Max(x => 100 * (double)x.CrossCount / (double)x.DialoguesCount), 
+                    //CrossIndexTotalAverage = 100 * (double)indexesByDialogueHeedbook.Average(x => (double)x.CrossCount /(double)x.DialoguesCount),
+                    CrossIndexTotalAverage = 100 * (double)indexesByDialogueHeedbook.Sum(x => (double)x.CrossCount) /
+                    (double)indexesByDialogueHeedbook.Sum(x => (double)x.DialoguesCount),
 
                     AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime) / 2,
                     AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime) / 2,
