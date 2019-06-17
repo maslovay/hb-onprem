@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
+using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,17 +26,20 @@ namespace UserService.Controllers
         private readonly INotificationHandler _handler;
         private readonly ElasticClient _log;
         private readonly SftpClient _sftpClient;
+        private readonly SftpSettings _sftpSettings;
         private readonly INotificationPublisher _notificationPublisher;
 
         public DialogueRecalculateController(INotificationHandler handler, RecordsContext context, 
                                                 ElasticClient log, SftpClient sftpClient, 
-                                                INotificationPublisher notificationPublisher)
+                                                INotificationPublisher notificationPublisher,
+                                                SftpSettings sftpSettings)
         {
             _handler = handler;
             _context = context;
             _log = log;
             _sftpClient = sftpClient;
             _notificationPublisher = notificationPublisher;
+            _sftpSettings = sftpSettings;
         }
 
         [HttpGet]
@@ -93,27 +97,104 @@ namespace UserService.Controllers
             var result = "";
             try
             {           
-                if(DialogueId == null) return BadRequest("DialogueId is Empty");     
-                System.Console.WriteLine($"DialogueId: {DialogueId}");
-                var dialogue = _context.Dialogues.FirstOrDefault(p=>p.DialogueId == Guid.Parse(DialogueId));
+                if(DialogueId == null) return BadRequest("DialogueId is Empty"); 
+                _log.Info($"DialogueId: {DialogueId}");
+                var dialogue = _context.Dialogues
+                    .Include(p=>p.DialogueAudio)                    
+                    .Include(p=>p.DialogueInterval)
+                    .Include(p=>p.DialogueVisual)                    
+                    .Include(p=>p.DialogueClientProfile)
+                    .Include(p=>p.DialogueFrame)
+                    .FirstOrDefault(p=>p.DialogueId == Guid.Parse(DialogueId));
 
                 if(dialogue==null) return BadRequest("such Dialogue not exist in Data Base");
 
-                var dialogueVideoFileExist = await _sftpClient.IsFileExistsAsync($"/home/nkrokhmal/storage/dialoguevideos/{DialogueId}.mkv");                
-                System.Console.WriteLine($"{dialogue.BegTime} - {dialogue.EndTime}");
-
+                var dialogueVideoFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialoguevideos/{DialogueId}.mkv");  
+                
                 if(dialogue!=null 
                     && dialogueVideoFileExist 
                     && (dialogue.StatusId == 3 || dialogue.StatusId == 6 || dialogue.StatusId == 8))
                 {
-                    System.Console.WriteLine($"DialogueVideoAssemble \t\tSuccess");   
-                    result += $"DialogueVideoAssemble - Success | ";                             
+                    _log.Info($"DialogueVideoAssemble - Success | ");     
+                    var dialogueAudioFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialogueaudios/{DialogueId}.wav");
+
+                    if(dialogue.DialogueAudio!=null
+                        &&dialogueAudioFileExist)
+                    {
+                        _log.Info($"VideoToSound - Success | ");    
+                        
+                        var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
+                    
+                        if(speechResult!=null && speechResult.STTResult!=null)
+                        {
+                            _log.Info($"GoogleRecognition - Success | ");                
+                        }
+                        else
+                        {                        
+                            _log.Info($"GoogleRecognition - not success | ");
+                            var @event = new AudioAnalyzeRun
+                            {
+                                Path = $"dialogueaudios/{DialogueId}.wav"
+                            };
+                            _notificationPublisher.Publish(@event);
+                        }
+
+                        if(dialogue.DialogueInterval != null)
+                        {
+                            _log.Info($"TonAnalyze - Success | ");             
+                        }
+                        else
+                        {
+                            _log.Info($"TonAnalyze - not Success | ");
+                            var @event = new ToneAnalyzeRun
+                            {
+                                Path = $"dialogueaudios/{DialogueId}.wav"
+                            };
+                            _notificationPublisher.Publish(@event);
+                        }    
+                    }
+                    else
+                    {
+                        _log.Info($"VideoToSound - not Success | ");
+                        _log.Info($"GoogleRecognition - not success | ");
+                        _log.Info($"TonAnalyze - not Success | ");
+
+                        var @event = new VideoToSoundRun
+                        {
+                            Path = $"dialoguevideos/{DialogueId}.mkv"
+                        };
+                        _notificationPublisher.Publish(@event);
+                    }                
+
+                    var dialogueAvatarExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}useravatars/{DialogueId}.jpg");                
+
+                    if(dialogueAvatarExist
+                        && dialogue.DialogueVisual!=null
+                        && dialogue.DialogueClientProfile!=null
+                        && dialogue.DialogueFrame!=null)
+                    {
+                        _log.Info($"FillingFrame - Success | ");
+                    }
+                    else
+                    {
+                        _log.Info($"FillingFrame - not Success | ");
+                        var @event = new DialogueCreationRun
+                        {
+                            ApplicationUserId = dialogue.ApplicationUserId,
+                            DialogueId = dialogue.DialogueId,
+                            BeginTime = dialogue.BegTime,
+                            EndTime = dialogue.EndTime
+                        };
+                        _notificationPublisher.Publish(@event);
+                    }                         
                 }
                 else
-                {      
-                    System.Console.WriteLine($"DialogueVideoAssemble \t\tnot Success");
-                    result += $"DialogueVideoAssemble - not Success | ";
-                    System.Console.WriteLine($"{dialogue.BegTime} - {dialogue.EndTime} - {dialogue.DialogueId} - {dialogue.ApplicationUserId}");
+                {  
+                    _log.Info($"DialogueVideoAssemble - not Success | ");    
+                    _log.Info($"VideoToSound - not Success | ");
+                    _log.Info($"GoogleRecognition - not success | ");
+                    _log.Info($"TonAnalyze - not Success | ");     
+                    _log.Info($"FillingFrame - not Success | ");                    
                     var @event = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = dialogue.ApplicationUserId,
@@ -122,94 +203,9 @@ namespace UserService.Controllers
                         EndTime = dialogue.EndTime
                     };
                     _notificationPublisher.Publish(@event);
-                }
+                }            
                 
-                
-                var dialogueAudio = _context.DialogueAudios.FirstOrDefault(p=>p.DialogueId == Guid.Parse(DialogueId));
-                var dialogueAudioFileExist = await _sftpClient.IsFileExistsAsync($"/home/nkrokhmal/storage/dialogueaudios/{DialogueId}.wav");
-
-                if(dialogueAudio!=null
-                    &&dialogueAudioFileExist)
-                {
-                    System.Console.WriteLine($"VideoToSound \t\t\tSuccess");           
-                    result += $"VideoToSound - Success | ";         
-                }
-                else
-                {
-                    System.Console.WriteLine($"VideoToSound \t\t\tnot Success");
-                    result += $"VideoToSound - not Success | ";
-                    var @event = new VideoToSoundRun
-                    {
-                        Path = $"dialoguevideos/{DialogueId}.mkv"
-                    };
-                    _notificationPublisher.Publish(@event);
-                }
-
-                var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-
-                if(speechResult!=null && speechResult.STTResult!=String.Empty)
-                {
-                    System.Console.WriteLine($"GoogleRecognition \t\tSuccess");   
-                    result += $"GoogleRecognition - Success | ";                 
-                }
-                else
-                {
-                    System.Console.WriteLine($"GoogleRecognition \t\tnot success");
-                    result += $"GoogleRecognition - not success | ";
-                    var @event = new AudioAnalyzeRun
-                    {
-                        Path = $"dialogueaudios/{DialogueId}.wav"
-                    };
-                    _notificationPublisher.Publish(@event);
-                }
-
-                var dialogueIntervals = _context.DialogueIntervals.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                var dialogueAudioResult = _context.DialogueAudios.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-
-                if(dialogueIntervals != null && dialogueAudioResult!=null)
-                {
-                    System.Console.WriteLine($"TonAnalyze \t\t\tSuccess");    
-                    result += $"TonAnalyze - Success | ";                
-                }
-                else
-                {
-                    System.Console.WriteLine($"TonAnalyze \t\t\tnot Success");
-                    result += $"TonAnalyze - not Success | ";
-                    var @event = new ToneAnalyzeRun
-                    {
-                        Path = $"dialogueaudios/{DialogueId}.wav"
-                    };
-                    _notificationPublisher.Publish(@event);
-                }
-
-                var dialogueAvatarExist = await _sftpClient.IsFileExistsAsync($"/home/nkrokhmal/storage/useravatars/{DialogueId}.jpg");
-                var dialogueVisuals = _context.DialogueVisuals.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                var dialogueClientProfiles = _context.DialogueClientProfiles.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                var dialogueFrames = _context.DialogueFrames.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                
-                if(!dialogueAvatarExist
-                    && dialogueVisuals!=null
-                    && dialogueClientProfiles!=null
-                    && dialogueFrames!=null)
-                {
-                    System.Console.WriteLine($"FillingFrame \t\t\tSuccess\n"); 
-                    result += $"FillingFrame - Success | "; 
-                }
-                else
-                {
-                    System.Console.WriteLine($"FillingFrame \t\t\tnot Success\n");
-                    result += $"FillingFrame - not Success | ";
-                    var @event = new DialogueCreationRun
-                    {
-                        ApplicationUserId = dialogue.ApplicationUserId,
-                        DialogueId = dialogue.DialogueId,
-                        BeginTime = dialogue.BegTime,
-                        EndTime = dialogue.EndTime
-                    };
-                    _notificationPublisher.Publish(@event);
-                }                
-                
-                return Ok(result);
+                return Ok();
             }
             catch(Exception ex)
             {
