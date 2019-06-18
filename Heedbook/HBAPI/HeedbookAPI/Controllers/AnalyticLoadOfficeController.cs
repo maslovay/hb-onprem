@@ -125,40 +125,46 @@ namespace UserOperations.Controllers
 
                 var result = new EfficiencyDashboardInfoNew
                 {
-                    LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime),
-                    LoadIndexDelta = -_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                    WorkloadValueAvg = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime),
+                    WorkloadDynamics = -_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
                     DialoguesCount = _dbOperation.DialoguesCount(dialoguesCur),
-                    WorkingHours = _dbOperation.SessionAverageHours(sessionCur, begTime, endTime),
-                    DialogueAverageDuration = _dbOperation.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                    BestEmployee = _dbOperation.BestEmployee(dialoguesCur)
+                    AvgWorkingTime = _dbOperation.SessionAverageHours(sessionCur, begTime, endTime),
+                    AvgDurationDialogue = _dbOperation.DialogueAverageDuration(dialoguesCur, begTime, endTime),
+                    BestEmployee = _dbOperation.BestEmployeeLoad(dialoguesCur, sessionCur, begTime, endTime),
                 };
                 var satisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur);
                 var loadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1));
                 var employeeCount = _dbOperation.EmployeeCount(dialoguesCur);
                 result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
-                result.LoadIndexDelta += result.LoadIndex;
-                result.DialoguesPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
+                result.WorkloadDynamics += result.WorkloadValueAvg;
+                result.DialoguesNumberAvgPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
 
                 var diagramDialogDurationPause = sessionCur
                 .GroupBy(p => p.BegTime.Date)
                 .Select(p => new
                 {
                     Day = p.Key.ToString(),
-                    avgDialogue = _dbOperation
+                    AvgDialogue = _dbOperation
                         .DialogueAverageDuration(
                             dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime)),
-                    avgPause = _dbOperation
+                    AvgPause = _dbOperation
                         .DialogueAveragePause(
                             p.ToList(), 
                             dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
-                            p.Max(s => s.EndTime))                  
+                            p.Max(s => s.EndTime)),
+                    AvgWorkLoad  = _dbOperation
+                        .LoadIndex(
+                            p.ToList(), 
+                            dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
+                            p.Min(s => s.BegTime),
+                            p.Max(s => s.EndTime))                      
                 }).    
                 ToList();
 
-                var optimalLoad = 0.6;
+                var optimalLoad = 0.7;
                 var employeeWorked = sessionCur
                 .GroupBy(p => p.BegTime.Date)
                 .Select(p => new
@@ -195,6 +201,7 @@ namespace UserOperations.Controllers
                             .Select(q => new { DialoguesCount = q.Select(r => r.DialogueId).Distinct().Count() })
                             .Average(q => q.DialoguesCount)
                     }).ToList();
+
                 var clientDay = dialogues
                     .GroupBy(p => p.BegTime.DayOfWeek)
                     .Select(p => new EfficiencyLoadClientDayInfo
@@ -204,12 +211,23 @@ namespace UserOperations.Controllers
                             .Select(q => new { DialoguesCount = q.Select(r => r.DialogueId).Distinct().Count() })
                             .Average(q => q.DialoguesCount)
                     }).ToList();
+
+                var pauses = _dbOperation.DialogueAveragePauseList(sessionCur, dialoguesCur, begTime, endTime);
+                var pausesResult = new{
+                    Less_10 = pauses.Where(p => p <= 10).Count(),
+                    Between_11_20 = pauses.Where(p => p > 10 && p < 20).Count(),
+                    Between_21_60 = pauses.Where(p => p > 20 && p < 60).Count(),
+                    More_60 = pauses.Where(p => p >= 60).Count()
+                };
+             
               
-                var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(result));
+                var jsonToReturn = new Dictionary<string, object>();
+                jsonToReturn["Workload"] = result;
                 jsonToReturn["DiagramDialogDurationPause"] = diagramDialogDurationPause;
                 jsonToReturn["DiagramEmployeeWorked"] = diagramEmployeeWorked;
                 jsonToReturn["ClientTime"] = clientTime;
                 jsonToReturn["ClientDay"] = clientDay;
+                jsonToReturn["Pauses"] = pausesResult;
                 _log.Info("AnalyticEfficiency/EfficiencyDashboard finished");
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
@@ -220,23 +238,5 @@ namespace UserOperations.Controllers
             }
         }     
         
-    }
-
-class EfficiencyDashboardInfoNew
-    {
-        public double? LoadIndex;
-        public double? LoadIndexDelta;
-        public int? DialoguesCount;
-       // public double? EmployeeCount;
-        public double? DialoguesPerEmployee;
-       // public int? EmployeeOptimalCount;
-        public double? WorkingHours;
-       // public double? WorkingHoursDelta;
-       // public double? DialogueAveragePause;
-        public double? DialogueAverageDuration;
-        public double? CorrelationLoadSatisfaction;
-        public string BestEmployee;
-    }    
-
-  
+    }  
 }

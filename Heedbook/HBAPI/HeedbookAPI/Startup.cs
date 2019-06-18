@@ -60,6 +60,7 @@ namespace UserOperations
             services.AddScoped<Utils.DBOperations>();
             services.AddScoped<RequestFilters>();
             services.AddScoped<RedisProvider>();
+            services.AddScoped<ViewProvider>();            
             services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
             {
                 p.Password.RequireDigit = true;
