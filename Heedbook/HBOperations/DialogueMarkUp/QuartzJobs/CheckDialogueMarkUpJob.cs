@@ -137,7 +137,7 @@ namespace DialogueMarkUp.QuartzJobs
                         BeginTime = markup.BegTime,
                         EndTime = markup.EndTime
                     };
-                    _log.Info($" Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    // _log.Info($" Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
 
                     var dialogueCreation = new DialogueCreationRun {
@@ -147,7 +147,7 @@ namespace DialogueMarkUp.QuartzJobs
                         EndTime = markup.EndTime,
                         AvatarFileName = markup.BegFileName
                     };
-                    _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    // _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
 
                 }
@@ -204,7 +204,6 @@ namespace DialogueMarkUp.QuartzJobs
                         BeginTime = markUps[i].BegTime,
                         EndTime = markUps[i].EndTime
                     };
-                    _log.Info($"Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
 
                     var dialogueCreation = new DialogueCreationRun {
@@ -215,7 +214,6 @@ namespace DialogueMarkUp.QuartzJobs
                         EndTime = markUps[i].EndTime,
                         AvatarFileName = markUps[i].BegFileName
                     };
-                    _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
 
                 }
