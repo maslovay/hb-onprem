@@ -39,11 +39,13 @@ namespace QuartzExtensions
         {
             Console.WriteLine("Зашли в AddSendNotMarckedImageCountQuartz");
             services.Add(new ServiceDescriptor(typeof(IJob), typeof(SendNotMarckedImageCountJob),
-                ServiceLifetime.Singleton));
+                ServiceLifetime.Singleton));                
+                
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
             services.AddSingleton(provider => JobBuilder.Create<SendNotMarckedImageCountJob>()
                                                         .WithIdentity("SendNotMarckedImageCount.job", "Frames")
                                                         .Build());
+                                                        
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
@@ -52,7 +54,6 @@ namespace QuartzExtensions
                                      .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
                                      .Build();
             });
-            Console.WriteLine("Середина AddSendNotMarckedImageCountQuartz");
             services.AddSingleton(provider =>
             {
                 var schedulerFactory = new StdSchedulerFactory();
@@ -61,6 +62,33 @@ namespace QuartzExtensions
                 scheduler.Start();
                 return scheduler;
             });
+        }
+
+        public static void AddSendOnlineTuiOfficesJobQuartz(this IServiceCollection services)
+        {
+            
+            services.Add(new ServiceDescriptor(typeof(IJob), typeof(SendOnlineTuiOfficesJob),
+                ServiceLifetime.Singleton));   
+            services.AddSingleton<IJobFactory, ScheduledJobFactory>();         
+            services.AddSingleton(provider => JobBuilder.Create<SendOnlineTuiOfficesJob>()
+                                                        .WithIdentity("SendOnlineTuiOfficesJob.job", "Companys")
+                                                        .Build());
+            services.AddSingleton(provider =>
+            {
+                return TriggerBuilder.Create()
+                                     .WithIdentity("SendOnlineTuiOfficesJob.trigger", "Companys")
+                                     .StartNow()
+                                     .WithCronSchedule("0 20 10 * * ?")                                        
+                                     .Build();
+            });            
+            services.AddSingleton(provider =>
+            {
+                var schedulerFactory = new StdSchedulerFactory();
+                var scheduler = schedulerFactory.GetScheduler().Result;
+                scheduler.JobFactory = provider.GetService<IJobFactory>();
+                scheduler.Start();
+                return scheduler;
+            });            
         }
     }
 }

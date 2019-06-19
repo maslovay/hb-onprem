@@ -48,8 +48,7 @@ namespace QuartzExtensions.Jobs
             var password = "querty";
 
             smtpClient.Credentials = new NetworkCredential("kertak@yandex.ru", password);
-            smtpClient.Send(mail);
-            Console.ReadLine();
+            smtpClient.Send(mail);            
         }
 
         public List<CompanyFrameInformation> NotMarckedImageCount()
