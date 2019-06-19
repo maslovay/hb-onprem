@@ -63,6 +63,8 @@ namespace DialogueMarkUp.QuartzJobs
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
 
+                    _log.Info($"Application user id is {applicationUserId}, Frames to proceed - {framesUser.Count()}");
+
                     framesUser = FindAllFaceId(framesUser, periodFrame, periodTime);
                     var markUps = framesUser.GroupBy(p => p.FileFrame.FaceId)
                         .Where(p => p.Count() > 2)
