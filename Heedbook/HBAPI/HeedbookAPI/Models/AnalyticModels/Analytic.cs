@@ -31,7 +31,7 @@ namespace UserOperations.Models.AnalyticModels
         public double? SatisfactionScoreBeg;
         public double? SatisfactionScoreEnd;
         public DateTime SessionBegTime;
-        public DateTime SessionEndTime; 
+        public DateTime SessionEndTime;
         public string WorkerType;
     }
 
@@ -42,13 +42,13 @@ namespace UserOperations.Models.AnalyticModels
         public DateTime BegTime;
         public DateTime EndTime;
         public DateTime SessionBegTime;
-        public DateTime SessionEndTime; 
-        public List<DialogueFrame> DialogueFrame; 
-        public double? Age; 
-        public string Gender; 
+        public DateTime SessionEndTime;
+        public List<DialogueFrame> DialogueFrame;
+        public double? Age;
+        public string Gender;
     }
 
-     public class EmotionAttention
+    public class EmotionAttention
     {
         public double? Positive { get; set; }
         public double? Negative { get; set; }
@@ -56,7 +56,7 @@ namespace UserOperations.Models.AnalyticModels
         public double? Attention { get; set; }
     }
 
-        public class SessionInfoCompany
+    public class SessionInfoCompany
     {
         public Guid CompanyId;
         public DateTime BegTime;
@@ -77,7 +77,7 @@ namespace UserOperations.Models.AnalyticModels
         public double? SatisfactionScoreBeg;
         public double? SatisfactionScoreEnd;
         public DateTime SessionBegTime;
-        public DateTime SessionEndTime; 
+        public DateTime SessionEndTime;
         public string WorkerType;
     }
 
@@ -168,7 +168,7 @@ namespace UserOperations.Models.AnalyticModels
         public double? RealEmployeeCount;
     }
 
-  public class EfficiencyLoadClientTimeInfo
+    public class EfficiencyLoadClientTimeInfo
     {
         public string Time;
         public double? ClientCount;
@@ -254,14 +254,26 @@ namespace UserOperations.Models.AnalyticModels
         public double? WorkloadValueAvg;
         public double? WorkloadDynamics;
         public int? DialoguesCount;
-       // public double? EmployeeCount;
+        // public double? EmployeeCount;
         public double? DialoguesNumberAvgPerEmployee;
-       // public int? EmployeeOptimalCount;
+        // public int? EmployeeOptimalCount;
         public double? AvgWorkingTime;
-       // public double? WorkingHoursDelta;
-       // public double? DialogueAveragePause;
+        // public double? WorkingHoursDelta;
+        // public double? DialogueAveragePause;
         public double? AvgDurationDialogue;
         public double? CorrelationLoadSatisfaction;
-        public Employee BestEmployee;      
-    }    
+        public Employee BestEmployee;
+    }
+
+    //---------AnalyticWeeklyReport------------
+    public class UserWeeklyInfo
+    {
+        public double? TotalAvg;
+       // public double? TotalAvgOld;
+        public double? Dynamic;
+        public Dictionary<DateTime, double?> AvgPerDay;
+        public int? OfficeRating;
+       // public int? OfficeRatingOld;
+        public int? OfficeRatingChanges;
+    }
 }

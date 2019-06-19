@@ -124,6 +124,10 @@ namespace HBData
         public DbSet<LoginHistory> LoginHistorys { get; set; }
         public DbSet<VIndexByCompanyDay> VIndexesByCompanysDays { get; set; }
         public DbSet<VIndexByDialogueDay> VIndexesByDialoguesDays { get; set; }
-        
+        public DbSet<VSessionWeeklyReport> VSessionWeeklyReports { get; set; }
+        public DbSet<VSessionWeeklyReportOld> VSessionWeeklyReportsOld { get; set; }
+        public DbSet<VWeeklyReport> VWeeklyReports { get; set; }
+        public DbSet<VWeeklyReportOld> VWeeklyReportsOld { get; set; }
+
     }
 }
