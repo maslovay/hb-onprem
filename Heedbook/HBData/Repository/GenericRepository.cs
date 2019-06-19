@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Data.Common;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
+using HBData.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
@@ -20,7 +22,7 @@ namespace HBData.Repository
         public GenericRepository(RecordsContext context)
         {
             _context = context;
-        }
+        }     
 
         public async Task<IEnumerable<T>> FindAllAsync<T>() where T : class
         {
@@ -128,7 +130,7 @@ namespace HBData.Repository
             _context.Set<T>().RemoveRange(dbSet.Where(expr));
         }
 
-        
+
         public IEnumerable<Object> ExecuteDbCommand(List<String> properties, String sql,
             Dictionary<String, Object> @params = null)
         {
@@ -180,7 +182,7 @@ namespace HBData.Repository
         private Object CreateType(List<String> properties, out Type type)
         {
             //TODO: replace it and make generic.
-            var asmName = new AssemblyName {Name = "MyDynamicAssembly"};
+            var asmName = new AssemblyName { Name = "MyDynamicAssembly" };
             var asmBuilder = AssemblyBuilder.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndCollect);
             var modBuilder =
                 asmBuilder.DefineDynamicModule(asmName.Name);
@@ -214,7 +216,7 @@ namespace HBData.Repository
                     typeBuilder.DefineMethod($"set_{property}",
                         getSetAttr,
                         null,
-                        new Type[] {typeof(Double)});
+                        new Type[] { typeof(Double) });
                 ILGenerator custNameSetIL = custNameSetPropMthdBldr.GetILGenerator();
                 custNameSetIL.Emit(OpCodes.Ldarg_0);
                 custNameSetIL.Emit(OpCodes.Ldarg_1);

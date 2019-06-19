@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using HBData.Models;
 
 namespace HBData.Repository
 {
     public interface IGenericRepository
-    {
+    {      
         Task<IEnumerable<T>> FindAllAsync<T>()
             where T : class;
 

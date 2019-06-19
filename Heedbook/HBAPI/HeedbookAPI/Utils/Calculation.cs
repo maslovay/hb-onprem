@@ -263,6 +263,22 @@ namespace UserOperations.Utils
                     (date == null || p.BegTime.Date == date))
                 .Select(p => p.DialogueId).Distinct().Count() : 0;
         }
+        public Employee BestEmployeeLoad(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
+        {
+            return dialogues.Any() ? dialogues
+                .GroupBy(p => p.ApplicationUserId)
+                .Select(p => new Employee
+                {
+                    BestEmployeeId = p.First().ApplicationUserId,
+                    BestEmployeeName = p.First().FullName,
+                    LoadValue = LoadIndex(sessions, p, beg, end),
+                    Date = p.First().BegTime
+                    //EfficiencyIndex
+                })
+                .OrderByDescending(p => p.LoadValue)
+                .Take(1)
+                .FirstOrDefault():null;
+        }
 
         public string BestEmployee(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
@@ -406,6 +422,13 @@ namespace UserOperations.Utils
             var sessionHours = sessions.Where(p => p.ApplicationUserId == dialogues.Key).Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours);
             var dialoguesHours = dialogues.Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours);
             return (sessionHours - dialoguesHours) / dialogues.Select(p => p.DialogueId).Distinct().Count();
+        }
+
+        public List<double> DialogueAveragePauseList(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
+        {
+            if (!sessions.Any()) return null;
+            if (!dialogues.Any()) return new List<double> {  sessions.Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours)};
+            return dialogues.Select(p =>  MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours ).ToList();
         }
           public double? DialogueAveragePause(List<SessionInfoCompany> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
         {

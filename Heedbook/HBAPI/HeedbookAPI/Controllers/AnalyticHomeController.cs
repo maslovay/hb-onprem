@@ -45,6 +45,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
+        private readonly ViewProvider _viewProvider;
         private readonly ElasticClient _log;
         public AnalyticHomeController(
             IConfiguration config,
@@ -52,6 +53,7 @@ namespace UserOperations.Controllers
             RecordsContext context,
             DBOperations dbOperation,
             RequestFilters requestFilters,
+            ViewProvider viewProvider,
             ElasticClient log
             )
         {
@@ -61,6 +63,7 @@ namespace UserOperations.Controllers
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _log = log;
+            _viewProvider = viewProvider;
         }
 
         [HttpGet("Dashboard")]
@@ -139,6 +142,8 @@ namespace UserOperations.Controllers
                 var companyIdsInHeedbookExceptSelected = _requestFilters.CompanyIdsInHeedbookExceptSelected(companyIds);  
 //-----------------ALL-----------------------
                 var indexesInIndustryAll = _context.VIndexesByCompanysDays.ToList();
+                Console.WriteLine("---END QUERY----");
+                Console.WriteLine(indexesInIndustryAll.FirstOrDefault().CompanyId);
                 //---for selected period in industries except selected companies
                 var indexesInIndustryExeptSelectedComp = indexesInIndustryAll
                     .Where(p => companyIdsInIndustryExceptSelected.Contains (p.CompanyId)

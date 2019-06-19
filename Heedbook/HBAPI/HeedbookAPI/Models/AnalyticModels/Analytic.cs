@@ -238,4 +238,30 @@ namespace UserOperations.Models.AnalyticModels
         public string Gender { get; set; }
         public EmotionAttention EmotionAttention { get; set; }
     }
+
+
+    //--------------AnalyticLoadOfficeController-------------------------
+    public class Employee
+    {
+        public string BestEmployeeName;
+        public Guid BestEmployeeId;
+        public double? LoadValue;
+        public DateTime? Date;
+    }
+
+    class EfficiencyDashboardInfoNew
+    {
+        public double? WorkloadValueAvg;
+        public double? WorkloadDynamics;
+        public int? DialoguesCount;
+       // public double? EmployeeCount;
+        public double? DialoguesNumberAvgPerEmployee;
+       // public int? EmployeeOptimalCount;
+        public double? AvgWorkingTime;
+       // public double? WorkingHoursDelta;
+       // public double? DialogueAveragePause;
+        public double? AvgDurationDialogue;
+        public double? CorrelationLoadSatisfaction;
+        public Employee BestEmployee;      
+    }    
 }
