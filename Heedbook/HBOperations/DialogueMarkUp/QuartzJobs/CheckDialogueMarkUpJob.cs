@@ -235,7 +235,6 @@ namespace DialogueMarkUp.QuartzJobs
                 // System.Console.WriteLine($"Index ---- {i}, Face id -- {faceId}, Time - {frameAttribute[i].FileFrame.Time}, FileName - {frameAttribute[i].FileFrame.FileName}");
                 frameAttribute[i].FileFrame.FaceId = faceId;
             }
-            _log.Info($"Face ids - {JsonConvert.SerializeObject(frameAttribute.Select(p => new {FaceId = p.FileFrame.FaceId, FileName = p.FileFrame.FaceId}).ToList())}");
             return frameAttribute;
         }
         private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double treshold = 0.4)
