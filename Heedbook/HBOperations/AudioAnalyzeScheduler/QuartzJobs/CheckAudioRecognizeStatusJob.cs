@@ -58,6 +58,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     var dialogueSpeeches = new List<DialogueSpeech>();
                     var dialogueWords = new List<DialogueWord>();
                     var phraseCounts = new List<DialoguePhraseCount>();
+                    var dialoguePhrases = new List<DialoguePhrase>();
                     // System.Console.WriteLine($"Audios count - {audios.Count()}");
                     foreach (var audio in audios)
                     {
@@ -102,6 +103,16 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     phraseCounter[phrase.PhraseTypeId.Value] += foundPhrases.Count();
                                 else
                                     phraseCounter[phrase.PhraseTypeId.Value] = foundPhrases.Count();
+
+                                if (foundPhrases.Any())
+                                {
+                                    dialoguePhrases.Add(new DialoguePhrase{
+                                        DialoguePhraseId = Guid.NewGuid(),
+                                        DialogueId = audio.DialogueId,
+                                        PhraseTypeId = phrase.PhraseTypeId,
+                                        PhraseId = phrase.PhraseId
+                                    });
+                                }
                             }
 
                             foreach (var key in phraseCounter.Keys)
@@ -145,6 +156,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         audio.StatusId = 7;
                     }
 
+                    _context.DialoguePhrases.AddRange(dialoguePhrases);
                     _context.DialogueSpeechs.AddRange(dialogueSpeeches);
                     _context.DialogueWords.AddRange(dialogueWords);
                     _context.DialoguePhraseCounts.AddRange(phraseCounts);
