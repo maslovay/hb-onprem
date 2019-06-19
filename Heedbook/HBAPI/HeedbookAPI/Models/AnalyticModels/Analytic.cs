@@ -275,5 +275,8 @@ namespace UserOperations.Models.AnalyticModels
         public int? OfficeRating;
        // public int? OfficeRatingOld;
         public int? OfficeRatingChanges;
+        public int? CorporationRating;
+       // public int? OfficeRatingOld;
+        public int? CorporationRatingChanges;
     }
 }
