@@ -268,6 +268,11 @@ namespace UserOperations.Models.AnalyticModels
     //---------AnalyticWeeklyReport------------
     public class UserWeeklyInfo
     {
+        public UserWeeklyInfo(int corp, int comp)
+        {
+            AmountUsersInCompany = comp;
+            AmountUsersInCorporation = corp;
+        }
         public double? TotalAvg;
        // public double? TotalAvgOld;
         public double? Dynamic;
@@ -278,5 +283,8 @@ namespace UserOperations.Models.AnalyticModels
         public int? CorporationRating;
        // public int? OfficeRatingOld;
         public int? CorporationRatingChanges;
+        public int AmountUsersInCorporation { get; set; }
+        public int AmountUsersInCompany { get; set; }
+
     }
 }

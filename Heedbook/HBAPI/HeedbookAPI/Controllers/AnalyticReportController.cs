@@ -166,7 +166,7 @@ namespace UserOperations.Controllers
 
                 var result = sessions
                     .GroupBy(p => p.ApplicationUserId)
-                    .Select(p => new ReportPartPeriodEmployeeInfo
+                    .Select(p => new 
                     {
                         FullName = p.First().FullName,
                         ApplicationUserId = p.Key,
