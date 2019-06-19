@@ -63,8 +63,18 @@ namespace UserOperations.Controllers
             try
             {
                 _log.Info("Session/SessionStatus started"); 
-                if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) return BadRequest("ApplicationUser is empty");
-                if (data.Action != "open" && data.Action != "close") return BadRequest("Wrong action");
+                var response = new Response();
+
+                if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
+                {
+                    response.Message = "ApplicationUser is empty";
+                    return BadRequest(response);
+                }
+                if (data.Action != "open" && data.Action != "close") 
+                {
+                    response.Message = "Wrong action";
+                    return BadRequest(response);
+                }
                 var actionId = data.Action == "open" ? 6 : 7;
                 var curTime = DateTime.UtcNow;
                 var oldTime = DateTime.UtcNow.AddDays(-3);
@@ -87,11 +97,14 @@ namespace UserOperations.Controllers
                             };
                             _context.Sessions.Add(session);
                             _context.SaveChanges();
-                            return Ok("Session successfully opened");
+                            response.Message = "Session successfully opened";
+                            return Ok(response);
                         case 7:
-                            return Ok("Can't close not opened session");
+                            response.Message = "Can't close not opened session";
+                            return Ok(response);
                         default:
-                            return BadRequest("Wrong action");
+                            response.Message = "Wrong action";
+                            return BadRequest(response);
                     }
                 }
                 else
@@ -99,7 +112,11 @@ namespace UserOperations.Controllers
                     switch (actionId)
                     {
                         case 6:
-                            if (lastSession.StatusId == 6) return Ok("Can't open not closed session");
+                            if (lastSession.StatusId == 6) 
+                            {
+                                response.Message = "Can't open not closed session";
+                                return Ok(response);
+                            }
                             var session = new Session{
                                 BegTime = DateTime.UtcNow,
                                 EndTime = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1),
@@ -111,29 +128,43 @@ namespace UserOperations.Controllers
                             _context.Sessions.Add(session);
                             _context.SaveChanges();
 
-                            return Ok("Session successfully opened");
+                            response.Message = "Session successfully opened";
+                            return Ok(response);
                         
                         case 7:
-                            if (lastSession.StatusId == 7) return Ok("Can't close not opened session");
+                            if (lastSession.StatusId == 7) 
+                            {
+                                response.Message = "Can't close not opened session";
+                                return Ok(response);
+                            }
                             lastSession.StatusId = 7;
                             lastSession.EndTime = DateTime.UtcNow;
 
                             _context.SaveChanges();
-                            return Ok("Session successfully closed");
+                            response.Message = "Session successfully closed";
+                            return Ok(response);
                         default:
-                            return BadRequest("Wrong action");
+                            response.Message = "Wrong action";
+                            return BadRequest(response);
                     }
                 }
             }
             catch (Exception e)
             {
+                var response = new Response();
+                response.Message = $"Exception occured {e}";
                 _log.Fatal($"Exception occurred {e}");
-                return BadRequest($"Exception occured {e}");
+                return BadRequest(response);
             }
         }
     }
 
-     public class SessionParams
+    public class Response
+    {
+        public string Message;
+    }
+
+    public class SessionParams
     {
         public Guid ApplicationUserId;
         public string Action;
