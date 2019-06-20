@@ -13,6 +13,7 @@ docker build -t containerregistryhb.azurecr.io/fillingsatisfactionservice:latest
 docker build -t containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest -f DialogueVideoAssembleService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/dialoguemarkupservice:latest -f DialogueMarkUpService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/sessionstatusscheduler:latest -f SessionStatusScheduler.Dockerfile .
+docker build -t containerregistryhb.azurecr.io/onlinetuiofficesscheduler:latest -f OnlineTuiOfficesScheduler.Dockerfile .
                                                                
 docker push containerregistryhb.azurecr.io/faceanalyzeservice:latest &&
 docker push containerregistryhb.azurecr.io/userservice:latest && 
@@ -29,3 +30,4 @@ docker push containerregistryhb.azurecr.io/fillingsatisfactionservice:latest &&
 docker push containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest &&
 docker push containerregistryhb.azurecr.io/dialoguemarkupservice:latest &&
 docker push containerregistryhb.azurecr.io/sessionstatusscheduler:latest
+docker push containerregistryhb.azurecr.io/onlinetuiofficesscheduler:latest
