@@ -159,6 +159,11 @@ namespace UserOperations.Controllers
                     && p.Day >= begTime && p.Day <= endTime
                      ).ToList();
 
+                var indexesOwn = indexesInIndustryAll
+                    .Where(p => p.CompanyId == companyId
+                    && p.Day >= begTime && p.Day <= endTime
+                     ).ToList();
+
 //-----------------DIALOGUES INDEXES-----------------------
                 var indexesByDialogueAll = _context.VIndexesByDialoguesDays.ToList();
                 var indexesByDialogueOwn = indexesByDialogueAll.Where(p => companyIds.Contains (p.CompanyId)
@@ -210,8 +215,8 @@ namespace UserOperations.Controllers
                     SatisfactionIndexTotalAverage = indexesInHeedbook.Sum(p => p.SatisfactionIndex) 
                                     / indexesInHeedbook.Count(),
 
-                    LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)) * 4,
-                    LoadIndexDelta = - _dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, endTime) * 4,
+                    LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
+                    LoadIndexDelta = - _dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, endTime),
                     LoadIndexIndustryAverage = indexesInIndustryExeptSelectedComp.Count() !=0 ? 
                                     100 * indexesInIndustryExeptSelectedComp
                                     .Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)
@@ -233,8 +238,8 @@ namespace UserOperations.Controllers
                     CrossIndexTotalAverage = 100 * (double)indexesByDialogueHeedbook.Sum(x => (double)x.CrossCount) /
                     (double)indexesByDialogueHeedbook.Sum(x => (double)x.DialoguesCount),
 
-                    AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime) / 2,
-                    AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime) / 2,
+                    AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime),
+                    AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime),
                     NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
                     NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld))
                 };
