@@ -36,7 +36,7 @@ namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AnalyticLoadOfficeController : Controller
+    public class AnalyticOfficeController : Controller
     {
         private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
@@ -45,7 +45,7 @@ namespace UserOperations.Controllers
         private readonly RequestFilters _requestFilters;
         private readonly ElasticClient _log;
 
-        public AnalyticLoadOfficeController(
+        public AnalyticOfficeController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
@@ -62,8 +62,8 @@ namespace UserOperations.Controllers
             _log = log;
         }
 
-        [HttpGet("EfficiencyDashboardNew")]
-        public IActionResult EfficiencyDashboardNew([FromQuery(Name = "begTime")] string beg,
+        [HttpGet("Efficiency")]
+        public IActionResult Efficiency([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -116,7 +116,7 @@ namespace UserOperations.Controllers
                         ApplicationUserId = p.ApplicationUserId,
                         BegTime = p.BegTime,
                         EndTime = p.EndTime,
-                        FullName = p.ApplicationUser.UserName,
+                        FullName = p.ApplicationUser.FullName,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                     }).ToList();
 
