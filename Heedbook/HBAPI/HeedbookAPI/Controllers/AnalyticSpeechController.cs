@@ -140,11 +140,13 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
+               // Console.WriteLine(role);
                 var companyId = Guid.Parse(userClaims["companyId"]);     
+              //  Console.WriteLine(companyId);
+
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
-
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);  
                  var request = _context.DialoguePhrases
                     .Include(p => p.Phrase)
                     .Include(p => p.Dialogue)
@@ -157,8 +159,7 @@ namespace UserOperations.Controllers
                         && (!applicationUserIds.Any() || applicationUserIds.Contains(p.Dialogue.ApplicationUserId))
                         && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.Dialogue.ApplicationUser.WorkerTypeId))
                         && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
-                        && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid)p.Phrase.PhraseTypeId)));
-                
+                        && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid)p.Phrase.PhraseTypeId)));                
                 //these 2 ids can be hardcoded as 3 and 4
                 var phraseTypes = _context.PhraseTypes.ToList();
                 var typeIdAlert = phraseTypes.Where(p => p.PhraseTypeText == "Alert").Select(p => p.PhraseTypeId).First();
@@ -213,7 +214,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);                  
 
                 var dialogueIds = _context.Dialogues
                     .Where(p => p.EndTime >= begTime
@@ -225,7 +226,7 @@ namespace UserOperations.Controllers
                         && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
                     .Select(p => p.DialogueId).ToList();
 
-                var dialoguesTotal = dialogueIds.Count();
+                var dialoguesTotal = dialogueIds.Count();               
                
                 // GET ALL PHRASES INFORMATION
                 var phrasesInfo = _context.DialoguePhrases
