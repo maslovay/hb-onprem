@@ -378,11 +378,7 @@ namespace UserOperations.Utils
         public double? SessionTotalHours(List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return sessions.Any() ?
-<<<<<<< HEAD
                 (double?)sessions.Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours) : 0;
-=======
-                (double?)sessions.Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours) : null;
->>>>>>> origin/master
         }
 
         public double? SessionAverageHours(List<SessionInfo> sessions, DateTime beg, DateTime end)
