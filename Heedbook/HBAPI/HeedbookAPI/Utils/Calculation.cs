@@ -412,7 +412,6 @@ namespace UserOperations.Utils
         public double? DialogueSumDuration(List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
             return dialogues.Any() ? (double?)dialogues.Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours) : null;
-
         }
 
         public double? DialogueSumDuration(IGrouping<DateTime, SessionInfo> sessions, List<DialogueInfo> dialogues, Guid applicationUserId)

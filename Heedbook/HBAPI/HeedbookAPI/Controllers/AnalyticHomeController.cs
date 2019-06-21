@@ -243,7 +243,8 @@ namespace UserOperations.Controllers
                     NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
                     NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld)),
 
-                    DialogueDuration = _dbOperation.DialogueSumDuration(dialogues, begTime, endTime)
+                    DialogueDuration = _dbOperation.DialogueSumDuration(dialoguesCur, begTime, endTime),
+                    DialogueDurationDelta = -_dbOperation.DialogueSumDuration(dialoguesOld, prevBeg, endTime)
                 };
 
               
@@ -262,8 +263,7 @@ namespace UserOperations.Controllers
                // result.EfficiencyIndexDelta += result.EfficiencyIndex;
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.DialoguesCountDelta += result.DialoguesCount;
-
-                             
+                result.DialogueDurationDelta += result.DialogueDuration;                             
 
 
                 var jsonToReturn = JsonConvert.SerializeObject(result);  
