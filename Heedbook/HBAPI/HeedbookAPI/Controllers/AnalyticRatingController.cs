@@ -133,7 +133,8 @@ namespace UserOperations.Controllers
                                 Load = _dbOperation.LoadIndex(sessions, q, p.Key, q.Key, begTime, endTime),
                                 LoadHours = _dbOperation.SessionAverageHours(sessions, p.Key, q.Key, begTime, endTime),
                                 WorkingHours = _dbOperation.DialogueSumDuration(q, begTime, endTime),
-                                DialogueDuration = _dbOperation.DialogueAverageDuration(q, begTime, endTime)
+                                DialogueDuration = _dbOperation.DialogueAverageDuration(q, begTime, endTime),
+                                CrossInProcents = _dbOperation.CrossIndex(dialogues)
                             }).ToList()
                     }).ToList();
 
@@ -343,6 +344,7 @@ namespace UserOperations.Controllers
         public double? LoadHours;
         public double? WorkingHours;
         public double? DialogueDuration;
+        public double? CrossInProcents;
     }
 
     public class RatingUserInfo

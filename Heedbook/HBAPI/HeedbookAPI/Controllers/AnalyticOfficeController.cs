@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticEfficiency/EfficiencyDashboard started");
+                _log.Info("AnalyticOffice/Efficiency started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -212,14 +212,26 @@ namespace UserOperations.Controllers
                             .Average(q => q.DialoguesCount)
                     }).ToList();
 
-                var pauses = _dbOperation.DialogueAveragePauseList(sessionCur, dialoguesCur, begTime, endTime);
-                var pausesResult = new{
-                    Less_10 = pauses.Where(p => p <= 10).Count(),
-                    Between_11_20 = pauses.Where(p => p > 10 && p < 20).Count(),
-                    Between_21_60 = pauses.Where(p => p > 20 && p < 60).Count(),
-                    More_60 = pauses.Where(p => p >= 60).Count()
+                var pauseInMin = _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, sessionCur.Min(p => p.BegTime), sessionCur.Max(p => p.EndTime));
+                var sessTimeMinutes = _dbOperation.SessionTotalHours(sessionCur, begTime, endTime)*60;
+               
+                var pausesAmount = new{
+                    Less_10 = pauseInMin.Where(p => p <= 10).Count(),
+                    Between_11_20 = pauseInMin.Where(p => p > 10 && p < 20).Count(),
+                    Between_21_60 = pauseInMin.Where(p => p > 20 && p < 60).Count(),
+                    More_60 = pauseInMin.Where(p => p >= 60).Count()
                 };
-             
+                ///--------------///////////
+
+                var pausesAvgValue = new{
+                    Less_10 = 100 *  pauseInMin.Where(p => p <= 10).Sum() / sessTimeMinutes,
+                    Between_11_20 = 100 * pauseInMin.Where(p => p > 10 && p < 20).Sum() / sessTimeMinutes,
+                    Between_21_60 = 100 * pauseInMin.Where(p => p > 20 && p < 60).Sum() / sessTimeMinutes,
+                    More_60 = 100 * pauseInMin.Where(p => p >= 60).Sum() / sessTimeMinutes,
+                    Sessions = 100 * (sessTimeMinutes - pauseInMin.Sum()) / sessTimeMinutes
+                };
+                return Ok(pausesAvgValue);
+                ///--------------///////////
               
                 var jsonToReturn = new Dictionary<string, object>();
                 jsonToReturn["Workload"] = result;
@@ -227,8 +239,8 @@ namespace UserOperations.Controllers
                 jsonToReturn["DiagramEmployeeWorked"] = diagramEmployeeWorked;
                 jsonToReturn["ClientTime"] = clientTime;
                 jsonToReturn["ClientDay"] = clientDay;
-                jsonToReturn["Pauses"] = pausesResult;
-                _log.Info("AnalyticEfficiency/EfficiencyDashboard finished");
+                jsonToReturn["Pauses"] = pausesAmount;
+                _log.Info("AnalyticOffice/Efficiency finished");
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
             catch (Exception e)

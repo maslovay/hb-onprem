@@ -375,6 +375,12 @@ namespace UserOperations.Utils
                 .FirstOrDefault()
                 .SatisfactionScoreDelta : 0;
         }
+        public double? SessionTotalHours(List<SessionInfo> sessions, DateTime beg, DateTime end)
+        {
+            return sessions.Any() ?
+                (double?)sessions.Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours) : null;
+        }
+
         public double? SessionAverageHours(List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return sessions.Any() ?
@@ -431,11 +437,11 @@ namespace UserOperations.Utils
             return (sessionHours - dialoguesHours) / dialogues.Select(p => p.DialogueId).Distinct().Count();
         }
 
-        public List<double> DialogueAveragePauseList(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
+        public List<double> DialogueAvgPauseListInMinutes(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
             if (!sessions.Any()) return null;
-            if (!dialogues.Any()) return new List<double> { sessions.Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours) };
-            return dialogues.Select(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours).ToList();
+            if (!dialogues.Any()) return  sessions.Select(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalMinutes).ToList();
+            return dialogues.Select(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalMinutes).ToList();
         }
         public double? DialogueAveragePause(List<SessionInfoCompany> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
         {
