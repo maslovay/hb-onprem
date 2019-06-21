@@ -221,7 +221,6 @@ namespace UserOperations.Controllers
                     Between_21_60 = pauseInMin.Where(p => p > 20 && p < 60).Count(),
                     More_60 = pauseInMin.Where(p => p >= 60).Count()
                 };
-                ///--------------///////////
 
                 var pausesAvgValue = new{
                     Less_10 = 100 *  pauseInMin.Where(p => p <= 10).Sum() / sessTimeMinutes,
@@ -230,8 +229,6 @@ namespace UserOperations.Controllers
                     More_60 = 100 * pauseInMin.Where(p => p >= 60).Sum() / sessTimeMinutes,
                     Sessions = 100 * (sessTimeMinutes - pauseInMin.Sum()) / sessTimeMinutes
                 };
-                return Ok(pausesAvgValue);
-                ///--------------///////////
               
                 var jsonToReturn = new Dictionary<string, object>();
                 jsonToReturn["Workload"] = result;
@@ -240,6 +237,7 @@ namespace UserOperations.Controllers
                 jsonToReturn["ClientTime"] = clientTime;
                 jsonToReturn["ClientDay"] = clientDay;
                 jsonToReturn["Pauses"] = pausesAmount;
+                jsonToReturn["PausesShare"] = pausesAvgValue;
                 _log.Info("AnalyticOffice/Efficiency finished");
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
