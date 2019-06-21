@@ -116,6 +116,7 @@ namespace UserOperations.Models.AnalyticModels
         public double? BestProgressiveEmployeeDelta;
         public double? SatisfactionDialogueDelta;
         public double? DialogueDuration;
+
         public double? DialogueDurationDelta;
     }
 

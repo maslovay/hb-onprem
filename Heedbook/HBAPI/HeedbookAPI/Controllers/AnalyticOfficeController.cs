@@ -229,7 +229,7 @@ namespace UserOperations.Controllers
                     More_60 = pauseInMin?.Where(p => p >= 60).Count()
                 };
 
-                var pausesAvgValue = new{
+                    var pausesAvgValue = new{
                     Less_10 = sessTimeMinutes != 0? 100 *  pauseInMin?.Where(p => p <= 10).Sum() / sessTimeMinutes : 0,
                     Between_11_20 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 10 && p < 20).Sum() / sessTimeMinutes : 0,
                     Between_21_60 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 20 && p < 60).Sum() / sessTimeMinutes : 0,
@@ -237,6 +237,8 @@ namespace UserOperations.Controllers
                     Sessions = sessTimeMinutes != 0? 100 * (sessTimeMinutes - pauseInMin?.Sum()) / sessTimeMinutes : 0
                 };
                 Console.WriteLine("239");
+
+              
                 var jsonToReturn = new Dictionary<string, object>();
                 jsonToReturn["Workload"] = result;
                 jsonToReturn["DiagramDialogDurationPause"] = diagramDialogDurationPause;
