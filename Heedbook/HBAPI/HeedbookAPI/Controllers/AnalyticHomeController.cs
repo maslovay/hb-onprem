@@ -226,9 +226,9 @@ namespace UserOperations.Controllers
                     
                    // CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
                     CrossIndex =  indexesByDialogueOwn.Count() != 0 ? 100 * indexesByDialogueOwn
-                        .Average(x => (double)x.CrossCount /(double)x.DialoguesCount) : 0,
+                        .Sum(x => (double)x.CrossCount) / indexesByDialogueOwn.Sum(x => (double)x.DialoguesCount) : 0,
                     CrossIndexDelta = - 100 * indexesByDialogueOwnOld.Count() != 0 ? indexesByDialogueOwn
-                        .Average(x => (double)x.CrossCount /(double)x.DialoguesCount) : 0,
+                        .Sum(x => (double)x.CrossCount) / indexesByDialogueOwn.Sum (x => (double)x.DialoguesCount) : 0,
                     CrossIndexIndustryAverage = indexesByDialogueExeptSelectedComp.Count() != 0 ?
                         100 * (double)indexesByDialogueExeptSelectedComp.Sum(p => (double)p.CrossCount)
                         /(double)indexesByDialogueExeptSelectedComp.Sum(p =>(double)p.DialoguesCount) : 0,
@@ -241,7 +241,9 @@ namespace UserOperations.Controllers
                     AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime),
                     AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime),
                     NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
-                    NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld))
+                    NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld)),
+
+                    DialogueDuration = _dbOperation.DialogueSumDuration(dialogues, begTime, endTime)
                 };
 
               

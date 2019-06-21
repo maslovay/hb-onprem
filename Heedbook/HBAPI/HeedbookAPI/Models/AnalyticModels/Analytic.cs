@@ -115,6 +115,7 @@ namespace UserOperations.Models.AnalyticModels
         public string BestProgressiveEmployee;
         public double? BestProgressiveEmployeeDelta;
         public double? SatisfactionDialogueDelta;
+        public double? DialogueDuration;
     }
 
     public class TopHintInfo
