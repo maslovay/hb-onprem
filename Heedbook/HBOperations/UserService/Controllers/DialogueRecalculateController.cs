@@ -194,7 +194,10 @@ namespace UserService.Controllers
                     _log.Info($"VideoToSound - not Success | ");
                     _log.Info($"GoogleRecognition - not success | ");
                     _log.Info($"TonAnalyze - not Success | ");     
-                    _log.Info($"FillingFrame - not Success | ");                    
+                    _log.Info($"FillingFrame - not Success | ");   
+                    dialogue.StatusId = 3;
+                    dialogue.CreationTime = DateTime.UtcNow;
+                    _context.SaveChanges();                 
                     var @event = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = dialogue.ApplicationUserId,
