@@ -50,6 +50,7 @@ namespace FillingFrameService
                             && item.Time <= message.EndTime)
                         .Select(item => item.FileFrameId)
                         .ToList();
+                
                 var emotions =
                     _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId),
                         item => item.FileFrame).ToList();

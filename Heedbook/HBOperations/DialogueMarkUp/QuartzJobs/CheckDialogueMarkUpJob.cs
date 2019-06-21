@@ -63,6 +63,8 @@ namespace DialogueMarkUp.QuartzJobs
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
 
+                    _log.Info($"Application user id is {applicationUserId}, Frames to proceed - {framesUser.Count()}");
+
                     framesUser = FindAllFaceId(framesUser, periodFrame, periodTime);
                     var markUps = framesUser.GroupBy(p => p.FileFrame.FaceId)
                         .Where(p => p.Count() > 2)
@@ -137,7 +139,7 @@ namespace DialogueMarkUp.QuartzJobs
                         BeginTime = markup.BegTime,
                         EndTime = markup.EndTime
                     };
-                    _log.Info($" Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    // _log.Info($" Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
 
                     var dialogueCreation = new DialogueCreationRun {
@@ -147,7 +149,7 @@ namespace DialogueMarkUp.QuartzJobs
                         EndTime = markup.EndTime,
                         AvatarFileName = markup.BegFileName
                     };
-                    _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
+                    // _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
 
                 }
@@ -204,7 +206,6 @@ namespace DialogueMarkUp.QuartzJobs
                         BeginTime = markUps[i].BegTime,
                         EndTime = markUps[i].EndTime
                     };
-                    _log.Info($"Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueVideoMerge);
 
                     var dialogueCreation = new DialogueCreationRun {
@@ -215,7 +216,6 @@ namespace DialogueMarkUp.QuartzJobs
                         EndTime = markUps[i].EndTime,
                         AvatarFileName = markUps[i].BegFileName
                     };
-                    _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
                     _publisher.Publish(dialogueCreation);
 
                 }
@@ -235,7 +235,6 @@ namespace DialogueMarkUp.QuartzJobs
                 // System.Console.WriteLine($"Index ---- {i}, Face id -- {faceId}, Time - {frameAttribute[i].FileFrame.Time}, FileName - {frameAttribute[i].FileFrame.FileName}");
                 frameAttribute[i].FileFrame.FaceId = faceId;
             }
-            _log.Info($"Face ids - {JsonConvert.SerializeObject(frameAttribute.Select(p => new {FaceId = p.FileFrame.FaceId, FileName = p.FileFrame.FaceId}).ToList())}");
             return frameAttribute;
         }
         private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double treshold = 0.4)
