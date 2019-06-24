@@ -212,9 +212,9 @@ namespace UserOperations.Controllers
                     LoadIndexIndustryBenchmark = 100 * indexesInIndustryAllForBenchmark.Max(p => p.DialoguesHours/ p.SessionHours),
                     LoadIndexTotalAverage = 100 * indexesInHeedbook.Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)/ indexesInHeedbook.Count(),
                     
-                   // CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
-                    CrossIndex =  indexesByDialogueOwn.Count() != 0 ? 100 * indexesByDialogueOwn
-                        .Sum(x => (double)x.CrossCount) / indexesByDialogueOwn.Sum(x => (double)x.DialoguesCount) : 0,
+                    CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
+                   // CrossIndex =  indexesByDialogueOwn.Count() != 0 ? 100 * indexesByDialogueOwn
+                    //    .Sum(x => (double)x.CrossCount) / indexesByDialogueOwn.Sum(x => (double)x.DialoguesCount) : 0,
                     CrossIndexDelta = - 100 * indexesByDialogueOwnOld.Count() != 0 ? indexesByDialogueOwn
                         .Sum(x => (double)x.CrossCount) / indexesByDialogueOwn.Sum (x => (double)x.DialoguesCount) : 0,
                     CrossIndexIndustryAverage = indexesByDialogueExeptSelectedComp.Count() != 0 ?
