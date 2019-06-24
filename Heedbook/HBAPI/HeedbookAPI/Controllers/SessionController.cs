@@ -83,6 +83,22 @@ namespace UserOperations.Controllers
                         .ToList().OrderByDescending(p => p.BegTime)
                         .FirstOrDefault();
 
+                //----------CLOSE ALL NOT CLOSED SESSIONS--------        
+                var allUserSessions = _context.Sessions
+                        .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.SessionId != lastSession.SessionId)
+                        .OrderByDescending(p => p.BegTime)
+                        .ToArray();
+                var lastNotClosedBegTime = lastSession != null? lastSession.BegTime : curTime;        
+                for( int i = 0; i < allUserSessions.Count(); i++ )
+                {
+                    if( allUserSessions[i].StatusId == 6 )
+                    {
+                        allUserSessions[i].StatusId = 7;
+                        allUserSessions[i].EndTime = i != allUserSessions.Count() - 2 ? allUserSessions[i+1].BegTime.AddMilliseconds(-1) : lastNotClosedBegTime;
+                        _context.SaveChanges();
+                    }
+                }
+                //----------CHANGE STATUS OR OPEN NEW-----------------------------------
                 if (lastSession == null)
                 {
                     switch (actionId)
