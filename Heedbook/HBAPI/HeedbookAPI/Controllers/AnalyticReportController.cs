@@ -211,7 +211,6 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
-                Console.WriteLine("-----------------------------1----------------------");
                 var sessions = _context.Sessions
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.ApplicationUser.WorkerType)
@@ -230,7 +229,6 @@ namespace UserOperations.Controllers
                         // WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
                     })
                     .ToList();
-                Console.WriteLine("-----------------------------2----------------------");
                 var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
 
                 var dialogues = _context.Dialogues
@@ -257,12 +255,10 @@ namespace UserOperations.Controllers
                         // Date = DbFunctions.TruncateTime(p.BegTime)
                     })
                     .ToList();
-                Console.WriteLine("-----------------------------3----------------------");
                 var result = new List<ReportFullPeriodInfo>();
 
                 foreach (var date in dialogues.Select(p => p.BegTime.Date).Distinct().ToList())
                 {
-                    Console.WriteLine($"----------------------{date}-----------------------------");
                     foreach (var applicationUserId in dialogues.Select(p => p.ApplicationUserId).Distinct().ToList())
                     {
 
@@ -270,7 +266,6 @@ namespace UserOperations.Controllers
                         var dialoguesUser = dialogues.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date).ToList();
                         if (dialoguesUser.Any())
                         {                          
-                              //  Console.WriteLine($"----------------------{applicationUserId}-----------------------------");
                                 var begDate = Convert.ToDateTime(date);
                                 var endDate = Convert.ToDateTime(date).AddDays(1);
                                 userInfo.ApplicationUserId = applicationUserId;
@@ -286,7 +281,6 @@ namespace UserOperations.Controllers
                         }
                     }
                 }
-                Console.WriteLine("-----------------------------4----------------------");
                 _log.Info("AnalyticReport/UserFull finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
