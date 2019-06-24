@@ -140,9 +140,7 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
-               // Console.WriteLine(role);
                 var companyId = Guid.Parse(userClaims["companyId"]);     
-              //  Console.WriteLine(companyId);
 
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
