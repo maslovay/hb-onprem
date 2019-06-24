@@ -88,7 +88,6 @@ namespace UserOperations.Controllers
         //             var gender = faceResult.FirstOrDefault().Attributes.Gender;
         //             var genderId = (gender == "male") ? 1 : 2;
 
-        //             System.Console.WriteLine($"Result of recognition - {age}, {gender}");
 
         //             var campaigns = _context.CampaignContents
         //                 .Include(p => p.Campaign)

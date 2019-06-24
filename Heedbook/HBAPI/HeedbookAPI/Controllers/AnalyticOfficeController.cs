@@ -100,7 +100,6 @@ namespace UserOperations.Controllers
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
-
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
                     .Where(p => p.BegTime >= prevBeg
@@ -138,7 +137,7 @@ namespace UserOperations.Controllers
                 result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
                 result.DialoguesNumberAvgPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
-
+ 
                 var diagramDialogDurationPause = sessionCur
                 .GroupBy(p => p.BegTime.Date)
                 .Select(p => new
@@ -202,7 +201,7 @@ namespace UserOperations.Controllers
                             .Average(q => q.DialoguesCount)
                     }).ToList();
 
-                var clientDay = dialogues
+                var clientDay = dialogues?
                     .GroupBy(p => p.BegTime.DayOfWeek)
                     .Select(p => new EfficiencyLoadClientDayInfo
                     {
@@ -212,23 +211,26 @@ namespace UserOperations.Controllers
                             .Average(q => q.DialoguesCount)
                     }).ToList();
 
-                var pauseInMin = _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, sessionCur.Min(p => p.BegTime), sessionCur.Max(p => p.EndTime));
+                var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
+                            _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, sessionCur.Min(p => p.BegTime), sessionCur.Max(p => p.EndTime)): null;
+                     
                 var sessTimeMinutes = _dbOperation.SessionTotalHours(sessionCur, begTime, endTime)*60;
-               
+
                 var pausesAmount = new{
-                    Less_10 = pauseInMin.Where(p => p <= 10).Count(),
-                    Between_11_20 = pauseInMin.Where(p => p > 10 && p < 20).Count(),
-                    Between_21_60 = pauseInMin.Where(p => p > 20 && p < 60).Count(),
-                    More_60 = pauseInMin.Where(p => p >= 60).Count()
+                    Less_10 = pauseInMin?.Where(p => p <= 10).Count(),
+                    Between_11_20 = pauseInMin?.Where(p => p > 10 && p < 20).Count(),
+                    Between_21_60 = pauseInMin?.Where(p => p > 20 && p < 60).Count(),
+                    More_60 = pauseInMin?.Where(p => p >= 60).Count()
                 };
 
-                var pausesAvgValue = new{
-                    Less_10 = 100 *  pauseInMin.Where(p => p <= 10).Sum() / sessTimeMinutes,
-                    Between_11_20 = 100 * pauseInMin.Where(p => p > 10 && p < 20).Sum() / sessTimeMinutes,
-                    Between_21_60 = 100 * pauseInMin.Where(p => p > 20 && p < 60).Sum() / sessTimeMinutes,
-                    More_60 = 100 * pauseInMin.Where(p => p >= 60).Sum() / sessTimeMinutes,
-                    Sessions = 100 * (sessTimeMinutes - pauseInMin.Sum()) / sessTimeMinutes
+                    var pausesAvgValue = new{
+                    Less_10 = sessTimeMinutes != 0? 100 *  pauseInMin?.Where(p => p <= 10).Sum() / sessTimeMinutes : 0,
+                    Between_11_20 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 10 && p < 20).Sum() / sessTimeMinutes : 0,
+                    Between_21_60 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 20 && p < 60).Sum() / sessTimeMinutes : 0,
+                    More_60 = sessTimeMinutes != 0? 100 * pauseInMin.Where(p => p >= 60).Sum() / sessTimeMinutes : 0,
+                    Sessions = sessTimeMinutes != 0? 100 * (sessTimeMinutes - pauseInMin?.Sum()) / sessTimeMinutes : 0
                 };
+
               
                 var jsonToReturn = new Dictionary<string, object>();
                 jsonToReturn["Workload"] = result;

@@ -163,7 +163,6 @@ namespace UserOperations.Controllers
                 })
                     .ToList();
 
-                Console.WriteLine("----------5----------------");
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
 
                 jsonToReturn["ContentByTime"] = slideShowSessionsAll.OrderBy(p => p.BegTime);
@@ -222,7 +221,6 @@ namespace UserOperations.Controllers
 
                     })
                     .ToList();
-                Console.WriteLine("-----------------------------3----------------------");
 
                 //-------------------------------ALL CONTENT SESSIONS --------------------------------
                 var slideShowSessionsAll = _context.SlideShowSessions.Where(p => !p.IsPoll)
@@ -253,7 +251,6 @@ namespace UserOperations.Controllers
                              )
                             .ToList();
 
-                Console.WriteLine("------------LINE 249---------------");
                 foreach ( var session in slideShowSessionsAll )
                 {
                     var dialog =  dialogues.Where(x => x.BegTime <= session.BegTime &&  x.EndTime >= session.BegTime)
@@ -262,7 +259,6 @@ namespace UserOperations.Controllers
                     session.Age = dialog?.Age;
                     session.Gender = dialog?.Gender;
                 }
-                Console.WriteLine("------------LINE 255---------------");
 
                 var shows = slideShowSessionsAll.Count();
                 var views = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).Count();
@@ -277,7 +273,6 @@ namespace UserOperations.Controllers
                         Key2 = key.Url,
                         Result = group.ToList()
                     }).ToList();
-                Console.WriteLine("------------LINE 270---------------"); 
                 var contentInfo = new ContentTotalInfoEfficiency
                 {
                     Shows = shows,
@@ -306,8 +301,6 @@ namespace UserOperations.Controllers
                     }
                     )).ToList()
                 };              
-                Console.WriteLine("------------LINE 289---------------");
-                Console.WriteLine("----------5----------------");
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
 
                 _log.Info("ContentShows/ContentShows finished");
@@ -365,7 +358,6 @@ namespace UserOperations.Controllers
 
                     })
                     .ToList();
-                Console.WriteLine("-----------------------------3----------------------");
 
                 //-------------------------------ALL CONTENT SESSIONS POLL--------------------------------
                 var slideShowSessionsAll = _context.SlideShowSessions.Where(p => p.IsPoll)
@@ -395,7 +387,6 @@ namespace UserOperations.Controllers
                              )
                             .ToList();
 
-                Console.WriteLine("------------LINE 398---------------");
                 foreach ( var session in slideShowSessionsAll )
                 {
                     var dialog =  dialogues.Where(x => x.BegTime <= session.BegTime &&  x.EndTime >= session.BegTime)
@@ -407,7 +398,6 @@ namespace UserOperations.Controllers
                         .Select(x => x.CampaignContent.CampaignContentId)
                         .Distinct()
                         .Contains(p.CampaignContentId) && p.Time >= begTime && p.Time <= endTime).ToList();
-                Console.WriteLine("------------LINE 410---------------");
 
                 var views = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).Count();
                 var clients = slideShowSessionsAll
@@ -419,7 +409,6 @@ namespace UserOperations.Controllers
                 var contentsShownGroup = slideShowSessionsAll
                     .GroupBy(p => p.ContentId).ToList();
                     
-                Console.WriteLine("------------LINE 422---------------"); 
                 var contentInfo = new
                 {
                     Views = views,
@@ -441,7 +430,6 @@ namespace UserOperations.Controllers
                     }
                     ).ToList()
                 };              
-                Console.WriteLine("------------LINE 444---------------");
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
 
                 _log.Info("ContentShows/Poll finished");

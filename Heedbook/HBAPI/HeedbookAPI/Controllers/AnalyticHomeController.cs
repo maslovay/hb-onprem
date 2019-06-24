@@ -45,7 +45,6 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ViewProvider _viewProvider;
         private readonly ElasticClient _log;
         public AnalyticHomeController(
             IConfiguration config,
@@ -53,7 +52,6 @@ namespace UserOperations.Controllers
             RecordsContext context,
             DBOperations dbOperation,
             RequestFilters requestFilters,
-            ViewProvider viewProvider,
             ElasticClient log
             )
         {
@@ -63,7 +61,6 @@ namespace UserOperations.Controllers
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _log = log;
-            _viewProvider = viewProvider;
         }
 
         [HttpGet("Dashboard")]
@@ -81,13 +78,10 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);   
-                Console.WriteLine($"---------------{companyId}------------------");  
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
-
-                Console.WriteLine("---------------1------------------");
 
                 var sessions = _context.Sessions
                         .Include(p => p.ApplicationUser)
@@ -142,8 +136,6 @@ namespace UserOperations.Controllers
                 var companyIdsInHeedbookExceptSelected = _requestFilters.CompanyIdsInHeedbookExceptSelected(companyIds);  
 //-----------------ALL-----------------------
                 var indexesInIndustryAll = _context.VIndexesByCompanysDays.ToList();
-                Console.WriteLine("---END QUERY----");
-                Console.WriteLine(indexesInIndustryAll.FirstOrDefault().CompanyId);
                 //---for selected period in industries except selected companies
                 var indexesInIndustryExeptSelectedComp = indexesInIndustryAll
                     .Where(p => companyIdsInIndustryExceptSelected.Contains (p.CompanyId)
@@ -186,10 +178,6 @@ namespace UserOperations.Controllers
                     .Where(p => companyIdsInHeedbookExceptSelected.Contains (p.CompanyId)
                     && p.Day >= begTime && p.Day <= endTime
                      ).ToList();
-
-                // Console.WriteLine($"--ind---{satisfactionByCompanysDaysInIndustry.Sum(p => p.SatisfactionIndex)}----"); 
-                // Console.WriteLine($"--begTime---{begTime}----");   
-                // Console.WriteLine($"--compId---{companyIds[0]}----");   
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();             
@@ -243,12 +231,11 @@ namespace UserOperations.Controllers
                     NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
                     NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld)),
 
-                    DialogueDuration = _dbOperation.DialogueSumDuration(dialogues, begTime, endTime)
+                    DialogueDuration = _dbOperation.DialogueSumDuration(dialoguesCur, begTime, endTime),
+                    DialogueDurationDelta = -_dbOperation.DialogueSumDuration(dialoguesOld, prevBeg, endTime)
                 };
 
               
-                Console.WriteLine($"--comp---{indexesByDialogueExeptSelectedComp.Count(x => x.CrossCount != 0)}----");
-                Console.WriteLine($"--comp---{indexesByDialogueExeptSelectedComp.Count()}----");
                 // result.NumberOfDialoguesPerEmployees = result.DialoguesCount / result.EmployeeCount;   
                 // result.NumberOfDialoguesPerEmployeesDelta =  - result.DialoguesCountDelta 
                 //     / (result.EmployeeCountDelta != 0? result.EmployeeCountDelta : 1) + result.NumberOfDialoguesPerEmployees; 
@@ -262,8 +249,7 @@ namespace UserOperations.Controllers
                // result.EfficiencyIndexDelta += result.EfficiencyIndex;
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.DialoguesCountDelta += result.DialoguesCount;
-
-                             
+                result.DialogueDurationDelta += result.DialogueDuration;                             
 
 
                 var jsonToReturn = JsonConvert.SerializeObject(result);  
