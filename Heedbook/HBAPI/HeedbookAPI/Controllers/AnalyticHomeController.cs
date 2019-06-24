@@ -156,29 +156,6 @@ namespace UserOperations.Controllers
                     && p.Day >= begTime && p.Day <= endTime
                      ).ToList();
 
-//-----------------DIALOGUES INDEXES-----------------------
-                var indexesByDialogueAll = _context.VIndexesByDialoguesDays.ToList();
-                var indexesByDialogueOwn = indexesByDialogueAll.Where(p => companyIds.Contains (p.CompanyId)
-                    && p.Day >= begTime && p.Day <= endTime
-                    ).ToList();
-                var indexesByDialogueOwnOld = indexesByDialogueAll.Where(p => companyIds.Contains (p.CompanyId)
-                    && p.Day >= prevBeg && p.Day <= endTime
-                    ).ToList();
-                //---for selected period in industries except selected companies
-                var indexesByDialogueExeptSelectedComp = indexesByDialogueAll
-                    .Where(p => companyIdsInIndustryExceptSelected.Contains (p.CompanyId)
-                    && p.Day >= begTime && p.Day <= endTime
-                    ).ToList();
-                //---for all period in industries
-                var indexesByDialogueAllForBenchmark = indexesByDialogueAll
-                    .Where(p => companyIdsInIndustry.Contains (p.CompanyId)
-                    ).ToList();
-                 //---for selected period in industries except selected companies
-                var indexesByDialogueHeedbook = indexesByDialogueAll
-                    .Where(p => companyIdsInHeedbookExceptSelected.Contains (p.CompanyId)
-                    && p.Day >= begTime && p.Day <= endTime
-                     ).ToList();
-
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();             
 
@@ -213,18 +190,10 @@ namespace UserOperations.Controllers
                     LoadIndexTotalAverage = 100 * indexesInHeedbook.Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)/ indexesInHeedbook.Count(),
                     
                     CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
-                   // CrossIndex =  indexesByDialogueOwn.Count() != 0 ? 100 * indexesByDialogueOwn
-                    //    .Sum(x => (double)x.CrossCount) / indexesByDialogueOwn.Sum(x => (double)x.DialoguesCount) : 0,
-                    CrossIndexDelta = - 100 * indexesByDialogueOwnOld.Count() != 0 ? indexesByDialogueOwn
-                        .Sum(x => (double)x.CrossCount) / indexesByDialogueOwn.Sum (x => (double)x.DialoguesCount) : 0,
-                    CrossIndexIndustryAverage = indexesByDialogueExeptSelectedComp.Count() != 0 ?
-                        100 * (double)indexesByDialogueExeptSelectedComp.Sum(p => (double)p.CrossCount)
-                        /(double)indexesByDialogueExeptSelectedComp.Sum(p =>(double)p.DialoguesCount) : 0,
-                    CrossIndexIndustryBenchmark = (double)indexesByDialogueAllForBenchmark
-                        .Max(x => 100 * (double)x.CrossCount / (double)x.DialoguesCount), 
-                    //CrossIndexTotalAverage = 100 * (double)indexesByDialogueHeedbook.Average(x => (double)x.CrossCount /(double)x.DialoguesCount),
-                    CrossIndexTotalAverage = 100 * (double)indexesByDialogueHeedbook.Sum(x => (double)x.CrossCount) /
-                    (double)indexesByDialogueHeedbook.Sum(x => (double)x.DialoguesCount),
+                    CrossIndexDelta = _dbOperation.CrossIndex(dialoguesOld),
+                    CrossIndexIndustryAverage =0,//TODO
+                    CrossIndexIndustryBenchmark = 0,//TODO
+                    CrossIndexTotalAverage = 0,//TODO
 
                     AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime),
                     AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime),
