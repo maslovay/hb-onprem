@@ -553,6 +553,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
+                Console.WriteLine("User/Dialogue --- "+role);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
 
                 System.Console.WriteLine(companyIds);

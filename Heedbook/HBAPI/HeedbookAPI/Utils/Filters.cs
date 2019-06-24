@@ -60,22 +60,32 @@ namespace UserOperations.Utils
 
         public void CheckRoles(ref List<Guid> companyIds, List<Guid> corporationIds, string role, Guid companyId)
         {
+             Console.WriteLine("check roles - "+role);
             List<Guid> compIds = companyIds;
             //--- admin can view any companies in any corporation
                    if ( role == "Admin" )
-                    {                    
-                        corporationIds = !corporationIds.Any()? _context.Corporations.Select(x => x.Id).ToList() : corporationIds;
+                    {             
                         //---take all companyIds in filter or all company ids in corporations
-                        compIds =  !compIds.Any()? _context.Companys
-                            .Where(x => x.CorporationId != null && corporationIds.Contains( (Guid)x.CorporationId ))
-                            .Select(x => x.CompanyId).ToList() : compIds;
+                        if (!compIds.Any() && !corporationIds.Any()) 
+                        {
+                        compIds =  _context.Companys
+                            //.Where(x => x.StatusId == 3)
+                            .Select(x => x.CompanyId).ToList();
+                        }
+                        else if (!compIds.Any())
+                        {
+                        compIds = _context.Companys
+                            .Where(x => corporationIds.Contains( (Guid)x.CorporationId ))
+                            .Select(x => x.CompanyId).ToList();
+                        }
+                         Console.WriteLine("compIds="+compIds.Count());
                     }
                     //--- supervisor can view companies from filter or companies from own corporation -------
                    else if ( role == "Supervisor" )
                    {
                         if (!compIds.Any())//--- if filter by companies not set ---
                         {//--- select own corporation
-                            var corporation = _context.Companys.Include(x=>x.Corporation).Where(x=>x.CompanyId == companyId).FirstOrDefault().Corporation;
+                            var corporation = _context.Companys.Include(x => x.Corporation).Where(x => x.CompanyId == companyId).FirstOrDefault().Corporation;
                         //--- return all companies from own corporation
                             compIds = _context.Companys.Where(x => x.CorporationId == corporation.Id ).Select(x => x.CompanyId).ToList();
                         }
