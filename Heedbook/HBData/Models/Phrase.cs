@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
@@ -54,6 +55,7 @@ namespace HBData.Models
         /// </summary>
         public Boolean IsTemplate { get; set; }
 
+        [JsonIgnore]
         /// <summary>
         ///     Links
         /// </summary>
