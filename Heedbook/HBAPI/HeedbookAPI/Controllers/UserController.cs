@@ -365,7 +365,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-                Console.WriteLine("PhraseLib---------------------------------");
                 _log.Info("User/PhraseLib POST started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
