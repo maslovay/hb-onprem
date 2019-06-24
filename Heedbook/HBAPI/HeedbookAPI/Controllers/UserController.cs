@@ -553,12 +553,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                Console.WriteLine("User/Dialogue --- "+role);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
-
-                System.Console.WriteLine(companyIds);
-                System.Console.WriteLine(begTime);
-                System.Console.WriteLine(endTime);
 
                 var dialogues = _context.Dialogues
                 .Include(p => p.DialoguePhrase)
@@ -627,7 +622,6 @@ namespace UserOperations.Controllers
                     .Where(p => p.StatusId == 3
                         && p.DialogueId == dialogueId)
                     .FirstOrDefault();
-                System.Console.WriteLine("3");
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
 //---avg dialogue time---------
                 var begTime = DateTime.UtcNow.AddDays(-30);

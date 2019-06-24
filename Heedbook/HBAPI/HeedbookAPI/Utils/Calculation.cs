@@ -390,13 +390,10 @@ namespace UserOperations.Utils
         }
 
         public double? SessionAverageHours(IGrouping<DateTime, SessionInfo> sessions)
-        {
-            Console.WriteLine("Sessions");           
+        {     
             DateTime beg = sessions.Key;
             DateTime end = sessions.Key.AddDays(1);
             var sessionHours = sessions.Any() ? (double?)Convert.ToDouble(sessions.Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours)) : null;
-            Console.WriteLine(sessionHours);
-           // Console.WriteLine(sessions.First().EndTime);
             return sessionHours;
         }
         public double? SessionAverageHours(List<SessionInfo> sessions, Guid applicationUserId, DateTime? date, DateTime beg, DateTime end)
@@ -422,7 +419,6 @@ namespace UserOperations.Utils
             DateTime end = sessions.Key.AddDays(1);
             var dialoguesUser = dialogues.Where(p => p.ApplicationUserId == applicationUserId && (p.BegTime.Date == beg || p.EndTime.Date == sessions.Key));
             var dialoguesHours = dialoguesUser.Count() != 0 ? (double?)Convert.ToDouble(dialoguesUser.Sum(p => MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours)) : null;
-            Console.WriteLine("dialoguesHours  "+dialoguesHours);
             return dialoguesHours??0;
         }
         public double? DialogueAveragePause(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
@@ -790,7 +786,6 @@ namespace UserOperations.Utils
                     frames = frames != null ? frames.Where(x => x.Time >= beg && x.Time <= end).ToList() : null;
                     if (frames != null && frames.Count() != 0)
                     {
-                        Console.WriteLine("---" + frames.FirstOrDefault().SurpriseShare);
                         result.Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20);
                         result.Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare);
                         result.Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare);
@@ -815,7 +810,6 @@ namespace UserOperations.Utils
                     frames = frames != null ? frames.Where(x => x.Time >= beg && x.Time <= end).ToList() : null;
                     if (frames != null && frames.Count() != 0)
                     {
-                        Console.WriteLine("---" + frames.FirstOrDefault().SurpriseShare);
                         result.Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20);
                         result.Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare);
                         result.Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare);
@@ -838,7 +832,6 @@ namespace UserOperations.Utils
                 frames = frames != null ? frames.Where(x => x.Time >= beg && x.Time <= end).ToList() : null;
                 if (frames != null && frames.Count() != 0)
                 {
-                    Console.WriteLine("---" + frames.FirstOrDefault().SurpriseShare);
                     result.Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20);
                     result.Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare);
                     result.Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare);

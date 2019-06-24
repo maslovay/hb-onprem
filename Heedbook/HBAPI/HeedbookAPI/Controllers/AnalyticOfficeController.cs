@@ -82,7 +82,6 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);   
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
- Console.WriteLine("85");
 
                 var sessions = _context.Sessions
                     .Include(p => p.ApplicationUser)
@@ -98,11 +97,9 @@ namespace UserOperations.Controllers
                         BegTime = p.BegTime,
                         EndTime = p.EndTime
                     }).ToList();
- Console.WriteLine("101");
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
- Console.WriteLine("105");
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
                     .Where(p => p.BegTime >= prevBeg
@@ -121,7 +118,6 @@ namespace UserOperations.Controllers
                         FullName = p.ApplicationUser.FullName,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                     }).ToList();
- Console.WriteLine("122");
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
@@ -141,8 +137,7 @@ namespace UserOperations.Controllers
                 result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
                 result.DialoguesNumberAvgPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
- Console.WriteLine("142");
-
+ 
                 var diagramDialogDurationPause = sessionCur
                 .GroupBy(p => p.BegTime.Date)
                 .Select(p => new
@@ -215,11 +210,10 @@ namespace UserOperations.Controllers
                             .Select(q => new { DialoguesCount = q.Select(r => r.DialogueId).Distinct().Count() })
                             .Average(q => q.DialoguesCount)
                     }).ToList();
-                Console.WriteLine("clientDay"+clientDay);
 
                 var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
                             _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, sessionCur.Min(p => p.BegTime), sessionCur.Max(p => p.EndTime)): null;
-                          //  Console.WriteLine(pauseInMin.Count());
+                     
                 var sessTimeMinutes = _dbOperation.SessionTotalHours(sessionCur, begTime, endTime)*60;
 
                 var pausesAmount = new{
@@ -236,7 +230,6 @@ namespace UserOperations.Controllers
                     More_60 = sessTimeMinutes != 0? 100 * pauseInMin.Where(p => p >= 60).Sum() / sessTimeMinutes : 0,
                     Sessions = sessTimeMinutes != 0? 100 * (sessTimeMinutes - pauseInMin?.Sum()) / sessTimeMinutes : 0
                 };
-                Console.WriteLine("239");
 
               
                 var jsonToReturn = new Dictionary<string, object>();

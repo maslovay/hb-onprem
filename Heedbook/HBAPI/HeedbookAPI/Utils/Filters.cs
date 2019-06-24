@@ -60,7 +60,6 @@ namespace UserOperations.Utils
 
         public void CheckRoles(ref List<Guid> companyIds, List<Guid> corporationIds, string role, Guid companyId)
         {
-             Console.WriteLine("check roles - "+role);
             List<Guid> compIds = companyIds;
             //--- admin can view any companies in any corporation
                    if ( role == "Admin" )
@@ -78,7 +77,6 @@ namespace UserOperations.Utils
                             .Where(x => corporationIds.Contains( (Guid)x.CorporationId ))
                             .Select(x => x.CompanyId).ToList();
                         }
-                         Console.WriteLine("compIds="+compIds.Count());
                     }
                     //--- supervisor can view companies from filter or companies from own corporation -------
                    else if ( role == "Supervisor" )
