@@ -14,6 +14,7 @@ using HBLib.Utils;
 using Microsoft.Extensions.Primitives;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.CommonModels;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -26,6 +27,7 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
+        private readonly RequestFilters _requestFilters;
         private readonly ElasticClient _log;
 
 
@@ -33,6 +35,7 @@ namespace UserOperations.Controllers
             RecordsContext context,
             IConfiguration config,
             ILoginService loginService,
+            RequestFilters requestFilters,
             ElasticClient log
             )
         {
@@ -41,6 +44,7 @@ namespace UserOperations.Controllers
             _context = context;
             _config = config;
             _loginService = loginService;
+            _requestFilters = requestFilters;
             _log = log;
             _containerName = "content-screenshots";
              _log.Info("Constructor of CampaignContent controller done");
@@ -54,18 +58,23 @@ namespace UserOperations.Controllers
         [HttpGet("Campaign")]
         [SwaggerOperation(Summary = "Return campaigns with content", Description = "Return all campaigns for loggined company with content relations")]
         [SwaggerResponse(200, "Campaigns list", typeof(List<CampaignGetModel>))]
-        public IActionResult CampaignGet([FromHeader,  
-                SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public IActionResult CampaignGet(
+                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
             _log.Info("Campaign get started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");  
-            var companyId = Guid.Parse(userClaims["companyId"]);
+            var role = userClaims["role"];
+            var companyId = Guid.Parse(userClaims["companyId"]);     
+            _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);  
+
             var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
             var campaigns = _context.Campaigns.Include(x => x.CampaignContents)
-                    .Where( x => x.CompanyId == companyId && x.StatusId != statusInactiveId ).ToList();
+                    .Where( x => companyIds.Contains(x.CompanyId) && x.StatusId != statusInactiveId ).ToList();
              _log.Info("campaign get finished");
             return Ok(campaigns);
             }
@@ -174,15 +183,21 @@ namespace UserOperations.Controllers
         [HttpGet("Content")]
         [SwaggerOperation(Summary = "Get all content", Description = "Get all content for loggined company with screenshot url links")]
         [SwaggerResponse(200, "Content list", typeof(List<Content>))]
-        public async Task<IActionResult> ContentGet([FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<IActionResult> ContentGet(
+                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
              _log.Info("Content GET started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
-            var companyId = Guid.Parse(userClaims["companyId"]);
-            var contents = _context.Contents.Where(x => x.CompanyId == companyId || x.IsTemplate == true).ToList();
+            var role = userClaims["role"];
+            var companyId = Guid.Parse(userClaims["companyId"]);     
+            _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);  
+
+            var contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains( (Guid)x.CompanyId )).ToList();
              _log.Info("Content get finished");
             return Ok(contents);
             }
