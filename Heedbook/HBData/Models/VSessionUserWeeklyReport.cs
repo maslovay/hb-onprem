@@ -6,7 +6,7 @@ namespace HBData.Models
     /// <summary>
     ///     View table
     /// </summary>
-    public class VSessionWeeklyReportOld
+    public class VSessionUserWeeklyReport
     {
         [Key]
         public Guid Id { get; set; }
@@ -21,7 +21,7 @@ namespace HBData.Models
         /// </summary>
         public Guid CompanyId { get; set; }
 
-        // public Company Company { get; set; }
+       // public Company Company { get; set; }
 
         /// <summary>
         ///     Industry

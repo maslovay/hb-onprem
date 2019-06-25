@@ -10,5 +10,6 @@ namespace DialogueMarkUp.QuartzJobs
         public DateTime EndTime;
         public string BegFileName;
         public string EndFileName;
+        public string Descriptor;
     }
 }
