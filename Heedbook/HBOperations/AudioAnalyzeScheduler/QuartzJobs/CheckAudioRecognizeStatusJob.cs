@@ -178,17 +178,12 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private double GetPositiveShareInText(List<string> recognizedWords)
         {
-            _log = _elasticClientFactory.GetElasticClient();
             var result = 0.0;
             
-            _log.SetFormat("{Path}");
             var sentence = string.Join(" ", recognizedWords);
             var posShareStrg = RunPython.Run("GetPositiveShare.py", "./sentimental", "3.6", sentence);
 
             result = double.Parse(posShareStrg.Item1.Trim());
-            
-            _log.Info("Function GetPositiveShareInText analyze finished");
-
             return result;
         }
 

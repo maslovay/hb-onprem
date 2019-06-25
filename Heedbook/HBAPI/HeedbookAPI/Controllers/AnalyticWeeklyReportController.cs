@@ -23,7 +23,7 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticWeeklyReportController : Controller
     {
-      private readonly IConfiguration _config;        
+        private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
@@ -49,17 +49,19 @@ namespace UserOperations.Controllers
 
         [HttpGet("User")]
         public IActionResult User(
-            [FromHeader] string Authorization,
-            [FromQuery(Name = "applicationUserId")] Guid userId
-        )
+         [FromHeader] string Authorization,
+         [FromQuery(Name = "applicationUserId")] Guid userId
+     )
         {
             try
             {
-                _log.Info("AnalyticWeeklyReport/Progress started");
+                _log.Info("AnalyticWeeklyReport/User started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
+
+                var begTime = DateTime.Now.AddDays(-7);
                 var jsonToReturn = new Dictionary<string, object>();
-                var companyId =   _context.ApplicationUsers.Where(p => p.Id == userId).FirstOrDefault().CompanyId;
+                var companyId = _context.ApplicationUsers.Where(p => p.Id == userId).FirstOrDefault().CompanyId;
                 var corporationId = _context.Companys.Where(p => p.CompanyId == companyId).FirstOrDefault()?.CorporationId;
                 var userIdsInCorporation = _context.Companys
                         .Include(p => p.ApplicationUser)
@@ -67,16 +69,16 @@ namespace UserOperations.Controllers
                 var userIdsInCompany = _context.ApplicationUsers
                         .Where(p => p.CompanyId == companyId).Select(u => u.Id).ToList();
 
-                  //----ALL FOR WEEK Corporation---
-                var sessionsCorporation =  _context.VSessionWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId)).ToList();
-                var sessionsCorporationOld = _context.VSessionWeeklyReportsOld.Where(p => userIdsInCorporation.Contains(p.AspNetUserId)).ToList();
-                var dialoguesCorporation = _context.VWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId)).ToList();
-                var dialoguesCorporationOld =   _context.VWeeklyReportsOld.Where(p => userIdsInCorporation.Contains(p.AspNetUserId)).ToList();
-                  //----ALL FOR WEEK Company---
-                var sessionsCompany =  _context.VSessionWeeklyReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId)).ToList();
-                var sessionsCompanyOld = _context.VSessionWeeklyReportsOld.Where(p => userIdsInCompany.Contains(p.AspNetUserId)).ToList();
-                var dialoguesCompany = _context.VWeeklyReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId)).ToList();
-                var dialoguesCompanyOld =   _context.VWeeklyReportsOld.Where(p => userIdsInCompany.Contains(p.AspNetUserId)).ToList();
+                //----ALL FOR WEEK Corporation---
+                var sessionsCorporation = _context.VSessionUserWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
+                var sessionsCorporationOld = _context.VSessionUserWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
+                var dialoguesCorporation = _context.VWeeklyUserReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
+                var dialoguesCorporationOld = _context.VWeeklyUserReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
+                //----ALL FOR WEEK Company---
+                var sessionsCompany = _context.VSessionUserWeeklyReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
+                var sessionsCompanyOld = _context.VSessionUserWeeklyReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
+                var dialoguesCompany = _context.VWeeklyUserReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
+                var dialoguesCompanyOld = _context.VWeeklyUserReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
                 //-----for User---
                 var userSessions = sessionsCompany.Where(p => p.AspNetUserId == userId).ToList();
                 var userSessionsOld = sessionsCompanyOld.Where(p => p.AspNetUserId == userId).ToList();
@@ -89,76 +91,76 @@ namespace UserOperations.Controllers
 
 
                 //----satisfaction--------
-                var Satisfaction = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var Satisfaction = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.Satisfaction) / userDialogues.Count(),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => i.Satisfaction),
                     OfficeRating = _dbOperation.OfficeRatingSatisfactionPlace(dialoguesCompany, userId),
-                    CorporationRating =  _dbOperation.OfficeRatingSatisfactionPlace(dialoguesCorporation, userId)
+                    CorporationRating = _dbOperation.OfficeRatingSatisfactionPlace(dialoguesCorporation, userId)
                 };
                 var TotalAvgOld = userDialoguesOld.Sum(p => p.Satisfaction) / userDialoguesOld.Count();
-                int? OfficeRatingOld = _dbOperation.OfficeRatingSatisfactionPlace(dialoguesCompanyOld, userId);                    
+                int? OfficeRatingOld = _dbOperation.OfficeRatingSatisfactionPlace(dialoguesCompanyOld, userId);
                 Satisfaction.Dynamic = Satisfaction.TotalAvg - TotalAvgOld;
-                Satisfaction.OfficeRatingChanges  = Satisfaction.OfficeRating - OfficeRatingOld;
+                Satisfaction.OfficeRatingChanges = Satisfaction.OfficeRating - OfficeRatingOld;
 
                 int? CorporationRatingOld = _dbOperation.OfficeRatingSatisfactionPlace(dialoguesCorporationOld, userId);
-                Satisfaction.CorporationRatingChanges  = Satisfaction.CorporationRating - CorporationRatingOld;
+                Satisfaction.CorporationRatingChanges = Satisfaction.CorporationRating - CorporationRatingOld;
                 jsonToReturn["Satisfaction"] = Satisfaction;
 
                 //   //----positiveEmotions--------
-                var PositiveEmotions = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var PositiveEmotions = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.PositiveEmotions) / userDialogues.Count(),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => i.PositiveEmotions),
                     OfficeRating = _dbOperation.OfficeRatingPositiveEmotPlace(dialoguesCompany, userId),
-                    CorporationRating =  _dbOperation.OfficeRatingPositiveEmotPlace(dialoguesCorporation, userId)
+                    CorporationRating = _dbOperation.OfficeRatingPositiveEmotPlace(dialoguesCorporation, userId)
                 };
                 TotalAvgOld = userDialoguesOld.Sum(p => p.PositiveEmotions) / userDialoguesOld.Count();
                 OfficeRatingOld = _dbOperation.OfficeRatingPositiveEmotPlace(dialoguesCompanyOld, userId);
-                PositiveEmotions.Dynamic  = PositiveEmotions.TotalAvg - TotalAvgOld;
+                PositiveEmotions.Dynamic = PositiveEmotions.TotalAvg - TotalAvgOld;
                 PositiveEmotions.OfficeRatingChanges = PositiveEmotions.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingPositiveEmotPlace(dialoguesCorporationOld, userId);
-                PositiveEmotions.CorporationRatingChanges  = PositiveEmotions.CorporationRating - CorporationRatingOld;
+                PositiveEmotions.CorporationRatingChanges = PositiveEmotions.CorporationRating - CorporationRatingOld;
                 jsonToReturn["PositiveEmotions"] = PositiveEmotions;
 
                 //    //----positiveIntonations--------
-                var PositiveIntonations = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var PositiveIntonations = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.PositiveTone) / userDialogues.Count(),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => i.PositiveTone),
                     OfficeRating = _dbOperation.OfficeRatingPositiveIntonationPlace(dialoguesCompany, userId),
-                    CorporationRating =  _dbOperation.OfficeRatingPositiveIntonationPlace(dialoguesCorporation, userId)
+                    CorporationRating = _dbOperation.OfficeRatingPositiveIntonationPlace(dialoguesCorporation, userId)
                 };
                 TotalAvgOld = userDialoguesOld.Sum(p => p.PositiveTone) / userDialoguesOld.Count();
                 OfficeRatingOld = _dbOperation.OfficeRatingPositiveIntonationPlace(dialoguesCompanyOld, userId);
                 PositiveIntonations.Dynamic = PositiveIntonations.TotalAvg - TotalAvgOld;
-                PositiveIntonations.OfficeRatingChanges  = PositiveIntonations.OfficeRating - OfficeRatingOld;
+                PositiveIntonations.OfficeRatingChanges = PositiveIntonations.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingPositiveIntonationPlace(dialoguesCorporationOld, userId);
-                PositiveIntonations.CorporationRatingChanges  = PositiveIntonations.CorporationRating - CorporationRatingOld;
+                PositiveIntonations.CorporationRatingChanges = PositiveIntonations.CorporationRating - CorporationRatingOld;
                 jsonToReturn["PositiveIntonations"] = PositiveIntonations;
 
                 //    //----speechEmotivity--------
-                var SpeechEmotivity = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var SpeechEmotivity = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
-                    TotalAvg = userDialogues.Sum(p => (double?) p.SpeekEmotions) / userDialogues.Count(),
+                    TotalAvg = userDialogues.Sum(p => (double?)p.SpeekEmotions) / userDialogues.Count(),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => i.SpeekEmotions),
                     OfficeRating = _dbOperation.OfficeRatingSpeechEmotPlace(dialoguesCompany, userId),
-                    CorporationRating =  _dbOperation.OfficeRatingSpeechEmotPlace(dialoguesCorporation, userId)
+                    CorporationRating = _dbOperation.OfficeRatingSpeechEmotPlace(dialoguesCorporation, userId)
                 };
-                TotalAvgOld = userDialoguesOld.Sum(p => (double?) p.SpeekEmotions) / userDialoguesOld.Count();
+                TotalAvgOld = userDialoguesOld.Sum(p => (double?)p.SpeekEmotions) / userDialoguesOld.Count();
                 OfficeRatingOld = _dbOperation.OfficeRatingSpeechEmotPlace(dialoguesCompanyOld, userId);
                 SpeechEmotivity.Dynamic = SpeechEmotivity.TotalAvg - TotalAvgOld;
-                SpeechEmotivity.OfficeRatingChanges  = SpeechEmotivity.OfficeRating - OfficeRatingOld;
+                SpeechEmotivity.OfficeRatingChanges = SpeechEmotivity.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingSpeechEmotPlace(dialoguesCorporationOld, userId);
-                SpeechEmotivity.CorporationRatingChanges  = SpeechEmotivity.CorporationRating - CorporationRatingOld;
+                SpeechEmotivity.CorporationRatingChanges = SpeechEmotivity.CorporationRating - CorporationRatingOld;
                 jsonToReturn["SpeechEmotivity"] = SpeechEmotivity;
 
                 //    //----workload--------
                 //---number of dialogues per day--
-                var NumberOfDialogues  = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var NumberOfDialogues = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.Dialogues),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => (double?)i.Dialogues),
@@ -168,14 +170,14 @@ namespace UserOperations.Controllers
                 TotalAvgOld = userDialoguesOld.Sum(p => p.Dialogues);
                 OfficeRatingOld = _dbOperation.OfficeRatingDialoguesAmount(dialoguesCompanyOld, userId);
                 NumberOfDialogues.Dynamic = NumberOfDialogues.TotalAvg - TotalAvgOld;
-                NumberOfDialogues.OfficeRatingChanges  = NumberOfDialogues.OfficeRating - OfficeRatingOld;
+                NumberOfDialogues.OfficeRatingChanges = NumberOfDialogues.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingDialoguesAmount(dialoguesCorporationOld, userId);
-                NumberOfDialogues.CorporationRatingChanges  = NumberOfDialogues.CorporationRating - CorporationRatingOld;
-                jsonToReturn["NumberOfDialogues"] = NumberOfDialogues; 
+                NumberOfDialogues.CorporationRatingChanges = NumberOfDialogues.CorporationRating - CorporationRatingOld;
+                jsonToReturn["NumberOfDialogues"] = NumberOfDialogues;
 
                 //---working day ----
-                var WorkingHours = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var WorkingHours = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userSessions.Sum(p => p.SessionsHours),
                     AvgPerDay = userSessions.ToDictionary(x => x.Day, i => (double?)i.SessionsHours),
@@ -185,14 +187,14 @@ namespace UserOperations.Controllers
                 TotalAvgOld = userSessionsOld.Sum(p => p.SessionsHours);
                 OfficeRatingOld = _dbOperation.OfficeRatingWorkingHours(sessionsCompanyOld, userId);
                 WorkingHours.Dynamic = WorkingHours.TotalAvg - TotalAvgOld;
-                WorkingHours.OfficeRatingChanges  = WorkingHours.OfficeRating - OfficeRatingOld;
+                WorkingHours.OfficeRatingChanges = WorkingHours.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingWorkingHours(sessionsCorporationOld, userId);
-                WorkingHours.CorporationRatingChanges  = WorkingHours.CorporationRating - CorporationRatingOld;
+                WorkingHours.CorporationRatingChanges = WorkingHours.CorporationRating - CorporationRatingOld;
                 jsonToReturn["WorkingHours_SessionsTotal"] = WorkingHours;
 
                 //----time of clients work---
-                var AvgDialogueTime = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var AvgDialogueTime = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.DialogueHours) / userDialogues.Sum(p => p.Dialogues),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => (double?)i.DialogueHours / i.Dialogues),
@@ -202,30 +204,30 @@ namespace UserOperations.Controllers
                 TotalAvgOld = userDialoguesOld.Sum(p => p.DialogueHours) / userDialoguesOld.Sum(p => p.Dialogues);
                 OfficeRatingOld = _dbOperation.OfficeRatingDialogueTime(dialoguesCompanyOld, userId);
                 AvgDialogueTime.Dynamic = AvgDialogueTime.TotalAvg - TotalAvgOld;
-                AvgDialogueTime.OfficeRatingChanges  = AvgDialogueTime.OfficeRating - OfficeRatingOld;
+                AvgDialogueTime.OfficeRatingChanges = AvgDialogueTime.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingDialogueTime(dialoguesCorporationOld, userId);
-                AvgDialogueTime.CorporationRatingChanges  = AvgDialogueTime.CorporationRating - CorporationRatingOld;
+                AvgDialogueTime.CorporationRatingChanges = AvgDialogueTime.CorporationRating - CorporationRatingOld;
                 jsonToReturn["AvgDialogueTime"] = AvgDialogueTime;
                 //---load---
-                var Workload = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var Workload = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = 100 * userDialogues.Sum(p => p.DialogueHours) / userSessions.Sum(p => p.SessionsHours),
-                    AvgPerDay =  _dbOperation.AvgWorkloadPerDay(userDialogues, userSessions),
+                    AvgPerDay = _dbOperation.AvgWorkloadPerDay(userDialogues, userSessions),
                     OfficeRating = _dbOperation.OfficeRatingWorkload(dialoguesCompany, sessionsCompany, userId),
                     CorporationRating = _dbOperation.OfficeRatingWorkload(dialoguesCorporation, sessionsCorporation, userId)
                 };
                 TotalAvgOld = 100 * userDialoguesOld.Sum(p => p.DialogueHours) / sessionsCompanyOld.Sum(p => p.SessionsHours);
                 OfficeRatingOld = _dbOperation.OfficeRatingWorkload(dialoguesCompanyOld, sessionsCompanyOld, userId);
                 Workload.Dynamic = Workload.TotalAvg - TotalAvgOld;
-                Workload.OfficeRatingChanges  = Workload.OfficeRating - OfficeRatingOld;
+                Workload.OfficeRatingChanges = Workload.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingWorkload(dialoguesCorporationOld, sessionsCorporationOld, userId);
-                Workload.CorporationRatingChanges  = Workload.CorporationRating - CorporationRatingOld;
-                jsonToReturn["Workload"] = Workload;          
+                Workload.CorporationRatingChanges = Workload.CorporationRating - CorporationRatingOld;
+                jsonToReturn["Workload"] = Workload;
 
                 //---standarts---            
-                var CrossPhrase = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var CrossPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => (double?)p.CrossDialogues) / userDialogues.Sum(p => (double?)p.Dialogues),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => (double?)i.CrossDialogues / i.Dialogues),
@@ -235,13 +237,13 @@ namespace UserOperations.Controllers
                 TotalAvgOld = userDialoguesOld.Sum(p => (double?)p.CrossDialogues) / userDialoguesOld.Sum(p => (double?)p.Dialogues);
                 OfficeRatingOld = _dbOperation.OfficeRatingCross(dialoguesCompanyOld, userId);
                 CrossPhrase.Dynamic = CrossPhrase.TotalAvg - TotalAvgOld;
-                CrossPhrase.OfficeRatingChanges  = CrossPhrase.OfficeRating - OfficeRatingOld;
+                CrossPhrase.OfficeRatingChanges = CrossPhrase.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingCross(dialoguesCorporationOld, userId);
-                CrossPhrase.CorporationRatingChanges  = CrossPhrase.CorporationRating - CorporationRatingOld;
+                CrossPhrase.CorporationRatingChanges = CrossPhrase.CorporationRating - CorporationRatingOld;
                 jsonToReturn["CrossPhrase"] = CrossPhrase;
 
-                var AlertPhrase = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var AlertPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => (double?)p.AlertDialogues) / userDialogues.Sum(p => (double?)p.Dialogues),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => (double?)i.AlertDialogues / i.Dialogues),
@@ -251,13 +253,13 @@ namespace UserOperations.Controllers
                 TotalAvgOld = userDialoguesOld.Sum(p => (double?)p.AlertDialogues) / userDialoguesOld.Sum(p => (double?)p.Dialogues);
                 OfficeRatingOld = _dbOperation.OfficeRatingAlert(dialoguesCompanyOld, userId);
                 AlertPhrase.Dynamic = AlertPhrase.TotalAvg - TotalAvgOld;
-                AlertPhrase.OfficeRatingChanges  = AlertPhrase.OfficeRating - OfficeRatingOld;
+                AlertPhrase.OfficeRatingChanges = AlertPhrase.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingAlert(dialoguesCorporationOld, userId);
-                AlertPhrase.CorporationRatingChanges  = AlertPhrase.CorporationRating - CorporationRatingOld;
+                AlertPhrase.CorporationRatingChanges = AlertPhrase.CorporationRating - CorporationRatingOld;
                 jsonToReturn["AlertPhrase"] = AlertPhrase;
 
-                var LoyaltyPhrase = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var LoyaltyPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => (double?)p.LoyaltyDialogues) / userDialogues.Sum(p => (double?)p.Dialogues),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => (double?)i.LoyaltyDialogues / i.Dialogues),
@@ -267,13 +269,13 @@ namespace UserOperations.Controllers
                 TotalAvgOld = userDialoguesOld.Sum(p => (double?)p.LoyaltyDialogues) / userDialoguesOld.Sum(p => (double?)p.Dialogues);
                 OfficeRatingOld = _dbOperation.OfficeRatingLoyalty(dialoguesCompanyOld, userId);
                 LoyaltyPhrase.Dynamic = LoyaltyPhrase.TotalAvg - TotalAvgOld;
-                LoyaltyPhrase.OfficeRatingChanges  = LoyaltyPhrase.OfficeRating - OfficeRatingOld;
+                LoyaltyPhrase.OfficeRatingChanges = LoyaltyPhrase.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingLoyalty(dialoguesCorporationOld, userId);
-                LoyaltyPhrase.CorporationRatingChanges  = LoyaltyPhrase.CorporationRating - CorporationRatingOld;
+                LoyaltyPhrase.CorporationRatingChanges = LoyaltyPhrase.CorporationRating - CorporationRatingOld;
                 jsonToReturn["LoyaltyPhrase"] = LoyaltyPhrase;
 
-                var NecessaryPhrase = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var NecessaryPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => (double?)p.NecessaryDialogues) / userDialogues.Sum(p => (double?)p.Dialogues),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => (double?)i.NecessaryDialogues / i.Dialogues),
@@ -283,13 +285,13 @@ namespace UserOperations.Controllers
                 TotalAvgOld = userDialoguesOld.Sum(p => (double?)p.NecessaryDialogues) / userDialoguesOld.Sum(p => (double?)p.Dialogues);
                 OfficeRatingOld = _dbOperation.OfficeRatingNecessary(dialoguesCompanyOld, userId);
                 NecessaryPhrase.Dynamic = NecessaryPhrase.TotalAvg - TotalAvgOld;
-                NecessaryPhrase.OfficeRatingChanges  = NecessaryPhrase.OfficeRating - OfficeRatingOld;
+                NecessaryPhrase.OfficeRatingChanges = NecessaryPhrase.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingNecessary(dialoguesCorporationOld, userId);
-                NecessaryPhrase.CorporationRatingChanges  = NecessaryPhrase.CorporationRating - CorporationRatingOld;
+                NecessaryPhrase.CorporationRatingChanges = NecessaryPhrase.CorporationRating - CorporationRatingOld;
                 jsonToReturn["NecessaryPhrase"] = NecessaryPhrase;
 
-                var FillersPhrase = new UserWeeklyInfo (usersInCorporation, usersInCompany)
+                var FillersPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => (double?)p.FillersDialogues) / userDialogues.Sum(p => (double?)p.Dialogues),
                     AvgPerDay = userDialogues.ToDictionary(x => x.Day, i => (double?)i.FillersDialogues / i.Dialogues),
@@ -300,10 +302,10 @@ namespace UserOperations.Controllers
                 FillersPhrase.Dynamic = FillersPhrase.TotalAvg - TotalAvgOld;
 
                 OfficeRatingOld = _dbOperation.OfficeRatingFillers(dialoguesCompanyOld, userId);
-                FillersPhrase.OfficeRatingChanges  = FillersPhrase.OfficeRating - OfficeRatingOld;
+                FillersPhrase.OfficeRatingChanges = FillersPhrase.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingFillers(dialoguesCorporationOld, userId);
-                FillersPhrase.CorporationRatingChanges  = FillersPhrase.CorporationRating - CorporationRatingOld;
+                FillersPhrase.CorporationRatingChanges = FillersPhrase.CorporationRating - CorporationRatingOld;
                 jsonToReturn["FillersPhrase"] = FillersPhrase;
 
 
@@ -317,6 +319,6 @@ namespace UserOperations.Controllers
                 return BadRequest(e);
             }
         }
-       
-    }   
+
+    }
 }
