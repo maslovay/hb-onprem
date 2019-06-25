@@ -94,6 +94,8 @@ namespace DialogueMarkUp.QuartzJobs
 
         private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid applicationUserId)
         {
+            var dialogueCreationList = new List<DialogueCreationRun>();
+            var dialogueVideoAssempleList = new List<DialogueVideoAssembleRun>();
             if (markUps.Last().EndTime.Date < DateTime.Now.Date)
             {
                 framesUser
@@ -134,26 +136,21 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _context.DialogueMarkups.Add(markUpNew);
 
-                    var dialogueVideoMerge = new DialogueVideoAssembleRun
+                    dialogueVideoAssempleList.Add( new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = applicationUserId,
                         DialogueId = dialogueId,
                         BeginTime = markup.BegTime,
                         EndTime = markup.EndTime
-                    };
-                    // _log.Info($" Creating dialogue {JsonConvert.SerializeObject(dialogueVideoMerge)}");
-                    _publisher.Publish(dialogueVideoMerge);
+                    });
 
-                    var dialogueCreation = new DialogueCreationRun {
+                    dialogueCreationList.Add( new DialogueCreationRun {
                         ApplicationUserId = applicationUserId,
                         DialogueId = dialogueId,
                         BeginTime = markup.BegTime,
                         EndTime = markup.EndTime,
                         AvatarFileName = markup.BegFileName
-                    };
-                    // _log.Info($" Filling frames {JsonConvert.SerializeObject(dialogueVideoMerge)}");
-                    _publisher.Publish(dialogueCreation);
-
+                    });
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
@@ -201,29 +198,42 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _context.DialogueMarkups.Add(markUpNew);
 
-                    var dialogueVideoMerge = new DialogueVideoAssembleRun
+                    dialogueVideoAssempleList.Add( new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = applicationUserId,
                         // DialogueId = (Guid) markUps[i].FaceId,
                         DialogueId = dialogueId,
                         BeginTime = markUps[i].BegTime,
                         EndTime = markUps[i].EndTime
-                    };
-                    _publisher.Publish(dialogueVideoMerge);
-
-                    var dialogueCreation = new DialogueCreationRun {
+                    });
+                    dialogueCreationList.Add(new DialogueCreationRun {
                        ApplicationUserId = applicationUserId,
                         // DialogueId = (Guid) markUps[i].FaceId,
                         DialogueId = dialogueId,
                         BeginTime = markUps[i].BegTime,
                         EndTime = markUps[i].EndTime,
                         AvatarFileName = markUps[i].BegFileName
-                    };
-                    _publisher.Publish(dialogueCreation);
-
+                    });
                 }
                 _context.Dialogues.AddRange(dialogues);
                 _context.SaveChanges();
+
+                foreach (var dialogueCreation in dialogueCreationList)
+                {
+                    _publisher.Publish(dialogueCreation);
+                }
+
+                foreach (var dialogueAssemble in dialogueVideoAssempleList)
+                {
+                    _publisher.Publish(dialogueAssemble);
+                }
+
+                var personDetection = new PersonDetectionRun{
+                    ApplicationUserIds = dialogues.Select(p => p.ApplicationUserId).Distinct().ToList()
+                };
+                _publisher.Publish(personDetection);
+
+
             }
         }
 
