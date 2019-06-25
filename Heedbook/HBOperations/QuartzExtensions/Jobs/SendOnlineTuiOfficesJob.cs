@@ -50,16 +50,14 @@ namespace QuartzExtensions.Jobs
             mail.From = new MailAddress("support@heedbook.com");
             mail.To.Add(new MailAddress("anisiya.kobylina@tui.ru"));            
             
-            mail.Subject = "Активные офисы TUI";
+            mail.Subject = "Active TUI OFFICES";
             var data = TuiOnlineOffices();
             var mailData = "";
             foreach (var item in data) mailData += item.CompanyName + " " + item.ApplicationUserName + " Online" + "\n";
 
             mail.Body = mailData;
-            mail.IsBodyHtml = false;
-            //mail.Attachments.Add(new Attachment("/home/oleg/Документы/My_Saves/save1.txt"));
-
-            //For Yandex
+            mail.IsBodyHtml = false;            
+            
             var host = "smtp.yandex.ru";
             var port = 587;
 
@@ -83,7 +81,6 @@ namespace QuartzExtensions.Jobs
             }
             catch(Exception ex)
             {
-                Console.WriteLine($"Ошибка отправки письма: \n{ex.Message}");
                 _log.Fatal($"Failed send email to anisiya.kobylina@tui.ru\n{ex.Message}\n");
             }  
         }

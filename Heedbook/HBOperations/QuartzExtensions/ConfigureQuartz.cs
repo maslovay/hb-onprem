@@ -36,8 +36,7 @@ namespace QuartzExtensions
         }
 
         public static void AddSendNotMarckedImageCountQuartz(this IServiceCollection services)
-        {
-            Console.WriteLine("Зашли в AddSendNotMarckedImageCountQuartz");
+        {            
             services.Add(new ServiceDescriptor(typeof(IJob), typeof(SendNotMarckedImageCountJob),
                 ServiceLifetime.Singleton));                
                 

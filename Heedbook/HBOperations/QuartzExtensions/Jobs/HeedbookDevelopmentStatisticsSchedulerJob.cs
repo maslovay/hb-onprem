@@ -13,13 +13,7 @@ using HBLib;
 using HBLib.Utils;
 
 namespace QuartzExtensions.Jobs
-{
-    // 1. Новые компании (компани, зарегестированные за последние 48 часов)
-    // 2. Активные компании:
-    //      a. список компаний, у которых была хотя бы одна сессия с датой начала (t-1, т.е. вчера)
-    //          I. число сотрудников работало
-    //          II. общая длительность сессии
-    //          III. число диалогов (в статусе 3)
+{    
     public class HeedbookDevelopmentStatisticsJob : IJob
     {
         private readonly RecordsContext _context;
@@ -39,15 +33,13 @@ namespace QuartzExtensions.Jobs
             mail.From = new MailAddress("support@heedbook.com");            
             mail.To.Add(new MailAddress("support@heedbook.com"));
             
-            mail.Subject = "Управленческие показатели";
+            mail.Subject = "Heedbook development statistics";
             var data = HeedbookDevelopmentStatistics();                 
 
             mail.Body = data;
             mail.BodyEncoding = System.Text.Encoding.UTF8;
             mail.IsBodyHtml = false;
-            //mail.Attachments.Add(new Attachment("/home/oleg/Документы/My_Saves/save1.txt"));
-
-            //For Yandex
+            
             var host = "smtp.yandex.ru";
             var port = 587;
 
@@ -74,7 +66,7 @@ namespace QuartzExtensions.Jobs
 
         public string HeedbookDevelopmentStatistics()
         {       
-            var result = "ЗАРЕГИСТРИРОВАННЫЕ КОМПАНИИ ЗА ПОСЛЕДНИЕ 48 ЧАСОВ:\n\n";
+            var result = "NEW COMPANIES IN THE LAST 48 HOURS:\n\n";
             var newCompanyes = _context.Companys
                                         .Where(p => p.CreationDate > DateTime.UtcNow.AddHours(-48))
                                         .ToList();
@@ -83,7 +75,7 @@ namespace QuartzExtensions.Jobs
                 result += $"{c.CreationDate} - {c.CompanyName}\n";   
             }            
             
-            result += $"\n\nАКТИВНОСТЬ КОМПАНИЙ ЗА ПОСЛЕДНИЕ СУТКИ:\n\n";            
+            result += $"\n\nACTIVITY OF COMPANIES FOR LAST DAYS:\n\n";            
 
             var dialogues = _context.Dialogues
                                     .Include(p => p.ApplicationUser)
@@ -112,13 +104,12 @@ namespace QuartzExtensions.Jobs
                 .ToList();
 
             foreach(var compRep in sessions)
-            {         
-                
-                result += $"Название компании:              {compRep.CompanyName}\n";
-                result += $"Число сотрудников работало:     {compRep.CountOfEmployers}\n";
-                result += $"Общая длительность сессий:      {compRep.TotalSessionDuration:0.##}\n";
-                result += $"Общая длительность всех видео:  {compRep.TotalVideoDuration:0.##}\n";
-                result += $"Число диалогов со статусом 3:   {compRep.CountOfDialogues}\n\n";
+            {                         
+                result += $"Company name:                       {compRep.CompanyName}\n";
+                result += $"Number of employes worked:          {compRep.CountOfEmployers}\n";
+                result += $"Total session duration:             {compRep.TotalSessionDuration:0.##}\n";
+                result += $"Total duration of all videos:       {compRep.TotalVideoDuration:0.##}\n";
+                result += $"Number of dialogs with status 3:    {compRep.CountOfDialogues}\n\n";
             }
             return result;
         }
