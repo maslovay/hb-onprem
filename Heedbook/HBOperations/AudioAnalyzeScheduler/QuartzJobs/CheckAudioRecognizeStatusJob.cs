@@ -42,7 +42,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             using (var scope = _factory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
-                _log.Info("Audion analyze scheduler started.");
+                _log.Info("Audio analyze scheduler started.");
                 try
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
@@ -80,14 +80,17 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             var languageId = (int)audio.Dialogue.ApplicationUser.Company.LanguageId;
                             var speechSpeed = GetSpeechSpeed(recognized, languageId);
                             _log.Info($"Speech speed: {speechSpeed}");
-                            dialogueSpeeches.Add(new DialogueSpeech
+
+                            var newSpeech = new DialogueSpeech
                             {
                                 DialogueId = audio.DialogueId,
                                 IsClient = true,
                                 SpeechSpeed = speechSpeed,
                                 PositiveShare = default(Double),
                                 SilenceShare = GetSilenceShare(recognized, audio.BegTime, audio.EndTime)
-                            });
+                            };
+                            
+                            dialogueSpeeches.Add(newSpeech);
 
                             var lemmatizer = LemmatizerFactory.CreateLemmatizer(languageId);
                             var phraseCount = new List<DialoguePhraseCount>();
@@ -133,6 +136,9 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                         EndTime = audio.BegTime.AddSeconds(Double.Parse(r.EndTime, CultureInfo.InvariantCulture))
                                     });
                             });
+
+                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r=> r.Word).ToList());
+                            
                             words = words.GroupBy(item => new
                             {
                                 item.BegTime,
@@ -168,6 +174,17 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     _log.Fatal($"Exception occured {e}");
                 }
             }
+        }
+
+        private double GetPositiveShareInText(List<string> recognizedWords)
+        {
+            var result = 0.0;
+            
+            var sentence = string.Join(" ", recognizedWords);
+            var posShareStrg = RunPython.Run("GetPositiveShare.py", "./sentimental", "3.6", sentence);
+
+            result = double.Parse(posShareStrg.Item1.Trim());
+            return result;
         }
 
         private Double GetSpeechSpeed(List<WordRecognized> words, Int32 languageId)
