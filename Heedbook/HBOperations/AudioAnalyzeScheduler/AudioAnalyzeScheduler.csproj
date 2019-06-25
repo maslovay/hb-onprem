@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <Target Name="AfterBuild">
-    <Message Text="Sentimantal is being installed..." Importance="normal"/>
+    <Message Text="Sentimantal is being installed..." Importance="normal" />
     <!-- Insert other tasks to run after build here -->
   </Target>
 </Project>
