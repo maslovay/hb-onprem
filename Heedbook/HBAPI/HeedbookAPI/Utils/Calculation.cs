@@ -842,20 +842,7 @@ namespace UserOperations.Utils
             return null;
         }
         //-------------------------WeeklyReportController--------------------------
-        public int? OfficeRatingSatisfactionPlace(List<VWeeklyReport> dialogues, Guid userId)
-        {
-            if (dialogues != null && dialogues.Count() != 0)
-            {
-                var OrderedBySatisf = dialogues
-                          .GroupBy(p => p.AspNetUserId)
-                          .Select(p => new { satisf = p.Average(x => x.Satisfaction), p.Key })
-                          .OrderByDescending(s => s.satisf)
-                          .Select((s, i) => new { place = i, userId = s.Key });
-                return OrderedBySatisf.Where(p => p.userId == userId).FirstOrDefault()?.place;
-            }
-            return null;
-        }
-        public int? OfficeRatingSatisfactionPlace(List<VWeeklyReportOld> dialogues, Guid userId)
+        public int? OfficeRatingSatisfactionPlace(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             if (dialogues != null && dialogues.Count() != 0)
             {
@@ -869,16 +856,7 @@ namespace UserOperations.Utils
             return null;
         }
 
-        public int? OfficeRatingPositiveEmotPlace(List<VWeeklyReport> dialogues, Guid userId)
-        {
-            var OrderedByPositive = dialogues
-                       .GroupBy(p => p.AspNetUserId)
-                       .Select(p => new { positive = p.Average(x => x.PositiveEmotions), p.Key })
-                       .OrderByDescending(s => s.positive)
-                       .Select((s, i) => new { place = i, userId = s.Key });
-            return OrderedByPositive.Where(p => p.userId == userId).FirstOrDefault()?.place;
-        }
-        public int? OfficeRatingPositiveEmotPlace(List<VWeeklyReportOld> dialogues, Guid userId)
+        public int? OfficeRatingPositiveEmotPlace(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var OrderedByPositive = dialogues
                        .GroupBy(p => p.AspNetUserId)
@@ -888,16 +866,7 @@ namespace UserOperations.Utils
             return OrderedByPositive.Where(p => p.userId == userId).FirstOrDefault()?.place;
         }
 
-        public int? OfficeRatingPositiveIntonationPlace(List<VWeeklyReport> dialogues, Guid userId)
-        {
-            var OrderedByPositive = dialogues
-                       .GroupBy(p => p.AspNetUserId)
-                       .Select(p => new { positive = p.Average(x => x.PositiveTone), p.Key })
-                       .OrderByDescending(s => s.positive)
-                       .Select((s, i) => new { place = i, userId = s.Key });
-            return OrderedByPositive.Where(p => p.userId == userId).FirstOrDefault()?.place;
-        }
-        public int? OfficeRatingPositiveIntonationPlace(List<VWeeklyReportOld> dialogues, Guid userId)
+        public int? OfficeRatingPositiveIntonationPlace(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var OrderedByPositive = dialogues
                        .GroupBy(p => p.AspNetUserId)
@@ -907,7 +876,7 @@ namespace UserOperations.Utils
             return OrderedByPositive.Where(p => p.userId == userId).FirstOrDefault()?.place;
         }
 
-        public int? OfficeRatingSpeechEmotPlace(List<VWeeklyReport> dialogues, Guid userId)
+        public int? OfficeRatingSpeechEmotPlace(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var OrderedByPositive = dialogues
                        .GroupBy(p => p.AspNetUserId)
@@ -916,16 +885,7 @@ namespace UserOperations.Utils
                        .Select((s, i) => new { place = i, userId = s.Key });
             return OrderedByPositive.Where(p => p.userId == userId).FirstOrDefault()?.place;
         }
-        public int? OfficeRatingSpeechEmotPlace(List<VWeeklyReportOld> dialogues, Guid userId)
-        {
-            var OrderedByPositive = dialogues
-                       .GroupBy(p => p.AspNetUserId)
-                       .Select(p => new { positive = p.Average(x => (double?)x.SpeekEmotions), p.Key })
-                       .OrderByDescending(s => s.positive)
-                       .Select((s, i) => new { place = i, userId = s.Key });
-            return OrderedByPositive.Where(p => p.userId == userId).FirstOrDefault()?.place;
-        }
-        public Dictionary<DateTime, double?> AvgWorkloadPerDay(List<VWeeklyReport> dialogues, List<VSessionWeeklyReport> sessions)//---for one user
+        public Dictionary<DateTime, double?> AvgWorkloadPerDay(List<VWeeklyUserReport> dialogues, List<VSessionUserWeeklyReport> sessions)//---for one user
         {
             return sessions
                 .Select(s => new
@@ -934,7 +894,7 @@ namespace UserOperations.Utils
                     Day = s.Day
                 }).OrderByDescending(s => s.Day).ToDictionary(x => x.Day, i => i.Workload);
         }
-        public int? OfficeRatingWorkload(List<VWeeklyReport> dialogues, List<VSessionWeeklyReport> sessions, Guid userId)
+        public int? OfficeRatingWorkload(List<VWeeklyUserReport> dialogues, List<VSessionUserWeeklyReport> sessions, Guid userId)
         {
             var workloadPerUser = sessions
                 .GroupBy(p => p.AspNetUserId)
@@ -946,37 +906,13 @@ namespace UserOperations.Utils
             var orderedWorkload = workloadPerUser.OrderByDescending(x => x.Workload).Select((x, i) => new { Place = i, x.UserId });
             return orderedWorkload.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
         }
-        public int? OfficeRatingWorkload(List<VWeeklyReportOld> dialogues, List<VSessionWeeklyReportOld> sessions, Guid userId)
-        {
-            var workloadPerUser = sessions
-                .GroupBy(p => p.AspNetUserId)
-                .Select(s => new
-                {
-                    UserId = s.Key,
-                    Workload = dialogues.Where(d => d.AspNetUserId == s.Key).Sum(d => d.DialogueHours) / s.Sum(x => x.SessionsHours)
-                });
-            var orderedWorkload = workloadPerUser.OrderByDescending(x => x.Workload).Select((x, i) => new { Place = i, x.UserId });
-            return orderedWorkload.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
-        }
-        public int? OfficeRatingWorkingHours(List<VSessionWeeklyReport> sessions, Guid userId)
+        public int? OfficeRatingWorkingHours(List<VSessionUserWeeklyReport> sessions, Guid userId)
         {
             var ordered = sessions.GroupBy(p => p.AspNetUserId)
                 .OrderByDescending(x => x.Sum(r => r.SessionsHours)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
         }
-        public int? OfficeRatingWorkingHours(List<VSessionWeeklyReportOld> sessions, Guid userId)
-        {
-            var ordered = sessions.GroupBy(p => p.AspNetUserId)
-               .OrderByDescending(x => x.Sum(r => r.SessionsHours)).Select((x, i) => new { Place = i, UserId = x.Key });
-            return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
-        }
-        public int? OfficeRatingDialogueTime(List<VWeeklyReport> dialogues, Guid userId)
-        {
-            var ordered = dialogues.GroupBy(p => p.AspNetUserId)
-                .OrderByDescending(x => x.Sum(r => r.DialogueHours / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
-            return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
-        }
-        public int? OfficeRatingDialogueTime(List<VWeeklyReportOld> dialogues, Guid userId)
+        public int? OfficeRatingDialogueTime(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
                 .OrderByDescending(x => x.Sum(r => r.DialogueHours / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
@@ -984,76 +920,46 @@ namespace UserOperations.Utils
         }
      
         //OfficeRatingDialoguesAmount  
-        public int? OfficeRatingDialoguesAmount(List<VWeeklyReport> dialogues, Guid userId)
+        public int? OfficeRatingDialoguesAmount(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
                 .OrderByDescending(x => x.Sum(r => r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
         }
-        public int? OfficeRatingDialoguesAmount(List<VWeeklyReportOld> dialogues, Guid userId)
-        {
-            var ordered = dialogues.GroupBy(p => p.AspNetUserId)
-                .OrderByDescending(x => x.Sum(r => r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
-            return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
-        }
-        public int? OfficeRatingCross(List<VWeeklyReport> dialogues, Guid userId)
+        public int? OfficeRatingCross(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
                .OrderByDescending(x => x.Sum(r => (double?)r.CrossDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
         }
-        public int? OfficeRatingCross(List<VWeeklyReportOld> dialogues, Guid userId)
-        {
-            var ordered = dialogues.GroupBy(p => p.AspNetUserId)
-               .OrderByDescending(x => x.Sum(r => (double?)r.CrossDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
-            return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
-        }
-        public int? OfficeRatingAlert(List<VWeeklyReport> dialogues, Guid userId)
+        public int? OfficeRatingAlert(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
                 .OrderByDescending(x => x.Sum(r => (double?)r.AlertDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
         }
-        public int? OfficeRatingAlert(List<VWeeklyReportOld> dialogues, Guid userId)
-        {
-            var ordered = dialogues.GroupBy(p => p.AspNetUserId)
-                .OrderByDescending(x => x.Sum(r => (double?)r.AlertDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
-            return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
-        }
-        public int? OfficeRatingLoyalty(List<VWeeklyReport> dialogues, Guid userId)
+        public int? OfficeRatingLoyalty(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
                .OrderByDescending(x => x.Sum(r => (double?)r.LoyaltyDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
         }
-        public int? OfficeRatingLoyalty(List<VWeeklyReportOld> dialogues, Guid userId)
-        {
-            var ordered = dialogues.GroupBy(p => p.AspNetUserId)
-               .OrderByDescending(x => x.Sum(r => (double?)r.LoyaltyDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
-            return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
-        }
-        public int? OfficeRatingNecessary(List<VWeeklyReport> dialogues, Guid userId)
+        public int? OfficeRatingNecessary(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
                .OrderByDescending(x => x.Sum(r => (double?)r.NecessaryDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
         }
-        public int? OfficeRatingNecessary(List<VWeeklyReportOld> dialogues, Guid userId)
-        {
-            var ordered = dialogues.GroupBy(p => p.AspNetUserId)
-               .OrderByDescending(x => x.Sum(r => (double?)r.NecessaryDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
-            return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
-        }
-        public int? OfficeRatingFillers(List<VWeeklyReport> dialogues, Guid userId)
+        public int? OfficeRatingFillers(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
                 .OrderByDescending(x => x.Sum(r => (double?)r.FillersDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
         }
-        public int? OfficeRatingFillers(List<VWeeklyReportOld> dialogues, Guid userId)
+        public int? OfficeRatingRisk(List<VWeeklyUserReport> dialogues, Guid userId)
         {
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
-                .OrderByDescending(x => x.Sum(r => (double?)r.FillersDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
+                .OrderByDescending(x => x.Sum(r => (double?)r.RiskDialogues / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered.Where(x => x.UserId == userId).FirstOrDefault()?.Place;
         }
     }

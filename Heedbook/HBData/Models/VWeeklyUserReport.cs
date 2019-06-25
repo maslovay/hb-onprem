@@ -6,7 +6,7 @@ namespace HBData.Models
     /// <summary>
     ///     View table
     /// </summary>
-    public class VWeeklyReportOld
+    public class VWeeklyUserReport
     {
       [Key]
         public Guid Id { get; set; }
@@ -26,5 +26,6 @@ namespace HBData.Models
         public int? LoyaltyDialogues { get; set; }
         public int? AlertDialogues { get; set; }
         public int? FillersDialogues { get; set; }
+        public int? RiskDialogues { get; set; }
     }
 }

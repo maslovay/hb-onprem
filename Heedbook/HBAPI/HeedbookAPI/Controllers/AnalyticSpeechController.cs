@@ -31,6 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using UserOperations.Utils;
 using HBLib.Utils;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -268,6 +269,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("PhraseTypeCount")]
+        [SwaggerOperation(Summary = "% phrases in dialogues", Description = "Return type, procent and colour of phrase type in dialogues (for employees, clients and total)")]
         public IActionResult SpeechPhraseTypeCount([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
@@ -299,8 +301,7 @@ namespace UserOperations.Controllers
                         && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId))))
                     .Select(p => p.DialogueId).ToList();
 
-                // CREATE PARAMETERS
-                var types = _context.PhraseTypes.ToList();
+                // CREATE PARAMETERS                
                 var totalInfo = new SpeechPhraseTotalInfo();
 
                 var requestPhrase = _context.DialoguePhrases
@@ -314,7 +315,7 @@ namespace UserOperations.Controllers
                         PhraseType = p.Phrase.PhraseType.PhraseTypeText,
                         Colour = p.Phrase.PhraseType.Colour,
                         DialogueId = p.DialogueId
-                    }).ToList();
+                    }).ToList();               
 
                 var employee = requestPhrase.Where(p => p.IsClient == false)
                     .GroupBy(p => p.PhraseType)
@@ -324,8 +325,7 @@ namespace UserOperations.Controllers
                         Count = (requestPhrase.Where(q => q.IsClient == false).Select(q => q.DialogueId).Distinct().Count() != 0) ?
                             Math.Round(100 * Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(requestPhrase.Where(q => q.IsClient == false).Select(q => q.DialogueId).Distinct().Count())) : 0,
                         Colour = p.First().Colour
-                    }).ToList();
-
+                    }).ToList();          
 
                 var client = requestPhrase.Where(p => p.IsClient == true & (p.PhraseType == "Loyalty" | p.PhraseType == "Alert"))
                     .GroupBy(p => p.PhraseType)
@@ -336,7 +336,7 @@ namespace UserOperations.Controllers
                         Math.Round(100 * Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(requestPhrase.Where(q => q.IsClient == true).Select(q => q.DialogueId).Distinct().Count())): 0,
                         Colour = p.First().Colour
                     }).ToList();
-
+                   
                 var total = requestPhrase
                     .GroupBy(p => p.PhraseType)
                     .Select(p => new SpeechPhrasesInfo
@@ -346,7 +346,8 @@ namespace UserOperations.Controllers
                         Colour = p.First().Colour
                     }).ToList();
 
-                var employeeType = employee.GetType();
+                var types = _context.PhraseTypes.ToList();
+               // var employeeType = employee.GetType();
                 foreach (var type in types)
                 {
                     if (employee.Where(p => p.Type == type.PhraseTypeText).Count() == 0)
@@ -365,7 +366,7 @@ namespace UserOperations.Controllers
                             Colour = type.Colour
                         });
 
-                    if (total.Where(p => p.Type == type.PhraseTypeText).Any())
+                    if (total.Where(p => p.Type == type.PhraseTypeText).Count() == 0)
                         total.Add(new SpeechPhrasesInfo
                         {
                             Type = type.PhraseTypeText,
@@ -373,7 +374,6 @@ namespace UserOperations.Controllers
                             Colour = type.Colour
                         });
                 }
-
                 totalInfo.Client = client;
                 totalInfo.Employee = employee;
                 totalInfo.Total = total;

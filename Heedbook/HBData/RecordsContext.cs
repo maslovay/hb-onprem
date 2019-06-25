@@ -122,11 +122,9 @@ namespace HBData
         public DbSet<WorkerType> WorkerTypes { get; set; }
         public DbSet<PasswordHistory> PasswordHistorys { get; set; }
         public DbSet<LoginHistory> LoginHistorys { get; set; }
-        public DbSet<VIndexByCompanyDay> VIndexesByCompanysDays { get; set; }
-        public DbSet<VSessionWeeklyReport> VSessionWeeklyReports { get; set; }
-        public DbSet<VSessionWeeklyReportOld> VSessionWeeklyReportsOld { get; set; }
-        public DbSet<VWeeklyReport> VWeeklyReports { get; set; }
-        public DbSet<VWeeklyReportOld> VWeeklyReportsOld { get; set; }
+        public DbSet<VIndexByCompanyDay> VIndexesByCompanysDays { get; set; }        
+        public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
+        public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }        
 
     }
 }
