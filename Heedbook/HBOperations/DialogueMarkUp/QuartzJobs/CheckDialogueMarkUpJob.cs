@@ -75,6 +75,7 @@ namespace DialogueMarkUp.QuartzJobs
                             EndTime = x.Max(q => q.FileFrame.Time),
                             BegFileName = x.Min(q => q.FileFrame.FileName),
                             EndFileName = x.Max(q => q.FileFrame.FileName),
+                            Descriptor = x.First().Descriptor
                         })
                         .Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 10)
                         .OrderBy(p => p.EndTime)
@@ -111,6 +112,7 @@ namespace DialogueMarkUp.QuartzJobs
                         ApplicationUserId = applicationUserId,
                         BegTime = markup.BegTime,
                         EndTime = markup.EndTime,
+                        PersonFaceDescriptor = markup.Descriptor,
                         CreationTime = DateTime.UtcNow,
                         LanguageId = 1,
                         StatusId = 6,
@@ -176,6 +178,7 @@ namespace DialogueMarkUp.QuartzJobs
                         ApplicationUserId = applicationUserId,
                         BegTime = markUps[i].BegTime,
                         EndTime = markUps[i].EndTime,
+                        PersonFaceDescriptor = markUps[i].Descriptor,
                         CreationTime = DateTime.UtcNow,
                         LanguageId = 1,
                         StatusId = 6,
