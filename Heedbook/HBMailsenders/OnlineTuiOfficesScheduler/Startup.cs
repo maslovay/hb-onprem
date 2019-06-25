@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Quartz;
 using QuartzExtensions;
 using HBLib;
+using HBLib.Utils;
 
 namespace OnlineTuiOfficesScheduler
 {
@@ -39,6 +40,7 @@ namespace OnlineTuiOfficesScheduler
 
             services.Configure<SmtpSettings>(Configuration.GetSection(nameof(SmtpSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
+            services.AddSingleton<SmtpClient>();
 
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddSendOnlineTuiOfficesJobQuartz(); //-----------
