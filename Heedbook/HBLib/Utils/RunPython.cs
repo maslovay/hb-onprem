@@ -29,7 +29,7 @@ namespace HBLib.Utils
                     if (pyProc != null)
                     {
                         result = pyProc.StandardOutput.ReadToEnd();
-                        error = pyProc.StandardError.ReadToEnd();
+                            error = pyProc.StandardError.ReadToEnd();
                         return (result, error);
                     }
                 }
