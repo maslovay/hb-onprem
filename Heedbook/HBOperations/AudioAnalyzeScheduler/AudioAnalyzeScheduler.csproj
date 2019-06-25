@@ -17,8 +17,12 @@
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
     <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
-  </ItemGroup>
 
+    <Content Include="sentimental\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
   <ItemGroup>
     <Content Update="appsettings.json">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -26,4 +30,9 @@
     </Content>
   </ItemGroup>
 
+  <Target Name="AfterBuild">
+    <Message Text="Sentimantal is being installed..." Importance="normal"/>
+    <!-- Insert other tasks to run after build here -->
+  </Target>
 </Project>
+
