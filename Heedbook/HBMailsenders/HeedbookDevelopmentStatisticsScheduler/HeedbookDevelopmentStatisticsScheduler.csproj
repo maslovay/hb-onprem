@@ -12,8 +12,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Configurations\Configurations.csproj" />
-      <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
+      <ProjectReference Include="..\..\HBOperations\Configurations\Configurations.csproj" />
+      <ProjectReference Include="..\..\HBOperations\QuartzExtensions\QuartzExtensions.csproj" />
     </ItemGroup>
 
 </Project>

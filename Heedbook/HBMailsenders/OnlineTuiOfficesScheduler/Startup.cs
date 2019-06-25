@@ -36,6 +36,10 @@ namespace OnlineTuiOfficesScheduler
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
+
+            services.Configure<SmtpSettings>(Configuration.GetSection(nameof(SmtpSettings)));
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
+
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddSendOnlineTuiOfficesJobQuartz(); //-----------
             services.AddRabbitMqEventBus(Configuration);

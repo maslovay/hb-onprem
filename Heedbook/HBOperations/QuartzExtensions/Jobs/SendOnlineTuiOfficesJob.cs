@@ -18,6 +18,7 @@ namespace QuartzExtensions.Jobs
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly ElasticClient _log;
+        private readonly SmtpSettings _smtpSettings;
 
         private List<Guid?> tuiOfficeGuids = new List<Guid?>
             {
@@ -37,18 +38,21 @@ namespace QuartzExtensions.Jobs
                 new Guid("7b83800e-583a-49a6-9e13-775a095f5baa"),
                 new Guid("fbc2d85e-1f32-4521-8ac4-a184ee71b554")
             };
-        public SendOnlineTuiOfficesJob(IServiceScopeFactory factory, ElasticClientFactory elasticClientFactory)
+        public SendOnlineTuiOfficesJob(IServiceScopeFactory factory, 
+            ElasticClientFactory elasticClientFactory,
+            SmtpSettings smtpSettings)
         {            
             _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();    
-            _elasticClientFactory = elasticClientFactory;        
+            _elasticClientFactory = elasticClientFactory;   
+            _smtpSettings = smtpSettings;  
         }
 
         public async Task Execute(IJobExecutionContext context)
         {   
             var _log = _elasticClientFactory.GetElasticClient();         
             var mail = new MailMessage();
-            mail.From = new MailAddress("support@heedbook.com");
-            mail.To.Add(new MailAddress("anisiya.kobylina@tui.ru"));            
+            mail.From = new MailAddress(_smtpSettings.FromEmail);            
+            mail.To.Add(new MailAddress(_smtpSettings.ToEmail));            
             
             mail.Subject = "Active TUI OFFICES";
             var data = TuiOnlineOffices();
@@ -56,20 +60,16 @@ namespace QuartzExtensions.Jobs
             foreach (var item in data) mailData += item.CompanyName + " " + item.ApplicationUserName + " Online" + "\n";
 
             mail.Body = mailData;
-            mail.IsBodyHtml = false;            
+            mail.IsBodyHtml = false;  
+
+            var smtpClient = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port);
+            smtpClient.DeliveryMethod = (SmtpDeliveryMethod)_smtpSettings.DeliveryMethod;
             
-            var host = "smtp.yandex.ru";
-            var port = 587;
+            smtpClient.EnableSsl = _smtpSettings.EnableSsl;
+            smtpClient.UseDefaultCredentials = _smtpSettings.UseDefaultCredentials;
+            smtpClient.Timeout = _smtpSettings.Timeout;
 
-            var smtpClient = new SmtpClient(host, port);
-            smtpClient.DeliveryMethod = SmtpDeliveryMethod.Network;
-            smtpClient.EnableSsl = true;
-            smtpClient.UseDefaultCredentials = false;
-            smtpClient.Timeout = 10000;
-
-            var password = "Heedbook_2017";
-
-            smtpClient.Credentials = new NetworkCredential("support@heedbook.com", password);
+            smtpClient.Credentials = new NetworkCredential(_smtpSettings.FromEmail, _smtpSettings.Password);
             try
             {
                 smtpClient.Send(mail);
@@ -87,22 +87,21 @@ namespace QuartzExtensions.Jobs
 
 
         public List<CompanyInformation> TuiOnlineOffices()
-        {       
-            
+        {           
             var offices = _context.Sessions
-                .Include(p=>p.ApplicationUser)
-                .Include(p=>p.ApplicationUser.Company)
-                .Where(p=>p.StatusId == 6
+            .Include(p=>p.ApplicationUser)
+            .Include(p=>p.ApplicationUser.Company)
+            .Where(p=>p.StatusId == 6
                 &&tuiOfficeGuids.Contains(p.ApplicationUser.CompanyId))
-                .GroupBy(p => p.ApplicationUser.CompanyId)
-                .Select(p=> new CompanyInformation
-                    {
-                        CompanyId = p.Key,
-                        CompanyName = p.First().ApplicationUser.Company.CompanyName,
-                        ApplicationUserName = p.First().ApplicationUser.FullName
-                    })
-                .ToList();            
-            return offices;
+            .GroupBy(p => p.ApplicationUser.CompanyId)
+            .Select(p=> new CompanyInformation
+                {
+                    CompanyId = p.Key,
+                    CompanyName = p.First().ApplicationUser.Company.CompanyName,
+                    ApplicationUserName = p.First().ApplicationUser.FullName
+                })
+            .ToList();            
+            return offices;            
         }
     }
 

@@ -19,39 +19,40 @@ namespace QuartzExtensions.Jobs
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly ElasticClient _log;
+        private readonly SmtpSettings _smtpSettings;
     
-        public HeedbookDevelopmentStatisticsJob(IServiceScopeFactory factory, ElasticClientFactory elasticClientFactory)
+        public HeedbookDevelopmentStatisticsJob(IServiceScopeFactory factory, 
+            ElasticClientFactory elasticClientFactory,
+            SmtpSettings smtpSettings)
         {            
             _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
             _elasticClientFactory = elasticClientFactory;
+            _smtpSettings = smtpSettings;  
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             var _log = _elasticClientFactory.GetElasticClient();         
             var mail = new MailMessage();
-            mail.From = new MailAddress("support@heedbook.com");            
-            mail.To.Add(new MailAddress("support@heedbook.com"));
+            mail.From = new MailAddress(_smtpSettings.FromEmail);            
+            mail.To.Add(new MailAddress("krokhmal11@mail.ru"));
+            mail.To.Add(new MailAddress(_smtpSettings.ToEmail)); 
             
             mail.Subject = "Heedbook development statistics";
+            
             var data = HeedbookDevelopmentStatistics();                 
 
             mail.Body = data;
             mail.BodyEncoding = System.Text.Encoding.UTF8;
             mail.IsBodyHtml = false;
-            
-            var host = "smtp.yandex.ru";
-            var port = 587;
 
-            var smtpClient = new SmtpClient(host, port);
-            smtpClient.DeliveryMethod = SmtpDeliveryMethod.Network;
-            smtpClient.EnableSsl = true;
-            smtpClient.UseDefaultCredentials = false;
-            smtpClient.Timeout = 10000;
+            var smtpClient = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port);
+            smtpClient.DeliveryMethod = (SmtpDeliveryMethod)_smtpSettings.DeliveryMethod;
+            smtpClient.EnableSsl = _smtpSettings.EnableSsl;
+            smtpClient.UseDefaultCredentials = _smtpSettings.UseDefaultCredentials;
+            smtpClient.Timeout = _smtpSettings.Timeout;
 
-            var password = "Heedbook_2017";
-
-            smtpClient.Credentials = new NetworkCredential("support@heedbook.com", password);            
+            smtpClient.Credentials = new NetworkCredential(_smtpSettings.FromEmail, _smtpSettings.Password);            
             try
             {
                 smtpClient.Send(mail);
@@ -78,12 +79,15 @@ namespace QuartzExtensions.Jobs
             result += $"\n\nACTIVITY OF COMPANIES FOR LAST DAYS:\n\n";            
 
             var dialogues = _context.Dialogues
-                                    .Include(p => p.ApplicationUser)
-                                    .Where(p => p.BegTime > DateTime.UtcNow.AddHours(-24));                                    
+                .Include(p => p.ApplicationUser)
+                .Where(p => p.BegTime > DateTime.UtcNow.AddHours(-24)
+                    && p.StatusId == 3)
+                .ToList();                                    
 
             var videos = _context.FileVideos
                 .Include(p => p.ApplicationUser)
-                .Where(p => p.BegTime > DateTime.UtcNow.AddHours(-24)).ToList();
+                .Where(p => p.BegTime > DateTime.UtcNow.AddHours(-24))
+                .ToList();
             
             var sessions = _context.Sessions
                 .Include(p => p.ApplicationUser)
@@ -95,11 +99,12 @@ namespace QuartzExtensions.Jobs
                         CompanyId = p.Key,
                         CompanyName = p.First().ApplicationUser.Company.CompanyName,
                         CountOfEmployers = p.GroupBy(u => u.ApplicationUserId).Count(),
-                        TotalSessionDuration = GetTotalSessionDuration(p).ToString("d'd 'h'h 'm'm 's's'"),
-                        TotalVideoDuration = GetTotalVideoDuration(p.First().ApplicationUser.CompanyId, ref videos)
+                        TotalSessionDuration = TimeSpan.FromSeconds(p.Sum(s => s.EndTime.Subtract(s.BegTime).TotalSeconds))
+                            .ToString("d'd 'h'h 'm'm 's's'"),                        
+                        TotalVideoDuration = TimeSpan.FromSeconds(videos.Where(s => s.ApplicationUser.CompanyId == p.Key)
+                            .Sum(o => (double)o.Duration))
                             .ToString("d'd 'h'h 'm'm 's's'"),
-                        CountOfDialogues = dialogues.Where(s => s.StatusId == 3
-                            && s.ApplicationUser.CompanyId == p.First().ApplicationUser.CompanyId).Count()
+                        CountOfDialogues = dialogues.Where(s => s.ApplicationUser.CompanyId == p.First().ApplicationUser.CompanyId).Count()
                     })
                 .ToList();
 
@@ -110,26 +115,6 @@ namespace QuartzExtensions.Jobs
                 result += $"Total session duration:             {compRep.TotalSessionDuration:0.##}\n";
                 result += $"Total duration of all videos:       {compRep.TotalVideoDuration:0.##}\n";
                 result += $"Number of dialogs with status 3:    {compRep.CountOfDialogues}\n\n";
-            }
-            return result;
-        }
-
-        public TimeSpan GetTotalSessionDuration(IGrouping<Guid?, Session> Sessions)
-        {            
-            TimeSpan result = TimeSpan.Zero;            
-            foreach(var session in Sessions)
-            {
-                result += session.EndTime.Subtract(session.BegTime);
-            }         
-            return result;
-        }
-        public TimeSpan GetTotalVideoDuration(Guid? companyId, ref List<FileVideo> videos)
-        {            
-            var companyVideos = videos.Where(p => p.ApplicationUser.CompanyId == companyId).ToList();
-            TimeSpan result = TimeSpan.Zero;
-            foreach(var video in companyVideos)
-            {
-                result += TimeSpan.FromSeconds(video.Duration == null ? 0 : (double)video.Duration);
             }
             return result;
         }
