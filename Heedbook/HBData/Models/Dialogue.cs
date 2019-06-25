@@ -17,7 +17,17 @@ namespace HBData.Models
         public Guid DialogueId { get; set; }
 
         /// <summary>
-        ///     Dialogue creaation time
+        ///     Person face id
+        /// </summary>
+        public Guid? PersonId {get;set;}
+
+        /// <summary>
+        ///     Person Face Descriptor
+        /// </summary>
+        public String PersonFaceDescriptor {get;set;} 
+
+        /// <summary>
+        ///     Dialogue creation time
         /// </summary>
         public DateTime CreationTime { get; set; }
 
