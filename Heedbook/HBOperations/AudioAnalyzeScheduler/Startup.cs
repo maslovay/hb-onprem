@@ -1,5 +1,6 @@
 ﻿using AsrHttpClient;
 using AudioAnalyzeScheduler.Extensions;
+using AudioAnalyzeScheduler.Settings;
 using Configurations;
 using HBData;
 using HBData.Repository;
@@ -31,6 +32,13 @@ namespace AudioAnalyzeScheduler
             services.AddOptions();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
+            //services.Configure<AudioAnalyseSchedulerSettings>(Configuration.GetSection(nameof(AudioAnalyseSchedulerSettings)));
+
+            var schedulerSettings = new AudioAnalyseSchedulerSettings()
+            {
+                Period = Configuration.GetSection(nameof(AudioAnalyseSchedulerSettings)).GetValue<int>("Period")
+            };
+            
             services.AddDbContext<RecordsContext>
             (options =>
             {
@@ -46,7 +54,7 @@ namespace AudioAnalyzeScheduler
             services.AddSingleton<SftpClient>();
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddAudioRecognizeQuartz();
+            services.AddAudioRecognizeQuartz(schedulerSettings);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

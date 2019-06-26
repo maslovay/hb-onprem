@@ -111,20 +111,17 @@ namespace UserService.Controllers
 
                 var dialogueVideoFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialoguevideos/{DialogueId}.mkv");  
                 
-                if(dialogue!=null 
-                    && dialogueVideoFileExist 
-                    && (dialogue.StatusId == 3 || dialogue.StatusId == 6 || dialogue.StatusId == 8))
+                if(dialogueVideoFileExist)
                 {
                     _log.Info($"DialogueVideoAssemble - Success | ");     
                     var dialogueAudioFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialogueaudios/{DialogueId}.wav");
 
                     if(dialogue.DialogueAudio!=null
-                        &&dialogueAudioFileExist)
+                        && dialogueAudioFileExist)
                     {
                         _log.Info($"VideoToSound - Success | ");    
                         
                         var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                    
                         if(speechResult!=null && speechResult.STTResult!=null)
                         {
                             _log.Info($"GoogleRecognition - Success | ");                
@@ -186,7 +183,9 @@ namespace UserService.Controllers
                             EndTime = dialogue.EndTime
                         };
                         _notificationPublisher.Publish(@event);
-                    }                         
+                    }
+
+                                      
                 }
                 else
                 {  
@@ -194,10 +193,7 @@ namespace UserService.Controllers
                     _log.Info($"VideoToSound - not Success | ");
                     _log.Info($"GoogleRecognition - not success | ");
                     _log.Info($"TonAnalyze - not Success | ");     
-                    _log.Info($"FillingFrame - not Success | ");   
-                    dialogue.StatusId = 3;
-                    dialogue.CreationTime = DateTime.UtcNow;
-                    _context.SaveChanges();                 
+                    _log.Info($"FillingFrame - not Success | ");                   
                     var @event = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = dialogue.ApplicationUserId,
@@ -206,7 +202,15 @@ namespace UserService.Controllers
                         EndTime = dialogue.EndTime
                     };
                     _notificationPublisher.Publish(@event);
-                }            
+                } 
+
+                if (dialogue.StatusId != 3)    
+                {
+                    dialogue.StatusId = 6;
+                    dialogue.CreationTime = DateTime.UtcNow;
+                    dialogue.Comment = "";
+                    _context.SaveChanges();
+                }                  
                 
                 return Ok();
             }

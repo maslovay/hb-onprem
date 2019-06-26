@@ -1,4 +1,5 @@
 using AudioAnalyzeScheduler.QuartzJobs;
+using AudioAnalyzeScheduler.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
@@ -9,7 +10,7 @@ namespace AudioAnalyzeScheduler.Extensions
 {
     public static class AddAudioAnalyzeSchedulerJob
     {
-        public static void AddAudioRecognizeQuartz(this IServiceCollection services)
+        public static void AddAudioRecognizeQuartz(this IServiceCollection services, AudioAnalyseSchedulerSettings settings)
         {
             services.Add(new ServiceDescriptor(typeof(IJob), typeof(CheckAudioRecognizeStatusJob),
                 ServiceLifetime.Singleton));
@@ -22,7 +23,7 @@ namespace AudioAnalyzeScheduler.Extensions
                 return TriggerBuilder.Create()
                                      .WithIdentity("CheckAudioRecognizeStatus.trigger", "Audios")
                                      .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(5).RepeatForever())
+                                     .WithSimpleSchedule(s => s.WithIntervalInSeconds(settings.Period).RepeatForever())
                                      .Build();
             });
 

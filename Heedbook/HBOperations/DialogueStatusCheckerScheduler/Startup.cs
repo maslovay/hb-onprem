@@ -1,5 +1,6 @@
 ﻿using Configurations;
 using DialogueStatusCheckerScheduler.Extensions;
+using DialogueStatusCheckerScheduler.Settings;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -40,7 +41,14 @@ namespace DialogueStatusCheckerScheduler
             services.AddScoped<ElasticClientFactory>();
 
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddDialogueStatusCheckerQuartz();
+
+            var settings = new DialogueStatusCheckerSchedulerSettings()
+            {
+                Period = Configuration.GetSection(nameof(DialogueStatusCheckerSchedulerSettings))
+                    .GetValue<int>("Period")
+            };
+            
+            services.AddDialogueStatusCheckerQuartz(settings);
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
