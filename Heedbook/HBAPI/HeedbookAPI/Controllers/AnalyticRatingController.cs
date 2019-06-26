@@ -168,11 +168,11 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
-                var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+               // var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var sessions = _context.Sessions
                     .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= prevBeg
+                    .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 7
                             && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
@@ -193,7 +193,7 @@ namespace UserOperations.Controllers
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueClientSatisfaction)
                     .Include(p => p.DialoguePhraseCount)
-                    .Where(p => p.BegTime >= prevBeg
+                    .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3
                             && p.InStatistic == true
