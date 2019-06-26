@@ -63,66 +63,7 @@ namespace UserOperations.Controllers
             _requestFilters = requestFilters;
             _log = log;
         }
-
-        [HttpGet("CrossRating")]
-        public IActionResult SpeechCrossRating([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
-        {
-            try
-            {
-                _log.Info("AnalyticSpeech/CrossRating started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
-
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
-                //Dialogues info
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        FullName = p.ApplicationUser.FullName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                    })
-                    .ToList();
-                //Result
-                var result = dialogues
-                    .GroupBy(p => p.ApplicationUserId)
-                    .Select(p => new
-                    {
-                        FullName = p.First().FullName,
-                        CrossIndex = p.Any() ? (double?) p.Average(q => Math.Min(q.CrossCout, 1)) : null
-                    }).ToList();
-                result = result.OrderBy(p => p.CrossIndex).ToList();
-                var jsonToReturn = JsonConvert.SerializeObject(result);
-                _log.Info("AnalyticSpeech/CrossRating finished");
-                return Ok(jsonToReturn);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
-        }
+  
 
         [HttpGet("EmployeeRating")]
         public IActionResult SpeechEmployeeRating([FromQuery(Name = "begTime")] string beg,
@@ -177,7 +118,7 @@ namespace UserOperations.Controllers
                     {
                         FullName = p.First().FullName,
                         ApplicationUserId = p.Key,
-                        CrossFreq = (p.Select(q => q.DialogueId).Distinct().Any()) ?
+                        CrossFreq =  (p.Select(q => q.DialogueId).Distinct().Any()) ?
                         100 * Convert.ToDouble(p.Where(q => q.PhraseTypeId == typeIdCross).Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) :
                         0,
                         AlertFreq = (p.Select(q => q.DialogueId).Distinct().Any()) ?
