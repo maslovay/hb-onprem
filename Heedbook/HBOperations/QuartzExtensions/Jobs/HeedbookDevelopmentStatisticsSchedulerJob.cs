@@ -61,7 +61,7 @@ namespace QuartzExtensions.Jobs
 
         public string HeedbookDevelopmentStatistics()
         {       
-            var result = "NEW COMPANIES IN THE LAST 48 HOURS:\n\n";
+            var result = "NEW COMPANIES FOR LAST 48 HOURS:\n\n";
             var newCompanyes = _context.Companys
                                         .Where(p => p.CreationDate > DateTime.UtcNow.AddHours(-48))
                                         .ToList();
@@ -70,7 +70,7 @@ namespace QuartzExtensions.Jobs
                 result += $"{c.CreationDate} - {c.CompanyName}\n";   
             }            
             
-            result += $"\n\nACTIVITY OF COMPANIES FOR LAST DAYS:\n\n";            
+            result += $"\n\nACTIVITY OF COMPANIES FOR LAST 24 HOURS:\n\n";            
 
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
