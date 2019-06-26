@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using HBData;
 using UserOperations.Models.AnalyticModels;
 using HBData.Models;
+using UserOperations.Controllers;
 
 namespace UserOperations.Utils
 {
@@ -169,6 +170,13 @@ namespace UserOperations.Utils
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCout, 1)) : 0;
+            return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
+        }
+
+        public double? LoyaltyIndex(List<ComponentsDialogueInfo> dialogues)
+        {
+            var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
+            var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.Loyalty, 1)) : 0;
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
 
