@@ -102,7 +102,7 @@ namespace UserOperations.Controllers
                         DialogueId = p.DialogueId,
                         ApplicationUserId = p.ApplicationUserId,
                         FullName = p.ApplicationUser.FullName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Sum(q => q.PhraseCount),
                     })
                     .ToList();
                 //Result

@@ -208,7 +208,7 @@ namespace UserOperations.Controllers
                         EndTime = p.EndTime,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                         FullName = p.ApplicationUser.FullName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count()
+                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Sum(q => q.PhraseCount)
                     })
                     .ToList();
 
@@ -299,7 +299,7 @@ namespace UserOperations.Controllers
                         EndTime = p.EndTime,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                         FullName = p.ApplicationUser.Company.CompanyName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count()
+                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Sum(q => q.PhraseCount)
                     })
                     .ToList();
 
