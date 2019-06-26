@@ -1,3 +1,5 @@
+using System.Threading;
+using DialogueStatusCheckerScheduler.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
@@ -9,7 +11,7 @@ namespace DialogueStatusCheckerScheduler.Extensions
 {
     public static class AddDialogueStatusCheckerScheduler
     {
-        public static void AddDialogueStatusCheckerQuartz(this IServiceCollection services)
+        public static void AddDialogueStatusCheckerQuartz(this IServiceCollection services, DialogueStatusCheckerSchedulerSettings settings)
         {
             services.Add(new ServiceDescriptor(typeof(IJob), typeof(DialogueStatusCheckerJob),
                 ServiceLifetime.Singleton));
@@ -22,7 +24,7 @@ namespace DialogueStatusCheckerScheduler.Extensions
                 return TriggerBuilder.Create()
                                      .WithIdentity("DialogueStatusChecker.trigger", "Dialogues")
                                      .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(2).RepeatForever())
+                                     .WithSimpleSchedule(s => s.WithIntervalInSeconds(settings.Period).RepeatForever())
                                      .Build();
             });
 

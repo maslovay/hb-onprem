@@ -24,8 +24,7 @@ namespace QuartzExtensions.Jobs
 
         public DialogueStatusCheckerJob(IServiceScopeFactory factory,
             INotificationPublisher notificationPublisher,
-            ElasticClientFactory elasticClientFactory
-            )
+            ElasticClientFactory elasticClientFactory)
         {
             _notificationPublisher = notificationPublisher;
             _elasticClientFactory = elasticClientFactory;
@@ -37,7 +36,7 @@ namespace QuartzExtensions.Jobs
             using (var scope = _scopeFactory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
-                _log.Info("Audion analyze scheduler started.");
+                _log.Info("Audio analyze scheduler started.");
                 try
                 {
                     _log.Info("Function started.");

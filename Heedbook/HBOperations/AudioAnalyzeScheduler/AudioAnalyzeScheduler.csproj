@@ -21,6 +21,8 @@
     <Content Include="sentimental\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+
+    <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj" />
   </ItemGroup>
   
   <ItemGroup>

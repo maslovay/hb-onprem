@@ -2,7 +2,6 @@
 using AudioAnalyzeScheduler.Model;
 using HBData;
 using HBData.Models;
-using HBData.Repository;
 using HBLib;
 using HBLib.Model;
 using HBLib.Utils;
@@ -11,8 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Quartz;
-using RabbitMqEventBus;
-using RabbitMqEventBus.Events;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -178,7 +175,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private double GetPositiveShareInText(List<string> recognizedWords)
         {
-    
             var result = 0.0;
             try
             {

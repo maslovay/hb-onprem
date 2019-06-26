@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using ServiceExtensions;
 
 namespace DialogueStatusCheckerScheduler
 {
@@ -14,7 +15,8 @@ namespace DialogueStatusCheckerScheduler
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
-                          .UseStartup<Startup>();
+                .ConfigureBuilderDueToEnvironment(args: args, portToReassignForTests: 5070)
+                .UseStartup<Startup>();
         }
     }
 }
