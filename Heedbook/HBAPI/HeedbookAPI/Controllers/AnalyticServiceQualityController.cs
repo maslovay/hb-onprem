@@ -88,13 +88,7 @@ namespace UserOperations.Controllers
                         PhraseTypeText = p.PhraseTypeText,
                         Colour = p.Colour
                     }).ToList();
-
-                // var crossTypeId = phraseTypes.First(p => p.PhraseTypeText == "Cross").PhraseTypeId;
-                // var alertTypeId = phraseTypes.First(p => p.PhraseTypeText == "Alert").PhraseTypeId;
-                // var fillersTypeId = phraseTypes.First(p => p.PhraseTypeText == "Fillers").PhraseTypeId;
                 var loyaltyTypeId = phraseTypes.First(p => p.PhraseTypeText == "Loyalty").PhraseTypeId;
-                // var neccesaryTypeId = phraseTypes.First(p => p.PhraseTypeText == "Necessary").PhraseTypeId;
-                // var riskTypeId = phraseTypes.First(p => p.PhraseTypeText == "Risk").PhraseTypeId;
 
                 //Dialogues info
                 var dialogues = _context.Dialogues
@@ -129,33 +123,9 @@ namespace UserOperations.Controllers
                         FearShare = p.DialogueVisual.Average(q => q.FearShare),
 
                         AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
-                        // Cross = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == crossTypeId).Count() != 0?
-                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == crossTypeId).Sum(q => q.PhraseCount), 1) : 0,
-                        // Necessary =  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == neccesaryTypeId).Count() != 0?
-                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == neccesaryTypeId).Sum(q => q.PhraseCount), 1) : 0,
                         Loyalty = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Sum(q => q.PhraseCount),
-                        //  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Count() != 0?
-                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Sum(q => q.PhraseCount), 1) : 0,
-                        // Alert =  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == alertTypeId).Count() != 0?
-                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == alertTypeId).Sum(q => q.PhraseCount), 1) : 0,
-                        // Fillers =  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == fillersTypeId).Count() != 0?
-                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == fillersTypeId).Sum(q => q.PhraseCount), 1) : 0,
-                        // Risk =  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == riskTypeId).Count() != 0?
-                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == riskTypeId).Sum(q => q.PhraseCount), 1) : 0,
                     })
                     .ToList();
-
-                // ComponentsPhraseTypeInfo Normalization(ComponentsPhraseTypeInfo info)
-                // {
-                //     var normCoeff = Convert.ToDouble(info.Cross) + Convert.ToDouble(info.Necessary) + Convert.ToDouble(info.Loyalty) + Convert.ToDouble(info.Alert) + Convert.ToDouble(info.Fillers);
-                //     info.Cross = normCoeff != 0 ? 100 * info.Cross / normCoeff : null;
-                //     info.Necessary = normCoeff != 0 ? 100 * info.Necessary / normCoeff : null;
-                //     info.Loyalty = normCoeff != 0 ? 100 * info.Loyalty / normCoeff : null;
-                //     info.Alert = normCoeff != 0 ? 100 * info.Alert / normCoeff : null;
-                //     info.Fillers = normCoeff != 0 ? 100 * info.Fillers / normCoeff : null;
-                //     info.Risk = normCoeff != 0 ? 100 * info.Risk / normCoeff : null;
-                //     return info;
-                // }
                 //Result
                 var result = new ComponentsSatisfactionInfo
                 {
@@ -185,12 +155,7 @@ namespace UserOperations.Controllers
                     },
                     PhraseComponent = new ComponentsPhraseTypeInfo
                     {
-                     //   Cross = _dbOperation.CrossIndex(dialogues),
-                      //  Necessary = dialogues.Average(p => p.Necessary),
                         Loyalty = _dbOperation.LoyaltyIndex(dialogues),
-                      //  Alert = dialogues.Average(p => p.Alert),
-                     //   Fillers = dialogues.Average(p => p.Fillers),
-
                         CrossColour = phraseTypes.FirstOrDefault(q => q.PhraseTypeText == "Cross").Colour,
                         NecessaryColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Necessary").Colour,
                         LoyaltyColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Loyalty").Colour,
@@ -199,8 +164,6 @@ namespace UserOperations.Controllers
                         RiskColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Risk").Colour
                     }
                 };
-
-               // result.PhraseComponent = Normalization(result.PhraseComponent);
                 _log.Info("AnalyticServiceQuality/Components finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
@@ -299,7 +262,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+              //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
 
                 var phrasesTypes = _context.PhraseTypes.ToList();
@@ -314,7 +277,7 @@ namespace UserOperations.Controllers
                         .Include(p => p.DialogueAudio)
                         .Include(p => p.DialogueVisual)
                         .Include(p => p.DialogueSpeech)
-                        .Where(p => p.BegTime >= prevBeg
+                        .Where(p => p.BegTime >= begTime
                                 && p.EndTime <= endTime
                                 && p.StatusId == 3
                                 && p.InStatistic == true
@@ -338,6 +301,7 @@ namespace UserOperations.Controllers
                             TextShare = p.DialogueSpeech.FirstOrDefault().PositiveShare,
                         })
                         .ToList(); 
+               // return Ok(dialogues.Select(p => p.DialogueId).Distinct().Count());
 
                 var result = dialogues
                     .GroupBy(p => p.ApplicationUserId)
