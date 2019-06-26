@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Mail;
 using System.Threading.Tasks;
 using HBData;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +17,7 @@ namespace QuartzExtensions.Jobs
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly ElasticClient _log;
         private readonly SmtpSettings _smtpSettings;
+        private readonly SmtpClient _smtpClient;
 
         private List<Guid?> tuiOfficeGuids = new List<Guid?>
             {
@@ -40,19 +39,21 @@ namespace QuartzExtensions.Jobs
             };
         public SendOnlineTuiOfficesJob(IServiceScopeFactory factory, 
             ElasticClientFactory elasticClientFactory,
-            SmtpSettings smtpSettings)
+            SmtpSettings smtpSettings,
+            SmtpClient smtpClient)
         {            
             _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();    
             _elasticClientFactory = elasticClientFactory;   
             _smtpSettings = smtpSettings;  
+            _smtpClient = smtpClient;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {   
             var _log = _elasticClientFactory.GetElasticClient();         
-            var mail = new MailMessage();
-            mail.From = new MailAddress(_smtpSettings.FromEmail);            
-            mail.To.Add(new MailAddress(_smtpSettings.ToEmail));            
+            var mail = new System.Net.Mail.MailMessage();
+            mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);            
+            mail.To.Add(new System.Net.Mail.MailAddress(_smtpSettings.ToEmail));            
             
             mail.Subject = "Active TUI OFFICES";
             var data = TuiOnlineOffices();
@@ -61,22 +62,10 @@ namespace QuartzExtensions.Jobs
 
             mail.Body = mailData;
             mail.IsBodyHtml = false;  
-
-            var smtpClient = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port);
-            smtpClient.DeliveryMethod = (SmtpDeliveryMethod)_smtpSettings.DeliveryMethod;
             
-            smtpClient.EnableSsl = _smtpSettings.EnableSsl;
-            smtpClient.UseDefaultCredentials = _smtpSettings.UseDefaultCredentials;
-            smtpClient.Timeout = _smtpSettings.Timeout;
-
-            smtpClient.Credentials = new NetworkCredential(_smtpSettings.FromEmail, _smtpSettings.Password);
             try
             {
-                smtpClient.Send(mail);
-                smtpClient.SendCompleted += (s, e) => 
-                {
-                    System.Console.WriteLine("Mail Sent Success!");
-                };
+                _smtpClient.Send(mail);       
                 _log.Info("Mail Sent to anisiya.kobylina@tui.ru");              
             }
             catch(Exception ex)

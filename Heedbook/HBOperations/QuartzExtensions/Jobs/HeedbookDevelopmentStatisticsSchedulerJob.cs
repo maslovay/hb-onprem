@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Mail;
 using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
@@ -20,23 +18,26 @@ namespace QuartzExtensions.Jobs
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly ElasticClient _log;
         private readonly SmtpSettings _smtpSettings;
+        private readonly SmtpClient _smtpClient;
     
         public HeedbookDevelopmentStatisticsJob(IServiceScopeFactory factory, 
             ElasticClientFactory elasticClientFactory,
-            SmtpSettings smtpSettings)
+            SmtpSettings smtpSettings,
+            SmtpClient smtpClient)
         {            
             _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
             _elasticClientFactory = elasticClientFactory;
             _smtpSettings = smtpSettings;  
+            _smtpClient = smtpClient;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             var _log = _elasticClientFactory.GetElasticClient();         
-            var mail = new MailMessage();
-            mail.From = new MailAddress(_smtpSettings.FromEmail);            
-            mail.To.Add(new MailAddress("krokhmal11@mail.ru"));
-            mail.To.Add(new MailAddress(_smtpSettings.ToEmail)); 
+            var mail = new System.Net.Mail.MailMessage();
+            mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);            
+            mail.To.Add(new System.Net.Mail.MailAddress("krokhmal11@mail.ru"));
+            mail.To.Add(new System.Net.Mail.MailAddress(_smtpSettings.ToEmail)); 
             
             mail.Subject = "Heedbook development statistics";
             
@@ -45,17 +46,10 @@ namespace QuartzExtensions.Jobs
             mail.Body = data;
             mail.BodyEncoding = System.Text.Encoding.UTF8;
             mail.IsBodyHtml = false;
-
-            var smtpClient = new SmtpClient(_smtpSettings.Host, _smtpSettings.Port);
-            smtpClient.DeliveryMethod = (SmtpDeliveryMethod)_smtpSettings.DeliveryMethod;
-            smtpClient.EnableSsl = _smtpSettings.EnableSsl;
-            smtpClient.UseDefaultCredentials = _smtpSettings.UseDefaultCredentials;
-            smtpClient.Timeout = _smtpSettings.Timeout;
-
-            smtpClient.Credentials = new NetworkCredential(_smtpSettings.FromEmail, _smtpSettings.Password);            
+                      
             try
             {
-                smtpClient.Send(mail);
+                _smtpClient.Send(mail);
                 _log.Info("Mail Sended to support@heedbook.com");
             }
             catch(Exception ex)
@@ -67,7 +61,7 @@ namespace QuartzExtensions.Jobs
 
         public string HeedbookDevelopmentStatistics()
         {       
-            var result = "NEW COMPANIES IN THE LAST 48 HOURS:\n\n";
+            var result = "NEW COMPANIES FOR LAST 48 HOURS:\n\n";
             var newCompanyes = _context.Companys
                                         .Where(p => p.CreationDate > DateTime.UtcNow.AddHours(-48))
                                         .ToList();
@@ -76,7 +70,7 @@ namespace QuartzExtensions.Jobs
                 result += $"{c.CreationDate} - {c.CompanyName}\n";   
             }            
             
-            result += $"\n\nACTIVITY OF COMPANIES FOR LAST DAYS:\n\n";            
+            result += $"\n\nACTIVITY OF COMPANIES FOR LAST 24 HOURS:\n\n";            
 
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
