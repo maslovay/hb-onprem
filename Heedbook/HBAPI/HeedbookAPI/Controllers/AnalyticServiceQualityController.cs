@@ -89,11 +89,12 @@ namespace UserOperations.Controllers
                         Colour = p.Colour
                     }).ToList();
 
-                var crossTypeId = phraseTypes.First(p => p.PhraseTypeText == "Cross").PhraseTypeId;
-                var alertTypeId = phraseTypes.First(p => p.PhraseTypeText == "Alert").PhraseTypeId;
-                var fillersTypeId = phraseTypes.First(p => p.PhraseTypeText == "Fillers").PhraseTypeId;
+                // var crossTypeId = phraseTypes.First(p => p.PhraseTypeText == "Cross").PhraseTypeId;
+                // var alertTypeId = phraseTypes.First(p => p.PhraseTypeText == "Alert").PhraseTypeId;
+                // var fillersTypeId = phraseTypes.First(p => p.PhraseTypeText == "Fillers").PhraseTypeId;
                 var loyaltyTypeId = phraseTypes.First(p => p.PhraseTypeText == "Loyalty").PhraseTypeId;
-                var neccesaryTypeId = phraseTypes.First(p => p.PhraseTypeText == "Necessary").PhraseTypeId;
+                // var neccesaryTypeId = phraseTypes.First(p => p.PhraseTypeText == "Necessary").PhraseTypeId;
+                // var riskTypeId = phraseTypes.First(p => p.PhraseTypeText == "Risk").PhraseTypeId;
 
                 //Dialogues info
                 var dialogues = _context.Dialogues
@@ -128,29 +129,33 @@ namespace UserOperations.Controllers
                         FearShare = p.DialogueVisual.Average(q => q.FearShare),
 
                         AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
-                        Cross = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == crossTypeId).Count() != 0?
-                            p.DialoguePhraseCount.Where(q => q.PhraseTypeId == crossTypeId).Average(q => q.PhraseCount) : 0,
-                        Necessary = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == neccesaryTypeId).Count() != 0? 
-                            p.DialoguePhraseCount.Where(q => q.PhraseTypeId == neccesaryTypeId).Average(q => q.PhraseCount) : 0,
-                        Loyalty = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Count() != 0? 
-                            p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Average(q => q.PhraseCount) : 0,
-                        Alert = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == alertTypeId).Count() != 0? 
-                            p.DialoguePhraseCount.Where(q => q.PhraseTypeId == alertTypeId).Average(q => q.PhraseCount) : 0,
-                        Fillers = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == fillersTypeId).Count() != 0? 
-                                p.DialoguePhraseCount.Where(q => q.PhraseTypeId == fillersTypeId).Average(q => q.PhraseCount): 0
+                        // Cross = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == crossTypeId).Count() != 0?
+                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == crossTypeId).Sum(q => q.PhraseCount), 1) : 0,
+                        // Necessary =  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == neccesaryTypeId).Count() != 0?
+                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == neccesaryTypeId).Sum(q => q.PhraseCount), 1) : 0,
+                        Loyalty = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Sum(q => q.PhraseCount),
+                        //  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Count() != 0?
+                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Sum(q => q.PhraseCount), 1) : 0,
+                        // Alert =  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == alertTypeId).Count() != 0?
+                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == alertTypeId).Sum(q => q.PhraseCount), 1) : 0,
+                        // Fillers =  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == fillersTypeId).Count() != 0?
+                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == fillersTypeId).Sum(q => q.PhraseCount), 1) : 0,
+                        // Risk =  p.DialoguePhraseCount.Where(q => q.PhraseTypeId == riskTypeId).Count() != 0?
+                        //      Math.Min(p.DialoguePhraseCount.Where(q => q.PhraseTypeId == riskTypeId).Sum(q => q.PhraseCount), 1) : 0,
                     })
                     .ToList();
 
-                ComponentsPhraseTypeInfo Normalization(ComponentsPhraseTypeInfo info)
-                {
-                    var normCoeff = Convert.ToDouble(info.Cross) + Convert.ToDouble(info.Necessary) + Convert.ToDouble(info.Loyalty) + Convert.ToDouble(info.Alert) + Convert.ToDouble(info.Fillers);
-                    info.Cross = normCoeff != 0 ? 100 * info.Cross / normCoeff : null;
-                    info.Necessary = normCoeff != 0 ? 100 * info.Necessary / normCoeff : null;
-                    info.Loyalty = normCoeff != 0 ? 100 * info.Loyalty / normCoeff : null;
-                    info.Alert = normCoeff != 0 ? 100 * info.Alert / normCoeff : null;
-                    info.Fillers = normCoeff != 0 ? 100 * info.Fillers / normCoeff : null;
-                    return info;
-                }
+                // ComponentsPhraseTypeInfo Normalization(ComponentsPhraseTypeInfo info)
+                // {
+                //     var normCoeff = Convert.ToDouble(info.Cross) + Convert.ToDouble(info.Necessary) + Convert.ToDouble(info.Loyalty) + Convert.ToDouble(info.Alert) + Convert.ToDouble(info.Fillers);
+                //     info.Cross = normCoeff != 0 ? 100 * info.Cross / normCoeff : null;
+                //     info.Necessary = normCoeff != 0 ? 100 * info.Necessary / normCoeff : null;
+                //     info.Loyalty = normCoeff != 0 ? 100 * info.Loyalty / normCoeff : null;
+                //     info.Alert = normCoeff != 0 ? 100 * info.Alert / normCoeff : null;
+                //     info.Fillers = normCoeff != 0 ? 100 * info.Fillers / normCoeff : null;
+                //     info.Risk = normCoeff != 0 ? 100 * info.Risk / normCoeff : null;
+                //     return info;
+                // }
                 //Result
                 var result = new ComponentsSatisfactionInfo
                 {
@@ -180,21 +185,22 @@ namespace UserOperations.Controllers
                     },
                     PhraseComponent = new ComponentsPhraseTypeInfo
                     {
-                        Cross = dialogues.Average(p => p.Cross),
-                        Necessary = dialogues.Average(p => p.Necessary),
-                        Loyalty = dialogues.Average(p => p.Loyalty),
-                        Alert = dialogues.Average(p => p.Alert),
-                        Fillers = dialogues.Average(p => p.Fillers),
+                     //   Cross = _dbOperation.CrossIndex(dialogues),
+                      //  Necessary = dialogues.Average(p => p.Necessary),
+                        Loyalty = _dbOperation.LoyaltyIndex(dialogues),
+                      //  Alert = dialogues.Average(p => p.Alert),
+                     //   Fillers = dialogues.Average(p => p.Fillers),
 
                         CrossColour = phraseTypes.FirstOrDefault(q => q.PhraseTypeText == "Cross").Colour,
                         NecessaryColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Necessary").Colour,
                         LoyaltyColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Loyalty").Colour,
                         AlertColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Alert").Colour,
-                        FillersColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Fillers").Colour
+                        FillersColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Fillers").Colour,
+                        RiskColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Risk").Colour
                     }
                 };
 
-                result.PhraseComponent = Normalization(result.PhraseComponent);
+               // result.PhraseComponent = Normalization(result.PhraseComponent);
                 _log.Info("AnalyticServiceQuality/Components finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
@@ -442,11 +448,12 @@ namespace UserOperations.Controllers
         public double? ContemptShare;
         public double? FearShare;
         public double? AttentionShare;
-        public double? Cross;
-        public double? Necessary;
-        public double? Loyalty;
-        public double? Alert;
-        public double? Fillers;
+    //  public double? Cross;
+    //  public double? Necessary;
+        public int Loyalty;
+    //  public double? Alert;
+    //  public double? Fillers;
+    //  public double? Risk;
     }
 
     public class ComponentsPhraseInfo
@@ -463,11 +470,13 @@ namespace UserOperations.Controllers
         public double? Loyalty;
         public double? Alert;
         public double? Fillers;
+        public double? Risk;
         public string CrossColour;
         public string NecessaryColour;
         public string LoyaltyColour;
         public string AlertColour;
         public string FillersColour;
+        public string RiskColour;
     }
 
     public class ComponentsAttentionInfo

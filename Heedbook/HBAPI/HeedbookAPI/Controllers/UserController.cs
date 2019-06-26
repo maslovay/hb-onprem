@@ -85,9 +85,16 @@ namespace UserOperations.Controllers
                 _log.Info("User/User GET started"); 
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                var users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                    .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled        
+                List<ApplicationUser> users = null;
+                if(userClaims["role"] == "Admin")
+                    users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                        .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled  
+                else
+                {                 
+                    var companyId = Guid.Parse(userClaims["companyId"]);
+                    users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                    .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled                         
+                }      
                 var result = users.Select(p => new UserModel(p, p.Avatar!= null? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)).path: null));
                 _log.Info("User/User GET finished");
                 return Ok(result);
@@ -116,7 +123,10 @@ namespace UserOperations.Controllers
                 PostUser message = JsonConvert.DeserializeObject<PostUser>(userDataJson);
                 if (_context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                     return BadRequest("User email not unique");
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                    
+                var isAdmin = userClaims["role"] == "Admin";
+                message.RoleId =  message.RoleId != null && isAdmin ? message.RoleId : _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id.ToString(); //Manager role
+                message.CompanyId =  message.CompanyId != null && isAdmin ? message.CompanyId : userClaims["companyId"];
                 
                 //string password = GeneratePass(6);
                 var user = new ApplicationUser
@@ -126,7 +136,7 @@ namespace UserOperations.Controllers
                     Email = message.Email,
                     NormalizedEmail = message.Email.ToUpper(),
                     Id = Guid.NewGuid(),
-                    CompanyId = companyId,
+                    CompanyId = Guid.Parse(message.CompanyId),
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
                     PasswordHash = _loginService.GeneratePasswordHash(message.Password),
@@ -151,7 +161,7 @@ namespace UserOperations.Controllers
                 var userRole = new ApplicationUserRole()
                 {
                     UserId = user.Id,
-                    RoleId = _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id //Manager role
+                    RoleId = Guid.Parse(message.RoleId)
                 };
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
@@ -689,10 +699,10 @@ namespace UserOperations.Controllers
         public string FullName;
         public string Email;
         public string EmployeeId;
-    //    public string RoleId;
+        public string RoleId;
         public string Password;
         public Guid? WorkerTypeId;
-
+        public string CompanyId;
     }
 
     public class UserModel
