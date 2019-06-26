@@ -53,6 +53,9 @@
       <None Update="Resources\Videos\testid_20190426094725_2.mkv">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Resources\Texts\TestTexts.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

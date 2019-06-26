@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.IO;
@@ -19,6 +20,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
+using RabbitMqEventBus;
 using ServiceExtensions;
 
 namespace Common
@@ -67,6 +71,32 @@ namespace Common
         public async Task TearDown()
         {
             await CleanTestData();
+        }
+
+        public HashSet<KeyValuePair<string, string>> GetTextResources(string name)
+        {
+            var json = File.ReadAllText("Resources/Texts/TestTexts.json");
+            var root = JObject.Parse(json);
+            var children = root.Children().Children();
+
+            var result = new HashSet<KeyValuePair<string, string>>(5);
+            
+            foreach (var token in children)
+            {
+                foreach (var chToken in token.Children())
+                {
+                    foreach (var pair in (JObject)chToken)
+                    {
+                        if (pair.Key != name) continue;
+                        foreach (var subToken in pair.Value.Children())
+                        {
+                            result.Add(new KeyValuePair<string, string>(subToken["sentense"].ToString(), subToken["class"].ToString()));
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
         
         protected abstract Task PrepareTestData();
@@ -166,8 +196,9 @@ namespace Common
             Services.Configure<SftpSettings>(Config.GetSection(nameof(SftpSettings)));
             Services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             Services.AddTransient<SftpClient>();
-            Services.AddScoped<IGenericRepository, GenericRepository>();
             
+            Services.AddScoped<IGenericRepository, GenericRepository>();
+           
             _additionalInitialization?.Invoke();
             ServiceProvider = Services.BuildServiceProvider();
         }
@@ -181,16 +212,16 @@ namespace Common
         
         protected abstract void InitServices();
 
-        protected Dialogue CreateNewTestDialog()
-            => CreateNewTestDialog(Guid.NewGuid());
+        protected Dialogue CreateNewTestDialog(int hourOffset = 1)
+            => CreateNewTestDialog(Guid.NewGuid(), hourOffset);
 
-        protected Dialogue CreateNewTestDialog(Guid dialogId)
+        protected Dialogue CreateNewTestDialog(Guid dialogId, int hourOffset = 0)
             => new Dialogue
             {
                 DialogueId = dialogId,
-                CreationTime = DateTime.Now.AddYears(-1),
-                BegTime = DateTime.Now.AddYears(-1),
-                EndTime = DateTime.Now.AddYears(1),
+                CreationTime = DateTime.Now.AddHours(-hourOffset),
+                BegTime = DateTime.Now.AddHours(-hourOffset),
+                EndTime = DateTime.Now.AddHours(hourOffset),
                 ApplicationUserId = TestUserId,
                 LanguageId = null,
                 StatusId = null,

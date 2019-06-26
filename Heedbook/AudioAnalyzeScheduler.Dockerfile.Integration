@@ -1,0 +1,30 @@
+FROM microsoft/dotnet:2.2-sdk AS test-env
+WORKDIR /app
+
+RUN apt-get update -y
+RUN apt-get install python3 python3-pip git -y
+RUN pip3 install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
+RUN pip3 install nltk
+
+COPY . .
+
+RUN mkdir /opt; exit 0;
+RUN chmod -R 777 /opt/; exit 0;
+RUN mkdir /opt/download; exit 0;
+RUN chmod -R 777 /opt/download; exit 0;
+
+RUN apt-get update
+RUN apt-get install ffmpeg -y
+RUN ./rabbit_test_setup.sh; exit 0;
+RUN ./test_environment_setup.sh; exit 0;
+
+WORKDIR /app/HBOperations
+RUN killall -9 dotnet; exit 0;   
+  
+WORKDIR /app/HBOperations/AudioAnalyzeScheduler/
+RUN dotnet restore .; exit 0;
+RUN ../../rabbit_test_start.sh 
+
+WORKDIR /app/HBOperations/AudioAnalyzeSchedulerTests/
+RUN dotnet restore .; exit 0;
+RUN dotnet test -r ./TestResults
