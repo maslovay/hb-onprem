@@ -123,7 +123,7 @@ namespace UserOperations.Controllers
                             FullName = p.ApplicationUser.FullName,
                             BegTime = p.BegTime,
                             EndTime = p.EndTime,
-                            CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                            CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Sum(q => q.PhraseCount),
                             SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                             SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
                             SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
