@@ -349,7 +349,7 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
-                var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+              //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
