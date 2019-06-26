@@ -85,9 +85,16 @@ namespace UserOperations.Controllers
                 _log.Info("User/User GET started"); 
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                var users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                    .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled        
+                List<ApplicationUser> users = null;
+                if(userClaims["role"] == "Admin")
+                    users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                        .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled  
+                else
+                {                 
+                    var companyId = Guid.Parse(userClaims["companyId"]);
+                    users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                    .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled                         
+                }      
                 var result = users.Select(p => new UserModel(p, p.Avatar!= null? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)).path: null));
                 _log.Info("User/User GET finished");
                 return Ok(result);
