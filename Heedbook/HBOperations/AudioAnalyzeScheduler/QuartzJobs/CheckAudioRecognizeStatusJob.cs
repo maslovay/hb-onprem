@@ -178,12 +178,21 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private double GetPositiveShareInText(List<string> recognizedWords)
         {
+    
             var result = 0.0;
-            
-            var sentence = string.Join(" ", recognizedWords);
-            var posShareStrg = RunPython.Run("GetPositiveShare.py", "./sentimental", "3", sentence);
+            try
+            {
+                var sentence = string.Join(" ", recognizedWords);
+                var posShareStrg = RunPython.Run("GetPositiveShare.py", "./sentimental", "3", sentence);
 
-            result = double.Parse(posShareStrg.Item1.Trim());
+                result = double.Parse(posShareStrg.Item1.Trim());
+            }
+            catch (Exception ex)
+            {
+                _log.Error("GetPositiveShareInText exception: " + ex.Message);
+                result = 0.0;
+            }
+
             return result;
         }
 
