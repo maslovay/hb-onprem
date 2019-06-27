@@ -19,7 +19,7 @@ namespace HBData
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-         //   optionsBuilder.UseNpgsql("User ID=test_user;Password=test_password;Host=13.79.230.20;Port=5432;Database=test_db; Pooling=true");
+         //   optionsBuilder.UseNpgsql("User ID=test_user;Password=test_password;Host=40.69.85.181;Port=5432;Database=test_db; Pooling=true");
         }
 
 
