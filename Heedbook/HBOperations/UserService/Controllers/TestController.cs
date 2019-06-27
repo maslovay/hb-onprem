@@ -39,16 +39,6 @@ namespace UserService.Controllers
         }
 
 
-        
-        [HttpGet("[action]")]
-        public async Task<ObjectResult> Get10Dialogues()
-        {
-            var dialogues =
-                _repository.Get<Dialogue>().Take(10).ToList();
-
-            return new ObjectResult(dialogues);
-        }
-        
         [HttpPost("[action]")]
         public async Task Test1(DialogueCreationRun message)
         {
