@@ -173,8 +173,10 @@ namespace AudioAnalyseScheduler.Tests
 
             foreach (var kvp in textsJson)
             {
+                Console.WriteLine($"String: {kvp.Key} Class: {kvp.Value}");
                 var posShareStrg = RunPython.Run("GetPositiveShare.py", "./", "3", kvp.Key);
                 result = double.Parse(posShareStrg.Item1.Trim());
+                Console.WriteLine($"Result {result}");
                 if (kvp.Value == "positive")
                     Assert.GreaterOrEqual(result, 0.5);
                 else
