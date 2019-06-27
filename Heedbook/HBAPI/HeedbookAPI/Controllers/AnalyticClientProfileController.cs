@@ -101,7 +101,18 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);             
+                var begYearTime = endTime.AddYears(-1);
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);   
+
+                var persondIdsPerYear = _context.Dialogues
+                    .Where(p => p.BegTime >= begYearTime &&
+                        p.EndTime < begTime &&
+                        p.StatusId == 3 &&
+                        p.InStatistic == true &&
+                        p.PersonId != null &&
+                        (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)))
+                    .Select(p => p.PersonId).Distinct()
+                    .ToList();
 
                 var data = _context.Dialogues
                     .Include(p => p.DialogueClientProfile)
@@ -116,7 +127,8 @@ namespace UserOperations.Controllers
                     .Select(p => new
                     {
                         Age = p.DialogueClientProfile.FirstOrDefault().Age,
-                        Gender = p.DialogueClientProfile.FirstOrDefault().Gender
+                        Gender = p.DialogueClientProfile.FirstOrDefault().Gender,
+                        PersonId = p.PersonId
                     }).ToList();
 
                 var result = new List<GenderAgeStructureResult>();
@@ -144,8 +156,15 @@ namespace UserOperations.Controllers
                             .Average()
                     });
                 }
+                var jsonToReturn = new Dictionary<string, object>();
+                jsonToReturn["allClients"] = data.Where(p => p.PersonId != null).Select(p => p.PersonId).Distinct().Count();
+                jsonToReturn["uniquePerYearClients"] = data
+                    .Where(p => p.PersonId != null && !persondIdsPerYear.Contains(p.PersonId))
+                    .Select(p => p.PersonId).Distinct().Count();;
+                jsonToReturn["genderAge"] = result;
+
                 _log.Info("AnalyticClientProfile/GenderAgeStructure finished");
-                return Ok(JsonConvert.SerializeObject(result));
+                return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
             catch (Exception e)
             {

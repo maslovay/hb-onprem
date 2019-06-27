@@ -259,11 +259,11 @@ namespace UserOperations.Controllers
                     session.Age = dialog?.Age;
                     session.Gender = dialog?.Gender;
                 }
+                slideShowSessionsAll = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
 
-                var shows = slideShowSessionsAll.Count();
-                var views = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).Count();
-                var splashShows = slideShowSessionsAll.Where(x => x.CampaignContent!= null &&  x.CampaignContent.Campaign!= null && x.CampaignContent.Campaign.IsSplash).Count();
-                var clients = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).Select(x => x.DialogueId).Distinct().Count();
+                var views = slideShowSessionsAll.Count();
+               // var splashShows = slideShowSessionsAll.Where(x => x.CampaignContent!= null &&  x.CampaignContent.Campaign!= null && x.CampaignContent.Campaign.IsSplash).Count();
+                var clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();
                
                 //-------------------------------GROUPING BY CONTENT (NOT POLL)--------------------------------
                 var contentsShownGroup = slideShowSessionsAll
@@ -275,9 +275,7 @@ namespace UserOperations.Controllers
                     }).ToList();
                 var contentInfo = new ContentTotalInfoEfficiency
                 {
-                    Shows = shows,
                     Views = views,
-                    SplashShows = splashShows,
                     Clients = clients,
                     //---url---
                     ContentFullInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentFullOneInfo
@@ -393,15 +391,15 @@ namespace UserOperations.Controllers
                             .FirstOrDefault();
                     session.DialogueId = dialog?.DialogueId;
                 }
-                 var answersList = _context.CampaignContentAnswers
+                slideShowSessionsAll =  slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
+                var answersList = _context.CampaignContentAnswers
                         .Where(p => slideShowSessionsAll
                         .Select(x => x.CampaignContent.CampaignContentId)
                         .Distinct()
                         .Contains(p.CampaignContentId) && p.Time >= begTime && p.Time <= endTime).ToList();
 
-                var views = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).Count();
-                var clients = slideShowSessionsAll
-                    .Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).Select(x => x.DialogueId).Distinct().Count();
+                var views = slideShowSessionsAll.Count();
+                var clients =slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();
                 var answers = answersList.Count();
                 double conversion = views != 0 ? (double)answers / (double)views : 0;
                
@@ -457,9 +455,7 @@ namespace UserOperations.Controllers
     {
         // the total number of demonstrated content, images, videos, URLs 
         // within the campaigns and the employees themselves during the dialogue
-        public int Shows { get; set; }
         public int Views { get; set; }
-        public int SplashShows { get; set; }
         public int Clients { get; set; }
          public List<ContentFullOneInfo> ContentFullInfo { get; set; }
     }

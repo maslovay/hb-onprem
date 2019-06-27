@@ -190,13 +190,13 @@ namespace UserOperations.Controllers
                     LoadIndexTotalAverage = 100 * indexesInHeedbook.Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)/ indexesInHeedbook.Count(),
                     
                     CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
-                    CrossIndexDelta = _dbOperation.CrossIndex(dialoguesOld),
+                    CrossIndexDelta = -_dbOperation.CrossIndex(dialoguesOld),
                     CrossIndexIndustryAverage =0,//TODO
                     CrossIndexIndustryBenchmark = 0,//TODO
                     CrossIndexTotalAverage = 0,//TODO
 
                     AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime),
-                    AvgWorkingTimeEmployeesDelta = _dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime),
+                    AvgWorkingTimeEmployeesDelta = -_dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime),
                     NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
                     NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld)),
 
