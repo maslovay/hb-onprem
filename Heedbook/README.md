@@ -144,7 +144,7 @@ kubectl apply -f service-account.yaml
 
 ##### Если нужно поменять контейнер-регистры, то делаем
 ```sh
-find . -name "*.yaml" -exec sed -i 's/containerregistryhb/hbtestregistry/g' {} \;
+find . -name "*.yaml" -exec sed -i 's/hbtestregistry/hbtestregistry/g' {} \;
 ```
 
 ##### К деплою мы готовы. Теперь выполняем команду
