@@ -121,7 +121,7 @@ namespace DialogueMarkUp.QuartzJobs
                         InStatistic = true
                     };
                     dialogues.Add(dialogue);
-
+                    CheckSessionForDialogue(dialogue, applicationUserId);
                     var markUpNew = new HBData.Models.DialogueMarkup{
                         DialogueMarkUpId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
@@ -183,7 +183,7 @@ namespace DialogueMarkUp.QuartzJobs
 
                     };
                     dialogues.Add(dialogue);
-
+                    CheckSessionForDialogue(dialogue, applicationUserId);
                     var markUpNew = new HBData.Models.DialogueMarkup{
                         DialogueMarkUpId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
@@ -301,6 +301,66 @@ namespace DialogueMarkUp.QuartzJobs
         private double? Cos(List<double> vector1, List<double> vector2)
         {
             return VectorMult(vector1, vector2) / VectorNorm(vector1) / VectorNorm(vector2);
+        }
+
+        private void CheckSessionForDialogue(Dialogue dialogue, Guid applicationUserId)
+        {
+            var session = _context.Sessions.Where(p => p.ApplicationUserId == applicationUserId).ToList();
+            if(dialogue is null)
+            {
+                _log.Error($"CheckSessionForDialogue: dialogue is null, applicationUserId: {applicationUserId}");
+                return;
+            }
+            if(session is null)
+            {                
+                _log.Error($"CheckSessionForDialogue: No Such Sessions for this ApplicationUser {applicationUserId}");
+                return;
+            }      
+            var dialogueBeginSession = session.FirstOrDefault(p => p.BegTime <= dialogue.BegTime
+                    && p.EndTime > dialogue.BegTime);
+            var dialogueEndSession = session.FirstOrDefault(p => p.BegTime < dialogue.EndTime
+                    && p.EndTime >= dialogue.EndTime);      
+
+            if(dialogueBeginSession == null && dialogueEndSession == null)
+            {
+                var ses = session.FirstOrDefault(p => p.BegTime > dialogue.BegTime
+                        && p.EndTime < dialogue.EndTime);
+                if(ses is null)
+                {        
+                    var newSession = new Session
+                    {
+                        SessionId = Guid.NewGuid(),
+                        ApplicationUserId = dialogue.ApplicationUserId,
+                        BegTime = dialogue.BegTime,
+                        EndTime = dialogue.EndTime,
+                        StatusId = 7,
+                        IsDesktop = session.FirstOrDefault().IsDesktop
+                    };
+                    _context.Sessions.Add(newSession);
+                }
+                else
+                {  
+                    ses.BegTime = dialogue.BegTime;
+                    ses.EndTime = dialogue.EndTime;
+                }
+            }
+            else if(dialogueBeginSession != null && dialogueEndSession is null)
+            {
+                dialogueBeginSession.EndTime = dialogue.EndTime;
+            }  
+            else if(dialogueBeginSession == null 
+                && dialogueEndSession != null)
+            {
+                dialogueEndSession.BegTime = dialogue.BegTime;
+            }          
+            else if(dialogueBeginSession != null 
+                && dialogueEndSession != null 
+                && dialogueBeginSession.SessionId != dialogueEndSession.SessionId)
+            {
+                dialogueBeginSession.EndTime = dialogue.EndTime;
+                dialogueEndSession.BegTime = dialogue.EndTime.AddSeconds(1);
+            }            
+            _context.SaveChanges();
         }
     }
 }
