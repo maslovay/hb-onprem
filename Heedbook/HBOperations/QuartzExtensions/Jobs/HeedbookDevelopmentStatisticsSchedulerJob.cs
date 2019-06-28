@@ -74,8 +74,6 @@ namespace QuartzExtensions.Jobs
 
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
-                .Include(p => p.DialogueFrame)
-                .Include(p => p.DialogueClientProfile)
                 .Where(p => p.BegTime > DateTime.UtcNow.AddHours(-24)
                     && p.StatusId == 3)
                 .ToList();                                    
