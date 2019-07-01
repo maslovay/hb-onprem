@@ -23,6 +23,9 @@ RUN killall -9 dotnet; exit 0;
   
 WORKDIR /app/HBOperations/AudioAnalyzeScheduler/
 RUN dotnet restore .; exit 0;
+RUN dotnet build . -c Release
+RUN cp ./sentimental/GetPositiveShare.py ./bin/Release/netcoreapp2.2/; exit 0;
+#RUN cp ./sentimental/GetPositiveShare.py ./bin/Debug/netcoreapp2.2/; exit 0;
 RUN ../../rabbit_test_start.sh 
 
 WORKDIR /app/HBOperations/AudioAnalyzeSchedulerTests/
