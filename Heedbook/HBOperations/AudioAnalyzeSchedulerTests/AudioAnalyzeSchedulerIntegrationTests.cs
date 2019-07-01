@@ -56,6 +56,7 @@ namespace AudioAnalyseScheduler.Tests
         public async Task TearDown()
         {
             await base.TearDown();
+            _schedulerProcess.Kill();
         }
         
         protected override async Task PrepareTestData()
