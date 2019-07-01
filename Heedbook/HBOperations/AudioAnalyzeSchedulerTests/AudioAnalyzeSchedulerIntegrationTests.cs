@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using RabbitMQ.Client.Logging;
 using UnitTestExtensions;
 
 namespace AudioAnalyseScheduler.Tests
@@ -213,7 +214,8 @@ namespace AudioAnalyseScheduler.Tests
             foreach (var kvp in textsJson)
             {
                 var posShareStrg = RunPython.Run("GetPositiveShare.py", "./", "3", kvp.Key);
-                result = double.Parse(posShareStrg.Item1.Trim());
+                Console.WriteLine($"GetPositiveShare result : {posShareStrg.ToString()}");
+                result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", String.Empty));
                 if (kvp.Value == "positive")
                     Assert.GreaterOrEqual(result, 0.5);
                 else
