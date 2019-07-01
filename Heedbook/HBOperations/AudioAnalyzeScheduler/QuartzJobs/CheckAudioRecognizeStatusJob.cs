@@ -181,6 +181,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 var sentence = string.Join(" ", recognizedWords);
                 var posShareStrg = RunPython.Run("GetPositiveShare.py", "./sentimental", "3", sentence);
 
+                _log.Error("RunPython err string: " + posShareStrg.Item2);
+                
                 result = double.Parse(posShareStrg.Item1.Trim());
             }
             catch (Exception ex)
