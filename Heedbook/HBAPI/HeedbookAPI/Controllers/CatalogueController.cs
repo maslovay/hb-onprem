@@ -49,7 +49,7 @@ namespace UserOperations.Controllers
         public CatalogueController(
             IConfiguration config,
             ILoginService loginService,
-            RecordsContext context
+            RecordsContext context,
             ElasticClient log
             )
         {
