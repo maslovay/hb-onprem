@@ -200,8 +200,8 @@ namespace UserOperations.Controllers
                     NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
                     NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld)),
 
-                //    DialogueDuration = _dbOperation.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                //    DialogueDurationDelta = -_dbOperation.DialogueAverageDuration(dialoguesOld, prevBeg, endTime)
+                    DialogueDuration = _dbOperation.DialogueAverageDuration(dialoguesCur, begTime, endTime),
+                    DialogueDurationDelta = -_dbOperation.DialogueAverageDuration(dialoguesOld, prevBeg, endTime)
                 };
 
               
