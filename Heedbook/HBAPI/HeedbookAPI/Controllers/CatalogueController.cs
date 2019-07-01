@@ -43,34 +43,34 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
 
         public CatalogueController(
             IConfiguration config,
             ILoginService loginService,
-            RecordsContext context,
-            ElasticClient log
+            RecordsContext context
+            // ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Country")]
         [SwaggerOperation(Description = "Return all countries. Does not require to transfer a token")]
         public IEnumerable<Country> CountrysGet()
         {
-            _log.Info("Catalogue/Country GET");
+            // _log.Info("Catalogue/Country GET");
             return _context.Countrys.ToList();
         }
         [HttpGet("Role")]
         [SwaggerOperation(Description = "Return all available user roles. Does not require to transfer a token")]
         public IEnumerable<ApplicationRole> RolesGet()
         {
-            _log.Info("Catalogue/Role GET");
+            // _log.Info("Catalogue/Role GET");
             return _context.ApplicationRoles.ToList();
         }
 
@@ -79,7 +79,7 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Content", typeof(WorkerType))]
         public IEnumerable<object> WorkerTypeGet([FromHeader] string Authorization)
         {
-            _log.Info("Catalogue/WorkerType GET");
+            // _log.Info("Catalogue/WorkerType GET");
             if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                 return null;
             var companyId = Guid.Parse(userClaims["companyId"]);
@@ -90,21 +90,21 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Return all industries. Does not require to transfer a token")]
         public IEnumerable<CompanyIndustry> IndustryGet()
         {
-            _log.Info("Catalogue/Industry GET");
+            // _log.Info("Catalogue/Industry GET");
             return _context.CompanyIndustrys.ToList();
         }
         [HttpGet("Language")]
         [SwaggerOperation(Description = "Return all available languages. Does not require to transfer a token")]
         public IEnumerable<Language> LanguageGet()
         {
-            _log.Info("Catalogue/Language GET");
+            // _log.Info("Catalogue/Language GET");
             return _context.Languages.ToList();
         }
         [HttpGet("PhraseType")]
         [SwaggerOperation(Description = "Return all available phrase types. Does not require to transfer a token")]
         public IEnumerable<PhraseType> PhraseTypeGet()
         {
-            _log.Info("Catalogue/PhraseType GET");
+            // _log.Info("Catalogue/PhraseType GET");
             return _context.PhraseTypes.ToList();
         }
     }

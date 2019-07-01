@@ -348,15 +348,18 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var companyIdUser = Guid.Parse(userClaims["companyId"]);
                 var languageId = userClaims["languageCode"];
-                var includedPhrases = _context.PhraseCompanys
+                
+                var phrases = _context.PhraseCompanys
                     .Include(x=>x.Phrase)
-                    .Where(x=>x.CompanyId == companyIdUser && x.Phrase.IsTemplate == true).Select(x=>x.Phrase.PhraseId).ToList();
-                var res = _context.Phrases.Where(p => p.PhraseText != null 
-                                    && p.IsTemplate == true 
-                                    && p.LanguageId.ToString() == languageId
-                                    && !includedPhrases.Contains(p.PhraseId)).ToList();
+                    .Where(x=>
+                        x.CompanyId == companyIdUser &&
+                        x.Phrase.IsTemplate == true && 
+                        x.Phrase.PhraseText != null &&
+                        x.Phrase.LanguageId.ToString() == languageId )
+                    .Select(x=>x.Phrase).ToList();
+                
                 // _log.Info("User/PhraseLib GET finished");
-                return Ok(res);
+                return Ok(phrases);
             }
             catch (Exception e)
             {
