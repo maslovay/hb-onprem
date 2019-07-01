@@ -159,43 +159,42 @@ namespace AudioAnalyseScheduler.Tests
 //        {
 //            var result = 0.0;
 //
-//            var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-15)
+//            var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-7)
 //                                                                    && f.DialogueSpeech.All(ds => ds.PositiveShare == 0.0),
 //                f => f.DialogueSpeech, f => f.DialogueAudio).OrderByDescending(f => f.CreationTime).ToArray();
 //
 //            foreach (var ff in dialogs)
 //            {
-//                var fad = _repository.Get<FileAudioDialogue>()
-//                    .FirstOrDefault(x => x.DialogueId == ff.DialogueId && x.STTResult != null && x.STTResult.Length > 120);
+//                var fads = _repository.Get<FileAudioDialogue>().Where(x => x.DialogueId == ff.DialogueId && x.STTResult != null && x.STTResult.Length > 0);
 //
-//                if (fad == null)
-//                    continue;
-//
-//                StringBuilder words = new StringBuilder();
-//                
-//                var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(fad.STTResult);
-//                if (asrResults.Any())
+//                foreach (var fad in fads)
 //                {
-//                    asrResults.ForEach(word =>
+//                    StringBuilder words = new StringBuilder();
+//
+//                    var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(fad.STTResult);
+//                    if (asrResults.Any())
 //                    {
-//                        words.Append(" ");
-//                        words.Append(word.Word);
-//                    });
-//                }
+//                        asrResults.ForEach(word =>
+//                        {
+//                            words.Append(" ");
+//                            words.Append(word.Word);
+//                        });
+//                    }
 //
-//                foreach (var speech in ff.DialogueSpeech)
-//                {
-//                    if (speech == null) 
-//                        continue;
-//
-//                    var posShareStrg =
-//                        RunPython.Run("GetPositiveShare.py", "./", "3", words.ToString());
-//                    result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", String.Empty));
-//
-//                    if (result > 0)
+//                    foreach (var speech in ff.DialogueSpeech)
 //                    {
-//                        speech.PositiveShare = result;
-//                        _repository.Update(speech);
+//                        if (speech == null)
+//                            continue;
+//
+//                        var posShareStrg =
+//                            RunPython.Run("GetPositiveShare.py", "./", "3", words.ToString());
+//                        result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
+//
+//                        if (result > 0)
+//                        {
+//                            speech.PositiveShare = result;
+//                            _repository.Update(speech);
+//                        }
 //                    }
 //                }
 //
