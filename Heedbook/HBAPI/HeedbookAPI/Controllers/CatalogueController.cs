@@ -43,20 +43,20 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        // private readonly ElasticClient _log;
+        private readonly ElasticClient _log;
 
 
         public CatalogueController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context
-            // ElasticClient log
+            ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
-            // _log = log;
+            _log = log;
         }
 
         [HttpGet("Country")]
@@ -104,7 +104,7 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Return all available phrase types. Does not require to transfer a token")]
         public IEnumerable<PhraseType> PhraseTypeGet()
         {
-            // _log.Info("Catalogue/PhraseType GET");
+            _log.Info("Catalogue/PhraseType GET");
             return _context.PhraseTypes.ToList();
         }
     }
