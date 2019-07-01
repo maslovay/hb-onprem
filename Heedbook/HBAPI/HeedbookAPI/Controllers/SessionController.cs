@@ -101,7 +101,7 @@ namespace UserOperations.Controllers
                         case 6:
                             var session = new Session{
                                 BegTime = DateTime.UtcNow,
-                                EndTime = DateTime.UtcNow,
+                                EndTime = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1),
                                 ApplicationUserId = data.ApplicationUserId,
                                 StatusId = actionId,
                                 IsDesktop = (bool)data.IsDesktop

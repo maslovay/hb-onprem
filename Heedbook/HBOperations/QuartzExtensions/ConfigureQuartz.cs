@@ -104,7 +104,7 @@ namespace QuartzExtensions
                 return TriggerBuilder.Create()
                                      .WithIdentity("HeedbookDevelopmentStatisticsJob.trigger", "SelfStatistic")
                                      .StartNow()                                       
-                                     .WithCronSchedule("0 00 7 * * ?", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())  
+                                     .WithCronSchedule("0 00 7 * * ?", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())                                    
                                      .Build();
             });
             services.AddSingleton(provider =>

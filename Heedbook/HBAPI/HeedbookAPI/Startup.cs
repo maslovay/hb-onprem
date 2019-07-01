@@ -132,8 +132,8 @@ namespace UserOperations
             services.AddTransient<SftpClient>();
 
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddTransient(provider =>
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddSingleton(provider =>
                        {
                            var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                            return new ElasticClient(settings);
