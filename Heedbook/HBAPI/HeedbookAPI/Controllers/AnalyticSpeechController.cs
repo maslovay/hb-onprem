@@ -119,10 +119,10 @@ namespace UserOperations.Controllers
                         FullName = p.First().FullName,
                         ApplicationUserId = p.Key,
                         CrossFreq =  (p.Select(q => q.DialogueId).Distinct().Any()) ?
-                        100 * Convert.ToDouble(p.Where(q => q.PhraseTypeId == typeIdCross).Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) :
+                        100 * (Convert.ToDouble(p.Where(q => q.PhraseTypeId == typeIdCross).Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count())) :
                         0,
                         AlertFreq = (p.Select(q => q.DialogueId).Distinct().Any()) ?
-                        100 * Convert.ToDouble(p.Where(q => q.PhraseTypeId == typeIdAlert).Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) :
+                        100 * (Convert.ToDouble(p.Where(q => q.PhraseTypeId == typeIdAlert).Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count())) :
                         0
                     });
                 _log.Info("AnalyticSpeech/EmployeeRating finished");

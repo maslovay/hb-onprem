@@ -138,13 +138,13 @@ namespace UserOperations.Controllers
                     })
                     .ToList();
 
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
+          //      var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.ApplicationUser.WorkerType)
                     .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialoguePhrase)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3
@@ -229,13 +229,13 @@ namespace UserOperations.Controllers
                         // WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
                     })
                     .ToList();
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
+        //        var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.ApplicationUser.WorkerType)
                     .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialoguePhrase)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3

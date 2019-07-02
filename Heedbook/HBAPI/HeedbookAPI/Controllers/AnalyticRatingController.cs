@@ -192,7 +192,7 @@ namespace UserOperations.Controllers
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialoguePhrase)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3
@@ -208,7 +208,7 @@ namespace UserOperations.Controllers
                         EndTime = p.EndTime,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                         FullName = p.ApplicationUser.FullName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Sum(q => q.PhraseCount)
+                        CrossCout = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
                     })
                     .ToList();
 
@@ -284,7 +284,7 @@ namespace UserOperations.Controllers
                     .Include(p => p.ApplicationUser)
                     .ThenInclude(p => p.Company)
                     .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialoguePhrase)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3
@@ -299,7 +299,7 @@ namespace UserOperations.Controllers
                         EndTime = p.EndTime,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                         FullName = p.ApplicationUser.Company.CompanyName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Sum(q => q.PhraseCount)
+                        CrossCout = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
                     })
                     .ToList();
 

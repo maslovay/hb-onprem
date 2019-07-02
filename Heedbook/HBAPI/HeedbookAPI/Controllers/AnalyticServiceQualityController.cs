@@ -273,7 +273,7 @@ namespace UserOperations.Controllers
                 var dialogues = _context.Dialogues
                         .Include(p => p.ApplicationUser)
                         .Include(p => p.DialogueClientSatisfaction)
-                        .Include(p => p.DialoguePhraseCount)
+                        .Include(p => p.DialoguePhrase)
                         .Include(p => p.DialogueAudio)
                         .Include(p => p.DialogueVisual)
                         .Include(p => p.DialogueSpeech)
@@ -291,9 +291,9 @@ namespace UserOperations.Controllers
                             FullName = p.ApplicationUser.FullName,
                             BegTime = p.BegTime,
                             EndTime = p.EndTime,
-                            CrossCount = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                            AlertCount = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
-                            NecessaryCount = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdNecessary).Count(),
+                            CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                            AlertCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
+                            NecessaryCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdNecessary).Count(),
                             SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                             PositiveTone = p.DialogueAudio.FirstOrDefault().PositiveTone,
                             AttentionShare = p.DialogueVisual.FirstOrDefault().AttentionShare,
@@ -313,9 +313,10 @@ namespace UserOperations.Controllers
                         PositiveEmotionShare = p.Any() ? p.Where(q => q.PositiveEmotion!= null && q.PositiveEmotion != 0).Average(q => q.PositiveEmotion) : null,
                         AttentionShare = p.Any() ? p.Where(q => q.AttentionShare != null && q.AttentionShare != 0).Average(q => q.AttentionShare) : null,
                         PositiveToneShare =p.Any() ? p.Where(q => q.PositiveTone != null && q.PositiveTone != 0).Average(q => q.PositiveTone) : null,
-                        TextAlertShare = p.Any() ?(double?) p.Average(q => Math.Min(q.AlertCount, 1)): null,
-                        TextCrossShare = p.Any() ?(double?) p.Average(q => Math.Min(q.CrossCount, 1)): null,
-                        TextNecessaryShare =  p.Any() ?(double?) p.Average(q => Math.Min(q.NecessaryCount, 1)): null,
+                   //TODO!!!
+                        TextAlertShare =  _dbOperation.AlertIndex(p),
+                        TextCrossShare =  _dbOperation.CrossIndex(p),
+                        TextNecessaryShare =   _dbOperation.NecessaryIndex(p),
                         TextPositiveShare = p.Any()? p.Where(q => q.TextShare != null && q.TextShare!= 0).Average(q => q.TextShare) : null
                     }).ToList();
                
