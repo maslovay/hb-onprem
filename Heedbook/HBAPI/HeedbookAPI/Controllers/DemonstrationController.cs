@@ -207,19 +207,18 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Content", typeof(ContentReturnOnDeviceModel))]
         public async Task<ActionResult> GetContents([FromQuery] string userId)
         {
-            try
+               try
             {                        
                 var companyId = _context.ApplicationUsers.Where(x => x.Id.ToString() == userId).FirstOrDefault().CompanyId;
                 var curDate = DateTime.Now;
                 var containerName = "media";
-                var active = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;
 
                 var campaigns = _context.Campaigns
                 .Where(p => p.CampaignContents != null && p.CampaignContents.Count() != 0
                     && p.CompanyId == companyId
                     && p.BegDate <= curDate
                     && p.EndDate >= curDate
-                    && p.StatusId == active)
+                    && p.StatusId == 2)
                 .Select(p =>
                     new
                     {
@@ -248,6 +247,9 @@ namespace UserOperations.Controllers
 
                 var htmlList = campaigns.SelectMany(x => x.contents.ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML))
                 .Union(_context.Contents.Where( c => c.CompanyId == companyId && (c.CampaignContents == null || c.CampaignContents.Count() == 0))
+                    .Select(c => new ContentWithId() { contentWithId = c }).ToList()
+                    .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable())
+                .Union(_context.Contents.Where( c => c.CompanyId == null)
                     .Select(c => new ContentWithId() { contentWithId = c }).ToList()
                     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable());
 
@@ -284,8 +286,7 @@ namespace UserOperations.Controllers
                             link = link.Replace("&amp", "");
                             link = link.Replace("&quot;", "");
                             var fileInfo = media.Where(x=>x.url == link).FirstOrDefault();
-                            if(fileInfo != null)
-                                resultMedia.Add(fileInfo);
+                            resultMedia.Add(fileInfo);
                         }
                         match = match.NextMatch();
                     }
@@ -295,7 +296,6 @@ namespace UserOperations.Controllers
                     }
                     htmlList2.Add(contains.Key, resultInput);
                 }
-
 
                 var responseContent = new List<object>();
                 responseContent.Add(new { campaigns = campaignsList });
