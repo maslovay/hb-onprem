@@ -223,12 +223,20 @@ namespace UserOperations.Controllers
                     More_60 = pauseInMin?.Where(p => p >= 60).Count()
                 };
 
-                    var pausesAvgValue = new{
+                var pausesShareInSession = new{
                     Less_10 = sessTimeMinutes != 0? 100 *  pauseInMin?.Where(p => p <= 10).Sum() / sessTimeMinutes : 0,
                     Between_11_20 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 10 && p < 20).Sum() / sessTimeMinutes : 0,
                     Between_21_60 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 20 && p < 60).Sum() / sessTimeMinutes : 0,
                     More_60 = sessTimeMinutes != 0? 100 * pauseInMin.Where(p => p >= 60).Sum() / sessTimeMinutes : 0,
-                    Sessions = sessTimeMinutes != 0? 100 * (sessTimeMinutes - pauseInMin?.Sum()) / sessTimeMinutes : 0
+                    Load = sessTimeMinutes != 0? 100 * (sessTimeMinutes - pauseInMin?.Sum()) / sessTimeMinutes : 0
+                };
+
+                 var pausesInMinutes = new{
+                    Less_10 = pauseInMin?.Where(p => p <= 10)?.Sum(),
+                    Between_11_20 = pauseInMin?.Where(p => p > 10 && p < 20)?.Sum(),
+                    Between_21_60 = pauseInMin?.Where(p => p > 20 && p < 60).Sum() ,
+                    More_60 = pauseInMin.Where(p => p >= 60).Sum(),
+                    Load = sessTimeMinutes - pauseInMin?.Sum()
                 };
 
               
@@ -238,8 +246,9 @@ namespace UserOperations.Controllers
                 jsonToReturn["DiagramEmployeeWorked"] = diagramEmployeeWorked;
                 jsonToReturn["ClientTime"] = clientTime;
                 jsonToReturn["ClientDay"] = clientDay;
-                jsonToReturn["Pauses"] = pausesAmount;
-                jsonToReturn["PausesShare"] = pausesAvgValue;
+                jsonToReturn["PausesAmount"] = pausesAmount;
+                jsonToReturn["PausesShare"] = pausesShareInSession;
+                jsonToReturn["PausesInMinutes"] = pausesInMinutes;
                 // _log.Info("AnalyticOffice/Efficiency finished");
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
