@@ -30,4 +30,5 @@ RUN ../../rabbit_test_start.sh
 
 WORKDIR /app/HBOperations/AudioAnalyzeSchedulerTests/
 RUN dotnet restore .; exit 0;
+RUN dotnet build .;
 RUN dotnet test -r ./TestResults
