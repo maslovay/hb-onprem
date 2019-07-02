@@ -296,7 +296,7 @@ namespace UserOperations.Controllers
                             NecessaryCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdNecessary).Count(),
                             SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                             PositiveTone = p.DialogueAudio.FirstOrDefault().PositiveTone,
-                            AttentionShare = p.DialogueVisual.FirstOrDefault().AttentionShare,
+                            AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
                             PositiveEmotion = p.DialogueVisual.FirstOrDefault().SurpriseShare + p.DialogueVisual.FirstOrDefault().HappinessShare,
                             TextShare = p.DialogueSpeech.FirstOrDefault().PositiveShare,
                         })

@@ -249,6 +249,9 @@ namespace UserOperations.Controllers
                 var htmlList = campaigns.SelectMany(x => x.contents.ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML))
                 .Union(_context.Contents.Where( c => c.CompanyId == companyId && (c.CampaignContents == null || c.CampaignContents.Count() == 0))
                     .Select(c => new ContentWithId() { contentWithId = c }).ToList()
+                    .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable())
+                .Union(_context.Contents.Where( c => c.CompanyId == null)
+                    .Select(c => new ContentWithId() { contentWithId = c }).ToList()
                     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable());
 
                 string videoStrA = "<div id=\"panelsContentWrapper\" style=\"width: 100%; height: 100%; font-size: 16px;\"><div style=\"width: 100%; height: 100%;\"><div id=\"layoutPanel_0\" style=\"height: 100%; width: 100%; position: relative; background: rgb(0, 0, 0);\"><div class=\"BackgroundVideo \" tabindex=\"0\" style=\"position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; visibility: visible; overflow: hidden;\"><video autoplay muted src=\"";
