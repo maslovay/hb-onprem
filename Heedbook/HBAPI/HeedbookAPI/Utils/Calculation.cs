@@ -419,9 +419,10 @@ namespace UserOperations.Utils
         public double? SessionAverageHours(List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return sessions.Any() ?
-                (double?)sessions.GroupBy(p => p.BegTime.Date).Select(q => q.Sum(p => Min(p.EndTime, end)
-                        .Subtract(Max(p.BegTime, beg)).TotalHours) / q.Select(p => p.ApplicationUserId)
-                        .Distinct().Count()).Average() : null;
+                (double?)sessions.GroupBy(p => p.BegTime.Date)
+                        .Select(q => 
+                            q.Sum(r => Min(r.EndTime, end).Subtract(Max(r.BegTime, beg)).TotalHours) / q.Select(r => r.ApplicationUserId).Distinct().Count()
+                        ).Average() : null;
         }
 
         public double? SessionAverageHours(IGrouping<DateTime, SessionInfo> sessions)
