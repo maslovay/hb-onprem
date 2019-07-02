@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Castle.Core.Internal;
 
 namespace AudioAnalyzeScheduler.QuartzJobs
 {
@@ -181,7 +182,10 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 var sentence = string.Join(" ", recognizedWords);
                 var posShareStrg = RunPython.Run("GetPositiveShare.py", "./sentimental", "3", sentence);
 
-                _log.Error("RunPython err string: " + posShareStrg.Item2);
+                if ( !posShareStrg.Item2.Trim().IsNullOrEmpty())
+                    _log.Error("RunPython err string: " + posShareStrg.Item2);
+                else
+                    _log.Info("RunPython result string: " + posShareStrg.Item1);
                 
                 result = double.Parse(posShareStrg.Item1.Trim());
             }
