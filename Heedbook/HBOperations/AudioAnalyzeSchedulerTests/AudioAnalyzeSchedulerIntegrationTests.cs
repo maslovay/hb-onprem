@@ -136,7 +136,7 @@ namespace AudioAnalyseScheduler.Tests
             Assert.IsTrue(WaitForSpeech());
         }
 
-        [Test, Retry(3)]
+        [Test]
         public void EnsureGetsPositiveShare()
         {
             GetPositiveShareInText();
@@ -144,7 +144,7 @@ namespace AudioAnalyseScheduler.Tests
 
         private bool WaitForSpeech()
         {
-            int deltaMs = 2000;
+            const int deltaMs = 2000;
             int cntr = 0;
             
             while (cntr * deltaMs < 40000 || _repository.Get<DialogueSpeech>().All(ds => ds.DialogueId != _testDialog.DialogueId))
@@ -212,13 +212,15 @@ namespace AudioAnalyseScheduler.Tests
 
             var textsJson = GetTextResources("texts");
 
-            foreach (var kvp in textsJson)
+            foreach (var (key, value) in textsJson)
             {
-                var posShareStrg = RunPython.Run("GetPositiveShare.py", "./", "3", kvp.Key);
-		Console.WriteLine($"GetPosShare text: {posShareStrg.ToString()}");
-                result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", String.Empty));
+                var posShareStrg = RunPython.Run("GetPositiveShare.py", "./", "3", key);
+                Console.WriteLine($"GetPosShare text: {posShareStrg.ToString()}");
+                Console.WriteLine($"Source text: {key}");
+                Console.WriteLine($"Pos/neg: {value}");
+                result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
 
-                if (kvp.Value == "positive")
+                if (value == "positive")
                     Assert.GreaterOrEqual(result, 0.5);
                 else
                     Assert.Less(result, 0.5);
