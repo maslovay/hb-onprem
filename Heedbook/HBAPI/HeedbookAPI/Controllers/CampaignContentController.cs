@@ -28,15 +28,15 @@ namespace UserOperations.Controllers
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
 
         public CampaignContentController(
             RecordsContext context,
             IConfiguration config,
             ILoginService loginService,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             try
@@ -45,13 +45,13 @@ namespace UserOperations.Controllers
             _config = config;
             _loginService = loginService;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
             _containerName = "content-screenshots";
-             _log.Info("Constructor of CampaignContent controller done");
+            //  _log.Info("Constructor of CampaignContent controller done");
             }
             catch(Exception e)
             {
-                log.Fatal($"Exception occurred {e}");
+                // log.Fatal($"Exception occurred {e}");
             }
         } 
 
@@ -65,7 +65,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-            _log.Info("Campaign get started");
+            // _log.Info("Campaign get started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");  
             var role = userClaims["role"];
@@ -75,12 +75,12 @@ namespace UserOperations.Controllers
             var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
             var campaigns = _context.Campaigns.Include(x => x.CampaignContents)
                     .Where( x => companyIds.Contains(x.CompanyId) && x.StatusId != statusInactiveId ).ToList();
-             _log.Info("campaign get finished");
+            //  _log.Info("campaign get finished");
             return Ok(campaigns);
             }
             catch(Exception e)
             {
-                 _log.Fatal($"Exception occurred {e}");
+                //  _log.Fatal($"Exception occurred {e}");
                  return BadRequest("Error");
             }
         }
@@ -92,7 +92,7 @@ namespace UserOperations.Controllers
                  SwaggerParameter("Send content separately from the campaign", Required = true)] CampaignPutPostModel model, 
                  [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-            _log.Info("Campaign POST started");
+            // _log.Info("Campaign POST started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
@@ -110,7 +110,7 @@ namespace UserOperations.Controllers
                 _context.Add(campCont);
             }
             _context.SaveChanges();
-            _log.Info("Campaign POST finished");
+            // _log.Info("Campaign POST finished");
             return Ok(campaign);
         }
 
@@ -122,7 +122,7 @@ namespace UserOperations.Controllers
                 SwaggerParameter("Send content separately from the campaign or send CampaignContents:[] if you dont need to change content relations", Required = true)] 
                 CampaignPutPostModel model, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-             _log.Info("Campaign PUT started");
+            //  _log.Info("Campaign PUT started");
              if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");           
                 Campaign modelCampaign = model.Campaign;
@@ -151,12 +151,12 @@ namespace UserOperations.Controllers
                     }
                     _context.SaveChanges();
                 }
-                _log.Info("Campaign PUT finished");
+                // _log.Info("Campaign PUT finished");
                 return Ok(campaignEntity);
                 }
                 catch
                 {
-                    _log.Fatal("Cant update");
+                    // _log.Fatal("Cant update");
                     return Ok("This campaign can be changed");
                 }
         }
@@ -165,7 +165,7 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Set campaign inactive", Description = "Set campaign status Inactive and delete all content relations for this campaign")]
         public IActionResult CampaignDelete([FromQuery] Guid campaignId, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-                _log.Info("Campaign DELETE started");
+                // _log.Info("Campaign DELETE started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");  
                 var campaign = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == campaignId).FirstOrDefault();
@@ -174,7 +174,7 @@ namespace UserOperations.Controllers
                     campaign.StatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
                     _context.RemoveRange(campaign.CampaignContents);
                     _context.SaveChanges();
-                    _log.Info("Campaign DELETE finished");
+                    // _log.Info("Campaign DELETE finished");
                     return Ok("OK");
                 }
                 return BadRequest("No such campaign");
@@ -190,7 +190,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-             _log.Info("Content GET started");
+            //  _log.Info("Content GET started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var role = userClaims["role"];
@@ -198,12 +198,12 @@ namespace UserOperations.Controllers
             _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);  
 
             var contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains( (Guid)x.CompanyId )).ToList();
-             _log.Info("Content get finished");
+            //  _log.Info("Content get finished");
             return Ok(contents);
             }
             catch(Exception e)
             {
-                 _log.Fatal($"Exception occurred {e}");
+                //  _log.Fatal($"Exception occurred {e}");
                  return BadRequest("Error");
             }
         }
@@ -213,7 +213,7 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "New content", typeof(Content))]
         public async Task<IActionResult> ContentPost([FromBody] Content content, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-            _log.Info("Content POST started");
+            // _log.Info("Content POST started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var companyId = Guid.Parse(userClaims["companyId"]);
@@ -226,7 +226,7 @@ namespace UserOperations.Controllers
             // content.StatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;;
             _context.Add(content);
             _context.SaveChanges();
-            _log.Info("Content POST finished");
+            // _log.Info("Content POST finished");
             return Ok(content);
         }
 
@@ -237,7 +237,7 @@ namespace UserOperations.Controllers
                     [FromBody] Content content, 
                     [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-            _log.Info("Content PUT started");
+            // _log.Info("Content PUT started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");  
             Content contentEntity = _context.Contents.Where(p => p.ContentId == content.ContentId).FirstOrDefault();
@@ -248,7 +248,7 @@ namespace UserOperations.Controllers
             }
             contentEntity.UpdateDate = DateTime.UtcNow;
             _context.SaveChanges();
-            _log.Info("Content PUT finished");
+            // _log.Info("Content PUT finished");
             return Ok(contentEntity);
         }
 
@@ -256,7 +256,7 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Remove content", Description = "Delete content")]
         public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId, [FromHeader,  SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-            _log.Info("Content DELETE started");
+            // _log.Info("Content DELETE started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");             
             var contentEntity = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
@@ -279,12 +279,12 @@ namespace UserOperations.Controllers
                         else
                             _context.Remove(contentEntity);
                             _context.SaveChanges();
-                        _log.Info("Content DELETE finished");
+                        // _log.Info("Content DELETE finished");
                         return Ok("OK");
                 }
                 catch ( Exception e )
                 {
-                    _log.Fatal($"Exception occurred {e}");
+                    // _log.Fatal($"Exception occurred {e}");
                     return BadRequest(e.Message);
                 }
             }

@@ -42,17 +42,17 @@ namespace UserOperations.Controllers
     {
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public PaymentController(
             ILoginService loginService,
-            RecordsContext context,
-            ElasticClient log
+            RecordsContext context
+            // ElasticClient log
             )
         {
             _loginService = loginService;
             _context = context;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Tariff")]
@@ -61,17 +61,17 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Payment/Tariff GET started"); 
+                // _log.Info("Payment/Tariff GET started"); 
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var tariffs = _context.Tariffs.Include(x => x.Transactions).Where(x => x.CompanyId == companyId).OrderByDescending(x => x.CreationDate).ToList();
-                _log.Info("Payment/Tariff GET finished"); 
+                // _log.Info("Payment/Tariff GET finished"); 
                 return Ok(tariffs);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -82,7 +82,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Payment/CheckoutResponse started"); 
+                // _log.Info("Payment/CheckoutResponse started"); 
                 Dictionary<string, string> dict = contentReq.Split('&').Select(s => s.Split('=')).ToDictionary(a => a[0], a => a[1]);
                 //compare key (md5_hash) getting by 2Checkout
                 //string secretWord = "ZTc5ZjYyNDEtZWVkMi00OTllLWI1ZmYtYjQ0Yjc2OWE4ZTk4"; //sandbox
@@ -121,12 +121,12 @@ namespace UserOperations.Controllers
                 //create response
                 var response = new HttpResponseMessage(HttpStatusCode.MovedPermanently);
                 response.Headers.Location = new System.Uri("https://hbserviceplan-onprem.azurewebsites.net/company");
-                _log.Info("Payment/CheckoutResponse finished"); 
+                // _log.Info("Payment/CheckoutResponse finished"); 
                 return Ok(response);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
