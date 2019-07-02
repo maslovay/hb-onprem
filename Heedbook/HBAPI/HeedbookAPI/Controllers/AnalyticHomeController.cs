@@ -214,7 +214,6 @@ namespace UserOperations.Controllers
                 result.EmployeeCountDelta += result.EmployeeCount;
                 result.CrossIndexDelta += result.CrossIndex;
                 result.LoadIndexDelta += result.LoadIndex;
-               // result.EfficiencyIndexDelta += result.EfficiencyIndex;
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.DialoguesCountDelta += result.DialoguesCount;
                 result.DialogueDurationDelta += result.DialogueDuration;                             
