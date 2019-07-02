@@ -14,7 +14,7 @@ RUN mkdir /opt/download; exit 0;
 RUN chmod -R 777 /opt/download; exit 0;
 
 RUN apt-get update
-RUN apt-get install ffmpeg -y
+#RUN apt-get install ffmpeg -y
 RUN ./rabbit_test_setup.sh; exit 0;
 RUN ./test_environment_setup.sh; exit 0;
 
@@ -25,10 +25,8 @@ WORKDIR /app/HBOperations/AudioAnalyzeScheduler/
 RUN dotnet restore .; exit 0;
 RUN dotnet build . -c Release
 RUN cp ./sentimental/GetPositiveShare.py ./bin/Release/netcoreapp2.2/; exit 0;
-#RUN cp ./sentimental/GetPositiveShare.py ./bin/Debug/netcoreapp2.2/; exit 0;
 RUN ../../rabbit_test_start.sh 
 
 WORKDIR /app/HBOperations/AudioAnalyzeSchedulerTests/
 RUN dotnet restore .; exit 0;
-RUN dotnet build .;
 RUN dotnet test -r ./TestResults
