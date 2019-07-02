@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AsrHttpClient;
 using AudioAnalyzeScheduler;
 using Common;
 using HBData;
@@ -13,7 +16,9 @@ using HBLib;
 using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using NUnit.Framework;
+using RabbitMQ.Client.Logging;
 using UnitTestExtensions;
 
 namespace AudioAnalyseScheduler.Tests
@@ -51,6 +56,7 @@ namespace AudioAnalyseScheduler.Tests
         public async Task TearDown()
         {
             await base.TearDown();
+            _schedulerProcess.Kill();
         }
         
         protected override async Task PrepareTestData()
@@ -130,7 +136,7 @@ namespace AudioAnalyseScheduler.Tests
             Assert.IsTrue(WaitForSpeech());
         }
 
-        [Test, Retry(3)]
+        [Test]
         public void EnsureGetsPositiveShare()
         {
             GetPositiveShareInText();
@@ -138,7 +144,7 @@ namespace AudioAnalyseScheduler.Tests
 
         private bool WaitForSpeech()
         {
-            int deltaMs = 2000;
+            const int deltaMs = 2000;
             int cntr = 0;
             
             while (cntr * deltaMs < 40000 || _repository.Get<DialogueSpeech>().All(ds => ds.DialogueId != _testDialog.DialogueId))
@@ -150,17 +156,71 @@ namespace AudioAnalyseScheduler.Tests
             return _repository.Get<DialogueSpeech>().Any(ds => ds.DialogueId == _testDialog.DialogueId);
         }
         
+//        [Test]
+//        public void RecalcPositiveShare()
+//        {
+//            var result = 0.0;
+//
+//            var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-7)
+//                                                                    && f.DialogueSpeech.All(ds => ds.PositiveShare == 0.0),
+//                f => f.DialogueSpeech, f => f.DialogueAudio).OrderByDescending(f => f.CreationTime).ToArray();
+//
+//            foreach (var ff in dialogs)
+//            {
+//                var fads = _repository.Get<FileAudioDialogue>().Where(x => x.DialogueId == ff.DialogueId && x.STTResult != null && x.STTResult.Length > 0);
+//
+//                foreach (var fad in fads)
+//                {
+//                    StringBuilder words = new StringBuilder();
+//
+//                    var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(fad.STTResult);
+//                    if (asrResults.Any())
+//                    {
+//                        asrResults.ForEach(word =>
+//                        {
+//                            words.Append(" ");
+//                            words.Append(word.Word);
+//                        });
+//                    }
+//
+//                    foreach (var speech in ff.DialogueSpeech)
+//                    {
+//                        if (speech == null)
+//                            continue;
+//
+//                        var posShareStrg =
+//                            RunPython.Run("GetPositiveShare.py", "./", "3", words.ToString());
+//                        result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
+//
+//                        if (result > 0)
+//                        {
+//                            speech.PositiveShare = result;
+//                            _repository.Update(speech);
+//                        }
+//                    }
+//                }
+//
+//                _repository.Save();
+//            }
+//
+//            Assert.Pass();
+//        }
+        
         private double GetPositiveShareInText()
         {
             var result = 0.0;
 
             var textsJson = GetTextResources("texts");
 
-            foreach (var kvp in textsJson)
+            foreach (var (key, value) in textsJson)
             {
-                var posShareStrg = RunPython.Run("GetPositiveShare.py", "./", "3", kvp.Key);
-                result = double.Parse(posShareStrg.Item1.Trim());
-                if (kvp.Value == "positive")
+                var posShareStrg = RunPython.Run("GetPositiveShare.py", "./", "3", key);
+                Console.WriteLine($"GetPosShare text: {posShareStrg.ToString()}");
+                Console.WriteLine($"Source text: {key}");
+                Console.WriteLine($"Pos/neg: {value}");
+                result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
+
+                if (value == "positive")
                     Assert.GreaterOrEqual(result, 0.5);
                 else
                     Assert.Less(result, 0.5);
