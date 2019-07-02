@@ -45,14 +45,14 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
         public AnalyticHomeController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -60,7 +60,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Dashboard")]
@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticHome/Dashboard started");
+                // _log.Info("AnalyticHome/Dashboard started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -130,22 +130,17 @@ namespace UserOperations.Controllers
                         })
                         .ToList(); 
 
-//-----------------FOR BRANCH---------------------------------------------------------------
                 var companyIdsInIndustryExceptSelected = _requestFilters.CompanyIdsInIndustryExceptSelected(companyIds);  
                 var companyIdsInIndustry = _requestFilters.CompanyIdsInIndustry(companyIds);  
                 var companyIdsInHeedbookExceptSelected = _requestFilters.CompanyIdsInHeedbookExceptSelected(companyIds);  
-//-----------------ALL-----------------------
                 var indexesInIndustryAll = _context.VIndexesByCompanysDays.ToList();
-                //---for selected period in industries except selected companies
                 var indexesInIndustryExeptSelectedComp = indexesInIndustryAll
                     .Where(p => companyIdsInIndustryExceptSelected.Contains (p.CompanyId)
                     && p.Day >= begTime && p.Day <= endTime
                     ).ToList();
-                //---for all period in industries
                 var indexesInIndustryAllForBenchmark = indexesInIndustryAll
                     .Where(p => companyIdsInIndustry.Contains (p.CompanyId)
                     ).ToList();
-                 //---for selected period in industries except selected companies
                 var indexesInHeedbook = indexesInIndustryAll
                     .Where(p => companyIdsInHeedbookExceptSelected.Contains (p.CompanyId)
                     && p.Day >= begTime && p.Day <= endTime
@@ -222,12 +217,12 @@ namespace UserOperations.Controllers
 
 
                 var jsonToReturn = JsonConvert.SerializeObject(result);  
-                _log.Info("AnalyticHome/Dashboard finished");          
+                // _log.Info("AnalyticHome/Dashboard finished");          
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -242,7 +237,9 @@ namespace UserOperations.Controllers
                                                         [FromHeader] string Authorization)
 
         {
-            _log.Info("AnalyticHome/Recomendation started");
+            try
+            {
+            // _log.Info("AnalyticHome/Recomendation started");
             if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
             var role = userClaims["role"];
@@ -298,8 +295,13 @@ namespace UserOperations.Controllers
                 IsPositive = false,
                 Hints = negativeTopHints
             });
-            _log.Info("AnalyticHome/Recomendation finished");
+            // _log.Info("AnalyticHome/Recomendation finished");
             return Ok(JsonConvert.SerializeObject(topHints));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
         }                                                
     }
 }

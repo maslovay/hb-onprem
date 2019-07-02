@@ -1,37 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
 using UserOperations.Models.AnalyticModels;
-using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using UserOperations.Utils;
 using HBLib.Utils;
-//---OLD---
+
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
@@ -43,15 +22,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticServiceQualityController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +38,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Components")]
@@ -73,7 +52,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/Components started");
+                // _log.Info("AnalyticServiceQuality/Components started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -126,7 +105,7 @@ namespace UserOperations.Controllers
                         Loyalty = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Sum(q => q.PhraseCount),
                     })
                     .ToList();
-                //Result
+                
                 var result = new ComponentsSatisfactionInfo
                 {
                     EmotionComponent = new ComponentsEmotionInfo {
@@ -164,12 +143,12 @@ namespace UserOperations.Controllers
                         RiskColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Risk").Colour
                     }
                 };
-                _log.Info("AnalyticServiceQuality/Components finished");
+                // _log.Info("AnalyticServiceQuality/Components finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e )
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -185,7 +164,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/Dashboard started");
+                // _log.Info("AnalyticServiceQuality/Dashboard started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -234,12 +213,12 @@ namespace UserOperations.Controllers
                     BestProgressiveEmployeeDelta = _dbOperation.BestProgressiveEmployeeDelta(dialogues, begTime)
                 };
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
-                _log.Info("AnalyticServiceQuality/Dashboard finished");
+                // _log.Info("AnalyticServiceQuality/Dashboard finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -255,7 +234,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/Rating started");
+                // _log.Info("AnalyticServiceQuality/Rating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -320,12 +299,12 @@ namespace UserOperations.Controllers
                     }).ToList();
                
                 result = result.OrderBy(p => p.SatisfactionIndex).ToList();
-                _log.Info("AnalyticServiceQuality/Rating finished");
+                // _log.Info("AnalyticServiceQuality/Rating finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -341,7 +320,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/SatisfactionStats started");
+                // _log.Info("AnalyticServiceQuality/SatisfactionStats started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -381,12 +360,12 @@ namespace UserOperations.Controllers
                 };
                 
                 result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
-                _log.Info("AnalyticServiceQuality/SatisfactionStats finished");
+                // _log.Info("AnalyticServiceQuality/SatisfactionStats finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

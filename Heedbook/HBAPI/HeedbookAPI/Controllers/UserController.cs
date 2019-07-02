@@ -45,7 +45,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly RequestFilters _requestFilters;
         private readonly SftpClient _sftpClient;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
         private readonly int activeStatus;
@@ -58,8 +58,8 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -67,7 +67,7 @@ namespace UserOperations.Controllers
             _context = context;
             _sftpClient = sftpClient;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
             _containerName = "useravatars";
 
             activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
@@ -82,7 +82,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/User GET started"); 
+                // _log.Info("User/User GET started"); 
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 List<ApplicationUser> users = null;
@@ -96,12 +96,12 @@ namespace UserOperations.Controllers
                     .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled                         
                 }      
                 var result = users.Select(p => new UserModel(p, p.Avatar!= null? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)).path: null));
-                _log.Info("User/User GET finished");
+                // _log.Info("User/User GET finished");
                 return Ok(result);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -116,7 +116,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/User POST started");
+                // _log.Info("User/User POST started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");              
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
@@ -145,9 +145,9 @@ namespace UserOperations.Controllers
                     WorkerTypeId = message.WorkerTypeId
                 };
                 await _context.AddAsync(user);
-                _loginService.SavePasswordHistory(user.Id, user.PasswordHash);//---save password
+                _loginService.SavePasswordHistory(user.Id, user.PasswordHash);
                 string avatarUrl = null;
-                    //---save avatar---
+                    
                 if(formData.Files.Count != 0)
                 {
                     FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
@@ -166,12 +166,12 @@ namespace UserOperations.Controllers
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
              //    return Ok(JsonConvert.SerializeObject(new UserModel(user, avatarUrl)));
-                _log.Info("User/User POST finished");
+                // _log.Info("User/User POST finished");
                 return Ok(new UserModel(user, avatarUrl));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }      
@@ -186,7 +186,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/User PUT started");
+                // _log.Info("User/User PUT started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
 
@@ -218,7 +218,7 @@ namespace UserOperations.Controllers
                     avatarUrl = _sftpClient.GetFileLink(_containerName , fn, default(DateTime)).path;
                 }
                     await _context.SaveChangesAsync();
-                    _log.Info("User/User PUT finished");
+                    // _log.Info("User/User PUT finished");
                     return Ok(new UserModel(user, avatarUrl));
                 }
                 else
@@ -228,7 +228,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -242,7 +242,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/User DELETE started");
+                // _log.Info("User/User DELETE started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
@@ -266,14 +266,14 @@ namespace UserOperations.Controllers
                         user.StatusId = disabledStatus;
                         await _context.SaveChangesAsync();
                     }
-                    _log.Info("User/User DELETE finished");
+                    // _log.Info("User/User DELETE finished");
                     return Ok("Deleted");
                 }
                 return BadRequest("No such user");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -286,7 +286,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/Companies GET started");
+                // _log.Info("User/Companies GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var corporationId = Guid.Parse(userClaims["corporationId"]);
@@ -305,7 +305,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -318,17 +318,17 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/Corporations GET started");
+                // _log.Info("User/Corporations GET started");
                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                    return BadRequest("Token wrong");
                if(userClaims["role"] != "Admin") return BadRequest("Not allowed access(role)");;
                 var corporations = _context.Corporations.ToList(); 
-                 _log.Info("User/Corporations GET finished");
+                //  _log.Info("User/Corporations GET finished");
                 return Ok(corporations);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -343,7 +343,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/PhraseLib GET started");
+                // _log.Info("User/PhraseLib GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyIdUser = Guid.Parse(userClaims["companyId"]);
@@ -355,12 +355,12 @@ namespace UserOperations.Controllers
                                     && p.IsTemplate == true 
                                     && p.LanguageId.ToString() == languageId
                                     && !includedPhrases.Contains(p.PhraseId)).ToList();
-                _log.Info("User/PhraseLib GET finished");
+                // _log.Info("User/PhraseLib GET finished");
                 return Ok(res);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -375,8 +375,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                Console.WriteLine("PhraseLib---------------------------------");
-                _log.Info("User/PhraseLib POST started");
+                // _log.Info("User/PhraseLib POST started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
@@ -399,12 +398,12 @@ namespace UserOperations.Controllers
                 phraseCompany.PhraseId = phrase.PhraseId;
                 await _context.PhraseCompanys.AddAsync(phraseCompany);
                 await _context.SaveChangesAsync();
-                _log.Info("User/PhraseLib POST finished");
+                // _log.Info("User/PhraseLib POST finished");
                 return Ok(phrase);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -417,7 +416,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/PhraseLib PUT started");
+                // _log.Info("User/PhraseLib PUT started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
@@ -436,7 +435,7 @@ namespace UserOperations.Controllers
                             p.SetValue(phrase, p.GetValue(message, null), null);
                     }
                     await _context.SaveChangesAsync();
-                    _log.Info("User/PhraseLib PUT finished");
+                    // _log.Info("User/PhraseLib PUT finished");
                     return Ok(phrase);
                 }
                 else
@@ -446,7 +445,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
 
@@ -460,7 +459,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/PhraseLib DELETE started");
+                // _log.Info("User/PhraseLib DELETE started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
@@ -475,7 +474,7 @@ namespace UserOperations.Controllers
                 _context.RemoveRange(phrasesCompany);//--remove connections to own phrases in library
                 _context.RemoveRange(phrases);//--remove own phrases
                 await _context.SaveChangesAsync();
-                _log.Info("User/PhraseLib DELETE finished");
+                // _log.Info("User/PhraseLib DELETE finished");
                 return Ok();
             }
             catch (Exception e)
@@ -492,18 +491,18 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/CompanyPhrase GET started");
+                // _log.Info("User/CompanyPhrase GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any()? new List<Guid> { Guid.Parse(userClaims["companyId"])} : companyIds;
 
                 var companyPhrase = _context.PhraseCompanys.Include( p=>p.Phrase ).Where( p => companyIds.Contains((Guid)p.CompanyId));
-                _log.Info("User/CompanyPhrase GET finished");
+                // _log.Info("User/CompanyPhrase GET finished");
                 return Ok(companyPhrase.Select(p => p.Phrase).ToList());
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -516,7 +515,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/CompanyPhrase POST started");
+                // _log.Info("User/CompanyPhrase POST started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
@@ -531,12 +530,12 @@ namespace UserOperations.Controllers
                     await _context.AddAsync(phraseCompany);
                 }
                 await _context.SaveChangesAsync();
-                _log.Info("User/CompanyPhrase POST finished");
+                // _log.Info("User/CompanyPhrase POST finished");
                 return Ok("OK");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -557,7 +556,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/Dialogue GET started");
+                // _log.Info("User/Dialogue GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -596,12 +595,12 @@ namespace UserOperations.Controllers
                     InStatistic = p.InStatistic,
                     MeetingExpectationsTotal = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 }).ToList();
-                _log.Info("User/Dialogue GET finished");
+                // _log.Info("User/Dialogue GET finished");
                 return Ok(dialogues);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -614,7 +613,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/DialogueInclude GET started");
+                // _log.Info("User/DialogueInclude GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var dialogue = _context.Dialogues
@@ -634,7 +633,7 @@ namespace UserOperations.Controllers
                         && p.DialogueId == dialogueId)
                     .FirstOrDefault();
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
-//---avg dialogue time---------
+
                 var begTime = DateTime.UtcNow.AddDays(-30);
                 var companyId = _context.Dialogues
                     .Include(x => x.ApplicationUser)
@@ -642,28 +641,28 @@ namespace UserOperations.Controllers
                     .FirstOrDefault()
                     .ApplicationUser.CompanyId;
                 double avgDialogueTime = 0;
-                try//---if there are no any dialogues
+                try
                 {
-                avgDialogueTime = _context.Dialogues.Where(p =>
-                    p.BegTime >= begTime &&
-                    p.StatusId == activeStatus &&
-                    p.ApplicationUser.CompanyId == companyId)
-                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);              
+                    avgDialogueTime = _context.Dialogues.Where(p =>
+                        p.BegTime >= begTime &&
+                        p.StatusId == activeStatus &&
+                        p.ApplicationUser.CompanyId == companyId)
+                    .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);              
                 }   
                 catch {}
-//------------------------------                  
+                  
                 var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
               
                 jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
                 jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
                 jsonDialogue["Video"] = dialogue == null ? null :_sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
                 jsonDialogue["DialogueAvgDurationLastMonth"] = avgDialogueTime;
-                _log.Info("User/DialogueInclude GET finished");
+                // _log.Info("User/DialogueInclude GET finished");
                 return Ok(jsonDialogue);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -676,19 +675,19 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("User/Dialogue PUT started");
+                // _log.Info("User/Dialogue PUT started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var dialogue = _context.Dialogues.FirstOrDefault( p => p.DialogueId == message.DialogueId );
                 dialogue.InStatistic = message.InStatistic;
                 _context.SaveChanges();
-                _log.Info("User/Dialogue PUT finished");
+                // _log.Info("User/Dialogue PUT finished");
                 return Ok(message.InStatistic);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }

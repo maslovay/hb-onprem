@@ -28,15 +28,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticWeeklyReportController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -44,7 +44,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("User")]
@@ -55,7 +55,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticWeeklyReport/User started");
+                // _log.Info("AnalyticWeeklyReport/User started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
 
@@ -69,17 +69,16 @@ namespace UserOperations.Controllers
                 var userIdsInCompany = _context.ApplicationUsers
                         .Where(p => p.CompanyId == companyId).Select(u => u.Id).ToList();
 
-                //----ALL FOR WEEK Corporation---
                 var sessionsCorporation = _context.VSessionUserWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
                 var sessionsCorporationOld = _context.VSessionUserWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
                 var dialoguesCorporation = _context.VWeeklyUserReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
                 var dialoguesCorporationOld = _context.VWeeklyUserReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
-                //----ALL FOR WEEK Company---
+
                 var sessionsCompany = _context.VSessionUserWeeklyReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
                 var sessionsCompanyOld = _context.VSessionUserWeeklyReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
                 var dialoguesCompany = _context.VWeeklyUserReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
                 var dialoguesCompanyOld = _context.VWeeklyUserReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
-                //-----for User---
+
                 var userSessions = sessionsCompany.Where(p => p.AspNetUserId == userId).ToList();
                 var userSessionsOld = sessionsCompanyOld.Where(p => p.AspNetUserId == userId).ToList();
                 var userDialogues = dialoguesCompany.Where(p => p.AspNetUserId == userId).ToList();
@@ -88,9 +87,6 @@ namespace UserOperations.Controllers
                 var usersInCorporation = userIdsInCorporation.Count();
                 var usersInCompany = userIdsInCompany.Count();
 
-
-
-                //----satisfaction--------
                 var Satisfaction = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.Satisfaction) / userDialogues.Count(),
@@ -107,7 +103,6 @@ namespace UserOperations.Controllers
                 Satisfaction.CorporationRatingChanges = Satisfaction.CorporationRating - CorporationRatingOld;
                 jsonToReturn["Satisfaction"] = Satisfaction;
 
-                //   //----positiveEmotions--------
                 var PositiveEmotions = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.PositiveEmotions) / userDialogues.Count(),
@@ -124,7 +119,6 @@ namespace UserOperations.Controllers
                 PositiveEmotions.CorporationRatingChanges = PositiveEmotions.CorporationRating - CorporationRatingOld;
                 jsonToReturn["PositiveEmotions"] = PositiveEmotions;
 
-                //    //----positiveIntonations--------
                 var PositiveIntonations = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.PositiveTone) / userDialogues.Count(),
@@ -141,7 +135,6 @@ namespace UserOperations.Controllers
                 PositiveIntonations.CorporationRatingChanges = PositiveIntonations.CorporationRating - CorporationRatingOld;
                 jsonToReturn["PositiveIntonations"] = PositiveIntonations;
 
-                //    //----speechEmotivity--------
                 var SpeechEmotivity = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => (double?)p.SpeekEmotions) / userDialogues.Count(),
@@ -158,8 +151,6 @@ namespace UserOperations.Controllers
                 SpeechEmotivity.CorporationRatingChanges = SpeechEmotivity.CorporationRating - CorporationRatingOld;
                 jsonToReturn["SpeechEmotivity"] = SpeechEmotivity;
 
-                //    //----workload--------
-                //---number of dialogues per day--
                 var NumberOfDialogues = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.Dialogues),
@@ -176,7 +167,6 @@ namespace UserOperations.Controllers
                 NumberOfDialogues.CorporationRatingChanges = NumberOfDialogues.CorporationRating - CorporationRatingOld;
                 jsonToReturn["NumberOfDialogues"] = NumberOfDialogues;
 
-                //---working day ----
                 var WorkingHours = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userSessions.Sum(p => p.SessionsHours),
@@ -193,7 +183,6 @@ namespace UserOperations.Controllers
                 WorkingHours.CorporationRatingChanges = WorkingHours.CorporationRating - CorporationRatingOld;
                 jsonToReturn["WorkingHours_SessionsTotal"] = WorkingHours;
 
-                //----time of clients work---
                 var AvgDialogueTime = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.DialogueHours) / userDialogues.Sum(p => p.Dialogues),
@@ -209,7 +198,7 @@ namespace UserOperations.Controllers
                 CorporationRatingOld = _dbOperation.OfficeRatingDialogueTime(dialoguesCorporationOld, userId);
                 AvgDialogueTime.CorporationRatingChanges = AvgDialogueTime.CorporationRating - CorporationRatingOld;
                 jsonToReturn["AvgDialogueTime"] = AvgDialogueTime;
-                //---load---
+
                 var Workload = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = 100 * userDialogues.Sum(p => p.DialogueHours) / userSessions.Sum(p => p.SessionsHours),
@@ -226,7 +215,6 @@ namespace UserOperations.Controllers
                 Workload.CorporationRatingChanges = Workload.CorporationRating - CorporationRatingOld;
                 jsonToReturn["Workload"] = Workload;
 
-                //---standarts---            
                 var CrossPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => (double?)p.CrossDialogues) / userDialogues.Sum(p => (double?)p.Dialogues),
@@ -309,13 +297,13 @@ namespace UserOperations.Controllers
                 jsonToReturn["FillersPhrase"] = FillersPhrase;
 
 
-                _log.Info("AnalyticRating/Progress finished");
+                // _log.Info("AnalyticRating/Progress finished");
                 //return Ok(JsonConvert.SerializeObject(results));
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

@@ -42,19 +42,19 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public SessionController(
             RecordsContext context,
             IConfiguration config,
-            DBOperations dbOperation,
-            ElasticClient log
+            DBOperations dbOperation
+            // ElasticClient log
             )
         {
             _context = context;
             _config = config;
             _dbOperation = dbOperation;
-            _log = log;
+            // _log = log;
         }
 
         [HttpPost("SessionStatus")]
@@ -62,7 +62,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Session/SessionStatus started"); 
+                // _log.Info("Session/SessionStatus started"); 
                 var response = new Response();
 
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
@@ -82,8 +82,7 @@ namespace UserOperations.Controllers
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
                         .ToList().OrderByDescending(p => p.BegTime)
                         .FirstOrDefault();
-
-                //----------CLOSE ALL NOT CLOSED SESSIONS--------        
+        
                 var notClosedSessions = _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6 && p.SessionId != lastSession.SessionId)
                         .ToArray(); 
@@ -93,7 +92,7 @@ namespace UserOperations.Controllers
                         notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
                         _context.SaveChanges();
                 }
-                //----------CHANGE STATUS OR OPEN NEW-----------------------------------
+
                 if (lastSession == null)
                 {
                     switch (actionId)
@@ -164,7 +163,7 @@ namespace UserOperations.Controllers
             {
                 var response = new Response();
                 response.Message = $"Exception occured {e}";
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(response);
             }
         }

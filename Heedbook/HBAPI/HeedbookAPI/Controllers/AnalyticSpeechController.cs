@@ -44,7 +44,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
 
         public AnalyticSpeechController(
@@ -52,8 +52,8 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -61,7 +61,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
   
 
@@ -78,7 +78,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticSpeech/EmployeeRating started");
+                // _log.Info("AnalyticSpeech/EmployeeRating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -100,7 +100,7 @@ namespace UserOperations.Controllers
                         && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.Dialogue.ApplicationUser.WorkerTypeId))
                         && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
                         && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid)p.Phrase.PhraseTypeId)));                
-                //these 2 ids can be hardcoded as 3 and 4
+
                 var phraseTypes = _context.PhraseTypes.ToList();
                 var typeIdAlert = phraseTypes.Where(p => p.PhraseTypeText == "Alert").Select(p => p.PhraseTypeId).First();
                 var typeIdCross = phraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
@@ -125,7 +125,7 @@ namespace UserOperations.Controllers
                         100 * Convert.ToDouble(p.Where(q => q.PhraseTypeId == typeIdAlert).Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) :
                         0
                     });
-                _log.Info("AnalyticSpeech/EmployeeRating finished");
+                // _log.Info("AnalyticSpeech/EmployeeRating finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
@@ -147,7 +147,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticSpeech/PhraseTable started");
+                // _log.Info("AnalyticSpeech/PhraseTable started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -200,7 +200,7 @@ namespace UserOperations.Controllers
                             Math.Round(Convert.ToDouble(p.GroupBy(q => q.ApplicationUserId).Max(q => q.Count())) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()), 2) :
                             0
                     });
-                _log.Info("AnalyticSpeech/PhraseTable finished");
+                // _log.Info("AnalyticSpeech/PhraseTable finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
@@ -223,7 +223,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticSpeech/PhraseTypeCount started");
+                // _log.Info("AnalyticSpeech/PhraseTypeCount started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -319,12 +319,12 @@ namespace UserOperations.Controllers
                 totalInfo.Employee = employee;
                 totalInfo.Total = total;
 
-                _log.Info("AnalyticSpeech/PhraseTypeCount finished");
+                // _log.Info("AnalyticSpeech/PhraseTypeCount finished");
                 return Ok(totalInfo);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);            
             }
         }
@@ -342,7 +342,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticSpeech/WordCloud started");
+                // _log.Info("AnalyticSpeech/WordCloud started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -378,12 +378,12 @@ namespace UserOperations.Controllers
                         Weight = 2 * p.Count(),
                         Colour = p.First().PhraseColor});
 
-                _log.Info("AnalyticSpeech/WordCloud finished");
+                // _log.Info("AnalyticSpeech/WordCloud finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

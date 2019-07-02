@@ -1,33 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using HBData;
 using UserOperations.Services;
-using UserOperations.Models.AnalyticModels;
-using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 using HBLib.Utils;
@@ -44,15 +23,15 @@ namespace UserOperations.Controllers
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
         private readonly List<AgeBoarder> _ageBoarders;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticClientProfileController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -60,7 +39,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
             _ageBoarders = new List<AgeBoarder>{
                 new AgeBoarder{
                     BegAge = 0,
@@ -94,7 +73,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticClientProfile/GenderAgeStructure started");
+                // _log.Info("AnalyticClientProfile/GenderAgeStructure started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -163,12 +142,12 @@ namespace UserOperations.Controllers
                     .Select(p => p.PersonId).Distinct().Count();;
                 jsonToReturn["genderAge"] = result;
 
-                _log.Info("AnalyticClientProfile/GenderAgeStructure finished");
+                // _log.Info("AnalyticClientProfile/GenderAgeStructure finished");
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
 

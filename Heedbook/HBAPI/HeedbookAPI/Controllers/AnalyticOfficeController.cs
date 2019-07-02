@@ -1,33 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
 using UserOperations.Models.AnalyticModels;
-using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using UserOperations.Utils;
 using HBLib.Utils;
@@ -43,15 +22,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticOfficeController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +38,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Efficiency")]
@@ -73,7 +52,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticOffice/Efficiency started");
+                // _log.Info("AnalyticOffice/Efficiency started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -81,6 +60,7 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);   
+                
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var sessions = _context.Sessions
@@ -240,12 +220,12 @@ namespace UserOperations.Controllers
                 jsonToReturn["ClientDay"] = clientDay;
                 jsonToReturn["Pauses"] = pausesAmount;
                 jsonToReturn["PausesShare"] = pausesAvgValue;
-                _log.Info("AnalyticOffice/Efficiency finished");
+                // _log.Info("AnalyticOffice/Efficiency finished");
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }     
