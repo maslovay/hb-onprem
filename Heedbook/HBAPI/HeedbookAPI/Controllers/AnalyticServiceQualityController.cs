@@ -43,15 +43,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticServiceQualityController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +59,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Components")]
@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/Components started");
+                // _log.Info("AnalyticServiceQuality/Components started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -164,12 +164,12 @@ namespace UserOperations.Controllers
                         RiskColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Risk").Colour
                     }
                 };
-                _log.Info("AnalyticServiceQuality/Components finished");
+                // _log.Info("AnalyticServiceQuality/Components finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e )
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -185,7 +185,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/Dashboard started");
+                // _log.Info("AnalyticServiceQuality/Dashboard started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -234,12 +234,12 @@ namespace UserOperations.Controllers
                     BestProgressiveEmployeeDelta = _dbOperation.BestProgressiveEmployeeDelta(dialogues, begTime)
                 };
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
-                _log.Info("AnalyticServiceQuality/Dashboard finished");
+                // _log.Info("AnalyticServiceQuality/Dashboard finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -255,7 +255,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/Rating started");
+                // _log.Info("AnalyticServiceQuality/Rating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -320,12 +320,12 @@ namespace UserOperations.Controllers
                     }).ToList();
                
                 result = result.OrderBy(p => p.SatisfactionIndex).ToList();
-                _log.Info("AnalyticServiceQuality/Rating finished");
+                // _log.Info("AnalyticServiceQuality/Rating finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -341,7 +341,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/SatisfactionStats started");
+                // _log.Info("AnalyticServiceQuality/SatisfactionStats started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -381,12 +381,12 @@ namespace UserOperations.Controllers
                 };
                 
                 result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
-                _log.Info("AnalyticServiceQuality/SatisfactionStats finished");
+                // _log.Info("AnalyticServiceQuality/SatisfactionStats finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

@@ -44,15 +44,15 @@ namespace UserOperations.Controllers
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
         private readonly List<AgeBoarder> _ageBoarders;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticClientProfileController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -60,7 +60,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
             _ageBoarders = new List<AgeBoarder>{
                 new AgeBoarder{
                     BegAge = 0,
@@ -94,7 +94,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticClientProfile/GenderAgeStructure started");
+                // _log.Info("AnalyticClientProfile/GenderAgeStructure started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -163,12 +163,12 @@ namespace UserOperations.Controllers
                     .Select(p => p.PersonId).Distinct().Count();;
                 jsonToReturn["genderAge"] = result;
 
-                _log.Info("AnalyticClientProfile/GenderAgeStructure finished");
+                // _log.Info("AnalyticClientProfile/GenderAgeStructure finished");
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
 

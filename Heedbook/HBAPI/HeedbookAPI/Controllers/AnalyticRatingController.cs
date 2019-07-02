@@ -43,15 +43,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticRatingController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +59,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Progress")]
@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticRating/Progress started");
+                // _log.Info("AnalyticRating/Progress started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -138,12 +138,12 @@ namespace UserOperations.Controllers
                             }).ToList()
                     }).ToList();
 
-                _log.Info("AnalyticRating/Progress finished");
+                // _log.Info("AnalyticRating/Progress finished");
                 return Ok(JsonConvert.SerializeObject(results));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -160,7 +160,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticRating/RatingUsers started");
+                // _log.Info("AnalyticRating/RatingUsers started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -231,12 +231,12 @@ namespace UserOperations.Controllers
                         //ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime)
                     }).ToList();
                 result = result.OrderBy(p => p.EfficiencyIndex).ToList();
-                _log.Info("AnalyticRating/RatingUsers finished");
+                // _log.Info("AnalyticRating/RatingUsers finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }  
@@ -252,7 +252,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticRating/RatingOffices started");
+                // _log.Info("AnalyticRating/RatingOffices started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -319,12 +319,12 @@ namespace UserOperations.Controllers
                         DialogueAveragePause = _dbOperation.DialogueAveragePause(sessions, p, begTime, endTime)
                     }).ToList();
                 result = result.OrderBy(p => p.EfficiencyIndex).ToList();
-                _log.Info("AnalyticRating/RatingOffices finished");
+                // _log.Info("AnalyticRating/RatingOffices finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }            
