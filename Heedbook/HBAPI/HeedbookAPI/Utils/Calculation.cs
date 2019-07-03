@@ -108,16 +108,12 @@ namespace UserOperations.Utils
             return sessionHours != 0 ? (double?)100 * dialoguesHours / sessionHours : null;
         }
 
-        public double? LoadIndex(IGrouping<DateTime, SessionInfo> sessions, List<DialogueInfo> dialogues, Guid applicationUserId)
-        {
-            DateTime beg = sessions.Key;
-            DateTime end = sessions.Key.AddDays(1);
-            var dialoguesUser = dialogues.Where(p => p.ApplicationUserId == applicationUserId && (p.BegTime.Date == sessions.Key || p.EndTime.Date == sessions.Key));
-            var sessionHours = sessions.Any() ? Convert.ToDouble(sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : 0;
-            var dialoguesHours = dialoguesUser.Count() != 0 ? Convert.ToDouble(dialoguesUser.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : 0;
-            return sessionHours != 0 ? 100 * (double?)dialoguesHours / sessionHours : null;
-        }
-
+         public double? LoadIndex(double? workinHours, double? dialogueHours)
+         {
+            workinHours = MaxDouble(workinHours, dialogueHours);
+            return workinHours != 0 ? dialogueHours / workinHours : 0;
+         }
+      
         public double? LoadIndex(List<SessionInfo> sessions, IGrouping<DateTime, DialogueInfo> dialogues,
             Guid applicationUserId, DateTime? date, DateTime beg, DateTime end)
         {

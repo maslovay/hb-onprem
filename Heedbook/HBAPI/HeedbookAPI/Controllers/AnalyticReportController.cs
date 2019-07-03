@@ -163,6 +163,17 @@ namespace UserOperations.Controllers
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                     })
                     .ToList();
+                    //---USER WITHOUT SESSIONS---
+                var userIds = sessions.Select(x => x.ApplicationUserId).Distinct().ToList();
+                var usersToAdd = _context.ApplicationUsers.Where(p => 
+                        p.CreationDate <= endTime
+                        && p.StatusId == 3
+                        &&(!companyIds.Any() || companyIds.Contains((Guid)p.CompanyId))
+                        && (!applicationUserIds.Any() || applicationUserIds.Contains(p.Id))
+                        && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId))
+                        && !userIds.Contains(p.Id)
+                        && p.Id != Guid.Parse(userClaims["applicationUserId"])
+                    ).ToList();
 
                 var result = sessions
                     .GroupBy(p => p.ApplicationUserId)
@@ -170,17 +181,26 @@ namespace UserOperations.Controllers
                     {
                         FullName = p.First().FullName,
                         ApplicationUserId = p.Key,
-                        // WorkerType = p.First().WorkerType,
                         LoadIndexAverage = _dbOperation.LoadIndex(p, dialogues, begTime, endTime),
                         PeriodInfo = p.GroupBy(q => q.BegTime.Date).Select(q => new ReportPartDayEmployeeInfo
                         {
                             Date = q.Key,
                             WorkingHours = _dbOperation.MaxDouble(_dbOperation.SessionAverageHours(q), _dbOperation.DialogueSumDuration(q, dialogues, p.Key)),
                             DialogueHours = _dbOperation.DialogueSumDuration(q, dialogues, p.Key),
-                            LoadIndex = _dbOperation.LoadIndex(q, dialogues, p.Key),
+                            LoadIndex = 100 * _dbOperation.LoadIndex(_dbOperation.SessionAverageHours(q), _dbOperation.DialogueSumDuration(q, dialogues, p.Key)),
                             DialogueCount = _dbOperation.DialoguesCount(dialogues, p.Key, q.Key)
                         }).ToList()
                     }).ToList();
+
+                var emptyUsers = usersToAdd.Select(p => new 
+                    {
+                        FullName = p.FullName,
+                        ApplicationUserId = p.Id,
+                        LoadIndexAverage = (double?)0,
+                        PeriodInfo =  new List<ReportPartDayEmployeeInfo>()
+                        }).ToList();                   
+                   
+                result.AddRange(emptyUsers);
                 // _log.Info("AnalyticReport/UserPartial finished");
                 return Ok(JsonConvert.SerializeObject(result));
 
