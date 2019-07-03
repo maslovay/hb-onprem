@@ -246,11 +246,16 @@ namespace UserOperations.Controllers
                     }).ToList()
                 }).ToList();
 
+                // var htmlList = campaigns.SelectMany(x => x.contents.ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML))
+                // .Union(_context.Contents.Where( c => c.CompanyId == companyId && (c.CampaignContents == null || c.CampaignContents.Count() == 0))
+                //     .Select(c => new ContentWithId() { contentWithId = c }).ToList()
+                //     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable())
+                // .Union(_context.Contents.Where( c => c.CompanyId == null)
+                //     .Select(c => new ContentWithId() { contentWithId = c }).ToList()
+                //     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable());
+
                 var htmlList = campaigns.SelectMany(x => x.contents.ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML))
                 .Union(_context.Contents.Where( c => c.CompanyId == companyId && (c.CampaignContents == null || c.CampaignContents.Count() == 0))
-                    .Select(c => new ContentWithId() { contentWithId = c }).ToList()
-                    .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable())
-                .Union(_context.Contents.Where( c => c.CompanyId == null)
                     .Select(c => new ContentWithId() { contentWithId = c }).ToList()
                     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable());
 
