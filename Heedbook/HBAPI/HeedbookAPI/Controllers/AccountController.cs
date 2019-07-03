@@ -31,6 +31,7 @@ using System.Net;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Annotations;
+using HBLib;
 using HBLib.Utils;
 
 namespace UserOperations.Controllers
@@ -43,16 +44,22 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
+        private readonly SmtpSettings _smtpSettings;
+        private readonly SmtpClient _smtpClient;
 
         public AccountController(
             ILoginService loginService,
             RecordsContext context,
-            ElasticClient log
+            ElasticClient log,            
+            SmtpSettings smtpSettings,
+            SmtpClient smtpClient
             )
         {
             _loginService = loginService;
             _context = context;
             _log = log;
+            _smtpSettings = smtpSettings;  
+            _smtpClient = smtpClient;
         }
 
         [HttpPost("Register")]
@@ -139,6 +146,7 @@ namespace UserOperations.Controllers
                     var ids = _context.ApplicationUsers.Where(p => p.Id == user.Id).ToList();
                     await _context.SaveChangesAsync();
                     _context.Dispose();
+                    AccountCreatedMailSend(message);
                     _log.Info("All saved in DB");
                 }
                 else
@@ -266,6 +274,34 @@ namespace UserOperations.Controllers
             {
                 _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
+            }
+        }
+
+        private void AccountCreatedMailSend(UserRegister message)
+        {
+            var mail = new System.Net.Mail.MailMessage();
+            mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);
+            mail.To.Add(new System.Net.Mail.MailAddress(message.Email)); 
+            
+            mail.Subject = "Heedbook registration completed successfully";
+
+            mail.Body = "Здравствуйте.\n" +
+                        "Вы зарегистрированы как Сотрудник в личном кабинете системы Heedbook\n" +
+                        "Для использования системы введите на сайте https://app.heedbook.com/login следующие данные:\n" +
+                        $"Login: {message.Email}\n" +
+                        $"Password: {message.Password}\n";
+            mail.BodyEncoding = System.Text.Encoding.UTF8;
+            mail.IsBodyHtml = false;
+
+            try
+            {
+                _smtpClient.Send(mail);
+                _log.Info($"Registration successfully mail Sended to {message.Email}");
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                _log.Fatal($"Failed Registration successfully mail to {message.Email}\n{ex.Message}\n");
             }
         }
     }
