@@ -139,6 +139,9 @@ namespace UserOperations
                            return new ElasticClient(settings);
                        });
 
+            services.Configure<SmtpSettings>(Configuration.GetSection(nameof(SmtpSettings)));
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
+            services.AddSingleton<SmtpClient>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
