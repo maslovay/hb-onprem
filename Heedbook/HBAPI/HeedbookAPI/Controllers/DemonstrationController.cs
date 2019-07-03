@@ -270,7 +270,7 @@ namespace UserOperations.Controllers
                 {
                    // return BadRequest("This company has no any content");
                 }
-                List<object> resultMedia = new List<object>();
+            //    List<object> resultMedia = new List<object>();
                 string unmutedVideo = "<video ";
                 string mutedVideo = "<video autoplay muted ";
 
@@ -291,9 +291,9 @@ namespace UserOperations.Controllers
                         {
                             link = link.Replace("&amp", "");
                             link = link.Replace("&quot;", "");
-                            var fileInfo = media.Where(x=>x.url == link).FirstOrDefault();
-                            if(fileInfo != null)
-                                resultMedia.Add(fileInfo);
+                            // var fileInfo = media.Where(x=>x.url == link).FirstOrDefault();
+                            // if(fileInfo != null)
+                            //     resultMedia.Add(fileInfo);
                         }
                         match = match.NextMatch();
                     }
@@ -308,7 +308,8 @@ namespace UserOperations.Controllers
                 var responseContent = new List<object>();
                 responseContent.Add(new { campaigns = campaignsList });
                 responseContent.Add(new { htmlRaws = htmlList2 });
-                responseContent.Add(new { blobMedia = resultMedia });
+            //    responseContent.Add(new { blobMedia = resultMedia });
+                responseContent.Add(new { blobMedia = media });
                 return Ok(responseContent);
             }
             catch (Exception e)
