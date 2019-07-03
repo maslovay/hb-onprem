@@ -468,8 +468,24 @@ namespace UserOperations.Utils
 
         public List<double> DialogueAvgPauseListInMinutes(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
+            List<double> pauses = new List<double>();
             if (!sessions.Any() || !dialogues.Any()) return null;
-            return dialogues.Select(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalMinutes).ToList();
+            foreach( var ses in sessions.OrderBy(p => p.BegTime))
+            {
+                var dialogInSession = dialogues.Where(p => p.BegTime >= ses.BegTime && p.EndTime <= ses.EndTime).OrderBy(p => p.BegTime).ToArray();
+                if(dialogInSession != null && dialogInSession.Count() != 0)
+                {
+                pauses.Add(dialogInSession.First().BegTime.Subtract(ses.BegTime).TotalMinutes);
+                for ( int i = 1; i < dialogInSession.Length - 1; i++)
+                {
+                    pauses.Add(dialogInSession[i].BegTime.Subtract(dialogInSession[i-1].EndTime).TotalMinutes);
+                }
+                if (dialogInSession.Count() > 1 ) pauses.Add(ses.EndTime.Subtract(dialogInSession.Last().EndTime).TotalMinutes);
+                }
+                else
+                pauses.Add(ses.EndTime.Subtract(ses.EndTime).TotalMinutes);
+            }
+            return pauses;
         }
         public double? DialogueAveragePause(List<SessionInfoCompany> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
         {
