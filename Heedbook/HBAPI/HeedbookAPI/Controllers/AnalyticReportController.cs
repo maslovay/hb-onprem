@@ -165,7 +165,10 @@ namespace UserOperations.Controllers
                     .ToList();
                     //---USER WITHOUT SESSIONS---
                 var userIds = sessions.Select(x => x.ApplicationUserId).Distinct().ToList();
-                var usersToAdd = _context.ApplicationUsers.Where(p => 
+                var employeeRole = _context.Roles.FirstOrDefault(x =>x.Name == "Employee").Id;
+                var usersToAdd = _context.ApplicationUsers
+                    .Include(x =>x.UserRoles)
+                    .Where(p => 
                         p.CreationDate <= endTime
                         && p.StatusId == 3
                         &&(!companyIds.Any() || companyIds.Contains((Guid)p.CompanyId))
@@ -173,6 +176,7 @@ namespace UserOperations.Controllers
                         && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId))
                         && !userIds.Contains(p.Id)
                         && p.Id != Guid.Parse(userClaims["applicationUserId"])
+                        && p.UserRoles.Any(x => x.RoleId == employeeRole)
                     ).ToList();
 
                 var result = sessions
