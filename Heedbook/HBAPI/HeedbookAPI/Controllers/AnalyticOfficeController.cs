@@ -212,7 +212,7 @@ namespace UserOperations.Controllers
                     }).ToList();
 
                 var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
-                            _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, begTime, endTime): null;
+                            _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur): null;
                      
                 var sessTimeMinutes = _dbOperation.SessionTotalHours(sessionCur, begTime, endTime)*60;
 

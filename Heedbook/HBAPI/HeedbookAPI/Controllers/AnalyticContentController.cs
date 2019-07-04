@@ -63,6 +63,7 @@ namespace UserOperations.Controllers
             // _log = log;
         }
 
+//---FOR ONE DIALOGUE---
         [HttpGet("ContentShows")]
         public IActionResult ContentShows([FromQuery(Name = "dialogueId")] Guid dialogueId,
                                                         [FromHeader] string Authorization)
@@ -111,7 +112,7 @@ namespace UserOperations.Controllers
                     }).ToList();
 
                 var amountShows = slideShowSessionsAll.Where(p => !p.IsPoll).Count();
-                var contentInfo = new ContentTotalInfo
+                var contentInfo = new //ContentTotalInfo
                 {
                     ContentsAmount = amountShows,
                     ContentsInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentOneInfo
@@ -200,8 +201,8 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueFrame)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
-                            //&& p.StatusId == 3
-                           // && p.InStatistic == true
+                            && p.StatusId == 3
+                            && p.InStatistic == true
                             && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
                     .Select(p => new DialogueInfoWithFrames
@@ -266,7 +267,7 @@ namespace UserOperations.Controllers
                         Key2 = key.Url,
                         Result = group.ToList()
                     }).ToList();
-                var contentInfo = new ContentTotalInfoEfficiency
+                var contentInfo = new //ContentTotalInfoEfficiency
                 {
                     Views = views,
                     Clients = clients,
@@ -317,7 +318,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("ContentShows/Poll started");
+                // _log.Info("AnalyticContent/Poll started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -332,8 +333,8 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueFrame)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
-                            //&& p.StatusId == 3
-                           // && p.InStatistic == true
+                            && p.StatusId == 3
+                            && p.InStatistic == true
                             && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
                     .Select(p => new DialogueInfoWithFrames
@@ -403,20 +404,21 @@ namespace UserOperations.Controllers
                     Clients = clients,
                     Answers = answers,
                     Conversion = conversion,
-                    ContentFullInfo = contentsShownGroup.Select(x => new
+                    ContentFullInfo = contentsShownGroup.Select(x => new AnswerInfo
                     {
                         Content = x.Key.ToString(),
-                        AmountViews = x.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
+                        AmountViews = x.Count(),// x.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
                         ContentName = x.FirstOrDefault().ContentName,
                         Answers = answersList
                             .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId))
-                            .Select(p => new { p.Answer, p.Time }),
-                        answersAmount = answersList
+                            .Select(p => new AnswerInfo.AnswerOne { Answer =  p.Answer, Time = p.Time }).ToList(),
+                        AnswersAmount = answersList
                             .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId))
-                            .Select(p => new { p.Answer, p.Time }).Count()
+                            .Select(p => new { p.Answer, p.Time }).Count(),
+                        Conversion = (double)answersList
+                            .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId)).Count() / (double)x.Count()
                     }
-                    ).ToList()
-                };              
+                    ).ToList()};
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
 
                 // _log.Info("ContentShows/Poll finished");
@@ -432,22 +434,22 @@ namespace UserOperations.Controllers
     }
 
 
-    public class ContentTotalInfo
-    {
-        // the total number of demonstrated content, images, videos, URLs 
-        // within the campaigns and the employees themselves during the dialogue
-        public int ContentsAmount { get; set; }
-        public List<ContentOneInfo> ContentsInfo { get; set; }
-    }
+    // public class ContentTotalInfo
+    // {
+    //     // the total number of demonstrated content, images, videos, URLs 
+    //     // within the campaigns and the employees themselves during the dialogue
+    //     public int ContentsAmount { get; set; }
+    //     public List<ContentOneInfo> ContentsInfo { get; set; }
+    // }
 
-    public class ContentTotalInfoEfficiency
-    {
-        // the total number of demonstrated content, images, videos, URLs 
-        // within the campaigns and the employees themselves during the dialogue
-        public int Views { get; set; }
-        public int Clients { get; set; }
-         public List<ContentFullOneInfo> ContentFullInfo { get; set; }
-    }
+    // public class ContentTotalInfoEfficiency
+    // {
+    //     // the total number of demonstrated content, images, videos, URLs 
+    //     // within the campaigns and the employees themselves during the dialogue
+    //     public int Views { get; set; }
+    //     public int Clients { get; set; }
+    //      public List<ContentFullOneInfo> ContentFullInfo { get; set; }
+    // }
     public class ContentOneInfo
     {
         public string Content { get; set; }
@@ -466,6 +468,21 @@ namespace UserOperations.Controllers
         public int Male { get; set; }
         public int Female { get; set; }
         public double? Age { get; set; }
+    }
+    public class AnswerInfo
+    {
+        public string Content { get; set; }
+        public int AnswersAmount { get; set; }
+        public string ContentName { get; set; }
+        public int AmountViews { get; set; }
+        public double Conversion { get; set; }
+        public List<AnswerOne> Answers {get; set;}
+        public class AnswerOne
+        {
+            public string Answer { get; set; }
+            public DateTime Time { get; set; }
+        }
+
     }
 }
 
