@@ -7,10 +7,12 @@ namespace HBLib.Utils
 {
     public static class RunPython
     {
-        public static (string, string) Run(string pyFilePath, string workDir, string version = "2.7", string args = "")
+        public static (string, string) Run(string pyFilePath, string workDir, string version = "2.7", string args = "", ElasticClient _log = null)
         {
             var error = "";
             var result = "";
+            
+            _log?.Info($"RunPython(\"{pyFilePath}\", \"{workDir}\", \"{args}\")");
             
             try
             {
@@ -21,6 +23,8 @@ namespace HBLib.Utils
                     psi.FileName+=version;
 
                 psi.WorkingDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), workDir);
+                _log?.Info($"RunPython: WorkingDirectory: {psi.WorkingDirectory}");
+
                 psi.UseShellExecute = false;
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
@@ -30,7 +34,11 @@ namespace HBLib.Utils
                     if (pyProc != null)
                     {
                         result = pyProc.StandardOutput.ReadToEnd();
-                        error = pyProc.StandardError.ReadToEnd();
+                        error = pyProc.StandardError.ReadToEnd();                       
+                        _log?.Info($"RunPython: result {result}");
+                        if ( !String.IsNullOrEmpty(error.Trim()))
+                            _log?.Error($"RunPython: result {result}");
+                        
                         return (result, error);
                     }
                 }
