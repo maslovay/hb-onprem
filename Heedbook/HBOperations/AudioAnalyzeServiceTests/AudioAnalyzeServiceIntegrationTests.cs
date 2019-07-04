@@ -19,6 +19,7 @@ namespace AudioAnalyzeService.Tests
         private ToneAnalyze _toneAnalyzeService;
         private AudioAnalyze _audioAnalyzeService;
         private Startup _startup;
+        private GoogleConnector _googleConnector;
         private ElasticClientFactory _elasticClientFactory;
         private FFMpegWrapper _ffmpegWrapper;
         private GoogleConnector _googleConnector;
@@ -96,8 +97,10 @@ namespace AudioAnalyzeService.Tests
         {
             _repository = ServiceProvider.GetService<IGenericRepository>();
             _elasticClientFactory = ServiceProvider.GetService<ElasticClientFactory>();
+            
             _ffmpegWrapper = ServiceProvider.GetService<FFMpegWrapper>();
             _toneAnalyzeService = new ToneAnalyze( _sftpClient, this.Config, ScopeFactory, _elasticClientFactory, _ffmpegWrapper );
+            _googleConnector = ServiceProvider.GetService<GoogleConnector>();
             _asrClient = ServiceProvider.GetService<AsrHttpClient.AsrHttpClient>();
             _googleConnector = ServiceProvider.GetService<GoogleConnector>();
             _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _asrClient, _elasticClientFactory, _googleConnector);

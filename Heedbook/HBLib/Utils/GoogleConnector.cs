@@ -30,7 +30,7 @@ namespace HBLib.Utils
 
         private const String FileGoogleCloudPublicAccess = "GoogleFilePublic.xml";
 
-        private readonly HttpClient _httpClient;
+        private HttpClient _httpClient;
 
         private readonly IGenericRepository _repository;
 
@@ -39,11 +39,9 @@ namespace HBLib.Utils
         private readonly DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         public GoogleConnector(SftpClient sftpClient,
-            IServiceScopeFactory scopeFactory,
-            HttpClient httpClient)
+            IServiceScopeFactory scopeFactory)
         {
             _sftpClient = sftpClient;
-            _httpClient = httpClient;
             var scope = scopeFactory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
         }
@@ -55,7 +53,7 @@ namespace HBLib.Utils
                 //transfer blob to byte array
                 var stream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(path);
                 var data = stream.ToArray();
-
+                _httpClient = new HttpClient();
                 //prepare the request
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
@@ -81,6 +79,7 @@ namespace HBLib.Utils
 
         public async Task<String> MakeFilePublicGoogleCloud(String filename, String binPath, String token)
         {
+            _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Clear();
 
             var googleFileGoogleCloudPublicAccess = Path.Combine(binPath, FileGoogleCloudPublicAccess);
@@ -103,6 +102,7 @@ namespace HBLib.Utils
         public async Task<String> MakeFilePublicGoogleCloudPost(String filename, String binPath,
             String token)
         {
+            _httpClient = new HttpClient();
             var queryString = HttpUtility.ParseQueryString(String.Empty);
 
             var uri = "https://www.googleapis.com/storage/v1/b/" + GoogleCloudContainerName + "/o/" + filename +
@@ -125,6 +125,7 @@ namespace HBLib.Utils
 
         public async Task DeleteFileGoogleCloud(String filename, String token)
         {
+            _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Clear();
 
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
@@ -135,6 +136,7 @@ namespace HBLib.Utils
 
         public async Task<GoogleSttLongrunningResult> GetGoogleSTTResults(String googleTransactionId)
         {
+            _httpClient = new HttpClient();
             var googleApiKey = await GetApiKey();
             _httpClient.DefaultRequestHeaders.Clear();
 
@@ -148,6 +150,7 @@ namespace HBLib.Utils
 
         public async Task<String> GetAuthorizationToken(String binPath)
         {
+            _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Clear();
 
             var jwt = CreateJwt(binPath);
