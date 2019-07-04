@@ -205,7 +205,7 @@ namespace AudioAnalyseScheduler.Tests
 //
 //            Assert.Pass();
 //        }
-        
+//        
         private double GetPositiveShareInText()
         {
             var result = 0.0;
