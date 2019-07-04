@@ -479,7 +479,9 @@ namespace UserOperations.Utils
         {
             List<double> pauses = new List<double>();
             if (!sessions.Any() || !dialogues.Any()) return null;
-            foreach( var ses in sessions.OrderBy(p => p.BegTime))
+            foreach( var sessionGrouping in sessions.GroupBy(x => x.ApplicationUserId))
+            {
+            foreach( var ses in sessionGrouping.OrderBy(p => p.BegTime))
             {
                 var dialogInSession = dialogues.Where(p => p.BegTime >= ses.BegTime && p.EndTime <= ses.EndTime).OrderBy(p => p.BegTime).ToArray();
                 if(dialogInSession != null && dialogInSession.Count() != 0)
@@ -494,6 +496,7 @@ namespace UserOperations.Utils
                 }
                 else
                 pauses.Add(ses.EndTime.Subtract(ses.BegTime).TotalMinutes);
+            }
             }
             return pauses;
         }
