@@ -17,18 +17,20 @@ namespace AudioAnalyzeService
         private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
-         private readonly ElasticClientFactory _elasticClientFactory;
-
+        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly GoogleConnector _googleConnector;
         public AudioAnalyze(
             IServiceScopeFactory factory,
             AsrHttpClient.AsrHttpClient asrHttpClient,
-            ElasticClientFactory elasticClientFactory
+            ElasticClientFactory elasticClientFactory,
+            GoogleConnector googleConnector
         )
         {
             // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
             _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
             _asrHttpClient = asrHttpClient;
             _elasticClientFactory = elasticClientFactory;
+            _googleConnector = googleConnector;
         }
 
         public async Task Run(String path)
@@ -46,8 +48,7 @@ namespace AudioAnalyzeService
                     var fileName = splitedString[1];
                     var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
                     var dialogue = _context.Dialogues
-                        .Where(p => p.DialogueId == dialogueId)
-                        .FirstOrDefault();
+                        .FirstOrDefault(p => p.DialogueId == dialogueId);
 
                     if (dialogue != null)
                     {
@@ -67,11 +68,32 @@ namespace AudioAnalyzeService
                             EndTime = dialogue.EndTime,
                             Duration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds
                         };
+
+                        if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
+                        {
+                            var languageId = Int32.Parse("2");
+
+                            var currentPath = Directory.GetCurrentDirectory();
+                            var token = await _googleConnector.GetAuthorizationToken(currentPath);
+
+                            var blobGoogleDriveName =
+                                dialogueId + "_client" + Path.GetExtension(fileName);
+                            await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);
+                            _log.Info("Load to disk");
+                            await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
+                            _log.Info("Make file public");
+                            var transactionId =
+                                await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId.ToString(), true, true);
+                            _log.Info("transaction id: " + transactionId);
+                            fileAudio.TransactionId = transactionId.Name.ToString();
+                        }
                         _context.FileAudioDialogues.Add(fileAudio);
                         _context.SaveChanges();
-                        await _asrHttpClient.StartAudioRecognize(dialogueId);
+                        if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
+                        {
+                            await _asrHttpClient.StartAudioRecognize(dialogueId);
+                        }
                         _log.Info("Started recognize audio");
-                        
                     }
                 }
 
