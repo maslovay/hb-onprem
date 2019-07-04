@@ -15,12 +15,13 @@ RUN dotnet build ./HBOperations/AudioAnalyzeScheduler/
 # Copy everything else and build
 RUN dotnet publish ./HBOperations/AudioAnalyzeScheduler -c Release -o publish
 RUN cp ./HBOperations/AudioAnalyzeScheduler/sentimental/* ./HBOperations/AudioAnalyzeScheduler/bin/Release/netcoreapp2.2 -R
+RUN cp ./HBOperations/AudioAnalyzeScheduler/sentimental/* ./HBOperations/AudioAnalyzeScheduler/publish/ -R
+
 
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/publish .
-RUN cp /app/HBOperations/AudioAnalyzeScheduler/sentimental/* /app/HBOperations/AudioAnalyzeScheduler/publish -R
 
 ENTRYPOINT ["dotnet", "AudioAnalyzeScheduler.dll"]
 RUN mkdir /opt/
