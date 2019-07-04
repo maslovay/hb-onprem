@@ -23,8 +23,9 @@ namespace HBLib.Utils
                     psi.FileName+=version;
 
                 psi.WorkingDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), workDir);
-                _log?.Info($"RunPython: WorkingDirectory: {psi.WorkingDirectory}");
 
+                _log?.Info($"RunPython: WorkingDirectory: {psi.WorkingDirectory}");
+                
                 psi.UseShellExecute = false;
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
@@ -34,7 +35,8 @@ namespace HBLib.Utils
                     if (pyProc != null)
                     {
                         result = pyProc.StandardOutput.ReadToEnd();
-                        error = pyProc.StandardError.ReadToEnd();                       
+                        error = pyProc.StandardError.ReadToEnd();
+                        
                         _log?.Info($"RunPython: result {result}");
                         if ( !String.IsNullOrEmpty(error.Trim()))
                             _log?.Error($"RunPython: result {result}");
