@@ -20,6 +20,8 @@ RUN cp ./HBOperations/AudioAnalyzeScheduler/sentimental/* ./HBOperations/AudioAn
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/publish .
+RUN cp ./HBOperations/AudioAnalyzeScheduler/sentimental/* ./HBOperations/AudioAnalyzeScheduler/publish -R
+
 ENTRYPOINT ["dotnet", "AudioAnalyzeScheduler.dll"]
 RUN mkdir /opt/
 RUN chmod -R 777 /opt/
