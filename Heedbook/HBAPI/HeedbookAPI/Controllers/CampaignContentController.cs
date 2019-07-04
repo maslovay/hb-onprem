@@ -172,8 +172,16 @@ namespace UserOperations.Controllers
                 if (campaign != null)
                 {
                     campaign.StatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
+                    _context.SaveChanges();
+                    try
+                    {
                     _context.RemoveRange(campaign.CampaignContents);
                     _context.SaveChanges();
+                    }
+                    catch
+                    {
+                        return Ok("Set inactive");
+                    }
                     // _log.Info("Campaign DELETE finished");
                     return Ok("OK");
                 }
