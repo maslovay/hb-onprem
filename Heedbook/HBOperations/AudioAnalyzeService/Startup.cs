@@ -42,6 +42,7 @@ namespace AudioAnalyzeService
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
+            services.AddTransient<GoogleConnector>();
             services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
             services.AddTransient<FFMpegWrapper>();
             services.AddTransient(provider =>
