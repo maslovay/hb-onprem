@@ -306,13 +306,21 @@ namespace DialogueMarkUp.QuartzJobs
         private void CheckSessionForDialogue(Dialogue dialogue)
         {
             var applicationUserId = dialogue.ApplicationUserId;
-            var session = _context.Sessions.Where(p => p.ApplicationUserId == applicationUserId).ToList();
+            var session = _context.Sessions.Where(p => p.ApplicationUserId == applicationUserId
+                && p.BegTime.Date == dialogue.BegTime.Date)
+                .ToList();
+            var ses = session.FirstOrDefault(p => ((p.BegTime <= dialogue.BegTime
+                    && p.EndTime > dialogue.BegTime) 
+                    || (p.BegTime < dialogue.EndTime
+                    && p.EndTime >= dialogue.EndTime))
+                    && !(p.BegTime > dialogue.BegTime
+                    && p.EndTime < dialogue.EndTime));
             if(dialogue is null)
             {
                 _log.Error($"CheckSessionForDialogue: dialogue is null, applicationUserId: {applicationUserId}");
                 return;
             }
-            if (session is null)
+            if (ses is null)
             {                
                 _context.Sessions.Add( new Session
                     {
@@ -333,8 +341,8 @@ namespace DialogueMarkUp.QuartzJobs
 
             if(dialogueBeginSession == null && dialogueEndSession == null)
             {
-                var ses = session.FirstOrDefault(p => p.BegTime > dialogue.BegTime
-                        && p.EndTime < dialogue.EndTime);
+                ses = session.FirstOrDefault(p => p.BegTime > dialogue.BegTime
+                    && p.EndTime < dialogue.EndTime);
                 if(ses != null)
                 {
                     ses.BegTime = dialogue.BegTime;

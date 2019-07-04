@@ -74,8 +74,7 @@ namespace QuartzExtensions.Jobs
 
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
-                .Where(p => p.BegTime > DateTime.UtcNow.AddHours(-24)
-                    && p.StatusId == 3)
+                .Where(p => p.BegTime > DateTime.UtcNow.AddHours(-24))
                 .ToList();                                    
 
             var frames = _context.FileFrames
@@ -104,7 +103,12 @@ namespace QuartzExtensions.Jobs
                         TotalVideoDuration = TimeSpan.FromSeconds(videos.Where(s => s.ApplicationUser.CompanyId == p.Key)
                             .Sum(o => (double)o.Duration))
                             .ToString("d'd 'h'h 'm'm 's's'"),
-                        CountOfDialogues = dialogues.Where(s => s.ApplicationUser.CompanyId == p.First().ApplicationUser.CompanyId).Count(),
+                        CountOfDialoguesStat3 = dialogues.Where(s => s.ApplicationUser.CompanyId == p.Key
+                            && s.StatusId == 3)
+                            .Count(),
+                        CountOfDialoguesStat8 = dialogues.Where(s => s.ApplicationUser.CompanyId == p.Key
+                            && s.StatusId == 8)
+                            .Count(),
                         CountOfFramesWithFaces = frames.Where(s => s.ApplicationUser.CompanyId == p.Key)
                             .Count(),
                         CountOfDifferentFaces = frames.Where(s => s.ApplicationUser.CompanyId == p.Key)
@@ -118,7 +122,8 @@ namespace QuartzExtensions.Jobs
                 result += $"Number of employes worked:          {compRep.CountOfEmployers}\n";
                 result += $"Total session duration:             {compRep.TotalSessionDuration:0.##}\n";
                 result += $"Total duration of all videos:       {compRep.TotalVideoDuration:0.##}\n";
-                result += $"Number of dialogs with status 3:    {compRep.CountOfDialogues}\n";
+                result += $"Number of dialogs with status 3:    {compRep.CountOfDialoguesStat3}\n";
+                result += $"Number of dialogs with status 8:    {compRep.CountOfDialoguesStat8}\n";
                 result += $"Number of frames with faces:        {compRep.CountOfFramesWithFaces}\n";
                 result += $"Number of different faces:          {compRep.CountOfDifferentFaces}\n\n";
             }
@@ -133,7 +138,8 @@ namespace QuartzExtensions.Jobs
         public int CountOfEmployers { get; set; }
         public string TotalSessionDuration { get; set; }
         public string TotalVideoDuration { get; set; }
-        public int CountOfDialogues { get; set; }
+        public int CountOfDialoguesStat3 { get; set; }
+        public int CountOfDialoguesStat8 { get; set; }
         public int CountOfFramesWithFaces { get; set; }
         public int CountOfDifferentFaces {get; set;}
     }

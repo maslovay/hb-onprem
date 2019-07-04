@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
 namespace HBLib.Utils
 {
@@ -19,17 +20,17 @@ namespace HBLib.Utils
                 if ( !string.IsNullOrWhiteSpace(version) )
                     psi.FileName+=version;
 
-                psi.WorkingDirectory = workDir;
+                psi.WorkingDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), workDir);
                 psi.UseShellExecute = false;
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;
                 
                 using (var pyProc = Process.Start(psi))
-                {
+                { 
                     if (pyProc != null)
                     {
                         result = pyProc.StandardOutput.ReadToEnd();
-                            error = pyProc.StandardError.ReadToEnd();
+                        error = pyProc.StandardError.ReadToEnd();
                         return (result, error);
                     }
                 }

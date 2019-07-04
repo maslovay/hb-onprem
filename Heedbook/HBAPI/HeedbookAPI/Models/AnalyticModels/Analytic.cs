@@ -26,7 +26,8 @@ namespace UserOperations.Models.AnalyticModels
         public DateTime BegTime;
         public DateTime EndTime;
         public string FullName;
-        public int CrossCout;
+        public int CrossCount;
+        public int AlertCount;
         public double? SatisfactionScore;
         public double? SatisfactionScoreBeg;
         public double? SatisfactionScoreEnd;
@@ -72,7 +73,7 @@ namespace UserOperations.Models.AnalyticModels
         public DateTime BegTime;
         public DateTime EndTime;
         public string FullName;
-        public int CrossCout;
+        public int CrossCount;
         public double? SatisfactionScore;
         public double? SatisfactionScoreBeg;
         public double? SatisfactionScoreEnd;

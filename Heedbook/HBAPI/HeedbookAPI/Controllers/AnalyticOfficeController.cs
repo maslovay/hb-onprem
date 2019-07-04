@@ -118,7 +118,6 @@ namespace UserOperations.Controllers
                         FullName = p.ApplicationUser.FullName,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                     }).ToList();
-
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
@@ -137,7 +136,7 @@ namespace UserOperations.Controllers
                 result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
                 result.DialoguesNumberAvgPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
- 
+
                 var diagramDialogDurationPause = sessionCur
                 .GroupBy(p => p.BegTime.Date)
                 .Select(p => new
@@ -162,7 +161,6 @@ namespace UserOperations.Controllers
                             p.Max(s => s.EndTime))                      
                 }).    
                 ToList();
-
                 var optimalLoad = 0.7;
                 var employeeWorked = sessionCur
                 .GroupBy(p => p.BegTime.Date)
@@ -181,7 +179,6 @@ namespace UserOperations.Controllers
                             p.Max(s => s.EndTime))                  
                 }).    
                 ToList();
-
                 var diagramEmployeeWorked = employeeWorked.Select(
                     p => new {
                         p.Day,
@@ -212,34 +209,39 @@ namespace UserOperations.Controllers
                     }).ToList();
 
                 var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
-                            _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, sessionCur.Min(p => p.BegTime), sessionCur.Max(p => p.EndTime)): null;
+                            _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur): null;
                      
                 var sessTimeMinutes = _dbOperation.SessionTotalHours(sessionCur, begTime, endTime)*60;
-
                 var pausesAmount = new{
                     Less_10 = pauseInMin?.Where(p => p <= 10).Count(),
-                    Between_11_20 = pauseInMin?.Where(p => p > 10 && p < 20).Count(),
-                    Between_21_60 = pauseInMin?.Where(p => p > 20 && p < 60).Count(),
-                    More_60 = pauseInMin?.Where(p => p >= 60).Count()
+                    Between_11_20 = pauseInMin?.Where(p => p > 10 && p <= 20).Count(),
+                    Between_21_60 = pauseInMin?.Where(p => p > 20 && p <= 60).Count(),
+                    More_60 = pauseInMin?.Where(p => p > 60).Count()
                 };
-
-                    var pausesAvgValue = new{
+                var pausesShareInSession = new{
                     Less_10 = sessTimeMinutes != 0? 100 *  pauseInMin?.Where(p => p <= 10).Sum() / sessTimeMinutes : 0,
-                    Between_11_20 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 10 && p < 20).Sum() / sessTimeMinutes : 0,
-                    Between_21_60 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 20 && p < 60).Sum() / sessTimeMinutes : 0,
-                    More_60 = sessTimeMinutes != 0? 100 * pauseInMin.Where(p => p >= 60).Sum() / sessTimeMinutes : 0,
-                    Sessions = sessTimeMinutes != 0? 100 * (sessTimeMinutes - pauseInMin?.Sum()) / sessTimeMinutes : 0
+                    Between_11_20 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 10 && p <= 20).Sum() / sessTimeMinutes : 0,
+                    Between_21_60 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 20 && p <= 60).Sum() / sessTimeMinutes : 0,
+                    More_60 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 60).Sum() / sessTimeMinutes : 0,
+                    Load = sessTimeMinutes != 0? 100 * (sessTimeMinutes - pauseInMin?.Sum()) / sessTimeMinutes : 0
                 };
-
-              
+                 var pausesInMinutes = new{
+                    Less_10 = pauseInMin?.Where(p => p <= 10).Sum(),
+                    Between_11_20 = pauseInMin?.Where(p => p > 10 && p <= 20).Sum(),
+                    Between_21_60 = pauseInMin?.Where(p => p > 20 && p <= 60).Sum() ,
+                    More_60 = pauseInMin?.Where(p => p > 60).Sum(),
+                    Load = sessTimeMinutes - pauseInMin?.Sum()
+                };
+  
                 var jsonToReturn = new Dictionary<string, object>();
                 jsonToReturn["Workload"] = result;
                 jsonToReturn["DiagramDialogDurationPause"] = diagramDialogDurationPause;
                 jsonToReturn["DiagramEmployeeWorked"] = diagramEmployeeWorked;
                 jsonToReturn["ClientTime"] = clientTime;
                 jsonToReturn["ClientDay"] = clientDay;
-                jsonToReturn["Pauses"] = pausesAmount;
-                jsonToReturn["PausesShare"] = pausesAvgValue;
+                jsonToReturn["PausesAmount"] = pausesAmount;
+                jsonToReturn["PausesShare"] = pausesShareInSession;
+                jsonToReturn["PausesInMinutes"] = pausesInMinutes;
                 // _log.Info("AnalyticOffice/Efficiency finished");
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }

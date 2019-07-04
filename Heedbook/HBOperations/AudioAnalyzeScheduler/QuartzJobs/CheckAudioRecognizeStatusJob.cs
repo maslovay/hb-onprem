@@ -156,6 +156,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     PhraseCount = phraseCounter[key],
                                     IsClient = true
                                 });
+                                
                             recognized.ForEach(r =>
                             {
                                 if (words.All(w => w.Word != r.Word))
@@ -172,12 +173,15 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList());
 
                             words = words.GroupBy(item => new
-                                          {
-                                              item.BegTime,
-                                              item.Word
-                                          })
-                                         .Select(item => item.FirstOrDefault())
-                                         .ToList();
+                            {
+                                item.BegTime,
+                                item.Word
+                            })
+                            .Select(item => item.FirstOrDefault())
+                            .ToList();
+                            
+                            words.Sort( (w0, w1) => (int)((w0.BegTime - w1.BegTime).TotalMilliseconds));
+                            
                             dialogueWords.Add(new DialogueWord
                             {
                                 DialogueId = audio.DialogueId,
@@ -215,7 +219,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             try
             {
                 var sentence = string.Join(" ", recognizedWords);
-                var posShareStrg = RunPython.Run("GetPositiveShare.py", "./sentimental", "3", sentence);
+                var posShareStrg = RunPython.Run("GetPositiveShare.py", "sentimental", "3", sentence);
 
                 if (!posShareStrg.Item2.Trim().IsNullOrEmpty())
                     _log.Error("RunPython err string: " + posShareStrg.Item2);

@@ -16,10 +16,10 @@ namespace UserOperations.CommonModels
 
      public class ContentWithId
     {
-        public ContentWithId()
-        {
-            htmlId = Guid.NewGuid().ToString();
-        }
+        // public ContentWithId()
+        // {
+        //     htmlId = Guid.NewGuid().ToString();
+        // }
         public Content contentWithId;
         public string htmlId;
         public Guid campaignContentId;

@@ -109,7 +109,7 @@ namespace UserOperations.Controllers
                 var dialogues = _context.Dialogues
                         .Include(p => p.ApplicationUser)
                         .Include(p => p.DialogueClientSatisfaction)
-                        .Include(p => p.DialoguePhraseCount)
+                        .Include(p => p.DialoguePhrase)
                         .Where(p => p.BegTime >= prevBeg
                                 && p.EndTime <= endTime
                                 && p.StatusId == 3
@@ -123,13 +123,12 @@ namespace UserOperations.Controllers
                             FullName = p.ApplicationUser.FullName,
                             BegTime = p.BegTime,
                             EndTime = p.EndTime,
-                            CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Sum(q => q.PhraseCount),
+                            CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
                             SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                             SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
                             SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
                         })
                         .ToList(); 
-
 //-----------------FOR BRANCH---------------------------------------------------------------
                 var companyIdsInIndustryExceptSelected = _requestFilters.CompanyIdsInIndustryExceptSelected(companyIds);  
                 var companyIdsInIndustry = _requestFilters.CompanyIdsInIndustry(companyIds);  
@@ -181,7 +180,7 @@ namespace UserOperations.Controllers
                                     / indexesInHeedbook.Count(),
 
                     LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
-                    LoadIndexDelta = - _dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, endTime),
+                    LoadIndexDelta = - _dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
                     LoadIndexIndustryAverage = indexesInIndustryExeptSelectedComp.Count() !=0 ? 
                                     100 * indexesInIndustryExeptSelectedComp
                                     .Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)
@@ -196,12 +195,12 @@ namespace UserOperations.Controllers
                     CrossIndexTotalAverage = 0,//TODO
 
                     AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime),
-                    AvgWorkingTimeEmployeesDelta = -_dbOperation.SessionAverageHours( sessionOld, prevBeg, endTime),
+                    AvgWorkingTimeEmployeesDelta = -_dbOperation.SessionAverageHours( sessionOld, prevBeg, begTime),
                     NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
                     NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld)),
 
                     DialogueDuration = _dbOperation.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                    DialogueDurationDelta = -_dbOperation.DialogueAverageDuration(dialoguesOld, prevBeg, endTime)
+                    DialogueDurationDelta = -_dbOperation.DialogueAverageDuration(dialoguesOld, prevBeg, begTime)
                 };
 
               
@@ -215,7 +214,6 @@ namespace UserOperations.Controllers
                 result.EmployeeCountDelta += result.EmployeeCount;
                 result.CrossIndexDelta += result.CrossIndex;
                 result.LoadIndexDelta += result.LoadIndex;
-               // result.EfficiencyIndexDelta += result.EfficiencyIndex;
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.DialoguesCountDelta += result.DialoguesCount;
                 result.DialogueDurationDelta += result.DialogueDuration;                             

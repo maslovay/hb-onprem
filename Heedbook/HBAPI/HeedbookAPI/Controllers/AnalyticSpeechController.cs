@@ -72,8 +72,8 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
+                                                        // [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
+                                                        // [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -86,44 +86,45 @@ namespace UserOperations.Controllers
 
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);  
-                 var request = _context.DialoguePhrases
-                    .Include(p => p.Phrase)
-                    .Include(p => p.Dialogue)
-                    .Include(p => p.Dialogue.ApplicationUser)
-                    .Where(p => p.Dialogue.EndTime >= begTime
-                        && p.Dialogue.EndTime <= endTime
-                        && p.Dialogue.StatusId == 3
-                        && p.Dialogue.InStatistic == true)
-                    .Where(p => (!companyIds.Any() || companyIds.Contains((Guid) p.Dialogue.ApplicationUser.CompanyId))
-                        && (!applicationUserIds.Any() || applicationUserIds.Contains(p.Dialogue.ApplicationUserId))
-                        && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.Dialogue.ApplicationUser.WorkerTypeId))
-                        && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
-                        && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid)p.Phrase.PhraseTypeId)));                
-                //these 2 ids can be hardcoded as 3 and 4
-                var phraseTypes = _context.PhraseTypes.ToList();
-                var typeIdAlert = phraseTypes.Where(p => p.PhraseTypeText == "Alert").Select(p => p.PhraseTypeId).First();
-                var typeIdCross = phraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId); 
+                var typeIdCross = _context.PhraseTypes
+                                    .Where(p => p.PhraseTypeText == "Cross")
+                                    .Select(p => p.PhraseTypeId).First();
+                var typeIdAlert = _context.PhraseTypes
+                                    .Where(p => p.PhraseTypeText == "Alert")
+                                    .Select(p => p.PhraseTypeId).First();
 
-                var phraseInfo = request.Select(p => new {
-                    DialogueId = p.DialogueId,
-                    ApplicationUserId = p.Dialogue.ApplicationUserId,
-                    FullName = p.Dialogue.ApplicationUser.FullName,
-                    PhraseTypeId = p.Phrase.PhraseTypeId
-                }).ToList();
-
-                var result = phraseInfo
+                    var dialogues = _context.Dialogues
+                    .Include(p => p.ApplicationUser)
+                    .Include(p => p.DialoguePhrase)
+                    .Where(p => p.BegTime >= begTime
+                            && p.EndTime <= endTime
+                            && p.StatusId == 3
+                            && p.InStatistic == true
+                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                    .Select(p => new DialogueInfo
+                    {
+                        DialogueId = p.DialogueId,
+                        ApplicationUserId = p.ApplicationUserId,
+                        BegTime = p.BegTime,
+                        EndTime = p.EndTime,
+                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                        FullName = p.ApplicationUser.FullName,
+                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                        AlertCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
+                    })
+                    .ToList();
+              
+                var result = dialogues
                     .GroupBy(p => p.ApplicationUserId)
                     .Select(p => new
                     {
                         FullName = p.First().FullName,
                         ApplicationUserId = p.Key,
-                        CrossFreq =  (p.Select(q => q.DialogueId).Distinct().Any()) ?
-                        100 * Convert.ToDouble(p.Where(q => q.PhraseTypeId == typeIdCross).Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) :
-                        0,
-                        AlertFreq = (p.Select(q => q.DialogueId).Distinct().Any()) ?
-                        100 * Convert.ToDouble(p.Where(q => q.PhraseTypeId == typeIdAlert).Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) :
-                        0
+                        CrossFreq = _dbOperation.CrossIndex(p),
+                        AlertFreq = _dbOperation.AlertIndex(p)
                     });
                 _log.Info("AnalyticSpeech/EmployeeRating finished");
                 return Ok(JsonConvert.SerializeObject(result));
