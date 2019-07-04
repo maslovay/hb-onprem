@@ -17,3 +17,4 @@ RUN apk update
 RUN apk add wine xvfb
 RUN apk add ffmpeg
 RUN chmod +x /app/OpenVokaWavMean-3-0-win64.exe
+ENV INFRASTRUCTURE Cloud
