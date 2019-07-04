@@ -37,6 +37,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage;
 using HBLib.Utils;
 using UserOperations.Utils;
+using Npgsql;
 
 namespace UserOperations.Controllers
 {
@@ -44,109 +45,37 @@ namespace UserOperations.Controllers
     [ApiController]
     public class HelpController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IndexesProvider _indexesProvider;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-        private readonly RedisProvider _redisProvider;
         private readonly int activeStatus;
 
 
         public HelpController(
-            UserManager<ApplicationUser> userManager,
+            IndexesProvider indexesProvider,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient,
-            RedisProvider redisProvider
+            SftpClient sftpClient
             )
         {
-            _userManager = userManager;
+            _indexesProvider = indexesProvider;
             _signInManager = signInManager;
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-            _redisProvider = redisProvider;
             activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
         }
 
-        [HttpGet("TestRedis")]
-        public async Task<IActionResult> TestRedis()
+        [HttpGet("GetIndex")]
+        public async Task<IActionResult> GetIndex( [FromQuery(Name = "companyId")] Guid companyId)
         {
-            var data = await _redisProvider.GetAsync();
-            return Ok(data);
-        }
-
-        [HttpGet("GetWords")]
-        public async Task<IActionResult> GetWords()
-        {         
-
-            // string connectionString = @"Server=tcp:hbrestoreserver.database.windows.net,1433;Initial Catalog=hbmssqldb;Persist Security Info=False;User ID=test_user;Password=password_123;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
-            // SqlConnection connection = new SqlConnection(connectionString);
-            // int i = 0;
-            // Guid id = default(Guid);
-            // try
-            // {
-            //     string sqlExpression = "SELECT * FROM ResultTable";
-            //     // Открываем подключение
-            //     //    using (SqlConnection connection = new SqlConnection(connectionString))
-            //     {
-
-            //         connection.Open();
-            //         SqlCommand command = new SqlCommand(sqlExpression, connection);
-            //         SqlDataReader reader = command.ExecuteReader();
-
-            //         if (reader.HasRows) // если есть данные
-            //         {
-            //             // выводим названия столбцов
-
-            //             while (reader.Read()) // построчно считываем данные
-            //             {
-
-
-            //                 id = (Guid)reader.GetValue(0);
-            //                 object word = reader.GetValue(1);
-            //                 object isClient = reader.GetValue(2);
-            //                 try
-            //                 {
-            //                         DialogueWord newWord = new DialogueWord();
-            //                         newWord.DialogueWordId = Guid.NewGuid();
-            //                         newWord.DialogueId = id;
-            //                         newWord.Words = "[" + word.ToString()+"]";
-            //                         newWord.IsClient = (bool)isClient;
-            //                         _context.Add(newWord);
-            //                     _context.SaveChanges();
-            //                 }
-            //                 catch
-            //                 {
-            //                     Console.WriteLine("{0} \t{1} \t{2}", "error  ---- ", i++, id);
-            //                 }
-            //                 Console.WriteLine("----------------------------------------------------------");
-            //                 Console.WriteLine("{0} \t{1} \t{2}", "saved ---- ", i++, id);
-            //             }
-            //         }
-
-            //         reader.Close();
-            //     }
-
-            // }
-            // catch (SqlException ex)
-            // {
-            //  //   Console.WriteLine(ex.Message);
-            //     Console.WriteLine("----------------------------------------------------------");
-            //     Console.WriteLine("{0} \t{1} \t{2}", "error  ---- ", i++, id);
-            // }
-            // finally
-            // {
-            //     // закрываем подключение
-            //     connection.Close();
-            //     Console.WriteLine("Подключение закрыто...");
-            // }
-
+                _indexesProvider.GetData(companyId);
             return Ok("I've done");
         }
 
@@ -274,7 +203,7 @@ namespace UserOperations.Controllers
             // _context.DialogueHints.Add(dialogueHint2);
             // _context.SaveChanges();
 
-      
+
 
             // var frames = _context.FileFrames.Where(p => p.Time >= dialogue.BegTime && p.Time <= dialogue.EndTime).ToList();
             // var framesIds = frames.Select(p => p.FileFrameId).ToList();
@@ -290,8 +219,8 @@ namespace UserOperations.Controllers
             //  _context.FileFrames.RemoveRange(frames);
             // var words = _context.DialogueWords.Where(p => p.DialogueWordId.ToString() == "176b5d3a-2804-4cf5-91fd-3a609651e0f6").ToList();
             // _context.RemoveRange(words);
-            
-            
+
+
             // var mood = _context.DialogueClientSatisfactions.Where(p => p.DialogueId == dialogueId).First();
             // mood.MeetingExpectationsTotal = 46;
 
@@ -300,7 +229,7 @@ namespace UserOperations.Controllers
 
 
             return Ok();
-            
+
         }
     }
 }

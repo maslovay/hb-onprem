@@ -59,7 +59,7 @@ namespace UserOperations
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<Utils.DBOperations>();
             services.AddScoped<RequestFilters>();
-            services.AddScoped<RedisProvider>();       
+            services.AddScoped<IndexesProvider>();       
             services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
             {
                 p.Password.RequireDigit = true;
@@ -132,13 +132,16 @@ namespace UserOperations
             services.AddTransient<SftpClient>();
 
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddTransient(provider =>
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddSingleton(provider =>
                        {
                            var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                            return new ElasticClient(settings);
                        });
 
+            services.Configure<SmtpSettings>(Configuration.GetSection(nameof(SmtpSettings)));
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
+            services.AddSingleton<SmtpClient>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

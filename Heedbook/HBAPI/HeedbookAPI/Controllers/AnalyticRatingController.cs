@@ -43,15 +43,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticRatingController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +59,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Progress")]
@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticRating/Progress started");
+                // _log.Info("AnalyticRating/Progress started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -81,11 +81,14 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
-                var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+              //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+                var typeIdCross = _context.PhraseTypes
+                    .Where(p => p.PhraseTypeText == "Cross")
+                    .Select(p => p.PhraseTypeId).First();
 
                 var sessions = _context.Sessions
                     .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= prevBeg
+                    .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 7
                             && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
@@ -101,7 +104,8 @@ namespace UserOperations.Controllers
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= prevBeg
+                    .Include(p => p.DialoguePhrase)
+                    .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3
                             && p.InStatistic == true
@@ -115,7 +119,8 @@ namespace UserOperations.Controllers
                         BegTime = p.BegTime,
                         EndTime = p.EndTime,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        FullName = p.ApplicationUser.FullName
+                        FullName = p.ApplicationUser.FullName,
+                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
                     })
                     .ToList();
 
@@ -130,20 +135,20 @@ namespace UserOperations.Controllers
                                 Date = q.Key,
                                 DialogueCount = q.Count() != 0 ? q.Select(r => r.DialogueId).Distinct().Count() : 0,
                                 TotalScore = q.Count() != 0 ? q.Average(r => r.SatisfactionScore) : null,
-                                Load = _dbOperation.LoadIndex(sessions, q, p.Key, q.Key, begTime, endTime),
-                                LoadHours = _dbOperation.SessionAverageHours(sessions, p.Key, q.Key, begTime, endTime),
-                                WorkingHours = _dbOperation.DialogueSumDuration(q, begTime, endTime),
-                                DialogueDuration = _dbOperation.DialogueAverageDuration(q, begTime, endTime),
-                                CrossInProcents = _dbOperation.CrossIndex(dialogues)
+                                Load = _dbOperation.LoadIndex(sessions, q, p.Key, q.Key),
+                                LoadHours = _dbOperation.SessionAverageHours(sessions, p.Key, q.Key),
+                                WorkingHours = _dbOperation.DialogueSumDuration(q),
+                                DialogueDuration = _dbOperation.DialogueAverageDuration(q),
+                                CrossInProcents = _dbOperation.CrossIndex(p)
                             }).ToList()
                     }).ToList();
 
-                _log.Info("AnalyticRating/Progress finished");
+                // _log.Info("AnalyticRating/Progress finished");
                 return Ok(JsonConvert.SerializeObject(results));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -160,7 +165,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticRating/RatingUsers started");
+                // _log.Info("AnalyticRating/RatingUsers started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -192,7 +197,7 @@ namespace UserOperations.Controllers
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialoguePhrase)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3
@@ -208,7 +213,7 @@ namespace UserOperations.Controllers
                         EndTime = p.EndTime,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                         FullName = p.ApplicationUser.FullName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Sum(q => q.PhraseCount)
+                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
                     })
                     .ToList();
 
@@ -231,12 +236,12 @@ namespace UserOperations.Controllers
                         //ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime)
                     }).ToList();
                 result = result.OrderBy(p => p.EfficiencyIndex).ToList();
-                _log.Info("AnalyticRating/RatingUsers finished");
+                // _log.Info("AnalyticRating/RatingUsers finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }  
@@ -252,7 +257,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticRating/RatingOffices started");
+                // _log.Info("AnalyticRating/RatingOffices started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -284,7 +289,7 @@ namespace UserOperations.Controllers
                     .Include(p => p.ApplicationUser)
                     .ThenInclude(p => p.Company)
                     .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialoguePhrase)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3
@@ -299,7 +304,7 @@ namespace UserOperations.Controllers
                         EndTime = p.EndTime,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                         FullName = p.ApplicationUser.Company.CompanyName,
-                        CrossCout = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Sum(q => q.PhraseCount)
+                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
                     })
                     .ToList();
 
@@ -319,12 +324,12 @@ namespace UserOperations.Controllers
                         DialogueAveragePause = _dbOperation.DialogueAveragePause(sessions, p, begTime, endTime)
                     }).ToList();
                 result = result.OrderBy(p => p.EfficiencyIndex).ToList();
-                _log.Info("AnalyticRating/RatingOffices finished");
+                // _log.Info("AnalyticRating/RatingOffices finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }            

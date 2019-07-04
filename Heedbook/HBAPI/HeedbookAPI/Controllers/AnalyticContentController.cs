@@ -43,7 +43,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
 
         public AnalyticContentController(
@@ -51,8 +51,8 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             //_config = config;
@@ -60,16 +60,17 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
+//---FOR ONE DIALOGUE---
         [HttpGet("ContentShows")]
         public IActionResult ContentShows([FromQuery(Name = "dialogueId")] Guid dialogueId,
                                                         [FromHeader] string Authorization)
         {
             try
             {
-                _log.Info("ContentShows/ContentShows started");
+                // _log.Info("ContentShows/ContentShows started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
 
@@ -78,7 +79,6 @@ namespace UserOperations.Controllers
                     .Where(p => p.DialogueId == dialogueId).FirstOrDefault();
                 if (dialogue == null) return BadRequest("No such dialogue");
 
-                //-------------------------------ALL CONTENT SESSIONS --------------------------------
                 var slideShowSessionsAll = _context.SlideShowSessions
                     .Include(p => p.CampaignContent)
                     .ThenInclude(p => p.Content)
@@ -102,7 +102,6 @@ namespace UserOperations.Controllers
                              )
                             .ToList();
 
-                //-------------------------------GROUPING BY CONTENT (NOT POLL)--------------------------------
                 var contentsShownGroup = slideShowSessionsAll.Where(p => !p.IsPoll)
                     .GroupBy(p => new { p.ContentType, ContentId = p.ContentId, p.Url }, (key, group) => new
                     {
@@ -113,7 +112,7 @@ namespace UserOperations.Controllers
                     }).ToList();
 
                 var amountShows = slideShowSessionsAll.Where(p => !p.IsPoll).Count();
-                var contentInfo = new ContentTotalInfo
+                var contentInfo = new //ContentTotalInfo
                 {
                     ContentsAmount = amountShows,
                     ContentsInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentOneInfo
@@ -134,7 +133,6 @@ namespace UserOperations.Controllers
                     )).ToList()
                 };
 
-                //------------------------------------ GROUPING BY CONTENT POOLS-----------------------------------------
                 var pollAmount = slideShowSessionsAll.Where(p => p.IsPoll && p.ContentId != null)
                     .GroupBy(p => new { p.ContentType, p.ContentId }, (key, group) => new
                     {
@@ -143,13 +141,12 @@ namespace UserOperations.Controllers
                         Result = group.ToList()
                     });
                 var answersAmount = slideShowSessionsAll.Where(p => p.IsPoll).Count();
-                //---all answers during dialogue--- 
                 var answers = _context.CampaignContentAnswers
                         .Where(p => slideShowSessionsAll
                         .Select(x => x.CampaignContentId)
                         .Distinct()
                         .Contains(p.CampaignContentId ) && p.Time >= dialogue.BegTime && p.Time <= dialogue.EndTime).ToList();
-                //---answers grouping by content---                  
+                  
                 var answersByContent = pollAmount.Where(x => x.Key2 != null).Select(x => new
                 {
                     Content = x.Key2.ToString(),
@@ -168,12 +165,12 @@ namespace UserOperations.Controllers
                 jsonToReturn["ContentByTime"] = slideShowSessionsAll.OrderBy(p => p.BegTime);
                 jsonToReturn["AnswersInfo"] = answersByContent;
                 jsonToReturn["AnswersAmount"] = answersAmount;
-                _log.Info("ContentShows/ContentShows finished");
+                // _log.Info("ContentShows/ContentShows finished");
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -190,7 +187,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("ContentShows/ContentShows started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -205,8 +201,8 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueFrame)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
-                            //&& p.StatusId == 3
-                           // && p.InStatistic == true
+                            && p.StatusId == 3
+                            && p.InStatistic == true
                             && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
                     .Select(p => new DialogueInfoWithFrames
@@ -222,7 +218,6 @@ namespace UserOperations.Controllers
                     })
                     .ToList();
 
-                //-------------------------------ALL CONTENT SESSIONS --------------------------------
                 var slideShowSessionsAll = _context.SlideShowSessions.Where(p => !p.IsPoll)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.CampaignContent)
@@ -265,7 +260,6 @@ namespace UserOperations.Controllers
                // var splashShows = slideShowSessionsAll.Where(x => x.CampaignContent!= null &&  x.CampaignContent.Campaign!= null && x.CampaignContent.Campaign.IsSplash).Count();
                 var clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();
                
-                //-------------------------------GROUPING BY CONTENT (NOT POLL)--------------------------------
                 var contentsShownGroup = slideShowSessionsAll
                     .GroupBy(p => new { ContentId = p.ContentId, p.Url }, (key, group) => new
                     {
@@ -273,11 +267,10 @@ namespace UserOperations.Controllers
                         Key2 = key.Url,
                         Result = group.ToList()
                     }).ToList();
-                var contentInfo = new ContentTotalInfoEfficiency
+                var contentInfo = new //ContentTotalInfoEfficiency
                 {
                     Views = views,
                     Clients = clients,
-                    //---url---
                     ContentFullInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentFullOneInfo
                     {
                         Content = x.Key2.ToString(),
@@ -301,12 +294,12 @@ namespace UserOperations.Controllers
                 };              
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
 
-                _log.Info("ContentShows/ContentShows finished");
+                // _log.Info("ContentShows/ContentShows finished");
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
 
@@ -325,7 +318,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("ContentShows/Poll started");
+                // _log.Info("AnalyticContent/Poll started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -340,8 +333,8 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueFrame)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
-                            //&& p.StatusId == 3
-                           // && p.InStatistic == true
+                            && p.StatusId == 3
+                            && p.InStatistic == true
                             && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
                     .Select(p => new DialogueInfoWithFrames
@@ -357,7 +350,6 @@ namespace UserOperations.Controllers
                     })
                     .ToList();
 
-                //-------------------------------ALL CONTENT SESSIONS POLL--------------------------------
                 var slideShowSessionsAll = _context.SlideShowSessions.Where(p => p.IsPoll)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.CampaignContent)
@@ -403,7 +395,6 @@ namespace UserOperations.Controllers
                 var answers = answersList.Count();
                 double conversion = views != 0 ? (double)answers / (double)views : 0;
                
-                //-------------------------------GROUPING BY CONTENT (NOT POLL)--------------------------------
                 var contentsShownGroup = slideShowSessionsAll
                     .GroupBy(p => p.ContentId).ToList();
                     
@@ -413,29 +404,29 @@ namespace UserOperations.Controllers
                     Clients = clients,
                     Answers = answers,
                     Conversion = conversion,
-                    //---url---
-                    ContentFullInfo = contentsShownGroup.Select(x => new
+                    ContentFullInfo = contentsShownGroup.Select(x => new AnswerInfo
                     {
                         Content = x.Key.ToString(),
-                        AmountViews = x.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
+                        AmountViews = x.Count(),// x.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
                         ContentName = x.FirstOrDefault().ContentName,
                         Answers = answersList
                             .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId))
-                            .Select(p => new { p.Answer, p.Time }),
-                        answersAmount = answersList
+                            .Select(p => new AnswerInfo.AnswerOne { Answer =  p.Answer, Time = p.Time }).ToList(),
+                        AnswersAmount = answersList
                             .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId))
-                            .Select(p => new { p.Answer, p.Time }).Count()
+                            .Select(p => new { p.Answer, p.Time }).Count(),
+                        Conversion = (double)answersList
+                            .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId)).Count() / (double)x.Count()
                     }
-                    ).ToList()
-                };              
+                    ).ToList()};
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
 
-                _log.Info("ContentShows/Poll finished");
+                // _log.Info("ContentShows/Poll finished");
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
 
@@ -443,22 +434,22 @@ namespace UserOperations.Controllers
     }
 
 
-    public class ContentTotalInfo
-    {
-        // the total number of demonstrated content, images, videos, URLs 
-        // within the campaigns and the employees themselves during the dialogue
-        public int ContentsAmount { get; set; }
-        public List<ContentOneInfo> ContentsInfo { get; set; }
-    }
+    // public class ContentTotalInfo
+    // {
+    //     // the total number of demonstrated content, images, videos, URLs 
+    //     // within the campaigns and the employees themselves during the dialogue
+    //     public int ContentsAmount { get; set; }
+    //     public List<ContentOneInfo> ContentsInfo { get; set; }
+    // }
 
-    public class ContentTotalInfoEfficiency
-    {
-        // the total number of demonstrated content, images, videos, URLs 
-        // within the campaigns and the employees themselves during the dialogue
-        public int Views { get; set; }
-        public int Clients { get; set; }
-         public List<ContentFullOneInfo> ContentFullInfo { get; set; }
-    }
+    // public class ContentTotalInfoEfficiency
+    // {
+    //     // the total number of demonstrated content, images, videos, URLs 
+    //     // within the campaigns and the employees themselves during the dialogue
+    //     public int Views { get; set; }
+    //     public int Clients { get; set; }
+    //      public List<ContentFullOneInfo> ContentFullInfo { get; set; }
+    // }
     public class ContentOneInfo
     {
         public string Content { get; set; }
@@ -477,6 +468,21 @@ namespace UserOperations.Controllers
         public int Male { get; set; }
         public int Female { get; set; }
         public double? Age { get; set; }
+    }
+    public class AnswerInfo
+    {
+        public string Content { get; set; }
+        public int AnswersAmount { get; set; }
+        public string ContentName { get; set; }
+        public int AmountViews { get; set; }
+        public double Conversion { get; set; }
+        public List<AnswerOne> Answers {get; set;}
+        public class AnswerOne
+        {
+            public string Answer { get; set; }
+            public DateTime Time { get; set; }
+        }
+
     }
 }
 

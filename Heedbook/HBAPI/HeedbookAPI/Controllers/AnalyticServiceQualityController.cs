@@ -43,15 +43,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticServiceQualityController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +59,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Components")]
@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/Components started");
+                // _log.Info("AnalyticServiceQuality/Components started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -164,12 +164,12 @@ namespace UserOperations.Controllers
                         RiskColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Risk").Colour
                     }
                 };
-                _log.Info("AnalyticServiceQuality/Components finished");
+                // _log.Info("AnalyticServiceQuality/Components finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e )
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -185,7 +185,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/Dashboard started");
+                // _log.Info("AnalyticServiceQuality/Dashboard started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -234,12 +234,12 @@ namespace UserOperations.Controllers
                     BestProgressiveEmployeeDelta = _dbOperation.BestProgressiveEmployeeDelta(dialogues, begTime)
                 };
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
-                _log.Info("AnalyticServiceQuality/Dashboard finished");
+                // _log.Info("AnalyticServiceQuality/Dashboard finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -255,7 +255,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/Rating started");
+                // _log.Info("AnalyticServiceQuality/Rating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -273,7 +273,7 @@ namespace UserOperations.Controllers
                 var dialogues = _context.Dialogues
                         .Include(p => p.ApplicationUser)
                         .Include(p => p.DialogueClientSatisfaction)
-                        .Include(p => p.DialoguePhraseCount)
+                        .Include(p => p.DialoguePhrase)
                         .Include(p => p.DialogueAudio)
                         .Include(p => p.DialogueVisual)
                         .Include(p => p.DialogueSpeech)
@@ -291,12 +291,12 @@ namespace UserOperations.Controllers
                             FullName = p.ApplicationUser.FullName,
                             BegTime = p.BegTime,
                             EndTime = p.EndTime,
-                            CrossCount = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                            AlertCount = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
-                            NecessaryCount = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == typeIdNecessary).Count(),
+                            CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                            AlertCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
+                            NecessaryCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdNecessary).Count(),
                             SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                             PositiveTone = p.DialogueAudio.FirstOrDefault().PositiveTone,
-                            AttentionShare = p.DialogueVisual.FirstOrDefault().AttentionShare,
+                            AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
                             PositiveEmotion = p.DialogueVisual.FirstOrDefault().SurpriseShare + p.DialogueVisual.FirstOrDefault().HappinessShare,
                             TextShare = p.DialogueSpeech.FirstOrDefault().PositiveShare,
                         })
@@ -313,19 +313,20 @@ namespace UserOperations.Controllers
                         PositiveEmotionShare = p.Any() ? p.Where(q => q.PositiveEmotion!= null && q.PositiveEmotion != 0).Average(q => q.PositiveEmotion) : null,
                         AttentionShare = p.Any() ? p.Where(q => q.AttentionShare != null && q.AttentionShare != 0).Average(q => q.AttentionShare) : null,
                         PositiveToneShare =p.Any() ? p.Where(q => q.PositiveTone != null && q.PositiveTone != 0).Average(q => q.PositiveTone) : null,
-                        TextAlertShare = p.Any() ?(double?) p.Average(q => Math.Min(q.AlertCount, 1)): null,
-                        TextCrossShare = p.Any() ?(double?) p.Average(q => Math.Min(q.CrossCount, 1)): null,
-                        TextNecessaryShare =  p.Any() ?(double?) p.Average(q => Math.Min(q.NecessaryCount, 1)): null,
+                   //TODO!!!
+                        TextAlertShare =  _dbOperation.AlertIndex(p),
+                        TextCrossShare =  _dbOperation.CrossIndex(p),
+                        TextNecessaryShare =   _dbOperation.NecessaryIndex(p),
                         TextPositiveShare = p.Any()? p.Where(q => q.TextShare != null && q.TextShare!= 0).Average(q => q.TextShare) : null
                     }).ToList();
                
                 result = result.OrderBy(p => p.SatisfactionIndex).ToList();
-                _log.Info("AnalyticServiceQuality/Rating finished");
+                // _log.Info("AnalyticServiceQuality/Rating finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -341,7 +342,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticServiceQuality/SatisfactionStats started");
+                // _log.Info("AnalyticServiceQuality/SatisfactionStats started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -381,12 +382,12 @@ namespace UserOperations.Controllers
                 };
                 
                 result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
-                _log.Info("AnalyticServiceQuality/SatisfactionStats finished");
+                // _log.Info("AnalyticServiceQuality/SatisfactionStats finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

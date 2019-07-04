@@ -124,6 +124,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     PhraseCount = phraseCounter[key],
                                     IsClient = true
                                 });
+                                
                             recognized.ForEach(r =>
                             {
                                 if (words.All(w => w.Word != r.Word))
@@ -134,7 +135,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                         EndTime = audio.BegTime.AddSeconds(Double.Parse(r.EndTime, CultureInfo.InvariantCulture))
                                     });
                             });
-
+                            
                             newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r=> r.Word).ToList());
                             
                             words = words.GroupBy(item => new
@@ -144,6 +145,9 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             })
                             .Select(item => item.FirstOrDefault())
                             .ToList();
+                            
+                            words.Sort( (w0, w1) => (int)((w0.BegTime - w1.BegTime).TotalMilliseconds));
+                            
                             dialogueWords.Add(new DialogueWord
                             {
                                 DialogueId = audio.DialogueId,

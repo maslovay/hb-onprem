@@ -43,15 +43,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticReportController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +59,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("ActiveEmployee")]
@@ -71,7 +71,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticReport/ActiveEmployee started");
+                // _log.Info("AnalyticReport/ActiveEmployee started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -89,12 +89,12 @@ namespace UserOperations.Controllers
                         FullName = p.ApplicationUser.FullName
                     })
                     .ToList().Distinct().ToList();
-                _log.Info("AnalyticReport/ActiveEmployee finished");
+                // _log.Info("AnalyticReport/ActiveEmployee finished");
                 return Ok(JsonConvert.SerializeObject(sessions));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -110,7 +110,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticReport/UserPartial started");
+                // _log.Info("AnalyticReport/UserPartial started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -138,13 +138,13 @@ namespace UserOperations.Controllers
                     })
                     .ToList();
 
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
+          //      var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.ApplicationUser.WorkerType)
                     .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialoguePhrase)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3
@@ -163,6 +163,21 @@ namespace UserOperations.Controllers
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                     })
                     .ToList();
+                    //---USER WITHOUT SESSIONS---
+                var userIds = sessions.Select(x => x.ApplicationUserId).Distinct().ToList();
+                var employeeRole = _context.Roles.FirstOrDefault(x =>x.Name == "Employee").Id;
+                var usersToAdd = _context.ApplicationUsers
+                    .Include(x =>x.UserRoles)
+                    .Where(p => 
+                        p.CreationDate <= endTime
+                        && p.StatusId == 3
+                        &&(!companyIds.Any() || companyIds.Contains((Guid)p.CompanyId))
+                        && (!applicationUserIds.Any() || applicationUserIds.Contains(p.Id))
+                        && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId))
+                        && !userIds.Contains(p.Id)
+                        && p.Id != Guid.Parse(userClaims["applicationUserId"])
+                        && p.UserRoles.Any(x => x.RoleId == employeeRole)
+                    ).ToList();
 
                 var result = sessions
                     .GroupBy(p => p.ApplicationUserId)
@@ -170,24 +185,33 @@ namespace UserOperations.Controllers
                     {
                         FullName = p.First().FullName,
                         ApplicationUserId = p.Key,
-                        // WorkerType = p.First().WorkerType,
                         LoadIndexAverage = _dbOperation.LoadIndex(p, dialogues, begTime, endTime),
                         PeriodInfo = p.GroupBy(q => q.BegTime.Date).Select(q => new ReportPartDayEmployeeInfo
                         {
                             Date = q.Key,
                             WorkingHours = _dbOperation.MaxDouble(_dbOperation.SessionAverageHours(q), _dbOperation.DialogueSumDuration(q, dialogues, p.Key)),
                             DialogueHours = _dbOperation.DialogueSumDuration(q, dialogues, p.Key),
-                            LoadIndex = _dbOperation.LoadIndex(q, dialogues, p.Key),
+                            LoadIndex = 100 * _dbOperation.LoadIndex(_dbOperation.SessionAverageHours(q), _dbOperation.DialogueSumDuration(q, dialogues, p.Key)),
                             DialogueCount = _dbOperation.DialoguesCount(dialogues, p.Key, q.Key)
                         }).ToList()
                     }).ToList();
-                _log.Info("AnalyticReport/UserPartial finished");
+
+                var emptyUsers = usersToAdd.Select(p => new 
+                    {
+                        FullName = p.FullName,
+                        ApplicationUserId = p.Id,
+                        LoadIndexAverage = (double?)0,
+                        PeriodInfo =  new List<ReportPartDayEmployeeInfo>()
+                        }).ToList();                   
+                   
+                result.AddRange(emptyUsers);
+                // _log.Info("AnalyticReport/UserPartial finished");
                 return Ok(JsonConvert.SerializeObject(result));
 
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -203,7 +227,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticReport/UserFull started");
+                // _log.Info("AnalyticReport/UserFull started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -229,13 +253,13 @@ namespace UserOperations.Controllers
                         // WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
                     })
                     .ToList();
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
+        //        var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.ApplicationUser.WorkerType)
                     .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhraseCount)
+                    .Include(p => p.DialoguePhrase)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 3
@@ -281,12 +305,12 @@ namespace UserOperations.Controllers
                         }
                     }
                 }
-                _log.Info("AnalyticReport/UserFull finished");
+                // _log.Info("AnalyticReport/UserFull finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

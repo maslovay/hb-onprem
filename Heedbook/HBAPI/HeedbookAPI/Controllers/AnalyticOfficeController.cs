@@ -43,15 +43,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
 
         public AnalyticOfficeController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +59,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+            // _log = log;
         }
 
         [HttpGet("Efficiency")]
@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticOffice/Efficiency started");
+                // _log.Info("AnalyticOffice/Efficiency started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -212,7 +212,7 @@ namespace UserOperations.Controllers
                     }).ToList();
 
                 var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
-                            _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, sessionCur.Min(p => p.BegTime), sessionCur.Max(p => p.EndTime)): null;
+                            _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur): null;
                      
                 var sessTimeMinutes = _dbOperation.SessionTotalHours(sessionCur, begTime, endTime)*60;
 
@@ -223,12 +223,20 @@ namespace UserOperations.Controllers
                     More_60 = pauseInMin?.Where(p => p >= 60).Count()
                 };
 
-                    var pausesAvgValue = new{
+                var pausesShareInSession = new{
                     Less_10 = sessTimeMinutes != 0? 100 *  pauseInMin?.Where(p => p <= 10).Sum() / sessTimeMinutes : 0,
                     Between_11_20 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 10 && p < 20).Sum() / sessTimeMinutes : 0,
                     Between_21_60 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 20 && p < 60).Sum() / sessTimeMinutes : 0,
                     More_60 = sessTimeMinutes != 0? 100 * pauseInMin.Where(p => p >= 60).Sum() / sessTimeMinutes : 0,
-                    Sessions = sessTimeMinutes != 0? 100 * (sessTimeMinutes - pauseInMin?.Sum()) / sessTimeMinutes : 0
+                    Load = sessTimeMinutes != 0? 100 * (sessTimeMinutes - pauseInMin?.Sum()) / sessTimeMinutes : 0
+                };
+
+                 var pausesInMinutes = new{
+                    Less_10 = pauseInMin?.Where(p => p <= 10)?.Sum(),
+                    Between_11_20 = pauseInMin?.Where(p => p > 10 && p < 20)?.Sum(),
+                    Between_21_60 = pauseInMin?.Where(p => p > 20 && p < 60).Sum() ,
+                    More_60 = pauseInMin.Where(p => p >= 60).Sum(),
+                    Load = sessTimeMinutes - pauseInMin?.Sum()
                 };
 
               
@@ -238,14 +246,15 @@ namespace UserOperations.Controllers
                 jsonToReturn["DiagramEmployeeWorked"] = diagramEmployeeWorked;
                 jsonToReturn["ClientTime"] = clientTime;
                 jsonToReturn["ClientDay"] = clientDay;
-                jsonToReturn["Pauses"] = pausesAmount;
-                jsonToReturn["PausesShare"] = pausesAvgValue;
-                _log.Info("AnalyticOffice/Efficiency finished");
+                jsonToReturn["PausesAmount"] = pausesAmount;
+                jsonToReturn["PausesShare"] = pausesShareInSession;
+                jsonToReturn["PausesInMinutes"] = pausesInMinutes;
+                // _log.Info("AnalyticOffice/Efficiency finished");
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }     

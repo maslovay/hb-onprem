@@ -44,7 +44,7 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-        private readonly ElasticClient _log;
+        // private readonly ElasticClient _log;
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
       
@@ -53,15 +53,15 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient,
-            ElasticClient log  
+            SftpClient sftpClient
+            // ElasticClient log  
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-            _log = log;
+            // _log = log;
             _containerName = "media";         
         }
 
@@ -74,7 +74,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("MediaFile/File GET started");    
+                // _log.Info("MediaFile/File GET started");    
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                         return BadRequest("Token wrong");
                 var companyId = userClaims["companyId"];
@@ -84,7 +84,7 @@ namespace UserOperations.Controllers
                 if (fileName != null)
                 {
                     var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fileName, (DateTime)expirationDate);
-                    _log.Info("MediaFile/File finished"); 
+                    // _log.Info("MediaFile/File finished"); 
                     return Ok(JsonConvert.SerializeObject(result));
                 }
                 else
@@ -95,13 +95,13 @@ namespace UserOperations.Controllers
                     {
                         result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
                     }
-                    _log.Info("MediaFile/File GET finished"); 
+                    // _log.Info("MediaFile/File GET finished"); 
                     return Ok(JsonConvert.SerializeObject(result));
                 }
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -113,7 +113,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("MediaFile/File POST started"); 
+                // _log.Info("MediaFile/File POST started"); 
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                         return BadRequest("Token wrong");
                 var companyId = userClaims["companyId"];
@@ -138,12 +138,12 @@ namespace UserOperations.Controllers
                 {
                     result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, default(DateTime)));
                 }
-                _log.Info("MediaFile/File POST finished"); 
+                // _log.Info("MediaFile/File POST finished"); 
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -154,7 +154,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("MediaFile/File PUT started"); 
+                // _log.Info("MediaFile/File PUT started"); 
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                         return BadRequest("Token wrong");
                 var companyId = userClaims["companyId"];
@@ -172,12 +172,12 @@ namespace UserOperations.Controllers
                 //     path =  await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fn}"), 
                 //     ext = Path.GetExtension(fileName.Trim('.'))};
                 var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fn, default(DateTime));
-                _log.Info("MediaFile/File PUT finished"); 
+                // _log.Info("MediaFile/File PUT finished"); 
                 return Ok(result);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -190,18 +190,18 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("MediaFile/File DELETE started"); 
+                // _log.Info("MediaFile/File DELETE started"); 
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                         return BadRequest("Token wrong");
                 var companyId = userClaims["companyId"];
                 var container = containerName?? _containerName;
                 await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{container}/{companyId}/{fileName}"));
-                _log.Info("MediaFile/File DELETE finished"); 
+                // _log.Info("MediaFile/File DELETE finished"); 
                 return Ok("OK");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+                // _log.Fatal($"Exception occurred {e}");
                  return BadRequest(e.Message);
             }
         }
