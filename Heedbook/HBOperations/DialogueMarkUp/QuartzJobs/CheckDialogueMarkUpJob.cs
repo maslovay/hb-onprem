@@ -309,10 +309,12 @@ namespace DialogueMarkUp.QuartzJobs
             var session = _context.Sessions.Where(p => p.ApplicationUserId == applicationUserId
                 && p.BegTime.Date == dialogue.BegTime.Date)
                 .ToList();
-            var ses = session.FirstOrDefault(p => (p.BegTime <= dialogue.BegTime
+            var ses = session.FirstOrDefault(p => ((p.BegTime <= dialogue.BegTime
                     && p.EndTime > dialogue.BegTime) 
                     || (p.BegTime < dialogue.EndTime
-                    && p.EndTime >= dialogue.EndTime));
+                    && p.EndTime >= dialogue.EndTime))
+                    && !(p.BegTime > dialogue.BegTime
+                    && p.EndTime < dialogue.EndTime));
             if(dialogue is null)
             {
                 _log.Error($"CheckSessionForDialogue: dialogue is null, applicationUserId: {applicationUserId}");
