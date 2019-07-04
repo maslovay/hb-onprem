@@ -358,14 +358,21 @@ namespace UserOperations.Controllers
                 var companyIdUser = Guid.Parse(userClaims["companyId"]);
                 var languageId = userClaims["languageCode"];
 
-                var phrases = _context.PhraseCompanys
+                var phrasesIncluded = _context.PhraseCompanys
                     .Include(x => x.Phrase)
                     .Where(x =>
                         x.CompanyId == companyIdUser &&
                         x.Phrase.IsTemplate == true &&
                         x.Phrase.PhraseText != null &&
                         x.Phrase.LanguageId.ToString() == languageId)
-                    .Select(x => x.Phrase).ToList();
+                    .Select(x => x.Phrase.PhraseId).ToList();
+
+                 var phrases = _context.Phrases
+                    .Where(x =>
+                        x.IsTemplate == true &&
+                        x.PhraseText != null &&
+                        ! phrasesIncluded.Contains(x.PhraseId) &&
+                        x.LanguageId.ToString() == languageId).ToList();
 
                 // _log.Info("User/PhraseLib GET finished");
                 return Ok(phrases);
