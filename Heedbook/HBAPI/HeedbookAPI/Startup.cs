@@ -58,6 +58,7 @@ namespace UserOperations
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<Utils.DBOperations>();
+            services.AddScoped<Utils.DBOperationsWeeklyReport>();
             services.AddScoped<RequestFilters>();
             services.AddScoped<IndexesProvider>();       
             services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
