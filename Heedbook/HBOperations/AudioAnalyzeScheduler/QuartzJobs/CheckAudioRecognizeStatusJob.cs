@@ -75,6 +75,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
+                            _log.Info($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
                             sttResults.Response.Results
                                       .ForEach(res => res.Alternatives
                                                          .ForEach(alt => alt.Words

@@ -86,6 +86,7 @@ namespace AudioAnalyzeService
                                 await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId.ToString(), true, true);
                             _log.Info("transaction id: " + transactionId);
                             fileAudio.TransactionId = transactionId.Name.ToString();
+                            fileAudio.StatusId = 6;
                         }
                         _context.FileAudioDialogues.Add(fileAudio);
                         _context.SaveChanges();
