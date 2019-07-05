@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -38,6 +40,21 @@ namespace UserService.Controllers
             
         }
 
+
+        [HttpGet("[action]")]
+        public async Task<ActionResult<IEnumerable<Dialogue>>> GetLast20ProcessedDialogues()
+        {
+            var dialogs = _repository.GetWithInclude<Dialogue>(
+                    d => d.EndTime >= DateTime.Now.AddDays(-1) && d.EndTime < DateTime.Now && d.StatusId == 3,
+                    d => d.DialogueSpeech,
+                    d => d.DialogueVisual,
+                    d => d.DialogueAudio,
+                    d => d.DialogueWord)
+                .OrderByDescending(d => d.EndTime)
+                .Take(30);
+
+            return Ok(dialogs.ToList());
+        }
 
         [HttpPost("[action]")]
         public async Task Test1(DialogueCreationRun message)

@@ -99,8 +99,8 @@ namespace AudioAnalyzeService.Tests
             
             _ffmpegWrapper = ServiceProvider.GetService<FFMpegWrapper>();
             _toneAnalyzeService = new ToneAnalyze( _sftpClient, this.Config, ScopeFactory, _elasticClientFactory, _ffmpegWrapper );
-            _googleConnector = ServiceProvider.GetService<GoogleConnector>();
             _asrClient = ServiceProvider.GetService<AsrHttpClient.AsrHttpClient>();
+            _googleConnector = ServiceProvider.GetService<GoogleConnector>();
             _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _asrClient, _elasticClientFactory, _googleConnector);
         }
         
