@@ -22,7 +22,6 @@ namespace AudioAnalyzeService.Tests
         private GoogleConnector _googleConnector;
         private ElasticClientFactory _elasticClientFactory;
         private FFMpegWrapper _ffmpegWrapper;
-        private GoogleConnector _googleConnector;
         private AsrHttpClient.AsrHttpClient _asrClient;
         private string testDialogVideoCorrectFileName;
         private string testDialogAudioCorrectFileName;

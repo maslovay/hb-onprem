@@ -70,6 +70,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         
 
                         var recognized = new List<WordRecognized>();
+
+                        _log.Info($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
