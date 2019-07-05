@@ -280,7 +280,7 @@ namespace UserOperations.Models.AnalyticModels
         public double? TotalAvg;
        // public double? TotalAvgOld;
         public double? Dynamic;
-        public Dictionary<DateTime, double?> AvgPerDay;
+        public Dictionary<DateTime, double> AvgPerDay;
         public int? OfficeRating;
        // public int? OfficeRatingOld;
         public int? OfficeRatingChanges;
