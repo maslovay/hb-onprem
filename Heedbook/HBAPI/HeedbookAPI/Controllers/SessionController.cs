@@ -42,19 +42,19 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
-        // private readonly ElasticClient _log;
+        private readonly ElasticClient _log;
 
         public SessionController(
             RecordsContext context,
             IConfiguration config,
-            DBOperations dbOperation
-            // ElasticClient log
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _context = context;
             _config = config;
             _dbOperation = dbOperation;
-            // _log = log;
+            _log = log;
         }
 
         [HttpPost("SessionStatus")]
@@ -62,7 +62,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("Session/SessionStatus started"); 
+                _log.Info("Session/SessionStatus started"); 
                 var response = new Response();
 
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
@@ -100,7 +100,7 @@ namespace UserOperations.Controllers
                         case 6:
                             var session = new Session{
                                 BegTime = DateTime.UtcNow,
-                                EndTime = DateTime.UtcNow,
+                                EndTime = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1),
                                 ApplicationUserId = data.ApplicationUserId,
                                 StatusId = actionId,
                                 IsDesktop = (bool)data.IsDesktop
@@ -108,6 +108,7 @@ namespace UserOperations.Controllers
                             _context.Sessions.Add(session);
                             _context.SaveChanges();
                             response.Message = "Session successfully opened";
+                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                             return Ok(response);
                         case 7:
                             response.Message = "Can't close not opened session";
@@ -139,6 +140,7 @@ namespace UserOperations.Controllers
                             _context.SaveChanges();
 
                             response.Message = "Session successfully opened";
+                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                             return Ok(response);
                         
                         case 7:
@@ -152,6 +154,7 @@ namespace UserOperations.Controllers
 
                             _context.SaveChanges();
                             response.Message = "Session successfully closed";
+                            _log.Info($"Session successfully closed {data.ApplicationUserId}"); 
                             return Ok(response);
                         default:
                             response.Message = "Wrong action";
@@ -163,7 +166,7 @@ namespace UserOperations.Controllers
             {
                 var response = new Response();
                 response.Message = $"Exception occured {e}";
-                // _log.Fatal($"Exception occurred {e}");
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(response);
             }
         }
