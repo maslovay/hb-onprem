@@ -62,17 +62,21 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Session/SessionStatus started"); 
+                _log.SetFormat("{ApplicationUserId}");
+                _log.SetArgs(data.ApplicationUserId);
+                _log.Info($"Session/SessionStatus {data.ApplicationUserId} started"); 
                 var response = new Response();
 
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
                 {
                     response.Message = "ApplicationUser is empty";
+                    _log.Info($"Session/SessionStatus ApplicationUser is empty");
                     return BadRequest(response);
                 }
                 if (data.Action != "open" && data.Action != "close") 
                 {
                     response.Message = "Wrong action";
+                    _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                     return BadRequest(response);
                 }
                 var actionId = data.Action == "open" ? 6 : 7;
@@ -112,9 +116,11 @@ namespace UserOperations.Controllers
                             return Ok(response);
                         case 7:
                             response.Message = "Can't close not opened session";
+                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                             return Ok(response);
                         default:
                             response.Message = "Wrong action";
+                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                             return BadRequest(response);
                     }
                 }
@@ -126,6 +132,7 @@ namespace UserOperations.Controllers
                             if (lastSession.StatusId == 6) 
                             {
                                 response.Message = "Can't open not closed session";
+                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't open not closed session");
                                 return Ok(response);
                             }
                             var session = new Session{
@@ -147,6 +154,7 @@ namespace UserOperations.Controllers
                             if (lastSession.StatusId == 7) 
                             {
                                 response.Message = "Can't close not opened session";
+                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                                 return Ok(response);
                             }
                             lastSession.StatusId = 7;
@@ -158,6 +166,7 @@ namespace UserOperations.Controllers
                             return Ok(response);
                         default:
                             response.Message = "Wrong action";
+                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                             return BadRequest(response);
                     }
                 }
