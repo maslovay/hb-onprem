@@ -69,11 +69,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     // System.Console.WriteLine($"Audios count - {audios.Count()}");
                     foreach (var audio in audios)
                     {
-                        
-
                         _log.Info($"Processing {audio.DialogueId}");
-                        
-
+                     
                         var recognized = new List<WordRecognized>();
 
                         _log.Info($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
@@ -85,14 +82,32 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                       .ForEach(res => res.Alternatives
                                                          .ForEach(alt => alt.Words
                                                                             .ForEach(word =>
-                                                                             {
-                                                                                 word.EndTime =
-                                                                                     word.EndTime.Replace('s', ' ')
-                                                                                         .Replace('.', ',');
-                                                                                 word.StartTime =
-                                                                                     word.StartTime.Replace('s', ' ')
-                                                                                         .Replace('.', ',');
-                                                                                 recognized.Add(word);
+                                                                            {
+                                                                                if (word == null)
+                                                                                {
+                                                                                    _log.Error("word = NULL!");
+                                                                                    return;
+                                                                                }
+
+                                                                                if (word.EndTime == null)
+                                                                                {
+                                                                                    _log.Error("No word.EndTime!");
+                                                                                    return;
+                                                                                }
+
+                                                                                if (word.StartTime == null)
+                                                                                {
+                                                                                    _log.Error("No word.StartTime!");
+                                                                                    return;
+                                                                                }
+
+                                                                                word.EndTime =
+                                                                                    word.EndTime.Replace('s', ' ')
+                                                                                        .Replace('.', ',');
+                                                                                word.StartTime =
+                                                                                    word.StartTime.Replace('s', ' ')
+                                                                                        .Replace('.', ',');
+                                                                                recognized.Add(word);
                                                                              })));
                             _log.Info($"Has items: {sttResults.Response.Results.Any()}");
                         }
