@@ -62,6 +62,8 @@ namespace UserOperations.Controllers
         {
             try
             {
+                _log.SetFormat("{ApplicationUserId}");
+                _log.SetArgs(data.ApplicationUserId);
                 _log.Info($"Session/SessionStatus {data.ApplicationUserId} started"); 
                 var response = new Response();
 
