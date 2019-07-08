@@ -86,9 +86,9 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             }
                             else
                             {
-                                _log.Info($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
                                 if (sttResults.Response.Results.Any())
                                 {
+                                    _log.Info($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
                                     sttResults.Response.Results
                                         .ForEach(res => res.Alternatives
                                                             .ForEach(alt => alt.Words
@@ -120,6 +120,10 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                                                                             .Replace('.', ',');
                                                                                     recognized.Add(word);
                                                                                 })));
+                                }
+                                else
+                                {
+                                    _log.Info("Stt result is null");
                                 }
                                 _log.Info($"Has items: {sttResults.Response.Results.Any()}");
                             }
