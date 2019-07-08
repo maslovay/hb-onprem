@@ -232,7 +232,8 @@ namespace HBLib.Utils
                 config = new
                 {
                     encoding = "LINEAR16",
-                    sampleRateHertz = 16000,
+                    // sampleRateHertz = 16000,
+                    sampleRateHertz = 8000,
                     languageCode = GetLanguageName(languageId),
                     enableWordTimeOffsets
                     //enableSpeakerDiarization,
