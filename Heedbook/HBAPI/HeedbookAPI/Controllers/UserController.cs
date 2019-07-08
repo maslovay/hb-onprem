@@ -298,18 +298,18 @@ namespace UserOperations.Controllers
                 // _log.Info("User/Companies GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var corporationId = Guid.Parse(userClaims["corporationId"]);
-                if (userClaims["role"] == "Supervisor") // only for own corporation
-                {
-                    var companies = _context.Companys // 2 active, 3 - disabled
-                        .Where(p => p.CorporationId == corporationId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();
-                    return Ok(companies);
-                }
                 if (userClaims["role"] == "Admin") // very cool!
                 {
                     var companies = _context.Companys.Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();  // 2 active, 3 - disabled
                     return Ok(companies);
                 }
+                if (userClaims["role"] == "Supervisor" && userClaims["corporationId"] != null) // only for own corporation
+                {
+                    var corporationId = Guid.Parse(userClaims["corporationId"]);
+                    var companies = _context.Companys // 2 active, 3 - disabled
+                        .Where(p => p.CorporationId == corporationId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();
+                    return Ok(companies);
+                }                
                 return BadRequest("Not allowed access(role)");
             }
             catch (Exception e)
