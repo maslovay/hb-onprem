@@ -75,7 +75,7 @@ namespace AudioAnalyzeService
 
                             var currentPath = Directory.GetCurrentDirectory();
                             var token = await _googleConnector.GetAuthorizationToken(currentPath);
-
+                            
                             var blobGoogleDriveName =
                                 dialogueId + "_client" + Path.GetExtension(fileName);
                             await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);

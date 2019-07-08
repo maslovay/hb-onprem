@@ -141,11 +141,20 @@ namespace HBLib.Utils
             _httpClient.DefaultRequestHeaders.Clear();
 
             var response = await _httpClient.GetAsync("https://speech.googleapis.com/v1/operations/" +
-                                                      googleTransactionId + "?key=" + googleApiKey);
+                                                      googleTransactionId + "?key=" + googleApiKey.GoogleKey);
 
             var results = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<GoogleSttLongrunningResult>(results);
+            if (result.Error != null && result.Error.Status == "PERMISSION_DENIED")
+            {
+                var googleAccount =
+                    await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
+                        item.GoogleAccountId == googleApiKey.GoogleAccountId);
+                googleAccount.StatusId = 8;
+                _repository.Save();
+            }
 
-            return JsonConvert.DeserializeObject<GoogleSttLongrunningResult>(results);
+            return result;
         }
 
         public async Task<String> GetAuthorizationToken(String binPath)
@@ -178,17 +187,25 @@ namespace HBLib.Utils
             var apiKey = await GetApiKey();
             if (apiKey == null) return null;
 
-            var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey, languageId); },
+            var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey.GoogleKey, languageId); },
                 TimeSpan.FromSeconds(1), 5);
+            if (jsStr.Error != null && jsStr.Error.Status == "PERMISSION_DENIED")
+            {
+                var googleAccount =
+                    await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
+                        item.GoogleAccountId == apiKey.GoogleAccountId);
+                googleAccount.StatusId = 8;
+                _repository.Save();
+            }
 
             return jsStr;
         }
 
-        private async Task<String> GetApiKey()
+        private async Task<GoogleAccount> GetApiKey()
         {
             //3 - is active. 
             var googleAccount = await _repository.FindOneByConditionAsync<GoogleAccount>(item => item.StatusId == 3);
-            return googleAccount.GoogleKey;
+            return googleAccount;
         }
 
         private GoogleTransactionId RecognizeLongRunning(String fn, String apiKey, Int32 languageId,
