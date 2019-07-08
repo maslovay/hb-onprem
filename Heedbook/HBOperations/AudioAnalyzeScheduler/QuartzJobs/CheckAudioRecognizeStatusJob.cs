@@ -48,12 +48,17 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 try
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
-                    var audios = _context.FileAudioDialogues
+                    var audiosReq = _context.FileAudioDialogues
                                          .Include(p => p.Dialogue)
                                          .Include(p => p.Dialogue.ApplicationUser)
                                          .Include(p => p.Dialogue.ApplicationUser.Company)
-                                         .Where(p => p.StatusId == 6)
-                                         .ToList();
+                                         .Where(p => p.StatusId == 6);
+                                        //  .ToList();
+                    if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
+                    {
+                        audiosReq = audiosReq.Where(p => !String.IsNullOrEmpty(p.TransactionId));
+                    }
+                    var audios = audiosReq.ToList();
 
                     var phrases = _context.Phrases.ToList();
 
