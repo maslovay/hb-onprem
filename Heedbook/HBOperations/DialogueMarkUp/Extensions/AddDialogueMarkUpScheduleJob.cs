@@ -1,4 +1,5 @@
 using DialogueMarkUp.QuartzJobs;
+using DialogueMarkUp.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
@@ -9,7 +10,7 @@ namespace DialogueMarkUp.Extensions
 {
     public static class AddDialogueMarkUpScheduleJob
     {
-        public static void AddMarkUpQuartz(this IServiceCollection services)
+        public static void AddMarkUpQuartz(this IServiceCollection services, DialogueMarkUpSettings settings)
         {
             services.Add(new ServiceDescriptor(typeof(IJob), typeof(CheckDialogueMarkUpJob),
                 ServiceLifetime.Singleton));
@@ -22,7 +23,7 @@ namespace DialogueMarkUp.Extensions
                 return TriggerBuilder.Create()
                                      .WithIdentity("CheckDialogueMarkUp.trigger", "Dialogues")
                                      .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
+                                     .WithSimpleSchedule(s => s.WithIntervalInSeconds(settings.Period).RepeatForever())
                                      .Build();
             });
 
