@@ -77,7 +77,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
-                            var differenceHour = (DateTime.Now - audio.CreationTime).Hours;
+                            var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
 
                             if (sttResults.Response == null && differenceHour >= 1)
                             {
