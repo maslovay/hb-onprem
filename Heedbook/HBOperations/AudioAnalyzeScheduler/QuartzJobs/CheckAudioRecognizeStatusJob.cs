@@ -84,39 +84,45 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 audio.StatusId = 8;
                                 _log.Error($"Error with stt results for {audio.DialogueId}");
                             }
-                            _log.Info($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
-                            sttResults.Response.Results
-                                      .ForEach(res => res.Alternatives
-                                                         .ForEach(alt => alt.Words
-                                                                            .ForEach(word =>
-                                                                            {
-                                                                                if (word == null)
+                            else
+                            {
+                                _log.Info($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
+                                if (sttResults.Response.Results.Any())
+                                {
+                                    sttResults.Response.Results
+                                        .ForEach(res => res.Alternatives
+                                                            .ForEach(alt => alt.Words
+                                                                                .ForEach(word =>
                                                                                 {
-                                                                                    _log.Error("word = NULL!");
-                                                                                    return;
-                                                                                }
+                                                                                    if (word == null)
+                                                                                    {
+                                                                                        _log.Error("word = NULL!");
+                                                                                        return;
+                                                                                    }
 
-                                                                                if (word.EndTime == null)
-                                                                                {
-                                                                                    _log.Error("No word.EndTime!");
-                                                                                    return;
-                                                                                }
+                                                                                    if (word.EndTime == null)
+                                                                                    {
+                                                                                        _log.Error("No word.EndTime!");
+                                                                                        return;
+                                                                                    }
 
-                                                                                if (word.StartTime == null)
-                                                                                {
-                                                                                    _log.Error("No word.StartTime!");
-                                                                                    return;
-                                                                                }
+                                                                                    if (word.StartTime == null)
+                                                                                    {
+                                                                                        _log.Error("No word.StartTime!");
+                                                                                        return;
+                                                                                    }
 
-                                                                                word.EndTime =
-                                                                                    word.EndTime.Replace('s', ' ')
-                                                                                        .Replace('.', ',');
-                                                                                word.StartTime =
-                                                                                    word.StartTime.Replace('s', ' ')
-                                                                                        .Replace('.', ',');
-                                                                                recognized.Add(word);
-                                                                             })));
-                            _log.Info($"Has items: {sttResults.Response.Results.Any()}");
+                                                                                    word.EndTime =
+                                                                                        word.EndTime.Replace('s', ' ')
+                                                                                            .Replace('.', ',');
+                                                                                    word.StartTime =
+                                                                                        word.StartTime.Replace('s', ' ')
+                                                                                            .Replace('.', ',');
+                                                                                    recognized.Add(word);
+                                                                                })));
+                                }
+                                _log.Info($"Has items: {sttResults.Response.Results.Any()}");
+                            }
                         }
 
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
