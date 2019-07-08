@@ -76,56 +76,64 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         _log.Info($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
-                            var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
-                            var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
+                            try
+                            {
+                                var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
+                                var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
 
-                            if (sttResults.Response == null && differenceHour >= 1)
-                            {
-                                audio.StatusId = 8;
-                                _log.Error($"Error with stt results for {audio.DialogueId}");
-                            }
-                            else
-                            {
-                                if (sttResults.Response.Results.Any())
+                                if (sttResults.Response == null && differenceHour >= 1)
                                 {
-                                    _log.Info($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
-                                    sttResults.Response.Results
-                                        .ForEach(res => res.Alternatives
-                                                            .ForEach(alt => alt.Words
-                                                                                .ForEach(word =>
-                                                                                {
-                                                                                    if (word == null)
-                                                                                    {
-                                                                                        _log.Error("word = NULL!");
-                                                                                        return;
-                                                                                    }
-
-                                                                                    if (word.EndTime == null)
-                                                                                    {
-                                                                                        _log.Error("No word.EndTime!");
-                                                                                        return;
-                                                                                    }
-
-                                                                                    if (word.StartTime == null)
-                                                                                    {
-                                                                                        _log.Error("No word.StartTime!");
-                                                                                        return;
-                                                                                    }
-
-                                                                                    word.EndTime =
-                                                                                        word.EndTime.Replace('s', ' ')
-                                                                                            .Replace('.', ',');
-                                                                                    word.StartTime =
-                                                                                        word.StartTime.Replace('s', ' ')
-                                                                                            .Replace('.', ',');
-                                                                                    recognized.Add(word);
-                                                                                })));
+                                    audio.StatusId = 8;
+                                    _log.Error($"Error with stt results for {audio.DialogueId}");
                                 }
                                 else
                                 {
-                                    _log.Info("Stt result is null");
+                                    if (sttResults.Response.Results.Any())
+                                    {
+                                        _log.Info($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
+                                        sttResults.Response.Results
+                                            .ForEach(res => res.Alternatives
+                                                                .ForEach(alt => alt.Words
+                                                                                    .ForEach(word =>
+                                                                                    {
+                                                                                        if (word == null)
+                                                                                        {
+                                                                                            _log.Error("word = NULL!");
+                                                                                            return;
+                                                                                        }
+
+                                                                                        if (word.EndTime == null)
+                                                                                        {
+                                                                                            _log.Error("No word.EndTime!");
+                                                                                            return;
+                                                                                        }
+
+                                                                                        if (word.StartTime == null)
+                                                                                        {
+                                                                                            _log.Error("No word.StartTime!");
+                                                                                            return;
+                                                                                        }
+
+                                                                                        word.EndTime =
+                                                                                            word.EndTime.Replace('s', ' ')
+                                                                                                .Replace('.', ',');
+                                                                                        word.StartTime =
+                                                                                            word.StartTime.Replace('s', ' ')
+                                                                                                .Replace('.', ',');
+                                                                                        recognized.Add(word);
+                                                                                    })));
+                                    }
+                                    else
+                                    {
+                                        _log.Info("Stt result is null");
+                                    }
+                                    _log.Info($"Has items: {sttResults.Response.Results.Any()}");
                                 }
-                                _log.Info($"Has items: {sttResults.Response.Results.Any()}");
+                            }
+                            catch (Exception e)
+                            {
+                                _log.Error($"Error parsing result {e}");
+                                audio.StatusId = 8;
                             }
                         }
 
