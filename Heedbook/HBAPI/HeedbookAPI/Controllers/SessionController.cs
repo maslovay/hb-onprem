@@ -64,7 +64,8 @@ namespace UserOperations.Controllers
             {
                 _log.SetFormat("{ApplicationUserId}");
                 _log.SetArgs(data.ApplicationUserId);
-                _log.Info($"Session/SessionStatus {data.ApplicationUserId} started"); 
+                _log.Info($"Session/SessionStatus {data.ApplicationUserId} started");
+
                 var response = new Response();
 
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
@@ -79,17 +80,22 @@ namespace UserOperations.Controllers
                     _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                     return BadRequest(response);
                 }
+
                 var actionId = data.Action == "open" ? 6 : 7;
                 var curTime = DateTime.UtcNow;
                 var oldTime = DateTime.UtcNow.AddDays(-3);
+                
                 var lastSession = _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
-                        .ToList().OrderByDescending(p => p.BegTime)
+                        .OrderByDescending(p => p.BegTime)
+                        .ToList()
                         .FirstOrDefault();
         
-                var notClosedSessions = _context.Sessions
+
+                var notClosedSessions = lastSession != null ? _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6 && p.SessionId != lastSession.SessionId)
-                        .ToArray(); 
+                        .ToList() : new List<Session>();
+                
                 for( int i = 0; i < notClosedSessions.Count(); i++ )
                 {                  
                         notClosedSessions[i].StatusId = 7;
