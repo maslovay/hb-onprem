@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
@@ -9,6 +10,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using HBData;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Model;
@@ -32,7 +34,7 @@ namespace HBLib.Utils
 
         private HttpClient _httpClient;
 
-        private readonly IGenericRepository _repository;
+        private readonly RecordsContext _context;
 
         private readonly SftpClient _sftpClient;
 
@@ -43,7 +45,7 @@ namespace HBLib.Utils
         {
             _sftpClient = sftpClient;
             var scope = scopeFactory.CreateScope();
-            _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
+            _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
         }
 
         public async Task<String> LoadFileToGoogleDrive(String blobGoogleDriveName, String path, String token)
@@ -67,7 +69,7 @@ namespace HBLib.Utils
 
                 response.EnsureSuccessStatusCode();
                 var results = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"{results}");
+                Console.WriteLine($"Function LoadFileToGoogleDrive finished - {results}");
                 return results;
             }
             catch (Exception e)
@@ -95,7 +97,7 @@ namespace HBLib.Utils
                 @"https://storage.googleapis.com/" + GoogleCloudContainerName + @"/" + filename + @"?acl", cont);
 
             var results = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Make public result - {results}");
+            Console.WriteLine($"Function MakeFilePublicGoogleCloud - {results}");
             return results;
         }
 
@@ -175,11 +177,15 @@ namespace HBLib.Utils
             Boolean enableWordTimeOffsets = true,
             Boolean enableSpeakerDiarization = true)
         {
+            System.Console.WriteLine("Function recognize started");
             var apiKey = await GetApiKey();
+            System.Console.WriteLine($"{apiKey}");
             if (apiKey == null) return null;
 
             var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey, languageId); },
                 TimeSpan.FromSeconds(1), 5);
+
+            System.Console.WriteLine($"Function Recognize finished -- {jsStr}");
 
             return jsStr;
         }
@@ -187,7 +193,8 @@ namespace HBLib.Utils
         private async Task<String> GetApiKey()
         {
             //3 - is active. 
-            var googleAccount = await _repository.FindOneByConditionAsync<GoogleAccount>(item => item.StatusId == 3);
+            var googleAccount = _context.GoogleAccounts.Where(item => item.StatusId == 3).FirstOrDefault();
+            System.Console.WriteLine(JsonConvert.SerializeObject(googleAccount));
             return googleAccount.GoogleKey;
         }
 
@@ -215,7 +222,8 @@ namespace HBLib.Utils
                 config = new
                 {
                     encoding = "LINEAR16",
-                    sampleRateHertz = 16000,
+                    // sampleRateHertz = 16000,
+                    sampleRateHertz = 8000,
                     languageCode = GetLanguageName(languageId),
                     enableWordTimeOffsets
                     //enableSpeakerDiarization,
@@ -229,15 +237,15 @@ namespace HBLib.Utils
                     // uri = "https://www.googleapis.com/download/storage/v1/b/hbfiles/o/982082bd-e509-4a09-b757-1464f2bda3a9_client.wav?generation=1552302916913445&alt=media"
                 }
             };
-            Console.WriteLine($"{apiKey}");
             Console.WriteLine($"{JsonConvert.SerializeObject(request)}");
-            Console.WriteLine($"{"https://speech.googleapis.com/v1/speech:longrunningrecognize?key=" + apiKey}");
 
             var response = httpClient
                           .PostAsync("https://speech.googleapis.com/v1/speech:longrunningrecognize?key=" + apiKey,
                                new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8,
                                    "application/json")).Result;
             var result = response.Content.ReadAsStringAsync().Result;
+
+            System.Console.WriteLine($"Function RecognizeLongRunning finished {result}");
             return JsonConvert.DeserializeObject<GoogleTransactionId>(result);
         }
 
