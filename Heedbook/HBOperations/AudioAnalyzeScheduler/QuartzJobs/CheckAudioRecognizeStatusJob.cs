@@ -77,6 +77,13 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
+                            var differenceHour = (DateTime.Now - audio.CreationTime).Hours;
+
+                            if (sttResults.Response == null && differenceHour >= 1)
+                            {
+                                audio.StatusId = 8;
+                                _log.Error($"Error with stt results for {audio.DialogueId}");
+                            }
                             _log.Info($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
                             sttResults.Response.Results
                                       .ForEach(res => res.Alternatives
