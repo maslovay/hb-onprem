@@ -57,7 +57,20 @@ namespace AudioAnalyseScheduler.Tests
         {
             await base.TearDown();
             _schedulerProcess.Kill();
+            StopServices();
         }
+
+        private void StopServices()
+        {
+            try
+            {
+                _schedulerProcess.Kill();
+            }
+            catch (Exception ex)
+            {
+                
+            }
+       }
         
         protected override async Task PrepareTestData()
         {
@@ -134,6 +147,8 @@ namespace AudioAnalyseScheduler.Tests
         public void EnsureCreatesDialogueSpeech()
         {
             Assert.IsTrue(WaitForSpeech());
+            
+            StopServices();
         }
 
         [Test]
@@ -147,7 +162,7 @@ namespace AudioAnalyseScheduler.Tests
             const int deltaMs = 2000;
             int cntr = 0;
             
-            while (cntr * deltaMs < 40000 || _repository.Get<DialogueSpeech>().All(ds => ds.DialogueId != _testDialog.DialogueId))
+            while (cntr * deltaMs < 20000 || _repository.Get<DialogueSpeech>().All(ds => ds.DialogueId != _testDialog.DialogueId))
             {
                 Thread.Sleep(deltaMs);
                 ++cntr;
