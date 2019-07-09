@@ -30,7 +30,7 @@ namespace HBLib.Utils
 
         private const String FileGoogleCloudPublicAccess = "GoogleFilePublic.xml";
 
-        private readonly HttpClient _httpClient;
+        private HttpClient _httpClient;
 
         private readonly IGenericRepository _repository;
 
@@ -39,11 +39,9 @@ namespace HBLib.Utils
         private readonly DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         public GoogleConnector(SftpClient sftpClient,
-            IServiceScopeFactory scopeFactory,
-            HttpClient httpClient)
+            IServiceScopeFactory scopeFactory)
         {
             _sftpClient = sftpClient;
-            _httpClient = httpClient;
             var scope = scopeFactory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
         }
@@ -55,7 +53,7 @@ namespace HBLib.Utils
                 //transfer blob to byte array
                 var stream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(path);
                 var data = stream.ToArray();
-
+                _httpClient = new HttpClient();
                 //prepare the request
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
@@ -81,6 +79,7 @@ namespace HBLib.Utils
 
         public async Task<String> MakeFilePublicGoogleCloud(String filename, String binPath, String token)
         {
+            _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Clear();
 
             var googleFileGoogleCloudPublicAccess = Path.Combine(binPath, FileGoogleCloudPublicAccess);
@@ -103,6 +102,7 @@ namespace HBLib.Utils
         public async Task<String> MakeFilePublicGoogleCloudPost(String filename, String binPath,
             String token)
         {
+            _httpClient = new HttpClient();
             var queryString = HttpUtility.ParseQueryString(String.Empty);
 
             var uri = "https://www.googleapis.com/storage/v1/b/" + GoogleCloudContainerName + "/o/" + filename +
@@ -125,6 +125,7 @@ namespace HBLib.Utils
 
         public async Task DeleteFileGoogleCloud(String filename, String token)
         {
+            _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Clear();
 
             _httpClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
@@ -135,19 +136,30 @@ namespace HBLib.Utils
 
         public async Task<GoogleSttLongrunningResult> GetGoogleSTTResults(String googleTransactionId)
         {
+            _httpClient = new HttpClient();
             var googleApiKey = await GetApiKey();
             _httpClient.DefaultRequestHeaders.Clear();
 
             var response = await _httpClient.GetAsync("https://speech.googleapis.com/v1/operations/" +
-                                                      googleTransactionId + "?key=" + googleApiKey);
+                                                      googleTransactionId + "?key=" + googleApiKey.GoogleKey);
 
             var results = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<GoogleSttLongrunningResult>(results);
+            if (result.Error != null && result.Error.Status == "PERMISSION_DENIED")
+            {
+                var googleAccount =
+                    await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
+                        item.GoogleAccountId == googleApiKey.GoogleAccountId);
+                googleAccount.StatusId = 8;
+                _repository.Save();
+            }
 
-            return JsonConvert.DeserializeObject<GoogleSttLongrunningResult>(results);
+            return result;
         }
 
         public async Task<String> GetAuthorizationToken(String binPath)
         {
+            _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Clear();
 
             var jwt = CreateJwt(binPath);
@@ -175,17 +187,25 @@ namespace HBLib.Utils
             var apiKey = await GetApiKey();
             if (apiKey == null) return null;
 
-            var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey, languageId); },
+            var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey.GoogleKey, languageId); },
                 TimeSpan.FromSeconds(1), 5);
+            if (jsStr.Error != null && jsStr.Error.Status == "PERMISSION_DENIED")
+            {
+                var googleAccount =
+                    await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
+                        item.GoogleAccountId == apiKey.GoogleAccountId);
+                googleAccount.StatusId = 8;
+                _repository.Save();
+            }
 
             return jsStr;
         }
 
-        private async Task<String> GetApiKey()
+        private async Task<GoogleAccount> GetApiKey()
         {
             //3 - is active. 
             var googleAccount = await _repository.FindOneByConditionAsync<GoogleAccount>(item => item.StatusId == 3);
-            return googleAccount.GoogleKey;
+            return googleAccount;
         }
 
         private GoogleTransactionId RecognizeLongRunning(String fn, String apiKey, Int32 languageId,
@@ -212,7 +232,8 @@ namespace HBLib.Utils
                 config = new
                 {
                     encoding = "LINEAR16",
-                    sampleRateHertz = 16000,
+                    // sampleRateHertz = 16000,
+                    sampleRateHertz = 8000,
                     languageCode = GetLanguageName(languageId),
                     enableWordTimeOffsets
                     //enableSpeakerDiarization,

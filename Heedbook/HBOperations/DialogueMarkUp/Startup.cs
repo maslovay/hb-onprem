@@ -1,6 +1,7 @@
 ﻿using AsrHttpClient;
 using DialogueMarkUp.Extensions;
 using Configurations;
+using DialogueMarkUp.Settings;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -35,6 +36,12 @@ namespace DialogueMarkUp
             services.AddOptions();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
+
+            var schedulerSettings = new DialogueMarkUpSettings()
+            {
+                Period = Configuration.GetSection(nameof(DialogueMarkUpSettings)).GetValue<int>("Period")
+            };
+            
             services.AddDbContext<RecordsContext>
             (options =>
             {
@@ -51,7 +58,7 @@ namespace DialogueMarkUp
             services.AddRabbitMqEventBus(Configuration);
 
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddMarkUpQuartz();
+            services.AddMarkUpQuartz(schedulerSettings);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

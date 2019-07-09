@@ -49,6 +49,7 @@ namespace AudioAnalyzeScheduler
             services.AddSingleton(provider => provider.GetService<IOptions<AsrSettings>>().Value);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddTransient<GoogleConnector>();
             services.AddSingleton<ElasticClientFactory>();
             services.AddSingleton<AsrHttpClient.AsrHttpClient>();
             services.AddSingleton<SftpClient>();

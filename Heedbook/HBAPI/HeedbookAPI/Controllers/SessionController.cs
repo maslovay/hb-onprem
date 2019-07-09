@@ -42,19 +42,19 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
-        // private readonly ElasticClient _log;
+        private readonly ElasticClient _log;
 
         public SessionController(
             RecordsContext context,
             IConfiguration config,
-            DBOperations dbOperation
-            // ElasticClient log
+            DBOperations dbOperation,
+            ElasticClient log
             )
         {
             _context = context;
             _config = config;
             _dbOperation = dbOperation;
-            // _log = log;
+            _log = log;
         }
 
         [HttpPost("SessionStatus")]
@@ -62,22 +62,29 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("Session/SessionStatus started"); 
+                _log.SetFormat("{ApplicationUserId}");
+                _log.SetArgs(data.ApplicationUserId);
+                _log.Info($"Session/SessionStatus {data.ApplicationUserId} started");
+
                 var response = new Response();
 
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
                 {
                     response.Message = "ApplicationUser is empty";
+                    _log.Info($"Session/SessionStatus ApplicationUser is empty");
                     return BadRequest(response);
                 }
                 if (data.Action != "open" && data.Action != "close") 
                 {
                     response.Message = "Wrong action";
+                    _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                     return BadRequest(response);
                 }
+
                 var actionId = data.Action == "open" ? 6 : 7;
                 var curTime = DateTime.UtcNow;
                 var oldTime = DateTime.UtcNow.AddDays(-3);
+                
                 var lastSession = _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
                         .ToList().OrderByDescending(p => p.BegTime)
@@ -91,7 +98,7 @@ namespace UserOperations.Controllers
                         case 6:
                             var session = new Session{
                                 BegTime = DateTime.UtcNow,
-                                EndTime = DateTime.UtcNow,
+                                EndTime = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1),
                                 ApplicationUserId = data.ApplicationUserId,
                                 StatusId = actionId,
                                 IsDesktop = (bool)data.IsDesktop
@@ -99,12 +106,15 @@ namespace UserOperations.Controllers
                             _context.Sessions.Add(session);
                             _context.SaveChanges();
                             response.Message = "Session successfully opened";
+                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                             return Ok(response);
                         case 7:
                             response.Message = "Can't close not opened session";
+                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                             return Ok(response);
                         default:
                             response.Message = "Wrong action";
+                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                             return BadRequest(response);
                     }
                 }
@@ -125,6 +135,7 @@ namespace UserOperations.Controllers
                             if (lastSession.StatusId == 6) 
                             {
                                 response.Message = "Can't open not closed session";
+                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't open not closed session");
                                 return Ok(response);
                             }
                             var session = new Session{
@@ -139,12 +150,14 @@ namespace UserOperations.Controllers
                             _context.SaveChanges();
 
                             response.Message = "Session successfully opened";
+                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                             return Ok(response);
                         
                         case 7:
                             if (lastSession.StatusId == 7) 
                             {
                                 response.Message = "Can't close not opened session";
+                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                                 return Ok(response);
                             }
                             lastSession.StatusId = 7;
@@ -152,9 +165,11 @@ namespace UserOperations.Controllers
 
                             _context.SaveChanges();
                             response.Message = "Session successfully closed";
+                            _log.Info($"Session successfully closed {data.ApplicationUserId}"); 
                             return Ok(response);
                         default:
                             response.Message = "Wrong action";
+                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                             return BadRequest(response);
                     }
                 }
@@ -163,7 +178,7 @@ namespace UserOperations.Controllers
             {
                 var response = new Response();
                 response.Message = $"Exception occured {e}";
-                // _log.Fatal($"Exception occurred {e}");
+                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(response);
             }
         }
