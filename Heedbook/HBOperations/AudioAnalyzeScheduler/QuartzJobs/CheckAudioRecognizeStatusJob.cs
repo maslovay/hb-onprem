@@ -238,13 +238,16 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             });
                             phraseCounts.AddRange(phraseCount);
                             _log.Info("Asr stt results is not empty. Everything is ok!");
+                            
+                            
+                            if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud") audio.StatusId = 7;
                         }
                         else
                         {
                             _log.Info("Asr stt results is empty");
                         }
 
-                        audio.StatusId = 7;
+                        if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem") audio.StatusId = 7;
                     }
 
                     _context.DialoguePhrases.AddRange(dialoguePhrases);
