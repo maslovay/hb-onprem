@@ -144,13 +144,13 @@ namespace AudioAnalyseScheduler.Tests
             _repository = ServiceProvider.GetService<IGenericRepository>();
         }
  
-        [Test]
-        public void EnsureCreatesDialogueSpeech()
-        {
-            Assert.IsTrue(WaitForSpeech());
-            
-            StopServices();
-        }
+//        [Test]
+//        public void EnsureCreatesDialogueSpeech()
+//        {
+//            Assert.IsTrue(WaitForSpeech());
+//            
+//            StopServices();
+//        }
 
         [Test]
         public void EnsureGetsPositiveShare()
