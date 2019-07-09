@@ -22,7 +22,7 @@ namespace HBLib.Utils
                 if ( !string.IsNullOrWhiteSpace(version) )
                     psi.FileName+=version;
 
-                psi.WorkingDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), workDir);
+                psi.WorkingDirectory = workDir;
 
                 _log?.Info($"RunPython: WorkingDirectory: {psi.WorkingDirectory}");
                 

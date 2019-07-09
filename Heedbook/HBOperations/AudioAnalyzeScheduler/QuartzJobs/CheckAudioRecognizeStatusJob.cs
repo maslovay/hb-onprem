@@ -279,7 +279,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             try
             {
                 var sentence = string.Join(" ", recognizedWords);
-                var posShareStrg = RunPython.Run("GetPositiveShare.py", "sentimental", "3", sentence);
+                var posShareStrg = RunPython.Run("GetPositiveShare.py", "/app/Heedbook/HBOperations/AudioAnalyzeScheduler/publish/sentimental", "3", sentence, _log);
 
                 if (!posShareStrg.Item2.Trim().IsNullOrEmpty())
                     _log.Error("RunPython err string: " + posShareStrg.Item2);
