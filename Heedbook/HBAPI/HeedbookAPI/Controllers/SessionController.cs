@@ -81,17 +81,8 @@ namespace UserOperations.Controllers
                 var lastSession = _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
                         .ToList().OrderByDescending(p => p.BegTime)
-                        .FirstOrDefault();
-        
-                var notClosedSessions = _context.Sessions
-                        .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6 && p.SessionId != lastSession.SessionId)
-                        .ToArray(); 
-                for( int i = 0; i < notClosedSessions.Count(); i++ )
-                {                  
-                        notClosedSessions[i].StatusId = 7;
-                        notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
-                        _context.SaveChanges();
-                }
+                        .FirstOrDefault();       
+           
 
                 if (lastSession == null)
                 {
@@ -119,6 +110,15 @@ namespace UserOperations.Controllers
                 }
                 else
                 {
+                    var notClosedSessions = _context.Sessions
+                    .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6 && p.SessionId != lastSession.SessionId)
+                    .ToArray(); 
+                    for( int i = 0; i < notClosedSessions.Count(); i++ )
+                    {                  
+                            notClosedSessions[i].StatusId = 7;
+                            notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
+                            _context.SaveChanges();
+                    }
                     switch (actionId)
                     {
                         case 6:
