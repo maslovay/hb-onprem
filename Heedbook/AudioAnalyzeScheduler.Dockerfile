@@ -18,6 +18,10 @@ RUN cp ./HBOperations/AudioAnalyzeScheduler/sentimental/* ./HBOperations/AudioAn
 RUN cp ./HBOperations/AudioAnalyzeScheduler/sentimental/* ./HBOperations/AudioAnalyzeScheduler/publish/ -R
 
 
+#Test python scripts
+WORKDIR /app/HBOperations/AudioAnalyzeScheduler/publish/sentimental/
+RUN python3 GetPositiveShare.py "Хорошо все"
+
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
