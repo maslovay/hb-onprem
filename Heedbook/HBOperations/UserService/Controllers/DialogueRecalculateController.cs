@@ -1,10 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
+using AsrHttpClient;
 using HBData;
 using HBData.Models;
+using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Http;
@@ -23,6 +28,7 @@ namespace UserService.Controllers
     public class DialogueRecalculateController : Controller
     {
         private readonly RecordsContext _context;
+        private readonly IGenericRepository _repository;
         private readonly INotificationHandler _handler;
         private readonly ElasticClient _log;
         private readonly SftpClient _sftpClient;
@@ -32,7 +38,7 @@ namespace UserService.Controllers
         public DialogueRecalculateController(INotificationHandler handler, RecordsContext context, 
                                                 ElasticClient log, SftpClient sftpClient, 
                                                 INotificationPublisher notificationPublisher,
-                                                SftpSettings sftpSettings)
+                                                SftpSettings sftpSettings, IGenericRepository repository)
         {
             _handler = handler;
             _context = context;
@@ -40,6 +46,7 @@ namespace UserService.Controllers
             _sftpClient = sftpClient;
             _notificationPublisher = notificationPublisher;
             _sftpSettings = sftpSettings;
+            _repository = repository;
         }
 
         [HttpGet]
@@ -218,6 +225,72 @@ namespace UserService.Controllers
             {
                 System.Console.WriteLine(ex.Message);
                 return BadRequest();
+            }
+        }
+        
+        [HttpGet("[action]")]
+        public void RecalcPositiveShare()
+        {
+            var result = 0.0;
+
+            var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-5)
+                                                                    && f.DialogueSpeech.All(ds => ds.PositiveShare == 0.0),
+                f => f.DialogueSpeech, f => f.DialogueAudio).OrderByDescending(f => f.CreationTime).ToArray();
+
+            _log.Info($"RecalcPositiveShare(): DDialogues to analyze {dialogs.Length}");   
+            Console.WriteLine($"Dialogues to analyze {dialogs.Length}");
+            
+            foreach (var ff in dialogs)
+            {
+                var fads = _repository.Get<FileAudioDialogue>().Where(x => x.DialogueId == ff.DialogueId && x.STTResult != null && x.STTResult.Length > 0);
+
+                foreach (var fad in fads)
+                {
+                    StringBuilder words = new StringBuilder();
+
+                    var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(fad.STTResult);
+                    if (asrResults.Any())
+                    {
+                        asrResults.ForEach(word =>
+                        {
+                            words.Append(" ");
+                            words.Append(word.Word);
+                        });
+                    }
+
+                    foreach (var speech in ff.DialogueSpeech)
+                    {
+                        try
+                        {
+                            if (speech == null)
+                                continue;
+
+                            Console.WriteLine($"Speech for dialogue {ff.DialogueId}");
+                            _log.Info($"RecalcPositiveShare(): Speech for dialogue {ff.DialogueId}");
+
+                            var posShareStrg =
+                                RunPython.Run("GetPositiveShare.py",
+                                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "3",
+                                    words.ToString(), _log);
+
+                            Console.WriteLine($"Speech for dialogue {ff.DialogueId} pos share result: {posShareStrg}");
+                            _log.Info($"RecalcPositiveShare(): Speech for dialogue {ff.DialogueId} pos share result: {posShareStrg}");
+                            result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
+                            
+                            if (result > 0)
+                            {
+                                speech.PositiveShare = result;
+                                _repository.Update(speech);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.Info($"RecalcPositiveShare() exception: " + ex.Message);
+                        }
+                    }
+                }
+
+                _repository.Save();
             }
         }
     }
