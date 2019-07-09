@@ -87,21 +87,9 @@ namespace UserOperations.Controllers
                 
                 var lastSession = _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
-                        .OrderByDescending(p => p.BegTime)
-                        .ToList()
-                        .FirstOrDefault();
-        
-
-                var notClosedSessions = lastSession != null ? _context.Sessions
-                        .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6 && p.SessionId != lastSession.SessionId)
-                        .ToList() : new List<Session>();
-                
-                for( int i = 0; i < notClosedSessions.Count(); i++ )
-                {                  
-                        notClosedSessions[i].StatusId = 7;
-                        notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
-                        _context.SaveChanges();
-                }
+                        .ToList().OrderByDescending(p => p.BegTime)
+                        .FirstOrDefault();       
+           
 
                 if (lastSession == null)
                 {
@@ -132,6 +120,15 @@ namespace UserOperations.Controllers
                 }
                 else
                 {
+                    var notClosedSessions = _context.Sessions
+                    .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6 && p.SessionId != lastSession.SessionId)
+                    .ToArray(); 
+                    for( int i = 0; i < notClosedSessions.Count(); i++ )
+                    {                  
+                            notClosedSessions[i].StatusId = 7;
+                            notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
+                            _context.SaveChanges();
+                    }
                     switch (actionId)
                     {
                         case 6:
