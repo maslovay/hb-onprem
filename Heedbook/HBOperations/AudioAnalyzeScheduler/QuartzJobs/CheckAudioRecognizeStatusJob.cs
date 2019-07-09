@@ -122,10 +122,19 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                                                                                 .Replace('.', ',');
                                                                                         recognized.Add(word);
                                                                                     })));
+                                        audio.STTResult = JsonConvert.SerializeObject(recognized);
                                     }
                                     else
                                     {
-                                        _log.Info("Stt result is null");
+                                        if (sttResults.Response.Results != null)
+                                        {
+                                            audio.StatusId = 7;
+                                            audio.STTResult = "[]";
+                                        }
+                                        else
+                                        {
+                                            _log.Info($"Stt result is null {sttResults.Response.Results == null}");
+                                        }
                                     }
                                     _log.Info($"Has items: {sttResults.Response.Results.Any()}");
                                 }
