@@ -47,9 +47,9 @@ namespace AudioAnalyseScheduler.Tests
 #if DEBUG
             config = "Debug";
 #endif
-//            _schedulerProcess = Process.Start("dotnet",
-//                $"../../../../AudioAnalyzeScheduler/bin/{config}/netcoreapp2.2/AudioAnalyzeScheduler.dll --isCalledFromUnitTest true");
-//            Thread.Sleep(2000);
+            _schedulerProcess = Process.Start("dotnet",
+                $"../../../../AudioAnalyzeScheduler/bin/{config}/netcoreapp2.2/AudioAnalyzeScheduler.dll --isCalledFromUnitTest true");
+            Thread.Sleep(2000);
         }
 
 
@@ -144,90 +144,90 @@ namespace AudioAnalyseScheduler.Tests
             _repository = ServiceProvider.GetService<IGenericRepository>();
         }
  
-//        [Test]
-//        public void EnsureCreatesDialogueSpeech()
-//        {
-//            Assert.IsTrue(WaitForSpeech());
-//            
-//            StopServices();
-//        }
-//
-//        [Test]
-//        public void EnsureGetsPositiveShare()
-//        {
-//            GetPositiveShareInText();
-//        }
-//
-//        private bool WaitForSpeech()
-//        {
-//            const int deltaMs = 2000;
-//            int cntr = 0;
-//            
-//            while (cntr * deltaMs < 20000 || _repository.Get<DialogueSpeech>().All(ds => ds.DialogueId != _testDialog.DialogueId))
-//            {
-//                Thread.Sleep(deltaMs);
-//                ++cntr;
-//            }
-//
-//            return _repository.Get<DialogueSpeech>().Any(ds => ds.DialogueId == _testDialog.DialogueId);
-//        }
-//        
         [Test]
-        public void RecalcPositiveShare()
+        public void EnsureCreatesDialogueSpeech()
         {
-            var result = 0.0;
-
-            var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-5)
-                                                                    && f.DialogueSpeech.All(ds => ds.PositiveShare == 0.0),
-                f => f.DialogueSpeech, f => f.DialogueAudio).OrderByDescending(f => f.CreationTime).ToArray();
-
-            Console.WriteLine($"Dialogues to analyze {dialogs.Length}");
+            Assert.IsTrue(WaitForSpeech());
             
-            foreach (var ff in dialogs)
+            StopServices();
+        }
+
+        [Test]
+        public void EnsureGetsPositiveShare()
+        {
+            GetPositiveShareInText();
+        }
+
+        private bool WaitForSpeech()
+        {
+            const int deltaMs = 2000;
+            int cntr = 0;
+            
+            while (cntr * deltaMs < 20000 || _repository.Get<DialogueSpeech>().All(ds => ds.DialogueId != _testDialog.DialogueId))
             {
-                var fads = _repository.Get<FileAudioDialogue>().Where(x => x.DialogueId == ff.DialogueId && x.STTResult != null && x.STTResult.Length > 0);
-
-                foreach (var fad in fads)
-                {
-                    StringBuilder words = new StringBuilder();
-
-                    var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(fad.STTResult);
-                    if (asrResults.Any())
-                    {
-                        asrResults.ForEach(word =>
-                        {
-                            words.Append(" ");
-                            words.Append(word.Word);
-                        });
-                    }
-
-                    foreach (var speech in ff.DialogueSpeech)
-                    {
-                        if (speech == null)
-                            continue;
-
-                        Console.WriteLine($"Speech for dialogue {ff.DialogueId}");
-                        
-                        var posShareStrg =
-                            RunPython.Run("GetPositiveShare.py", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "3", words.ToString());
-                        result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
-
-
-                        Console.WriteLine($"Speech for dialogue {ff.DialogueId} pos share result: {posShareStrg}");            
-
-                        if (result > 0)
-                        {
-                            speech.PositiveShare = result;
-                            _repository.Update(speech);
-                        }
-                    }
-                }
-
-                _repository.Save();
+                Thread.Sleep(deltaMs);
+                ++cntr;
             }
 
-            Assert.Pass();
+            return _repository.Get<DialogueSpeech>().Any(ds => ds.DialogueId == _testDialog.DialogueId);
         }
+        
+//        [Test]
+//        public void RecalcPositiveShare()
+//        {
+//            var result = 0.0;
+//
+//            var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-5)
+//                                                                    && f.DialogueSpeech.All(ds => ds.PositiveShare == 0.0),
+//                f => f.DialogueSpeech, f => f.DialogueAudio).OrderByDescending(f => f.CreationTime).ToArray();
+//
+//            Console.WriteLine($"Dialogues to analyze {dialogs.Length}");
+//            
+//            foreach (var ff in dialogs)
+//            {
+//                var fads = _repository.Get<FileAudioDialogue>().Where(x => x.DialogueId == ff.DialogueId && x.STTResult != null && x.STTResult.Length > 0);
+//
+//                foreach (var fad in fads)
+//                {
+//                    StringBuilder words = new StringBuilder();
+//
+//                    var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(fad.STTResult);
+//                    if (asrResults.Any())
+//                    {
+//                        asrResults.ForEach(word =>
+//                        {
+//                            words.Append(" ");
+//                            words.Append(word.Word);
+//                        });
+//                    }
+//
+//                    foreach (var speech in ff.DialogueSpeech)
+//                    {
+//                        if (speech == null)
+//                            continue;
+//
+//                        Console.WriteLine($"Speech for dialogue {ff.DialogueId}");
+//                        
+//                        var posShareStrg =
+//                            RunPython.Run("GetPositiveShare.py", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "3", words.ToString());
+//                        result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
+//
+//
+//                        Console.WriteLine($"Speech for dialogue {ff.DialogueId} pos share result: {posShareStrg}");            
+//
+//                        if (result > 0)
+//                        {
+//                            speech.PositiveShare = result;
+//                            _repository.Update(speech);
+//                        }
+//                    }
+//                }
+//
+//                _repository.Save();
+//            }
+//
+//            Assert.Pass();
+//        }
         
         private double GetPositiveShareInText()
         {
