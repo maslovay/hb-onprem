@@ -313,8 +313,8 @@ namespace DialogueMarkUp.QuartzJobs
                     && p.EndTime > dialogue.BegTime) 
                     || (p.BegTime < dialogue.EndTime
                     && p.EndTime >= dialogue.EndTime))
-                    && !(p.BegTime > dialogue.BegTime
-                    && p.EndTime < dialogue.EndTime));
+                    && !(p.BegTime >= dialogue.BegTime
+                    && p.EndTime <= dialogue.EndTime));
             if(dialogue is null)
             {
                 _log.Error($"CheckSessionForDialogue: dialogue is null, applicationUserId: {applicationUserId}");
@@ -349,14 +349,35 @@ namespace DialogueMarkUp.QuartzJobs
                     ses.EndTime = dialogue.EndTime;
                 }
             }
-            else if(dialogueBeginSession != null && dialogueEndSession is null)
+            else if(dialogueBeginSession != null 
+                && dialogueEndSession == null)
             {
-                dialogueBeginSession.EndTime = dialogue.EndTime;
+                var lastInsideSession = session.Where(p => p.BegTime >= dialogueBeginSession.BegTime && p.EndTime < dialogue.EndTime)
+                    .OrderByDescending(p => p.BegTime)
+                    .FirstOrDefault();
+                if(lastInsideSession!=null)
+                {
+                    lastInsideSession.EndTime = dialogue.EndTime;
+                }
+                else
+                {
+                    dialogueBeginSession.EndTime = dialogue.EndTime;
+                }
             }  
             else if(dialogueBeginSession == null 
                 && dialogueEndSession != null)
             {
-                dialogueEndSession.BegTime = dialogue.BegTime;
+                var firstInsideSessions = session.Where(p => p.BegTime >= dialogue.BegTime && p.EndTime < dialogueEndSession.BegTime)
+                    .OrderBy(p => p.BegTime)
+                    .FirstOrDefault();
+                if(firstInsideSessions != null)
+                {
+                    firstInsideSessions.BegTime = dialogue.BegTime;                    
+                }
+                else
+                {
+                    dialogueEndSession.BegTime = dialogue.BegTime;
+                }
             }          
             else if(dialogueBeginSession != null 
                 && dialogueEndSession != null 
