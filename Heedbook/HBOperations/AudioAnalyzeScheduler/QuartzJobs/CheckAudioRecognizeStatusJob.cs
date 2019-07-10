@@ -13,7 +13,9 @@ using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Castle.Core.Internal;
 
@@ -279,7 +281,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             try
             {
                 var sentence = string.Join(" ", recognizedWords);
-                var posShareStrg = RunPython.Run("GetPositiveShare.py", "/app/Heedbook/HBOperations/AudioAnalyzeScheduler/publish/sentimental", "3", sentence, _log);
+                var posShareStrg = RunPython.Run("sentimental/GetPositiveShare.py", 
+                    Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sentimental"), "3", sentence, _log);
 
                 if (!posShareStrg.Item2.Trim().IsNullOrEmpty())
                     _log.Error("RunPython err string: " + posShareStrg.Item2);
