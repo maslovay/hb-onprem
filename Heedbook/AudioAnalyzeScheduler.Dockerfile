@@ -1,11 +1,6 @@
 FROM microsoft/dotnet:2.2-sdk-alpine AS build-env
 WORKDIR /app
 
-RUN apk add --update python3
-RUN apk add --update git
-RUN pip3 install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
-RUN pip3 install nltk
-
 COPY . .
 
 
@@ -21,6 +16,12 @@ RUN cp ./HBOperations/AudioAnalyzeScheduler/sentimental/* ./HBOperations/AudioAn
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/publish .
+
+RUN apk add --update python3
+RUN apk add --update git
+RUN pip3 install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
+RUN pip3 install nltk
+
 
 ENTRYPOINT ["dotnet", "AudioAnalyzeScheduler.dll"]
 RUN mkdir /opt/
