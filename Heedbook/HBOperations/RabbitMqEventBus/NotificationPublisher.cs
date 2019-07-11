@@ -57,7 +57,6 @@ namespace RabbitMqEventBus
                 {
                     var properties = channel.CreateBasicProperties();
                     properties.DeliveryMode = 2; // persistent
-                    properties.Headers = new Dictionary<String, Object> {{DELIVERY_COUNT_HEADER, 0}};
                     channel.BasicPublish(BROKER_NAME,
                         eventName,
                         true,
@@ -130,18 +129,16 @@ namespace RabbitMqEventBus
             {
                 var @event = ea.RoutingKey;
                 var message = Encoding.UTF8.GetString(ea.Body);
-                if (ea.BasicProperties.Headers.TryGetValue(DELIVERY_COUNT_HEADER, out var deliveryCount))
+                var retryCount = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event))).RetryCount;
+                if (retryCount >= _deliveryCount)
                 {
-                    var count = Int32.Parse(deliveryCount.ToString());
-                    if (count >= _deliveryCount)
-                        channel.BasicAck(ea.DeliveryTag, false);
-                    else
-                        ea.BasicProperties.Headers[DELIVERY_COUNT_HEADER] = count + 1;
+                    channel.BasicAck(ea.DeliveryTag, false);
                 }
-
-                await ProcessEvent(@event, message);
-
-                channel.BasicAck(ea.DeliveryTag, false);
+                else
+                {
+                    await ProcessEvent(@event, message, retryCount);
+                    channel.BasicAck(ea.DeliveryTag, false);
+                }
             };
 
             channel.QueueDeclare(eventName,
@@ -167,7 +164,7 @@ namespace RabbitMqEventBus
         }
 
 
-        private async Task ProcessEvent(String eventName, String message)
+        private async Task ProcessEvent(String eventName, String message, int retryCount)
         {
             if (_subsManager.HasSubscriptionsForEvent(eventName))
             {
@@ -185,6 +182,8 @@ namespace RabbitMqEventBus
                         var eventType = _subsManager.GetEventTypeByName(eventName);
                         var integrationEvent = JsonConvert.DeserializeObject(message, eventType);
                         var handler = _serviceProvider.GetService(subscription.HandlerType);
+                        var castedIntegrationEvent = (IntegrationEvent)integrationEvent;
+                        castedIntegrationEvent.RetryCount = retryCount + 1;
                         var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
                         await (Task) concreteType.GetMethod("Handle").Invoke(handler, new[] {integrationEvent});
                     }
