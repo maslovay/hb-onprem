@@ -17,14 +17,15 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/publish .
 RUN mkdir -p /app/sentimental/
-COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/publish/sentimentmal /app/sentimental
+COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/publish/sentimental/ /app/sentimental/
 
 RUN apk add --update python3
 RUN apk add --update git
 RUN pip3 install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
 RUN pip3 install nltk
 
-
+RUN /app/sentimental/GetPositiveShare.py "Хорошо или плохо?"
+ 
 ENTRYPOINT ["dotnet", "AudioAnalyzeScheduler.dll"]
 RUN mkdir /opt/
 RUN chmod -R 777 /opt/
