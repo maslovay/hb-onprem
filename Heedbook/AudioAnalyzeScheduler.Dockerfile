@@ -16,6 +16,8 @@ RUN cp ./HBOperations/AudioAnalyzeScheduler/sentimental/* ./HBOperations/AudioAn
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/publish .
+RUN mkdir -p /app/sentimental/
+COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/publish/sentimentmal /app/sentimental
 
 RUN apk add --update python3
 RUN apk add --update git
