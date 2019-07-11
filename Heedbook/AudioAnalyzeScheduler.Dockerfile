@@ -25,7 +25,8 @@ RUN pip3 install nltk
 
 WORKDIR /app/sentimental
 RUN ls -n .
-RUN sh GetPositiveShare.py "Хорошо или плохо?"
+RUN python3 setup.py
+RUN python3 GetPositiveShare.py "Хорошо или плохо?"
 WORKDIR /app
  
 ENTRYPOINT ["dotnet", "AudioAnalyzeScheduler.dll"]
