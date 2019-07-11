@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace HBData.Models
@@ -69,5 +70,9 @@ namespace HBData.Models
         ///     Number of faces on frame
         /// </summary>
         public Int32? FaceLength { get; set; }
+
+        public ICollection<FrameEmotion> FrameEmotion { get; set; }
+
+        public ICollection<FrameAttribute> FrameAttribute { get; set; }
     }
 }

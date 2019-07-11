@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
@@ -18,7 +19,7 @@ namespace HBData.Models
         ///     File id
         /// </summary>
         public Guid FileFrameId { get; set; }
-
+        [JsonIgnore]
         public FileFrame FileFrame { get; set; }
 
         /// <summary>

@@ -14,13 +14,15 @@ using Newtonsoft.Json;
 using RabbitMqEventBus.Events;
 using Renci.SshNet.Common;
 using HBLib;
+using HBData;
+using Microsoft.EntityFrameworkCore;
 
 namespace FillingFrameService
 {
     public class DialogueCreation
     {
         private readonly ElasticClient _log;
-        private readonly IGenericRepository _repository;
+        private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly ElasticClientFactory _elasticClientFactory;
 
@@ -29,7 +31,7 @@ namespace FillingFrameService
             SftpClient client,
             ElasticClientFactory elasticClientFactory)
         {
-            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
+            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _sftpClient = client;
             _elasticClientFactory = elasticClientFactory;
         }
@@ -43,21 +45,23 @@ namespace FillingFrameService
 
             try
             {
-                var frameIds =
-                    _repository.Get<FileFrame>().Where(item =>
+                var frames =
+                    _context.FileFrames
+                        .Include(p => p.FrameAttribute)
+                        .Include(p => p.FrameEmotion)
+                        .Where(item =>
                             item.ApplicationUserId == message.ApplicationUserId
                             && item.Time >= message.BeginTime
                             && item.Time <= message.EndTime)
-                        .Select(item => item.FileFrameId)
                         .ToList();
                 
-                var emotions =
-                    _repository.GetWithInclude<FrameEmotion>(item => frameIds.Contains(item.FileFrameId),
-                        item => item.FileFrame).ToList();
+                var emotions = frames.Where(p => p.FrameEmotion.Any())
+                    .Select(p => p.FrameEmotion.First())
+                    .ToList();
 
-                var attributes =
-                    _repository.GetWithInclude<FrameAttribute>(item => frameIds.Contains(item.FileFrameId),
-                        item => item.FileFrame).ToList();
+                var attributes = frames.Where(p => p.FrameAttribute.Any())
+                    .Select(p => p.FrameAttribute.First())
+                    .ToList();
 
                 if (emotions.Any() && attributes.Any())
                 {
@@ -106,9 +110,12 @@ namespace FillingFrameService
 
                     var insertTasks = new List<Task>
                     {
-                        _repository.CreateAsync(dialogueVisual),
-                        _repository.CreateAsync(dialogueClientProfile),
-                        _repository.BulkInsertAsync(dialogueFrames)
+                        _context.DialogueVisuals.AddAsync(dialogueVisual),
+                        _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
+                        _context.DialogueFrames.AddRangeAsync(dialogueFrames)
+                        // _repository.CreateAsync(dialogueVisual),
+                        // _repository.CreateAsync(dialogueClientProfile),
+                        // _repository.BulkInsertAsync(dialogueFrames)
                     };
 
                     var attribute = attributes.First();
@@ -131,7 +138,7 @@ namespace FillingFrameService
                     await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
                     stream.Close();
                     await Task.WhenAll(insertTasks);
-                    await _repository.SaveAsync();
+                    _context.SaveChanges();
                     _log.Info("Function finished");
                 }
             }
