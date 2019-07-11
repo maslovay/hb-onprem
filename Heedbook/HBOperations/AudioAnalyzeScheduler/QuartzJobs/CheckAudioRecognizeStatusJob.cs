@@ -281,7 +281,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             try
             {
                 var sentence = string.Join(" ", recognizedWords);
-                var posShareStrg = RunPython.Run("sentimental/GetPositiveShare.py", 
+                var posShareStrg = RunPython.Run("GetPositiveShare.py", 
                     Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sentimental"), "3", sentence, _log);
 
                 if (!posShareStrg.Item2.Trim().IsNullOrEmpty())

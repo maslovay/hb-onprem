@@ -23,10 +23,10 @@ RUN apk add --update git
 RUN pip3 install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
 RUN pip3 install nltk
 
-WORKDIR /app/sentimental
-RUN ls -n .
-RUN python3 GetPositiveShare.py "Хорошо или плохо?"
-WORKDIR /app
+#WORKDIR /app/sentimental
+#RUN ls -n .
+#RUN python3 GetPositiveShare.py "Хорошо или плохо?"
+#WORKDIR /app
  
 ENTRYPOINT ["dotnet", "AudioAnalyzeScheduler.dll"]
 RUN mkdir /opt/
