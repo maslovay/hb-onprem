@@ -25,6 +25,7 @@ RUN pip3 install nltk
 
 WORKDIR /app/sentimental
 RUN ls -n .
+RUN sh setup.py
 RUN sh GetPositiveShare.py "Хорошо или плохо?"
 WORKDIR /app
  
