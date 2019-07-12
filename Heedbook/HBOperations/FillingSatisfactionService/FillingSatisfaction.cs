@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using HBLib;
+using HBData;
+using Microsoft.EntityFrameworkCore;
 
 namespace FillingSatisfactionService
 {
@@ -18,7 +20,7 @@ namespace FillingSatisfactionService
         private readonly CalculationConfig _config;
         private readonly INotificationPublisher _notificationPublisher;
         private readonly ElasticClient _log;
-        private readonly IGenericRepository _repository;
+        private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
 
 
@@ -29,7 +31,7 @@ namespace FillingSatisfactionService
             ElasticClientFactory elasticClientFactory
             )
         {
-            _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
+            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _calculations = calculations;
             _notificationPublisher = notificationPublisher;
             _config = config;
@@ -45,37 +47,21 @@ namespace FillingSatisfactionService
             try
             {
                 _log.Info("Function started");
-                var dialogueFrame =
-                    await _repository.FindByConditionAsync<DialogueFrame>(p => p.DialogueId == dialogueId);
-                var dialogueAudio = new DialogueAudio();
-
-                Double? positiveTextTone;
-                try
-                {
-                    dialogueAudio =
-                        await _repository.FindOneByConditionAsync<DialogueAudio>(p => p.DialogueId == dialogueId);
-                }
-                catch
-                {
-                    dialogueAudio = null;
-                }
-
-                try
-                {
-                    positiveTextTone = _repository
-                                      .Get<DialogueSpeech>().First(p => p.DialogueId == dialogueId).PositiveShare;
-                }
-                catch
-                {
-                    positiveTextTone = null;
-                }
-
-                var dialogueInterval =
-                    await _repository.FindByConditionAsync<DialogueInterval>(p => p.DialogueId == dialogueId);
+                var dialogue = _context.Dialogues
+                    .Include(p => p.DialogueFrame)
+                    .Include(p => p.DialogueAudio)
+                    .Include(p => p.DialogueSpeech)
+                    .Include(p => p.DialogueInterval)
+                    .FirstOrDefault(p => p.DialogueId == dialogueId);
+                var dialogueFrame = dialogue.DialogueFrame;
+                var dialogueAudio = dialogue.DialogueAudio.FirstOrDefault();
+                var positiveTextTone = dialogue.DialogueSpeech.FirstOrDefault() == null ? null: dialogue.DialogueSpeech.FirstOrDefault().PositiveShare;
+                var dialogueInterval = dialogue.DialogueInterval;
 
                 var meetingExpectationsByNN =
                     _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio,
                         positiveTextTone);
+                
                 Double? begMoodByNN = 0;
                 Double? endMoodByNN = 0;
                 Double nNWeight = 0;
@@ -112,7 +98,7 @@ namespace FillingSatisfactionService
                 try
                 {
                     satisfactionScore =
-                        await _repository.FindOneByConditionAsync<DialogueClientSatisfaction>(p =>
+                        _context.DialogueClientSatisfactions.FirstOrDefault(p =>
                             p.DialogueId == dialogueId);
                 }
                 catch
@@ -207,7 +193,7 @@ namespace FillingSatisfactionService
                         BegMoodByNN = begMoodByNN,
                         EndMoodByNN = endMoodByNN
                     };
-                    _repository.Create(emp);
+                    _context.DialogueClientSatisfactions.Add(emp);
                 }
                 else
                 {
@@ -219,7 +205,7 @@ namespace FillingSatisfactionService
                     satisfactionScore.EndMoodByNN = endMoodByNN;
                 }
 
-                _repository.Save();
+                _context.SaveChanges();
                 var @event = new FillingHintsRun
                 {
                     DialogueId = dialogueId
