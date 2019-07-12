@@ -14,7 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Renci.SshNet.Common;
 
-namespace AudioAnalyzeService
+namespace ToneAnalyzeService
 {
     public class ToneAnalyze
     {
