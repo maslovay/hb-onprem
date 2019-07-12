@@ -28,6 +28,7 @@ namespace UserService.Controllers
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly INotificationPublisher _notificationPublisher;
+        
 
         public DialogueRecalculateController(INotificationHandler handler, RecordsContext context, 
                                                 ElasticClient log, SftpClient sftpClient, 
@@ -92,89 +93,62 @@ namespace UserService.Controllers
 
         [HttpPost("CheckRelatedDialogueData")]
         [SwaggerOperation(Description = "Re assemble dialogue")]
-        public async Task<IActionResult> CheckRelatedDialogueData(string DialogueId)
+        public async Task<IActionResult> CheckRelatedDialogueData(Guid dialogueId)
         {
+            _log.SetFormat("{DialogueId}");
+            _log.SetArgs(dialogueId);
             var result = "";
             try
             {           
-                if(DialogueId == null) return BadRequest("DialogueId is Empty"); 
-                _log.Info($"DialogueId: {DialogueId}");
                 var dialogue = _context.Dialogues
                     .Include(p=>p.DialogueAudio)                    
-                    .Include(p=>p.DialogueInterval)
                     .Include(p=>p.DialogueVisual)                    
                     .Include(p=>p.DialogueClientProfile)
                     .Include(p=>p.DialogueFrame)
-                    .FirstOrDefault(p=>p.DialogueId == Guid.Parse(DialogueId));
+                    .FirstOrDefault(p=>p.DialogueId == dialogueId);
 
-                if(dialogue==null) return BadRequest("such Dialogue not exist in Data Base");
-
-                var dialogueVideoFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialoguevideos/{DialogueId}.mkv");  
+                if (dialogue == null) return BadRequest("Such dialogue do not exist in PostgresDB");
+                var dialogueVideoFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialoguevideos/{dialogueId}.mkv");  
                 
                 if(dialogueVideoFileExist)
                 {
-                    _log.Info($"DialogueVideoAssemble - Success | ");     
-                    var dialogueAudioFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialogueaudios/{DialogueId}.wav");
-
-                    if(dialogue.DialogueAudio!=null
-                        && dialogueAudioFileExist)
+                    var dialogueAudioFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialogueaudios/{dialogueId}.wav");   
+                    if(dialogueAudioFileExist)
                     {
-                        _log.Info($"VideoToSound - Success | ");    
-                        
-                        var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                        if(speechResult!=null && speechResult.STTResult!=null)
+                        var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == dialogueId);
+                        if(speechResult ==null)
                         {
-                            _log.Info($"GoogleRecognition - Success | ");                
-                        }
-                        else
-                        {                        
-                            _log.Info($"GoogleRecognition - not success | ");
+                            result += "Starting AudioAnalyze, ";                        
                             var @event = new AudioAnalyzeRun
                             {
-                                Path = $"dialogueaudios/{DialogueId}.wav"
+                                Path = $"dialogueaudios/{dialogueId}.wav"
                             };
                             _notificationPublisher.Publish(@event);
                         }
 
-                        if(dialogue.DialogueInterval != null)
+                        if(dialogue.DialogueAudio == null)
                         {
-                            _log.Info($"TonAnalyze - Success | ");             
-                        }
-                        else
-                        {
-                            _log.Info($"TonAnalyze - not Success | ");
+                            result += "Starting ToneAnalyze, ";
                             var @event = new ToneAnalyzeRun
                             {
-                                Path = $"dialogueaudios/{DialogueId}.wav"
+                                Path = $"dialogueaudios/{dialogueId}.wav"
                             };
                             _notificationPublisher.Publish(@event);
                         }    
                     }
                     else
                     {
-                        _log.Info($"VideoToSound - not Success | ");
-                        _log.Info($"GoogleRecognition - not success | ");
-                        _log.Info($"TonAnalyze - not Success | ");
-
+                        result += "Starting VideoToSound, ";
                         var @event = new VideoToSoundRun
                         {
-                            Path = $"dialoguevideos/{DialogueId}.mkv"
+                            Path = $"dialoguevideos/{dialogueId}.mkv"
                         };
                         _notificationPublisher.Publish(@event);
                     }                
 
-                    var dialogueAvatarExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}useravatars/{DialogueId}.jpg");                
-
-                    if(dialogueAvatarExist
-                        && dialogue.DialogueVisual!=null
-                        && dialogue.DialogueClientProfile!=null
-                        && dialogue.DialogueFrame!=null)
+                    if(dialogue.DialogueVisual ==null && dialogue.DialogueClientProfile!=null && dialogue.DialogueFrame!=null)
                     {
-                        _log.Info($"FillingFrame - Success | ");
-                    }
-                    else
-                    {
-                        _log.Info($"FillingFrame - not Success | ");
+                        result += "Starting FillingFrames, ";
                         var @event = new DialogueCreationRun
                         {
                             ApplicationUserId = dialogue.ApplicationUserId,
@@ -183,17 +157,11 @@ namespace UserService.Controllers
                             EndTime = dialogue.EndTime
                         };
                         _notificationPublisher.Publish(@event);
-                    }
-
-                                      
+                    }                     
                 }
                 else
                 {  
-                    _log.Info($"DialogueVideoAssemble - not Success | ");    
-                    _log.Info($"VideoToSound - not Success | ");
-                    _log.Info($"GoogleRecognition - not success | ");
-                    _log.Info($"TonAnalyze - not Success | ");     
-                    _log.Info($"FillingFrame - not Success | ");                   
+                    result += "Starting DialogueVideoAssemble, ";                
                     var @event = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = dialogue.ApplicationUserId,
@@ -212,12 +180,12 @@ namespace UserService.Controllers
                     _context.SaveChanges();
                 }                  
                 
-                return Ok();
+                return Ok(result);
             }
-            catch(Exception ex)
+            catch(Exception e)
             {
-                System.Console.WriteLine(ex.Message);
-                return BadRequest();
+                _log.Fatal("Exception occured {e}");
+                return BadRequest(e);
             }
         }
     }
