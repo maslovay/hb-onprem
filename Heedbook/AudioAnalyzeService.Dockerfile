@@ -13,8 +13,4 @@ RUN mkdir /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir /opt/download
 RUN chmod -R 777 /opt/download
-RUN apk update
-RUN apk add wine xvfb
-RUN apk add ffmpeg
-RUN chmod +x /app/OpenVokaWavMean-3-0-win64.exe
 ENV INFRASTRUCTURE Cloud
