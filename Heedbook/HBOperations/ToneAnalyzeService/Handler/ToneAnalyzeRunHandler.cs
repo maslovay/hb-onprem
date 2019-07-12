@@ -2,7 +2,7 @@
 using RabbitMqEventBus.Base;
 using RabbitMqEventBus.Events;
 
-namespace AudioAnalyzeService.Handler
+namespace ToneAnalyzeService.Handler
 {
     public class ToneAnalyzeRunHandler : IIntegrationEventHandler<ToneAnalyzeRun>
     {

@@ -16,7 +16,6 @@ namespace AudioAnalyzeService.Tests
     [TestFixture]
     public class AudioAnalyzeServiceIntegrationTests : ServiceTest
     {
-        private ToneAnalyze _toneAnalyzeService;
         private AudioAnalyze _audioAnalyzeService;
         private Startup _startup;
         private GoogleConnector _googleConnector;
@@ -98,24 +97,9 @@ namespace AudioAnalyzeService.Tests
             _elasticClientFactory = ServiceProvider.GetService<ElasticClientFactory>();
             
             _ffmpegWrapper = ServiceProvider.GetService<FFMpegWrapper>();
-            _toneAnalyzeService = new ToneAnalyze( _sftpClient, this.Config, ScopeFactory, _elasticClientFactory, _ffmpegWrapper );
             _asrClient = ServiceProvider.GetService<AsrHttpClient.AsrHttpClient>();
             _googleConnector = ServiceProvider.GetService<GoogleConnector>();
             _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _asrClient, _elasticClientFactory, _googleConnector);
-        }
-        
-        [Test, Retry(3)]
-        public async Task ToneAnalyzerCreatesDbRecords()
-        {
-            _sftpClient.ChangeDirectoryToDefault();
-            
-            await _toneAnalyzeService.Run("dialoguevideos/" + testDialogVideoCorrectFileName);
-            var intervals = _repository.Get<DialogueInterval>().Where(di => di.DialogueId == testDialog.DialogueId).ToArray();
-            var dialogueAudio = _repository.Get<DialogueAudio>()
-                .FirstOrDefault(da => da.DialogueId == testDialog.DialogueId);
-            
-            Assert.Greater(intervals.Length, 0);
-            Assert.NotNull(dialogueAudio);
         }
         
         [Test, Retry(3)]
