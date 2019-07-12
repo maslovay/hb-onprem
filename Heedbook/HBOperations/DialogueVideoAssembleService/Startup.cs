@@ -38,6 +38,8 @@ namespace DialogueVideoAssembleService
             });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.Configure<DialogueVideoAssembleSettings>(Configuration.GetSection(nameof(DialogueVideoAssembleSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<DialogueVideoAssembleSettings>>().Value);
             services.AddTransient<SftpClient>();
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
@@ -45,6 +47,7 @@ namespace DialogueVideoAssembleService
             services.AddTransient<DialogueVideoAssemble>();
             services.AddTransient<FFMpegSettings>();
             services.AddTransient<FFMpegWrapper>();
+            services.AddScoped<Utils.DialogueVideoAssembleUtils>();
             services.AddTransient<DialogueVideoAssembleRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddRabbitMqEventBus(Configuration);

@@ -2,5 +2,6 @@
 {
     public class IntegrationEvent
     {
+        public int RetryCount { get; set; }
     }
 }

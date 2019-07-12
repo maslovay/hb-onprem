@@ -1,14 +1,19 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 
 namespace HBData.Models
 {
     public class FrameEmotion
     {
-        [Key] public Guid FrameEmotionId { get; set; }
+        [Key] 
+        public Guid FrameEmotionId { get; set; }
 
         public Guid FileFrameId { get; set; }
+        [JsonIgnore]
         public FileFrame FileFrame { get; set; }
+
+
         public Double? AngerShare { get; set; }
         public Double? ContemptShare { get; set; }
         public Double? DisgustShare { get; set; }
