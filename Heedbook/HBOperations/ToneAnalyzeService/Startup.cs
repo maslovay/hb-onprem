@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Configurations;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -50,6 +51,7 @@ namespace ToneAnalyzeService
             services.AddTransient<FFMpegWrapper>();
             services.AddTransient(provider =>
                 provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddRabbitMqEventBus(Configuration);
             services.AddTransient<SftpClient>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddTransient<ToneAnalyze>();

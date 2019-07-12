@@ -40,7 +40,6 @@ namespace UserService.Controllers
             
         }
 
-        
         [HttpGet("[action]/{timelInHours}")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> CheckIfAnyAssembledDialogues( int timelInHours )
         {
