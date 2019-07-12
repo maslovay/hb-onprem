@@ -158,8 +158,8 @@ namespace UserService.Controllers
                         _notificationPublisher.Publish(@event);
                     }                
 
-                    _log.Info($"Filling frame result - {dialogue.DialogueVisual ==null || dialogue.DialogueClientProfile ==null || dialogue.DialogueFrame ==null}");
-                    if(dialogue.DialogueVisual.Any() || dialogue.DialogueClientProfile.Any() || dialogue.DialogueFrame.Any())
+                    _log.Info($"Filling frame result - {(!dialogue.DialogueVisual.Any() || !dialogue.DialogueClientProfile.Any() || !dialogue.DialogueFrame.Any())}");
+                    if(!dialogue.DialogueVisual.Any() || !dialogue.DialogueClientProfile.Any() || !dialogue.DialogueFrame.Any())
                     {
                         result += "Starting FillingFrames, ";
                         var @event = new DialogueCreationRun
