@@ -46,7 +46,6 @@ namespace FaceAnalyzeService
                 _log.Info($"Function started");
                 if (await _sftpClient.IsFileExistsAsync(remotePath))
                 {
-
                     string localPath;
                     lock (_syncRoot)
                     {

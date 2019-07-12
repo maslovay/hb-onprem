@@ -19,6 +19,8 @@ namespace HBLib.Utils
 
             _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
                 sftpSettings.Password);
+            _client.KeepAliveInterval = TimeSpan.FromSeconds(30);
+            //_client.ConnectionInfo.Timeout = TimeSpan.FromMinutes(5);
             _sftpSettings = sftpSettings;
             // fileref = new FileReference(new SftpSettings()
             // {
@@ -38,13 +40,13 @@ namespace HBLib.Utils
         {
             _client.Dispose();
         }
+
         private async Task ConnectToSftpAsync()
         {
             if (!_client.IsConnected)
-                await Task.Run(() => _client.Connect()).ContinueWith(t =>
-                {
-                    ChangeDirectoryToDefault();
-                });
+            {
+                await Task.Run(() => _client.Connect()).ContinueWith(t => { ChangeDirectoryToDefault(); });
+            }
         }
 
         /// <summary>
