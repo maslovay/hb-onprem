@@ -41,7 +41,7 @@ namespace UserService.Controllers
         }
 
         
-        [HttpGet("[action]")]
+        [HttpGet("[action]/{timelInHours}")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> CheckIfAnyAssembledDialogues( int timelInHours )
         {
             var dialogs = _repository.GetWithInclude<Dialogue>(
