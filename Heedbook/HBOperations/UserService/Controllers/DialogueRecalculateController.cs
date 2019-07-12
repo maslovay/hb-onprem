@@ -109,13 +109,16 @@ namespace UserService.Controllers
 
                 if (dialogue == null) return BadRequest("Such dialogue do not exist in PostgresDB");
                 var dialogueVideoFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialoguevideos/{dialogueId}.mkv");  
-                
+                _log.Info($"Video file exist - {dialogueVideoFileExist}");
                 if(dialogueVideoFileExist)
                 {
                     var dialogueAudioFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialogueaudios/{dialogueId}.wav");   
+                    _log.Info($"Audio file exist - {dialogueAudioFileExist}");
                     if(dialogueAudioFileExist)
                     {
                         var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == dialogueId);
+                        _log.Info($"Audio analyze result - {speechResult ==null}");
+
                         if(speechResult ==null)
                         {
                             result += "Starting AudioAnalyze, ";                        
@@ -126,6 +129,7 @@ namespace UserService.Controllers
                             _notificationPublisher.Publish(@event);
                         }
 
+                        _log.Info($"Tone analyze result - {dialogue.DialogueAudio ==null}");
                         if(dialogue.DialogueAudio == null)
                         {
                             result += "Starting ToneAnalyze, ";
@@ -138,6 +142,7 @@ namespace UserService.Controllers
                     }
                     else
                     {
+                        _log.Info("Starting video to sound");
                         result += "Starting VideoToSound, ";
                         var @event = new VideoToSoundRun
                         {
@@ -146,7 +151,8 @@ namespace UserService.Controllers
                         _notificationPublisher.Publish(@event);
                     }                
 
-                    if(dialogue.DialogueVisual ==null && dialogue.DialogueClientProfile!=null && dialogue.DialogueFrame!=null)
+                    _log.Info($"Filling frame result - {dialogue.DialogueVisual ==null && dialogue.DialogueClientProfile ==null && dialogue.DialogueFrame ==null}");
+                    if(dialogue.DialogueVisual ==null && dialogue.DialogueClientProfile ==null && dialogue.DialogueFrame ==null)
                     {
                         result += "Starting FillingFrames, ";
                         var @event = new DialogueCreationRun
@@ -161,6 +167,7 @@ namespace UserService.Controllers
                 }
                 else
                 {  
+                    _log.Info("Starting dialogue video assemble");
                     result += "Starting DialogueVideoAssemble, ";                
                     var @event = new DialogueVideoAssembleRun
                     {
@@ -178,7 +185,8 @@ namespace UserService.Controllers
                     dialogue.CreationTime = DateTime.UtcNow;
                     dialogue.Comment = "";
                     _context.SaveChanges();
-                }                  
+                }      
+                _log.Info("Function finished");            
                 
                 return Ok(result);
             }
