@@ -40,6 +40,21 @@ namespace UserService.Controllers
             
         }
 
+        
+        [HttpGet("[action]")]
+        public async Task<ActionResult<IEnumerable<Dialogue>>> CheckIfAnyAssembledDialogues( int timelInHours )
+        {
+            var dialogs = _repository.GetWithInclude<Dialogue>(
+                d => d.EndTime >= DateTime.Now.AddHours(-timelInHours)
+                     && d.EndTime < DateTime.Now
+                     && d.StatusId == 3);
+
+            if (dialogs.Any())
+                return Ok($"Assembled dialogues present for last {timelInHours} hours: {dialogs.Count()}");
+
+            return NotFound($"NO assembled dialogues present for last {timelInHours} hours!!!");
+        }
+        
 
         [HttpGet("[action]")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> GetLast20ProcessedDialogues()
