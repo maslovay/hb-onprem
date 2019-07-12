@@ -119,7 +119,7 @@ namespace UserService.Controllers
                         var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == dialogueId);
                         _log.Info($"Audio analyze result - {speechResult ==null}");
 
-                        if(speechResult ==null)
+                        if(speechResult == null)
                         {
                             result += "Starting AudioAnalyze, ";                        
                             var @event = new AudioAnalyzeRun
@@ -129,8 +129,8 @@ namespace UserService.Controllers
                             _notificationPublisher.Publish(@event);
                         }
 
-                        _log.Info($"Tone analyze result - {dialogue.DialogueAudio ==null}");
-                        if(dialogue.DialogueAudio == null)
+                        _log.Info($"Tone analyze result - {dialogue.DialogueAudio == null}");
+                        if(!dialogue.DialogueAudio.Any() || dialogue.DialogueAudio == null)
                         {
                             result += "Starting ToneAnalyze, ";
                             var @event = new ToneAnalyzeRun
