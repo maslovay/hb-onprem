@@ -11,12 +11,11 @@ namespace UserOperations.Controllers
     [ApiController]
     public class LoggingController : ControllerBase
     {
-        private ElasticClient _log;
+        private readonly ElasticSettings _settings;
 
-        public LoggingController(ElasticClient log)
+        public LoggingController(ElasticSettings settings)
         {
-            _log = log;
-            
+            _settings = settings;
         }
 
         /// <summary>
@@ -24,29 +23,33 @@ namespace UserOperations.Controllers
         /// </summary>
         /// <param name="message">Main info</param>
         /// <param name="severity">Severity: "Info", "Debug", "Error", "Fatal", "Warning"</param>
+        /// <param name="functionName">Function nme for filtering</param>
         [HttpGet("[action]")]
-        public async Task<ObjectResult> SendLog(string message, string severity)
+        public async Task<ObjectResult> SendLog(string message, string severity, string functionName)
         {
             if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(severity))
                 return BadRequest("Please, fill ALL parameters! ");
+
+            _settings.FunctionName = functionName;
+            var log = new ElasticClient(_settings);
             
             switch ( severity.ToUpper() )
             {
                 case "FATAL":
-                    _log.Fatal(message);
+                    log.Fatal(message);
                     break;
                 case "DEBUG":
-                    _log.Debug(message);
+                    log.Debug(message);
                     break;
                 case "ERROR":
-                    _log.Error(message);
+                    log.Error(message);
                     break;
                 case "WARNING":
-                    _log.Warning(message);
+                    log.Warning(message);
                     break;
                 default: 
                 case "INFO":
-                    _log.Info(message);
+                    log.Info(message);
                     break;
             }
 
