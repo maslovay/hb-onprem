@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
+    <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
     <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
     <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj" />
   </ItemGroup>
