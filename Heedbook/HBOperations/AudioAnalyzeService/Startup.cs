@@ -57,6 +57,7 @@ namespace AudioAnalyzeService
             services.AddTransient<AudioAnalyzeRunHandler>();
 
             services.AddRabbitMqEventBus(Configuration);
+            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
