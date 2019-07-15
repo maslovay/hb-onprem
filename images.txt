@@ -12,3 +12,4 @@ containerregistryhb.azurecr.io/fillingsatisfactionservice:latest
 containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest
 containerregistryhb.azurecr.io/dialoguemarkupservice:latest
 containerregistryhb.azurecr.io/toneanalyzeservice:latest
+containerregistryhb.azurecr.io/persondetectionservice:latest

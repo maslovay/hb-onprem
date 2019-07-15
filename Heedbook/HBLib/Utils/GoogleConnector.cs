@@ -191,6 +191,7 @@ namespace HBLib.Utils
                 TimeSpan.FromSeconds(1), 5);
             if (jsStr.Error != null && jsStr.Error.Status == "PERMISSION_DENIED")
             {
+                Console.WriteLine("api key expired");
                 var googleAccount =
                     await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
                         item.GoogleAccountId == apiKey.GoogleAccountId);
@@ -256,6 +257,7 @@ namespace HBLib.Utils
                                new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8,
                                    "application/json")).Result;
             var result = response.Content.ReadAsStringAsync().Result;
+            Console.WriteLine(result);
             return JsonConvert.DeserializeObject<GoogleTransactionId>(result);
         }
 

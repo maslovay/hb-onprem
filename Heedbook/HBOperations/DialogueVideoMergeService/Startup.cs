@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Quartz;
+using QuartzExtensions;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
@@ -50,11 +52,12 @@ namespace DialogueVideoMergeService
             services.AddTransient<DialogueVideoMergeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddRabbitMqEventBus(Configuration);
+            services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             var handlerService = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             handlerService.Subscribe<DialogueVideoMergeRun, DialogueVideoMergeRunHandler>();
@@ -62,7 +65,10 @@ namespace DialogueVideoMergeService
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
-
+            var job = app.ApplicationServices.GetService<IJobDetail>();
+            var trigger = app.ApplicationServices.GetService<ITrigger>();
+            scheduler.ScheduleJob(job,
+                trigger);
             app.UseHttpsRedirection();
             app.UseMvc();
         }

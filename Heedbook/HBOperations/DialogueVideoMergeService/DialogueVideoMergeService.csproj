@@ -9,12 +9,14 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="Quartz" Version="3.0.7" />
   </ItemGroup>
 
    <ItemGroup>
     <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
+    <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
     <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
   </ItemGroup>
 

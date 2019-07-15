@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Quartz;
+using QuartzExtensions;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using VideoToSoundService.Hander;
@@ -38,11 +40,12 @@ namespace VideoToSoundService
             services.AddTransient<FFMpegWrapper>();
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddRabbitMqEventBus(Configuration);
+            services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             publisher.Subscribe<VideoToSoundRun, VideoToSoundRunHandler>();
@@ -50,7 +53,10 @@ namespace VideoToSoundService
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
-
+            var job = app.ApplicationServices.GetService<IJobDetail>();
+            var trigger = app.ApplicationServices.GetService<ITrigger>();
+            scheduler.ScheduleJob(job,
+                trigger);
             app.UseHttpsRedirection();
             app.UseMvc();
         }
