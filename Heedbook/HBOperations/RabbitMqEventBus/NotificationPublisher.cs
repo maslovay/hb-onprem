@@ -127,19 +127,34 @@ namespace RabbitMqEventBus
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += async (model, ea) =>
             {
-                var @event = ea.RoutingKey;
-                var message = Encoding.UTF8.GetString(ea.Body);
-                var retryCount = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event))).RetryCount;
-                Console.WriteLine("retry count is : " + retryCount);
-                Console.WriteLine("delivery count is: " + _deliveryCount);
+                try
+                {
+                    var @event = ea.RoutingKey;
+                    var message = Encoding.UTF8.GetString(ea.Body);
+                    var retryCount = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event))).RetryCount;
+                    Console.WriteLine("retry count is : " + retryCount);
+                    Console.WriteLine("delivery count is: " + _deliveryCount);
                 
-                if (retryCount >= _deliveryCount)
-                {
-                    channel.BasicAck(ea.DeliveryTag, false);
+                    if (retryCount >= _deliveryCount)
+                    {
+                        channel.BasicAck(ea.DeliveryTag, false);
+                    }
+                    else
+                    {
+                        await ProcessEvent(@event, message, retryCount);
+                        channel.BasicAck(ea.DeliveryTag, false);
+                    }
                 }
-                else
+                catch (Exception e)
                 {
-                    await ProcessEvent(@event, message, retryCount);
+                    var encodingString = Encoding.UTF8.GetString(ea.Body);
+
+                    var @event = (IntegrationEvent)JsonConvert.DeserializeObject(encodingString,
+                        _subsManager.GetEventTypeByName(ea.RoutingKey));
+                    @event.RetryCount += 1;
+                    Console.WriteLine("exception occured in rabbitmq event bus, retry count is: " + @event.RetryCount);
+                    Console.WriteLine("type is: " + @event.GetType());
+                    Publish(@event);
                     channel.BasicAck(ea.DeliveryTag, false);
                 }
             };
@@ -157,7 +172,7 @@ namespace RabbitMqEventBus
             channel.BasicConsume(eventName,
                 false,
                 consumer);
-
+            
             channel.CallbackException += (sender, ea) =>
             {
                 _consumerChannel.Dispose();
@@ -185,8 +200,6 @@ namespace RabbitMqEventBus
                         var eventType = _subsManager.GetEventTypeByName(eventName);
                         var integrationEvent = JsonConvert.DeserializeObject(message, eventType);
                         var handler = _serviceProvider.GetService(subscription.HandlerType);
-                        var castedIntegrationEvent = (IntegrationEvent)integrationEvent;
-                        castedIntegrationEvent.RetryCount = retryCount + 1;
                         var concreteType = typeof(IIntegrationEventHandler<>).MakeGenericType(eventType);
                         await (Task) concreteType.GetMethod("Handle").Invoke(handler, new[] {integrationEvent});
                     }
