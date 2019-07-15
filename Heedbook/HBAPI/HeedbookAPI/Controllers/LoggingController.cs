@@ -15,7 +15,7 @@ namespace UserOperations.Controllers
 
         public LoggingController(ElasticSettings settings)
         {
-            _settings = settings;
+            _settings = new ElasticSettings {Host = settings.Host, Port = settings.Port};
         }
 
         /// <summary>
