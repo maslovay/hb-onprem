@@ -41,7 +41,7 @@ namespace FillingHintService
                                           .Select(item => item.Language.LanguageShortName)
                                           .First();
                 var catalogueHints = await _repository.FindAllAsync<CatalogueHint>();
-                if (!catalogueHints.Any())
+                if (catalogueHints.Any())
                 {
                     var hints = catalogueHints.Select(item => new Hint()
                     {
