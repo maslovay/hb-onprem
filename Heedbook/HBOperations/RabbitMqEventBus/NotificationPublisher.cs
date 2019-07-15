@@ -130,11 +130,11 @@ namespace RabbitMqEventBus
                 try
                 {
                     var @event = ea.RoutingKey;
-                    Console.WriteLine("delivery tag: " + ea.DeliveryTag );
                     var message = Encoding.UTF8.GetString(ea.Body);
-                    var retryCount = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event)));
-                    if (retryCount.RetryCount >= _deliveryCount)
+                    var eventMessage = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event)));
+                    if (eventMessage.RetryCount >= _deliveryCount)
                     {
+                        Console.WriteLine($"Message deleted from queue after {_deliveryCount} retries");
                         channel.BasicAck(ea.DeliveryTag, false);
                     }
                     else
