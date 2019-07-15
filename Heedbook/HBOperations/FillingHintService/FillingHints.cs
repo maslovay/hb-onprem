@@ -51,6 +51,10 @@ namespace FillingHintService
                     foreach (var hintConditions in hints)
                     foreach (var hintCondition in hintConditions.HintCondition)
                     {
+                        if (hintCondition.Table == null || hintCondition.Condition == null ||
+                            hintCondition.Indexes == null)
+                            continue;
+                        
                         var reqSql = BuildRequest(hintCondition.Table, dialogueId.ToString(), hintCondition.Condition,
                             hintCondition.Indexes);
 
