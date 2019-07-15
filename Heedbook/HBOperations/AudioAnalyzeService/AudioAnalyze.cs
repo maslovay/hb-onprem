@@ -85,6 +85,10 @@ namespace AudioAnalyzeService
                             var transactionId =
                                 await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId.ToString(), true, true);
                             _log.Info("transaction id: " + transactionId);
+                            if (transactionId == null || transactionId.Name <= 0)
+                            {
+                                throw new Exception("Transaction Id is null");
+                            }
                             fileAudio.TransactionId = transactionId.Name.ToString();
                             fileAudio.StatusId = 6;
                         }

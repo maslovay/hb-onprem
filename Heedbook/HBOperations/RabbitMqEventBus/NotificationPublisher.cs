@@ -130,6 +130,9 @@ namespace RabbitMqEventBus
                 var @event = ea.RoutingKey;
                 var message = Encoding.UTF8.GetString(ea.Body);
                 var retryCount = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event))).RetryCount;
+                Console.WriteLine("retry count is : " + retryCount);
+                Console.WriteLine("delivery count is: " + _deliveryCount);
+                
                 if (retryCount >= _deliveryCount)
                 {
                     channel.BasicAck(ea.DeliveryTag, false);
