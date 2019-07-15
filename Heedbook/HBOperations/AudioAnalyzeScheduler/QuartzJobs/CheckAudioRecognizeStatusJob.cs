@@ -277,27 +277,17 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private double GetPositiveShareInText(List<string> recognizedWords)
         {
-            var result = 0.0;
-            try
-            {
-                var sentence = string.Join(" ", recognizedWords);
-                var posShareStrg = RunPython.Run("GetPositiveShare.py", 
-                    Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sentimental"), "3", sentence, _log);
+            var sentence = string.Join(" ", recognizedWords);
+            var posShareStrg = RunPython.Run("GetPositiveShare.py",
+                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sentimental"), "3",
+                sentence, _log);
 
-                if (!posShareStrg.Item2.Trim().IsNullOrEmpty())
-                    _log.Error("RunPython err string: " + posShareStrg.Item2);
-                else
-                    _log.Info("RunPython result string: " + posShareStrg.Item1);
+            if (!posShareStrg.Item2.Trim().IsNullOrEmpty())
+                _log.Error("RunPython err string: " + posShareStrg.Item2);
+            else
+                _log.Info("RunPython result string: " + posShareStrg.Item1);
 
-                result = double.Parse(posShareStrg.Item1.Trim());
-            }
-            catch (Exception ex)
-            {
-                _log.Error("GetPositiveShareInText exception: " + ex.Message);
-                result = 0.0;
-            }
-
-            return result;
+            return double.Parse(posShareStrg.Item1.Trim());
         }
 
         private Double GetSpeechSpeed(List<WordRecognized> words, Int32 languageId)
