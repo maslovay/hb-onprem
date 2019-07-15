@@ -106,7 +106,7 @@ namespace UserService.Controllers
             if (!String.IsNullOrEmpty(posShareStrg.Item2.Trim()))
                 throw new Exception("RunPython err string: " + posShareStrg.Item2);
 
-            return posShareStrg.ToString(); //double.Parse(posShareStrg.Item1.Trim(), CultureInfo.CurrentCulture);
+            return double.Parse(posShareStrg.Item1.Trim()).ToString(); //double.Parse(posShareStrg.Item1.Trim(), CultureInfo.CurrentCulture);
         }
         
         [HttpGet("[action]")]
