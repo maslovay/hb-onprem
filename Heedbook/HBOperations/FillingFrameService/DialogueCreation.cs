@@ -120,7 +120,7 @@ namespace FillingFrameService
 
                     var attribute = attributes.First();
                     var avatarFileName = string.IsNullOrEmpty(message.AvatarFileName) ? attribute.FileFrame.FileName : message.AvatarFileName;
-
+                    _log.Info($"Avatar file name is {avatarFileName}");
                     var localPath =
                         await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + avatarFileName);
 
