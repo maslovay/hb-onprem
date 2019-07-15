@@ -87,10 +87,13 @@ namespace AudioAnalyzeService
                             _log.Info("transaction id: " + transactionId);
                             if (transactionId == null || transactionId.Name <= 0)
                             {
-                                throw new Exception("Transaction Id is null");
+                                _log.Info("transaction id is null. Possibly wrong api key");
                             }
-                            fileAudio.TransactionId = transactionId.Name.ToString();
-                            fileAudio.StatusId = 6;
+                            else
+                            {
+                                fileAudio.TransactionId = transactionId.Name.ToString();
+                                fileAudio.StatusId = 6;
+                            }
                         }
                         _context.FileAudioDialogues.Add(fileAudio);
                         _context.SaveChanges();
