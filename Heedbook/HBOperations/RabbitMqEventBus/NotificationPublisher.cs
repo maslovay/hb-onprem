@@ -130,15 +130,11 @@ namespace RabbitMqEventBus
                 try
                 {
                     var @event = ea.RoutingKey;
-                    Console.WriteLine("delivery tag: " + ea.DeliveryTag );
                     var message = Encoding.UTF8.GetString(ea.Body);
-                    var retryCount = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event)));
-                    Console.WriteLine("delivery tag: " + retryCount.DeliveryTag);
-                    Console.WriteLine("retry count is : " + retryCount.RetryCount);
-                    Console.WriteLine("delivery count is: " + _deliveryCount);
-                
-                    if (retryCount.RetryCount >= _deliveryCount)
+                    var eventMessage = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event)));
+                    if (eventMessage.RetryCount >= _deliveryCount)
                     {
+                        Console.WriteLine($"Message deleted from queue after {_deliveryCount} retries");
                         channel.BasicAck(ea.DeliveryTag, false);
                     }
                     else
@@ -154,7 +150,6 @@ namespace RabbitMqEventBus
                         _subsManager.GetEventTypeByName(ea.RoutingKey));
                     Console.WriteLine(@event.RetryCount);
                     @event.RetryCount += 1;
-                    @event.DeliveryTag = ea.DeliveryTag;
                     Console.WriteLine("exception occured in rabbitmq event bus, retry count is: " + @event.RetryCount);
                     channel.BasicAck(ea.DeliveryTag, false);
                     Publish(@event);
