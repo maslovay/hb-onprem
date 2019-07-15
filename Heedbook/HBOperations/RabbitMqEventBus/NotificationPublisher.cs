@@ -130,32 +130,34 @@ namespace RabbitMqEventBus
                 try
                 {
                     var @event = ea.RoutingKey;
+                    Console.WriteLine("delivery tag: " + ea.DeliveryTag );
                     var message = Encoding.UTF8.GetString(ea.Body);
-                    var retryCount = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event))).RetryCount;
-                    Console.WriteLine("retry count is : " + retryCount);
+                    var retryCount = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event)));
+                    Console.WriteLine("delivery tag: " + retryCount.DeliveryTag);
+                    Console.WriteLine("retry count is : " + retryCount.RetryCount);
                     Console.WriteLine("delivery count is: " + _deliveryCount);
                 
-                    if (retryCount >= _deliveryCount)
+                    if (retryCount.RetryCount >= _deliveryCount)
                     {
                         channel.BasicAck(ea.DeliveryTag, false);
                     }
                     else
                     {
-                        await ProcessEvent(@event, message, retryCount);
+                        await ProcessEvent(@event, message);
                         channel.BasicAck(ea.DeliveryTag, false);
                     }
                 }
                 catch (Exception e)
                 {
                     var encodingString = Encoding.UTF8.GetString(ea.Body);
-
                     var @event = (IntegrationEvent)JsonConvert.DeserializeObject(encodingString,
                         _subsManager.GetEventTypeByName(ea.RoutingKey));
+                    Console.WriteLine(@event.RetryCount);
                     @event.RetryCount += 1;
+                    @event.DeliveryTag = ea.DeliveryTag;
                     Console.WriteLine("exception occured in rabbitmq event bus, retry count is: " + @event.RetryCount);
-                    Console.WriteLine("type is: " + @event.GetType());
-                    Publish(@event);
                     channel.BasicAck(ea.DeliveryTag, false);
+                    Publish(@event);
                 }
             };
 
@@ -182,7 +184,7 @@ namespace RabbitMqEventBus
         }
 
 
-        private async Task ProcessEvent(String eventName, String message, int retryCount)
+        private async Task ProcessEvent(String eventName, String message)
         {
             if (_subsManager.HasSubscriptionsForEvent(eventName))
             {
