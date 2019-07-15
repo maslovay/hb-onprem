@@ -82,7 +82,6 @@ namespace ToneAnalyzeService
                         SadnessTone = result.TryGetValue("Sadness", out var sadness) ? sadness : default(Double?)
                     });
                     begTime = endTime;
-                    File.Delete(fileName);
                 }
 
                 var dialogueAudio = new DialogueAudio
@@ -96,7 +95,7 @@ namespace ToneAnalyzeService
                 await _repository.BulkInsertAsync(intervals);
                 await _repository.CreateAsync(dialogueAudio);
                 await _repository.SaveAsync();
-                OS.SafeDelete(localPath);
+                File.Delete(localPath);
                 _log.Info("Function Tone analyze finished");
             }
             catch (SftpPathNotFoundException e)
@@ -173,11 +172,13 @@ namespace ToneAnalyzeService
 
                 _log.Info(text);
                 output = "";
+                File.Delete(fileName);
                 return result;
             }
             catch
             {
                 _log.Fatal(text);
+                File.Delete(fileName);
                 throw new Exception($"Something went wrong! The error message: {text}");
             }
         }
