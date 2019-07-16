@@ -117,9 +117,17 @@ namespace FillingFrameService
                         // _repository.CreateAsync(dialogueClientProfile),
                         // _repository.BulkInsertAsync(dialogueFrames)
                     };
-                    FrameAttribute attribute = string.IsNullOrWhiteSpace(message.AvatarFileName) 
-                        ? attributes.First() 
-                        : attributes.First(item => item.FileFrame.FileName == message.AvatarFileName);
+
+                    FrameAttribute attribute;
+                    if (string.IsNullOrWhiteSpace(message.AvatarFileName) )
+                    {
+                        attribute = frames.First(item => item.FileName == message.AvatarFileName).FrameAttribute.FirstOrDefault();
+                        if (attribute == null) attribute = attributes.First();
+                    }
+                    else
+                    {
+                        attribute = attributes.First();
+                    }
 
                     _log.Info($"Avatar file name is {attribute.FileFrame.FileName}");
                     var localPath =
@@ -149,7 +157,7 @@ namespace FillingFrameService
             }
             catch (Exception e)
             {
-                _log.Info($"exception occured {e}");
+                _log.Fatal($"exception occured {e}");
                 throw new DialogueCreationException(e.Message, e);
             }
         }
