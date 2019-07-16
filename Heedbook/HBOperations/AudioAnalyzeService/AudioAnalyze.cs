@@ -68,7 +68,7 @@ namespace AudioAnalyzeService
                             EndTime = dialogue.EndTime,
                             Duration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds
                         };
-
+                        await _googleConnector.CheckApiKey();
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             var languageId = Int32.Parse("2");

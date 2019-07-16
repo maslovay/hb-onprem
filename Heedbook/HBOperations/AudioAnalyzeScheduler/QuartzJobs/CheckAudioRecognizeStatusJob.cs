@@ -55,7 +55,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                          .Include(p => p.Dialogue.ApplicationUser)
                                          .Include(p => p.Dialogue.ApplicationUser.Company)
                                          .Where(p => p.StatusId == 6);
-                                        //  .ToList();
+                    //  .ToList();
+                    await _googleConnector.CheckApiKey();
                     if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                     {
                         audiosReq = audiosReq.Where(p => !String.IsNullOrEmpty(p.TransactionId));
@@ -74,7 +75,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         _log.Info($"Processing {audio.DialogueId}");
                      
                         var recognized = new List<WordRecognized>();
-
+                        
                         _log.Info($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
