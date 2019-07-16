@@ -157,7 +157,7 @@ namespace FillingFrameService
             }
             catch (Exception e)
             {
-                _log.Info($"exception occured {e}");
+                _log.Fatal($"exception occured {e}");
                 throw new DialogueCreationException(e.Message, e);
             }
         }
