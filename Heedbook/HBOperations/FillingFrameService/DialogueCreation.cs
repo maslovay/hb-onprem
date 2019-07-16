@@ -54,7 +54,7 @@ namespace FillingFrameService
                             && item.Time >= message.BeginTime
                             && item.Time <= message.EndTime)
                         .ToList();
-                
+
                 var emotions = frames.Where(p => p.FrameEmotion.Any())
                     .Select(p => p.FrameEmotion.First())
                     .ToList();
@@ -66,19 +66,19 @@ namespace FillingFrameService
                 if (emotions.Any() && attributes.Any())
                 {
                     var dialogueFrames = emotions.Select(item => new DialogueFrame
-                        {
-                            DialogueId = message.DialogueId,
-                            AngerShare = item.AngerShare,
-                            FearShare = item.FearShare,
-                            DisgustShare = item.DisgustShare,
-                            ContemptShare = item.ContemptShare,
-                            NeutralShare = item.NeutralShare,
-                            SadnessShare = item.SadnessShare,
-                            SurpriseShare = item.SurpriseShare,
-                            HappinessShare = item.HappinessShare,
-                            YawShare = item.YawShare,
-                            Time = item.FileFrame.Time
-                        })
+                    {
+                        DialogueId = message.DialogueId,
+                        AngerShare = item.AngerShare,
+                        FearShare = item.FearShare,
+                        DisgustShare = item.DisgustShare,
+                        ContemptShare = item.ContemptShare,
+                        NeutralShare = item.NeutralShare,
+                        SadnessShare = item.SadnessShare,
+                        SurpriseShare = item.SurpriseShare,
+                        HappinessShare = item.HappinessShare,
+                        YawShare = item.YawShare,
+                        Time = item.FileFrame.Time
+                    })
                         .ToList();
 
                     var genderCount = attributes.Count(item => item.Gender == "Male");
@@ -117,12 +117,13 @@ namespace FillingFrameService
                         // _repository.CreateAsync(dialogueClientProfile),
                         // _repository.BulkInsertAsync(dialogueFrames)
                     };
+                    FrameAttribute attribute = string.IsNullOrWhiteSpace(message.AvatarFileName) 
+                        ? attributes.First() 
+                        : attributes.First(item => item.FileFrame.FileName == message.AvatarFileName);
 
-                    var attribute = attributes.First();
-                    var avatarFileName = string.IsNullOrEmpty(message.AvatarFileName) ? attribute.FileFrame.FileName : message.AvatarFileName;
-                    _log.Info($"Avatar file name is {avatarFileName}");
+                    _log.Info($"Avatar file name is {attribute.FileFrame.FileName}");
                     var localPath =
-                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + avatarFileName);
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
 
                     var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
                     var rectangle = new Rectangle
