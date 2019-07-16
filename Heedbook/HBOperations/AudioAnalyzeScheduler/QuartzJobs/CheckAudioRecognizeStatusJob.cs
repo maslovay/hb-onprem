@@ -229,8 +229,10 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     });
                             });
 
-                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList());
-
+                            _log.Info("GetPositiveShareInText start");
+                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList(), audio.DialogueId);
+                            _log.Info("GetPositiveShareInText end");
+                            
                             words = words.GroupBy(item => new
                             {
                                 item.BegTime,
@@ -275,26 +277,39 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             }
         }
 
-        private double GetPositiveShareInText(List<string> recognizedWords)
+        private double GetPositiveShareInText(IEnumerable<string> recognizedWords, Guid dialogueId)
         {
             try
             {
+                _log.Info("GetPositiveShareInText dialogueId: " + dialogueId);
                 var sentence = string.Join(" ", recognizedWords);
+                _log.Info("RunPython input string: " + sentence);
                 var posShareStrg = RunPython.Run("GetPositiveShare.py",
                     Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sentimental"), "3",
                     sentence, _log);
 
                 if (!posShareStrg.Item2.Trim().IsNullOrEmpty())
-                    _log.Error("RunPython err string: " + posShareStrg.Item2);
+                    _log.Error("RunPython err string: " + posShareStrg.Item2 + "  dialogueId: " + dialogueId);
                 else
-                    _log.Info("RunPython result string: " + posShareStrg.Item1);
+                    _log.Info("RunPython result string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
 
-                _log.Info("RunPython err string: " + posShareStrg.Item1);
-                return double.Parse(posShareStrg.Item1.Trim());
+                _log.Info("RunPython out string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
+
+                var result = 0.0;
+
+
+                if (!double.TryParse(posShareStrg.Item1.Trim(), out result))
+                {
+                    _log.Fatal($"GetPositiveShareInText can't parse string: {posShareStrg.Item1.Trim()} dialogueId: {dialogueId}");
+                    // TODO: delete after bug fixing
+                    throw new Exception($"GetPositiveShareInText can't parse string: {posShareStrg.Item1.Trim()} dialogueId: {dialogueId}"); 
+                }
+                
+                return result;
             }
             catch (Exception ex)
             {
-                _log.Fatal(ex.Message, ex);
+                _log.Fatal("GetPositiveShareInText exception occurred: " + ex.Message, ex);
                 throw;
             }
         }
