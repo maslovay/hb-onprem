@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
@@ -45,6 +46,21 @@ namespace HBLib.Utils
             var scope = scopeFactory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
         }
+
+        public async Task<bool> CheckApiKey()
+        {
+           var isApiKeyExists = _repository.Get<GoogleAccount>().Any(item => item.StatusId == 3);
+            if (isApiKeyExists)
+            {
+                Environment.SetEnvironmentVariable("INFRASTRUCTURE", "Cloud");
+            }
+            else
+            {
+                Environment.SetEnvironmentVariable("INFRASTRUCTURE", "OnPrem");
+            }
+            return isApiKeyExists;
+        }
+
 
         public async Task<String> LoadFileToGoogleDrive(String blobGoogleDriveName, String path, String token)
         {
@@ -339,13 +355,13 @@ namespace HBLib.Utils
 
                 aud = "https://accounts.google.com/o/oauth2/token",
 
-                iat = ((Int32) now.Subtract(_unixEpoch).TotalSeconds).ToString(CultureInfo.InvariantCulture),
+                iat = ((Int32)now.Subtract(_unixEpoch).TotalSeconds).ToString(CultureInfo.InvariantCulture),
 
-                exp = ((Int32) now.AddMinutes(10).Subtract(_unixEpoch).TotalSeconds).ToString(CultureInfo
+                exp = ((Int32)now.AddMinutes(10).Subtract(_unixEpoch).TotalSeconds).ToString(CultureInfo
                    .InvariantCulture)
             };
             // header
-            var header = new {typ = "JWT", alg = "RS256"};
+            var header = new { typ = "JWT", alg = "RS256" };
 
             // encoded header
             var headerSerialized = JsonConvert.SerializeObject(header);
@@ -370,7 +386,7 @@ namespace HBLib.Utils
             try
             {
                 // signiture
-                var rsa = (RSACryptoServiceProvider) certificate.PrivateKey;
+                var rsa = (RSACryptoServiceProvider)certificate.PrivateKey;
                 //rsa.PersistKeyInCsp = true;
 
                 var cspParam = new CspParameters
@@ -382,7 +398,7 @@ namespace HBLib.Utils
                     Flags = CspProviderFlags.NoPrompt | CspProviderFlags.UseExistingKey |
                             CspProviderFlags.UseMachineKeyStore
                 };
-                var cryptoServiceProvider = new RSACryptoServiceProvider(cspParam) {PersistKeyInCsp = false};
+                var cryptoServiceProvider = new RSACryptoServiceProvider(cspParam) { PersistKeyInCsp = false };
 
                 var signatureBytes = cryptoServiceProvider.SignData(inputBytes, "SHA256");
                 var signatureEncoded = Convert.ToBase64String(signatureBytes);

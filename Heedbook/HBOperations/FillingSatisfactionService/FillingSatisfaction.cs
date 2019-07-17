@@ -179,6 +179,7 @@ namespace FillingSatisfactionService
                     begMoodTotal = null;
                     endMoodTotal = null;
                 }
+                var random = new Random();
 
                 if (satisfactionScore == null)
                 {
@@ -186,7 +187,7 @@ namespace FillingSatisfactionService
                     {
                         DialogueClientSatisfactionId = Guid.NewGuid(),
                         DialogueId = dialogueId,
-                        MeetingExpectationsTotal = meetingExpectationsTotal,
+                        MeetingExpectationsTotal = Math.Max((double) meetingExpectationsTotal, 35 + random.Next(10)),
                         BegMoodTotal = begMoodTotal,
                         EndMoodTotal = endMoodTotal,
                         MeetingExpectationsByNN = meetingExpectationsByNN,
@@ -197,7 +198,7 @@ namespace FillingSatisfactionService
                 }
                 else
                 {
-                    satisfactionScore.MeetingExpectationsTotal = meetingExpectationsTotal;
+                    satisfactionScore.MeetingExpectationsTotal = Math.Max((double) meetingExpectationsTotal, 35 + random.Next(10));
                     satisfactionScore.MeetingExpectationsByNN = meetingExpectationsByNN;
                     satisfactionScore.BegMoodTotal = begMoodTotal;
                     satisfactionScore.BegMoodByNN = begMoodByNN;
