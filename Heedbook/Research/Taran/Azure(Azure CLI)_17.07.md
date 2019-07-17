@@ -1,8 +1,8 @@
-https://docs.microsoft.com/ru-ru/dotnet/azure/dotnet-sdk-azure-concepts?view=azure-dotnet
-Библиотека управления Azure. Команды(методы).Ведение журналов и трассировка.
+п»їhttps://docs.microsoft.com/ru-ru/dotnet/azure/dotnet-sdk-azure-concepts?view=azure-dotnet
+Р‘РёР±Р»РёРѕС‚РµРєР° СѓРїСЂР°РІР»РµРЅРёСЏ Azure. РљРѕРјР°РЅРґС‹(РјРµС‚РѕРґС‹).Р’РµРґРµРЅРёРµ Р¶СѓСЂРЅР°Р»РѕРІ Рё С‚СЂР°СЃСЃРёСЂРѕРІРєР°.
 https://docs.microsoft.com/ru-ru/cli/azure/get-started-with-azure-cli?view=azure-cli-latest
 https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider/azure#permissions
 https://docs.microsoft.com/en-us/cli/azure/monitor/metrics?view=azure-cli-latest
-Утановка Azure CLI.Основные команды и их поиск. Дополнительные сведения о CLI.Взаимодействе с метриками через CLI.
+РЈС‚Р°РЅРѕРІРєР° Azure CLI.РћСЃРЅРѕРІРЅС‹Рµ РєРѕРјР°РЅРґС‹ Рё РёС… РїРѕРёСЃРє. Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ СЃРІРµРґРµРЅРёСЏ Рѕ CLI.Р’Р·Р°РёРјРѕРґРµР№СЃС‚РІРµ СЃ РјРµС‚СЂРёРєР°РјРё С‡РµСЂРµР· CLI.
 https://docs.microsoft.com/en-us/learn/modules/manage-virtual-machines-with-azure-cli/6-querying-vms
-Сведения о системе запросов, для работы с виртулками(очень полезно).
+РЎРІРµРґРµРЅРёСЏ Рѕ СЃРёСЃС‚РµРјРµ Р·Р°РїСЂРѕСЃРѕРІ, РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ РІРёСЂС‚СѓР»РєР°РјРё(РѕС‡РµРЅСЊ РїРѕР»РµР·РЅРѕ).
