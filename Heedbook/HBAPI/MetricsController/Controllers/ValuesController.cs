@@ -10,11 +10,17 @@ namespace MetricsController.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        // GET api/values
-        [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        private readonly AzureConnector _connector;
+        public ValuesController(AzureConnector connector)
         {
-            
+            _connector = connector;
+        }
+ 
+        [HttpGet]
+        public IActionResult Get()
+        {
+            _connector.TestSlave();
+            return Ok();
         }
        
     }
