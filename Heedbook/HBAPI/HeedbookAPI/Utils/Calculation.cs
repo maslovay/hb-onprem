@@ -87,6 +87,7 @@ namespace UserOperations.Utils
         {           
              var sessionHours = sessions.Any() ? sessions.Sum(p =>
                 Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
+
             var dialoguesHours = dialogues.Any() ? dialogues.Sum(p =>
                 Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
             return 100 * LoadIndex( sessionHours, dialoguesHours);
@@ -475,7 +476,7 @@ namespace UserOperations.Utils
             return (sessionHours - dialoguesHours) / dialogues.Select(p => p.DialogueId).Distinct().Count();
         }
 
-        public List<double> DialogueAvgPauseListInMinutes(List<SessionInfo> sessions, List<DialogueInfo> dialogues)
+        public List<double> DialogueAvgPauseListInMinutes(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
             List<double> pauses = new List<double>();
             if (!sessions.Any() || !dialogues.Any()) return null;
@@ -483,19 +484,24 @@ namespace UserOperations.Utils
             {
             foreach( var ses in sessionGrouping.OrderBy(p => p.BegTime))
             {
-                var dialogInSession = dialogues.Where(p => p.BegTime >= ses.BegTime && p.EndTime <= ses.EndTime).OrderBy(p => p.BegTime).ToArray();
+                var dialogInSession = dialogues
+                        .Where(p => 
+                        p.ApplicationUserId == ses.ApplicationUserId
+                        && p.BegTime >= Max(ses.BegTime, beg) 
+                        && p.EndTime <= Min(ses.EndTime, end))
+                        .OrderBy(p => p.BegTime)
+                        .ToArray();
                 if(dialogInSession != null && dialogInSession.Count() != 0)
                 {
-                    pauses.Add(dialogInSession.First().BegTime.Subtract(ses.BegTime).TotalMinutes);
+                    pauses.Add(dialogInSession.First().BegTime.Subtract(Max(ses.BegTime, beg)).TotalMinutes);
                     for ( int i = 1; i < dialogInSession.Length - 1; i++)
                     {
-                        if(dialogInSession[i].BegTime.Subtract(dialogInSession[i-1].EndTime).TotalMinutes > 0)
                         pauses.Add(dialogInSession[i].BegTime.Subtract(dialogInSession[i-1].EndTime).TotalMinutes);
                     }
-                    if (dialogInSession.Count() > 1 ) pauses.Add(ses.EndTime.Subtract(dialogInSession.Last().EndTime).TotalMinutes);
+                    pauses.Add(Min(ses.EndTime, end).Subtract(dialogInSession.Last().EndTime).TotalMinutes);
                 }
                 else
-                pauses.Add(ses.EndTime.Subtract(ses.BegTime).TotalMinutes);
+                pauses.Add(Min(ses.EndTime, end).Subtract(Max(ses.BegTime, beg)).TotalMinutes);
             }
             }
             return pauses;

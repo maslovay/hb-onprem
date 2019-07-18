@@ -209,7 +209,7 @@ namespace UserOperations.Controllers
                     }).ToList();
 
                 var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
-                            _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur): null;
+                            _dbOperation.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, begTime, endTime): null;
                      
                 var sessTimeMinutes = _dbOperation.SessionTotalHours(sessionCur, begTime, endTime)*60;
                 var pausesAmount = new{
@@ -218,6 +218,7 @@ namespace UserOperations.Controllers
                     Between_21_60 = pauseInMin?.Where(p => p > 20 && p <= 60).Count(),
                     More_60 = pauseInMin?.Where(p => p > 60).Count()
                 };
+
                 var pausesShareInSession = new{
                     Less_10 = sessTimeMinutes != 0? 100 *  pauseInMin?.Where(p => p <= 10).Sum() / sessTimeMinutes : 0,
                     Between_11_20 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 10 && p <= 20).Sum() / sessTimeMinutes : 0,
