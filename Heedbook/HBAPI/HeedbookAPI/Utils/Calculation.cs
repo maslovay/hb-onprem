@@ -87,11 +87,9 @@ namespace UserOperations.Utils
         {           
              var sessionHours = sessions.Any() ? sessions.Sum(p =>
                 Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
-                Console.WriteLine("sessionHours from f = "+sessionHours);
 
             var dialoguesHours = dialogues.Any() ? dialogues.Sum(p =>
                 Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
-                 Console.WriteLine("dialoguesHours from f = "+dialoguesHours);
             return 100 * LoadIndex( sessionHours, dialoguesHours);
         }
 
@@ -482,7 +480,6 @@ namespace UserOperations.Utils
         {
             List<double> pauses = new List<double>();
             if (!sessions.Any() || !dialogues.Any()) return null;
-            double dialogueDur = 0;
             foreach( var sessionGrouping in sessions.GroupBy(x => x.ApplicationUserId))
             {
             foreach( var ses in sessionGrouping.OrderBy(p => p.BegTime))
@@ -494,7 +491,6 @@ namespace UserOperations.Utils
                         && p.EndTime <= Min(ses.EndTime, end))
                         .OrderBy(p => p.BegTime)
                         .ToArray();
-                    dialogueDur+=dialogInSession.Sum(x => x.EndTime.Subtract(x.BegTime).TotalHours);
                 if(dialogInSession != null && dialogInSession.Count() != 0)
                 {
                     pauses.Add(dialogInSession.First().BegTime.Subtract(Max(ses.BegTime, beg)).TotalMinutes);
@@ -508,7 +504,6 @@ namespace UserOperations.Utils
                 pauses.Add(Min(ses.EndTime, end).Subtract(Max(ses.BegTime, beg)).TotalMinutes);
             }
             }
-            Console.WriteLine("dialog!!!!!!!!! = "+ dialogueDur);
             return pauses;
         }
         public double? DialogueAveragePause(List<SessionInfoCompany> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)

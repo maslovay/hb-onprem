@@ -219,14 +219,6 @@ namespace UserOperations.Controllers
                     More_60 = pauseInMin?.Where(p => p > 60).Count()
                 };
 
-                Console.WriteLine("session + "+sessTimeMinutes/60);
-                Console.WriteLine("pauses + "+pauseInMin?.Sum()/60);
-                var w = sessTimeMinutes/60 - pauseInMin?.Sum()/60;
-                Console.WriteLine("working = "+w);
-                var l = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime);
-                Console.WriteLine("load 1 = "+l);
-                Console.WriteLine("load 1 = "+w/(sessTimeMinutes/60));
-
                 var pausesShareInSession = new{
                     Less_10 = sessTimeMinutes != 0? 100 *  pauseInMin?.Where(p => p <= 10).Sum() / sessTimeMinutes : 0,
                     Between_11_20 = sessTimeMinutes != 0? 100 * pauseInMin?.Where(p => p > 10 && p <= 20).Sum() / sessTimeMinutes : 0,
