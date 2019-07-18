@@ -119,9 +119,9 @@ namespace FillingFrameService
                     };
 
                     FrameAttribute attribute;
-                    if (string.IsNullOrWhiteSpace(message.AvatarFileName) )
+                    if (!string.IsNullOrWhiteSpace(message.AvatarFileName) )
                     {
-                        attribute = frames.First(item => item.FileName == message.AvatarFileName).FrameAttribute.FirstOrDefault();
+                        attribute = frames.Where(item => item.FileName == message.AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
                         if (attribute == null) attribute = attributes.First();
                     }
                     else
