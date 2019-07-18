@@ -53,97 +53,100 @@ namespace FillingHintService
                     {
                         foreach (var hintCondition in hintConditions.HintCondition)
                         {
-                            if (hintCondition.Table == null || hintCondition.Condition == null ||
-                                hintCondition.Indexes == null)
-                                continue;
-
-                            var reqSql = BuildRequest(hintCondition.Table, dialogueId.ToString(),
-                                hintCondition.Condition,
-                                hintCondition.Indexes);
-
-                            var data = _repository.ExecuteDbCommand(hintCondition.Indexes, reqSql)
-                                .ToList();
-
                             Double? resValue = 0;
-                            switch (hintCondition.Operation)
+                            if (hintCondition.Table == null || hintCondition.Condition == null || hintCondition.Indexes == null)
                             {
-                                case "sum":
-                                    if (!data.Any())
-                                        resValue = 0;
-                                    else
-                                        foreach (var index in hintCondition.Indexes)
-                                            resValue += data.Sum(item =>
-                                            {
-                                                var property = item.GetType().GetProperty(index);
-                                                if (property != null)
-                                                    return Double.Parse(property.GetValue(item).ToString());
+                                continue;
+                            }
+                            else
+                            {
+                                var reqSql = BuildRequest(hintCondition.Table, dialogueId.ToString(),
+                                    hintCondition.Condition,
+                                    hintCondition.Indexes);
 
-                                                return 0;
+                                var data = _repository.ExecuteDbCommand(hintCondition.Indexes, reqSql)
+                                    .ToList();
+
+                                switch (hintCondition.Operation)
+                                {
+                                    case "sum":
+                                        if (!data.Any())
+                                            resValue = 0;
+                                        else
+                                            foreach (var index in hintCondition.Indexes)
+                                                resValue += data.Sum(item =>
+                                                {
+                                                    var property = item.GetType().GetProperty(index);
+                                                    if (property != null)
+                                                        return Double.Parse(property.GetValue(item).ToString());
+
+                                                    return 0;
+                                                });
+
+                                        if ((resValue >= hintCondition.Min) & (resValue <= hintCondition.Max))
+                                        {
+                                            var textInfo = hintConditions.HintText.Where(p => p.Language == language)
+                                                .ToList();
+                                            if (textInfo.Any())
+                                            {
+                                                var dialogueHint = new DialogueHint
+                                                {
+                                                    DialogueId = dialogueId,
+                                                    HintText = textInfo.First().Text,
+                                                    IsAutomatic = true,
+                                                    IsPositive = hintCondition.IsPositive,
+                                                    Type = hintCondition.Type
+                                                };
+                                                _repository.Create(dialogueHint);
+                                            }
+                                        }
+
+                                        break;
+
+                                    case "sub":
+                                        if (data.Count() != 2)
+                                        {
+                                            resValue = 0;
+                                        }
+                                        else
+                                        {
+                                            resValue = data.Sum(item =>
+                                            {
+                                                var firstProperty = item.GetType().GetProperty(hintCondition.Indexes[0]);
+                                                var secondProperty = item.GetType().GetProperty(hintCondition.Indexes[1]);
+                                                Double first = 0;
+                                                Double second = 0;
+                                                if (firstProperty != null)
+                                                    first = Double.Parse(firstProperty.GetValue(item).ToString());
+
+                                                if (secondProperty != null)
+                                                    second = Double.Parse(secondProperty.GetValue(item).ToString());
+
+                                                return first - second;
                                             });
-
-                                    if ((resValue >= hintCondition.Min) & (resValue <= hintCondition.Max))
-                                    {
-                                        var textInfo = hintConditions.HintText.Where(p => p.Language == language)
-                                            .ToList();
-                                        if (textInfo.Any())
-                                        {
-                                            var dialogueHint = new DialogueHint
-                                            {
-                                                DialogueId = dialogueId,
-                                                HintText = textInfo.First().Text,
-                                                IsAutomatic = true,
-                                                IsPositive = hintCondition.IsPositive,
-                                                Type = hintCondition.Type
-                                            };
-                                            _repository.Create(dialogueHint);
+                                            ;
                                         }
-                                    }
 
-                                    break;
-
-                                case "sub":
-                                    if (data.Count() != 2)
-                                    {
-                                        resValue = 0;
-                                    }
-                                    else
-                                    {
-                                        resValue = data.Sum(item =>
+                                        if ((resValue >= hintCondition.Min) & (resValue <= hintCondition.Max))
                                         {
-                                            var firstProperty = item.GetType().GetProperty(hintCondition.Indexes[0]);
-                                            var secondProperty = item.GetType().GetProperty(hintCondition.Indexes[1]);
-                                            Double first = 0;
-                                            Double second = 0;
-                                            if (firstProperty != null)
-                                                first = Double.Parse(firstProperty.GetValue(item).ToString());
-
-                                            if (secondProperty != null)
-                                                second = Double.Parse(secondProperty.GetValue(item).ToString());
-
-                                            return first - second;
-                                        });
-                                        ;
-                                    }
-
-                                    if ((resValue >= hintCondition.Min) & (resValue <= hintCondition.Max))
-                                    {
-                                        var textInfo = hintConditions.HintText.Where(p => p.Language == language)
-                                            .ToList();
-                                        if (textInfo.Any())
-                                        {
-                                            var dialogueHint = new DialogueHint
+                                            var textInfo = hintConditions.HintText.Where(p => p.Language == language)
+                                                .ToList();
+                                            if (textInfo.Any())
                                             {
-                                                DialogueId = dialogueId,
-                                                HintText = textInfo.First().Text,
-                                                IsAutomatic = true,
-                                                IsPositive = hintCondition.IsPositive,
-                                                Type = hintCondition.Type
-                                            };
-                                            _repository.Create(dialogueHint);
+                                                var dialogueHint = new DialogueHint
+                                                {
+                                                    DialogueId = dialogueId,
+                                                    HintText = textInfo.First().Text,
+                                                    IsAutomatic = true,
+                                                    IsPositive = hintCondition.IsPositive,
+                                                    Type = hintCondition.Type
+                                                };
+                                                _repository.Create(dialogueHint);
+                                            }
                                         }
-                                    }
 
-                                    break;
+                                        break;
+                                }
                             }
 
                             _log.Info($"Table: {hintCondition.Table}");
