@@ -151,7 +151,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
                         {
-                            var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(audio.STTResult);
+                            var asrResults = string.IsNullOrEmpty(audio.STTResult) ? new List<AsrResult>() : JsonConvert.DeserializeObject<List<AsrResult>>(audio.STTResult);
                             asrResults.ForEach(word =>
                             {
                                 recognized.Add(new WordRecognized
