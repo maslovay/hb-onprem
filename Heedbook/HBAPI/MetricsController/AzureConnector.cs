@@ -11,12 +11,13 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
+using MetricsController.Controllers;
 
 namespace MetricsController
 {
     public class AzureConnector
     {
-        public void TestSlave()
+        public IEnumerable<Metrics> GetMetrics()
         {
             var subscriptionId = "5fa2a073-308e-4ce6-bc36-9bebd83a9b74";
             var clientId = "13698b58-36e0-47fa-b3b0-7403b299736a";
@@ -41,7 +42,13 @@ namespace MetricsController
                     .WithInterval(TimeSpan.FromMinutes(15))
                     .Execute();
                 }
-            }           
+            }
+            List<Metricsprop> metricsList = new List<Metricsprop>();
+            metricsList.Add(new Metricsprop
+            {
+                mName = ;
+            });
+            
         }
             private static async Task<Microsoft.Azure.Management.Fluent.IAzure> AuthenticateWithMonitoringClient(string tenantId, string clientId, string secret, string subscriptionId)
             {

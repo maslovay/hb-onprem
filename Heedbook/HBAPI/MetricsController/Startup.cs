@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Quartz;
 
 namespace MetricsController
 {
@@ -25,12 +26,13 @@ namespace MetricsController
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddGetMetricsJobQuartz();
             services.AddScoped<AzureConnector>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler ischeduler)
         {
             if (env.IsDevelopment())
             {
@@ -41,7 +43,8 @@ namespace MetricsController
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-
+            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
+               app.ApplicationServices.GetService<ITrigger>());
             app.UseHttpsRedirection();
             app.UseMvc();
         }

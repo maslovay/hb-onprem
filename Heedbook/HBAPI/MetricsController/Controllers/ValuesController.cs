@@ -19,7 +19,7 @@ namespace MetricsController.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            _connector.TestSlave();
+            _connector.GetMetrics();
             return Ok();
         }
        
