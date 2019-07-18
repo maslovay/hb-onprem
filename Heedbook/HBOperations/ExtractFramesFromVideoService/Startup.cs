@@ -13,6 +13,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Notifications.Base;
+using Quartz;
+using QuartzExtensions;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using UnitTestExtensions;
@@ -52,6 +54,7 @@ namespace ExtractFramesFromVideo
             services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
             services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
             services.AddTransient<FFMpegWrapper>();
+            services.AddDeleteOldFilesQuartz();
             services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddTransient<FramesFromVideo>();
@@ -59,7 +62,7 @@ namespace ExtractFramesFromVideo
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             app.ApplicationServices.GetRequiredService<INotificationService>();
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
@@ -68,7 +71,10 @@ namespace ExtractFramesFromVideo
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
-
+            var job = app.ApplicationServices.GetService<IJobDetail>();
+            var trigger = app.ApplicationServices.GetService<ITrigger>();
+            scheduler.ScheduleJob(job,
+                trigger);
             app.UseHttpsRedirection();
             app.UseMvc();
         }

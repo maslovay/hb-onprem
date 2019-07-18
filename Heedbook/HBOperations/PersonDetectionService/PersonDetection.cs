@@ -66,14 +66,14 @@ namespace PersonDetectionService
             }
         }
 
-        public Guid? FindId(Dialogue curDialogue, List<Dialogue> dialogues, double treshold=0.42)
+        public Guid? FindId(Dialogue curDialogue, List<Dialogue> dialogues, double threshold=0.42)
         {
             if (!dialogues.Any()) return Guid.NewGuid();
             foreach (var dialogue in dialogues)
             {
                 var cosResult = _calc.Cos(curDialogue.PersonFaceDescriptor, dialogue.PersonFaceDescriptor);
-                System.Console.WriteLine($"Cos distnace is -- {cosResult}");
-                if (cosResult > treshold) return dialogue.PersonId;
+                System.Console.WriteLine($"Cos distance is -- {cosResult}");
+                if (cosResult > threshold) return dialogue.PersonId;
             }
             return Guid.NewGuid();
 

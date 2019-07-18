@@ -49,11 +49,23 @@ namespace DialogueStatusCheckerScheduler.Tests
                 $"../../../../DialogueStatusCheckerScheduler/bin/{config}/netcoreapp2.2/DialogueStatusCheckerScheduler.dll --isCalledFromUnitTest true");
         }
 
-
         [TearDown]
         public async Task TearDown()
         {
             await base.TearDown();
+            StopServices();
+        }
+
+        private void StopServices()
+        {
+            try
+            {
+                _schedulerProcess.Kill();
+            }
+            catch (Exception ex)
+            {
+                
+            }
         }
 
         protected override async Task PrepareTestData()
@@ -99,6 +111,8 @@ namespace DialogueStatusCheckerScheduler.Tests
         public void EnsureCallsFillingSatisfaction()
         {
             Assert.IsTrue(WaitForAFlag());
+            
+            StopServices();
         }
 
         private bool WaitForAFlag()

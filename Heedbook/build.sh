@@ -5,6 +5,7 @@ docker build -t containerregistryhb.azurecr.io/fillingframeservice:latest -f Fil
 docker build -t containerregistryhb.azurecr.io/extractframesfromvideoservice:latest -f ExtractFramesFromVideoService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/videotosoundservice:latest -f VideoToSoundService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/audioanalyzeservice:latest -f AudioAnalyzeService.Dockerfile . &&
+docker build -t containerregistryhb.azurecr.io/toneanalyzeservice:latest -f ToneAnalyzeService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/audioanalyzescheduler:latest -f AudioAnalyzeScheduler.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/dialoguestatuscheckerscheduler:latest -f DialogueStatusCheckerScheduler.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/dialoguevideomergeservice:latest -f DialogueVideoMergeService.Dockerfile . &&
@@ -23,6 +24,7 @@ docker push containerregistryhb.azurecr.io/fillingframeservice:latest &&
 docker push containerregistryhb.azurecr.io/extractframesfromvideoservice:latest && 
 docker push containerregistryhb.azurecr.io/videotosoundservice:latest &&
 docker push containerregistryhb.azurecr.io/audioanalyzeservice:latest &&
+docker push containerregistryhb.azurecr.io/toneanalyzeservice:latest &&
 docker push containerregistryhb.azurecr.io/dialoguestatuscheckerscheduler:latest &&
 docker push containerregistryhb.azurecr.io/audioanalyzescheduler:latest &&
 docker push containerregistryhb.azurecr.io/dialoguevideomergeservice:latest &&

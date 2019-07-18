@@ -57,7 +57,6 @@ namespace RabbitMqEventBus
                 {
                     var properties = channel.CreateBasicProperties();
                     properties.DeliveryMode = 2; // persistent
-                    properties.Headers = new Dictionary<String, Object> {{DELIVERY_COUNT_HEADER, 0}};
                     channel.BasicPublish(BROKER_NAME,
                         eventName,
                         true,
@@ -128,20 +127,33 @@ namespace RabbitMqEventBus
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += async (model, ea) =>
             {
-                var @event = ea.RoutingKey;
-                var message = Encoding.UTF8.GetString(ea.Body);
-                if (ea.BasicProperties.Headers.TryGetValue(DELIVERY_COUNT_HEADER, out var deliveryCount))
+                try
                 {
-                    var count = Int32.Parse(deliveryCount.ToString());
-                    if (count >= _deliveryCount)
+                    var @event = ea.RoutingKey;
+                    var message = Encoding.UTF8.GetString(ea.Body);
+                    var eventMessage = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event)));
+                    if (eventMessage.RetryCount >= _deliveryCount)
+                    {
+                        Console.WriteLine($"Message deleted from queue after {_deliveryCount} retries");
                         channel.BasicAck(ea.DeliveryTag, false);
+                    }
                     else
-                        ea.BasicProperties.Headers[DELIVERY_COUNT_HEADER] = count + 1;
+                    {
+                        await ProcessEvent(@event, message);
+                        channel.BasicAck(ea.DeliveryTag, false);
+                    }
                 }
-
-                await ProcessEvent(@event, message);
-
-                channel.BasicAck(ea.DeliveryTag, false);
+                catch (Exception e)
+                {
+                    var encodingString = Encoding.UTF8.GetString(ea.Body);
+                    var @event = (IntegrationEvent)JsonConvert.DeserializeObject(encodingString,
+                        _subsManager.GetEventTypeByName(ea.RoutingKey));
+                    Console.WriteLine(@event.RetryCount);
+                    @event.RetryCount += 1;
+                    Console.WriteLine("exception occured in rabbitmq event bus, retry count is: " + @event.RetryCount);
+                    channel.BasicAck(ea.DeliveryTag, false);
+                    Publish(@event);
+                }
             };
 
             channel.QueueDeclare(eventName,
@@ -157,7 +169,7 @@ namespace RabbitMqEventBus
             channel.BasicConsume(eventName,
                 false,
                 consumer);
-
+            
             channel.CallbackException += (sender, ea) =>
             {
                 _consumerChannel.Dispose();

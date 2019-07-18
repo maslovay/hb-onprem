@@ -68,7 +68,7 @@ namespace AudioAnalyzeService
                             EndTime = dialogue.EndTime,
                             Duration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds
                         };
-
+                        await _googleConnector.CheckApiKey();
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             var languageId = Int32.Parse("2");
@@ -85,8 +85,15 @@ namespace AudioAnalyzeService
                             var transactionId =
                                 await _googleConnector.Recognize(blobGoogleDriveName, languageId, dialogueId.ToString(), true, true);
                             _log.Info("transaction id: " + transactionId);
-                            fileAudio.TransactionId = transactionId.Name.ToString();
-                            fileAudio.StatusId = 6;
+                            if (transactionId == null || transactionId.Name <= 0)
+                            {
+                                _log.Info("transaction id is null. Possibly wrong api key");
+                            }
+                            else
+                            {
+                                fileAudio.TransactionId = transactionId.Name.ToString();
+                                fileAudio.StatusId = 6;
+                            }
                         }
                         _context.FileAudioDialogues.Add(fileAudio);
                         _context.SaveChanges();

@@ -395,7 +395,9 @@ namespace HBLib.Utils
             public String FileFolder;
             public String FileName;
             public String Path;
+            public String ImagePath;
             public String Type;
+            public int Duration;
         }
     }
 }

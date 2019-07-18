@@ -14,7 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Renci.SshNet.Common;
 
-namespace AudioAnalyzeService
+namespace ToneAnalyzeService
 {
     public class ToneAnalyze
     {
@@ -82,7 +82,6 @@ namespace AudioAnalyzeService
                         SadnessTone = result.TryGetValue("Sadness", out var sadness) ? sadness : default(Double?)
                     });
                     begTime = endTime;
-                    File.Delete(fileName);
                 }
 
                 var dialogueAudio = new DialogueAudio
@@ -96,7 +95,7 @@ namespace AudioAnalyzeService
                 await _repository.BulkInsertAsync(intervals);
                 await _repository.CreateAsync(dialogueAudio);
                 await _repository.SaveAsync();
-                OS.SafeDelete(localPath);
+                File.Delete(localPath);
                 _log.Info("Function Tone analyze finished");
             }
             catch (SftpPathNotFoundException e)
@@ -173,11 +172,13 @@ namespace AudioAnalyzeService
 
                 _log.Info(text);
                 output = "";
+                File.Delete(fileName);
                 return result;
             }
             catch
             {
                 _log.Fatal(text);
+                File.Delete(fileName);
                 throw new Exception($"Something went wrong! The error message: {text}");
             }
         }

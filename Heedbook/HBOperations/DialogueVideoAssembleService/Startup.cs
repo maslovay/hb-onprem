@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Quartz;
+using QuartzExtensions;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
@@ -38,6 +40,8 @@ namespace DialogueVideoAssembleService
             });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.Configure<DialogueVideoAssembleSettings>(Configuration.GetSection(nameof(DialogueVideoAssembleSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<DialogueVideoAssembleSettings>>().Value);
             services.AddTransient<SftpClient>();
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
@@ -45,14 +49,16 @@ namespace DialogueVideoAssembleService
             services.AddTransient<DialogueVideoAssemble>();
             services.AddTransient<FFMpegSettings>();
             services.AddTransient<FFMpegWrapper>();
+            services.AddScoped<Utils.DialogueVideoAssembleUtils>();
             services.AddTransient<DialogueVideoAssembleRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddRabbitMqEventBus(Configuration);
+            services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             var handlerService = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             handlerService.Subscribe<DialogueVideoAssembleRun, DialogueVideoAssembleRunHandler>();
@@ -61,7 +67,10 @@ namespace DialogueVideoAssembleService
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
-
+            var job = app.ApplicationServices.GetService<IJobDetail>();
+            var trigger = app.ApplicationServices.GetService<ITrigger>();
+            scheduler.ScheduleJob(job,
+                trigger);
             app.UseHttpsRedirection();
             app.UseMvc();
         }

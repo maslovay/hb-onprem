@@ -13,7 +13,9 @@ using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Castle.Core.Internal;
 
@@ -53,7 +55,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                          .Include(p => p.Dialogue.ApplicationUser)
                                          .Include(p => p.Dialogue.ApplicationUser.Company)
                                          .Where(p => p.StatusId == 6);
-                                        //  .ToList();
+                    //  .ToList();
+                    await _googleConnector.CheckApiKey();
                     if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                     {
                         audiosReq = audiosReq.Where(p => !String.IsNullOrEmpty(p.TransactionId));
@@ -72,7 +75,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         _log.Info($"Processing {audio.DialogueId}");
                      
                         var recognized = new List<WordRecognized>();
-
+                        
                         _log.Info($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
@@ -148,7 +151,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
                         {
-                            var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(audio.STTResult);
+                            var asrResults = string.IsNullOrEmpty(audio.STTResult) ? new List<AsrResult>() : JsonConvert.DeserializeObject<List<AsrResult>>(audio.STTResult);
                             asrResults.ForEach(word =>
                             {
                                 recognized.Add(new WordRecognized
@@ -227,8 +230,10 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     });
                             });
 
-                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList());
-
+                            _log.Info("GetPositiveShareInText start");
+                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList(), audio.DialogueId);
+                            _log.Info("GetPositiveShareInText end");
+                            
                             words = words.GroupBy(item => new
                             {
                                 item.BegTime,
@@ -273,28 +278,41 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             }
         }
 
-        private double GetPositiveShareInText(List<string> recognizedWords)
+        private double GetPositiveShareInText(IEnumerable<string> recognizedWords, Guid dialogueId)
         {
-            var result = 0.0;
             try
             {
+                _log.Info("GetPositiveShareInText dialogueId: " + dialogueId);
                 var sentence = string.Join(" ", recognizedWords);
-                var posShareStrg = RunPython.Run("GetPositiveShare.py", "sentimental", "3", sentence);
+                _log.Info("RunPython input string: " + sentence);
+                var posShareStrg = RunPython.Run("GetPositiveShare.py",
+                    Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sentimental"), "3",
+                    sentence, _log);
 
                 if (!posShareStrg.Item2.Trim().IsNullOrEmpty())
-                    _log.Error("RunPython err string: " + posShareStrg.Item2);
+                    _log.Error("RunPython err string: " + posShareStrg.Item2 + "  dialogueId: " + dialogueId);
                 else
-                    _log.Info("RunPython result string: " + posShareStrg.Item1);
+                    _log.Info("RunPython result string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
 
-                result = double.Parse(posShareStrg.Item1.Trim());
+                _log.Info("RunPython out string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
+
+                var result = 0.0;
+
+
+                if (!double.TryParse(posShareStrg.Item1.Trim(), out result))
+                {
+                    _log.Fatal($"GetPositiveShareInText can't parse string: {posShareStrg.Item1.Trim()} dialogueId: {dialogueId}");
+                    // TODO: delete after bug fixing
+                    throw new Exception($"GetPositiveShareInText can't parse string: {posShareStrg.Item1.Trim()} dialogueId: {dialogueId}"); 
+                }
+                
+                return result;
             }
             catch (Exception ex)
             {
-                _log.Error("GetPositiveShareInText exception: " + ex.Message);
-                result = 0.0;
+                _log.Fatal("GetPositiveShareInText exception occurred: " + ex.Message, ex);
+                throw;
             }
-
-            return result;
         }
 
         private Double GetSpeechSpeed(List<WordRecognized> words, Int32 languageId)

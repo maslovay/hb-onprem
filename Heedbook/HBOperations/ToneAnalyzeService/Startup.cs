@@ -1,5 +1,7 @@
-﻿using AsrHttpClient;
-using AudioAnalyzeService.Handler;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Configurations;
 using HBData;
 using HBData.Repository;
@@ -7,15 +9,20 @@ using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Quartz;
+using QuartzExtensions;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using ToneAnalyzeService.Handler;
 
-namespace AudioAnalyzeService
+namespace ToneAnalyzeService
 {
     public class Startup
     {
@@ -42,36 +49,37 @@ namespace AudioAnalyzeService
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
-            services.AddTransient<GoogleConnector>();
             services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
             services.AddTransient<FFMpegWrapper>();
             services.AddTransient(provider =>
                 provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddRabbitMqEventBus(Configuration);
             services.AddTransient<SftpClient>();
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
-            services.AddTransient(provider => provider.GetService<IOptions<AsrSettings>>().Value);
-            services.AddTransient<AsrHttpClient.AsrHttpClient>();
-            services.AddTransient<AudioAnalyze>();
-
-            services.AddTransient<AudioAnalyzeRunHandler>();
-
-            services.AddRabbitMqEventBus(Configuration);
-            
+            services.AddTransient<ToneAnalyze>();
+            services.AddTransient<ToneAnalyzeRunHandler>();
+            services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<AudioAnalyzeRun, AudioAnalyzeRunHandler>();
-            
+            service.Subscribe<ToneAnalyzeRun, ToneAnalyzeRunHandler>();
             if (env.IsDevelopment())
+            {
                 app.UseDeveloperExceptionPage();
+            }
             else
+            {
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-
+            }
+            var job = app.ApplicationServices.GetService<IJobDetail>();
+            var trigger = app.ApplicationServices.GetService<ITrigger>();
+            scheduler.ScheduleJob(job,
+                trigger);
             app.UseHttpsRedirection();
             app.UseMvc();
         }

@@ -1,10 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
+using AsrHttpClient;
 using HBData;
 using HBData.Models;
+using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Http;
@@ -23,16 +28,18 @@ namespace UserService.Controllers
     public class DialogueRecalculateController : Controller
     {
         private readonly RecordsContext _context;
+        private readonly IGenericRepository _repository;
         private readonly INotificationHandler _handler;
         private readonly ElasticClient _log;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly INotificationPublisher _notificationPublisher;
+        
 
         public DialogueRecalculateController(INotificationHandler handler, RecordsContext context, 
                                                 ElasticClient log, SftpClient sftpClient, 
                                                 INotificationPublisher notificationPublisher,
-                                                SftpSettings sftpSettings)
+                                                SftpSettings sftpSettings, IGenericRepository repository)
         {
             _handler = handler;
             _context = context;
@@ -40,6 +47,7 @@ namespace UserService.Controllers
             _sftpClient = sftpClient;
             _notificationPublisher = notificationPublisher;
             _sftpSettings = sftpSettings;
+            _repository = repository;
         }
 
         [HttpGet]
@@ -92,89 +100,68 @@ namespace UserService.Controllers
 
         [HttpPost("CheckRelatedDialogueData")]
         [SwaggerOperation(Description = "Re assemble dialogue")]
-        public async Task<IActionResult> CheckRelatedDialogueData(string DialogueId)
+        public async Task<IActionResult> CheckRelatedDialogueData(Guid dialogueId)
         {
+            _log.SetFormat("{DialogueId}");
+            _log.SetArgs(dialogueId);
             var result = "";
             try
             {           
-                if(DialogueId == null) return BadRequest("DialogueId is Empty"); 
-                _log.Info($"DialogueId: {DialogueId}");
                 var dialogue = _context.Dialogues
                     .Include(p=>p.DialogueAudio)                    
-                    .Include(p=>p.DialogueInterval)
                     .Include(p=>p.DialogueVisual)                    
                     .Include(p=>p.DialogueClientProfile)
                     .Include(p=>p.DialogueFrame)
-                    .FirstOrDefault(p=>p.DialogueId == Guid.Parse(DialogueId));
+                    .FirstOrDefault(p=>p.DialogueId == dialogueId);
 
-                if(dialogue==null) return BadRequest("such Dialogue not exist in Data Base");
-
-                var dialogueVideoFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialoguevideos/{DialogueId}.mkv");  
-                
+                if (dialogue == null) return BadRequest("Such dialogue do not exist in PostgresDB");
+                var dialogueVideoFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialoguevideos/{dialogueId}.mkv");  
+                _log.Info($"Video file exist - {dialogueVideoFileExist}");
                 if(dialogueVideoFileExist)
                 {
-                    _log.Info($"DialogueVideoAssemble - Success | ");     
-                    var dialogueAudioFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialogueaudios/{DialogueId}.wav");
-
-                    if(dialogue.DialogueAudio!=null
-                        && dialogueAudioFileExist)
+                    var dialogueAudioFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialogueaudios/{dialogueId}.wav");   
+                    _log.Info($"Audio file exist - {dialogueAudioFileExist}");
+                    if(dialogueAudioFileExist)
                     {
-                        _log.Info($"VideoToSound - Success | ");    
-                        
-                        var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == Guid.Parse(DialogueId));
-                        if(speechResult!=null && speechResult.STTResult!=null)
+                        var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == dialogueId);
+                        _log.Info($"Audio analyze result - {speechResult ==null}");
+
+                        if(speechResult == null)
                         {
-                            _log.Info($"GoogleRecognition - Success | ");                
-                        }
-                        else
-                        {                        
-                            _log.Info($"GoogleRecognition - not success | ");
+                            result += "Starting AudioAnalyze, ";                        
                             var @event = new AudioAnalyzeRun
                             {
-                                Path = $"dialogueaudios/{DialogueId}.wav"
+                                Path = $"dialogueaudios/{dialogueId}.wav"
                             };
                             _notificationPublisher.Publish(@event);
                         }
 
-                        if(dialogue.DialogueInterval != null)
+                        _log.Info($"Tone analyze result - {dialogue.DialogueAudio == null}");
+                        if(!dialogue.DialogueAudio.Any() || dialogue.DialogueAudio == null)
                         {
-                            _log.Info($"TonAnalyze - Success | ");             
-                        }
-                        else
-                        {
-                            _log.Info($"TonAnalyze - not Success | ");
+                            result += "Starting ToneAnalyze, ";
                             var @event = new ToneAnalyzeRun
                             {
-                                Path = $"dialogueaudios/{DialogueId}.wav"
+                                Path = $"dialogueaudios/{dialogueId}.wav"
                             };
                             _notificationPublisher.Publish(@event);
                         }    
                     }
                     else
                     {
-                        _log.Info($"VideoToSound - not Success | ");
-                        _log.Info($"GoogleRecognition - not success | ");
-                        _log.Info($"TonAnalyze - not Success | ");
-
+                        _log.Info("Starting video to sound");
+                        result += "Starting VideoToSound, ";
                         var @event = new VideoToSoundRun
                         {
-                            Path = $"dialoguevideos/{DialogueId}.mkv"
+                            Path = $"dialoguevideos/{dialogueId}.mkv"
                         };
                         _notificationPublisher.Publish(@event);
                     }                
 
-                    var dialogueAvatarExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}useravatars/{DialogueId}.jpg");                
-
-                    if(dialogueAvatarExist
-                        && dialogue.DialogueVisual!=null
-                        && dialogue.DialogueClientProfile!=null
-                        && dialogue.DialogueFrame!=null)
+                    _log.Info($"Filling frame result - {(!dialogue.DialogueVisual.Any() || !dialogue.DialogueClientProfile.Any() || !dialogue.DialogueFrame.Any())}");
+                    if(!dialogue.DialogueVisual.Any() || !dialogue.DialogueClientProfile.Any() || !dialogue.DialogueFrame.Any())
                     {
-                        _log.Info($"FillingFrame - Success | ");
-                    }
-                    else
-                    {
-                        _log.Info($"FillingFrame - not Success | ");
+                        result += "Starting FillingFrames, ";
                         var @event = new DialogueCreationRun
                         {
                             ApplicationUserId = dialogue.ApplicationUserId,
@@ -183,17 +170,12 @@ namespace UserService.Controllers
                             EndTime = dialogue.EndTime
                         };
                         _notificationPublisher.Publish(@event);
-                    }
-
-                                      
+                    }                     
                 }
                 else
                 {  
-                    _log.Info($"DialogueVideoAssemble - not Success | ");    
-                    _log.Info($"VideoToSound - not Success | ");
-                    _log.Info($"GoogleRecognition - not success | ");
-                    _log.Info($"TonAnalyze - not Success | ");     
-                    _log.Info($"FillingFrame - not Success | ");                   
+                    _log.Info("Starting dialogue video assemble");
+                    result += "Starting DialogueVideoAssemble, ";                
                     var @event = new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = dialogue.ApplicationUserId,
@@ -210,14 +192,81 @@ namespace UserService.Controllers
                     dialogue.CreationTime = DateTime.UtcNow;
                     dialogue.Comment = "";
                     _context.SaveChanges();
-                }                  
+                }      
+                _log.Info("Function finished");            
                 
-                return Ok();
+                return Ok(result);
             }
-            catch(Exception ex)
+            catch(Exception e)
             {
-                System.Console.WriteLine(ex.Message);
-                return BadRequest();
+                _log.Fatal("Exception occured {e}");
+                return BadRequest(e);
+            }
+        }
+        
+        [HttpGet("[action]")]
+        public void RecalcPositiveShare()
+        {
+            var result = 0.0;
+
+            var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-5)
+                                                                    && f.DialogueSpeech.All(ds => ds.PositiveShare == 0.0),
+                f => f.DialogueSpeech, f => f.DialogueAudio).OrderByDescending(f => f.CreationTime).ToArray();
+
+            _log.Info($"RecalcPositiveShare(): DDialogues to analyze {dialogs.Length}");   
+            Console.WriteLine($"Dialogues to analyze {dialogs.Length}");
+            
+            foreach (var ff in dialogs)
+            {
+                var fads = _repository.Get<FileAudioDialogue>().Where(x => x.DialogueId == ff.DialogueId && x.STTResult != null && x.STTResult.Length > 0);
+
+                foreach (var fad in fads)
+                {
+                    StringBuilder words = new StringBuilder();
+
+                    var asrResults = JsonConvert.DeserializeObject<List<AsrResult>>(fad.STTResult);
+                    if (asrResults.Any())
+                    {
+                        asrResults.ForEach(word =>
+                        {
+                            words.Append(" ");
+                            words.Append(word.Word);
+                        });
+                    }
+
+                    foreach (var speech in ff.DialogueSpeech)
+                    {
+                        try
+                        {
+                            if (speech == null)
+                                continue;
+
+                            Console.WriteLine($"Speech for dialogue {ff.DialogueId}");
+                            _log.Info($"RecalcPositiveShare(): Speech for dialogue {ff.DialogueId}");
+
+                            var posShareStrg =
+                                RunPython.Run("GetPositiveShare.py",
+                                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "3",
+                                    words.ToString(), _log);
+
+                            Console.WriteLine($"Speech for dialogue {ff.DialogueId} pos share result: {posShareStrg}");
+                            _log.Info($"RecalcPositiveShare(): Speech for dialogue {ff.DialogueId} pos share result: {posShareStrg}");
+                            result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
+                            
+                            if (result > 0)
+                            {
+                                speech.PositiveShare = result;
+                                _repository.Update(speech);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.Info($"RecalcPositiveShare() exception: " + ex.Message);
+                        }
+                    }
+                }
+
+                _repository.Save();
             }
         }
     }
