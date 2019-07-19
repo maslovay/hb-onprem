@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using ServiceExtensions;
 
 namespace DialoguesRecalculateScheduler
 {
@@ -19,6 +20,7 @@ namespace DialoguesRecalculateScheduler
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .ConfigureBuilderDueToEnvironment(args: args, portToReassignForTests: 5075)
                 .UseStartup<Startup>();
     }
 }
