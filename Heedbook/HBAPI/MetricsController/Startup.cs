@@ -28,6 +28,8 @@ namespace MetricsController
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.Configure<AzureSettings>(Configuration.GetSection(nameof(AzureSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<AzureSettings>>().Value);
             services.AddGetMetricsQuartz();

@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HBLib;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace MetricsController.QuartzJob
 {
@@ -11,17 +13,33 @@ namespace MetricsController.QuartzJob
     {
         private AzureConnector _connector;
         private IServiceScopeFactory _scopeFactory;
-        public GetMetricsJob(IServiceScopeFactory scopeFactory)
+        private readonly ElasticClientFactory _elasticClientFactory;
+        public GetMetricsJob(IServiceScopeFactory scopeFactory, ElasticClientFactory elasticClientFactory)
         {
             _scopeFactory = scopeFactory;
+            _elasticClientFactory = elasticClientFactory;
         }
+        
         public async Task Execute(IJobExecutionContext context)
         {
-            using (var scope = _scopeFactory.CreateScope())
+            var _log = _elasticClientFactory.GetElasticClient();
+            try 
             {
-                _connector = scope.ServiceProvider.GetRequiredService<AzureConnector>();
-                var metrics = _connector.GetMetrics();
+                    _log.Info($"Start function");
+                    using (var scope = _scopeFactory.CreateScope())
+                    {
+                        _connector = scope.ServiceProvider.GetRequiredService<AzureConnector>();
+                        var metrics = _connector.GetMetrics();
+                        _connector._log = _log;
+                        
+                    }
+                    
+                }
+                catch (Exception e)
+                {
+                    _log.Fatal($"Exception occured:{e}");
+                }
+               _log.Info($"Finished function");
             }
-        }
     }
 }

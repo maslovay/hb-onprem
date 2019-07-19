@@ -10,32 +10,39 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using HBLib;
+using HBLib.Utils;
 using Newtonsoft.Json;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
 using MetricsController.Controllers;
+using Microsoft.AspNetCore.Identity.UI.V4.Pages.Internal.Account;
 
 namespace MetricsController
 {
     public class AzureConnector
     {
+        public ElasticClient _log { get; set; }
         private AzureSettings _settings;
+        private ElasticClientFactory _elasticClientFactory;
 
-        public AzureConnector(AzureSettings settings)
+        public AzureConnector(AzureSettings settings,ElasticClientFactory elasticClientFactory)
         {
             _settings = settings;
+            _elasticClientFactory = elasticClientFactory;
         }
         
         public IEnumerable<Metrics> GetMetrics()
         {
-            var metrics = new[] { "Percentage CPU", "Disk Write Operations/Sec", "Disk Read Operations/Sec", "Disk Read Bytes", "Disk Write Bytes" };
+            
+            _log.Info("Try to login in azure");
             Microsoft.Azure.Management.Fluent.IAzure azure = AuthenticateWithMonitoringClient().Result;
             var vms = azure.VirtualMachines.ListByResourceGroup("HBONPREMTEST");
             var metricsList = new List<Metrics>();
-            foreach (var vm in vms.Where(item => item.Name.Contains("Slave")))
+            _log.Info($"Getting Metrics");
+            foreach (var vm in vms.Where(item => _settings.VmName.Any(i=> i == item.Name)))
             {
                 var metricDefinitions = azure.MetricDefinitions.ListByResource(vm.Id)
-                    .Where(item => metrics.Any(i => i == item.Name.Value));
+                    .Where(item => _settings.Metrics.Any(i => i == item.Name.Value));
                 var metric = new Metrics()
                 {
                     VmName = vm.Name,
@@ -65,7 +72,7 @@ namespace MetricsController
             return metricsList;
 
         }
-            private  async Task<Microsoft.Azure.Management.Fluent.IAzure> AuthenticateWithMonitoringClient()
+        private  async Task<Microsoft.Azure.Management.Fluent.IAzure> AuthenticateWithMonitoringClient()
             {
                 var credentials = SdkContext.AzureCredentialsFactory
                                 .FromServicePrincipal(_settings.ClientId,
