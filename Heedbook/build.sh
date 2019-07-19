@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 docker build -t containerregistryhb.azurecr.io/faceanalyzeservice:latest -f FaceAnalyzeService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/userservice:latest -f UserService.Dockerfile . && 
 docker build -t containerregistryhb.azurecr.io/useroperations:latest -f UserOperations.Dockerfile . && 
@@ -15,7 +16,9 @@ docker build -t containerregistryhb.azurecr.io/dialoguevideoassembleservice:late
 docker build -t containerregistryhb.azurecr.io/dialoguemarkupservice:latest -f DialogueMarkUpService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/sessionstatusscheduler:latest -f SessionStatusScheduler.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/onlinetuiofficesscheduler:latest -f OnlineTuiOfficesScheduler.Dockerfile . &&
-docker build -t containerregistryhb.azurecr.io/heedbookdevelopmentstatisticsscheduler:latest -f HeedbookDevelopmentStatisticsScheduler.Dockerfile .
+docker build -t containerregistryhb.azurecr.io/heedbookdevelopmentstatisticsscheduler:latest -f HeedbookDevelopmentStatisticsScheduler.Dockerfile . &&
+docker build -t containerregistryhb.azurecr.io/dialoguesrecalculatescheduler:latest -f DialoguesRecalculateScheduler.Dockerfile .
+
 
 docker push containerregistryhb.azurecr.io/faceanalyzeservice:latest &&
 docker push containerregistryhb.azurecr.io/userservice:latest && 
@@ -34,4 +37,5 @@ docker push containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest &
 docker push containerregistryhb.azurecr.io/dialoguemarkupservice:latest &&
 docker push containerregistryhb.azurecr.io/sessionstatusscheduler:latest &&
 docker push containerregistryhb.azurecr.io/onlinetuiofficesscheduler:latest &&
-docker push containerregistryhb.azurecr.io/heedbookdevelopmentstatisticsscheduler:latest
+docker push containerregistryhb.azurecr.io/heedbookdevelopmentstatisticsscheduler:latest &&
+docker push containerregistryhb.azurecr.io/dialoguesrecalculatescheduler:latest

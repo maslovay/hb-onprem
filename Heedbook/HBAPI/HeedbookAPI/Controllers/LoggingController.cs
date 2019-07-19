@@ -30,7 +30,7 @@ namespace UserOperations.Controllers
         /// <param name="message">Main info</param>
         /// <param name="severity">Severity: "Info", "Debug", "Error", "Fatal", "Warning"</param>
         /// <param name="functionName">Function name for filtering</param>
-        /// <param name="customDimensions">Custom dimensions. Example: [{"TestParam":"1230932"}, {"DialogueId": "890238091238901283"}]</param>
+        /// <param name="customDimensions">Custom dimensions. Example: {"TestParam":"1230932"}, {"DialogueId": "890238091238901283"}</param>
         [HttpPost("SendLog")]
         public async Task<ObjectResult> SendLogPost([FromQuery]string message, [FromQuery]string severity, 
             [FromQuery]string functionName, [FromBody]JObject customDimensions = null)
