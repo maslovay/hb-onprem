@@ -50,6 +50,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498
 		..\FillingSatisfactionService.Dockerfile.Integration = ..\FillingSatisfactionService.Dockerfile.Integration
 		..\DialogueVideoAssembleService.Dockerfile.Integration = ..\DialogueVideoAssembleService.Dockerfile.Integration
 		..\AudioAnalyzeScheduler.Dockerfile.Integration = ..\AudioAnalyzeScheduler.Dockerfile.Integration
+		..\DialoguesRecalculateScheduler.Dockerfile = ..\DialoguesRecalculateScheduler.Dockerfile
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceAnalyzeService", "FaceAnalyzeService\FaceAnalyzeService.csproj", "{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}"
@@ -121,6 +122,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonDetectionService", "PersonDetectionService\PersonDetectionService.csproj", "{ED9615DF-2A83-4E20-BE8C-502D18C35D6D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToneAnalyzeService", "ToneAnalyzeService\ToneAnalyzeService.csproj", "{78180912-2178-4593-856D-65DA37D1169F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialoguesRecalculateScheduler", "DialoguesRecalculateScheduler\DialoguesRecalculateScheduler.csproj", "{36AAF04F-0C77-4E4B-99BE-0D6826906033}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -284,6 +287,10 @@ Global
 		{78180912-2178-4593-856D-65DA37D1169F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78180912-2178-4593-856D-65DA37D1169F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78180912-2178-4593-856D-65DA37D1169F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -328,6 +335,7 @@ Global
 		{33908ADF-2539-4439-864E-A45492BE211D} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{ED9615DF-2A83-4E20-BE8C-502D18C35D6D} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{78180912-2178-4593-856D-65DA37D1169F} = {F9312081-26B8-4651-ABC9-A32914105EBA}
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
