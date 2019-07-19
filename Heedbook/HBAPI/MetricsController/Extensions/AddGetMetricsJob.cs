@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using QuartzExepsions;
 using QuartzExtensions;
 
 
@@ -21,15 +20,15 @@ namespace MetricsController.Extensions
                 ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
             services.AddSingleton(provider => JobBuilder.Create<GetMetricsJob>()
-                                                        .WithIdentity("GetMetrics.job", "Metrics")
-                                                        .Build());
+                .WithIdentity("GetMetrics.job", "Metrics")
+                .Build());
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity("GetMetrics.trigger", "Metrics")
-                                     .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
-                                     .Build();
+                    .WithIdentity("GetMetrics.trigger", "Metrics")
+                    .StartNow()
+                    .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
+                    .Build();
             });
 
             services.AddSingleton(provider =>
@@ -42,3 +41,4 @@ namespace MetricsController.Extensions
             });
         }
     }
+}

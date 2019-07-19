@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HBLib;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
+using MetricsController.Extensions;
 
 namespace MetricsController
 {
@@ -26,13 +28,15 @@ namespace MetricsController
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddGetMetricsJobQuartz();
+            services.Configure<AzureSettings>(Configuration.GetSection(nameof(AzureSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<AzureSettings>>().Value);
+            services.AddGetMetricsQuartz();
             services.AddScoped<AzureConnector>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler ischeduler)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
             if (env.IsDevelopment())
             {

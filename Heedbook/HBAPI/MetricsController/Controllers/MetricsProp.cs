@@ -8,12 +8,11 @@ namespace MetricsController.Controllers
     public class Metricsprop
     {
 
-        public string PercentageCpu { get; set; }
+        public string Name { get; set; }
+        
+        public string Average { get; set; }
 
-        public double Type { get; set; }
-
-        public string Value { get; set; }
-
+        public string Max { get; set; }
         public string Unit { get; set; }
 
 

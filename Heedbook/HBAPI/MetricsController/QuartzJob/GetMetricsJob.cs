@@ -3,19 +3,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MetricsController.QuartzJob
 {
     public class GetMetricsJob : IJob
     {
         private AzureConnector _connector;
-        public GetMetricsJob(AzureConnector connector)
+        private IServiceScopeFactory _scopeFactory;
+        public GetMetricsJob(IServiceScopeFactory scopeFactory)
         {
-            _connector = connector;
+            _scopeFactory = scopeFactory;
         }
-        public void Execute(IJobExecutionContext context)
+        public async Task Execute(IJobExecutionContext context)
         {
-            _connector.GetMetrics();
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                _connector = scope.ServiceProvider.GetRequiredService<AzureConnector>();
+                var metrics = _connector.GetMetrics();
+            }
         }
     }
 }
