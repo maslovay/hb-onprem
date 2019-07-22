@@ -2,12 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Serilog;
+using Attachment = HBLib.Utils.Attachment;
+
 
 namespace MetricsController.QuartzJob
 {
@@ -22,7 +25,7 @@ namespace MetricsController.QuartzJob
             ElasticClientFactory elasticClientFactory,
             SlackClient slackClient)
         {
-            _scopeFactory = scopeFactory;
+
             _elasticClientFactory = elasticClientFactory;
             _slackClient = slackClient;
         }
@@ -38,10 +41,33 @@ namespace MetricsController.QuartzJob
                     _connector = scope.ServiceProvider.GetRequiredService<AzureConnector>();
                     _connector._log = _log;
                     var metrics = _connector.GetMetrics();
-                    var payload = new Payload
+                    var payload = new Payload()
                     {
-                        Text = JsonConvert.SerializeObject(metrics)
+                        Attachments = new List<Attachment>()
                     };
+                        foreach (var metric in metrics)
+                        {
+                            var attachment = new Attachment()
+                            {
+                                Color = "#36a64f",
+                                Pretext = $"{metric.VmName}",
+                                Fields = new List<Field>()
+                            };
+                            foreach (var metricValue in metric.MetricValues)
+                            {
+                                var field = new Field()
+                                {
+                                    Title = $"{metricValue.Name}",
+                                    Value = $"Max:{metricValue.Max} {metricValue.Unit} Average:{metricValue.Average} {metricValue.Unit}",
+                                    Short = false,
+                                    
+                                };
+                                attachment.Fields.Add(field);
+                            }
+                            payload.Attachments.Add(attachment);
+
+                        };
+                    
                     
                     _slackClient.PostMessage(payload);
                 }
