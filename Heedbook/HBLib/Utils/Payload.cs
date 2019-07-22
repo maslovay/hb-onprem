@@ -5,7 +5,7 @@ namespace HBLib.Utils
 {
     public class Payload
     {
-        [JsonProperty("attechment")]
+        [JsonProperty("attachments")]
         public List<Attachment> Attachments { get; set; }
     }
 }

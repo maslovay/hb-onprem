@@ -10,7 +10,7 @@ namespace HBLib.Utils
         public  string Color { get; set; }
         [JsonProperty("pretext")]
         public string Pretext { get; set; }
-        [JsonProperty("field")]
+        [JsonProperty("fields")]
         public List<Field> Fields { get; set; }
     }
 }

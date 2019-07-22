@@ -25,7 +25,7 @@ namespace MetricsController.QuartzJob
             ElasticClientFactory elasticClientFactory,
             SlackClient slackClient)
         {
-
+            _scopeFactory = scopeFactory;
             _elasticClientFactory = elasticClientFactory;
             _slackClient = slackClient;
         }
