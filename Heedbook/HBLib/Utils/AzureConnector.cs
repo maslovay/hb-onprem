@@ -50,8 +50,9 @@ namespace HBLib.Utils
                     {
                         Name = metricCollection.Metrics[0].Name.Value,
                         Unit = metricCollection.Metrics[0].Unit.ToString(),
-                        Average = metricCollection.Metrics[0].Timeseries[0].Data[0].Average.Value.ToString(CultureInfo.InvariantCulture),
-                        Max = metricCollection.Metrics[0].Timeseries[0].Data[0].Maximum.Value.ToString(CultureInfo.InvariantCulture)
+                        Average = (int)Math.Round(metricCollection.Metrics[0].Timeseries[0].Data[0].Average.Value),
+                        Max = (int)Math.Round(metricCollection.Metrics[0].Timeseries[0].Data[0].Maximum.Value)
+                        
                     });
                 }
                 metricsList.Add(metric);

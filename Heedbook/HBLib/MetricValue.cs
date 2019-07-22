@@ -4,10 +4,8 @@
     {
 
         public string Name { get; set; }
-        
-        public string Average { get; set; }
-
-        public string Max { get; set; }
+        public int Average { get; set; }
+        public int Max { get; set; }
         public string Unit { get; set; }
 
 

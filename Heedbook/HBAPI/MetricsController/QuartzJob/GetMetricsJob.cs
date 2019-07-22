@@ -45,30 +45,37 @@ namespace MetricsController.QuartzJob
                     {
                         Attachments = new List<Attachment>()
                     };
-                        foreach (var metric in metrics)
+                    foreach (var metric in metrics)
+                    {
+                        var attachment = new Attachment()
                         {
-                            var attachment = new Attachment()
-                            {
-                                Color = "#36a64f",
-                                Pretext = $"{metric.VmName}",
-                                Fields = new List<Field>()
-                            };
-                            foreach (var metricValue in metric.MetricValues)
-                            {
-                                var field = new Field()
-                                {
-                                    Title = $"{metricValue.Name}",
-                                    Value = $"Max:{metricValue.Max} {metricValue.Unit} Average:{metricValue.Average} {metricValue.Unit}",
-                                    Short = false,
-                                    
-                                };
-                                attachment.Fields.Add(field);
-                            }
-                            payload.Attachments.Add(attachment);
-
+                            Pretext = $"{metric.VmName}",
+                            Fields = new List<Field>()
                         };
-                    
-                    
+                        foreach (var metricValue in metric.MetricValues)
+                        {
+                            if (string.IsNullOrWhiteSpace(attachment.Color))
+                            {
+                                attachment.Color =
+                                    metricValue.Name.Contains("CPU") &&
+                                    (metricValue.Average >= 80 || metricValue.Max >= 90)
+                                        ? "#FF0000"
+                                        : "#36a64f";
+                            }
+
+                            var field = new Field()
+                            {
+                                Title = $"{metricValue.Name}",
+                                Value = $"Max:{metricValue.Max} Average:{metricValue.Average}",
+                                Short = false,
+                            };
+
+                            attachment.Fields.Add(field);
+                        }
+
+                        payload.Attachments.Add(attachment);
+                    }
+
                     _slackClient.PostMessage(payload);
                 }
             }
