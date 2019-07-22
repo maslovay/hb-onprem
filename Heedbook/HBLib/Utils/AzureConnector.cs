@@ -1,23 +1,11 @@
-﻿using Microsoft.Azure.Management.Monitor.Fluent;
-using Microsoft.Azure.Management.Monitor.Fluent.Models;
-using Microsoft.Rest.Azure.Authentication;
-using Microsoft.Rest.Azure.OData;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
-using HBLib;
-using HBLib.Utils;
-using Newtonsoft.Json;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
-using MetricsController.Controllers;
-using Microsoft.AspNetCore.Identity.UI.V4.Pages.Internal.Account;
 
-namespace MetricsController
+namespace HBLib.Utils
 {
     public class AzureConnector
     {
@@ -36,10 +24,10 @@ namespace MetricsController
             
             _log.Info("Try to login in azure");
             Microsoft.Azure.Management.Fluent.IAzure azure = AuthenticateWithMonitoringClient().Result;
-            var vms = azure.VirtualMachines.ListByResourceGroup("HBONPREMTEST");
+            var vms = azure.VirtualMachines.ListByResourceGroup(_settings.ResourceGroup);
             var metricsList = new List<Metrics>();
             _log.Info($"Getting Metrics");
-            foreach (var vm in vms.Where(item => _settings.VmName.Any(i=> i == item.Name)))
+            foreach (var vm in vms.Where(item => _settings.VmNames.Any(i=> i == item.Name)))
             {
                 var metricDefinitions = azure.MetricDefinitions.ListByResource(vm.Id)
                     .Where(item => _settings.Metrics.Any(i => i == item.Name.Value));
@@ -47,7 +35,7 @@ namespace MetricsController
                 {
                     VmName = vm.Name,
                     Time = DateTime.Now,
-                    MetricsProp = new List<Metricsprop>()
+                    MetricValues = new List<MetricValue>()
                 };
                 foreach (var metricDefinition in metricDefinitions)
                 {
@@ -58,7 +46,7 @@ namespace MetricsController
                     .WithAggregation("Maximum, Average")
                     .WithInterval(TimeSpan.FromMinutes(15))
                     .Execute();
-                    metric.MetricsProp.Add(new Metricsprop()
+                    metric.MetricValues.Add(new MetricValue()
                     {
                         Name = metricCollection.Metrics[0].Name.Value,
                         Unit = metricCollection.Metrics[0].Unit.ToString(),

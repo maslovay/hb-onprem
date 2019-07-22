@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace MetricsController.Controllers
+﻿namespace HBLib
 {
-    public class Metricsprop
+    public class MetricValue
     {
 
         public string Name { get; set; }

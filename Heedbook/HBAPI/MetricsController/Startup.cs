@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HBLib;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -29,9 +30,13 @@ namespace MetricsController
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.Configure<SlackSettings>(Configuration.GetSection(nameof(SlackSettings)));
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<SlackSettings>>().Value);
+            services.AddSingleton<ElasticClientFactory>();
+            services.AddSingleton<SlackClient>();
             services.Configure<AzureSettings>(Configuration.GetSection(nameof(AzureSettings)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<AzureSettings>>().Value);
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<AzureSettings>>().Value);
             services.AddGetMetricsQuartz();
             services.AddScoped<AzureConnector>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);

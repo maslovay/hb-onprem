@@ -9,8 +9,9 @@ namespace HBLib
         public string ClientId { get; set; } 
         
         public string Secret { get; set; }
-        
-        public List<string> VmName { get; set; }
+
+        public string ResourceGroup { get; set; }
+        public List<string> VmNames { get; set; }
         
         public List<string> Metrics { get; set; }
 
