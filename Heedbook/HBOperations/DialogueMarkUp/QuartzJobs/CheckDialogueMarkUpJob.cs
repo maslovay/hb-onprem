@@ -307,6 +307,7 @@ namespace DialogueMarkUp.QuartzJobs
         {
             var applicationUserId = dialogue.ApplicationUserId;
             var intersectSession = _context.Sessions.Where(p => p.ApplicationUserId == applicationUserId
+                    && (p.StatusId == 6 || p.StatusId == 7)
                     && ((p.BegTime <= dialogue.BegTime
                         && p.EndTime > dialogue.BegTime) 
                         || (p.BegTime < dialogue.EndTime
@@ -367,7 +368,7 @@ namespace DialogueMarkUp.QuartzJobs
                         ApplicationUserId = applicationUserId,
                         BegTime = dialogue.BegTime,
                         EndTime = dialogue.EndTime,
-                        StatusId = sessionsInside.LastOrDefault().StatusId
+                        StatusId = sessionsInside.LastOrDefault().StatusId == 6 ? 6 : 7
                     });  
                     foreach(var s in sessionsInside)
                     {
@@ -384,7 +385,7 @@ namespace DialogueMarkUp.QuartzJobs
                 if(insideSessions.Count()>0)
                 {
                     dialogueBeginSession.EndTime = dialogue.EndTime;
-                    dialogueBeginSession.StatusId = insideSessions.LastOrDefault().StatusId;
+                    dialogueBeginSession.StatusId = insideSessions.LastOrDefault().StatusId == 6 ? 6 : 7;
                     foreach(var s in insideSessions)
                     {
                         s.StatusId = 8;
@@ -427,8 +428,9 @@ namespace DialogueMarkUp.QuartzJobs
                         s.StatusId = 8;
                     }
                 }                
-                dialogueBeginSession.EndTime = dialogue.EndTime;
-                dialogueEndSession.BegTime = dialogue.EndTime.AddSeconds(1);
+                dialogueBeginSession.EndTime = dialogueEndSession.EndTime;
+                dialogueBeginSession.StatusId = dialogueEndSession.StatusId == 6 ? 6 : 7;
+                dialogueEndSession.StatusId = 8;
             }            
             _context.SaveChanges();
         }
