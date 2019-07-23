@@ -106,10 +106,10 @@ namespace FillingSatisfactionService
                     satisfactionScore = null;
                 }
 
-                Double clientWeight = 0, employeeWeight = 0, teacherWeight = 0;
-                Double clientTotalScore = 0, employeeTotalScore = 0, teacherTotalScore = 0;
-                Double employeeBegScore = 0, teacherBegScore = 0;
-                Double employeeEndScore = 0, teacherEndScore = 0;
+                double clientWeight = 0, employeeWeight = 0, teacherWeight = 0;
+                double clientTotalScore = 0, employeeTotalScore = 0, teacherTotalScore = 0;
+                double employeeBegScore = 0, teacherBegScore = 0;
+                double employeeEndScore = 0, teacherEndScore = 0;
                 if (satisfactionScore != null)
                 {
                     if (satisfactionScore.MeetingExpectationsByClient != null)
