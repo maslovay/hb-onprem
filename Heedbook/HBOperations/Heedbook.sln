@@ -122,6 +122,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonDetectionService", "P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToneAnalyzeService", "ToneAnalyzeService\ToneAnalyzeService.csproj", "{78180912-2178-4593-856D-65DA37D1169F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsController", "..\HBAPI\MetricsController\MetricsController.csproj", "{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -284,6 +286,10 @@ Global
 		{78180912-2178-4593-856D-65DA37D1169F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78180912-2178-4593-856D-65DA37D1169F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78180912-2178-4593-856D-65DA37D1169F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -41,10 +41,10 @@ namespace HBLib.Utils
                 {
                     DateTime recordDateTime = DateTime.UtcNow;
                     var metricCollection = metricDefinition.DefineQuery()
-                    .StartingFrom(recordDateTime.AddMinutes(-15))
+                    .StartingFrom(recordDateTime.AddMinutes(-30))
                     .EndsBefore(recordDateTime)
                     .WithAggregation("Maximum, Average")
-                    .WithInterval(TimeSpan.FromMinutes(15))
+                    .WithInterval(TimeSpan.FromMinutes(30))
                     .Execute();
                     metric.MetricValues.Add(new MetricValue()
                     {
