@@ -161,8 +161,8 @@ namespace UserOperations.Controllers
                 {
                     FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
                     var fn = user.Id + fileInfo.Extension;
-                    var memoryStream = formData.Files[0].OpenReadStream();
-                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
+                    // var memoryStream = formData.Files[0].OpenReadStream();
+                    // await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
                     user.Avatar = fn;
                     avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default(DateTime)).path;
                 }
