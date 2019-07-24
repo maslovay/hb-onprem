@@ -60,20 +60,27 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
 
                 var begTime = DateTime.Now.AddDays(-7);
+                var emplyeeRoleId = _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id;
                 var jsonToReturn = new Dictionary<string, object>();
                 var companyId = _context.ApplicationUsers.Where(p => p.Id == userId).FirstOrDefault().CompanyId;
                 var corporationId = _context.Companys.Where(p => p.CompanyId == companyId).FirstOrDefault()?.CorporationId;
-                var userIdsInCorporation = _context.Companys
+                var userIdsInCorporation = corporationId != null? _context.Companys
                         .Include(p => p.ApplicationUser)
-                        .Where(p => p.CorporationId == corporationId).SelectMany(p => p.ApplicationUser.Select(u => u.Id)).ToList();
-                var userIdsInCompany = _context.ApplicationUsers
-                        .Where(p => p.CompanyId == companyId).Select(u => u.Id).ToList();
+                        .ThenInclude(u => u.UserRoles)
+                        .Where(p => p.CorporationId == corporationId)
+                        .SelectMany(p => p.ApplicationUser.Where(u => u.UserRoles.Select(r => r.RoleId).Contains(emplyeeRoleId)).Select(u => u.Id)).ToList() : null;
+                var userIdsInCompany = _context.ApplicationUsers                
+                        .Where(p => p.CompanyId == companyId && p.UserRoles.Select(r => r.RoleId).Contains(emplyeeRoleId)).Select(u => u.Id).ToList();
 
                 //----ALL FOR WEEK Corporation---
-                var sessionsCorporation = _context.VSessionUserWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
-                var sessionsCorporationOld = _context.VSessionUserWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
-                var dialoguesCorporation = _context.VWeeklyUserReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
-                var dialoguesCorporationOld = _context.VWeeklyUserReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
+                var sessionsCorporation = userIdsInCorporation != null? 
+                        _context.VSessionUserWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day > begTime).ToList() : null;
+                var sessionsCorporationOld = userIdsInCorporation != null? 
+                        _context.VSessionUserWeeklyReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day <= begTime).ToList() : null;
+                var dialoguesCorporation = userIdsInCorporation != null? 
+                        _context.VWeeklyUserReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day > begTime).ToList() : null;
+                var dialoguesCorporationOld = userIdsInCorporation != null? 
+                        _context.VWeeklyUserReports.Where(p => userIdsInCorporation.Contains(p.AspNetUserId) && p.Day <= begTime).ToList() : null;
                 //----ALL FOR WEEK Company---
                 var sessionsCompany = _context.VSessionUserWeeklyReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day > begTime).ToList();
                 var sessionsCompanyOld = _context.VSessionUserWeeklyReports.Where(p => userIdsInCompany.Contains(p.AspNetUserId) && p.Day <= begTime).ToList();
@@ -85,10 +92,8 @@ namespace UserOperations.Controllers
                 var userDialogues = dialoguesCompany.Where(p => p.AspNetUserId == userId).ToList();
                 var userDialoguesOld = dialoguesCompanyOld.Where(p => p.AspNetUserId == userId).ToList();
 
-                var usersInCorporation = userIdsInCorporation.Count();
+                var usersInCorporation = userIdsInCorporation != null? userIdsInCorporation.Count() : 0;
                 var usersInCompany = userIdsInCompany.Count();
-
-
 
                 //----satisfaction--------
                 var Satisfaction = new UserWeeklyInfo(usersInCorporation, usersInCompany)
