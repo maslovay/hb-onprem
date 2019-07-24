@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.ServiceBus.Management;
 using Newtonsoft.Json;
 using Serilog;
 using Attachment = HBLib.Utils.Attachment;
+using MetricValue = HBLib.MetricValue;
 
 
 namespace MetricsController.QuartzJob
@@ -33,6 +35,7 @@ namespace MetricsController.QuartzJob
         public async Task Execute(IJobExecutionContext context)
         {
             var _log = _elasticClientFactory.GetElasticClient();
+            bool readySend = false;
             try
             {
                 _log.Info($"Start function");
@@ -54,14 +57,13 @@ namespace MetricsController.QuartzJob
                         };
                         foreach (var metricValue in metric.MetricValues)
                         {
-                            if (string.IsNullOrWhiteSpace(attachment.Color))
+                            if (metricValue.Name.Contains("CPU") &&
+                                (metricValue.Average >= 80 || metricValue.Max >= 90))
                             {
-                                attachment.Color =
-                                    metricValue.Name.Contains("CPU") &&
-                                    (metricValue.Average >= 80 || metricValue.Max >= 90)
-                                        ? "#FF0000"
-                                        : "#36a64f";
+                                attachment.Color = "#FF0000";
+                                readySend = true;
                             }
+
 
                             var field = new Field()
                             {
@@ -73,10 +75,18 @@ namespace MetricsController.QuartzJob
                             attachment.Fields.Add(field);
                         }
 
-                        payload.Attachments.Add(attachment);
+                        if (readySend)
+                        {
+                            payload.Attachments.Add(attachment);
+                        }
+
+                        readySend = false;
                     }
 
-                    _slackClient.PostMessage(payload);
+                    if (payload.Attachments.Any())
+                    {
+                        _slackClient.PostMessage(payload);
+                    }
                 }
             }
             catch (Exception e)
