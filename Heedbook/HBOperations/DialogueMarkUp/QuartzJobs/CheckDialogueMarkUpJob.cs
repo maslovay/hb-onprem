@@ -306,6 +306,7 @@ namespace DialogueMarkUp.QuartzJobs
         private void CheckSessionForDialogue(Dialogue dialogue)
         {
             var applicationUserId = dialogue.ApplicationUserId;
+            var applicationUser = _context.ApplicationUsers.FirstOrDefault(p => p.Id == applicationUserId);
             var intersectSession = _context.Sessions.Where(p => p.ApplicationUserId == applicationUserId
                     && (p.StatusId == 6 || p.StatusId == 7)
                     && ((p.BegTime <= dialogue.BegTime
@@ -339,15 +340,18 @@ namespace DialogueMarkUp.QuartzJobs
                     lastSession.EndTime = dialogue.EndTime;
                 }
                 else
+                {                    
                     _context.Sessions.Add( new Session
                     {
                         SessionId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
+                        ApplicationUser = applicationUser,
                         BegTime = dialogue.BegTime,
                         EndTime = dialogue.EndTime,
                         StatusId = 7
                     });
-                _context.SaveChanges();
+                }
+                _context.SaveChangesAsync();
                 return;
             } 
 
@@ -366,6 +370,7 @@ namespace DialogueMarkUp.QuartzJobs
                     {
                         SessionId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
+                        ApplicationUser = applicationUser,
                         BegTime = dialogue.BegTime,
                         EndTime = dialogue.EndTime,
                         StatusId = sessionsInside.LastOrDefault().StatusId == 6 ? 6 : 7
@@ -379,7 +384,7 @@ namespace DialogueMarkUp.QuartzJobs
             else if(dialogueBeginSession != null 
                 && dialogueEndSession == null)
             {
-                var insideSessions = intersectSession.Where(p => p.BegTime > dialogueBeginSession.EndTime && p.EndTime < dialogue.EndTime)
+                var insideSessions = intersectSession.Where(p => p.BegTime >= dialogueBeginSession.EndTime && p.EndTime < dialogue.EndTime)
                     .OrderBy(p => p.BegTime).ToList();
                 
                 if(insideSessions.Count()>0)
@@ -399,7 +404,7 @@ namespace DialogueMarkUp.QuartzJobs
             else if(dialogueBeginSession == null 
                 && dialogueEndSession != null)
             {
-                var insideSessions = intersectSession.Where(p => p.BegTime > dialogue.BegTime && p.EndTime < dialogueEndSession.BegTime)
+                var insideSessions = intersectSession.Where(p => p.BegTime > dialogue.BegTime && p.EndTime <= dialogueEndSession.BegTime)
                     .OrderBy(p => p.BegTime).ToList();
                   
                 if(insideSessions.Count() > 0)
@@ -419,7 +424,8 @@ namespace DialogueMarkUp.QuartzJobs
                 && dialogueEndSession != null 
                 && dialogueBeginSession.SessionId != dialogueEndSession.SessionId)
             {
-                var insideSession = intersectSession.Where(p => p.BegTime > dialogue.BegTime && p.EndTime < dialogue.EndTime)
+                var insideSession = intersectSession.Where(p => p.BegTime >= dialogueBeginSession.EndTime 
+                        && p.EndTime <= dialogueEndSession.BegTime)
                     .ToList();
                 if(insideSession.Count()>0)
                 {
@@ -432,7 +438,7 @@ namespace DialogueMarkUp.QuartzJobs
                 dialogueBeginSession.StatusId = dialogueEndSession.StatusId == 6 ? 6 : 7;
                 dialogueEndSession.StatusId = 8;
             }            
-            _context.SaveChanges();
+            _context.SaveChangesAsync();
         }
         
     }
