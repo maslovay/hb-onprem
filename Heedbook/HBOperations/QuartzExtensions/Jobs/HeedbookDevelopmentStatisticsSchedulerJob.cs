@@ -112,7 +112,9 @@ namespace QuartzExtensions.Jobs
                         CountOfFramesWithFaces = frames.Where(s => s.ApplicationUser.CompanyId == p.Key)
                             .Count(),
                         CountOfDifferentFaces = frames.Where(s => s.ApplicationUser.CompanyId == p.Key)
-                            .GroupBy(s => s.FaceId).Distinct().Count()
+                            .GroupBy(s => s.FaceId).Distinct().Count(),
+                        DialoguesWithStatus8 = dialogues.Where(s => s.ApplicationUser.CompanyId == p.Key
+                            && s.StatusId == 8).Select(o => o.DialogueId).ToList()
                     })
                 .ToList();
 
@@ -125,7 +127,17 @@ namespace QuartzExtensions.Jobs
                 result += $"Number of dialogs with status 3:    {compRep.CountOfDialoguesStat3}\n";
                 result += $"Number of dialogs with status 8:    {compRep.CountOfDialoguesStat8}\n";
                 result += $"Number of frames with faces:        {compRep.CountOfFramesWithFaces}\n";
-                result += $"Number of different faces:          {compRep.CountOfDifferentFaces}\n\n";
+                result += $"Number of different faces:          {compRep.CountOfDifferentFaces}\n";
+                
+                if(compRep.DialoguesWithStatus8.Count>0)
+                {
+                    result += $"List of dialogues with status 8:\n";
+                    foreach(var dialogId in compRep.DialoguesWithStatus8)
+                    {
+                        result += $"\t{dialogId.ToString()}\n";
+                    }
+                }                
+                result += $"\n";
             }
             return result;
         }
@@ -142,5 +154,6 @@ namespace QuartzExtensions.Jobs
         public int CountOfDialoguesStat8 { get; set; }
         public int CountOfFramesWithFaces { get; set; }
         public int CountOfDifferentFaces {get; set;}
+        public List<Guid> DialoguesWithStatus8 {get; set;}
     }
 }
