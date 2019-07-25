@@ -228,6 +228,11 @@ namespace HBLib.Utils
             return localPath;
         }
 
+        public DateTime GetLastWriteTime(string path)
+        {
+            return _client.GetLastWriteTime(path);
+        }
+
         /// <summary>
         ///     Download files to local disk.
         /// </summary>
