@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Renci.SshNet.Messages.Transport;
+using Renci.SshNet.Sftp;
 
 namespace HBLib.Utils
 {
@@ -345,6 +346,12 @@ namespace HBLib.Utils
             return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();
         }
 
+        public async Task<IEnumerable<SftpFile>> ListDirectoryAsync(string path)
+        {
+            await ConnectToSftpAsync();
+            path = _sftpSettings.DestinationPath + path;
+            return _client.ListDirectory(path);
+        }
         /// <summary>
         /// Disconnects from a FTP server
         /// </summary>

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using HBLib;
 using HBLib.Utils;
@@ -11,8 +12,8 @@ namespace DeleteScheduler.QuartzJob
     {
         private SftpClient _sftpclient;
         private ElasticClientFactory _elasticClientFactory;
-        
-        public DeleteOldFilesOnFtpJob(SftpClient sftpclient, 
+
+        public DeleteOldFilesOnFtpJob(SftpClient sftpclient,
             ElasticClientFactory elasticClientFactory)
         {
             _elasticClientFactory = elasticClientFactory;
@@ -21,34 +22,34 @@ namespace DeleteScheduler.QuartzJob
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var dirs = new[] {"frames", "videos"};
+            var dirs = new[] {"videos", "frames"};
             var _log = _elasticClientFactory.GetElasticClient();
             try
             {
                 _log.Info($"Start function");
                 foreach (var dir in dirs)
                 {
-                    var fileNames = await _sftpclient.ListDirectoryFiles(dir);
+                    var files = await _sftpclient.ListDirectoryAsync(dir);
+                    var now = DateTime.UtcNow;
+                    var fileNames = files.Where(item =>
+                        {
+                            var diff = now - item.LastWriteTimeUtc;
+                            return diff.Days >= 30;
+                        })
+                        .Where(item => !item.IsDirectory)
+                        .Select(item => item.FullName);
                     foreach (var fileName in fileNames)
                     {
-                        var lastWriteTime = _sftpclient.GetLastWriteTime(fileName);
-                        var diff = DateTime.UtcNow - lastWriteTime;
-                        if (diff.Days >= 30)
-                        {
-                            var path = dir.Contains(Path.DirectorySeparatorChar)
-                                ? dir + fileName
-                                : dir + Path.DirectorySeparatorChar + fileName;
-                            await _sftpclient.DeleteFileIfExistsAsync(path);
-                            _log.Info($"Deleted {fileName}");
-                        }
+                        await _sftpclient.DeleteFileIfExistsAsync(fileName);
+                        _log.Info($"Deleted {fileName}");
                     }
                 }
-                
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 _log.Fatal($"{e}");
             }
+
             _log.Info("Function ended");
         }
     }

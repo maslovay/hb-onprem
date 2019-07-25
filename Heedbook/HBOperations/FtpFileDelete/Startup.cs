@@ -1,4 +1,5 @@
 ﻿using HBLib;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +23,12 @@ namespace DeleteScheduler
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDeleteOldFilesOnFtpQuartz();
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddSingleton<SftpClient>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
