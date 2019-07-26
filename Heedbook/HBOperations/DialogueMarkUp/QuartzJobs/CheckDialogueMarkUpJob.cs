@@ -351,7 +351,7 @@ namespace DialogueMarkUp.QuartzJobs
                         StatusId = 7
                     });
                 }
-                _context.SaveChangesAsync();
+                _context.SaveChanges();
                 return;
             } 
 
@@ -362,23 +362,36 @@ namespace DialogueMarkUp.QuartzJobs
 
             if(dialogueBeginSession == null && dialogueEndSession == null)
             {
-                var sessionsInside = intersectSession.Where(p => p.BegTime > dialogue.BegTime
+                var insideSessions = intersectSession.Where(p => p.BegTime > dialogue.BegTime
                     && p.EndTime < dialogue.EndTime).OrderBy(p => p.BegTime);
-                if(sessionsInside.Count() > 0)
+                if(insideSessions.Count() > 0)
                 {
-                    _context.Sessions.Add( new Session
+                    var lastInsideSession = insideSessions.LastOrDefault();
+                    if(lastInsideSession.StatusId == 6)
                     {
-                        SessionId = Guid.NewGuid(),
-                        ApplicationUserId = applicationUserId,
-                        ApplicationUser = applicationUser,
-                        BegTime = dialogue.BegTime,
-                        EndTime = dialogue.EndTime,
-                        StatusId = sessionsInside.LastOrDefault().StatusId == 6 ? 6 : 7
-                    });  
-                    foreach(var s in sessionsInside)
+                        lastInsideSession.BegTime = dialogue.BegTime;
+                        lastInsideSession.EndTime = dialogue.EndTime;
+                        foreach(var s in insideSessions.Where(p => p!=lastInsideSession))
+                        {
+                            s.StatusId = 8;
+                        }
+                    }
+                    else
                     {
-                        s.StatusId = 8;
-                    }                  
+                        _context.Sessions.Add( new Session
+                        {
+                            SessionId = Guid.NewGuid(),
+                            ApplicationUserId = applicationUserId,
+                            ApplicationUser = applicationUser,
+                            BegTime = dialogue.BegTime,
+                            EndTime = dialogue.EndTime,
+                            StatusId = 7
+                        });  
+                        foreach(var s in insideSessions)
+                        {
+                            s.StatusId = 8;
+                        } 
+                    }                 
                 }
             }
             else if(dialogueBeginSession != null 
@@ -389,12 +402,24 @@ namespace DialogueMarkUp.QuartzJobs
                 
                 if(insideSessions.Count()>0)
                 {
-                    dialogueBeginSession.EndTime = dialogue.EndTime;
-                    dialogueBeginSession.StatusId = insideSessions.LastOrDefault().StatusId == 6 ? 6 : 7;
-                    foreach(var s in insideSessions)
-                    {
-                        s.StatusId = 8;
+                    var lastInsideSession = insideSessions.LastOrDefault();
+                    if(lastInsideSession.StatusId == 6)
+                    {                        
+                        dialogueBeginSession.EndTime = lastInsideSession.BegTime;
+                        lastInsideSession.EndTime = dialogue.EndTime;
+                        foreach(var s in insideSessions.Where(p => p!=lastInsideSession))
+                        {
+                            s.StatusId = 8;
+                        }
                     }
+                    else
+                    {
+                        dialogueBeginSession.EndTime = dialogue.EndTime;                        
+                        foreach(var s in insideSessions)
+                        {
+                            s.StatusId = 8;
+                        }
+                    }                    
                 }
                 else
                 {
@@ -434,12 +459,10 @@ namespace DialogueMarkUp.QuartzJobs
                         s.StatusId = 8;
                     }
                 }                
-                dialogueBeginSession.EndTime = dialogueEndSession.EndTime;
-                dialogueBeginSession.StatusId = dialogueEndSession.StatusId == 6 ? 6 : 7;
-                dialogueEndSession.StatusId = 8;
+                dialogueEndSession.BegTime = dialogueBeginSession.BegTime;
+                dialogueBeginSession.StatusId = 8;                
             }            
-            _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
-        
     }
 }
