@@ -55,6 +55,8 @@ namespace Common
         public async Task Setup(Action additionalInitialization, bool prepareTestData = false)
 
         {
+            base.PublisherSetup();
+            
             Config = new ConfigurationBuilder()
                 .ConfigureBuilderForTests()
                 .Build();

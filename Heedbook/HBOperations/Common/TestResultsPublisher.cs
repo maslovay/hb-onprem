@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AlarmSender;
 using Microsoft.Extensions.Configuration;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 
@@ -13,12 +14,9 @@ namespace Common
     {
         private IConfiguration _configuration;
         private List<Sender> _senders = new List<Sender>(5);
-        
         public delegate void TestFixtureStartedDelegate(string testFixtureName, string message);
         public delegate void TestResultReceivedDelegate(string testName, bool isPassed, string message, string errorMessage);
         public delegate void TestFixtureFinishedDelegate(string testFixtureName, string message);
-
-        
         public event TestFixtureStartedDelegate TestFixtureStarted;
         public event TestResultReceivedDelegate TestResultReceived;
         public event TestFixtureFinishedDelegate TestFixtureFinished;

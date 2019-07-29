@@ -22,7 +22,6 @@ namespace AlarmSender
         private readonly object syncObj = new object();
         private TelegramBotClient _client;
         
-        
         public TelegramSender(/*ILogger logger, */ IConfiguration configuration)
         {
             //_logger = logger;
