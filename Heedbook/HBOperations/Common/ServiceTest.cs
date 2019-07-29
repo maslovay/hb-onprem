@@ -22,12 +22,13 @@ using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using RabbitMqEventBus;
 using ServiceExtensions;
 
 namespace Common
 {
-    public abstract class ServiceTest
+    public abstract class ServiceTest : TestResultsPublisher
     {
         protected IGenericRepository _repository;
         protected SftpClient _sftpClient;
@@ -53,6 +54,8 @@ namespace Common
         public async Task Setup( Action additionalInitialization, bool prepareTestData = false )
 
         {
+            base.PublisherSetup();
+            
             Config = new ConfigurationBuilder()
                     .ConfigureBuilderForTests()
                     .Build();
@@ -70,9 +73,19 @@ namespace Common
 
         public async Task TearDown()
         {
+            base.PublisherTearDown();
             await CleanTestData();
         }
 
+        [OneTimeTearDown]
+        public async Task OneTimeTearDown()
+            => base.PublisherEachTestTearDown();
+
+
+        [OneTimeSetUp]
+        public async Task OneTimeSetUp()
+            => base.PublisherEachTestSetup();
+        
         public HashSet<KeyValuePair<string, string>> GetTextResources(string name)
         {
             var json = File.ReadAllText("Resources/Texts/TestTexts.json");
@@ -85,13 +98,11 @@ namespace Common
             {
                 foreach (var chToken in token.Children())
                 {
-                    foreach (var pair in (JObject)chToken)
+                    foreach (var (key, value) in (JObject)chToken)
                     {
-                        if (pair.Key != name) continue;
-                        foreach (var subToken in pair.Value.Children())
-                        {
+                        if (key != name) continue;
+                        foreach (var subToken in value.Children())
                             result.Add(new KeyValuePair<string, string>(subToken["sentense"].ToString(), subToken["class"].ToString()));
-                        }
                     }
                 }
             }
