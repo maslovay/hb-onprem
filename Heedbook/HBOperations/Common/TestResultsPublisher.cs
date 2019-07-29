@@ -45,14 +45,14 @@ namespace Common
             FetchSenders(serviceProvider);
             var dateTime = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
             var testFixtureName = TestContext.CurrentContext.Test.ClassName;
-            TestFixtureStarted?.Invoke($"{dateTime} Test fixture:  {testFixtureName}", "Started");
+            TestFixtureStarted?.Invoke(testFixtureName, $"{dateTime} Test fixture:  {testFixtureName}: Started");
         }
 
         protected void PublisherTearDown()
         {
             var dateTime = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
             var testFixtureName = TestContext.CurrentContext.Test.ClassName;
-            TestFixtureFinished?.Invoke($"{dateTime} Test fixture:  {testFixtureName}", "Finished");
+            TestFixtureFinished?.Invoke(testFixtureName, $"{dateTime} Test fixture:  {testFixtureName}: Finished");
         }
 
         [OneTimeSetUp]
