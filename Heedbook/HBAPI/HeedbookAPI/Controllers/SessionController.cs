@@ -88,7 +88,11 @@ namespace UserOperations.Controllers
                 var lastSession = _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
                         .ToList().OrderByDescending(p => p.BegTime)
-                        .FirstOrDefault();       
+                        .FirstOrDefault();    
+
+                var newAlert = new Alert();   
+                newAlert.ApplicationUserId = data.ApplicationUserId;
+                newAlert.CreationDate = DateTime.Now;
            
 
                 if (lastSession == null)
@@ -104,6 +108,10 @@ namespace UserOperations.Controllers
                                 IsDesktop = (bool)data.IsDesktop
                             };
                             _context.Sessions.Add(session);
+
+                            newAlert.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
+                            _context.Alerts.Add(newAlert);
+
                             _context.SaveChanges();
                             response.Message = "Session successfully opened";
                             _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
@@ -145,8 +153,11 @@ namespace UserOperations.Controllers
                                 StatusId = actionId,
                                 IsDesktop = (bool)data.IsDesktop
                             };
-
                             _context.Sessions.Add(session);
+
+                            newAlert.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
+                            _context.Alerts.Add(newAlert);
+
                             _context.SaveChanges();
 
                             response.Message = "Session successfully opened";
@@ -162,6 +173,9 @@ namespace UserOperations.Controllers
                             }
                             lastSession.StatusId = 7;
                             lastSession.EndTime = DateTime.UtcNow;
+
+                            newAlert.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session close").FirstOrDefault().AlertTypeId;
+                            _context.Alerts.Add(newAlert);
 
                             _context.SaveChanges();
                             response.Message = "Session successfully closed";

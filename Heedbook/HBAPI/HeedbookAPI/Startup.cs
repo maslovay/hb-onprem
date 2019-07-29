@@ -70,23 +70,8 @@ namespace UserOperations
                 p.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<RecordsContext>();
-
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
-            // services.AddDistributedRedisCache(option =>
-            // {
-            //     option.Configuration = $"{Configuration.GetSection("MemoryCacheDb")["Host"]}:{Configuration.GetSection("MemoryCacheDb")["Port"]}";
-            //     //"52.236.81.14:6379";
-            //     option.InstanceName = "master";
-            // });
-
-            //             services.AddStackExchangeRedisCache(options =>
-            // {
-            //     options.Configuration = "localhost:52431";
-            //     options.InstanceName = "SampleInstance";
-            // });
-
-
-
+            
             services.AddSwaggerGen(c =>
             {
                 c.EnableAnnotations();
