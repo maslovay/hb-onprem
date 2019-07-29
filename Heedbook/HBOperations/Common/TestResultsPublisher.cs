@@ -27,7 +27,7 @@ namespace Common
             TestFixtureFinished += (name, message) => SendTextMessage(message);
             TestResultReceived += (name, isPassed, message, errorMessage) =>
             {
-                string text = $"{message} " + (isPassed ? String.Empty : errorMessage);
+                var text = $"{message} " + (isPassed ? string.Empty : errorMessage);
                 SendTextMessage(text);
             };
         }
@@ -35,7 +35,7 @@ namespace Common
         private void SendTextMessage(string text)
         {
             foreach (var sender in _senders)
-                sender.Send(text);
+                sender.Send(text, false);
         }
         
         
