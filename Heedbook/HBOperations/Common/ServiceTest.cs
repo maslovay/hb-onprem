@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AlarmSender;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
@@ -32,7 +33,7 @@ namespace Common
     {
         protected IGenericRepository _repository;
         protected SftpClient _sftpClient;
-        
+
         public IConfiguration Config { get; private set; }
         public ServiceCollection Services { get; private set; }
         public ServiceProvider ServiceProvider { get; private set; }
@@ -51,21 +52,21 @@ namespace Common
 
         private string testIndustryName = "TESTINDUSTRY";
 
-        public async Task Setup( Action additionalInitialization, bool prepareTestData = false )
+        public async Task Setup(Action additionalInitialization, bool prepareTestData = false)
 
         {
-            base.PublisherSetup();
-            
             Config = new ConfigurationBuilder()
-                    .ConfigureBuilderForTests()
-                    .Build();
-
+                .ConfigureBuilderForTests()
+                .Build();
+            
             _additionalInitialization = additionalInitialization;
          
             InitServiceProvider();
             InitGeneralServices();
             InitServices();
             PrepareDatabase();
+            
+            base.PublisherSetup(Config, ServiceProvider);
             
             if (prepareTestData)
                 await PrepareTestData();
@@ -209,6 +210,8 @@ namespace Common
             Services.AddTransient<SftpClient>();
             
             Services.AddScoped<IGenericRepository, GenericRepository>();
+            Services.AddSingleton(Config);
+            Services.AddSingleton<TelegramSender>();
            
             _additionalInitialization?.Invoke();
             ServiceProvider = Services.BuildServiceProvider();
