@@ -90,9 +90,9 @@ namespace UserOperations.Controllers
                         .ToList().OrderByDescending(p => p.BegTime)
                         .FirstOrDefault();    
 
-                var newAlert = new Alert();   
-                newAlert.ApplicationUserId = data.ApplicationUserId;
-                newAlert.CreationDate = DateTime.Now;
+                var alertOpenCloseSession = new Alert();   
+                alertOpenCloseSession.ApplicationUserId = data.ApplicationUserId;
+                alertOpenCloseSession.CreationDate = DateTime.UtcNow;
            
 
                 if (lastSession == null)
@@ -109,8 +109,8 @@ namespace UserOperations.Controllers
                             };
                             _context.Sessions.Add(session);
 
-                            newAlert.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
-                            _context.Alerts.Add(newAlert);
+                            alertOpenCloseSession.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
+                            _context.Alerts.Add(alertOpenCloseSession);
 
                             _context.SaveChanges();
                             response.Message = "Session successfully opened";
@@ -155,8 +155,8 @@ namespace UserOperations.Controllers
                             };
                             _context.Sessions.Add(session);
 
-                            newAlert.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
-                            _context.Alerts.Add(newAlert);
+                            alertOpenCloseSession.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
+                            _context.Alerts.Add(alertOpenCloseSession);
 
                             _context.SaveChanges();
 
@@ -174,9 +174,23 @@ namespace UserOperations.Controllers
                             lastSession.StatusId = 7;
                             lastSession.EndTime = DateTime.UtcNow;
 
-                            newAlert.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session close").FirstOrDefault().AlertTypeId;
-                            _context.Alerts.Add(newAlert);
+                            //---add alerts---
+                            alertOpenCloseSession.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "session close").AlertTypeId;
+                            _context.Alerts.Add(alertOpenCloseSession);
 
+                            var dialoquesAmount = _context.Dialogues
+                                .Where(x => x.BegTime >= lastSession.BegTime 
+                                && x.EndTime <= lastSession.EndTime 
+                                && x.ApplicationUserId == lastSession.ApplicationUserId && x.StatusId == 3 && x.InStatistic == true).Count();
+                            if( dialoquesAmount == 0 )
+                            {
+                                var alertNoDialogues = new Alert();   
+                                alertNoDialogues.ApplicationUserId = data.ApplicationUserId;
+                                alertNoDialogues.CreationDate = DateTime.UtcNow;
+                                alertNoDialogues.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "no conversations").AlertTypeId;
+                                _context.Alerts.Add(alertNoDialogues);
+                            }
+                            //---
                             _context.SaveChanges();
                             response.Message = "Session successfully closed";
                             _log.Info($"Session successfully closed {data.ApplicationUserId}"); 
@@ -203,7 +217,6 @@ namespace UserOperations.Controllers
             try
             {
                 var response = new Response();
-
                 if (String.IsNullOrEmpty(applicationUserId.ToString())) 
                 {
                     response.Message = "ApplicationUser is empty";
@@ -211,7 +224,7 @@ namespace UserOperations.Controllers
                 }
 
                 var newAlert = new Alert();
-                newAlert.CreationDate = DateTime.Now;
+                newAlert.CreationDate = DateTime.UtcNow;
                 newAlert.ApplicationUserId = applicationUserId;
                 newAlert.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "client does not smile").AlertTypeId;
                 _context.Alerts.Add(newAlert);
