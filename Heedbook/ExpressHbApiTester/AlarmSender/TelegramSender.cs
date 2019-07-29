@@ -33,10 +33,11 @@ namespace AlarmSender
             receiveThrd.Start();
         }
 
-        public override async void Send(string message)
+        public override async void Send(string message, bool processCallback = true)
         {
             await _client?.SendTextMessageAsync(_chatId, message, ParseMode.Html);
-            ProcessCallbackImmediately();
+            if (processCallback == true)
+                ProcessCallbackImmediately();
         }
 
         private void ProcessCallbackImmediately()
