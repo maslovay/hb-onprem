@@ -731,6 +731,7 @@ namespace UserOperations.Controllers
                             && (!alertTypeIds.Any() || alertTypeIds.Contains(p.AlertTypeId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                             && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    .OrderByDescending(x => x.CreationDate)
                     .ToList();
         return Ok(alerts);
     }    
