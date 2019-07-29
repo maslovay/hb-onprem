@@ -335,7 +335,7 @@ namespace DialogueMarkUp.QuartzJobs
                         .OrderByDescending(p => p.BegTime)
                         .ToList()
                         .FirstOrDefault();
-                if(lastSession != null && lastSession.StatusId == 6)
+                if(lastSession != null && lastSession.StatusId == 6 && lastSession.EndTime < dialogue.EndTime)
                 {
                     lastSession.EndTime = dialogue.EndTime;
                 }
@@ -405,7 +405,8 @@ namespace DialogueMarkUp.QuartzJobs
                     var lastInsideSession = insideSessions.LastOrDefault();
                     if(lastInsideSession.StatusId == 6)
                     {                        
-                        dialogueBeginSession.EndTime = lastInsideSession.BegTime;
+                        dialogueBeginSession.EndTime = dialogue.BegTime;
+                        lastInsideSession.BegTime = dialogue.BegTime;
                         lastInsideSession.EndTime = dialogue.EndTime;
                         foreach(var s in insideSessions.Where(p => p!=lastInsideSession))
                         {
@@ -462,7 +463,7 @@ namespace DialogueMarkUp.QuartzJobs
                 dialogueEndSession.BegTime = dialogueBeginSession.BegTime;
                 dialogueBeginSession.StatusId = 8;                
             }            
-            _context.SaveChangesAsync();
+            _context.SaveChanges();
         }
     }
 }
