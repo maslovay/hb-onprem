@@ -196,6 +196,35 @@ namespace UserOperations.Controllers
                 return BadRequest(response);
             }
         }
+
+       [HttpPost("AlertNotSmile")]
+        public IActionResult AlertNotSmile([FromBody] Guid applicationUserId)
+        {
+            try
+            {
+                var response = new Response();
+
+                if (String.IsNullOrEmpty(applicationUserId.ToString())) 
+                {
+                    response.Message = "ApplicationUser is empty";
+                    return BadRequest(response);
+                }
+
+                var newAlert = new Alert();
+                newAlert.CreationDate = DateTime.Now;
+                newAlert.ApplicationUserId = applicationUserId;
+                newAlert.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "client does not smile").AlertTypeId;
+                _context.Alerts.Add(newAlert);
+                _context.SaveChanges();
+                response.Message = "Alert saved";
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                 _log.Fatal($"Exception occurred {e}");
+                return BadRequest();
+            }
+        }
     }
 
     public class Response
