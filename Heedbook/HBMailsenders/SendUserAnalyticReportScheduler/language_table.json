@@ -1,7 +1,7 @@
 [{
-	"reportName": "Weekly report",
+	"reportName": "Heedbook: weekly report",
 	"introductionGreeting": "Hello",
-	"introductionDescription": "We send you an individual report for the last week, formed by an automated system for assessing the quality of service and compliance with work standards.",
+	"introductionDescription": "We send you an individual report for the last week, formed by an Heedbook-automated system for assessing the quality of service and compliance with work standards.",
 	"report": {
 		"indicators": {			
 			"title": "Indicators",
@@ -32,9 +32,9 @@
 		}
 },	
 {
-	"reportName": "Недельный отчет",
+	"reportName": "Heedbook: недельный отчет",
 	"introductionGreeting": "Добрый день",
-	"introductionDescription": "Направляем Вам индивидуальный отчет за прошедшую неделю, сформированный автоматизированной системой оценки качества обслуживания и соблюдения стандартов работы.",
+	"introductionDescription": "Направляем Вам индивидуальный отчет за прошедшую неделю, сформированный Heedbook-автоматизированной системой оценки качества обслуживания и соблюдения стандартов работы.",
 	"report": {
 		"indicators": {			
 			"title": "Показатели",

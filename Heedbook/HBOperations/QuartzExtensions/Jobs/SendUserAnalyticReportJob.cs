@@ -86,7 +86,6 @@ namespace QuartzExtensions.Jobs
                 return;
             }
                 
-
             var fullPath = System.IO.Path.GetFullPath(".");
             var engine = new RazorLight.RazorLightEngineBuilder()
                 .UseFilesystemProject(fullPath)
@@ -243,8 +242,14 @@ namespace QuartzExtensions.Jobs
         }
 
         private MemoryStream GeneratePng(Dictionary<DateTime, float> points, string name, double colourData, int ReportStyle)
-        {
-            var pane = new ZedGraph.GraphPane(new RectangleF(0, 0, 400, 100), "", "", "");
+        {            
+            float leftMargin = 10;
+            float rightMargin = 10;
+            float topMargin = 10;
+            float bottomMargin = 5;
+            float width = 400;
+            float height = 100;
+            var pane = new ZedGraph.GraphPane(new RectangleF(leftMargin, topMargin, width - leftMargin - rightMargin, height - topMargin - bottomMargin), "", "", "");
             pane.CurveList.Clear();
             PointPairList list = new PointPairList();
             int xmax = 100;
@@ -324,8 +329,10 @@ namespace QuartzExtensions.Jobs
             pane.Border.Width = 0;
             pane.Border.Color = Color.White;
             pane.Border.IsVisible = false;
+            pane.Border.IsAntiAlias = true;
             
-
+            pane.Chart.Border.IsVisible = false;
+            pane.Legend.Border.IsVisible = false;
             pane.Legend.FontSpec.Fill.IsVisible = false;
             pane.Legend.Fill.IsVisible = false;
             pane.Legend.IsVisible = false;
