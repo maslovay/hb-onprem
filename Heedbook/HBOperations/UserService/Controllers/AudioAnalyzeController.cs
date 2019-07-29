@@ -17,7 +17,7 @@ namespace UserService.Controllers
         }
 
         [HttpPost("audio-analyze")]
-        [SwaggerOperation(Description = "Speech recogntion for audio file in message")]
+        [SwaggerOperation(Description = "Speech recognition for audio file in message")]
         public void AudioAnalyze([FromBody] AudioAnalyzeRun message)
         {
             _handler.EventRaised(message);
