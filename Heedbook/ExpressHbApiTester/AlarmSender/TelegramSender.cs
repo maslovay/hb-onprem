@@ -16,16 +16,15 @@ namespace AlarmSender
         private readonly IConfiguration _configuration;
         private readonly string _chatId;
         private readonly string _token;
-        private readonly ILogger _logger;
+        //private readonly ILogger _logger;
         private readonly List<string> _commands = new List<string>(10);
         private int updatesOffset = 0;
         private readonly object syncObj = new object();
         private TelegramBotClient _client;
         
-        
-        public TelegramSender(ILogger logger, IConfiguration configuration)
+        public TelegramSender(/*ILogger logger, */ IConfiguration configuration)
         {
-            _logger = logger;
+            //_logger = logger;
             _configuration = configuration;
             _token = _configuration.GetSection("AlarmSender").GetSection("Telegram").GetValue<string>("Token");
             _chatId = _configuration.GetSection("AlarmSender").GetSection("Telegram").GetValue<string>("ChatId");
@@ -36,7 +35,7 @@ namespace AlarmSender
 
         public override async void Send(string message)
         {
-            await _client.SendTextMessageAsync(_chatId, message, ParseMode.Html);
+            await _client?.SendTextMessageAsync(_chatId, message, ParseMode.Html);
             ProcessCallbackImmediately();
         }
 
@@ -65,8 +64,8 @@ namespace AlarmSender
             }
             catch (AggregateException ex)
             {
-                _client.StopReceiving();
                 Console.WriteLine("TelegramSender.ProcessCallbackImmediately() exception: " + ex.Message);
+                _client?.StopReceiving();
             }
         }
 
