@@ -194,6 +194,7 @@ namespace FillingSatisfactionService
                         BegMoodByNN = Math.Max((double) begMoodByNN, 35 + random.Next(10)),
                         EndMoodByNN = Math.Max((double) endMoodByNN, 35 + random.Next(10))
                     };
+                    _log.Info($"Total mood is --- {emp.MeetingExpectationsTotal}");
                     _context.DialogueClientSatisfactions.Add(emp);
                 }
                 else
@@ -204,7 +205,9 @@ namespace FillingSatisfactionService
                     satisfactionScore.BegMoodByNN = Math.Max((double)  begMoodByNN, 35 + random.Next(10));
                     satisfactionScore.EndMoodTotal = Math.Max((double)  endMoodTotal, 35 + random.Next(10));
                     satisfactionScore.EndMoodByNN =  Math.Max((double)  endMoodByNN, 35 + random.Next(10));
+                    _log.Info($"Total mood is --- {satisfactionScore.MeetingExpectationsTotal}");
                 }
+
 
                 _context.SaveChanges();
                 var @event = new FillingHintsRun
