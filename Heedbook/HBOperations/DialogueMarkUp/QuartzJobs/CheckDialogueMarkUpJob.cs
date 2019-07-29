@@ -462,7 +462,7 @@ namespace DialogueMarkUp.QuartzJobs
                 dialogueEndSession.BegTime = dialogueBeginSession.BegTime;
                 dialogueBeginSession.StatusId = 8;                
             }            
-            _context.SaveChanges();
+            _context.SaveChangesAsync();
         }
     }
 }
