@@ -24,6 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\ExpressHbApiTester\AlarmSender\AlarmSender.csproj" />
       <ProjectReference Include="..\..\HBData\HBData.csproj" />
       <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
       <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj" />
