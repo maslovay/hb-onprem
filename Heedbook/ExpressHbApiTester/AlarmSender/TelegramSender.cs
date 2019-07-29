@@ -35,7 +35,7 @@ namespace AlarmSender
 
         public override async void Send(string message)
         {
-            await _client.SendTextMessageAsync(_chatId, message, ParseMode.Html);
+            await _client?.SendTextMessageAsync(_chatId, message, ParseMode.Html);
             ProcessCallbackImmediately();
         }
 
@@ -64,8 +64,8 @@ namespace AlarmSender
             }
             catch (AggregateException ex)
             {
-                _client.StopReceiving();
                 Console.WriteLine("TelegramSender.ProcessCallbackImmediately() exception: " + ex.Message);
+                _client?.StopReceiving();
             }
         }
 
