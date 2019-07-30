@@ -47,6 +47,7 @@ namespace Common
             TestContext.Out.WriteLine("Publishing test results...");
             if (!File.Exists(pathToTrx))
             {
+                throw new Exception($"Can't find TRX file {pathToTrx}");
                 TestContext.Out.WriteLine($"Can't find TRX file {pathToTrx}");
                 return;
             }
@@ -117,7 +118,8 @@ namespace Common
             }
             catch (Exception ex)
             {
-                TestContext.Out.WriteLine("Error parsing an XML: " + ex.Message + " " + ex.StackTrace);
+                throw;
+                //TestContext.Out.WriteLine("Error parsing an XML: " + ex.Message + " " + ex.StackTrace);
             }
         }
 //        
