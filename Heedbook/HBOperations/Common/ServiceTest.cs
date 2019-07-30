@@ -74,7 +74,7 @@ namespace Common
 
         public async Task TearDown()
         {
-            var resultsPath = Path.Combine(Environment.SpecialFolder.Personal.ToString(), "TestResults", "results.trx");
+            var resultsPath = Path.Combine("TestResults", "results.trx");
             base.Publish(resultsPath);
             await CleanTestData();
         }
