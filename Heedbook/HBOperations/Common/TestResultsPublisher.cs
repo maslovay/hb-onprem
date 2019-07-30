@@ -44,7 +44,7 @@ namespace Common
 
         public void Publish(string pathToTrx)
         {
-            Console.WriteLine("Publishing test results...");
+            TestContext.Out.WriteLine("Publishing test results...");
             if (!File.Exists(pathToTrx))
             {
                 TestContext.Out.WriteLine($"Can't find TRX file {pathToTrx}");
