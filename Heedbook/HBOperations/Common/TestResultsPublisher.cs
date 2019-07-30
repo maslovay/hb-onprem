@@ -59,34 +59,34 @@ namespace Common
         protected void PublisherEachTestSetup()
         {
             var dateTime = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
-            var testName = TestContext.CurrentContext.Test.FullName;
-            TestFixtureStarted?.Invoke($"{dateTime} Test:  {testName}", "Started");            
+            var testName = TestContext.CurrentContext.Test.MethodName;
+            TestResultReceived?.Invoke(testName, false, $"<pre>{dateTime} Test:  {testName} Started</pre>", string.Empty);            
         }
 
         [OneTimeTearDown]
         protected void PublisherEachTestTearDown()
         {
             var status = TestContext.CurrentContext.Result.Outcome.Status;
-            var testName = TestContext.CurrentContext.Test.FullName;
+            var testName = TestContext.CurrentContext.Test.MethodName;
             var message = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
             
             switch (status)
             {
                 case TestStatus.Failed:
-                    message += $" {testName} result: Failed";
+                    message += $" <pre><b>{testName}</b> result: <b>Failed</b></pre>";
                     break;
                 case TestStatus.Passed:
-                    message += $" {testName} result: Passed";
+                    message += $" <pre><b>{testName}</b> result: <b>Passed</b></pre>";
                     break;
                 case TestStatus.Skipped:
-                    message += $" {testName} result: Skipped";
+                    message += $" <pre><b>{testName}</b> result: <b>Skipped</b></pre>";
                     break;                   
                 case TestStatus.Warning:
-                    message += $" {testName} result: Warning";
+                    message += $" <pre><b>{testName}</b> result: <b>Warning</b></pre>";
                     break;   
                 default:
                 case TestStatus.Inconclusive:
-                    message += $" {testName} result: Inconclusive";
+                    message += $" <pre><b>{testName}</b> result: <b>Inconclusive</b></pre>";
                     break;      
             }
             
