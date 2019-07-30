@@ -66,7 +66,7 @@ namespace Common
             InitServices();
             PrepareDatabase();
             
-            base.PublisherSetup(Config, ServiceProvider);
+            //base.PublisherSetup(Config, ServiceProvider);
             
             if (prepareTestData)
                 await PrepareTestData();
@@ -74,18 +74,19 @@ namespace Common
 
         public async Task TearDown()
         {
-            base.PublisherTearDown();
+            var resultsPath = Path.Combine(Environment.SpecialFolder.Personal.ToString(), "TestResults", "results.trx");
+            base.Publish(resultsPath);
             await CleanTestData();
         }
 
-        [OneTimeTearDown]
-        public async Task OneTimeTearDown()
-            => base.PublisherEachTestTearDown();
-
-
-        [OneTimeSetUp]
-        public async Task OneTimeSetUp()
-            => base.PublisherEachTestSetup();
+//        [OneTimeTearDown]
+//        public async Task OneTimeTearDown()
+//            => base.PublisherEachTestTearDown();
+//
+//
+//        [OneTimeSetUp]
+//        public async Task OneTimeSetUp()
+//            => base.PublisherEachTestSetup();
         
         public HashSet<KeyValuePair<string, string>> GetTextResources(string name)
         {
