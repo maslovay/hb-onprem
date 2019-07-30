@@ -17,6 +17,7 @@ namespace Common
     public class TestResultsPublisher
     {
         private IConfiguration _configuration;
+
         private List<Sender> _senders = new List<Sender>(5);
 //        public delegate void TestFixtureStartedDelegate(string testFixtureName, string message);
 //        public delegate void TestResultReceivedDelegate(string testName, bool isPassed, string message, string errorMessage);
@@ -47,7 +48,6 @@ namespace Common
             TestContext.Out.WriteLine("Publishing test results...");
             if (!File.Exists(pathToTrx))
             {
-                throw new Exception($"Can't find TRX file {pathToTrx}");
                 TestContext.Out.WriteLine($"Can't find TRX file {pathToTrx}");
                 return;
             }
@@ -55,46 +55,43 @@ namespace Common
             var text = File.ReadAllText(pathToTrx);
 
             TestContext.Out.WriteLine("Publishing test results: " + text);
-            try
+            var trxDoc = XDocument.Parse(text);
+
+            if (trxDoc.Root == null)
+                return;
+
+            var testRunElement = trxDoc.Root;
+            var startDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name.LocalName == "Times")
+                ?.Attribute("start")
+                ?.Value;
+            var finishDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name.LocalName == "Times")
+                ?.Attribute("finish")
+                ?.Value;
+
+            var testResults = testRunElement.Elements().FirstOrDefault(elem => elem.Name.LocalName == "Results")
+                ?.Elements()
+                .Where(elem => elem.Name.LocalName == "UnitTestResult").ToArray();
+
+            var testDefs = testRunElement.Elements().FirstOrDefault(elem => elem.Name.LocalName == "TestDefinitions")
+                ?.Elements()
+                .Where(elem => elem.Name.LocalName == "UnitTest").ToArray();
+
+            if (testResults == null || !testDefs.Any())
             {
-                var trxDoc = XDocument.Parse(text);
+                TestContext.Out.WriteLine($"Can't find testResults for a TestRun!");
+                return;
+            }
 
-                if (trxDoc.Root == null)
-                    return;
-                
-                foreach (var testRunElement in trxDoc.Root.Elements().Where(elem => elem.Name == "TestRun"))
-                {
-                    var startDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Times")
-                        ?.Attribute("start")
-                        ?.Value;
-                    var finishDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Times")
-                        ?.Attribute("finish")
-                        ?.Value;
+            if (!testDefs.Any())
+            {
+                TestContext.Out.WriteLine($"Can't find testDefinitions for a TestRun!");
+                return;
+            }
 
-                    var testResults = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Results")
-                        ?.Elements()
-                        .Where(elem => elem.Name == "UnitTestResults").ToArray();
+            var testFixture = testDefs.FirstOrDefault()?.Elements().FirstOrDefault(elem => elem.Name.LocalName == "TestMethod")?.Attribute("className")?.Value;
 
-                    var testDefs = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "TestDefinitions")
-                        ?.Elements()
-                        .Where(elem => elem.Name == "UnitTest").ToArray();
-
-                    if (testResults == null || !testDefs.Any())
-                    {
-                        TestContext.Out.WriteLine($"Can't find testResults for a TestRun!");
-                        continue;
-                    }
-
-                    if (!testDefs.Any())
-                    {
-                        TestContext.Out.WriteLine($"Can't find testDefinitions for a TestRun!");
-                        continue;
-                    }
-
-                    var testFixture = testDefs.FirstOrDefault()?.Attribute("className")?.Value;
-
-                    var message =
-                        $"TestRun for TestFixture \"{testFixture}\" started: {startDateTime} finished: {finishDateTime}";
+            var message =
+                $"TestRun for TestFixture \"{testFixture}\" started: {startDateTime} finished: {finishDateTime}";
 
 //            TestFixtureStarted += (name, message) => SendTextMessage(message);
 //            TestFixtureFinished += (name, message) => SendTextMessage(message);
@@ -104,27 +101,21 @@ namespace Common
 //                SendTextMessage(text);
 //            };
 
-                    foreach (var res in testResults)
-                    {
-                        var testId = res.Attribute("testId")?.Value;
-                        var testXml = testDefs.FirstOrDefault(elem =>
-                            elem.Name == "UnitTest" && elem.Attributes().Any(a => a.Name == "id" && a.Value == testId));
-
-                        var testName = testXml?.Attribute("name")?.Value;
-                        var testOutcome = res.Attribute("outcome");
-
-                        message += $"<pre> {testName} : {testOutcome} </pre>";
-                    }
-
-                    SendTextMessage(message);
-                }
-            }
-            catch (Exception ex)
+            foreach (var res in testResults)
             {
-                throw;
-                //TestContext.Out.WriteLine("Error parsing an XML: " + ex.Message + " " + ex.StackTrace);
+                var testId = res.Attribute("testId")?.Value;
+                var testXml = testDefs.FirstOrDefault(elem =>
+                    elem.Name.LocalName == "UnitTest" && elem.Attributes().Any(a => a.Name.LocalName == "id" && a.Value == testId));
+
+                var testName = testXml?.Attribute("name")?.Value;
+                var testOutcome = res.Attribute("outcome");
+
+                message += $"<pre> {testName} : {testOutcome} </pre>";
             }
+
+            SendTextMessage(message);
         }
+
 //        
 //        protected void PublisherSetup(IConfiguration configuration, IServiceProvider serviceProvider)
 //        {
