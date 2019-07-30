@@ -33,10 +33,11 @@ namespace AlarmSender
             receiveThrd.Start();
         }
 
-        public override async void Send(string message)
+        public override async void Send(string message, bool processCallback = true)
         {
             await _client?.SendTextMessageAsync(_chatId, message, ParseMode.Html);
-            ProcessCallbackImmediately();
+            if (processCallback == true)
+                ProcessCallbackImmediately();
         }
 
         private void ProcessCallbackImmediately()
@@ -85,6 +86,9 @@ namespace AlarmSender
                     var orderedResults = updateTask.Result?.OrderByDescending(u => u.Id);
                     var command = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost
                         .Text;
+                    
+                    var chatId = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost?.Chat?.Id;
+
                     var callbackId = orderedResults?.FirstOrDefault(r => r.CallbackQuery != null)?.CallbackQuery.Id;
                     if (callbackId != null)
                         (_client.AnswerCallbackQueryAsync(callbackId)).Wait();
@@ -95,6 +99,7 @@ namespace AlarmSender
                     if (string.IsNullOrEmpty(command))
                         return string.Empty;
 
+                    Console.WriteLine("Chat id: " + chatId);
                     Console.WriteLine("Command found: " + command);
                     return command.Replace("/", "");
                 }

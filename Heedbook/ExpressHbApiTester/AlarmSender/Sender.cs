@@ -10,7 +10,7 @@ namespace AlarmSender
 
         public event CommandReceivedDelegate CommandReceived;
 
-        public abstract void Send(string message);
+        public abstract void Send(string message, bool processCallback = true);
 
         public void ReceiveCommands()
         {
