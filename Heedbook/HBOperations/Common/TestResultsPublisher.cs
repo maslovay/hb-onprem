@@ -35,7 +35,7 @@ namespace Common
         private void SendTextMessage(string text)
         {
             foreach (var sender in _senders)
-                sender.Send(text, false);
+                sender.Send(text, true);
         }
         
         
@@ -67,7 +67,7 @@ namespace Common
         protected void PublisherEachTestTearDown()
         {
             var status = TestContext.CurrentContext.Result.Outcome.Status;
-            var testName = TestContext.CurrentContext.Test.MethodName;
+            var testName = TestContext.CurrentContext.Test.FullName;
             var message = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
             
             switch (status)
