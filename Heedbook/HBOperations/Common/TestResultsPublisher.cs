@@ -59,7 +59,10 @@ namespace Common
             {
                 var trxDoc = XDocument.Parse(text);
 
-                foreach (var testRunElement in trxDoc.Elements().Where(elem => elem.Name == "TestRun"))
+                if (trxDoc.Root == null)
+                    return;
+                
+                foreach (var testRunElement in trxDoc.Root.Elements().Where(elem => elem.Name == "TestRun"))
                 {
                     var startDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Times")
                         ?.Attribute("start")
