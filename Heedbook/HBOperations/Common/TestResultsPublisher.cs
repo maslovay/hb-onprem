@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Engine;
+using NUnit.Framework;
 using Telegram.Bot.Types;
 using File = System.IO.File;
 
@@ -46,49 +47,51 @@ namespace Common
             Console.WriteLine("Publishing test results...");
             if (!File.Exists(pathToTrx))
             {
-                throw new Exception($"Can't find TRX file {pathToTrx}");
-                Console.WriteLine($"Can't find TRX file {pathToTrx}");
+                TestContext.Out.WriteLine($"Can't find TRX file {pathToTrx}");
                 return;
             }
 
             var text = File.ReadAllText(pathToTrx);
 
-            Console.WriteLine("Publishing test results: " + text);
-            var trxDoc = XDocument.Parse(text);
-
-            foreach (var testRunElement in trxDoc.Elements().Where(elem => elem.Name == "TestRun"))
+            TestContext.Out.WriteLine("Publishing test results: " + text);
+            try
             {
-                var startDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Times")
-                    ?.Attribute("start")
-                    ?.Value;
-                var finishDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Times")
-                    ?.Attribute("finish")
-                    ?.Value;       
-                
-                var testResults = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Results")
-                    ?.Elements()
-                    .Where(elem => elem.Name == "UnitTestResults").ToArray();
-                
-                var testDefs = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "TestDefinitions")
-                    ?.Elements()
-                    .Where(elem => elem.Name == "UnitTest").ToArray();
+                var trxDoc = XDocument.Parse(text);
 
-                if (testResults == null || !testDefs.Any())
+                foreach (var testRunElement in trxDoc.Elements().Where(elem => elem.Name == "TestRun"))
                 {
-                    Console.WriteLine($"Can't find testResults for a TestRun!");
-                    continue;
-                }
-                
-                if (!testDefs.Any())
-                {
-                    Console.WriteLine($"Can't find testDefinitions for a TestRun!");
-                    continue;
-                }
-                
-                var testFixture = testDefs.FirstOrDefault()?.Attribute("className")?.Value;
-                
-                var message = $"TestRun for TestFixture \"{testFixture}\" started: {startDateTime} finished: {finishDateTime}";
-                
+                    var startDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Times")
+                        ?.Attribute("start")
+                        ?.Value;
+                    var finishDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Times")
+                        ?.Attribute("finish")
+                        ?.Value;
+
+                    var testResults = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "Results")
+                        ?.Elements()
+                        .Where(elem => elem.Name == "UnitTestResults").ToArray();
+
+                    var testDefs = testRunElement.Elements().FirstOrDefault(elem => elem.Name == "TestDefinitions")
+                        ?.Elements()
+                        .Where(elem => elem.Name == "UnitTest").ToArray();
+
+                    if (testResults == null || !testDefs.Any())
+                    {
+                        TestContext.Out.WriteLine($"Can't find testResults for a TestRun!");
+                        continue;
+                    }
+
+                    if (!testDefs.Any())
+                    {
+                        TestContext.Out.WriteLine($"Can't find testDefinitions for a TestRun!");
+                        continue;
+                    }
+
+                    var testFixture = testDefs.FirstOrDefault()?.Attribute("className")?.Value;
+
+                    var message =
+                        $"TestRun for TestFixture \"{testFixture}\" started: {startDateTime} finished: {finishDateTime}";
+
 //            TestFixtureStarted += (name, message) => SendTextMessage(message);
 //            TestFixtureFinished += (name, message) => SendTextMessage(message);
 //            TestResultReceived += (name, isPassed, message, errorMessage) =>
@@ -96,20 +99,25 @@ namespace Common
 //                var text = $"{message} " + (isPassed ? string.Empty : errorMessage);
 //                SendTextMessage(text);
 //            };
-                
-                foreach (var res in testResults)
-                {
-                    var testId = res.Attribute("testId")?.Value;
-                    var testXml = testDefs.FirstOrDefault(elem =>
-                        elem.Name == "UnitTest" && elem.Attributes().Any(a => a.Name == "id" && a.Value == testId));
 
-                    var testName = testXml?.Attribute("name")?.Value;
-                    var testOutcome = res.Attribute("outcome");
+                    foreach (var res in testResults)
+                    {
+                        var testId = res.Attribute("testId")?.Value;
+                        var testXml = testDefs.FirstOrDefault(elem =>
+                            elem.Name == "UnitTest" && elem.Attributes().Any(a => a.Name == "id" && a.Value == testId));
 
-                    message += $"<pre> {testName} : {testOutcome} </pre>";
+                        var testName = testXml?.Attribute("name")?.Value;
+                        var testOutcome = res.Attribute("outcome");
+
+                        message += $"<pre> {testName} : {testOutcome} </pre>";
+                    }
+
+                    SendTextMessage(message);
                 }
-                
-                SendTextMessage(message);
+            }
+            catch (Exception ex)
+            {
+                TestContext.Out.WriteLine("Error parsing an XML: " + ex.Message + " " + ex.StackTrace);
             }
         }
 //        
