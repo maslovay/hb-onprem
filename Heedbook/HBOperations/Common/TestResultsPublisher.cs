@@ -73,20 +73,20 @@ namespace Common
             switch (status)
             {
                 case TestStatus.Failed:
-                    message += $" <pre><b>{testName}</b> result: <b>Failed</b></pre>";
+                    message += $" <pre>{testName} result: Failed</pre>";
                     break;
                 case TestStatus.Passed:
-                    message += $" <pre><b>{testName}</b> result: <b>Passed</b></pre>";
+                    message += $" <pre>{testName} result: Passed</pre>";
                     break;
                 case TestStatus.Skipped:
-                    message += $" <pre><b>{testName}</b> result: <b>Skipped</b></pre>";
+                    message += $" <pre>{testName} result: Skipped</pre>";
                     break;                   
                 case TestStatus.Warning:
-                    message += $" <pre><b>{testName}</b> result: <b>Warning</b></pre>";
+                    message += $" <pre>{testName} result: Warning</pre>";
                     break;   
                 default:
                 case TestStatus.Inconclusive:
-                    message += $" <pre><b>{testName}</b> result: <b>Inconclusive</b></pre>";
+                    message += $" <pre>{testName} result: Inconclusive</pre>";
                     break;      
             }
             
