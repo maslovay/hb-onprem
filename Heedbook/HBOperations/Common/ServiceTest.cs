@@ -29,7 +29,7 @@ using ServiceExtensions;
 
 namespace Common
 {
-    public abstract class ServiceTest : TestResultsPublisher
+    public abstract class ServiceTest : TestResultsPublisher, IDisposable
     {
         protected IGenericRepository _repository;
         protected SftpClient _sftpClient;
@@ -74,8 +74,6 @@ namespace Common
 
         public async Task TearDown()
         {
-            var resultsPath = Path.Combine(Environment.CurrentDirectory,"../../../TestResults", "results.trx");
-            base.Publish(resultsPath);
             await CleanTestData();
         }
 
@@ -263,6 +261,12 @@ namespace Common
             }
             
             throw new Exception("Incorrect filename for getting a DateTime!");
+        }
+
+        public void Dispose()
+        {
+            var resultsPath = Path.Combine(Environment.CurrentDirectory,"../../../TestResults", "results.trx");
+            base.Publish(resultsPath);
         }
     }
 }
