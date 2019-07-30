@@ -46,6 +46,7 @@ namespace Common
             Console.WriteLine("Publishing test results...");
             if (!File.Exists(pathToTrx))
             {
+                throw new Exception($"Can't find TRX file {pathToTrx}");
                 Console.WriteLine($"Can't find TRX file {pathToTrx}");
                 return;
             }
