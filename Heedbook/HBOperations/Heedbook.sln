@@ -52,6 +52,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498
 		..\AudioAnalyzeScheduler.Dockerfile.Integration = ..\AudioAnalyzeScheduler.Dockerfile.Integration
 		..\DialoguesRecalculateScheduler.Dockerfile = ..\DialoguesRecalculateScheduler.Dockerfile
 		..\ReferenceController.Dockerfile.Integration = ..\ReferenceController.Dockerfile.Integration
+		..\VideoToSoundService.Dockerfile.Integration = ..\VideoToSoundService.Dockerfile.Integration
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceAnalyzeService", "FaceAnalyzeService\FaceAnalyzeService.csproj", "{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}"
