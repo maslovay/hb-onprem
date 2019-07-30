@@ -66,7 +66,7 @@ namespace Common
             InitServices();
             PrepareDatabase();
             
-            //base.PublisherSetup(Config, ServiceProvider);
+            base.PublisherSetup(Config, ServiceProvider);
             
             if (prepareTestData)
                 await PrepareTestData();

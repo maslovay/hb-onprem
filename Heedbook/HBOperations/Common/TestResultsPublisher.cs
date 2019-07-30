@@ -116,16 +116,16 @@ namespace Common
             SendTextMessage(message);
         }
 
-//        
-//        protected void PublisherSetup(IConfiguration configuration, IServiceProvider serviceProvider)
-//        {
-//            _configuration = configuration;
-//            FetchSenders(serviceProvider);
+        
+        protected void PublisherSetup(IConfiguration configuration, IServiceProvider serviceProvider)
+        {
+            _configuration = configuration;
+            FetchSenders(serviceProvider);
 //            var dateTime = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
 //            var testFixtureName = TestContext.CurrentContext.Test.ClassName;
 //            TestFixtureStarted?.Invoke(testFixtureName, $"{dateTime} Test fixture:  {testFixtureName}: Started");
-//        }
-//
+        }
+
 //        protected void PublisherTearDown()
 //        {
 //            var dateTime = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
@@ -172,41 +172,41 @@ namespace Common
 //                TestContext.CurrentContext.Result.Message);  
 //        }
 //        
-//        public void FetchSenders(IServiceProvider serviceProvider)
-//        {
-//                try
-//                {
-//                    if (_configuration.GetSection("AlarmSender") == null)
-//                        return;
-//
-//                    var senderStrings = _configuration.GetSection("AlarmSender").GetChildren().Select(c => c.Key);
-//                    
-//                    // logger.Info("Loading senders...");
-//                    Console.WriteLine("Loading senders...");
-//                    if ( !senderStrings.Any())
-//                    {
-//                        Console.WriteLine("No senders in config!");
-//                        //logger.Error("No senders in config!");
-//                        return;
-//                    }
-//
-//                    foreach (var handler in senderStrings)
-//                    {
-//                        Console.WriteLine($"Loading senders... {handler}");
-//                        switch (handler)
-//                        {
-//                            default:
-//                            case "Telegram":
-//                            if (_senders.All(s => s.GetType() != typeof(TelegramSender)))
-//                                _senders.Add((TelegramSender)serviceProvider.GetService(typeof(TelegramSender)));
-//                            break;
-//                        }
-//                    }
-//                }
-//                catch (Exception ex)
-//                {
-//                    Console.WriteLine("Helper.FetchSenders() exception: " + ex.Message);
-//                }
-//        }
+        public void FetchSenders(IServiceProvider serviceProvider)
+        {
+            try
+            {
+                if (_configuration.GetSection("AlarmSender") == null)
+                    return;
+
+                var senderStrings = _configuration.GetSection("AlarmSender").GetChildren().Select(c => c.Key);
+
+                // logger.Info("Loading senders...");
+                Console.WriteLine("Loading senders...");
+                if (!senderStrings.Any())
+                {
+                    Console.WriteLine("No senders in config!");
+                    //logger.Error("No senders in config!");
+                    return;
+                }
+
+                foreach (var handler in senderStrings)
+                {
+                    Console.WriteLine($"Loading senders... {handler}");
+                    switch (handler)
+                    {
+                        default:
+                        case "Telegram":
+                            if (_senders.All(s => s.GetType() != typeof(TelegramSender)))
+                                _senders.Add((TelegramSender) serviceProvider.GetService(typeof(TelegramSender)));
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Helper.FetchSenders() exception: " + ex.Message);
+            }
+        }
     }
 }
