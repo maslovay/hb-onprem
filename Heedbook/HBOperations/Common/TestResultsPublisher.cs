@@ -43,6 +43,7 @@ namespace Common
 
         public void Publish(string pathToTrx)
         {
+            Console.WriteLine("Publishing test results...");
             if (!File.Exists(pathToTrx))
             {
                 Console.WriteLine($"Can't find TRX file {pathToTrx}");
@@ -50,7 +51,8 @@ namespace Common
             }
 
             var text = File.ReadAllText(pathToTrx);
-            
+
+            Console.WriteLine("Publishing test results: " + text);
             var trxDoc = XDocument.Parse(text);
 
             foreach (var testRunElement in trxDoc.Elements().Where(elem => elem.Name == "TestRun"))
