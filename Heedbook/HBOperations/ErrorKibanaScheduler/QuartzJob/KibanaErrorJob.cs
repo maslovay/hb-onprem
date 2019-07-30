@@ -1,16 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HBLib;
 using HBLib.Utils;
 using Quartz;
 using Elasticsearch.Net;
 using Elasticsearch.Net.Specification.IndicesApi;
+using Microsoft.Azure.WebJobs;
 using Nest;
 using Nest.JsonNetSerializer;
 using Newtonsoft.Json;
 using ElasticClient = Nest.ElasticClient;
+using Field = Nest.Field;
 
 namespace ErrorKibanaScheduler.QuartzJob
 {
@@ -35,12 +39,14 @@ namespace ErrorKibanaScheduler.QuartzJob
             var client = new ElasticClient(settings);
             
             var searchRequest = client.Search<SearchSetting>(source => source
-                .Source(sourcefield => sourcefield.IncludeAll()
-                ).Index("logstash-2019.07.29")
-                .Query(q => q.MatchAll()
-                )
-            );
+                .Source(s=> s
+                    .Includes(i => i
+                        .Fields(f => f.FunctionName, f=> f.OriginalFormat, f=> f.Timestamp)))
+                .Take(10000)
+                .Index($"logstash-{DateTime.Today:yyyy.MM.dd}")
+                .Query(q => q.Match(m => m.Field(f => f.LogLevel).Query("Fatal"))));
+            
+            var documents = searchRequest.Documents.Where(item => item.Timestamp >= DateTime.UtcNow.AddMinutes(-15)).ToList();
         }
-
     }
 }
