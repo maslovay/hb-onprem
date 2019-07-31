@@ -17,7 +17,7 @@
 	},	
 	"indicators": {
 			"AlertPhrase": "Share dialogues with alert phrases",
-			"AvgDialogueTime": "Average dialogue time",
+			"AvgDialogueTime": "Average dialogue time, m",
 			"CrossPhrase": "Share dialogues with cross phrases",
 			"FillersPhrase": "Share dialogues with fillers phrases",
 			"LoyaltyPhrase": "Share dialogues with loyalty phrases",
@@ -50,7 +50,7 @@
 	},		
 	"indicators": {
 			"AlertPhrase": "Доля диалогов с запрещенными фразами",
-			"AvgDialogueTime": "Средняя продолжительность диалогов",
+			"AvgDialogueTime": "Средняя продолжительность диалогов, м.",
 			"CrossPhrase": "Доля диалогов с кросс-продажами",
 			"FillersPhrase": "Доля диалогов с словами-паразитами",
 			"LoyaltyPhrase": "Доля диалогов с фразами лояльность",

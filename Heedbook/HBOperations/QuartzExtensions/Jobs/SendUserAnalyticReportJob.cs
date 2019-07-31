@@ -84,10 +84,12 @@ namespace QuartzExtensions.Jobs
                 }
                 else
                 {
-                    _log.Info($"Prepare report for applicationUser {user.Id} - {user.FullName}");        
-                    await CreateHtmlFromTemplate(user);
+                    if(!user.Email.Contains("@heedbook.com"))
+                    {
+                        _log.Info($"Prepare report for applicationUser {user.Id} - {user.FullName}");        
+                        await CreateHtmlFromTemplate(user);
+                    }
                 }
-                
             }            
         }
         private async Task CreateHtmlFromTemplate(ApplicationUser applicationUser)
@@ -124,7 +126,7 @@ namespace QuartzExtensions.Jobs
                     new ReportData{Name = "Workload", Data = UserWeeklyInfo.Workload, Description = languageDataReport.Indicators.Workload, Thumbnail = true, ColourData=UserWeeklyInfo.Workload.totalAvg},
                     new ReportData{Name = "NumberOfDialogues", Data = UserWeeklyInfo.NumberOfDialogues, Description = languageDataReport.Indicators.NumberOfDialogues, ColourData=UserWeeklyInfo.NumberOfDialogues.totalAvg, NotPercentage = true, Integer=true, ReportStyle=2},
                     new ReportData{Name = "WorkingHours_SessionsTotal", Data = UserWeeklyInfo.WorkingHours_SessionsTotal, Description = languageDataReport.Indicators.WorkingHours_SessionsTotal, ColourData=UserWeeklyInfo.WorkingHours_SessionsTotal.totalAvg, NotPercentage=true, ReportStyle=1},
-                    new ReportData{Name = "AvgDialogueTime", Data = UserWeeklyInfo.AvgDialogueTime, Description = languageDataReport.Indicators.AvgDialogueTime, ColourData=UserWeeklyInfo.AvgDialogueTime.totalAvg},                    
+                    new ReportData{Name = "AvgDialogueTime", Data = UserWeeklyInfo.AvgDialogueTime, Description = languageDataReport.Indicators.AvgDialogueTime, ColourData=UserWeeklyInfo.AvgDialogueTime.totalAvg, NotPercentage=true, ReportStyle=1},                    
                     new ReportData{Name = "CrossPhrase", Data = UserWeeklyInfo.CrossPhrase, Description = languageDataReport.Indicators.CrossPhrase, Thumbnail = true, ColourData=UserWeeklyInfo.CrossPhrase.totalAvg},
                     new ReportData{Name = "AlertPhrase", Data = UserWeeklyInfo.AlertPhrase, Description = languageDataReport.Indicators.AlertPhrase, ColourData=UserWeeklyInfo.AlertPhrase.totalAvg},
                     new ReportData{Name = "LoyaltyPhrase", Data = UserWeeklyInfo.LoyaltyPhrase, Description = languageDataReport.Indicators.LoyaltyPhrase, ColourData=UserWeeklyInfo.LoyaltyPhrase.totalAvg},
