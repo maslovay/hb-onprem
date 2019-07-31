@@ -208,7 +208,7 @@ namespace UserOperations.Controllers
                 };
                 TotalAvgOld = _dbOperation.AvgDialogueTimeTotal(userDialoguesOld);
                 OfficeRatingOld = _dbOperation.OfficeRatingDialogueTime(dialoguesCompanyOld, userId);
-                AvgDialogueTime.Dynamic = TimeSpan.FromHours((double)(AvgDialogueTime.TotalAvg - TotalAvgOld)).TotalMinutes;
+                AvgDialogueTime.Dynamic = AvgDialogueTime.TotalAvg - TimeSpan.FromHours((double)(TotalAvgOld)).TotalMinutes;
                 AvgDialogueTime.OfficeRatingChanges = AvgDialogueTime.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingDialogueTime(dialoguesCorporationOld, userId);
