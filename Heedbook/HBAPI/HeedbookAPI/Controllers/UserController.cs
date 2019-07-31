@@ -713,13 +713,15 @@ namespace UserOperations.Controllers
     [SwaggerOperation(Summary = "all alerts for period", Description = "Return all alerts for period, type, employee, worker type, time")]
     public IActionResult AlertGet([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserIds[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "alertTypeIds[]")] List<Guid> alertTypeIds,
+                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "alertTypeId[]")] List<Guid> alertTypeIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
     {
         if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                 return BadRequest("Token wrong");
+        var companyId = Guid.Parse(userClaims["companyId"]);
+
 
         var begTime = _requestFilters.GetBegDate(beg);
         var endTime = _requestFilters.GetEndDate(end);
@@ -728,6 +730,7 @@ namespace UserOperations.Controllers
           .Include(p => p.ApplicationUser)
                     .Where(p => p.CreationDate >= begTime
                             && p.CreationDate <= endTime
+                            && p.ApplicationUser.CompanyId == companyId
                             && (!alertTypeIds.Any() || alertTypeIds.Contains(p.AlertTypeId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                             && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
