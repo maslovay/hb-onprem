@@ -1,12 +1,16 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AlarmSender;
 using Microsoft.Extensions.Configuration;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Xml.Linq;
+using NUnit.Engine;
 using NUnit.Framework;
-using NUnit.Framework.Interfaces;
+using Telegram.Bot.Types;
+using File = System.IO.File;
 
 namespace Common
 {
@@ -14,121 +18,123 @@ namespace Common
     {
         private IConfiguration _configuration;
         private List<Sender> _senders = new List<Sender>(5);
-        public delegate void TestFixtureStartedDelegate(string testFixtureName, string message);
-        public delegate void TestResultReceivedDelegate(string testName, bool isPassed, string message, string errorMessage);
-        public delegate void TestFixtureFinishedDelegate(string testFixtureName, string message);
-        public event TestFixtureStartedDelegate TestFixtureStarted;
-        public event TestResultReceivedDelegate TestResultReceived;
-        public event TestFixtureFinishedDelegate TestFixtureFinished;
 
-        public TestResultsPublisher()
+        protected TestResultsPublisher()
         {
-            TestFixtureStarted += (name, message) => SendTextMessage(message);
-            TestFixtureFinished += (name, message) => SendTextMessage(message);
-            TestResultReceived += (name, isPassed, message, errorMessage) =>
-            {
-                var text = $"{message} " + (isPassed ? string.Empty : errorMessage);
-                SendTextMessage(text);
-            };
         }
 
         private void SendTextMessage(string text)
         {
             foreach (var sender in _senders)
-                sender.Send(text, false);
+                sender.Send(text, true);
         }
-        
+
+        public void Publish(string pathToTrx)
+        {
+            TestContext.Out.WriteLine("Publishing test results...");
+            if (!File.Exists(pathToTrx))
+            {
+                TestContext.Out.WriteLine($"Can't find TRX file {pathToTrx}");
+                return;
+            }
+
+            var text = File.ReadAllText(pathToTrx);
+
+            TestContext.Out.WriteLine("Publishing test results: " + text);
+            var trxDoc = XDocument.Parse(text);
+
+            if (trxDoc.Root == null)
+                return;
+
+            var testRunElement = trxDoc.Root;
+            var startDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name.LocalName == "Times")
+                ?.Attribute("start")
+                ?.Value;
+            var finishDateTime = testRunElement.Elements().FirstOrDefault(elem => elem.Name.LocalName == "Times")
+                ?.Attribute("finish")
+                ?.Value;
+
+            var testResults = testRunElement.Elements().FirstOrDefault(elem => elem.Name.LocalName == "Results")
+                ?.Elements()
+                .Where(elem => elem.Name.LocalName == "UnitTestResult").ToArray();
+
+            var testDefs = testRunElement.Elements().FirstOrDefault(elem => elem.Name.LocalName == "TestDefinitions")
+                ?.Elements()
+                .Where(elem => elem.Name.LocalName == "UnitTest").ToArray();
+
+            if (testResults == null || !testDefs.Any())
+            {
+                TestContext.Out.WriteLine($"Can't find testResults for a TestRun!");
+                return;
+            }
+
+            if (!testDefs.Any())
+            {
+                TestContext.Out.WriteLine($"Can't find testDefinitions for a TestRun!");
+                return;
+            }
+
+            var testFixture = testDefs.FirstOrDefault()?.Elements().FirstOrDefault(elem => elem.Name.LocalName == "TestMethod")?.Attribute("className")?.Value;
+
+            var message =
+                $"TestRun for TestFixture \"{testFixture}\" started: {startDateTime} finished: {finishDateTime}";
+
+            foreach (var res in testResults)
+            {
+                var testId = res.Attribute("testId")?.Value;
+                var testXml = testDefs.FirstOrDefault(elem =>
+                    elem.Name.LocalName == "UnitTest" && elem.Attributes().Any(a => a.Name.LocalName == "id" && a.Value == testId));
+
+                var testName = testXml?.Attribute("name")?.Value;
+                var testOutcome = res.Attribute("outcome");
+
+                message += $"<pre> {testName} : {testOutcome} </pre>";
+            }
+
+            SendTextMessage(message);
+        }
         
         protected void PublisherSetup(IConfiguration configuration, IServiceProvider serviceProvider)
         {
             _configuration = configuration;
             FetchSenders(serviceProvider);
-            var dateTime = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
-            var testFixtureName = TestContext.CurrentContext.Test.ClassName;
-            TestFixtureStarted?.Invoke(testFixtureName, $"{dateTime} Test fixture:  {testFixtureName}: Started");
         }
-
-        protected void PublisherTearDown()
-        {
-            var dateTime = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
-            var testFixtureName = TestContext.CurrentContext.Test.ClassName;
-            TestFixtureFinished?.Invoke(testFixtureName, $"{dateTime} Test fixture:  {testFixtureName}: Finished");
-        }
-
-        [OneTimeSetUp]
-        protected void PublisherEachTestSetup()
-        {
-            var dateTime = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
-            var testName = TestContext.CurrentContext.Test.MethodName;
-            TestResultReceived?.Invoke(testName, false, $"<pre>{dateTime} Test:  {testName} Started</pre>", string.Empty);            
-        }
-
-        [OneTimeTearDown]
-        protected void PublisherEachTestTearDown()
-        {
-            var status = TestContext.CurrentContext.Result.Outcome.Status;
-            var testName = TestContext.CurrentContext.Test.MethodName;
-            var message = DateTime.Now.ToLocalTime().ToString("dd.MM.yyyy hh:mm:ss: ");
-            
-            switch (status)
-            {
-                case TestStatus.Failed:
-                    message += $" <pre><b>{testName}</b> result: <b>Failed</b></pre>";
-                    break;
-                case TestStatus.Passed:
-                    message += $" <pre><b>{testName}</b> result: <b>Passed</b></pre>";
-                    break;
-                case TestStatus.Skipped:
-                    message += $" <pre><b>{testName}</b> result: <b>Skipped</b></pre>";
-                    break;                   
-                case TestStatus.Warning:
-                    message += $" <pre><b>{testName}</b> result: <b>Warning</b></pre>";
-                    break;   
-                default:
-                case TestStatus.Inconclusive:
-                    message += $" <pre><b>{testName}</b> result: <b>Inconclusive</b></pre>";
-                    break;      
-            }
-            
-            TestResultReceived?.Invoke(testName, status == TestStatus.Passed, message, 
-                TestContext.CurrentContext.Result.Message);  
-        }
-        
+ 
         public void FetchSenders(IServiceProvider serviceProvider)
         {
-                try
+            try
+            {
+                if (_configuration.GetSection("AlarmSender") == null)
+                    return;
+
+                var senderStrings = _configuration.GetSection("AlarmSender").GetChildren().Select(c => c.Key);
+
+                // logger.Info("Loading senders...");
+                Console.WriteLine("Loading senders...");
+                if (!senderStrings.Any())
                 {
-                    if (_configuration.GetSection("AlarmSender") == null)
-                        return;
+                    Console.WriteLine("No senders in config!");
+                    //logger.Error("No senders in config!");
+                    return;
+                }
 
-                    var senderStrings = _configuration.GetSection("AlarmSender").GetChildren().Select(c => c.Key);
-                    
-                    // logger.Info("Loading senders...");
-                    Console.WriteLine("Loading senders...");
-                    if ( !senderStrings.Any())
+                foreach (var handler in senderStrings)
+                {
+                    Console.WriteLine($"Loading senders... {handler}");
+                    switch (handler)
                     {
-                        Console.WriteLine("No senders in config!");
-                        //logger.Error("No senders in config!");
-                        return;
-                    }
-
-                    foreach (var handler in senderStrings)
-                    {
-                        Console.WriteLine($"Loading senders... {handler}");
-                        switch (handler)
-                        {
-                            default:
-                            case "Telegram":
+                        default:
+                        case "Telegram":
                             if (_senders.All(s => s.GetType() != typeof(TelegramSender)))
-                                _senders.Add((TelegramSender)serviceProvider.GetService(typeof(TelegramSender)));
+                                _senders.Add((TelegramSender) serviceProvider.GetService(typeof(TelegramSender)));
                             break;
-                        }
                     }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Helper.FetchSenders() exception: " + ex.Message);
-                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Helper.FetchSenders() exception: " + ex.Message);
+            }
         }
     }
 }

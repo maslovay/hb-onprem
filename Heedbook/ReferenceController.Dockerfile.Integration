@@ -8,5 +8,5 @@ RUN killall -9 dotnet; exit 0;
 WORKDIR /app/HBOperations/ReferenceControllerServiceTests/
 RUN dotnet restore .; exit 0;
 RUN dotnet build
-RUN dotnet test -r ./TestResults
+RUN dotnet test --logger "trx;LogFileName=results.trx"
 RUN killall -9 dotnet; exit 0;

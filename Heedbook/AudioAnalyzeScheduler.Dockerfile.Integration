@@ -29,4 +29,4 @@ RUN ../../rabbit_test_start.sh
 
 WORKDIR /app/HBOperations/AudioAnalyzeSchedulerTests/
 RUN dotnet restore .; exit 0;
-RUN dotnet test -r ./TestResults
+RUN dotnet test --logger "trx;LogFileName=results.trx"
