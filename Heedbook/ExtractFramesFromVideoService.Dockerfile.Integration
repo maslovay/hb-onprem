@@ -29,4 +29,3 @@ WORKDIR /app/HBOperations/ExtractFramesFromVideoServiceTests/
 RUN dotnet restore .; exit 0;
 RUN dotnet build
 RUN ../../rabbit_test_start.sh & dotnet test --logger "trx;LogFileName=results.trx"
-RUN killall -9 dotnet; exit 0;

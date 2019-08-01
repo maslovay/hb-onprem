@@ -2,11 +2,5 @@ FROM microsoft/dotnet:2.2-sdk AS test-env
 WORKDIR /app
 COPY . .
 
-WORKDIR /app/HBOperations
-RUN killall -9 dotnet; exit 0;   
-  
-WORKDIR /app/HBOperations/ReferenceControllerServiceTests/
-RUN dotnet restore .; exit 0;
-RUN dotnet build
+WORKDIR /app/HBOperations/ReferenceControllerTests/
 RUN dotnet test --logger "trx;LogFileName=results.trx"
-RUN killall -9 dotnet; exit 0;
