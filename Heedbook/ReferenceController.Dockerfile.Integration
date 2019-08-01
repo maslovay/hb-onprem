@@ -5,4 +5,3 @@ COPY . .
   
 WORKDIR /app/HBOperations/ReferenceControllerTests/
 RUN dotnet test --logger "trx;LogFileName=results.trx"
-RUN killall -9 dotnet; exit 0;
