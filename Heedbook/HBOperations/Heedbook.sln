@@ -63,6 +63,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498
 		..\UserOperations.Dockerfile = ..\UserOperations.Dockerfile
 		..\UserService.Dockerfile = ..\UserService.Dockerfile
 		..\VideoToSoundService.Dockerfile = ..\VideoToSoundService.Dockerfile
+
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceAnalyzeService", "FaceAnalyzeService\FaceAnalyzeService.csproj", "{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}"
