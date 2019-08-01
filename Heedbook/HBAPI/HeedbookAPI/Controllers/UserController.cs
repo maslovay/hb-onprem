@@ -713,7 +713,7 @@ namespace UserOperations.Controllers
     [SwaggerOperation(Summary = "all alerts for period", Description = "Return all alerts for period, type, employee, worker type, time")]
     public IActionResult AlertGet([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "alertTypeId[]")] List<Guid> alertTypeIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
