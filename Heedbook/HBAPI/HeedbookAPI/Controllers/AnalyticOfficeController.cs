@@ -65,10 +65,10 @@ namespace UserOperations.Controllers
         [HttpGet("Efficiency")]
         public IActionResult Efficiency([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "applicationUserIds[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyIds[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                        [FromQuery(Name = "workerTypeIds[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try

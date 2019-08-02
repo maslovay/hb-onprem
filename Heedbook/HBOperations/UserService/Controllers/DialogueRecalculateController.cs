@@ -114,9 +114,12 @@ namespace UserService.Controllers
                     .Include(p=>p.DialogueFrame)
                     .FirstOrDefault(p=>p.DialogueId == dialogueId);
 
-                if (dialogue == null) return BadRequest("Such dialogue do not exist in PostgresDB");
+                if (dialogue == null) 
+                    return BadRequest("Such dialogue does not exist in database!");
+                
                 var dialogueVideoFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialoguevideos/{dialogueId}.mkv");  
                 _log.Info($"Video file exist - {dialogueVideoFileExist}");
+                
                 if(dialogueVideoFileExist)
                 {
                     var dialogueAudioFileExist = await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}dialogueaudios/{dialogueId}.wav");   

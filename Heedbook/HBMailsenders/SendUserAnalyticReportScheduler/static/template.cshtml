@@ -1,0 +1,190 @@
+﻿@model QuartzExtensions.Jobs.ViewLanguageDataReport
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    	<link href="../css/main.css" rel="stylesheet">
+		<style type="text/css">
+
+		.report-dynamics-hbgreen {
+		background: #2ab978;
+		padding: 10px 0;
+		max-width: 58%;
+		color: #fff;
+		border-radius: 10px;
+		font-weight: 600;
+		text-align: center
+		}
+		.report-dynamics-hbred {
+		background: #bf1626;
+		padding: 10px 0;
+		/* width: 58%; */
+		color: #fff;
+		border-radius: 10px;
+		font-weight: 600;
+		text-align: center
+		}
+		.report-dynamics-hbgray {
+		background: rgba(190, 190, 190, .8);
+		padding: 10px 0;
+		/* width: 58%; */
+		color: #fff;
+		border-radius: 10px;
+		font-weight: 600;
+		text-align: center
+		}
+		.report-dynamics-hbyellow {
+		background: rgba(254, 187, 18, .8);
+		padding: 10px 0;
+		/* width: 58%; */
+		color: #fff;
+		border-radius: 10px;
+		font-weight: 600;
+		text-align: center
+		}
+		.report-report-down {
+		background: #bf1626;
+		padding: 5px 15px;
+		width: 20%;
+		color: #fff;
+		border-radius: 12px;
+		font-weight: 600
+		}
+		.report-report-up {
+		background: #2ab978;
+		padding: 5px 15px;
+		width: 30%;
+		color: #fff;
+		border-radius: 12px;
+		font-weight: 600
+		}
+		.super{
+		vertical-align: super;
+		}
+		.sub{
+		vertical-align: sub;
+		}
+
+		</style>
+	</head>
+	<body>
+		<div id="root">
+			<div>
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="hpanel">
+							<div class="panel-heading"></div>
+							<div class="panel-body">
+								<div class="table-responsive">
+									<p>@(Model.LanguageDataReport.IntroductionGreeting), @(Model.ApplicationUserName) </p>
+									<p>@(Model.LanguageDataReport.IntroductionDescription)</p>								
+									<table class="footable table table-stripped toggle-arrow-tiny">
+										<thead>
+											<tr>
+												<th style="width: 15%;">@(Model.LanguageDataReport.Report.Indicators.Title)</th>
+												<th style="text-align: center; width: 15%;">@(Model.LanguageDataReport.Report.Dynamics)</th>
+												<th style="width: 20%;">@(Model.LanguageDataReport.Report.Value)</th>
+												<th style="width: 25%;">@(Model.LanguageDataReport.Report.OfficeRating) @(Model.Parameters.FirstOrDefault().Data.amountUsersInCompany)</th>
+												@if(Model.Parameters.FirstOrDefault().Data.amountUsersInCorporation>0)
+												{
+													<th style="width: 25%;">@(Model.LanguageDataReport.Report.CorporationRating) @(Model.Parameters.FirstOrDefault().Data.amountUsersInCorporation)</th>
+												}
+												
+											</tr>
+										</thead>
+										<tbody>
+											@foreach (var item in Model.Parameters)
+											{
+												<tr>		
+													@if(item.Thumbnail) 
+													{
+														<td><b>@item.Description</b></td>
+													}	
+													else
+													{
+														<td>@item.Description</td>
+													}
+													<td>
+														<div style="width: 200px; height: 100px;">	
+															<img width="200" height="100" src='data:image/jpeg;base64, @(item.Base64Image)'/>													
+														</div>
+													</td>													
+													<td class="value-size" align="center">	
+														@if(item.NotPercentage)
+														{
+															<p>@(item.Integer ? item.Data.totalAvg.ToString() : item.Data.totalAvg.ToString("#,##0.00"))
+																@if(item.Data.dynamic>0)
+																{
+																	<span class="super" style="color:#2ab978; font-size: 12px;">@(item.Integer ?  item.Data.dynamic.ToString() : item.Data.dynamic.ToString("#,##0.00"))</span>
+																}
+																else if(item.Data.dynamic<0)
+																{
+																	<span class="super" style="color:#bf1626; font-size: 12px;">@(item.Integer ?  item.Data.dynamic.ToString() : item.Data.dynamic.ToString("#,##0.00"))</span>																
+																}
+																else
+																{
+																	<span class="super" style="font-size: 12px;">@(item.Integer ?  item.Data.dynamic.ToString() : item.Data.dynamic.ToString("#,##0.00"))</span>
+																}
+															</p>
+														}
+														else
+														{
+															<p>@item.Data.totalAvg.ToString("#,##0.00")%	
+																@if(item.Data.dynamic>0)
+																{
+																	<span class="super" style="color:#2ab978; font-size: 12px;">@item.Data.dynamic.ToString("#,##0.00")%</span>
+																}
+																else if(item.Data.dynamic<0)
+																{
+																	<span class="super" style="color:#bf1626; font-size: 12px;">@item.Data.dynamic.ToString("#,##0.00")%</span>																
+																}
+																else
+																{
+																	<span class="super" style="font-size: 12px;">@item.Data.dynamic.ToString("#,##0.00")%</span>
+																}
+															</p>
+														}
+																												
+													<td class="value-size" align="center">														
+														<p>@(item.Data.officeRating+1)														
+															@if(item.Data.officeRatingChanges>0)
+															{																		
+																<span class="super" style="color:#2ab978; font-size: 12px;">@item.Data.officeRatingChanges</span>															
+															}
+															else if(item.Data.officeRatingChanges<0)
+															{			
+																<span class="super" style="color:#bf1626; font-size: 12px;">@item.Data.officeRatingChanges</span>														
+															}															
+														</p>														
+													</td>
+													@if(Model.Parameters.FirstOrDefault().Data.amountUsersInCorporation>0)
+													{
+														<td class="value-size" align="center">														
+															<p>@(item.Data.corporationRating+1)														
+																@if(item.Data.corporationRatingChanges>0)
+																{
+																	<span class="super" style="color:#2ab978; font-size: 12px;" >@item.Data.corporationRatingChanges</span>
+																}
+																else if(item.Data.corporationRatingChanges<0)
+																{
+																	<span class="super" style="color:#bf1626; font-size: 12px;">@item.Data.corporationRatingChanges</span>	
+																}
+															</p>
+														</td>
+													}													
+												</tr>
+											}										
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -312,6 +312,7 @@ namespace UserOperations.Controllers
                     .GroupBy(p => p.CompanyId)
                     .Select(p => new RatingUserInfo
                     {
+                        CompanyId = p.Key.ToString(),
                         FullName = p.First().FullName,
                         SatisfactionIndex = _dbOperation.SatisfactionIndex(p),
                         LoadIndex = _dbOperation.LoadIndex(sessions, p, begTime, endTime),
@@ -354,6 +355,7 @@ namespace UserOperations.Controllers
 
     public class RatingUserInfo
     {
+        public string CompanyId;
         public string FullName;
         public double? EfficiencyIndex;
         public double? SatisfactionIndex;

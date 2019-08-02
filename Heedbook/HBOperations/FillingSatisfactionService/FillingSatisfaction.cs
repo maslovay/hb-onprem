@@ -106,10 +106,10 @@ namespace FillingSatisfactionService
                     satisfactionScore = null;
                 }
 
-                Double clientWeight = 0, employeeWeight = 0, teacherWeight = 0;
-                Double clientTotalScore = 0, employeeTotalScore = 0, teacherTotalScore = 0;
-                Double employeeBegScore = 0, teacherBegScore = 0;
-                Double employeeEndScore = 0, teacherEndScore = 0;
+                double clientWeight = 0, employeeWeight = 0, teacherWeight = 0;
+                double clientTotalScore = 0, employeeTotalScore = 0, teacherTotalScore = 0;
+                double employeeBegScore = 0, teacherBegScore = 0;
+                double employeeEndScore = 0, teacherEndScore = 0;
                 if (satisfactionScore != null)
                 {
                     if (satisfactionScore.MeetingExpectationsByClient != null)
@@ -194,6 +194,7 @@ namespace FillingSatisfactionService
                         BegMoodByNN = Math.Max((double) begMoodByNN, 35 + random.Next(10)),
                         EndMoodByNN = Math.Max((double) endMoodByNN, 35 + random.Next(10))
                     };
+                    _log.Info($"Total mood is --- {emp.MeetingExpectationsTotal}");
                     _context.DialogueClientSatisfactions.Add(emp);
                 }
                 else
@@ -204,7 +205,9 @@ namespace FillingSatisfactionService
                     satisfactionScore.BegMoodByNN = Math.Max((double)  begMoodByNN, 35 + random.Next(10));
                     satisfactionScore.EndMoodTotal = Math.Max((double)  endMoodTotal, 35 + random.Next(10));
                     satisfactionScore.EndMoodByNN =  Math.Max((double)  endMoodByNN, 35 + random.Next(10));
+                    _log.Info($"Total mood is --- {satisfactionScore.MeetingExpectationsTotal}");
                 }
+
 
                 _context.SaveChanges();
                 var @event = new FillingHintsRun

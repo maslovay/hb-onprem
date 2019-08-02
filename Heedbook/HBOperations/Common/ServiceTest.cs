@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AlarmSender;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
@@ -22,16 +23,17 @@ using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using RabbitMqEventBus;
 using ServiceExtensions;
 
 namespace Common
 {
-    public abstract class ServiceTest
+    public abstract class ServiceTest : TestResultsPublisher, IDisposable
     {
         protected IGenericRepository _repository;
         protected SftpClient _sftpClient;
-        
+
         public IConfiguration Config { get; private set; }
         public ServiceCollection Services { get; private set; }
         public ServiceProvider ServiceProvider { get; private set; }
@@ -50,19 +52,21 @@ namespace Common
 
         private string testIndustryName = "TESTINDUSTRY";
 
-        public async Task Setup( Action additionalInitialization, bool prepareTestData = false )
+        public async Task Setup(Action additionalInitialization, bool prepareTestData = false)
 
         {
             Config = new ConfigurationBuilder()
-                    .ConfigureBuilderForTests()
-                    .Build();
-
+                .ConfigureBuilderForTests()
+                .Build();
+            
             _additionalInitialization = additionalInitialization;
          
             InitServiceProvider();
             InitGeneralServices();
             InitServices();
             PrepareDatabase();
+            
+            base.PublisherSetup(Config, ServiceProvider);
             
             if (prepareTestData)
                 await PrepareTestData();
@@ -73,6 +77,15 @@ namespace Common
             await CleanTestData();
         }
 
+//        [OneTimeTearDown]
+//        public async Task OneTimeTearDown()
+//            => base.PublisherEachTestTearDown();
+//
+//
+//        [OneTimeSetUp]
+//        public async Task OneTimeSetUp()
+//            => base.PublisherEachTestSetup();
+        
         public HashSet<KeyValuePair<string, string>> GetTextResources(string name)
         {
             var json = File.ReadAllText("Resources/Texts/TestTexts.json");
@@ -85,13 +98,11 @@ namespace Common
             {
                 foreach (var chToken in token.Children())
                 {
-                    foreach (var pair in (JObject)chToken)
+                    foreach (var (key, value) in (JObject)chToken)
                     {
-                        if (pair.Key != name) continue;
-                        foreach (var subToken in pair.Value.Children())
-                        {
+                        if (key != name) continue;
+                        foreach (var subToken in value.Children())
                             result.Add(new KeyValuePair<string, string>(subToken["sentense"].ToString(), subToken["class"].ToString()));
-                        }
                     }
                 }
             }
@@ -198,6 +209,8 @@ namespace Common
             Services.AddTransient<SftpClient>();
             
             Services.AddScoped<IGenericRepository, GenericRepository>();
+            Services.AddSingleton(Config);
+            Services.AddSingleton<TelegramSender>();
            
             _additionalInitialization?.Invoke();
             ServiceProvider = Services.BuildServiceProvider();
@@ -248,6 +261,12 @@ namespace Common
             }
             
             throw new Exception("Incorrect filename for getting a DateTime!");
+        }
+
+        public void Dispose()
+        {
+            var resultsPath = Path.Combine(Environment.CurrentDirectory,"../../../TestResults", "results.trx");
+            base.Publish(resultsPath);
         }
     }
 }
