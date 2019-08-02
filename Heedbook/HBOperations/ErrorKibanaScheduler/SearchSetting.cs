@@ -13,7 +13,8 @@ namespace ErrorKibanaScheduler
 
         public string type;
 
-        [JsonProperty("@timestamp")] public DateTime Timestamp { get; set; }
+        [JsonProperty("@timestamp")] 
+        public DateTime Timestamp { get; set; }
 
         public int version;
         [JsonProperty("FunctionName")]
