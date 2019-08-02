@@ -148,10 +148,7 @@ namespace UserOperations.Controllers
                     _context.Dispose();                    
                     _log.Info("All saved in DB");
                 }
-                else
-                {
-
-                }
+                
                 AccountCreatedMailSend(message);
                 _log.Info("Account/register finished");
                 return Ok("Registred");
