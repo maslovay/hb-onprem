@@ -145,14 +145,14 @@ namespace UserOperations.Controllers
                     await _context.Transactions.AddAsync(transaction);
                     var ids = _context.ApplicationUsers.Where(p => p.Id == user.Id).ToList();
                     await _context.SaveChangesAsync();
-                    _context.Dispose();
-                    AccountCreatedMailSend(message);
+                    _context.Dispose();                    
                     _log.Info("All saved in DB");
                 }
                 else
                 {
 
                 }
+                AccountCreatedMailSend(message);
                 _log.Info("Account/register finished");
                 return Ok("Registred");
             }
@@ -295,7 +295,7 @@ namespace UserOperations.Controllers
 
             try
             {
-                _smtpClient.Send(mail);
+                _smtpClient.SendAsync(mail);
                 _log.Info($"Registration successfully mail Sended to {message.Email}");
             }
             catch(Exception ex)
