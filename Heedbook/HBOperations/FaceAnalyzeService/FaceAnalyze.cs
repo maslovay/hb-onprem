@@ -54,7 +54,7 @@ namespace FaceAnalyzeService
                     _log.Info($"Download to path - {localPath}");
                     if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
                     {
-                        _log.Info("Face detected!");
+                        _log.Info($"{localPath}: Face detected!");
 
                         var byteArray = await File.ReadAllBytesAsync(localPath);
                         var base64String = Convert.ToBase64String(byteArray);
@@ -105,7 +105,7 @@ namespace FaceAnalyzeService
                     }
                     else
                     {
-                        _log.Info("No face detected!");
+                        _log.Info($"{localPath}: No face detected!");
                     }
                     _log.Info("Function finished");
 
