@@ -141,67 +141,6 @@ namespace ExtractFramesFromVideo
             return frames;
         }
 
-
-        // public async Task Run(string videoBlobRelativePath)
-        // {
-        //     try
-        //     {
-        //         _log.Info("Function Extract Frames From Video Started");
-        //         _log.Info("Write blob to memory stream");
-
-
-        //         var targetVideoFileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
-
-        //         var appUserId = targetVideoFileName.Split(("_"))[0];
-        //         var videoTimestampText = targetVideoFileName.Split(("_"))[1];
-        //         var videoTimeStamp =
-        //             DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-        //         videoTimeStamp = videoTimeStamp.AddSeconds(2);
-
-        //         using (var ftpDownloadStream =
-        //             await _client.DownloadFromFtpAsMemoryStreamAsync(videoBlobRelativePath))
-        //         {
-        //             _log.Info($"File length - {ftpDownloadStream.Length}, File time stamp - {videoTimeStamp}");
-        //             var uploadStreams = await _wrapper.CutVideo(ftpDownloadStream, videoTimeStamp, appUserId, 10, 3);
-        //             _log.Info($"Keys - {JsonConvert.SerializeObject(uploadStreams.Keys)}");
-
-        //             var uploadTasks = new List<Task>();
-        //             var insertToDbTasks = new List<Task>();
-        //             foreach (var frameFilename in uploadStreams.Keys)
-        //             {
-        //                 uploadStreams[frameFilename].Position = 0;
-        //                 var uploadTask = _client.UploadAsMemoryStreamAsync(uploadStreams[frameFilename],
-        //                     FrameContainerName + "/", frameFilename);
-
-        //                 _log.Info($"Creating file {frameFilename}");
-
-        //                 uploadTasks.Add(uploadTask);
-
-        //                 RaiseNewFrameEvent(frameFilename);
-
-        //                 insertToDbTasks.Add(InsertNewFileFrameToDb(appUserId, frameFilename, videoTimeStamp));
-
-        //                 videoTimeStamp = videoTimeStamp.AddSeconds(3);
-        //             }
-
-        //             await Task.WhenAll(uploadTasks);
-        //             await Task.WhenAll(insertToDbTasks);
-        //         }
-
-        //         _log.Info("Function Extract Frames From Video finished");
-        //     }
-        //     catch (SftpPathNotFoundException e)
-        //     {
-        //         Console.WriteLine("Path not found");
-        //         _log.Fatal($"{e}");
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         Console.WriteLine(e);
-        //         throw;
-        //     }
-        // }
-
         private void RaiseNewFrameEvent(string filename)
         {
             var message = new FaceAnalyzeRun
@@ -211,42 +150,6 @@ namespace ExtractFramesFromVideo
 
             _handler.EventRaised(message);
         }
-
-        // private async Task InsertNewFileFrameToDb(string appUserId, string filename, DateTime timeStampForFrame)
-        // {
-        //     Monitor.Enter(_repository);
-        //     try
-        //     {
-        //         var fileFrame = new FileFrame
-        //         {
-        //             ApplicationUserId = Guid.Parse(appUserId),
-        //             FaceLength = 0,
-        //             FileContainer = "frames",
-        //             FileExist = true,
-        //             FileName = filename,
-        //             IsFacePresent = false,
-        //             StatusId = 6,
-        //             StatusNNId = 6,
-        //             Time = new DateTime(timeStampForFrame.Year,
-        //                 timeStampForFrame.Month,
-        //                 timeStampForFrame.Day,
-        //                 timeStampForFrame.Hour,
-        //                 timeStampForFrame.Minute,
-        //                 timeStampForFrame.Second)
-        //         };
-
-        //         await _repository.CreateAsync(fileFrame);
-        //         _repository.Save();
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _log.Error("Exception was thrown while trying to access to DB: " + ex.Message, ex);
-        //     }
-        //     finally
-        //     {
-        //         Monitor.Exit(_repository);
-        //     }
-        // }
     }
 
     public class FrameInfo
