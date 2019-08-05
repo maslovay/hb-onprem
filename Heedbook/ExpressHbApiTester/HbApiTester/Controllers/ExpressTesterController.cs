@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AlarmSender;
 using HbApiTester;
+using HbApiTester.Models;
 using HbApiTester.Settings;
 using HbApiTester.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +17,13 @@ namespace HbApiTester.Controllers
     public class ExpressTesterController : ControllerBase
     {
         private readonly CommandManager _commandManager;
+        private readonly ResultsPublisher _resultsPublisher;
 
-        public ExpressTesterController(CommandManager commandManager)
-            => _commandManager = commandManager;
+        public ExpressTesterController(CommandManager commandManager, ResultsPublisher resultsPublisher)
+        {
+            _resultsPublisher = resultsPublisher;
+            _commandManager = commandManager;
+        }
 
         [HttpGet("[action]")]
         public IActionResult StartApiTests()
@@ -32,6 +37,12 @@ namespace HbApiTester.Controllers
             {
                 return BadRequest("Exception occurred: "  + ex.Message);
             }
+        }
+        
+        [HttpPost("[action]")]
+        public void PublishUnitTestResults([FromBody]PublishUnitTestResultsModel model)
+        {
+            _resultsPublisher.PublishUnitTestResults(model.TrxText);
         }
     }
 }

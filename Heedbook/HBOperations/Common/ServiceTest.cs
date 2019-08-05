@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -29,7 +30,7 @@ using ServiceExtensions;
 
 namespace Common
 {
-    public abstract class ServiceTest : TestResultsPublisher, IDisposable
+    public abstract class ServiceTest : IDisposable
     {
         protected IGenericRepository _repository;
         protected SftpClient _sftpClient;
@@ -66,26 +67,38 @@ namespace Common
             InitServices();
             PrepareDatabase();
             
-            base.PublisherSetup(Config, ServiceProvider);
-            
             if (prepareTestData)
                 await PrepareTestData();
         }
 
         public async Task TearDown()
         {
+            PublishResults();
             await CleanTestData();
         }
 
-//        [OneTimeTearDown]
-//        public async Task OneTimeTearDown()
-//            => base.PublisherEachTestTearDown();
-//
-//
-//        [OneTimeSetUp]
-//        public async Task OneTimeSetUp()
-//            => base.PublisherEachTestSetup();
-        
+        private static void PublishResults()
+        {
+            var resultsPath = Path.Combine(Environment.CurrentDirectory, "../../../TestResults", "results.trx");
+            var resultsText = File.ReadAllText(resultsPath);
+
+            var wr = WebRequest.Create(
+                "http://hbonpremalarmserver.canadacentral.cloudapp.azure.com/api/ExpressTester/PublishUnitTestResults");
+            wr.ContentType = "application/json";
+            wr.Method = "POST";
+            
+            using (var reqStream = wr.GetRequestStream())
+            {
+                var body = "{\"trxText\":\"" + resultsText.Replace("\"", "\\\"") + "\"}";
+                using (var sw = new StreamWriter(reqStream))
+                {
+                    sw.WriteLine(body);
+                }
+            }
+
+            var response = wr.GetResponse();
+        }
+
         public HashSet<KeyValuePair<string, string>> GetTextResources(string name)
         {
             var json = File.ReadAllText("Resources/Texts/TestTexts.json");
@@ -265,8 +278,6 @@ namespace Common
 
         public void Dispose()
         {
-            var resultsPath = Path.Combine(Environment.CurrentDirectory,"../../../TestResults", "results.trx");
-            base.Publish(resultsPath);
         }
     }
 }
