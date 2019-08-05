@@ -9,7 +9,7 @@ using HbApiTester.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 
-namespace ExpressTesterWebApi.Controllers
+namespace HbApiTester.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
