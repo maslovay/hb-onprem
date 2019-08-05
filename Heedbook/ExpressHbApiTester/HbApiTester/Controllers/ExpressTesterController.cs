@@ -17,7 +17,6 @@ namespace HbApiTester.Controllers
     {
         private readonly CommandManager _commandManager;
 
-
         public ExpressTesterController(CommandManager commandManager)
             => _commandManager = commandManager;
 
@@ -26,7 +25,8 @@ namespace HbApiTester.Controllers
         {
             try
             {
-                _commandManager.RunCommand("/api_tests");
+                Console.WriteLine("/api_tests command sent");
+                //_commandManager.RunCommand("/api_tests");
                 return Ok("Api tests started!");
             }
             catch (Exception ex)
