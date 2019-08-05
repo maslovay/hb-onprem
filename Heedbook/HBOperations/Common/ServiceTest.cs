@@ -81,14 +81,22 @@ namespace Common
         {
             var resultsPath = Path.Combine(Environment.CurrentDirectory, "../../../TestResults", "results.trx");
             var resultsText = File.ReadAllText(resultsPath);
-            using (WebClient wc = new WebClient())
+
+            var wr = WebRequest.Create(
+                "http://hbonpremalarmserver.canadacentral.cloudapp.azure.com/api/ExpressTester/PublishUnitTestResults");
+            wr.ContentType = "application/json";
+            wr.Method = "POST";
+            
+            using (var reqStream = wr.GetRequestStream())
             {
-                var body = "{\"trxText\":\"" + resultsText + "\"}";
-                wc.Headers[HttpRequestHeader.ContentType] = "application/json";
-                wc.UploadString(
-                    "http://hbonpremalarmserver.canadacentral.cloudapp.azure.com/api/ExpressTester/PublishUnitTestResults",
-                    resultsText);
+                var body = "{\"trxText\":\"" + resultsText.Replace("\"", "\\\"") + "\"}";
+                using (var sw = new StreamWriter(reqStream))
+                {
+                    sw.WriteLine(body);
+                }
             }
+
+            var response = wr.GetResponse();
         }
 
         public HashSet<KeyValuePair<string, string>> GetTextResources(string name)
