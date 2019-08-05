@@ -67,7 +67,18 @@ namespace HbApiTester
                 app.ApplicationServices.GetService<ITrigger>());
             app.ApplicationServices.GetService<CommandManager>().Start();
 
+            if (env.IsDevelopment())
+                app.UseDeveloperExceptionPage();
+            else
+                app.UseHsts();
+           
             app.UseSwagger(c => { c.RouteTemplate = "api/swagger/{documentName}/swagger.json"; });
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
+                c.RoutePrefix = "api/swagger";
+            });
+            
             app.UseCors();
             app.UseMvc();
         }
