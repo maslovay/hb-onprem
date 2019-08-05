@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http;
 using Telegram.Bot;
 
 namespace AlarmSender.DataStructures
@@ -8,11 +10,12 @@ namespace AlarmSender.DataStructures
         {
             ChatId = chatId;
             Token = token;
+            Client = new TelegramBotClient(token, new HttpClient());
         }
         
         public string ChatId { get; private set; }
         public string Token { get; private set; }
         
-        public TelegramBotClient Client { get; private set; }
+        public TelegramBotClient Client { get;  set; }
     }
 }

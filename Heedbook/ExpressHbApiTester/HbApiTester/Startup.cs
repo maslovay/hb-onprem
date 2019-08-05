@@ -44,6 +44,7 @@ namespace HbApiTester
                 ExternalResources = Configuration.GetSection("HbApiTesterSettings").GetSection("ExternalResources").Get<Dictionary<string, string>>()
             };
             
+           
             var logger = NLog.LogManager.GetLogger("HbApiTester");
 
             services.AddSingleton<ILogger>(logger);
@@ -53,6 +54,7 @@ namespace HbApiTester
             services.AddSingleton<DelayedTestsRunner>();
             services.AddSingleton<ExternalResourceTestsRunner>();
             services.AddSingleton<CommandManager>();
+            services.AddSingleton<ResultsPublisher>();
             services.AddSingleton<Checker>();
             services.AddSingleton<DbOperations>();
             services.AddSingleton<TelegramSender>();

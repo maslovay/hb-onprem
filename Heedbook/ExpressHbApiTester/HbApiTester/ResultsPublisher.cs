@@ -15,9 +15,9 @@ namespace HbApiTester
         private readonly NLog.ILogger _logger;
         private readonly IConfiguration _configuration;
         
-        protected ResultsPublisher(IConfiguration configuration, NLog.ILogger logger, IServiceProvider serviceProvider, RunnerSettings settings)
+        public ResultsPublisher(HbApiTesterSettings settings, IConfiguration configuration, IServiceProvider serviceProvider)
         {
-            _logger = logger;
+           // _logger = logger;
             _configuration = configuration;
             
             Helper.FetchSenders(_logger, settings, _senders, serviceProvider);
@@ -58,7 +58,8 @@ namespace HbApiTester
                 return;
             }
 
-            var testFixture = testDefs.FirstOrDefault()?.Elements().FirstOrDefault(elem => elem.Name.LocalName == "TestMethod")?.Attribute("className")?.Value;
+            var testFixture =
+                testDefs.FirstOrDefault()?.Elements().FirstOrDefault(elem => elem.Name.LocalName == "TestMethod")?.Attribute("className")?.Value;
 
             var message =
                 $"TestRun for TestFixture \"{testFixture}\" started: {startDateTime} finished: {finishDateTime}";

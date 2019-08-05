@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
 using AlarmSender.DataStructures;
 using Microsoft.Extensions.Configuration;
@@ -15,27 +16,23 @@ namespace AlarmSender
     public class TelegramSender : Sender
     {
         private readonly IConfiguration _configuration;
-//        private readonly string _chatId;
-//        private readonly string _token;
-        //private readonly ILogger _logger;
         private readonly List<string> _commands = new List<string>(10);
         private int updatesOffset = 0;
         private readonly object syncObj = new object();
-//        private TelegramBotClient _client;
-        
+
         public TelegramSender(/*ILogger logger, */ IConfiguration configuration)
         {
             //_logger = logger;
             _configuration = configuration;
 
-            var chatSections = _configuration.GetSection("AlarmSender").GetChildren().ToArray();
+            var chatSections = _configuration.GetSection("AlarmSender").GetSection("Chats").GetChildren().ToArray();
 
             foreach (var section in chatSections)
             {
                 var chat = new TelegramChat(section.Key, 
                     section.GetSection("Telegram").GetValue<string>("ChatId"),
                     section.GetSection("Telegram").GetValue<string>("Token"));
-                
+
                 Chats.Add(chat);
             }
 
