@@ -39,4 +39,13 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Include="..\..\HBOperations\ServiceExtensions\ServiceExtensions.cs">
+        <Link>ServiceExtensions\ServiceExtensions.cs</Link>
+      </Compile>
+      <Compile Include="..\..\HBOperations\UnitTestExtensions\UnitTestExtensions.cs">
+        <Link>ServiceExtensions\UnitTestExtensions.cs</Link>
+      </Compile>
+    </ItemGroup>
+
 </Project>

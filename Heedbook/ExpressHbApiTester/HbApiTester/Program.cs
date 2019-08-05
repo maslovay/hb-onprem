@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using ServiceExtensions;
 
 namespace HbApiTester
 {
@@ -32,6 +33,6 @@ namespace HbApiTester
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseUrls("http://localhost:1190");
+                .ConfigureBuilderDueToEnvironment(portToReassignForTests: 1190);
     }
 }
