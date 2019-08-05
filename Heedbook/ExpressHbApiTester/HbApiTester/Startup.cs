@@ -66,7 +66,9 @@ namespace HbApiTester
             scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
                 app.ApplicationServices.GetService<ITrigger>());
             app.ApplicationServices.GetService<CommandManager>().Start();
-            
+
+            app.UseSwagger(c => { c.RouteTemplate = "api/swagger/{documentName}/swagger.json"; });
+            app.UseCors();
             app.UseMvc();
         }
     }
