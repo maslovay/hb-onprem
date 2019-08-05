@@ -16,9 +16,13 @@ namespace HbApiTester.Controllers
     public class ExpressTesterController : ControllerBase
     {
         private readonly CommandManager _commandManager;
+        private readonly ResultsPublisher _resultsPublisher;
 
-        public ExpressTesterController(CommandManager commandManager)
-            => _commandManager = commandManager;
+        public ExpressTesterController(CommandManager commandManager, ResultsPublisher resultsPublisher)
+        {
+            _resultsPublisher = resultsPublisher;
+            _commandManager = commandManager;
+        }
 
         [HttpGet("[action]")]
         public IActionResult StartApiTests()
@@ -27,6 +31,20 @@ namespace HbApiTester.Controllers
             {
                 _commandManager.RunCommand("api_tests");
                 return Ok("Api tests started!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Exception occurred: "  + ex.Message);
+            }
+        }
+        
+        [HttpPost("[action]}")]
+        public IActionResult PublishUnitTestResults([FromBody]string trxText)
+        {
+            try
+            {
+                _resultsPublisher.PublishUnitTestResults(trxText);
+                return Ok("Sending unit test results!");
             }
             catch (Exception ex)
             {
