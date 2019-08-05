@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -72,9 +73,22 @@ namespace Common
 
         public async Task TearDown()
         {
-            var resultsPath = Path.Combine(Environment.CurrentDirectory,"../../../TestResults", "results.trx");
-
+            PublishResults();
             await CleanTestData();
+        }
+
+        private static void PublishResults()
+        {
+            var resultsPath = Path.Combine(Environment.CurrentDirectory, "../../../TestResults", "results.trx");
+            var resultsText = File.ReadAllText(resultsPath);
+            using (WebClient wc = new WebClient())
+            {
+                var body = "{\"trxText\":\"" + resultsText + "\"}";
+                wc.Headers[HttpRequestHeader.ContentType] = "application/json";
+                wc.UploadString(
+                    "http://hbonpremalarmserver.canadacentral.cloudapp.azure.com/api/ExpressTester/PublishUnitTestResults",
+                    resultsText);
+            }
         }
 
         public HashSet<KeyValuePair<string, string>> GetTextResources(string name)
