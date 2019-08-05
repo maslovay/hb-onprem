@@ -8,7 +8,7 @@ namespace AlarmSender
 {
     public abstract class Sender : ISender
     {
-        protected List<AlarmSenderChat> Chats  => new List<AlarmSenderChat>(3);
+        protected List<AlarmSenderChat> Chats { get; } = new  List<AlarmSenderChat>(3);
 
         public delegate void CommandReceivedDelegate(string command);
 
