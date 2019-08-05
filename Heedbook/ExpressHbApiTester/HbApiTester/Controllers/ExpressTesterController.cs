@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AlarmSender;
 using HbApiTester;
+using HbApiTester.Models;
 using HbApiTester.Settings;
 using HbApiTester.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -39,17 +40,9 @@ namespace HbApiTester.Controllers
         }
         
         [HttpPost("[action]")]
-        public IActionResult PublishUnitTestResults([FromBody]string trxText)
+        public void PublishUnitTestResults([FromBody]PublishUnitTestResultsModel model)
         {
-            try
-            {
-                _resultsPublisher.PublishUnitTestResults(trxText);
-                return Ok("Sending unit test results!");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest("Exception occurred: "  + ex.Message);
-            }
+            _resultsPublisher.PublishUnitTestResults(model.TrxText);
         }
     }
 }
