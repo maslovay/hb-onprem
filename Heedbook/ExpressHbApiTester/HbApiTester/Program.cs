@@ -33,6 +33,6 @@ namespace HbApiTester
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .ConfigureBuilderDueToEnvironment(portToReassignForTests: 1190);
+                .UseUrls(Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
     }
 }
