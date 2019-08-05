@@ -85,8 +85,8 @@ namespace HbApiTester
             app.UseSwagger(c => { c.RouteTemplate = "api/swagger/{documentName}/swagger.json"; });
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
-                c.RoutePrefix = "api/swagger";
+                c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "ExpressTest API");
+                c.RoutePrefix = String.Empty;
             });
             
             app.UseCors();

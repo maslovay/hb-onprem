@@ -25,8 +25,7 @@ namespace HbApiTester.Controllers
         {
             try
             {
-                Console.WriteLine("/api_tests command sent");
-                //_commandManager.RunCommand("/api_tests");
+                _commandManager.RunCommand("api_tests");
                 return Ok("Api tests started!");
             }
             catch (Exception ex)
