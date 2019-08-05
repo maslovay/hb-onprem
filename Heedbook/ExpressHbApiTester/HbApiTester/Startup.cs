@@ -56,6 +56,7 @@ namespace HbApiTester
             services.AddSingleton<Checker>();
             services.AddSingleton<DbOperations>();
             services.AddSingleton<TelegramSender>();
+            services.AddSingleton<ResultsPublisher>();
             
             services.AddSwaggerGen(c =>
             {
