@@ -8,6 +8,8 @@
         <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.HttpsPolicy" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.2.0" />
         <PackageReference Include="NLog" Version="4.6.6" />
         <PackageReference Include="Quartz" Version="3.0.7" />
         <PackageReference Include="SQLiteNetExtensionsCore" Version="2.0.0" />

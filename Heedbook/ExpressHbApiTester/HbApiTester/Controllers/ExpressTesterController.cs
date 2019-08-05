@@ -21,7 +21,7 @@ namespace HbApiTester.Controllers
             => _commandManager = commandManager;
 
         [HttpGet("[action]")]
-        public ActionResult<ObjectResult> StartApiTests()
+        public IActionResult StartApiTests()
         {
             try
             {
@@ -31,7 +31,7 @@ namespace HbApiTester.Controllers
             }
             catch (Exception ex)
             {
-                return new BadRequestObjectResult("Exception occurred: "  + ex.Message);
+                return BadRequest("Exception occurred: "  + ex.Message);
             }
         }
     }

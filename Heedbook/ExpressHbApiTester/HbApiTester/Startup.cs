@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
+using Swashbuckle.AspNetCore.Swagger;
 using ILogger = NLog.ILogger;
 
 namespace HbApiTester
@@ -55,6 +56,15 @@ namespace HbApiTester
             services.AddSingleton<Checker>();
             services.AddSingleton<DbOperations>();
             services.AddSingleton<TelegramSender>();
+            
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info
+                {
+                    Title = "User Service Api",
+                    Version = "v1"
+                });
+            });
             
             services.AddHbApiTesterJobQuartz(hbApiSchedulerSettings);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
