@@ -104,7 +104,7 @@ namespace HbApiTester.Tasks
                 {
                     sender.Send($"ERROR: <b>{resp.TaskName}</b>: <b>{resp.ResultMessage}</b>: " +
                                 $"__{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}__ " +
-                                $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info}");
+                                $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info}", "ApiTester");
                 }
             };
 
@@ -113,14 +113,14 @@ namespace HbApiTester.Tasks
                 foreach (var sender in _senders)
                 {
                     sender.Send($"SUCCESS: <i>{resp.TaskName}: {resp.ResultMessage}</i>: " +
-                                $"<i>{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}</i> URL: {resp.Url}");
+                                $"<i>{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}</i> URL: {resp.Url}", "ApiTester");
                 }
             };
 
             TestRunStatus += message =>
             {
                 foreach (var sender in _senders)
-                    sender.Send( $"{DateTime.Now.ToLocalTime().ToString(CultureInfo.InvariantCulture)} {message}");
+                    sender.Send( $"{DateTime.Now.ToLocalTime().ToString(CultureInfo.InvariantCulture)} {message}", "ApiTester");
             };
         }
 
