@@ -1,3 +1,4 @@
+using System;
 using HbApiTester.QuartzJobs;
 using HbApiTester.Settings;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,7 +41,7 @@ namespace AudioAnalyzeScheduler.Extensions
             
             var longTrigger = TriggerBuilder.Create()
                     .WithIdentity("HbApiTester.trigger", "HbApiTest")
-                    .StartNow()
+                    .StartAt(DateTime.Now.AddMinutes(5))
                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(settings.CheckPeriodMin).RepeatForever())
                     .Build();
 
