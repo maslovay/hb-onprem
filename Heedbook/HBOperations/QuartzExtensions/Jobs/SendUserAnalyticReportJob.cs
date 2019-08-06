@@ -74,7 +74,7 @@ namespace QuartzExtensions.Jobs
                     && p.EndTime.Date <=sesEndTime
                     && p.StatusId == 7)
                 .ToList();            
-            
+            var counter =0;
             foreach(var user in applicationUsers)
             {
                 var userSessions = sessions.Where(p => p.ApplicationUserId == user.Id).ToList();
@@ -88,9 +88,18 @@ namespace QuartzExtensions.Jobs
                     {
                         _log.Info($"Prepare report for applicationUser {user.Id} - {user.FullName}");        
                         await CreateHtmlFromTemplate(user);
+                        counter++;
                     }
                 }
-            }            
+            } 
+            _log.Info($"Weekly report sent to {counter} users"); 
+            var mail = new System.Net.Mail.MailMessage();
+            mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);
+            mail.To.Add("krokhmal11@mail.ru");
+            mail.Subject = "Users Weekly Analytic Reports Status";
+            mail.Body = $"Weekly report sent to {counter} users";
+            mail.IsBodyHtml = false;      
+            _smtpClient.SendAsync(mail);        
         }
         private async Task CreateHtmlFromTemplate(ApplicationUser applicationUser)
         {   
