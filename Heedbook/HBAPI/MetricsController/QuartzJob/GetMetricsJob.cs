@@ -58,12 +58,19 @@ namespace MetricsController.QuartzJob
                         foreach (var metricValue in metric.MetricValues)
                         {
                             if (metricValue.Name.Contains("CPU") &&
-                                (metricValue.Average >= 80 || metricValue.Max >= 90))
+                                (metricValue.Average >= 60 || metricValue.Max >= 95))
+
                             {
                                 attachment.Color = "#FF0000";
                                 readySend = true;
                             }
-
+                            else if (metricValue.Name.Contains("CPU") &&
+                                 (metricValue.Average >= 85))
+                            {
+                                attachment.Color = "#FF0000";
+                                readySend = true;
+                            }
+                            
 
                             var field = new Field()
                             {
