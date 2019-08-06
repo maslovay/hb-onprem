@@ -29,9 +29,14 @@ namespace AlarmSender
 
             foreach (var section in chatSections)
             {
+                var token = section.GetSection("Telegram").GetValue<string>("Token");
+                var chatId = section.GetSection("Telegram").GetValue<string>("ChatId");
+                var client = ((TelegramChat) (Chats.FirstOrDefault(c => (c is TelegramChat tc && tc.Token == token))))?.Client;
+                
                 var chat = new TelegramChat(section.Key, 
-                    section.GetSection("Telegram").GetValue<string>("ChatId"),
-                    section.GetSection("Telegram").GetValue<string>("Token"));
+                    chatId,
+                    token,
+                    client);
 
                 Chats.Add(chat);
             }
