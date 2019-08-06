@@ -8,4 +8,4 @@ RUN dotnet publish ./HBOperations/FtpDeleteScheduler -c Release -o publish
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/FtpDeleteScheduler/publish .
-ENTRYPOINT ["dotnet", "FtpDeleteScheduler.dll"]
+ENTRYPOINT ["dotnet", "FtpFileDelete.dll"]
