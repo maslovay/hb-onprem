@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Drawing;
+using ErrorKibanaScheduler;
 using Newtonsoft.Json;
 
 namespace HBLib.Utils
@@ -12,5 +13,6 @@ namespace HBLib.Utils
         public string Pretext { get; set; }
         [JsonProperty("fields")]
         public List<Field> Fields { get; set; }
+        
     }
 }

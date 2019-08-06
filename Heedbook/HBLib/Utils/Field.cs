@@ -11,6 +11,13 @@ namespace HBLib.Utils
         [JsonProperty("short")]
         public bool Short { get; set; }
         
+        [JsonProperty("functionname")]
+        public string FucnctionName { get; set; }
+        
+        [JsonProperty("message")]
+        public string Message { get; set; }
+        
+        public int TikTak { get; set; }
         
     }
 }
