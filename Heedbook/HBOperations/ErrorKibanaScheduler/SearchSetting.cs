@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace ErrorKibanaScheduler
@@ -17,6 +18,7 @@ namespace ErrorKibanaScheduler
         public DateTime Timestamp { get; set; }
 
         public int version;
+        
         [JsonProperty("FunctionName")]
         public string FunctionName { get; set; }
 
@@ -27,7 +29,10 @@ namespace ErrorKibanaScheduler
         public string OriginalFormat { get; set; }
 
         public string InvocationId;
-
+        
+        public int TikTak { get; set; }
+        
         public string CustomDimensions;
+        
     }
 }

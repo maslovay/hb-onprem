@@ -53,43 +53,40 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var documents = searchRequest.Documents
                     .Where(item => item.Timestamp >= DateTime.UtcNow.AddHours(-15)).ToList();
 
-                var dmp = new diff_match_patch();
-
+                var dmp = new diff_match_patch
+                {
+                    Match_Threshold = 0.1f, Match_Distance = 0
+                };
                 var payload = new Payload()
                 {
                     Attachments = new List<Attachment>()
                 };
-
                 for (var i = 0; i < documents.Count; i++)
-                {
-                    var log = new Field();
+                {        
+                    var count = 0;        
                     var attachment = new Attachment()
                     {
-                        Pretext = $"{log.FucnctionName}",
-                        Fields = new List<Field>()
+                        Title = $"{documents[i].FunctionName}",
+                        Text = $"{documents[i].OriginalFormat}"
                     };
-
                     for (int j = documents.Count - 1; j > i; j--)
                     {
-                        dmp.Match_Threshold = 0.3f;
-                        var matchMain = dmp.match_main(documents[i].OriginalFormat, documents[j].OriginalFormat, 1000);
-                        if (matchMain == 0)
+                        var percentageMatch = 0;
+                        var matchMain = dmp.match_main(documents[i].OriginalFormat, documents[j].OriginalFormat, 3000);
+                        if (matchMain != 0)
                         {
-                            log.TikTak += 1;
+                            percentageMatch = (documents[i].OriginalFormat.Length / matchMain) *100;
+                        }
+                        if (matchMain == 0 || percentageMatch >= 80)
+                        {
+                            count += 1;
                             documents.RemoveAt(j);
                         }
                     }
-                    var field = new Field()
-                    {
-                        Title = $"{log.FucnctionName}",
-                        Message = $"{log.Message}"
-                    };
 
-                    attachment.Fields.Add(field);
-
-                    attachment.Fields.Add(log);
+                    attachment.AuthorName = count.ToString();
+                    payload.Attachments.Add(attachment);
                 }
-
                 _slackClient.PostMessage(payload);
             }
             catch (Exception e)

@@ -13,6 +13,11 @@ namespace HBLib.Utils
         public string Pretext { get; set; }
         [JsonProperty("fields")]
         public List<Field> Fields { get; set; }
-        
+        [JsonProperty("text")]
+        public string Text { get; set;}
+        [JsonProperty("author_name")]
+        public string AuthorName { get; set;}
+        [JsonProperty("title")]
+        public string Title { get; set; }
     }
 }

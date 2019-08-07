@@ -59,7 +59,6 @@ namespace MetricsController.QuartzJob
                         {
                             if (metricValue.Name.Contains("CPU") &&
                                 (metricValue.Average >= 60 && metricValue.Max >= 95))
-
                             {
                                 attachment.Color = "#FF0000";
                                 readySend = true;
@@ -71,7 +70,6 @@ namespace MetricsController.QuartzJob
                                 readySend = true;
                             }
                             
-
                             var field = new Field()
                             {
                                 Title = $"{metricValue.Name}",
