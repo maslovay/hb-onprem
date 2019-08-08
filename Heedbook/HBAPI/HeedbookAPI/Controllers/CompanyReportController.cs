@@ -62,12 +62,17 @@ namespace UserOperations.Controllers
         [HttpGet("GetReport")]
         [SwaggerOperation(Summary = "Report about dialogues", Description = "For not loggined users")]        
         [SwaggerResponse(200, "Report constructed")]
-        public FileResult GetReport([FromQuery(Name = "begTime")] string beg)
+        public FileResult GetReport([FromQuery(Name = "begTime")] string beg,
+            [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds)
         {
             var stringFormat = "yyyyMMddHHmmss";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
             System.Console.WriteLine($"{begTime}");
-            DialogueReport(begTime);
+
+            companyIds = companyIds.Any() ? companyIds : _context.Companys.Where(p => p.StatusId == 3).Select(p=>p.CompanyId).ToList();
+
+            DialogueReport(begTime, companyIds);
+
             var dataBytes = System.IO.File.ReadAllBytes("DialogueReport.xlsx");
             System.IO.File.Delete("DialogueReport.xlsx");
 
@@ -77,8 +82,8 @@ namespace UserOperations.Controllers
             return File(dataStream, fileType, fileName);
         }  
 
-        
-        private void DialogueReport(DateTime beginTime)
+
+        private void DialogueReport(DateTime beginTime, List<Guid> companyIds)
         {            
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
@@ -94,11 +99,13 @@ namespace UserOperations.Controllers
                 .Include(p => p.DialogueVisual)
                 .Include(p => p.DialoguePhrase)
                 .Include(p => p.DialogueWord)
-                .Where(p => p.BegTime > beginTime)
-                //.GroupBy(p => p.ApplicationUser.CompanyId)
+
+                .Where(p => p.BegTime > beginTime
+                    && companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                 .Select(p => new DialogueReportModel
                     {
                         CompanyName = p.ApplicationUser.Company.CompanyName,
+                        CompanyId = (Guid)p.ApplicationUser.CompanyId,
                         DialogueId = p.DialogueId,
                         EmployeeEmployeeId = p.ApplicationUserId,
                         EmployeeWorkerTypeName = p.ApplicationUser.WorkerType.WorkerTypeName,
@@ -163,7 +170,8 @@ namespace UserOperations.Controllers
                 SheetData sheetData = worksheetPart.Worksheet.AppendChild(new SheetData());
                 Row row1 = new Row();
 
-                row1.Append(                    
+                row1.Append(         
+                    ConstructCell("CompanyId", CellValues.String),           
                     ConstructCell("DialogueId", CellValues.String),
                     ConstructCell("Employee EmployeeId", CellValues.String),
                     ConstructCell("Employee WorkerTypeName", CellValues.String),                    
@@ -206,6 +214,7 @@ namespace UserOperations.Controllers
                 {
                     tempRow = new Row();
                     tempRow.Append(
+                        ConstructCell(dr.CompanyId.ToString(), CellValues.String),
                         ConstructCell(dr.DialogueId.ToString(), CellValues.String),
                         ConstructCell(dr.EmployeeEmployeeId.ToString(), CellValues.String),
                         ConstructCell(dr.EmployeeWorkerTypeName, CellValues.String),                    
@@ -258,6 +267,7 @@ namespace UserOperations.Controllers
     public class DialogueReportModel
     {
         public string CompanyName {get; set;}
+        public Guid CompanyId {get; set;}
         public Guid DialogueId { get; set; }
         public Guid EmployeeEmployeeId { get; set; }
         public string EmployeeWorkerTypeName { get; set; }                   

@@ -3,4 +3,6 @@ WORKDIR /app
 COPY . .
 
 WORKDIR /app/HBOperations/ReferenceControllerTests/
+
 RUN dotnet test --logger "trx;LogFileName=results.trx" && cat results.trx | sed "s/\\\"/\\\\\"/g" > results_screened.trx && curl -X POST "http://hbonpremalarmserver.canadacentral.cloudapp.azure.com/api/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxText\" : \"$(cat results_screened.trx)\" }"
+
