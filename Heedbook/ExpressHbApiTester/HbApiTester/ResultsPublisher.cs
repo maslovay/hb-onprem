@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using AlarmSender;
 using HbApiTester.Settings;
@@ -23,8 +24,10 @@ namespace HbApiTester
             Helper.FetchSenders(_logger, settings, _senders, serviceProvider);
         }
 
-        public void PublishUnitTestResults(string text)
+        public void PublishUnitTestResults(string textBase64)
         {
+            var text = Encoding.UTF8.GetString(Convert.FromBase64String(textBase64));
+            
             var trxDoc = XDocument.Parse(text);
 
             if (trxDoc.Root == null)
