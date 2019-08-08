@@ -11,13 +11,11 @@ using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBLib;
 using Microsoft.EntityFrameworkCore;
-using Swashbuckle.AspNetCore.Annotations;
 
 
 namespace DialogueMarkUp.QuartzJobs
@@ -48,17 +46,20 @@ namespace DialogueMarkUp.QuartzJobs
             try
             {
                 var endTime = DateTime.UtcNow.AddMinutes(-30);
-                var frames = _context.FrameAttributes
+                var frameAttributes = _context.FrameAttributes
                     .Include(p => p.FileFrame)
                     .Where(p => p.FileFrame.StatusNNId == 6 && p.FileFrame.Time < endTime)
                     .OrderBy(p => p.FileFrame.Time)
                     .GroupBy(p => p.FileFrame.FileName)
                     .Select(p => p.First())
                     .ToList();
-                _log.Info($"Processing {frames.Count()}");
-                foreach (var applicationUserId in frames.Select(p => p.FileFrame.ApplicationUserId).ToList().Distinct().ToList())
+                _log.Info($"Processing {frameAttributes.Count()}");
+
+                var appUsers = frameAttributes.Select(p => p.FileFrame.ApplicationUserId).Distinct().ToList();
+                
+                foreach (var applicationUserId in appUsers)
                 {
-                    var framesUser = frames
+                    var framesUser = frameAttributes
                         .Where(p => p.FileFrame.ApplicationUserId == applicationUserId)
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
@@ -80,8 +81,10 @@ namespace DialogueMarkUp.QuartzJobs
                         .Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 10)
                         .OrderBy(p => p.EndTime)
                         .ToList();
+                    
                     _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}");  
-                    if (markUps.Any()) CreateMarkUp(markUps, framesUser, applicationUserId);
+                    if (markUps.Any()) 
+                        CreateMarkUp(markUps, framesUser, applicationUserId);
                 }
                 _log.Info("Function DialogueMarkUp finished");                
             }
@@ -95,7 +98,7 @@ namespace DialogueMarkUp.QuartzJobs
         private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid applicationUserId)
         {
             var dialogueCreationList = new List<DialogueCreationRun>();
-            var dialogueVideoAssempleList = new List<DialogueVideoAssembleRun>();
+            var dialogueVideoAssembleList = new List<DialogueVideoAssembleRun>();
             if (markUps.Last().EndTime.Date < DateTime.Now.Date)
             {
                 framesUser
@@ -122,7 +125,7 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     dialogues.Add(dialogue);
                     CheckSessionForDialogue(dialogue);
-                    var markUpNew = new HBData.Models.DialogueMarkup{
+                    var markUpNew = new DialogueMarkup{
                         DialogueMarkUpId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
                         BegTime = markup.BegTime,
@@ -136,7 +139,7 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _context.DialogueMarkups.Add(markUpNew);
 
-                    dialogueVideoAssempleList.Add( new DialogueVideoAssembleRun
+                    dialogueVideoAssembleList.Add(new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = applicationUserId,
                         DialogueId = dialogueId,
@@ -144,7 +147,8 @@ namespace DialogueMarkUp.QuartzJobs
                         EndTime = markup.EndTime
                     });
 
-                    dialogueCreationList.Add( new DialogueCreationRun {
+                    dialogueCreationList.Add(new DialogueCreationRun
+                    {
                         ApplicationUserId = applicationUserId,
                         DialogueId = dialogueId,
                         BeginTime = markup.BegTime,
@@ -165,7 +169,7 @@ namespace DialogueMarkUp.QuartzJobs
                         .ForEach(p => p.FileFrame.StatusNNId = 7);
                 }
                 var dialogues = new List<Dialogue>();
-                for (int i = 0; i < markUps.Count() - 1; i++)
+                for (int i = 0; i < markUps.Count() - 1; ++i)
                 {
                     var dialogueId = Guid.NewGuid();
                     var dialogue = new Dialogue
@@ -198,7 +202,7 @@ namespace DialogueMarkUp.QuartzJobs
                     };
                     _context.DialogueMarkups.Add(markUpNew);
 
-                    dialogueVideoAssempleList.Add( new DialogueVideoAssembleRun
+                    dialogueVideoAssembleList.Add( new DialogueVideoAssembleRun
                     {
                         ApplicationUserId = applicationUserId,
                         // DialogueId = (Guid) markUps[i].FaceId,
@@ -223,7 +227,7 @@ namespace DialogueMarkUp.QuartzJobs
                     _publisher.Publish(dialogueCreation);
                 }
 
-                foreach (var dialogueAssemble in dialogueVideoAssempleList)
+                foreach (var dialogueAssemble in dialogueVideoAssembleList)
                 {
                     _publisher.Publish(dialogueAssemble);
                 }
@@ -250,7 +254,8 @@ namespace DialogueMarkUp.QuartzJobs
             }
             return frameAttribute;
         }
-        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double treshold = 0.4)
+        
+        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double threshold = 0.4)
         {
             var frameCompare = frameAttribute.Last();
             if (frameCompare.FileFrame.FaceId != null) 
@@ -258,28 +263,24 @@ namespace DialogueMarkUp.QuartzJobs
                 System.Console.WriteLine("Face id exist");
                 return frameCompare.FileFrame.FaceId;
             }
-            else
-            {
-                frameAttribute = frameAttribute.Where(p => p.FileFrame.Time >= frameCompare.FileFrame.Time.AddMinutes(-periodTime)).ToList();
-                var index = frameAttribute.Count() - 1;
-                var lastFrame = frameAttribute[index];
-                
-                var faceIds = new List<Guid?>();
 
-                var i = index - 1;
-                while (i >= 0)
-                {
-                    var cos = Cos(JsonConvert.DeserializeObject<List<double>>(lastFrame.Descriptor),
-                                JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
+            frameAttribute = frameAttribute.Where(p => p.FileFrame.Time >= frameCompare.FileFrame.Time.AddMinutes(-periodTime)).ToList();
+            var index = frameAttribute.Count() - 1;
+            var lastFrame = frameAttribute[index];
+                
+            var faceIds = new List<Guid?>();
+
+            var i = index - 1;
+            while (i >= 0)
+            {
+                var cos = Cos(JsonConvert.DeserializeObject<List<double>>(lastFrame.Descriptor),
+                    JsonConvert.DeserializeObject<List<double>>(frameAttribute[i].Descriptor));
                 //    System.Console.WriteLine($"{cos}, {i}");
-                    if (cos > treshold) //return frameAttribute[i].FileFrame.FaceId;
-                    {
-                        faceIds.Add(frameAttribute[i].FileFrame.FaceId);
-                    }
-                    i --;
-                }
-                return (faceIds.Any()) ?  faceIds.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key : Guid.NewGuid();
+                if (cos > threshold) //return frameAttribute[i].FileFrame.FaceId;
+                    faceIds.Add(frameAttribute[i].FileFrame.FaceId);
+                --i;
             }
+            return (faceIds.Any()) ?  faceIds.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key : Guid.NewGuid();
         }
 
         private double VectorNorm(List<double> vector)

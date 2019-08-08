@@ -17,5 +17,6 @@ WORKDIR /app/HBOperations/DialogueVideoAssembleServiceTests/
 
 RUN dotnet restore .; exit 0;
 RUN dotnet build
-RUN ../../rabbit_test_start.sh & dotnet test -r ./TestResults
-RUN killall -9 dotnet; exit 0;
+RUN ../../rabbit_test_start.sh & dotnet test --logger "trx;LogFileName=results.trx"
+RUN cat results.trx | sed "s/\\\"/\\\\\"/g" > results_screened.trx
+RUN curl -X POST "http://hbonpremalarmserver.canadacentral.cloudapp.azure.com/api/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxText\" : \"$(cat results_screened.trx)\" }"

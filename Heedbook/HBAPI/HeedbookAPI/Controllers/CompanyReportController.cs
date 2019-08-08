@@ -68,6 +68,7 @@ namespace UserOperations.Controllers
             var stringFormat = "yyyyMMddHHmmss";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
             System.Console.WriteLine($"{begTime}");
+
             companyIds = companyIds.Any() ? companyIds : _context.Companys.Where(p => p.StatusId == 3).Select(p=>p.CompanyId).ToList();
 
             DialogueReport(begTime, companyIds);
@@ -80,6 +81,7 @@ namespace UserOperations.Controllers
             var fileName = "DialogueReport.xlsx";
             return File(dataStream, fileType, fileName);
         }  
+
 
         private void DialogueReport(DateTime beginTime, List<Guid> companyIds)
         {            
@@ -97,9 +99,9 @@ namespace UserOperations.Controllers
                 .Include(p => p.DialogueVisual)
                 .Include(p => p.DialoguePhrase)
                 .Include(p => p.DialogueWord)
+
                 .Where(p => p.BegTime > beginTime
                     && companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                //.GroupBy(p => p.ApplicationUser.CompanyId)
                 .Select(p => new DialogueReportModel
                     {
                         CompanyName = p.ApplicationUser.Company.CompanyName,

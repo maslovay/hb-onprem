@@ -48,6 +48,9 @@ namespace HbApiTester
 
             _started = true;
         }
+
+        public void RunCommand(string command)
+            => CommandWorker(command);
         
         private void CommandWorker(string command)
         {

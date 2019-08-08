@@ -38,6 +38,7 @@ using Microsoft.WindowsAzure.Storage;
 using HBLib.Utils;
 using UserOperations.Utils;
 using Npgsql;
+using System.Threading;
 
 namespace UserOperations.Controllers
 {
@@ -161,17 +162,166 @@ namespace UserOperations.Controllers
             return "OK";
         }
 
+        [HttpGet("newtest")]
+        public IActionResult newtest()
+        {
+            var dialogues = _context.DialogueClientSatisfactions.Where(p => p.MeetingExpectationsTotal < 35).ToList();
+            var random = new Random();
+            foreach (var dialogue in dialogues)
+            {
+                dialogue.MeetingExpectationsTotal =  Math.Max((double) dialogue.MeetingExpectationsTotal, 35 + random.Next(10));
+            }
+            _context.SaveChanges();
+            // var dialogue = _context.Dialogues.Where(p => p.DialogueId.ToString() == "5d90051a-15a9-4126-8988-6e7f6ab256e1").FirstOrDefault();
+            // dialogue.StatusId = 8;
+            // _context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpGet("phrase")]
+        public IActionResult phrase()
+        {
+            var pathPhrase = "/home/nikolay/Desktop/phrase.json";
+            var pathCompanyPhrase = "/home/nikolay/Desktop/phrasecompanys.json";
+            List<Phrase> phrases;
+            List<PhraseCompany> companyPhrases;
+            using (StreamReader r = new StreamReader(pathPhrase))
+            {
+                phrases = JsonConvert.DeserializeObject<List<Phrase>>(r.ReadToEnd());
+            }
+             using (StreamReader r = new StreamReader(pathCompanyPhrase))
+            {
+                companyPhrases = JsonConvert.DeserializeObject<List<PhraseCompany>>(r.ReadToEnd());
+            }
+            _context.Phrases.AddRange(phrases);
+            _context.PhraseCompanys.AddRange(companyPhrases);
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpGet("samedialogues")]
+        public IActionResult samedialogues()
+        {
+            var begTime = DateTime.Now.AddDays(-10);
+            var dialogues = _context.Dialogues.Where(p => p.BegTime >= begTime && p.StatusId == 3)
+                .ToList()
+                .OrderBy(p => p.BegTime)
+                .ToList();
+
+            for (int i = 1; i< dialogues.Count(); i++)
+            {
+                if (dialogues[i].BegTime == dialogues[i-1].BegTime && dialogues[i].ApplicationUserId == dialogues[i-1].ApplicationUserId)
+                {
+                    System.Console.WriteLine(dialogues[i].DialogueId);
+                    System.Console.WriteLine(dialogues[i-1].DialogueId);
+
+                    dialogues[i-1].StatusId = 8;
+                }
+                _context.SaveChanges();
+            }
+            return Ok();
+        }
+        
         [HttpGet("test")]
         public IActionResult test()
         {
-            var dialogueId = Guid.Parse("03c81407-8ae2-4351-9d90-ab955f530584");
-            var dialogue = _context.Dialogues
-                .Where(p => p.StatusId == 3
-                    && p.DialogueId == dialogueId)
-                .FirstOrDefault();
+           
+            var begTime = DateTime.Now.AddDays(-10);
+            // var frameLast = _context.FileFrames.Where(p => p.FileName == "f62f320f-e448-40a1-90d3-9af1c745303d_20190709150711.jpg").FirstOrDefault();
+            // var begTime = frameLast.Time;
+            // var EndTime = DateTime.UtcNow.AddHours(-13);
+            // var frames = _context.FileFrames.Where(p => p.Time >= begTime && p.Time <= EndTime && p.FaceLength == 0).ToList().OrderBy(p => p.Time).ToList();
+            // System.Console.WriteLine($"{frames.Count()}");
+            // var i = 0;
+            // foreach (var frame in frames.Select(p => p.FileName).ToList().Distinct().ToList())
+            // {
+            //     System.Console.WriteLine($"Index - {i}, frame - {frame}");
+            //     i++;
+            //     var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://slavehb.northeurope.cloudapp.azure.com/user/Face");
+            //     httpWebRequest.ContentType = "application/json";
+            //     httpWebRequest.Method = "POST";
 
-            var frames = _context.DialogueSpeechs.Where(p => p.DialogueId == dialogueId).FirstOrDefault();
-            frames.PositiveShare = 55;
+            //     using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            //     {
+            //        var dict = new Dictionary<string, string>();
+            //        dict["Path"] = $"frames/{frame}";
+
+            //         streamWriter.Write(JsonConvert.SerializeObject(dict));
+            //     }
+
+            //     var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+            //     using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            //     {
+            //         var result = streamReader.ReadToEnd();
+            //         System.Console.WriteLine("Result" + result);
+            //     }
+
+            //     Thread.Sleep(300);
+            // }
+
+
+
+
+            var dialogues = _context.Dialogues.Where(p => p.StatusId == 8 && p.BegTime >= begTime).ToList();
+            System.Console.WriteLine(dialogues.Count());
+            dialogues = dialogues.Where(p => p.Comment == null || !p.Comment.StartsWith("Too many holes in dialogue")).ToList();
+            System.Console.WriteLine(dialogues.Count());
+            var i = 0;
+            foreach (var dialogue in dialogues)
+            {
+                try
+                {
+                    var url = $"https://slavehb.northeurope.cloudapp.azure.com/user/DialogueRecalculate/CheckRelatedDialogueData?DialogueId={dialogue.DialogueId}";
+                    System.Console.WriteLine($"Processing {dialogue.DialogueId}, Index {i}");
+
+                    var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                    httpWebRequest.ContentType = "application/json";
+                    httpWebRequest.Method = "POST";
+
+                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                    {
+                        var result = streamReader.ReadToEnd();
+                        System.Console.WriteLine("Result ---- " + result);
+                    }
+                    Thread.Sleep(1000);
+                    i++;
+                }
+                catch (Exception e)
+                {
+                    
+                }
+            
+            }
+
+
+            // System.Console.WriteLine(audios.Select(p => p.DialogueId).Distinct().ToList().Count());
+
+            // foreach (var audio in audios.Select(p => p.DialogueId).Distinct().ToList())
+            // {
+            //     System.Console.WriteLine($"Processing {audio}");
+            //     var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://slavehb.northeurope.cloudapp.azure.com/user/AudioAnalyze/audio-analyze");
+            //     httpWebRequest.ContentType = "application/json";
+            //     httpWebRequest.Method = "POST";
+
+            //     using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+            //     {
+            //        var dict = new Dictionary<string, string>();
+            //        dict["Path"] = $"dialogueaudios/{audio}.wav";
+
+            //         streamWriter.Write(JsonConvert.SerializeObject(dict));
+            //     }
+
+            //     var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+            //     using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            //     {
+            //         var result = streamReader.ReadToEnd();
+            //         System.Console.WriteLine("Result" + result);
+            //     }
+
+            //     Thread.Sleep(1500);    
+            // }
+           
 
 
 
@@ -223,8 +373,6 @@ namespace UserOperations.Controllers
 
             // var mood = _context.DialogueClientSatisfactions.Where(p => p.DialogueId == dialogueId).First();
             // mood.MeetingExpectationsTotal = 46;
-
-            _context.SaveChanges();
 
 
 
