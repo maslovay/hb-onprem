@@ -1,23 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HBLib;
 using HBLib.Utils;
 using Quartz;
 using Elasticsearch.Net;
-using Elasticsearch.Net.Specification.IndicesApi;
-using ErrorKibanaScheduler.DiffMathPath;
 using Nest;
 using Nest.JsonNetSerializer;
-using Newtonsoft.Json;
-using Serilog;
 using Attachment = HBLib.Utils.Attachment;
 using ElasticClient = Nest.ElasticClient;
-using Field = HBLib.Utils.Field;
+
 
 namespace ErrorKibanaScheduler.QuartzJob
 {
@@ -51,49 +44,41 @@ namespace ErrorKibanaScheduler.QuartzJob
                     .Query(q => q.Match(m => m.Field(f => f.LogLevel).Query("Fatal"))));
 
                 var documents = searchRequest.Documents
-                    .Where(item => item.Timestamp >= DateTime.UtcNow.AddHours(-15)).ToList();
+                    .Where(item => item.Timestamp >= DateTime.UtcNow.AddHours(-2)).ToList();
 
-                var dmp = new diff_match_patch
-                {
-                    Match_Threshold = 0.1f, Match_Distance = 0
-                };
-                var payload = new Payload()
-                {
-                    Attachments = new List<Attachment>()
-                };
+                var dmp = new TextCompare();
+
                 for (var i = 0; i < documents.Count; i++)
-                {        
-                    var count = 0;        
+                {
+                    var payload = new Payload()
+                    {
+                        Attachments = new List<Attachment>()
+                    };
+                    var count = 1;        
                     var attachment = new Attachment()
                     {
+                        Color = "#FF0000",
                         Title = $"{documents[i].FunctionName}",
                         Text = $"{documents[i].OriginalFormat}"
                     };
                     for (int j = documents.Count - 1; j > i; j--)
                     {
-                        var percentageMatch = 0;
-                        var matchMain = dmp.match_main(documents[i].OriginalFormat, documents[j].OriginalFormat, 3000);
-                        if (matchMain != 0)
-                        {
-                            percentageMatch = (documents[i].OriginalFormat.Length / matchMain) *100;
-                        }
-                        if (matchMain == 0 || percentageMatch >= 80)
+                        var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
+                        if (percentageMatch >= 80)
                         {
                             count += 1;
                             documents.RemoveAt(j);
                         }
                     }
-
                     attachment.AuthorName = count.ToString();
                     payload.Attachments.Add(attachment);
+                    _slackClient.PostMessage(payload);
                 }
-                _slackClient.PostMessage(payload);
             }
             catch (Exception e)
             {
                 _log.Fatal($"{e}");
             }
-
             _log.Info("Function finished");
         }
     }
