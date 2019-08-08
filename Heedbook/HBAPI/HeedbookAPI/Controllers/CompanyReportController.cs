@@ -62,10 +62,12 @@ namespace UserOperations.Controllers
         [HttpGet("GetReport")]
         [SwaggerOperation(Summary = "Report about dialogues", Description = "For not loggined users")]        
         [SwaggerResponse(200, "Report constructed")]
-        public FileResult GetReport()
+        public FileResult GetReport([FromQuery(Name = "begTime")] string beg)
         {
-            
-            DialogueReport();
+            var stringFormat = "yyyyMMddHHmmss";
+            var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
+            System.Console.WriteLine($"{begTime}");
+            DialogueReport(begTime);
             var dataBytes = System.IO.File.ReadAllBytes("DialogueReport.xlsx");
             System.IO.File.Delete("DialogueReport.xlsx");
 
@@ -76,7 +78,7 @@ namespace UserOperations.Controllers
         }  
 
         
-        private void DialogueReport()
+        private void DialogueReport(DateTime beginTime)
         {            
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
@@ -92,7 +94,7 @@ namespace UserOperations.Controllers
                 .Include(p => p.DialogueVisual)
                 .Include(p => p.DialoguePhrase)
                 .Include(p => p.DialogueWord)
-                .Where(p => p.BegTime.Date == DateTime.Now.Date.AddDays(-1))
+                .Where(p => p.BegTime > beginTime)
                 //.GroupBy(p => p.ApplicationUser.CompanyId)
                 .Select(p => new DialogueReportModel
                     {
