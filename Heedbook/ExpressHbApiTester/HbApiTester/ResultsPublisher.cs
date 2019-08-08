@@ -26,8 +26,11 @@ namespace HbApiTester
 
         public void PublishUnitTestResults(string textBase64)
         {
+            var bytes = Convert.FromBase64String(textBase64);
             var text = Encoding.UTF8.GetString(Convert.FromBase64String(textBase64));
-            
+            if ( text[0] == 65279 )
+                text = text.Remove(0, 1);
+
             var trxDoc = XDocument.Parse(text);
 
             if (trxDoc.Root == null)
