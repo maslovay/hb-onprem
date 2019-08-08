@@ -42,7 +42,7 @@ namespace HbApiTester.Controllers
         [HttpPost("[action]")]
         public void PublishUnitTestResults([FromBody]PublishUnitTestResultsModel model)
         {
-            _resultsPublisher.PublishUnitTestResults(model.TrxText);
+            _resultsPublisher.PublishUnitTestResults(model.TrxTextBase64);
         }
     }
 }
