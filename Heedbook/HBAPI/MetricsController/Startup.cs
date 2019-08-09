@@ -31,10 +31,10 @@ namespace MetricsController
         {
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.Configure<SlackSettings>(Configuration.GetSection(nameof(SlackSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<SlackSettings>>().Value);
+            services.Configure<MessengerSettings>(Configuration.GetSection(nameof(MessengerSettings)));
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<MessengerSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
-            services.AddSingleton<SlackClient>();
+            services.AddSingleton<MessengerClient>();
             services.Configure<AzureSettings>(Configuration.GetSection(nameof(AzureSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<AzureSettings>>().Value);
             services.AddGetMetricsQuartz();

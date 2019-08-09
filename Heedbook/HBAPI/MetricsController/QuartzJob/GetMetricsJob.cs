@@ -21,11 +21,11 @@ namespace MetricsController.QuartzJob
         private AzureConnector _connector;
         private IServiceScopeFactory _scopeFactory;
         private readonly ElasticClientFactory _elasticClientFactory;
-        private SlackClient _slackClient;
+        private MessengerClient _slackClient;
 
         public GetMetricsJob(IServiceScopeFactory scopeFactory,
             ElasticClientFactory elasticClientFactory,
-            SlackClient slackClient)
+            MessengerClient slackClient)
         {
             _scopeFactory = scopeFactory;
             _elasticClientFactory = elasticClientFactory;

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HBLib;
@@ -8,7 +7,6 @@ using Quartz;
 using Elasticsearch.Net;
 using Nest;
 using Nest.JsonNetSerializer;
-using Attachment = HBLib.Utils.Attachment;
 using ElasticClient = Nest.ElasticClient;
 
 
@@ -17,13 +15,13 @@ namespace ErrorKibanaScheduler.QuartzJob
     public class KibanaErrorJob : IJob
     {
         private ElasticClientFactory _elasticClientFactory;
-        private SlackClient _slackClient;
+        private MessengerClient _client;
 
         public KibanaErrorJob(ElasticClientFactory elasticClientFactory,
-            SlackClient slackClient)
+            MessengerClient client)
         {
             _elasticClientFactory = elasticClientFactory;
-            _slackClient = slackClient;
+            _client = client;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -38,29 +36,31 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
                         .Includes(i => i
-                            .Fields(f => f.FunctionName, f => f.OriginalFormat, f => f.Timestamp)))
+                            .Fields(f => f.FunctionName,
+                                f => f.OriginalFormat,
+                                f => f.Timestamp,
+                                f => f.FunctionName,
+                                f => f.InvocationId,
+                                f => f.LogLevel)))
                     .Take(10000)
                     .Index($"logstash-{DateTime.Today:yyyy.MM.dd}")
-                    .Query(q => q.Match(m => m.Field(f => f.LogLevel).Query("Fatal"))));
+                    .Query(q => q
+                        .Bool(m => m
+                            .Should(s => s
+                                .MatchPhrase(mp => mp
+                                    .Field(fd => fd.LogLevel)
+                                    .Query("Fatal")
+                                    .Query("Error")))
+                            .MinimumShouldMatch(1))));
 
                 var documents = searchRequest.Documents
-                    .Where(item => item.Timestamp >= DateTime.UtcNow.AddHours(-2)).ToList();
+                    .Where(item => item.Timestamp >= DateTime.UtcNow.AddHours(-3)).ToList();
 
                 var dmp = new TextCompare();
 
                 for (var i = 0; i < documents.Count; i++)
                 {
-                    var payload = new Payload()
-                    {
-                        Attachments = new List<Attachment>()
-                    };
-                    var count = 1;        
-                    var attachment = new Attachment()
-                    {
-                        Color = "#FF0000",
-                        Title = $"{documents[i].FunctionName}",
-                        Text = $"{documents[i].OriginalFormat}"
-                    };
+                    var count = 1;
                     for (int j = documents.Count - 1; j > i; j--)
                     {
                         var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
@@ -70,15 +70,20 @@ namespace ErrorKibanaScheduler.QuartzJob
                             documents.RemoveAt(j);
                         }
                     }
-                    attachment.AuthorName = count.ToString();
-                    payload.Attachments.Add(attachment);
-                    _slackClient.PostMessage(payload);
+
+                    var message = new TelegramMessage()
+                    {
+                        logText =
+                            $"<b>FunctionName:</b>{documents[i].FunctionName} \r\n<b>LogLevel:</b> {documents[i].LogLevel} \r\n<b>Count:</b> {count} \r\n<b>ErrorHead:</b> {String.Concat(documents[i].OriginalFormat.Take(200))} \r\n<b>InvocationId:</b> {documents[i].InvocationId}"
+                    };
+                    _client.PostMessage(message);
                 }
             }
             catch (Exception e)
             {
                 _log.Fatal($"{e}");
             }
+
             _log.Info("Function finished");
         }
     }

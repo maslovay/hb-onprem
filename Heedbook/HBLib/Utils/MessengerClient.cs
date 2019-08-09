@@ -4,19 +4,19 @@ using Newtonsoft.Json;
 
 namespace HBLib.Utils
 {
-    public class SlackClient
+    public class MessengerClient
     {
-        private readonly SlackSettings _settings;
+        private readonly MessengerSettings _settings;
 	
-        public SlackClient(SlackSettings settings)
+        public MessengerClient(MessengerSettings settings)
         {
             _settings = settings;
         }
-        public void PostMessage(Payload payload)
+        public void PostMessage(Message message)
         {
             using(var client =  new HttpClient())
             {
-                var data = new StringContent(JsonConvert.SerializeObject(payload));
+                var data = new StringContent(JsonConvert.SerializeObject(message));
                 data.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                  client.PostAsync(_settings.Uri, data).GetAwaiter().GetResult();
             }

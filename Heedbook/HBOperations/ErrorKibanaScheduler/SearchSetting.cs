@@ -27,8 +27,8 @@ namespace ErrorKibanaScheduler
         
         [JsonProperty("OriginalFormat")]
         public string OriginalFormat { get; set; }
-
-        public string InvocationId;
+        [JsonProperty("InvocationId")]
+        public string InvocationId { get; set; }
         
         public int TikTak { get; set; }
         

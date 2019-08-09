@@ -8,16 +8,21 @@ namespace ErrorKibanaScheduler
 {
     public class TextCompare
     {
-        public int CompareText(string firstLog, string secondLog)
-        {
-            if (firstLog.Length != secondLog.Length)
-            {
-                return 0;
-            }
+        public double CompareText(string firstLog, string secondLog)
+        {   
             var firstList = firstLog.Split(' ').ToList();
             var secondList = secondLog.Split(' ').ToList();
-            var count = firstList.Where((t, i) => t == secondList[i]).Count();
-            return secondList.Count / count * 100;
+            double count;
+            if (firstList.Count <= secondList.Count)
+            {
+                count = firstList.Where((t, i) => t == secondList[i]).Count();
+            }
+            else
+            {
+                count = secondList.Where((t, i) => t == firstList[i]).Count();
+            }
+            var res = count / secondList.Count * 100;
+            return res;
         }
     }
 }

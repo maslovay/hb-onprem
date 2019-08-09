@@ -2,7 +2,7 @@ using System;
 
 namespace HBLib.Utils
 {
-    public class SlackSettings
+    public class MessengerSettings
     {
         public string Uri { get; set; }
     }
