@@ -1,17 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
 using HBData;
 using HBData.Models;
-using HBData.Models.AccountViewModels;
-using HBLib;
-using HBLib.Utils;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Swashbuckle.AspNetCore.Annotations;
-using UserOperations.AccountModels;
 using UserOperations.Services;
 
 
@@ -22,16 +15,23 @@ namespace UserOperations.Controllers
     public class TabletAppInfoController : Controller
     {
         private readonly RecordsContext _context;
+        private readonly ILoginService _loginService;
         
-        public TabletAppInfoController( RecordsContext context )
+        public TabletAppInfoController( RecordsContext context, ILoginService loginService )
         {
             _context = context;
+            _loginService = loginService;
         }
 
         [HttpGet("[action]/{version}")]
-        public IActionResult AddCurrentTabletAppVersion(string version)
+        public IActionResult AddCurrentTabletAppVersion([FromRoute]string version, [FromHeader] string Authorization)
         {
-            if ( _context.TabletAppInfos.Any( t => String.Equals(t.TabletAppVersion, version, StringComparison.CurrentCultureIgnoreCase) ) )
+            if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                return BadRequest("Token wrong");
+            if (userClaims["role"].ToUpper() != "ADMIN")
+                return BadRequest("Requires ADMIN role!");
+            
+            if ( _context.TabletAppInfos.Any( t => string.Equals(t.TabletAppVersion, version, StringComparison.CurrentCultureIgnoreCase) ) )
                 return new BadRequestObjectResult("This version already exists!");
             
             var newVersion = new TabletAppInfo()
