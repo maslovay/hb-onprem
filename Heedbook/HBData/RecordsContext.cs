@@ -127,6 +127,6 @@ namespace HBData
         public DbSet<VIndexByCompanyDay> VIndexesByCompanysDays { get; set; }        
         public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
         public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }        
-
+        public DbSet<TabletAppInfo> TabletAppInfos { get; set; }
     }
 }
