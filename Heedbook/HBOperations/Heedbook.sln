@@ -128,6 +128,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErrorKibanaScheduler", "Err
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FtpFileDelete", "FtpDeleteScheduler\FtpFileDelete.csproj", "{A3188977-F0AE-4498-9B36-100FAFF65718}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackupFtp", "BackupFtp\BackupFtp.csproj", "{37B68563-9290-4DBC-9556-A9FCF3E7373E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -302,6 +304,10 @@ Global
 		{A3188977-F0AE-4498-9B36-100FAFF65718}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3188977-F0AE-4498-9B36-100FAFF65718}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3188977-F0AE-4498-9B36-100FAFF65718}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37B68563-9290-4DBC-9556-A9FCF3E7373E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37B68563-9290-4DBC-9556-A9FCF3E7373E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37B68563-9290-4DBC-9556-A9FCF3E7373E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37B68563-9290-4DBC-9556-A9FCF3E7373E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

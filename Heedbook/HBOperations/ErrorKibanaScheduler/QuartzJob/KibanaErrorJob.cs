@@ -54,7 +54,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                             .MinimumShouldMatch(1))));
 
                 var documents = searchRequest.Documents
-                    .Where(item => item.Timestamp >= DateTime.UtcNow.AddHours(-3)).ToList();
+                    .Where(item => item.Timestamp >= DateTime.UtcNow.AddHours(-4)).ToList();
 
                 var dmp = new TextCompare();
 
