@@ -128,7 +128,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErrorKibanaScheduler", "Err
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FtpFileDelete", "FtpDeleteScheduler\FtpFileDelete.csproj", "{A3188977-F0AE-4498-9B36-100FAFF65718}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackupFtp", "BackupFtp\BackupFtp.csproj", "{37B68563-9290-4DBC-9556-A9FCF3E7373E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloneFtpOnAzure", "CloneFtpOnAzure\CloneFtpOnAzure.csproj", "{37B68563-9290-4DBC-9556-A9FCF3E7373E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
