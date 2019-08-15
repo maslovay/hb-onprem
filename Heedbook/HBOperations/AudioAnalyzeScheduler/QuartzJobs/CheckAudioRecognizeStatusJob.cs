@@ -258,6 +258,15 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         }
                         else
                         {
+                            var newSpeech = new DialogueSpeech
+                            {
+                                DialogueId = audio.DialogueId,
+                                IsClient = true,
+                                SpeechSpeed = 0,
+                                PositiveShare = default(Double),
+                                SilenceShare = 0
+                            };
+                            dialogueSpeeches.Add(newSpeech);
                             _log.Info("Asr stt results is empty");
                         }
 
