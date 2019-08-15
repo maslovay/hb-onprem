@@ -124,7 +124,7 @@ namespace DialogueMarkUp.QuartzJobs
                         InStatistic = true
                     };
                     dialogues.Add(dialogue);
-                    CheckSessionForDialogue(dialogue);
+                    CheckSessionForDialogue(dialogue).Wait();
                     var markUpNew = new DialogueMarkup{
                         DialogueMarkUpId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
@@ -187,7 +187,7 @@ namespace DialogueMarkUp.QuartzJobs
 
                     };
                     dialogues.Add(dialogue);
-                    CheckSessionForDialogue(dialogue);
+                    CheckSessionForDialogue(dialogue).Wait();
                     var markUpNew = new HBData.Models.DialogueMarkup{
                         DialogueMarkUpId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
@@ -304,9 +304,10 @@ namespace DialogueMarkUp.QuartzJobs
             return VectorMult(vector1, vector2) / VectorNorm(vector1) / VectorNorm(vector2);
         }
 
-        private void CheckSessionForDialogue(Dialogue dialogue)
+        private async Task CheckSessionForDialogue(Dialogue dialogue)
         {
             var applicationUserId = dialogue.ApplicationUserId;
+            
             var applicationUser = _context.ApplicationUsers.FirstOrDefault(p => p.Id == applicationUserId);
             var intersectSession = _context.Sessions.Where(p => p.ApplicationUserId == applicationUserId
                     && (p.StatusId == 6 || p.StatusId == 7)
@@ -332,11 +333,11 @@ namespace DialogueMarkUp.QuartzJobs
                 var lastSession = _context.Sessions
                         .Where(p => p.ApplicationUserId == applicationUserId 
                             && p.BegTime >= oldTime 
-                            && p.BegTime <= curTime)
+                            && p.EndTime < dialogue.BegTime)
                         .OrderByDescending(p => p.BegTime)
                         .ToList()
                         .FirstOrDefault();
-                if(lastSession != null && lastSession.StatusId == 6 && lastSession.EndTime < dialogue.EndTime)
+                if(lastSession != null && lastSession.StatusId == 6)
                 {
                     lastSession.EndTime = dialogue.EndTime;
                 }
@@ -352,7 +353,7 @@ namespace DialogueMarkUp.QuartzJobs
                         StatusId = 7
                     });
                 }
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return;
             } 
 
@@ -433,7 +434,7 @@ namespace DialogueMarkUp.QuartzJobs
             {
                 var insideSessions = intersectSession.Where(p => p.BegTime > dialogue.BegTime && p.EndTime <= dialogueEndSession.BegTime)
                     .OrderBy(p => p.BegTime).ToList();
-                  
+                
                 if(insideSessions.Count() > 0)
                 {
                     dialogueEndSession.BegTime = dialogue.BegTime;       
@@ -464,7 +465,7 @@ namespace DialogueMarkUp.QuartzJobs
                 dialogueEndSession.BegTime = dialogueBeginSession.BegTime;
                 dialogueBeginSession.StatusId = 8;                
             }            
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();            
         }
     }
 }
