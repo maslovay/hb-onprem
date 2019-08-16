@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HBLib;
@@ -8,6 +9,7 @@ using Elasticsearch.Net;
 using Nest;
 using Nest.JsonNetSerializer;
 using ElasticClient = Nest.ElasticClient;
+using Field = Nest.Field;
 
 
 namespace ErrorKibanaScheduler.QuartzJob
@@ -49,9 +51,12 @@ namespace ErrorKibanaScheduler.QuartzJob
                             .Should(s => s
                                 .MatchPhrase(mp => mp
                                     .Field(fd => fd.LogLevel)
-                                    .Query("Fatal")
-                                    .Query("Error")))
-                            .MinimumShouldMatch(1))));
+                                    .Query("Fatal")), 
+                                s => s
+                                    .MatchPhrase(mp => mp
+                                        .Field(fd => fd.LogLevel)
+                                        .Query("Error"))
+                            ))));
 
                 var documents = searchRequest.Documents
                     .Where(item => item.Timestamp >= DateTime.UtcNow.AddHours(-4)).ToList();
