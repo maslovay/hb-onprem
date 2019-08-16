@@ -89,7 +89,7 @@ namespace UserService.Controllers
             catch (Exception e)
             {
                 _log.Fatal($"Exception occured while executing Video save info {e}");
-                return BadRequest(e);
+                return BadRequest(e.Message);
             }
         }
     }
