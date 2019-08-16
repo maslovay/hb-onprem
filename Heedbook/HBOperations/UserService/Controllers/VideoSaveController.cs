@@ -23,12 +23,15 @@ namespace UserService.Controllers
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
+        private readonly ElasticClient _log;
 
-        public VideoSaveController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient)
+
+        public VideoSaveController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient, ElasticClient log)
         {
             _handler = handler;
             _context = context;
             _sftpClient = sftpClient;
+            _log = log;
         }
 
         [HttpPost]
@@ -39,14 +42,11 @@ namespace UserService.Controllers
             [FromForm] IFormCollection formData)
         {
             try
-            {   
-                System.Console.WriteLine("1");
+            {  
+                _log.Info("Function Video save info started");
                 duration = duration == null ? 15 : duration;
-                System.Console.WriteLine("2");
                 var memoryStream = formData.Files.FirstOrDefault().OpenReadStream();
-                System.Console.WriteLine("3");
                 if (memoryStream == null)   return BadRequest("No video file or file is empty");
-                System.Console.WriteLine("4");
                 var languageId = _context.ApplicationUsers
                                          .Include(p => p.Company)
                                          .Include(p => p.Company.Language)
@@ -56,9 +56,7 @@ namespace UserService.Controllers
                 var stringFormat = "yyyyMMddHHmmss";
                 var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var fileName = $"{applicationUserId}_{time.ToString(stringFormat)}_{languageId}.mkv";
-                System.Console.WriteLine("5");
                 await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, "videos/", fileName);
-                System.Console.WriteLine("6");
 
                 var videoFile = new FileVideo();
                 videoFile.ApplicationUserId = applicationUserId;
@@ -73,7 +71,6 @@ namespace UserService.Controllers
                 videoFile.StatusId = 6;
 
                 _context.FileVideos.Add(videoFile);
-                System.Console.WriteLine("7");
                 _context.SaveChanges();
 
 
@@ -88,12 +85,14 @@ namespace UserService.Controllers
                 {
                     Console.WriteLine($"No such file videos/{fileName}");
                 }
+                _log.Info("Function Video save info finished");
 
                 return Ok();
             }
             catch (Exception e)
             {
-                return BadRequest(e);
+                _log.Fatal("Exception occured {e}");
+                return BadRequest(e.Message);
             }
 
 
