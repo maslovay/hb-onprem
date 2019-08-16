@@ -84,7 +84,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
                                 var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
 
-                                if (sttResults.Response == null && differenceHour >= 1)
+                                if ((sttResults.Response == null && differenceHour >= 1)||sttResults.Response.Results==null)
                                 {
                                     audio.StatusId = 8;
                                     _log.Error($"Error with stt results for {audio.DialogueId}");
