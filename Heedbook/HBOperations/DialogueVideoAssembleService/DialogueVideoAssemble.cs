@@ -108,7 +108,7 @@ namespace DialogueVideoAssembleService
                 _log.Info("Running commands for frames");
                 _utils.RunFrameFFmpegCommands(frameCommands, cmd, _wrapper, _log, sessionDir);
 
-                var extension = Path.GetExtension(fileVideos.Select(item => item.FileName).First());
+                var extension = Path.GetExtension(fileVideos.Select(item => item.FileName).FirstOrDefault());
                 var tempOutputFn = Path.Combine(sessionDir, $"_tmp_{message.DialogueId}{extension}");
                 var outputFn = Path.Combine(sessionDir, $"{message.DialogueId}{extension}");                                
 
@@ -138,9 +138,9 @@ namespace DialogueVideoAssembleService
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occured with this input parameters\n"
-                + $"ApplicationUserId: {message.ApplicationUserId}, \n{message.DialogueId}, \n{message.BeginTime}, \n{message.EndTime}");
-                _log.Fatal($"Exception occured {e}");
+                _log.Fatal($" Exception occured with this input parameters\n"
+                + $"ApplicationUserId: {message.ApplicationUserId}, \nDialogueId: {message.DialogueId}, \nBeginTime: {message.BeginTime}, \nEndTime: {message.EndTime}");
+                _log.Fatal($" DialogueId: {message.DialogueId} \nException occured {e}");
                 throw;
             }
         }
