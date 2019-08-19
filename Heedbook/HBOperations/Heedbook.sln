@@ -1,7 +1,6 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2048
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{6DF2D04E-B9A6-40C9-8222-00F11D59B099}"
 EndProject
@@ -24,33 +23,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMqEventBus", "RabbitMqEventBus\RabbitMqEventBus.csproj", "{32785144-D258-46F8-AF5D-FCD1745AB5B2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{57FF1498-9934-4664-B888-F24989B01059}"
-	ProjectSection(SolutionItems) = preProject
-		AudioAnalyzeScheduler.Dockerfile = AudioAnalyzeScheduler.DockeHeedbook/HBAPI/HeedbookAPI/Utils/Filters.cs rfile
-		..\UserService.Dockerfile.integration = ..\UserService.Dockerfile.integration
-		..\rabbit_test_setup.sh = ..\rabbit_test_setup.sh
-		..\test_environment_setup.sh = ..\test_environment_setup.sh
-		..\rabbit_test_start.sh = ..\rabbit_test_start.sh
-		..\AudioAnalyzeScheduler.Dockerfile = ..\AudioAnalyzeScheduler.Dockerfile
-		..\AudioAnalyzeService.Dockerfile = ..\AudioAnalyzeService.Dockerfile
-		..\AudioAnalyzeService.Dockerfile.Integration = ..\AudioAnalyzeService.Dockerfile.Integration
-		..\build.sh = ..\build.sh
-		..\DialogueMarkUpService.Dockerfile = ..\DialogueMarkUpService.Dockerfile
-		..\DialogueStatusCheckerScheduler.Dockerfile = ..\DialogueStatusCheckerScheduler.Dockerfile
-		..\DialogueVideoAssembleService.Dockerfile = ..\DialogueVideoAssembleService.Dockerfile
-		..\DialogueVideoMergeService.Dockerfile = ..\DialogueVideoMergeService.Dockerfile
-		..\DialogueVideoMergeService.Dockerfile.Integration = ..\DialogueVideoMergeService.Dockerfile.Integration
-		..\ExtractFramesFromVideoService.Dockerfile = ..\ExtractFramesFromVideoService.Dockerfile
-		..\ExtractFramesFromVideoService.Dockerfile.Integration = ..\ExtractFramesFromVideoService.Dockerfile.Integration
-		..\FaceAnalyzeService.Dockerfile = ..\FaceAnalyzeService.Dockerfile
-		..\FaceAnalyzeService.Dockerfile.Integration = ..\FaceAnalyzeService.Dockerfile.Integration
-		..\FillingFrameService.Dockerfile = ..\FillingFrameService.Dockerfile
-		..\FillingFrameService.Dockerfile.Integration = ..\FillingFrameService.Dockerfile.Integration
-		..\FillingHintService.Dockerfile = ..\FillingHintService.Dockerfile
-		..\FillingSatisfactionService.Dockerfile = ..\FillingSatisfactionService.Dockerfile
-		..\FillingSatisfactionService.Dockerfile.Integration = ..\FillingSatisfactionService.Dockerfile.Integration
-		..\DialogueVideoAssembleService.Dockerfile.Integration = ..\DialogueVideoAssembleService.Dockerfile.Integration
-		..\AudioAnalyzeScheduler.Dockerfile.Integration = ..\AudioAnalyzeScheduler.Dockerfile.Integration
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceAnalyzeService", "FaceAnalyzeService\FaceAnalyzeService.csproj", "{0888758E-FA1C-4B3F-AFAF-A8B85454E6E2}"
 EndProject
@@ -84,51 +56,51 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{4907EB71
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExtractFramesFromVideoServiceTests", "ExtractFramesFromVideoServiceTests\ExtractFramesFromVideoServiceTests.csproj", "{903DC45A-1337-4A38-A3DE-D403740B318A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillingSatisfactionServiceTests", "FillingSatisfactionServiceTests\FillingSatisfactionServiceTests.csproj", "{1AD9107B-4A24-4926-9D05-66BEDD43F5E7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FillingSatisfactionServiceTests", "FillingSatisfactionServiceTests\FillingSatisfactionServiceTests.csproj", "{1AD9107B-4A24-4926-9D05-66BEDD43F5E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{B272A808-9CE3-40F6-8BD4-188ED405DE1C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{B272A808-9CE3-40F6-8BD4-188ED405DE1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FillingFrameServiceTests", "FillingFrameServiceTests\FillingFrameServiceTests.csproj", "{4FF6FB3E-E4A3-48CE-AEC4-3B7F442C8A37}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FillingFrameServiceTests", "FillingFrameServiceTests\FillingFrameServiceTests.csproj", "{4FF6FB3E-E4A3-48CE-AEC4-3B7F442C8A37}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueVideoMergeServiceTests", "DialogueVideoMergeServiceTests\DialogueVideoMergeServiceTests.csproj", "{B88F68C7-7B77-47F0-8F23-5EDB5610D76D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueVideoMergeServiceTests", "DialogueVideoMergeServiceTests\DialogueVideoMergeServiceTests.csproj", "{B88F68C7-7B77-47F0-8F23-5EDB5610D76D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaceAnalyzeServiceTests", "FaceAnalyzeServiceTests\FaceAnalyzeServiceTests.csproj", "{6C3D7493-3577-478E-9469-8B73B88FF7F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FaceAnalyzeServiceTests", "FaceAnalyzeServiceTests\FaceAnalyzeServiceTests.csproj", "{6C3D7493-3577-478E-9469-8B73B88FF7F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoToSoundServiceTests", "VideoToSoundServiceTests\VideoToSoundServiceTests.csproj", "{13235CD9-007C-47F7-9962-9E848A67F4A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VideoToSoundServiceTests", "VideoToSoundServiceTests\VideoToSoundServiceTests.csproj", "{13235CD9-007C-47F7-9962-9E848A67F4A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioAnalyzeServiceTests", "AudioAnalyzeServiceTests\AudioAnalyzeServiceTests.csproj", "{4EA188C6-EF4C-4E1C-8C26-04AAA5DC1DFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AudioAnalyzeServiceTests", "AudioAnalyzeServiceTests\AudioAnalyzeServiceTests.csproj", "{4EA188C6-EF4C-4E1C-8C26-04AAA5DC1DFA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceExtensions", "ServiceExtensions\ServiceExtensions.csproj", "{DD6C0D82-D07A-4E09-B630-86628322A682}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceExtensions", "ServiceExtensions\ServiceExtensions.csproj", "{DD6C0D82-D07A-4E09-B630-86628322A682}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestExtensions", "UnitTestExtensions\UnitTestExtensions.csproj", "{573C2E9B-F6D6-45B4-9FEA-4B5BBC841682}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTestExtensions", "UnitTestExtensions\UnitTestExtensions.csproj", "{573C2E9B-F6D6-45B4-9FEA-4B5BBC841682}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotMarckedImageScheduler", "NotMarckedImageScheduler\NotMarckedImageScheduler.csproj", "{4FFD2961-2708-4576-9CB4-37085AD37A36}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotMarckedImageScheduler", "NotMarckedImageScheduler\NotMarckedImageScheduler.csproj", "{4FFD2961-2708-4576-9CB4-37085AD37A36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReferenceController", "..\HBAPI\ReferenceController\ReferenceController.csproj", "{A48E447A-3F76-42C3-836C-C396BFEDF20B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReferenceController", "..\HBAPI\ReferenceController\ReferenceController.csproj", "{A48E447A-3F76-42C3-836C-C396BFEDF20B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReferenceControllerTests", "ReferenceControllerTests\ReferenceControllerTests.csproj", "{99BB51FD-9E25-444C-999D-8DE8E639C42A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReferenceControllerTests", "ReferenceControllerTests\ReferenceControllerTests.csproj", "{99BB51FD-9E25-444C-999D-8DE8E639C42A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueVideoAssembleService", "DialogueVideoAssembleService\DialogueVideoAssembleService.csproj", "{8D27D7A9-0BC0-4917-8325-314445E9B9BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueVideoAssembleService", "DialogueVideoAssembleService\DialogueVideoAssembleService.csproj", "{8D27D7A9-0BC0-4917-8325-314445E9B9BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueMarkUp", "DialogueMarkUp\DialogueMarkUp.csproj", "{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueMarkUp", "DialogueMarkUp\DialogueMarkUp.csproj", "{49EF1AD2-7D9C-46D2-855F-D92A2C40119A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueVideoAssembleServiceTests", "DialogueVideoAssembleServiceTests\DialogueVideoAssembleServiceTests.csproj", "{4226D9C7-F324-47E3-B8C2-CB8F16114995}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueVideoAssembleServiceTests", "DialogueVideoAssembleServiceTests\DialogueVideoAssembleServiceTests.csproj", "{4226D9C7-F324-47E3-B8C2-CB8F16114995}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioAnalyzeSchedulerTests", "AudioAnalyzeSchedulerTests\AudioAnalyzeSchedulerTests.csproj", "{A4428BED-D945-4B68-A09F-F1A6851881B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AudioAnalyzeSchedulerTests", "AudioAnalyzeSchedulerTests\AudioAnalyzeSchedulerTests.csproj", "{A4428BED-D945-4B68-A09F-F1A6851881B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueStatusCheckerSchedulerTests", "DialogueStatusCheckerSchedulerTests\DialogueStatusCheckerSchedulerTests.csproj", "{33908ADF-2539-4439-864E-A45492BE211D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialogueStatusCheckerSchedulerTests", "DialogueStatusCheckerSchedulerTests\DialogueStatusCheckerSchedulerTests.csproj", "{33908ADF-2539-4439-864E-A45492BE211D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonDetectionService", "PersonDetectionService\PersonDetectionService.csproj", "{ED9615DF-2A83-4E20-BE8C-502D18C35D6D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersonDetectionService", "PersonDetectionService\PersonDetectionService.csproj", "{ED9615DF-2A83-4E20-BE8C-502D18C35D6D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToneAnalyzeService", "ToneAnalyzeService\ToneAnalyzeService.csproj", "{78180912-2178-4593-856D-65DA37D1169F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToneAnalyzeService", "ToneAnalyzeService\ToneAnalyzeService.csproj", "{78180912-2178-4593-856D-65DA37D1169F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsController", "..\HBAPI\MetricsController\MetricsController.csproj", "{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DialoguesRecalculateScheduler", "DialoguesRecalculateScheduler\DialoguesRecalculateScheduler.csproj", "{36AAF04F-0C77-4E4B-99BE-0D6826906033}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErrorKibanaScheduler", "ErrorKibanaScheduler\ErrorKibanaScheduler.csproj", "{D2496727-C0B8-49D3-8D4E-B76A965D12C6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utitilities", "Utitilities", "{3948BA27-478A-40E7-B61D-C203DABB84D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FtpFileDelete", "FtpDeleteScheduler\FtpFileDelete.csproj", "{A3188977-F0AE-4498-9B36-100FAFF65718}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlarmSender", "..\ExpressHbApiTester\AlarmSender\AlarmSender.csproj", "{62A1003E-9B42-48CF-BA3D-71565E41088E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloneFtpOnAzure", "CloneFtpOnAzure\CloneFtpOnAzure.csproj", "{37B68563-9290-4DBC-9556-A9FCF3E7373E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserOperations", "..\HBAPI\HeedbookAPI\UserOperations.csproj", "{AD828C79-B511-45D6-8AE4-246BEFB90DC7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -292,22 +264,18 @@ Global
 		{78180912-2178-4593-856D-65DA37D1169F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{78180912-2178-4593-856D-65DA37D1169F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{78180912-2178-4593-856D-65DA37D1169F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CFFC7C30-EA4B-4E65-B849-5D38F009AA0A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D2496727-C0B8-49D3-8D4E-B76A965D12C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D2496727-C0B8-49D3-8D4E-B76A965D12C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D2496727-C0B8-49D3-8D4E-B76A965D12C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D2496727-C0B8-49D3-8D4E-B76A965D12C6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A3188977-F0AE-4498-9B36-100FAFF65718}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A3188977-F0AE-4498-9B36-100FAFF65718}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A3188977-F0AE-4498-9B36-100FAFF65718}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A3188977-F0AE-4498-9B36-100FAFF65718}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37B68563-9290-4DBC-9556-A9FCF3E7373E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37B68563-9290-4DBC-9556-A9FCF3E7373E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37B68563-9290-4DBC-9556-A9FCF3E7373E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37B68563-9290-4DBC-9556-A9FCF3E7373E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62A1003E-9B42-48CF-BA3D-71565E41088E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62A1003E-9B42-48CF-BA3D-71565E41088E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62A1003E-9B42-48CF-BA3D-71565E41088E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62A1003E-9B42-48CF-BA3D-71565E41088E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD828C79-B511-45D6-8AE4-246BEFB90DC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD828C79-B511-45D6-8AE4-246BEFB90DC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD828C79-B511-45D6-8AE4-246BEFB90DC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD828C79-B511-45D6-8AE4-246BEFB90DC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -352,6 +320,9 @@ Global
 		{33908ADF-2539-4439-864E-A45492BE211D} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{ED9615DF-2A83-4E20-BE8C-502D18C35D6D} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 		{78180912-2178-4593-856D-65DA37D1169F} = {F9312081-26B8-4651-ABC9-A32914105EBA}
+		{36AAF04F-0C77-4E4B-99BE-0D6826906033} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
+		{3948BA27-478A-40E7-B61D-C203DABB84D7} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
+		{62A1003E-9B42-48CF-BA3D-71565E41088E} = {3948BA27-478A-40E7-B61D-C203DABB84D7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
