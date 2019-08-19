@@ -118,11 +118,11 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                                                                         }
 
                                                                                         word.EndTime =
-                                                                                            word.EndTime.Replace('s', ' ')
-                                                                                                .Replace('.', ',');
+                                                                                            word.EndTime.Replace('s', ' ');
+                                                                                                // .Replace('.', ',');
                                                                                         word.StartTime =
-                                                                                            word.StartTime.Replace('s', ' ')
-                                                                                                .Replace('.', ',');
+                                                                                            word.StartTime.Replace('s', ' ');
+                                                                                                // .Replace('.', ',');
                                                                                         recognized.Add(word);
                                                                                     })));
                                         audio.STTResult = JsonConvert.SerializeObject(recognized);
