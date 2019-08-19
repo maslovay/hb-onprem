@@ -84,7 +84,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
                                 var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
 
-                                if (sttResults.Response == null && differenceHour >= 1)
+                                if ((sttResults.Response == null && differenceHour >= 1)||sttResults.Response.Results==null)
                                 {
                                     audio.StatusId = 8;
                                     _log.Error($"Error with stt results for {audio.DialogueId}");
@@ -118,11 +118,11 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                                                                         }
 
                                                                                         word.EndTime =
-                                                                                            word.EndTime.Replace('s', ' ')
-                                                                                                .Replace('.', ',');
+                                                                                            word.EndTime.Replace('s', ' ');
+                                                                                                // .Replace('.', ',');
                                                                                         word.StartTime =
-                                                                                            word.StartTime.Replace('s', ' ')
-                                                                                                .Replace('.', ',');
+                                                                                            word.StartTime.Replace('s', ' ');
+                                                                                                // .Replace('.', ',');
                                                                                         recognized.Add(word);
                                                                                     })));
                                         audio.STTResult = JsonConvert.SerializeObject(recognized);
@@ -167,7 +167,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         if (recognized.Any())
                         {
                             var languageId = (int) audio.Dialogue.ApplicationUser.Company.LanguageId;
-                            var speechSpeed = GetSpeechSpeed(recognized, languageId);
+                            var speechSpeed = GetSpeechSpeed(recognized, languageId, _log);
                             _log.Info($"Speech speed: {speechSpeed}");
 
                             var newSpeech = new DialogueSpeech
@@ -176,7 +176,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 IsClient = true,
                                 SpeechSpeed = speechSpeed,
                                 PositiveShare = default(Double),
-                                SilenceShare = GetSilenceShare(recognized, audio.BegTime, audio.EndTime)
+                                SilenceShare = GetSilenceShare(recognized, audio.BegTime, audio.EndTime, _log)
                             };
 
                             dialogueSpeeches.Add(newSpeech);
@@ -258,6 +258,15 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         }
                         else
                         {
+                            var newSpeech = new DialogueSpeech
+                            {
+                                DialogueId = audio.DialogueId,
+                                IsClient = true,
+                                SpeechSpeed = 0,
+                                PositiveShare = default(Double),
+                                SilenceShare = 0
+                            };
+                            dialogueSpeeches.Add(newSpeech);
                             _log.Info("Asr stt results is empty");
                         }
 
@@ -315,7 +324,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             }
         }
 
-        private Double GetSpeechSpeed(List<WordRecognized> words, Int32 languageId)
+        private Double GetSpeechSpeed(List<WordRecognized> words, Int32 languageId, ElasticClient _log)
         {
             var vowels = Vowels.VowelsDictionary[languageId];
             var sumTime = words.Sum(item =>
@@ -325,14 +334,17 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 return endTime - startTime;
             });
             var vowelsCount = words.Select(item => item.Word.Where(c => vowels.Contains(c))).Count();
+            _log.Info($"Speech sum time - {sumTime}, Vowels count -- {vowelsCount}");
             return vowelsCount / sumTime;
         }
 
-        private Double GetSilenceShare(List<WordRecognized> words, DateTime begTime, DateTime endTime)
+        private Double GetSilenceShare(List<WordRecognized> words, DateTime begTime, DateTime endTime, ElasticClient _log)
         {
             var wordsDuration = words.Sum(item =>
                 Double.Parse(item.EndTime, CultureInfo.InvariantCulture) -
                 Double.Parse(item.StartTime, CultureInfo.InvariantCulture));
+
+            _log.Info($"Words duration -- {wordsDuration}, Dialogue duration --- {endTime.Subtract(begTime).TotalSeconds}");    
             return endTime.Subtract(begTime).TotalSeconds > 0
                 ? 100 * Math.Max(endTime.Subtract(begTime).TotalSeconds - wordsDuration, 0.01) /
                   endTime.Subtract(begTime).TotalSeconds
