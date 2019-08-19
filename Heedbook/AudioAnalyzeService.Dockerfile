@@ -14,3 +14,4 @@ RUN chmod -R 777 /opt/
 RUN mkdir /opt/download
 RUN chmod -R 777 /opt/download
 ENV INFRASTRUCTURE Cloud
+ENV TESTCLUSTER testcluster
