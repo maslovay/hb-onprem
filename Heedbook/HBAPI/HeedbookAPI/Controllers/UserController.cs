@@ -726,6 +726,23 @@ namespace UserOperations.Controllers
         var begTime = _requestFilters.GetBegDate(beg);
         var endTime = _requestFilters.GetEndDate(end);
 
+        var dialogues = _context.Dialogues
+                .Include(p => p.ApplicationUser)
+                .Where(p => p.BegTime >= begTime
+                        && p.EndTime <= endTime
+                        // && p.StatusId == 3
+                        // && p.InStatistic == true
+                        // && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                        // && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                        )
+                .Select(p => new                 
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                }).ToList();
+
         var alerts = _context.Alerts
           .Include(p => p.ApplicationUser)
                     .Where(p => p.CreationDate >= begTime
@@ -734,6 +751,16 @@ namespace UserOperations.Controllers
                             && (!alertTypeIds.Any() || alertTypeIds.Contains(p.AlertTypeId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                             && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    .Select(x => new {
+                        x.AlertId,
+                        x.AlertTypeId,
+                        x.ApplicationUserId,
+                        x.CreationDate,
+                        dialogueId = 
+                                (Guid?)dialogues.FirstOrDefault(p => p.ApplicationUserId == x.ApplicationUserId 
+                                    && p.BegTime <= x.CreationDate 
+                                    && p.EndTime >= x.CreationDate).DialogueId
+                    })
                     .OrderByDescending(x => x.CreationDate)
                     .ToList();
         return Ok(alerts);
