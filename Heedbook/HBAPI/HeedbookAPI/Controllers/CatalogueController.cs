@@ -93,6 +93,7 @@ namespace UserOperations.Controllers
             // _log.Info("Catalogue/Industry GET");
             return _context.CompanyIndustrys.ToList();
         }
+
         [HttpGet("Language")]
         [SwaggerOperation(Description = "Return all available languages. Does not require to transfer a token")]
         public IEnumerable<Language> LanguageGet()
@@ -100,12 +101,20 @@ namespace UserOperations.Controllers
             // _log.Info("Catalogue/Language GET");
             return _context.Languages.ToList();
         }
+
         [HttpGet("PhraseType")]
         [SwaggerOperation(Description = "Return all available phrase types. Does not require to transfer a token")]
         public IEnumerable<PhraseType> PhraseTypeGet()
         {
             // _log.Info("Catalogue/PhraseType GET");
             return _context.PhraseTypes.ToList();
+        }
+
+        [HttpGet("AlertType")]
+        [SwaggerOperation(Description = "Return all available alert types. Does not require to transfer a token")]
+        public IEnumerable<AlertType> AlertTypeGet()
+        {
+            return _context.AlertTypes.ToList();
         }
     }
 }

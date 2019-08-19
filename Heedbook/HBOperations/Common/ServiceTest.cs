@@ -4,9 +4,11 @@ using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AlarmSender;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
@@ -22,16 +24,17 @@ using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using RabbitMqEventBus;
 using ServiceExtensions;
 
 namespace Common
 {
-    public abstract class ServiceTest
+    public abstract class ServiceTest : IDisposable
     {
         protected IGenericRepository _repository;
         protected SftpClient _sftpClient;
-        
+
         public IConfiguration Config { get; private set; }
         public ServiceCollection Services { get; private set; }
         public ServiceProvider ServiceProvider { get; private set; }
@@ -50,13 +53,13 @@ namespace Common
 
         private string testIndustryName = "TESTINDUSTRY";
 
-        public async Task Setup( Action additionalInitialization, bool prepareTestData = false )
+        public async Task Setup(Action additionalInitialization, bool prepareTestData = false)
 
         {
             Config = new ConfigurationBuilder()
-                    .ConfigureBuilderForTests()
-                    .Build();
-
+                .ConfigureBuilderForTests()
+                .Build();
+            
             _additionalInitialization = additionalInitialization;
          
             InitServiceProvider();
@@ -70,7 +73,30 @@ namespace Common
 
         public async Task TearDown()
         {
+            PublishResults();
             await CleanTestData();
+        }
+
+        private static void PublishResults()
+        {
+            var resultsPath = Path.Combine(Environment.CurrentDirectory, "../../../TestResults", "results.trx");
+            var resultsText = File.ReadAllText(resultsPath);
+
+            var wr = WebRequest.Create(
+                "http://hbonpremalarmserver.canadacentral.cloudapp.azure.com/api/ExpressTester/PublishUnitTestResults");
+            wr.ContentType = "application/json";
+            wr.Method = "POST";
+            
+            using (var reqStream = wr.GetRequestStream())
+            {
+                var body = "{\"trxText\":\"" + resultsText.Replace("\"", "\\\"") + "\"}";
+                using (var sw = new StreamWriter(reqStream))
+                {
+                    sw.WriteLine(body);
+                }
+            }
+
+            var response = wr.GetResponse();
         }
 
         public HashSet<KeyValuePair<string, string>> GetTextResources(string name)
@@ -85,13 +111,11 @@ namespace Common
             {
                 foreach (var chToken in token.Children())
                 {
-                    foreach (var pair in (JObject)chToken)
+                    foreach (var (key, value) in (JObject)chToken)
                     {
-                        if (pair.Key != name) continue;
-                        foreach (var subToken in pair.Value.Children())
-                        {
+                        if (key != name) continue;
+                        foreach (var subToken in value.Children())
                             result.Add(new KeyValuePair<string, string>(subToken["sentense"].ToString(), subToken["class"].ToString()));
-                        }
                     }
                 }
             }
@@ -198,6 +222,8 @@ namespace Common
             Services.AddTransient<SftpClient>();
             
             Services.AddScoped<IGenericRepository, GenericRepository>();
+            Services.AddSingleton(Config);
+            Services.AddSingleton<TelegramSender>();
            
             _additionalInitialization?.Invoke();
             ServiceProvider = Services.BuildServiceProvider();
@@ -248,6 +274,10 @@ namespace Common
             }
             
             throw new Exception("Incorrect filename for getting a DateTime!");
+        }
+
+        public void Dispose()
+        {
         }
     }
 }
