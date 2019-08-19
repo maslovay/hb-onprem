@@ -32,7 +32,20 @@ namespace ServiceExtensions
                 }
                 
                 Console.WriteLine($">>>>>>>>>>>>>>>>>>>> IsDevelopment: {env.IsDevelopment()}");
-                Console.WriteLine($">>>>>>>>>>>>>>>>>>>> IsProduction: {env.IsDevelopment()}");
+                
+                if (Environment.GetEnvironmentVariable("TESTCLUSTER") == "true")
+                {
+                    Console.WriteLine($">>>>>>>>>>>>>>>>>>>> TESTCLUSTER: true");
+                    Console.WriteLine($">>>>>>>>>>>>>>>>>>>> URLS: {Environment.GetEnvironmentVariable("ASPNETCORE_URLS")}");
+                    builder.UseUrls(Environment.GetEnvironmentVariable("ASPNETCORE_URLS"));
+                    configBuilder.AddJsonFile($"appsettings.test.json", optional: true, reloadOnChange: true);
+                    builder.UseConfiguration(configBuilder.Build());
+
+                    return;
+                }
+
+                Console.WriteLine($">>>>>>>>>>>>>>>>>>>> TESTCLUSTER: false");
+
                 
                 if (env.IsDevelopment())
                     configBuilder.AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true,

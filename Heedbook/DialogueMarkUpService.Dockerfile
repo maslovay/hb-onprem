@@ -9,3 +9,4 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/DialogueMarkUp/publish .
 ENTRYPOINT ["dotnet", "DialogueMarkUp.dll"]
+ENV TESTCLUSTER testcluster
