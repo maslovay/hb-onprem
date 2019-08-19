@@ -119,15 +119,18 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
 
+                var employeeRole = _context.Roles.FirstOrDefault(x =>x.Name == "Employee").Id;
                 var sessions = _context.Sessions
                     .Include(p => p.ApplicationUser)
+                    .Include(p => p.ApplicationUser.UserRoles)
                     .Include(p => p.ApplicationUser.WorkerType)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 7
                             && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                            && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
                     .Select(p => new SessionInfo
                     {
                         ApplicationUserId = p.ApplicationUserId,
@@ -165,7 +168,7 @@ namespace UserOperations.Controllers
                     .ToList();
                     //---USER WITHOUT SESSIONS---
                 var userIds = sessions.Select(x => x.ApplicationUserId).Distinct().ToList();
-                var employeeRole = _context.Roles.FirstOrDefault(x =>x.Name == "Employee").Id;
+                
                 var usersToAdd = _context.ApplicationUsers
                     .Include(x =>x.UserRoles)
                     .Where(p => 
@@ -176,7 +179,7 @@ namespace UserOperations.Controllers
                         && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId))
                         && !userIds.Contains(p.Id)
                         && p.Id != Guid.Parse(userClaims["applicationUserId"])
-                        && p.UserRoles.Any(x => x.RoleId == employeeRole)
+                        && (p.UserRoles.Any(x => x.RoleId == employeeRole))
                     ).ToList();
 
                 var result = sessions
@@ -234,16 +237,20 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);    
+                var employeeRole = _context.Roles.FirstOrDefault(x =>x.Name == "Employee").Id;
+
                 var sessions = _context.Sessions
                     .Include(p => p.ApplicationUser)
+                    .Include(p => p.ApplicationUser.UserRoles)
                     .Include(p => p.ApplicationUser.WorkerType)
                     .Where(p => p.BegTime >= begTime
                             && p.EndTime <= endTime
                             && p.StatusId == 7
                             && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                            && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
                     .Select(p => new SessionInfo
                     {
                         ApplicationUserId = p.ApplicationUserId,
@@ -257,6 +264,7 @@ namespace UserOperations.Controllers
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
+                    .Include(p => p.ApplicationUser.UserRoles)
                     .Include(p => p.ApplicationUser.WorkerType)
                     .Include(p => p.DialogueClientSatisfaction)
                     .Include(p => p.DialoguePhrase)
@@ -266,7 +274,8 @@ namespace UserOperations.Controllers
                             && p.InStatistic == true
                             && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                            && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
                     .Select(p => new DialogueInfo
                     {
                         DialogueId = p.DialogueId,

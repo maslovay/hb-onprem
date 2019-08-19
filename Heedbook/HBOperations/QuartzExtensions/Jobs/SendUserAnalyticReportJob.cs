@@ -65,27 +65,44 @@ namespace QuartzExtensions.Jobs
 
             var applicationUsers = _context.ApplicationUsers
                 .Include(p => p.Company)
-                .Where(p => p.StatusId == 3);
-            foreach(var user in applicationUsers)
-            {
-                await CreateHtmlFromTemplate(user);
-            }
-        }
-        private async Task CreateHtmlFromTemplate(ApplicationUser applicationUser)
-        {
+                .Where(p => p.StatusId == 3)
+                .ToList();
+            
             var sesBegTime = DateTime.Now.AddDays(-7);
             var sesEndTime = DateTime.Now.AddDays(-1);
-            var sessions = _context.Sessions.Where(p => p.ApplicationUserId == applicationUser.Id
-                    && p.BegTime.Date >=sesBegTime
+            var sessions = _context.Sessions.Where(p => p.BegTime.Date >=sesBegTime
                     && p.EndTime.Date <=sesEndTime
                     && p.StatusId == 7)
-                .ToList();
-            if(sessions == null || sessions.Count == 0)
+                .ToList();            
+            var counter =0;
+            foreach(var user in applicationUsers)
             {
-                _log.Error($"Sessions for user: {applicationUser.Id} is null");
-                return;
-            }
-                
+                var userSessions = sessions.Where(p => p.ApplicationUserId == user.Id).ToList();
+                if(userSessions == null || userSessions.Count == 0)
+                {
+                    _log.Error($"Sessions for user: {user.Id} is null");                
+                }
+                else
+                {
+                    if(!user.Email.Contains("@heedbook.com"))
+                    {
+                        _log.Info($"Prepare report for applicationUser {user.Id} - {user.FullName}");        
+                        await CreateHtmlFromTemplate(user);
+                        counter++;
+                    }
+                }
+            } 
+            _log.Info($"Weekly report sent to {counter} users"); 
+            var mail = new System.Net.Mail.MailMessage();
+            mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);
+            mail.To.Add("krokhmal11@mail.ru");
+            mail.Subject = "Users Weekly Analytic Reports Status";
+            mail.Body = $"Weekly report sent to {counter} users";
+            mail.IsBodyHtml = false;      
+            _smtpClient.SendAsync(mail);        
+        }
+        private async Task CreateHtmlFromTemplate(ApplicationUser applicationUser)
+        {   
             var fullPath = System.IO.Path.GetFullPath(".");
             var engine = new RazorLight.RazorLightEngineBuilder()
                 .UseFilesystemProject(fullPath)
@@ -94,12 +111,15 @@ namespace QuartzExtensions.Jobs
 
             var languageId = applicationUser.Company.LanguageId;
             var languageTableData = File.ReadAllText("language_table.json");
+            
+            var languageTable = JsonConvert.DeserializeObject<List<LanguageDataReport>>(languageTableData);   
 
-            var languageTable = JsonConvert.DeserializeObject<List<LanguageDataReport>>(languageTableData);            
+            if(languageId-1>languageTable.Count)
+                languageId = 1;
+
             var languageDataReport = languageTable[languageId==null ? 0 : (int)languageId-1]; 
-
-            var userData = await GetUserWeeklyData(applicationUser);    
-
+            
+            var userData = await GetUserWeeklyData(applicationUser);   
             var  UserWeeklyInfo= JsonConvert.DeserializeObject<WeeklyReport>(userData.Authorization);            
             if(UserWeeklyInfo == null)
             {
@@ -115,7 +135,7 @@ namespace QuartzExtensions.Jobs
                     new ReportData{Name = "Workload", Data = UserWeeklyInfo.Workload, Description = languageDataReport.Indicators.Workload, Thumbnail = true, ColourData=UserWeeklyInfo.Workload.totalAvg},
                     new ReportData{Name = "NumberOfDialogues", Data = UserWeeklyInfo.NumberOfDialogues, Description = languageDataReport.Indicators.NumberOfDialogues, ColourData=UserWeeklyInfo.NumberOfDialogues.totalAvg, NotPercentage = true, Integer=true, ReportStyle=2},
                     new ReportData{Name = "WorkingHours_SessionsTotal", Data = UserWeeklyInfo.WorkingHours_SessionsTotal, Description = languageDataReport.Indicators.WorkingHours_SessionsTotal, ColourData=UserWeeklyInfo.WorkingHours_SessionsTotal.totalAvg, NotPercentage=true, ReportStyle=1},
-                    new ReportData{Name = "AvgDialogueTime", Data = UserWeeklyInfo.AvgDialogueTime, Description = languageDataReport.Indicators.AvgDialogueTime, ColourData=UserWeeklyInfo.AvgDialogueTime.totalAvg},                    
+                    new ReportData{Name = "AvgDialogueTime", Data = UserWeeklyInfo.AvgDialogueTime, Description = languageDataReport.Indicators.AvgDialogueTime, ColourData=UserWeeklyInfo.AvgDialogueTime.totalAvg, NotPercentage=true, ReportStyle=1},                    
                     new ReportData{Name = "CrossPhrase", Data = UserWeeklyInfo.CrossPhrase, Description = languageDataReport.Indicators.CrossPhrase, Thumbnail = true, ColourData=UserWeeklyInfo.CrossPhrase.totalAvg},
                     new ReportData{Name = "AlertPhrase", Data = UserWeeklyInfo.AlertPhrase, Description = languageDataReport.Indicators.AlertPhrase, ColourData=UserWeeklyInfo.AlertPhrase.totalAvg},
                     new ReportData{Name = "LoyaltyPhrase", Data = UserWeeklyInfo.LoyaltyPhrase, Description = languageDataReport.Indicators.LoyaltyPhrase, ColourData=UserWeeklyInfo.LoyaltyPhrase.totalAvg},
@@ -151,7 +171,7 @@ namespace QuartzExtensions.Jobs
 
             System.IO.File.WriteAllText($"./static/template.html", result);
 
-            await SendHttpReport(applicationUser, model);
+            SendHttpReport(applicationUser, model);
         }
        
         private async Task<UserWeeklyData> GetUserWeeklyData(ApplicationUser applicationUser)
@@ -204,7 +224,7 @@ namespace QuartzExtensions.Jobs
             }                            
         }
          
-        private async Task SendHttpReport(ApplicationUser applicationUser, ViewLanguageDataReport model)
+        private void SendHttpReport(ApplicationUser applicationUser, ViewLanguageDataReport model)
         {                         
             var email = applicationUser.Email;
             if(email == "" || email == null)
@@ -219,7 +239,7 @@ namespace QuartzExtensions.Jobs
             var mail = new System.Net.Mail.MailMessage();
             mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);            
             
-            mail.To.Add(email);            
+            mail.To.Add(email);           
             mail.Subject = model.LanguageDataReport.ReportName + " " + beginWeek + " - " + endWeek;
             mail.IsBodyHtml = true; 
             
@@ -231,13 +251,13 @@ namespace QuartzExtensions.Jobs
             try
             {
                 _smtpClient.SendAsync(mail);       
-                _log.Info($"SendUserAnalyticReport, Mail Sent to application user: {applicationUser.Id} - {email}");        
+                _log.Info($"SendUserAnalyticReport, Mail Sent to application user: {applicationUser.Id} - {email}");   
             }
             catch(Exception ex)
             {
                 _log.Fatal($"Failed send email to {applicationUser.Id} - {email}:\n{ex.Message}");
-            }           
-            System.Console.WriteLine($"Mail Sent");
+            }          
+            
             File.Delete(System.IO.Path.GetFullPath(htmlFileFullPath));
         }
 

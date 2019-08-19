@@ -16,8 +16,41 @@ namespace UserOperations.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-                .HasAnnotation("ProductVersion", "2.2.4-servicing-10062")
+                .HasAnnotation("ProductVersion", "2.2.6-servicing-10079")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            modelBuilder.Entity("HBData.Models.Alert", b =>
+                {
+                    b.Property<Guid>("AlertId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("AlertTypeId");
+
+                    b.Property<Guid>("ApplicationUserId");
+
+                    b.Property<DateTime>("CreationDate");
+
+                    b.HasKey("AlertId");
+
+                    b.HasIndex("AlertTypeId");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("Alerts");
+                });
+
+            modelBuilder.Entity("HBData.Models.AlertType", b =>
+                {
+                    b.Property<Guid>("AlertTypeId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Name")
+                        .IsRequired();
+
+                    b.HasKey("AlertTypeId");
+
+                    b.ToTable("AlertTypes");
+                });
 
             modelBuilder.Entity("HBData.Models.ApplicationRole", b =>
                 {
@@ -1102,6 +1135,18 @@ namespace UserOperations.Migrations
                     b.ToTable("Statuss");
                 });
 
+            modelBuilder.Entity("HBData.Models.TabletAppInfo", b =>
+                {
+                    b.Property<string>("TabletAppVersion")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("ReleaseDate");
+
+                    b.HasKey("TabletAppVersion");
+
+                    b.ToTable("TableAppInfos");
+                });
+
             modelBuilder.Entity("HBData.Models.Tariff", b =>
                 {
                     b.Property<Guid>("TariffId")
@@ -1188,7 +1233,7 @@ namespace UserOperations.Migrations
                     b.ToTable("VIndexesByCompanysDays");
                 });
 
-            modelBuilder.Entity("HBData.Models.VSessionWeeklyReport", b =>
+            modelBuilder.Entity("HBData.Models.VSessionUserWeeklyReport", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
@@ -1207,32 +1252,10 @@ namespace UserOperations.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VSessionWeeklyReports");
+                    b.ToTable("VSessionUserWeeklyReports");
                 });
 
-            modelBuilder.Entity("HBData.Models.VSessionWeeklyReportOld", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<Guid>("AspNetUserId");
-
-                    b.Property<Guid>("CompanyId");
-
-                    b.Property<Guid>("CompanyIndustryId");
-
-                    b.Property<DateTime>("Day");
-
-                    b.Property<int>("SessionsAmount");
-
-                    b.Property<double>("SessionsHours");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("VSessionWeeklyReportsOld");
-                });
-
-            modelBuilder.Entity("HBData.Models.VWeeklyReport", b =>
+            modelBuilder.Entity("HBData.Models.VWeeklyUserReport", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
@@ -1259,41 +1282,7 @@ namespace UserOperations.Migrations
 
                     b.Property<double?>("PositiveTone");
 
-                    b.Property<double?>("Satisfaction");
-
-                    b.Property<double?>("SpeekEmotions");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("VWeeklyReports");
-                });
-
-            modelBuilder.Entity("HBData.Models.VWeeklyReportOld", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<int?>("AlertDialogues");
-
-                    b.Property<Guid>("AspNetUserId");
-
-                    b.Property<int?>("CrossDialogues");
-
-                    b.Property<DateTime>("Day");
-
-                    b.Property<double?>("DialogueHours");
-
-                    b.Property<int>("Dialogues");
-
-                    b.Property<int?>("FillersDialogues");
-
-                    b.Property<int?>("LoyaltyDialogues");
-
-                    b.Property<int?>("NecessaryDialogues");
-
-                    b.Property<double?>("PositiveEmotions");
-
-                    b.Property<double?>("PositiveTone");
+                    b.Property<int?>("RiskDialogues");
 
                     b.Property<double?>("Satisfaction");
 
@@ -1301,7 +1290,7 @@ namespace UserOperations.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VWeeklyReportsOld");
+                    b.ToTable("VWeeklyUserReports");
                 });
 
             modelBuilder.Entity("HBData.Models.WorkerType", b =>
@@ -1388,6 +1377,19 @@ namespace UserOperations.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens");
+                });
+
+            modelBuilder.Entity("HBData.Models.Alert", b =>
+                {
+                    b.HasOne("HBData.Models.AlertType", "AlertType")
+                        .WithMany()
+                        .HasForeignKey("AlertTypeId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("HBData.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("HBData.Models.ApplicationUser", b =>
@@ -1656,7 +1658,7 @@ namespace UserOperations.Migrations
             modelBuilder.Entity("HBData.Models.FrameAttribute", b =>
                 {
                     b.HasOne("HBData.Models.FileFrame", "FileFrame")
-                        .WithMany()
+                        .WithMany("FrameAttribute")
                         .HasForeignKey("FileFrameId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
@@ -1664,7 +1666,7 @@ namespace UserOperations.Migrations
             modelBuilder.Entity("HBData.Models.FrameEmotion", b =>
                 {
                     b.HasOne("HBData.Models.FileFrame", "FileFrame")
-                        .WithMany()
+                        .WithMany("FrameEmotion")
                         .HasForeignKey("FileFrameId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

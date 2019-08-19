@@ -61,38 +61,48 @@ namespace FillingSatisfactionService.Helper
             var FaceYawMax = _config.FaceYawMax;
             var FaceYawMin = _config.FaceYawMin;
             var TotalScore = 0;
+            var rand = new Random();
             try
             {
-                TotalScore = Convert.ToInt32(80 +
-                                             100 * (Convert.ToDouble(DF
-                                                                    .Where(p => p.HappinessShare != null)
-                                                                    .Average(p => p.HappinessShare))
-                                                    + Convert.ToDouble(DF
-                                                                      .Where(p => p.SurpriseShare != null)
-                                                                      .Average(p => p.SurpriseShare))
-                                                    - Convert.ToDouble(DF
-                                                                      .Where(p => p.AngerShare != null)
-                                                                      .Average(p => p.AngerShare))
-                                                    - Convert.ToDouble(DF
-                                                                      .Where(p => p.FearShare != null)
-                                                                      .Average(p => p.FearShare))
-                                                    - Convert.ToDouble(DF
-                                                                      .Where(p => p.ContemptShare != null)
-                                                                      .Average(p => p.ContemptShare))
-                                                    - Convert.ToDouble(DF
-                                                                      .Where(p => p.DisgustShare != null)
-                                                                      .Average(p => p.DisgustShare))
-                                                    - Convert.ToDouble(DF
-                                                                      .Where(p => p.SadnessShare != null)
-                                                                      .Average(p => p.SadnessShare)))
-                                             + Convert.ToDouble(DA.PositiveTone * 0.5 - DA.NegativeTone * 0.3)
-                                             + (DF.Where(p => p.YawShare >= FaceYawMin && p.YawShare <= FaceYawMax)
-                                                  .Count() * 100 / (DF.Count() + 1) / 3 - 27)
-                                             + Convert.ToDouble(PositiveTextTone / 4 - 18));
+                var framesSatisfaction =
+                    37*((Convert.ToDouble(DF
+                        .Where(s => s.HappinessShare != null)
+                        .Average(s => s.HappinessShare))
+                    + Convert.ToDouble(DF
+                        .Where(s => s.SurpriseShare != null)
+                        .Average(s => s.SurpriseShare))
+                    - 0.1*(Convert.ToDouble(DF
+                        .Where(s => s.AngerShare != null)
+                        .Average(s => s.AngerShare))
+                    + Convert.ToDouble(DF
+                        .Where(s => s.FearShare != null)
+                        .Average(s => s.FearShare))
+                    + Convert.ToDouble(DF
+                        .Where(s => s.ContemptShare != null)
+                        .Average(s => s.ContemptShare))
+                    + Convert.ToDouble(DF
+                        .Where(s => s.DisgustShare != null)
+                        .Average(s => s.DisgustShare))
+                    + Convert.ToDouble(DF
+                        .Where(s => s.SadnessShare != null)
+                        .Average(s => s.SadnessShare))))                                
+                    + 3 * ((DF.Where(s => s.YawShare >= FaceYawMin && s.YawShare <= FaceYawMax).Count()
+                        / (DF.Count() + 1))));
+                var audioSatisfaction = 24*((DA.PositiveTone == null ? 0 : (double)DA.PositiveTone)
+                    - 3/5 * (DA.NegativeTone == null ? 0 : (double)DA.NegativeTone));
+                var textSatisfaction = (PositiveTextTone);
+
+                var arcCtgWeight = 0.6*(Math.PI/2-Math.Atan((framesSatisfaction-3)*0.8)) + 0.9;
+                var arcTgWeight = 0.6*Math.Atan((framesSatisfaction-2)*0.5) + 1;
+                
+                TotalScore = Convert.ToInt32(33 
+                    + (framesSatisfaction + audioSatisfaction + textSatisfaction)*(arcCtgWeight * arcTgWeight)
+                    +rand.Next(-5, 6)+15);
+                        
 
                 if (TotalScore > 99) TotalScore = 99;
 
-                if (TotalScore < 10) TotalScore = 10;
+                if (TotalScore < 35) TotalScore = 35;
             }
             catch
             {

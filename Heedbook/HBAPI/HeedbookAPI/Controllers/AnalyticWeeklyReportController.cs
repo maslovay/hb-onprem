@@ -201,14 +201,14 @@ namespace UserOperations.Controllers
                 //----time of clients work---
                 var AvgDialogueTime = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
-                    TotalAvg = _dbOperation.AvgDialogueTimeTotal(userDialogues),
+                    TotalAvg = TimeSpan.FromHours(_dbOperation.AvgDialogueTimeTotal(userDialogues)).TotalMinutes,
                     AvgPerDay = _dbOperation.AvgDialogueTimePerDay(userDialogues),
                     OfficeRating = _dbOperation.OfficeRatingDialogueTime(dialoguesCompany, userId),
                     CorporationRating = _dbOperation.OfficeRatingDialogueTime(dialoguesCorporation, userId)
                 };
                 TotalAvgOld = _dbOperation.AvgDialogueTimeTotal(userDialoguesOld);
                 OfficeRatingOld = _dbOperation.OfficeRatingDialogueTime(dialoguesCompanyOld, userId);
-                AvgDialogueTime.Dynamic = AvgDialogueTime.TotalAvg - TotalAvgOld;
+                AvgDialogueTime.Dynamic = AvgDialogueTime.TotalAvg - TimeSpan.FromHours((double)(TotalAvgOld)).TotalMinutes;
                 AvgDialogueTime.OfficeRatingChanges = AvgDialogueTime.OfficeRating - OfficeRatingOld;
 
                 CorporationRatingOld = _dbOperation.OfficeRatingDialogueTime(dialoguesCorporationOld, userId);

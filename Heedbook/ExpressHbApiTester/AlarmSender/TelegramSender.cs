@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading;
+using AlarmSender.DataStructures;
 using Microsoft.Extensions.Configuration;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -14,40 +16,54 @@ namespace AlarmSender
     public class TelegramSender : Sender
     {
         private readonly IConfiguration _configuration;
-        private readonly string _chatId;
-        private readonly string _token;
-        //private readonly ILogger _logger;
         private readonly List<string> _commands = new List<string>(10);
         private int updatesOffset = 0;
         private readonly object syncObj = new object();
-        private TelegramBotClient _client;
-        
+
         public TelegramSender(/*ILogger logger, */ IConfiguration configuration)
         {
             //_logger = logger;
             _configuration = configuration;
-            _token = _configuration.GetSection("AlarmSender").GetSection("Telegram").GetValue<string>("Token");
-            _chatId = _configuration.GetSection("AlarmSender").GetSection("Telegram").GetValue<string>("ChatId");
-            _client = new TelegramBotClient(_token);
+
+            var chatSections = _configuration.GetSection("AlarmSender").GetSection("Chats").GetChildren().ToArray();
+
+            foreach (var section in chatSections)
+            {
+                var token = section.GetSection("Telegram").GetValue<string>("Token");
+                var chatId = section.GetSection("Telegram").GetValue<string>("ChatId");
+                var client = ((TelegramChat) (Chats.FirstOrDefault(c => (c is TelegramChat tc && tc.Token == token))))?.Client;
+                
+                var chat = new TelegramChat(section.Key, 
+                    chatId,
+                    token,
+                    client);
+
+                Chats.Add(chat);
+            }
+
             var receiveThrd = new Thread(ReceiveCommands);
             receiveThrd.Start();
         }
 
-        public override async void Send(string message)
+        public override async void Send(string message, string chatName, bool processCallback = true)
         {
-            await _client?.SendTextMessageAsync(_chatId, message, ParseMode.Html);
-            ProcessCallbackImmediately();
+            if (!(Chats.FirstOrDefault(c => c.Name == chatName) is TelegramChat chat))
+                return;
+            
+            await chat.Client?.SendTextMessageAsync(chat.ChatId, message, ParseMode.Html);
+            if (processCallback == true)
+                ProcessCallbackImmediately(chat);
         }
 
-        private void ProcessCallbackImmediately()
+        private void ProcessCallbackImmediately(TelegramChat chat)
         {
             try
             {
                 lock (syncObj)
                 {
-                    while (_client.IsReceiving)
+                    while (chat.Client.IsReceiving)
                         Thread.Sleep(1);
-                    var updateTask = (_client.GetUpdatesAsync(updatesOffset, 30, 8));
+                    var updateTask = (chat.Client.GetUpdatesAsync(updatesOffset, 30, 8));
                     updateTask.Wait();
                     
                     var orderedResults = updateTask.Result?.OrderByDescending(u => u.Id);
@@ -55,7 +71,7 @@ namespace AlarmSender
                     if (callbackId != null)
                     {
                         Console.WriteLine("TelegramSender.ProcessCallbackImmediately Callback id = " + callbackId);
-                        (_client.AnswerCallbackQueryAsync(callbackId)).Wait();
+                        (chat.Client.AnswerCallbackQueryAsync(callbackId)).Wait();
                     }
 
                     updatesOffset = orderedResults?.FirstOrDefault()?.Id ?? 0;
@@ -65,29 +81,35 @@ namespace AlarmSender
             catch (AggregateException ex)
             {
                 Console.WriteLine("TelegramSender.ProcessCallbackImmediately() exception: " + ex.Message);
-                _client?.StopReceiving();
+                chat.Client?.StopReceiving();
             }
         }
 
-        protected override string Poll()
+        protected override string Poll(string chatName)
         {
             try
             {
                 lock (syncObj)
                 {
+                    if (!(Chats.FirstOrDefault(c => c.Name == chatName) is TelegramChat chat))
+                        return string.Empty;
+
                     //_client.StartReceiving();
-                    while (_client.IsReceiving)
+                    while (chat.Client.IsReceiving)
                         Thread.Sleep(1);
-                    var updateTask = (_client.GetUpdatesAsync(updatesOffset, 10, 5));
+                    var updateTask = chat.Client.GetUpdatesAsync(updatesOffset, 10, 5);
                     updateTask.Wait();
                     //_client.StopReceiving();
                     
                     var orderedResults = updateTask.Result?.OrderByDescending(u => u.Id);
                     var command = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost
                         .Text;
+                    
+                    var chatId = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost?.Chat?.Id;
+
                     var callbackId = orderedResults?.FirstOrDefault(r => r.CallbackQuery != null)?.CallbackQuery.Id;
                     if (callbackId != null)
-                        (_client.AnswerCallbackQueryAsync(callbackId)).Wait();
+                        chat.Client.AnswerCallbackQueryAsync(callbackId).Wait();
 
                     updatesOffset = orderedResults?.FirstOrDefault()?.Id ?? 0;
                     ++updatesOffset;
@@ -95,6 +117,7 @@ namespace AlarmSender
                     if (string.IsNullOrEmpty(command))
                         return string.Empty;
 
+                    Console.WriteLine("Chat id: " + chatId);
                     Console.WriteLine("Command found: " + command);
                     return command.Replace("/", "");
                 }
@@ -105,7 +128,7 @@ namespace AlarmSender
             }
             finally
             {
-                Thread.Sleep(5000);
+                Thread.Sleep(500);
             }
 
             return string.Empty;

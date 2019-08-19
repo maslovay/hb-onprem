@@ -57,6 +57,7 @@ namespace QuartzExtensions.Jobs
                 Console.WriteLine(ex.Message);
                 _log.Fatal($"Failed send email to support@heedbook.com\n{ex.Message}\n");
             }
+            System.Console.WriteLine($"Mail sent");
         }
 
         public string HeedbookDevelopmentStatistics()
@@ -100,9 +101,19 @@ namespace QuartzExtensions.Jobs
                         CountOfEmployers = p.GroupBy(u => u.ApplicationUserId).Count(),
                         TotalSessionDuration = TimeSpan.FromSeconds(p.Sum(s => s.EndTime.Subtract(s.BegTime).TotalSeconds))
                             .ToString("d'd 'h'h 'm'm 's's'"),
+                        UsersSessionsDurations = p.GroupBy(u => u.ApplicationUserId)
+                            .Select(u => new UserSessionDuration{
+                                
+                                    UserName = u.FirstOrDefault().ApplicationUser.FullName, 
+                                    Duration = TimeSpan.FromSeconds(u.Sum(e => e.EndTime.Subtract(e.BegTime).TotalSeconds)).ToString("d'd 'h'h 'm'm 's's'")
+                                })
+                            .ToList(),
                         TotalVideoDuration = TimeSpan.FromSeconds(videos.Where(s => s.ApplicationUser.CompanyId == p.Key)
                             .Sum(o => (double)o.Duration))
                             .ToString("d'd 'h'h 'm'm 's's'"),
+                        TotalDialoguesDuration = TimeSpan.FromSeconds(dialogues.Where(s => s.ApplicationUser.CompanyId == p.Key)
+                            .Sum(s => s.EndTime.Subtract(s.BegTime).TotalSeconds))
+                            .ToString("d'd 'h'h 'm'm 's's'"),                        
                         CountOfDialoguesStat3 = dialogues.Where(s => s.ApplicationUser.CompanyId == p.Key
                             && s.StatusId == 3)
                             .Count(),
@@ -117,17 +128,25 @@ namespace QuartzExtensions.Jobs
                             && s.StatusId == 8).Select(o => o.DialogueId).ToList()
                     })
                 .ToList();
-
+            
             foreach(var compRep in sessions)
             {                         
-                result += $"Company name:                       {compRep.CompanyName}\n";
-                result += $"Number of employes worked:          {compRep.CountOfEmployers}\n";
-                result += $"Total session duration:             {compRep.TotalSessionDuration:0.##}\n";
-                result += $"Total duration of all videos:       {compRep.TotalVideoDuration:0.##}\n";
-                result += $"Number of dialogs with status 3:    {compRep.CountOfDialoguesStat3}\n";
-                result += $"Number of dialogs with status 8:    {compRep.CountOfDialoguesStat8}\n";
-                result += $"Number of frames with faces:        {compRep.CountOfFramesWithFaces}\n";
-                result += $"Number of different faces:          {compRep.CountOfDifferentFaces}\n";
+                result += $"Company name:                           {compRep.CompanyName}\n";
+                result += $"Number of employes worked:              {compRep.CountOfEmployers}\n";
+                result += $"Total session duration:                 {compRep.TotalSessionDuration:0.##}\n";
+                if(compRep.UsersSessionsDurations.Count > 0)
+                {
+                    foreach(var u in compRep.UsersSessionsDurations)
+                    {
+                        result += $"\t{u.UserName} - {u.Duration:0.##}\n";
+                    }
+                }                
+                result += $"Total duration of all videos:           {compRep.TotalVideoDuration:0.##}\n";
+                result += $"Total duration of all dialogues:        {compRep.TotalDialoguesDuration:0.##}\n";
+                result += $"Number of dialogs with status 3:        {compRep.CountOfDialoguesStat3}\n";
+                result += $"Number of dialogs with status 8:        {compRep.CountOfDialoguesStat8}\n";
+                result += $"Number of frames with faces:            {compRep.CountOfFramesWithFaces}\n";
+                result += $"Number of different faces:              {compRep.CountOfDifferentFaces}\n";
                 
                 if(compRep.DialoguesWithStatus8.Count>0)
                 {
@@ -149,11 +168,19 @@ namespace QuartzExtensions.Jobs
         public string CompanyName { get; set; }
         public int CountOfEmployers { get; set; }
         public string TotalSessionDuration { get; set; }
+        public List<UserSessionDuration> UsersSessionsDurations { get; set; }
         public string TotalVideoDuration { get; set; }
+        public string TotalDialoguesDuration { get; set; }
         public int CountOfDialoguesStat3 { get; set; }
         public int CountOfDialoguesStat8 { get; set; }
         public int CountOfFramesWithFaces { get; set; }
         public int CountOfDifferentFaces {get; set;}
         public List<Guid> DialoguesWithStatus8 {get; set;}
+        
+    }
+    public class UserSessionDuration
+    {
+        public string UserName {get; set;}
+        public string Duration {get; set;}
     }
 }
