@@ -33,8 +33,7 @@ namespace CloneFtpOnAzure
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
-            services.Configure<BlobController>(Configuration.GetSection(nameof(BlobController)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<BlobController>>().Value);
+            services.AddSingleton<BlobController>();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddSingleton<SftpClient>();

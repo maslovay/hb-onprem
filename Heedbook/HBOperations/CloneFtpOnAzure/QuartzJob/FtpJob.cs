@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using HBLib;
 using HBLib.Utils;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -15,44 +16,43 @@ namespace CloneFtpOnAzure
     {
         public SftpClient _sftpClient;
         public BlobController _blobController;
+        private readonly ElasticClientFactory _elasticClientFactory;
 
-        public FtpJob(SftpClient sftpClient, BlobController blobController)
+        public FtpJob(SftpClient sftpClient,
+            BlobController blobController,
+        ElasticClientFactory elasticClientFactory)
         {
+            _elasticClientFactory = elasticClientFactory;
             _blobController = blobController;
             _sftpClient = sftpClient;
         }
         
-
         public async Task Execute(IJobExecutionContext context)
         {
-            
-            string[] path ={"dialoguevideos","dialogueaudios","clientavatars","mediacontens"};
-            var files = new Dictionary<string, ICollection<String>>();
-            path.Select(async item => files[item] = await _sftpClient.ListDirectoryFiles(item)).ToList();
-            var localPaths = new Dictionary<string, List<string>>();
-            foreach (var file in files)
+            var _log = _elasticClientFactory.GetElasticClient();
+            try
             {
-                localPaths[file.Key] = new List<string>();
-                foreach (var fileName in file.Value)
+                string[] path = {"dialoguevideos", "dialogueaudios", "clientavatars", "mediacontens"};
+                var files = new Dictionary<string, ICollection<String>>();
+                path.Select(async item => files[item] = await _sftpClient.ListDirectoryFiles(item)).ToList();
+                _log.Info("Try to DownloadOnFtp and UploadBlobOnAzure");
+                foreach (var file in files)
                 {
-                 var localPath = await  _sftpClient.DownloadFromFtpToLocalDiskAsync(Path.Combine(file.Key, fileName));
-                 localPaths[file.Key].Add(localPath);
+                    foreach (var fileName in file.Value)
+                    {
+                        var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(file.Key + "/" + fileName);
+                        await _blobController.UploadFileToBlob(localPath,
+                            Path.Combine(file.Key + Path.GetFileName(localPath)), file.Key);
+                        File.Delete(localPath);
+                    }
                 }
+                _log.Info("Download and Upload finished");
             }
-
-            foreach (var localPath in localPaths)
+            catch (Exception e)
             {
-                foreach (var localPathValue in localPath.Value)
-                {
-                   await _blobController.UploadBlob(localPathValue,Path.Combine(localPath.Key + Path.GetFileName(localPathValue)));
-                   
-                }
+                _log.Fatal($"{e}");
+                throw;
             }
-            // /opt/download/1232312.jpg -> 1232312.jpg;
-            // directory -> dialoguevideos;
-            // Path.Combine(directory, 1232312.jpg) -> directory/1232312.jpg - linux | directory\1232312.jpg - windows
-            
         }
-        
     }
 }
