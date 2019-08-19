@@ -1,5 +1,4 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -102,6 +101,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlarmSender", "..\ExpressHbApiTester\AlarmSender\AlarmSender.csproj", "{62A1003E-9B42-48CF-BA3D-71565E41088E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UserOperations", "..\HBAPI\HeedbookAPI\UserOperations.csproj", "{AD828C79-B511-45D6-8AE4-246BEFB90DC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CloneFtpOnAzure", "CloneFtpOnAzure\CloneFtpOnAzure.csproj", "{B680F7EA-9B79-4FFE-AD36-4A564EEA6612}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FtpFileDelete", "FtpDeleteScheduler\FtpFileDelete.csproj", "{785A8183-B7EF-4BF7-A196-7CBFEF6CFE23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsController", "..\HBAPI\MetricsController\MetricsController.csproj", "{1272D895-BF36-4B10-88AB-6AF383C1402E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErrorKibanaScheduler", "ErrorKibanaScheduler\ErrorKibanaScheduler.csproj", "{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -277,6 +284,22 @@ Global
 		{AD828C79-B511-45D6-8AE4-246BEFB90DC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD828C79-B511-45D6-8AE4-246BEFB90DC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD828C79-B511-45D6-8AE4-246BEFB90DC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B680F7EA-9B79-4FFE-AD36-4A564EEA6612}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B680F7EA-9B79-4FFE-AD36-4A564EEA6612}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B680F7EA-9B79-4FFE-AD36-4A564EEA6612}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B680F7EA-9B79-4FFE-AD36-4A564EEA6612}.Release|Any CPU.Build.0 = Release|Any CPU
+		{785A8183-B7EF-4BF7-A196-7CBFEF6CFE23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{785A8183-B7EF-4BF7-A196-7CBFEF6CFE23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{785A8183-B7EF-4BF7-A196-7CBFEF6CFE23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{785A8183-B7EF-4BF7-A196-7CBFEF6CFE23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1272D895-BF36-4B10-88AB-6AF383C1402E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1272D895-BF36-4B10-88AB-6AF383C1402E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1272D895-BF36-4B10-88AB-6AF383C1402E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1272D895-BF36-4B10-88AB-6AF383C1402E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -324,6 +347,10 @@ Global
 		{36AAF04F-0C77-4E4B-99BE-0D6826906033} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{3948BA27-478A-40E7-B61D-C203DABB84D7} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{62A1003E-9B42-48CF-BA3D-71565E41088E} = {3948BA27-478A-40E7-B61D-C203DABB84D7}
+		{B680F7EA-9B79-4FFE-AD36-4A564EEA6612} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
+		{785A8183-B7EF-4BF7-A196-7CBFEF6CFE23} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
+		{1272D895-BF36-4B10-88AB-6AF383C1402E} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
+		{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
