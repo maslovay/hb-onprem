@@ -76,7 +76,8 @@ namespace DialogueMarkUp.QuartzJobs
                             EndTime = x.Max(q => q.FileFrame.Time),
                             BegFileName = x.Min(q => q.FileFrame.FileName),
                             EndFileName = x.Max(q => q.FileFrame.FileName),
-                            Descriptor = x.First().Descriptor
+                            Descriptor = x.First().Descriptor,
+                            Gender = x.First().Gender
                         })
                         .Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 10)
                         .OrderBy(p => p.EndTime)
@@ -153,7 +154,8 @@ namespace DialogueMarkUp.QuartzJobs
                         DialogueId = dialogueId,
                         BeginTime = markup.BegTime,
                         EndTime = markup.EndTime,
-                        AvatarFileName = markup.BegFileName
+                        AvatarFileName = markup.BegFileName,
+                        Gender = markup.Gender
                     });
                 }
                 _context.Dialogues.AddRange(dialogues);
@@ -216,7 +218,8 @@ namespace DialogueMarkUp.QuartzJobs
                         DialogueId = dialogueId,
                         BeginTime = markUps[i].BegTime,
                         EndTime = markUps[i].EndTime,
-                        AvatarFileName = markUps[i].BegFileName
+                        AvatarFileName = markUps[i].BegFileName,
+                        Gender = markUps[i].Gender
                     });
                 }
                 _context.Dialogues.AddRange(dialogues);
@@ -236,8 +239,6 @@ namespace DialogueMarkUp.QuartzJobs
                     ApplicationUserIds = dialogues.Select(p => p.ApplicationUserId).Distinct().ToList()
                 };
                 _publisher.Publish(personDetection);
-
-
             }
         }
 

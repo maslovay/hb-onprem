@@ -11,5 +11,6 @@ namespace DialogueMarkUp.QuartzJobs
         public string BegFileName;
         public string EndFileName;
         public string Descriptor;
+        public string Gender;
     }
 }
