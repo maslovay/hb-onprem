@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Renci.SshNet.Messages.Transport;
 
@@ -32,7 +33,22 @@ namespace HBLib.Utils
             // });
 
             HttpFileUrl = @"http://filereference.northeurope.cloudapp.azure.com/";
-            ConnectToSftpAsync().Wait();
+            var _retryCount = 5;
+            while (true)
+            {
+                try
+                {
+                    ConnectToSftpAsync().Wait();
+                    break;
+                }
+                catch (Exception e)
+                {
+                    _retryCount-- ;
+                    if (_retryCount == 0) throw;
+                    Thread.Sleep(100 * _retryCount);
+                }
+            }
+            // ConnectToSftpAsync().Wait();
         }
 
         public void Dispose()
