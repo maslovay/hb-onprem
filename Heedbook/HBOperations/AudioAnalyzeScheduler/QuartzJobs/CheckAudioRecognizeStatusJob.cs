@@ -343,7 +343,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 Double.Parse(item.EndTime, CultureInfo.InvariantCulture) -
                 Double.Parse(item.StartTime, CultureInfo.InvariantCulture));
             return endTime.Subtract(begTime).TotalSeconds > 0
-                ? 100 * Math.Max(endTime.Subtract(begTime).TotalSeconds - wordsDuration, 0.01) /
+                ? Math.Max(endTime.Subtract(begTime).TotalSeconds - wordsDuration, 0.01) /
                   endTime.Subtract(begTime).TotalSeconds
                 : 0;
         }
