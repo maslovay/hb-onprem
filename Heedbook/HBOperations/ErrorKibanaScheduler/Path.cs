@@ -1,6 +1,6 @@
 namespace ErrorKibanaScheduler
 {
-    public class Path
+    public class UriPathOnKibana
     {
         public string UriPath { get; set; }
     }

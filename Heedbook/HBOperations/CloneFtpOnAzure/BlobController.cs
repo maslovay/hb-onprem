@@ -11,6 +11,11 @@ namespace CloneFtpOnAzure
     public class BlobController
     {
         private StorageAccInfo _storageAccInfo;
+
+        public BlobController(StorageAccInfo storageAccInfo)
+        {
+            _storageAccInfo = storageAccInfo;
+        }
         public async Task UploadFileToBlob(string path, string name,string containerName)
         {
             var storageCredentials =  new StorageCredentials($"{_storageAccInfo.AccName}",  $"{_storageAccInfo.AccKey}");

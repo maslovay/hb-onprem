@@ -19,10 +19,10 @@ namespace ErrorKibanaScheduler.QuartzJob
     {
         private ElasticClientFactory _elasticClientFactory;
         private MessengerClient _client;
-        private Path _path;
+        private UriPathOnKibana _path;
 
         public KibanaErrorJob(ElasticClientFactory elasticClientFactory,
-            MessengerClient client,Path path)
+            MessengerClient client,UriPathOnKibana path)
         {
             _path = path;
             _elasticClientFactory = elasticClientFactory;
@@ -51,10 +51,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                     .Index($"logstash-{DateTime.Today:yyyy.MM.dd}")
                     .Sort(x => x.Descending(a => a.Timestamp))
                     .Query(q => q
-                        .Bool(m => m
-                             .Filter(fb=>fb
-                                 .DateRange(r=>r
-                                    .Field(fd=>fd.Timestamp >= DateTime.UtcNow.AddHours(-4))))
+                        .Bool(m => m       
                             .Should(s => s
                                 .MatchPhrase(mp => mp
                                     .Field(fd => fd.LogLevel)
@@ -62,7 +59,9 @@ namespace ErrorKibanaScheduler.QuartzJob
                                 s => s
                                     .MatchPhrase(mp => mp
                                         .Field(fd => fd.LogLevel)
-                                        .Query("Error"))))));
+                                        .Query("Error")))) && q.DateRange(r=>r
+                                    .Field(fd=>fd.Timestamp)
+                                    .GreaterThanOrEquals(DateTime.UtcNow.AddHours(-4)))));
 
                 var documents = searchRequest.Documents.ToList();
                 var alarm = new TelegramMessage()

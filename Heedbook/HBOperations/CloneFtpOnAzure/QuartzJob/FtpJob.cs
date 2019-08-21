@@ -17,11 +17,13 @@ namespace CloneFtpOnAzure
         public SftpClient _sftpClient;
         public BlobController _blobController;
         private readonly ElasticClientFactory _elasticClientFactory;
-
+        private StorageAccInfo _storageAccInfo;
         public FtpJob(SftpClient sftpClient,
             BlobController blobController,
-        ElasticClientFactory elasticClientFactory)
+        ElasticClientFactory elasticClientFactory,
+            StorageAccInfo storageAccInfo)
         {
+            _storageAccInfo = storageAccInfo;
             _elasticClientFactory = elasticClientFactory;
             _blobController = blobController;
             _sftpClient = sftpClient;
@@ -32,7 +34,7 @@ namespace CloneFtpOnAzure
             var _log = _elasticClientFactory.GetElasticClient();
             try
             {
-                string[] path = {"dialoguevideos", "dialogueaudios", "clientavatars", "mediacontens"};
+                string[] path = _storageAccInfo.DirectoryName;
                 var files = new Dictionary<string, ICollection<String>>();
                 path.Select(async item => files[item] = await _sftpClient.ListDirectoryFiles(item)).ToList();
                 _log.Info("Try to DownloadOnFtp and UploadBlobOnAzure");
@@ -40,9 +42,14 @@ namespace CloneFtpOnAzure
                 {
                     foreach (var fileName in file.Value)
                     {
+                        
                         var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(file.Key + "/" + fileName);
-                        await _blobController.UploadFileToBlob(localPath,
-                            Path.Combine(file.Key + Path.GetFileName(localPath)), file.Key);
+                        if (_sftpClient.GetLastWriteTime(localPath) <= DateTime.UtcNow.AddHours(-24))
+                        {
+                            await _blobController.UploadFileToBlob(localPath,
+                                Path.Combine(file.Key + Path.GetFileName(localPath)), file.Key);
+                        }
+
                         File.Delete(localPath);
                     }
                 }

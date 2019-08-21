@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace CloneFtpOnAzure
 {
     public class StorageAccInfo
@@ -5,5 +7,7 @@ namespace CloneFtpOnAzure
         public string AccName { get; set; }
         
         public string AccKey { get; set; }
+        
+        public string[] DirectoryName { get; set; }
     }
 }

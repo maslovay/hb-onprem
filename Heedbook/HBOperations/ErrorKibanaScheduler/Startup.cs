@@ -32,6 +32,8 @@ namespace ErrorKibanaScheduler
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.Configure<MessengerSettings>(Configuration.GetSection(nameof(MessengerSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<MessengerSettings>>().Value);
+            services.Configure<UriPathOnKibana>(Configuration.GetSection(nameof(UriPathOnKibana)));
+            services.AddSingleton(provider=> provider.GetRequiredService<IOptions<UriPathOnKibana>>().Value);
             services.AddSingleton<ElasticClientFactory>();
             services.AddSingleton<MessengerClient>();
             services.AddErrorMessageOnQuartzJob();
