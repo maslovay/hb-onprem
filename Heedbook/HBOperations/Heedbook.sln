@@ -110,6 +110,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetricsController", "..\HBA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErrorKibanaScheduler", "ErrorKibanaScheduler\ErrorKibanaScheduler.csproj", "{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeleteOldLogsOnElasticScheduler", "DeleteOldLogsOnElasticScheduler\DeleteOldLogsOnElasticScheduler.csproj", "{1E6128F8-2FED-44F1-9ED2-F6C6CB2D3E4F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -300,6 +302,10 @@ Global
 		{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E6128F8-2FED-44F1-9ED2-F6C6CB2D3E4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E6128F8-2FED-44F1-9ED2-F6C6CB2D3E4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E6128F8-2FED-44F1-9ED2-F6C6CB2D3E4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E6128F8-2FED-44F1-9ED2-F6C6CB2D3E4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -351,6 +357,7 @@ Global
 		{785A8183-B7EF-4BF7-A196-7CBFEF6CFE23} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{1272D895-BF36-4B10-88AB-6AF383C1402E} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{FB54A0B2-45EF-40B1-B4C1-D9C134C2D5FF} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
+		{1E6128F8-2FED-44F1-9ED2-F6C6CB2D3E4F} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}

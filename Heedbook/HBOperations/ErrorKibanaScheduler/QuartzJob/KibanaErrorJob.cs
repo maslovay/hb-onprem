@@ -6,6 +6,7 @@ using HBLib;
 using HBLib.Utils;
 using Quartz;
 using Elasticsearch.Net;
+using Microsoft.Azure.KeyVault.Models;
 using Nest;
 using Nest.JsonNetSerializer;
 using ElasticClient = Nest.ElasticClient;
@@ -18,10 +19,12 @@ namespace ErrorKibanaScheduler.QuartzJob
     {
         private ElasticClientFactory _elasticClientFactory;
         private MessengerClient _client;
+        private Path _path;
 
         public KibanaErrorJob(ElasticClientFactory elasticClientFactory,
-            MessengerClient client)
+            MessengerClient client,Path path)
         {
+            _path = path;
             _elasticClientFactory = elasticClientFactory;
             _client = client;
         }
@@ -30,7 +33,7 @@ namespace ErrorKibanaScheduler.QuartzJob
         {
             var _log = _elasticClientFactory.GetElasticClient();
             _log.Info("Try to connect");
-            var pool = new SingleNodeConnectionPool(new Uri("http://13.74.249.78:9200"));
+            var pool = new SingleNodeConnectionPool(new Uri($"{_path.UriPath}"));
             var settings = new ConnectionSettings(pool, sourceSerializer: JsonNetSerializer.Default);
             var client = new ElasticClient(settings);
             try
@@ -46,8 +49,12 @@ namespace ErrorKibanaScheduler.QuartzJob
                                 f => f.LogLevel)))
                     .Take(10000)
                     .Index($"logstash-{DateTime.Today:yyyy.MM.dd}")
+                    .Sort(x => x.Descending(a => a.Timestamp))
                     .Query(q => q
                         .Bool(m => m
+                             .Filter(fb=>fb
+                                 .DateRange(r=>r
+                                    .Field(fd=>fd.Timestamp >= DateTime.UtcNow.AddHours(-4))))
                             .Should(s => s
                                 .MatchPhrase(mp => mp
                                     .Field(fd => fd.LogLevel)
@@ -55,12 +62,18 @@ namespace ErrorKibanaScheduler.QuartzJob
                                 s => s
                                     .MatchPhrase(mp => mp
                                         .Field(fd => fd.LogLevel)
-                                        .Query("Error"))
-                            ))));
+                                        .Query("Error"))))));
 
-                var documents = searchRequest.Documents
-                    .Where(item => item.Timestamp >= DateTime.UtcNow.AddHours(-4)).ToList();
-
+                var documents = searchRequest.Documents.ToList();
+                var alarm = new TelegramMessage()
+                {
+                    logText = "<b>8000 or more error</b>"
+                };
+                if (documents.Count >= 8000)
+                {
+                    _client.PostMessage(alarm);
+                }
+                
                 var dmp = new TextCompare();
 
                 for (var i = 0; i < documents.Count; i++)

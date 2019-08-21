@@ -10,9 +10,10 @@ namespace CloneFtpOnAzure
 {
     public class BlobController
     {
+        private StorageAccInfo _storageAccInfo;
         public async Task UploadFileToBlob(string path, string name,string containerName)
         {
-            var storageCredentials =  new StorageCredentials("backupp",  "pb/WS9Pc3x9cpz1l09T7/If4E9bDXnyEKgvReGbFtbvhBEoS8IKelvU1dcU1G3XKx+4sP2sfo1bMY//Dz3Ng1Q==");
+            var storageCredentials =  new StorageCredentials($"{_storageAccInfo.AccName}",  $"{_storageAccInfo.AccKey}");
             var cloudStorageAccount =  new CloudStorageAccount(storageCredentials,  true);
             var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
             var container = cloudBlobClient.GetContainerReference($"{containerName}");
