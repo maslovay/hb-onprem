@@ -346,7 +346,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
             _log.Info($"Words duration -- {wordsDuration}, Dialogue duration --- {endTime.Subtract(begTime).TotalSeconds}");    
             return endTime.Subtract(begTime).TotalSeconds > 0
-                ? 100 * Math.Max(endTime.Subtract(begTime).TotalSeconds - wordsDuration, 0.01) /
+                ? Math.Max(endTime.Subtract(begTime).TotalSeconds - wordsDuration, 0.01) /
                   endTime.Subtract(begTime).TotalSeconds
                 : 0;
         }

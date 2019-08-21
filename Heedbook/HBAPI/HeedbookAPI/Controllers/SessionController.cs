@@ -211,6 +211,29 @@ namespace UserOperations.Controllers
             }
         }
 
+        [HttpGet("SessionStatus")]
+        public IActionResult SessionStatus([FromQuery] Guid applicationUserId)
+        {
+            try
+            {  
+                var session = _context.Sessions
+                        .Where(p => p.ApplicationUserId == applicationUserId)
+                        .ToList()?.OrderByDescending(p => p.BegTime)
+                        .FirstOrDefault();   
+                var result = new { session?.BegTime, session?.StatusId };     
+                _log.Info($"Get Session/SessionStatus {applicationUserId}");
+                return Ok(result);  
+            }
+            catch (Exception e)
+            {
+                var response = new Response();
+                response.Message = $"Exception occured {e}";
+                _log.Fatal($"Exception occurred {e}");
+                return BadRequest(response);
+            }
+        }
+
+      
        [HttpPost("AlertNotSmile")]
         public IActionResult AlertNotSmile([FromBody] Guid applicationUserId)
         {

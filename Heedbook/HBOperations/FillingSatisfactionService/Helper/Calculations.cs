@@ -98,16 +98,15 @@ namespace FillingSatisfactionService.Helper
                 TotalScore = Convert.ToInt32(33 
                     + (framesSatisfaction + audioSatisfaction + textSatisfaction)*(arcCtgWeight * arcTgWeight)
                     +rand.Next(-5, 6)+15);
-                        
-
-                if (TotalScore > 99) TotalScore = 99;
-
-                if (TotalScore < 35) TotalScore = 35;
             }
             catch
             {
                 TotalScore = 0;
             }
+            
+            if (TotalScore > 99) TotalScore = 99;
+
+            if (TotalScore < 35) TotalScore = 35;
 
             return TotalScore;
         }
@@ -119,25 +118,40 @@ namespace FillingSatisfactionService.Helper
             var begScore = 0;
             try
             {
-                var yaw = 0;
-                if (Math.Abs(Convert.ToDouble(dialogueFrame.YawShare)) >
-                    Math.Min(Math.Abs(faceYawMax), Math.Abs(faceYawMin)))
-                    yaw = 10;
+                var frameSatisfaction = 30 * (dialogueFrame.HappinessShare + dialogueFrame.SurpriseShare 
+                    - 0.1 * (dialogueFrame.AngerShare 
+                        + dialogueFrame.FearShare 
+                        + dialogueFrame.ContemptShare 
+                        + dialogueFrame.DisgustShare 
+                        + dialogueFrame.SadnessShare)
+                    + ((dialogueFrame.YawShare >= faceYawMin && dialogueFrame.YawShare <= faceYawMax) ? 3 : 0));
 
-                begScore = (Int32) Math.Round((Decimal)
-                    (80 + 2 * (dialogueFrame.SurpriseShare + dialogueFrame.HappinessShare) -
-                     (dialogueFrame.AngerShare + dialogueFrame.ContemptShare + dialogueFrame.DisgustShare +
-                      3 * dialogueFrame.SadnessShare + dialogueFrame.FearShare)
-                     + (3 * dialogueInterval.HappinessTone - dialogueInterval.SadnessTone - dialogueInterval.AngerTone -
-                        dialogueInterval.FearTone) - yaw));
-                if (begScore > 99) begScore = 99;
+                double audioSatisfaction = 0;
+                if(dialogueInterval!=null)
+                {
+                    audioSatisfaction = 24*((3 * dialogueInterval.HappinessTone == null ? 0 : (double)dialogueInterval.HappinessTone
+                    - dialogueInterval.SadnessTone ==null ? 0 : (double)dialogueInterval.SadnessTone
+                    - dialogueInterval.AngerTone == null ? 0 : (double)dialogueInterval.AngerTone
+                    - dialogueInterval.FearTone == null ? 0 : (double)dialogueInterval.FearTone));
+                }
+                
 
-                if (begScore < 10) begScore = 10;
+                var arcCtgWeight = 0.6*(Math.PI/2-Math.Atan(((double)frameSatisfaction-3)*0.8)) + 0.9;
+                var arcTgWeight = 0.6*Math.Atan(((double)frameSatisfaction-2)*0.5) + 0.3;
+
+                var rand = new Random();
+                begScore = Convert.ToInt32(33 
+                    + (frameSatisfaction + audioSatisfaction)*(arcCtgWeight * arcTgWeight)
+                    +rand.Next(-3, 3)+5);
             }
             catch
             {
                 begScore = 0;
             }
+
+            if (begScore > 99) begScore = 99;
+
+            if (begScore < 35) begScore = 35;
 
             return begScore;
         }
