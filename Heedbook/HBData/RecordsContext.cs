@@ -128,5 +128,6 @@ namespace HBData
         public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
         public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }        
         public DbSet<TabletAppInfo> TabletAppInfos { get; set; }
+        public DbSet<VideoFace> VideoFaces { get; set; }
     }
 }
