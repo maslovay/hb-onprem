@@ -9,3 +9,4 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/FillingHintService/publish .
 ENTRYPOINT ["dotnet", "FillingHintService.dll"]
+ENV TESTCLUSTER testcluster

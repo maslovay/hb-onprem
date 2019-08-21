@@ -16,3 +16,4 @@ RUN chmod -R 777 /opt/download
 RUN apt-get update
 RUN apt-get install -y libopenblas-base
 RUN apt-get install -y libx11-dev
+ENV TESTCLUSTER testcluster

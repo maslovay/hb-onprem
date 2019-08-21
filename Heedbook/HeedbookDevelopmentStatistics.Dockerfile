@@ -11,3 +11,4 @@ COPY --from=build-env /app/HBMailsenders/HeedbookDevelopmentStatisticsScheduler/
 ENTRYPOINT ["dotnet", "HeedbookDevelopmentStatisticsScheduler.dll"]
 EXPOSE 53680
 ENV ASPNETCORE_URLS http://+:53680
+ENV TESTCLUSTER testcluster

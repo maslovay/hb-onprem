@@ -53,22 +53,57 @@ namespace UserService.Controllers
                                          .First().Company.Language.LanguageId;
 
                 var stringFormat = "yyyyMMddHHmmss";
-                var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
-                var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): time.AddSeconds((double)duration);
-                var fileName = $"{applicationUserId}_{time.ToString(stringFormat)}_{languageId}.mkv";
+                var timeBeg = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
+                var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): timeBeg.AddSeconds((double)duration);
+                var fileName = $"{applicationUserId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
 
-                var videoFile = new FileVideo{
-                    ApplicationUserId = applicationUserId,
-                    BegTime = time,
-                    CreationTime = DateTime.UtcNow,
-                    Duration = duration,
-                    EndTime = timeEnd,
-                    FileContainer = "videos",
-                    FileExist = await _sftpClient.IsFileExistsAsync($"videos/{fileName}"),
-                    FileName = fileName,
-                    FileVideoId = Guid.NewGuid(),
-                    StatusId = 6
-                };
+                var videoIntersectVideosAny = _context.FileVideos
+                    .Where(p => p.ApplicationUserId == applicationUserId
+                    && ((p.BegTime <= timeBeg
+                            && p.EndTime > timeBeg
+                            && p.EndTime < timeEnd) 
+                        || (p.BegTime < timeEnd
+                            && p.BegTime > timeBeg
+                            && p.EndTime >= timeEnd)
+                        || (p.BegTime >= timeBeg
+                            && p.EndTime <= timeEnd)
+                        || (p.BegTime < timeBeg
+                            && p.EndTime > timeEnd)))
+                    .Any();
+                var videoFile = new FileVideo();
+                if(videoIntersectVideosAny)
+                {
+                    videoFile = new FileVideo
+                    {
+                        ApplicationUserId = applicationUserId,
+                        BegTime = timeBeg,
+                        CreationTime = DateTime.UtcNow,
+                        Duration = duration,
+                        EndTime = timeEnd,
+                        FileContainer = "videos",
+                        FileExist = await _sftpClient.IsFileExistsAsync($"videos/{fileName}"),
+                        FileName = fileName,
+                        FileVideoId = Guid.NewGuid(),
+                        StatusId = 8
+                    };
+                }
+                else
+                {
+                    videoFile = new FileVideo
+                    {
+                        ApplicationUserId = applicationUserId,
+                        BegTime = timeBeg,
+                        CreationTime = DateTime.UtcNow,
+                        Duration = duration,
+                        EndTime = timeEnd,
+                        FileContainer = "videos",
+                        FileExist = await _sftpClient.IsFileExistsAsync($"videos/{fileName}"),
+                        FileName = fileName,
+                        FileVideoId = Guid.NewGuid(),
+                        StatusId = 6
+                    };
+                }
+                
                 _context.FileVideos.Add(videoFile);
                 _context.SaveChanges();
 
