@@ -23,6 +23,7 @@ docker build -t hbtestregistry.azurecr.io/heedbookdevelopmentstatisticsscheduler
 docker build -t hbtestregistry.azurecr.io/dialoguesrecalculatescheduler:latesttest -f tmp/DialoguesRecalculateScheduler.Dockerfile . &&
 docker build -t hbtestregistry.azurecr.io/senduseranalyticreportscheduler:latesttest -f tmp/SendUserAnalyticReportScheduler.Dockerfile .&&
 docker build -t hbtestregistry.azurecr.io/referencecontroller:latesttest -f tmp/ReferenceController.Dockerfile .&&
+docker build -t hbtestregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest -f DialogueAndSessionsNestedScheduler.Dockerfile .
 
 docker push hbtestregistry.azurecr.io/faceanalyzeservice:latesttest &&
 docker push hbtestregistry.azurecr.io/userservice:latesttest && 
@@ -44,6 +45,7 @@ docker push hbtestregistry.azurecr.io/onlinetuiofficesscheduler:latesttest &&
 docker push hbtestregistry.azurecr.io/heedbookdevelopmentstatisticsscheduler:latesttest &&
 docker push hbtestregistry.azurecr.io/dialoguesrecalculatescheduler:latesttest &&
 docker push hbtestregistry.azurecr.io/senduseranalyticreportscheduler:latesttest &&
-docker push hbtestregistry.azurecr.io/referencecontroller:latesttest 
+docker push hbtestregistry.azurecr.io/referencecontroller:latesttest &&
+docker push hbtestregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest
 
 rm -rf tmp
