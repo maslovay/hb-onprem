@@ -100,12 +100,14 @@ namespace DialogueMarkUp.QuartzJobs
                         .OrderBy(p => p.EndTime)
                         .ToList();
                     
-                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}");  
-                    if (markUps.Any()) CreateMarkUp(markUps, framesUser, applicationUserId);
-
-                    // to do: add
-                    _context.SaveChanges();
+                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps.Select(p => new {p.ApplicationUserId, p.BegTime, p.EndTime, p.Videos}))}");  
+                    _log.Info($"Frames user count - {framesUser.Any()}, applicationUserId - {applicationUserId}, markup count - {markUps.Count()}");
+                    if (markUps.Any()) 
+                    {
+                        CreateMarkUp(markUps, framesUser, applicationUserId);
+                    }
                 }
+                _context.SaveChanges();
                 _log.Info("Function DialogueMarkUp finished");                
             }
             catch (Exception e)
@@ -262,6 +264,7 @@ namespace DialogueMarkUp.QuartzJobs
                         Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList()
                     });
                     i += takeVideos;
+                    _log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)} ");
                 }
             }
             return updatedMarkUp;
