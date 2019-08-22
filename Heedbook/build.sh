@@ -18,7 +18,8 @@ docker build -t containerregistryhb.azurecr.io/sessionstatusscheduler:latest -f 
 docker build -t containerregistryhb.azurecr.io/onlinetuiofficesscheduler:latest -f OnlineTuiOfficesScheduler.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/heedbookdevelopmentstatisticsscheduler:latest -f HeedbookDevelopmentStatistics.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/dialoguesrecalculatescheduler:latest -f DialoguesRecalculateScheduler.Dockerfile . &&
-docker build -t containerregistryhb.azurecr.io/senduseranalyticreportscheduler:latest -f SendUserAnalyticReportScheduler.Dockerfile .
+docker build -t containerregistryhb.azurecr.io/senduseranalyticreportscheduler:latest -f SendUserAnalyticReportScheduler.Dockerfile . &&
+docker build -t containerregistryhb.azurecr.io/dialogueandsessionsnestedscheduler:latest -f DialogueAndSessionsNestedScheduler.Dockerfile .
 
 docker push containerregistryhb.azurecr.io/faceanalyzeservice:latest &&
 docker push containerregistryhb.azurecr.io/userservice:latest && 
@@ -39,4 +40,5 @@ docker push containerregistryhb.azurecr.io/sessionstatusscheduler:latest &&
 docker push containerregistryhb.azurecr.io/onlinetuiofficesscheduler:latest &&
 docker push containerregistryhb.azurecr.io/heedbookdevelopmentstatisticsscheduler:latest &&
 docker push containerregistryhb.azurecr.io/dialoguesrecalculatescheduler:latest &&
-docker push containerregistryhb.azurecr.io/senduseranalyticreportscheduler:latest
+docker push containerregistryhb.azurecr.io/senduseranalyticreportscheduler:latest &&
+docker push containerregistryhb.azurecr.io/dialogueandsessionsnestedscheduler:latest
