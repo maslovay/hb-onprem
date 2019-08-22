@@ -42,7 +42,6 @@ namespace QuartzExtensions.Jobs
                 {
                     _log.Info("Function started.");
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
-                    System.Console.WriteLine($"{dialogues.Count()}");
                     var dialogues = _context.Dialogues
                         .Include(p => p.DialogueFrame)
                         .Include(p => p.DialogueAudio)
@@ -51,6 +50,8 @@ namespace QuartzExtensions.Jobs
                         .Include(p => p.DialogueClientProfile)
                         .Where(item => item.StatusId == 6)
                         .ToList();
+                    System.Console.WriteLine($"{dialogues.Count()}");
+
 
                     if (!dialogues.Any())
                     {
