@@ -133,6 +133,7 @@ namespace DialogueMarkUp.QuartzJobs
                     FaceIds = GetFrameVideo(video, frames).Select(p => p.FileFrame.FaceId).ToList()
                 });
             }
+            videoFaces = videoFaces.Where(p => p.FaceIds.Any()).ToList();
             return videoFaces;
         }
 
