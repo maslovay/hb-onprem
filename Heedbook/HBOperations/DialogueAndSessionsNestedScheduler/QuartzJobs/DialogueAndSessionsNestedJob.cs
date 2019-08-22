@@ -36,7 +36,8 @@ namespace DialogueAndSessionsNested.QuartzJobs
         }
 
         public async Task Execute(IJobExecutionContext context)
-        {    
+        {   
+            System.Console.WriteLine($"started");
             var _log = _elasticClientFactory.GetElasticClient();    
             _log.Info("Function started");
             var forLastDays = 1;
