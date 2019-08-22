@@ -125,7 +125,7 @@ namespace DialogueMarkUp.QuartzJobs
                         InStatistic = true
                     };
                     dialogues.Add(dialogue);
-                    CheckSessionForDialogue(dialogue).Wait();
+                    
                     var markUpNew = new DialogueMarkup{
                         DialogueMarkUpId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
@@ -189,7 +189,7 @@ namespace DialogueMarkUp.QuartzJobs
 
                     };
                     dialogues.Add(dialogue);
-                    CheckSessionForDialogue(dialogue).Wait();
+                    
                     var markUpNew = new HBData.Models.DialogueMarkup{
                         DialogueMarkUpId = Guid.NewGuid(),
                         ApplicationUserId = applicationUserId,
@@ -303,172 +303,6 @@ namespace DialogueMarkUp.QuartzJobs
         private double? Cos(List<double> vector1, List<double> vector2)
         {
             return VectorMult(vector1, vector2) / VectorNorm(vector1) / VectorNorm(vector2);
-        }
-
-        private async Task CheckSessionForDialogue(Dialogue dialogue)
-        {
-            var applicationUserId = dialogue.ApplicationUserId;
-            
-            var applicationUser = _context.ApplicationUsers.FirstOrDefault(p => p.Id == applicationUserId);
-            var intersectSession = _context.Sessions.Where(p => p.ApplicationUserId == applicationUserId
-                    && (p.StatusId == 6 || p.StatusId == 7)
-                    && ((p.BegTime <= dialogue.BegTime
-                            && p.EndTime > dialogue.BegTime
-                            && p.EndTime < dialogue.EndTime) 
-                        || (p.BegTime < dialogue.EndTime
-                            && p.BegTime > dialogue.BegTime
-                            && p.EndTime >= dialogue.EndTime)
-                        || (p.BegTime >= dialogue.BegTime
-                            && p.EndTime <= dialogue.EndTime)
-                        || (p.BegTime < dialogue.BegTime
-                            && p.EndTime > dialogue.EndTime)))
-                .ToList();
-            
-            if(dialogue is null)
-            {
-                _log.Info($"CheckSessionForDialogue: dialogue is null, applicationUserId: {applicationUserId}");
-                return;
-            }
-            if (!intersectSession.Any())
-            {
-                var curTime = DateTime.UtcNow;
-                var oldTime = DateTime.UtcNow.AddDays(-3);
-                var lastSession = _context.Sessions
-                        .Where(p => p.ApplicationUserId == applicationUserId 
-                            && p.BegTime >= oldTime 
-                            && p.EndTime <= dialogue.BegTime)
-                        .OrderByDescending(p => p.BegTime)
-                        .ToList()
-                        .FirstOrDefault();
-                if(lastSession != null && lastSession.StatusId == 6)
-                {
-                    lastSession.EndTime = dialogue.EndTime;
-                }
-                else
-                {                    
-                    _context.Sessions.Add( new Session
-                    {
-                        SessionId = Guid.NewGuid(),
-                        ApplicationUserId = applicationUserId,
-                        ApplicationUser = applicationUser,
-                        BegTime = dialogue.BegTime,
-                        EndTime = dialogue.EndTime,
-                        StatusId = 7
-                    });
-                }
-                await _context.SaveChangesAsync();
-                return;
-            } 
-
-            var dialogueBeginSession = intersectSession.FirstOrDefault(p => p.BegTime <= dialogue.BegTime
-                    && p.EndTime > dialogue.BegTime);
-            var dialogueEndSession = intersectSession.FirstOrDefault(p => p.BegTime < dialogue.EndTime
-                    && p.EndTime >= dialogue.EndTime);      
-
-            if(dialogueBeginSession == null && dialogueEndSession == null)
-            {
-                var insideSessions = intersectSession.Where(p => p.BegTime > dialogue.BegTime
-                    && p.EndTime < dialogue.EndTime).OrderBy(p => p.BegTime);
-                if(insideSessions.Any())
-                {
-                    var lastInsideSession = insideSessions.LastOrDefault();
-                    if(lastInsideSession.StatusId == 6)
-                    {
-                        lastInsideSession.BegTime = dialogue.BegTime;
-                        lastInsideSession.EndTime = dialogue.EndTime;
-                        foreach(var s in insideSessions.Where(p => p!=lastInsideSession))
-                        {
-                            s.StatusId = 8;
-                        }
-                    }
-                    else
-                    {
-                        _context.Sessions.Add( new Session
-                        {
-                            SessionId = Guid.NewGuid(),
-                            ApplicationUserId = applicationUserId,
-                            ApplicationUser = applicationUser,
-                            BegTime = dialogue.BegTime,
-                            EndTime = dialogue.EndTime,
-                            StatusId = 7
-                        });  
-                        foreach(var s in insideSessions)
-                        {
-                            s.StatusId = 8;
-                        } 
-                    }                 
-                }
-            }
-            else if(dialogueBeginSession != null 
-                && dialogueEndSession == null)
-            {
-                var insideSessions = intersectSession.Where(p => p.BegTime >= dialogueBeginSession.EndTime && p.EndTime < dialogue.EndTime)
-                    .OrderBy(p => p.BegTime).ToList();
-                
-                if(insideSessions.Any())
-                {
-                    var lastInsideSession = insideSessions.LastOrDefault();
-                    if(lastInsideSession.StatusId == 6)
-                    {                        
-                        dialogueBeginSession.EndTime = dialogue.BegTime;
-                        lastInsideSession.BegTime = dialogue.BegTime;
-                        lastInsideSession.EndTime = dialogue.EndTime;
-                        foreach(var s in insideSessions.Where(p => p!=lastInsideSession))
-                        {
-                            s.StatusId = 8;
-                        }
-                    }
-                    else
-                    {
-                        dialogueBeginSession.EndTime = dialogue.EndTime;                        
-                        foreach(var s in insideSessions)
-                        {
-                            s.StatusId = 8;
-                        }
-                    }                    
-                }
-                else
-                {
-                    dialogueBeginSession.EndTime = dialogue.EndTime;
-                }
-            }  
-            else if(dialogueBeginSession == null 
-                && dialogueEndSession != null)
-            {
-                var insideSessions = intersectSession.Where(p => p.BegTime > dialogue.BegTime && p.EndTime <= dialogueEndSession.BegTime)
-                    .OrderBy(p => p.BegTime).ToList();
-                
-                if(insideSessions.Any())
-                {
-                    dialogueEndSession.BegTime = dialogue.BegTime;       
-                    foreach(var s in insideSessions)
-                    {
-                        s.StatusId = 8;
-                    }             
-                }
-                else
-                {
-                    dialogueEndSession.BegTime = dialogue.BegTime;
-                }
-            }          
-            else if(dialogueBeginSession != null 
-                && dialogueEndSession != null 
-                && dialogueBeginSession.SessionId != dialogueEndSession.SessionId)
-            {
-                var insideSession = intersectSession.Where(p => p.BegTime >= dialogueBeginSession.EndTime 
-                        && p.EndTime <= dialogueEndSession.BegTime)
-                    .ToList();
-                if(insideSession.Any())
-                {
-                    foreach(var s in insideSession)
-                    {
-                        s.StatusId = 8;
-                    }
-                }                
-                dialogueEndSession.BegTime = dialogueBeginSession.BegTime;
-                dialogueBeginSession.StatusId = 8;                
-            }            
-            await _context.SaveChangesAsync();            
-        }
+        }        
     }
 }
