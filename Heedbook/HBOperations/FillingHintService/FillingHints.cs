@@ -10,6 +10,7 @@ using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using HBLib;
+using Microsoft.Azure.Management.Search.Fluent;
 
 namespace FillingHintService
 {

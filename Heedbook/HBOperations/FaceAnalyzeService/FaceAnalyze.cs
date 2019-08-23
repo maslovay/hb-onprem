@@ -35,8 +35,13 @@ namespace FaceAnalyzeService
             _elasticClientFactory = elasticClientFactory;
         }
 
+        public void GetAll(Func<String, bool> func)
+        {
+        }
+
         public async Task Run(String remotePath)
         {
+            
             var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(remotePath);
