@@ -124,9 +124,11 @@ namespace DialogueAndSessionsNested.QuartzJobs
             } 
 
             var dialogueBeginSession = intersectSession.FirstOrDefault(p => p.BegTime <= dialogue.BegTime
-                    && p.EndTime > dialogue.BegTime);
+                    && p.EndTime > dialogue.BegTime
+                    && p.EndTime < dialogue.EndTime);                    
             var dialogueEndSession = intersectSession.FirstOrDefault(p => p.BegTime < dialogue.EndTime
-                    && p.EndTime >= dialogue.EndTime);      
+                    && p.BegTime > dialogue.BegTime
+                    && p.EndTime >= dialogue.EndTime);   
 
             if(dialogueBeginSession == null && dialogueEndSession == null)
             {
