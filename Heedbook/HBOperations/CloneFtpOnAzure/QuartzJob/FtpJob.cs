@@ -36,21 +36,19 @@ namespace CloneFtpOnAzure
             {
                 string[] path = _storageAccInfo.DirectoryName;
                 var files = new Dictionary<string, ICollection<String>>();
-                path.Select(async item => files[item] = await _sftpClient.ListDirectoryFiles(item)).ToList();
+                path.Select(async item => files[item] = await _sftpClient
+                    .ListDirectoryFilesByConditionAsync(item, s => s.LastWriteTime <= DateTime.UtcNow.AddHours(-24)))
+                    .ToList();
                 _log.Info("Try to DownloadOnFtp and UploadBlobOnAzure");
                 foreach (var file in files)
                 {
                     foreach (var fileName in file.Value)
                     {
-                        
-                        var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(file.Key + "/" + fileName);
-                        if (_sftpClient.GetLastWriteTime(localPath) <= DateTime.UtcNow.AddHours(-24))
+                        using (var stream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(file.Key + "/" + fileName))
                         {
-                            await _blobController.UploadFileToBlob(localPath,
-                                Path.Combine(file.Key + Path.GetFileName(localPath)), file.Key);
+                            await _blobController.UploadFileStreamToBlob(stream,
+                                Path.GetFileName(fileName), file.Key);
                         }
-
-                        File.Delete(localPath);
                     }
                 }
                 _log.Info("Download and Upload finished");
