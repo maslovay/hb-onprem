@@ -34,7 +34,7 @@ namespace HBLib.Utils
         {
             _elasticSettings = elasticSettings;
             _logger = new LoggerConfiguration()
-                     .WriteTo.TCPSink(IPAddress.Parse(elasticSettings.Host), elasticSettings.Port).CreateLogger();
+                     .WriteTo.TCPSink(elasticSettings.Host, elasticSettings.Port).CreateLogger();
             
             _invocationId = Guid.NewGuid().ToString();
             _format = format + ": ";
@@ -46,7 +46,7 @@ namespace HBLib.Utils
         {
             _elasticSettings = elasticSettings;
             _logger = new LoggerConfiguration()
-                     .WriteTo.TCPSink(IPAddress.Parse(elasticSettings.Host), elasticSettings.Port).CreateLogger();
+                     .WriteTo.TCPSink(elasticSettings.Host, elasticSettings.Port).CreateLogger();
             _invocationId = Guid.NewGuid().ToString();
             _format = "";
             _args = Array.Empty<Object>();
