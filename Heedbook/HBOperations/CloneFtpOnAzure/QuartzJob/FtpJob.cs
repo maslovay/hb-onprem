@@ -37,7 +37,7 @@ namespace CloneFtpOnAzure
                 string[] path = _storageAccInfo.DirectoryName;
                 var files = new Dictionary<string, ICollection<String>>();
                 path.Select(async item => files[item] = await _sftpClient
-                    .ListDirectoryFilesByConditionAsync(item, s => s.LastWriteTime <= DateTime.UtcNow.AddHours(-24)))
+                    .ListDirectoryFilesByConditionAsync(item, s => s.LastWriteTime >= DateTime.UtcNow.AddHours(-24)))
                     .ToList();
                 _log.Info("Try to DownloadOnFtp and UploadBlobOnAzure");
                 foreach (var file in files)
