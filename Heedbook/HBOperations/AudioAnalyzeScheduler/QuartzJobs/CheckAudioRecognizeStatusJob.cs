@@ -313,7 +313,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             catch (Exception ex)
             {
                 _log.Fatal("GetPositiveShareInText exception occurred: " + ex.Message, ex);
-                return 0;
+                throw;
             }
         }
 
