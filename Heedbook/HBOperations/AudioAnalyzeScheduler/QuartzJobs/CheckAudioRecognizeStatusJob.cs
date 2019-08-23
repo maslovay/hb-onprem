@@ -65,13 +65,15 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
                     var phrases = _context.Phrases.ToList();
 
-                    var dialogueSpeeches = new List<DialogueSpeech>();
-                    var dialogueWords = new List<DialogueWord>();
-                    var phraseCounts = new List<DialoguePhraseCount>();
-                    var dialoguePhrases = new List<DialoguePhrase>();
+                    
+                    
                     // System.Console.WriteLine($"Audios count - {audios.Count()}");
                     foreach (var audio in audios)
                     {
+                        var dialoguePhrases = new List<DialoguePhrase>();
+                        var dialogueSpeeches = new List<DialogueSpeech>();
+                        var dialogueWords = new List<DialogueWord>();
+                        var phraseCounts = new List<DialoguePhraseCount>();
                         _log.Info($"Processing {audio.DialogueId}");
                      
                         var recognized = new List<WordRecognized>();
@@ -230,10 +232,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     });
                             });
 
-                            _log.Info("GetPositiveShareInText start");
-                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList(), audio.DialogueId);
-                            _log.Info("GetPositiveShareInText end");
-                            
+                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList(), audio.DialogueId);                            
                             words = words.GroupBy(item => new
                             {
                                 item.BegTime,
@@ -271,14 +270,15 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         }
 
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem") audio.StatusId = 7;
+                        
+                        _context.DialoguePhrases.AddRange(dialoguePhrases);
+                        _context.DialogueSpeechs.AddRange(dialogueSpeeches);
+                        _context.DialogueWords.AddRange(dialogueWords);
+                        _context.DialoguePhraseCounts.AddRange(phraseCounts);
+                        _context.SaveChanges();
+                        _log.Info($"Finished processing {audio.DialogueId}");
                     }
-
-                    _context.DialoguePhrases.AddRange(dialoguePhrases);
-                    _context.DialogueSpeechs.AddRange(dialogueSpeeches);
-                    _context.DialogueWords.AddRange(dialogueWords);
-                    _context.DialoguePhraseCounts.AddRange(phraseCounts);
-                    _context.SaveChanges();
-                    _log.Info("Scheduler ended.");
+                    _log.Info("Function finished.");
                 }
                 catch (Exception e)
                 {
@@ -291,9 +291,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
         {
             try
             {
-                _log.Info("GetPositiveShareInText dialogueId: " + dialogueId);
                 var sentence = string.Join(" ", recognizedWords);
-                _log.Info("RunPython input string: " + sentence);
                 var posShareStrg = RunPython.Run("GetPositiveShare.py",
                     Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "sentimental"), "3",
                     sentence, _log);
@@ -334,7 +332,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 return endTime - startTime;
             });
             var vowelsCount = words.Select(item => item.Word.Where(c => vowels.Contains(c))).Count();
-            _log.Info($"Speech sum time - {sumTime}, Vowels count -- {vowelsCount}");
             return vowelsCount / sumTime;
         }
 
@@ -344,7 +341,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 Double.Parse(item.EndTime, CultureInfo.InvariantCulture) -
                 Double.Parse(item.StartTime, CultureInfo.InvariantCulture));
 
-            _log.Info($"Words duration -- {wordsDuration}, Dialogue duration --- {endTime.Subtract(begTime).TotalSeconds}");    
             return endTime.Subtract(begTime).TotalSeconds > 0
                 ? Math.Max(endTime.Subtract(begTime).TotalSeconds - wordsDuration, 0.01) /
                   endTime.Subtract(begTime).TotalSeconds
