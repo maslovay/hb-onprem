@@ -23,3 +23,4 @@ sed -i "s/testcluster/true/" tmp/HeedbookDevelopmentStatistics.Dockerfile
 sed -i "s/testcluster/true/" tmp/DialoguesRecalculateScheduler.Dockerfile 
 sed -i "s/testcluster/true/" tmp/SendUserAnalyticReportScheduler.Dockerfile 
 sed -i "s/testcluster/true/" tmp/ReferenceController.Dockerfile 
+sed -i "s/testcluster/true/" tmp/DialogueAndSessionsNestedScheduler.Dockerfile 

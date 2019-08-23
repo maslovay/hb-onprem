@@ -235,3 +235,10 @@ __" runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady m
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml
 ```
 немного подождал и все исправилось. 
+
+
+### Развертывание образов docker в кластере на базе MS Azure
+1. Собираем образа и передаем их в репозиторий
+Для этого в корне данного репозитория существуют скрипты build.sh ( для "боевого" кластера ) и build_testcluster.sh (для тестового кластера)
+
+2. По SSH заходим на мастер-ноду требуемого кластера и следуем инструкциям из репозитория hb-infrastructure  

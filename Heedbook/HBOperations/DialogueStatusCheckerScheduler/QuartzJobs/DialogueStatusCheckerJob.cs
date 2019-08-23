@@ -33,6 +33,7 @@ namespace QuartzExtensions.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
+            System.Console.WriteLine("Function started");
             using (var scope = _scopeFactory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
@@ -41,7 +42,6 @@ namespace QuartzExtensions.Jobs
                 {
                     _log.Info("Function started.");
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
-
                     var dialogues = _context.Dialogues
                         .Include(p => p.DialogueFrame)
                         .Include(p => p.DialogueAudio)
@@ -50,6 +50,8 @@ namespace QuartzExtensions.Jobs
                         .Include(p => p.DialogueClientProfile)
                         .Where(item => item.StatusId == 6)
                         .ToList();
+                    System.Console.WriteLine($"{dialogues.Count()}");
+
 
                     if (!dialogues.Any())
                     {
