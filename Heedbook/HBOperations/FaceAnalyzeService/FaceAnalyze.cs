@@ -114,7 +114,7 @@ namespace FaceAnalyzeService
                     }
                     _log.Info("Function finished");
 
-                    File.Delete(remotePath);
+                    File.Delete(localPath);
                 }
                 else
                 {
