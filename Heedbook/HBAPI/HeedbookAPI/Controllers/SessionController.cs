@@ -218,8 +218,8 @@ namespace UserOperations.Controllers
             {  
                 var session = _context.Sessions
                         .Where(p => p.ApplicationUserId == applicationUserId)
-                        .ToList()?.OrderByDescending(p => p.BegTime)
-                        .FirstOrDefault();   
+                        .OrderByDescending(p => p.BegTime)
+                        .First();   
                 var result = new { session?.BegTime, session?.StatusId };     
                 _log.Info($"Get Session/SessionStatus {applicationUserId}");
                 return Ok(result);  
