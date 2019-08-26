@@ -96,6 +96,7 @@ namespace QuartzExtensions.Jobs
             var mail = new System.Net.Mail.MailMessage();
             mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);
             mail.To.Add("krokhmal11@mail.ru");
+            mail.To.Add("pinarin@heedbook.com");
             mail.Subject = "Users Weekly Analytic Reports Status";
             mail.Body = $"Weekly report sent to {counter} users";
             mail.IsBodyHtml = false;      
