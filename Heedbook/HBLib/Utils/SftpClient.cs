@@ -340,6 +340,17 @@ namespace HBLib.Utils
             return taskList.ToArray();
         }
 
+        public async Task<List<string>> ListDirectoryFilesByConditionAsync(String path, Func<SftpFile, bool> predicate)
+        {
+            var result = new List<String>();
+            await ConnectToSftpAsync();
+
+            path = _sftpSettings.DestinationPath + path;
+
+            if (!_client.Exists(path))
+                return result;
+            return _client.ListDirectory(path).Where(predicate).Select(f => f.Name).ToList();
+        }
         /// <summary>
         ///     Lists all files in a directory using a pattern
         /// </summary>
