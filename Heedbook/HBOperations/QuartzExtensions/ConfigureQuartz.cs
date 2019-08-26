@@ -105,8 +105,7 @@ namespace QuartzExtensions
                 return TriggerBuilder.Create()
                                      .WithIdentity("HeedbookDevelopmentStatisticsJob.trigger", "SelfStatistic")
                                      .StartNow()                                       
-                                     //.WithCronSchedule("0 00 7 * * ?", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())  
-                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(10).RepeatForever())
+                                     .WithCronSchedule("0 00 7 * * ?", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())  
                                      .Build();
             });
             services.AddSingleton(provider =>
@@ -133,8 +132,7 @@ namespace QuartzExtensions
                 return TriggerBuilder.Create()
                                     .WithIdentity("SendUserAnalyticReportJob.trigger", "SelfStatistic")
                                     .StartNow()                                       
-                                    //.WithCronSchedule("0 00 7 ? * MON", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())     
-                                    .WithSimpleSchedule(s => s.WithIntervalInMinutes(10).RepeatForever())                                                                  
+                                    .WithCronSchedule("0 00 7 ? * MON", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())                                   
                                     .Build();
             });
             services.AddSingleton<ILoginService, LoginService>();
