@@ -101,14 +101,9 @@ namespace DialogueMarkUp.QuartzJobs
                         .ToList();
                     if (markUps.Any()) 
                     {
-                        try
-                        {
-                            CreateMarkUp(markUps, framesUser, applicationUserId);
-                        }
-                        catch (Exception e)
-                        {
-                            _log.Fatal($"Exception occured {e}");
-                        }
+                        
+                        CreateMarkUp(markUps, framesUser, applicationUserId, _log);
+                        
                     }
                 }
                 _context.SaveChanges();
@@ -149,18 +144,14 @@ namespace DialogueMarkUp.QuartzJobs
             public List<Guid?> FaceIds;
         } 
 
-        private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid applicationUserId)
+        private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid applicationUserId, ElasticClient log)
         {
             var dialogueCreationList = new List<DialogueCreationRun>();
             var dialogueVideoAssembleList = new List<DialogueVideoAssembleRun>();
             int markUpCount;
-            _log.Info($"Mark up is null -- {markUps == null}");
             if (markUps != null)
             {
-                _log.Info($"Mark up is not empty -- {markUps.Any()}");
-                _log.Info($"End dates -- {markUps.Select(p => p.EndTime)}");
                 var lastTime = markUps.Max(p =>p.EndTime);
-                _log.Info($"Last date is {lastTime}");
                 if (lastTime.Date < DateTime.Now.Date)
                 {
                     framesUser
@@ -180,25 +171,25 @@ namespace DialogueMarkUp.QuartzJobs
                     }
                     markUpCount = markUps.Count() - 1;
                 }
-                _log.Info($"Mark up count  - {markUpCount}");
+                log.Info($"Mark up count  - {markUpCount}");
                 var dialogues = new List<Dialogue>();
                 for (int i = 0; i < markUpCount; ++i)
                 {
-                    _log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}, {JsonConvert.SerializeObject(markUps[i])}");
+                    log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}, {JsonConvert.SerializeObject(markUps[i])}");
                     if (markUps[i] != null)
                     {
-                        var updatedMarkUps = UpdateMarkUp(markUps[i]);
+                        var updatedMarkUps = UpdateMarkUp(markUps[i], log);
                         foreach (var updatedMarkUp in updatedMarkUps)
                         {   
                             var dialogueId = Guid.NewGuid();
 
                             var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
                                 updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
-                            _log.Info($"{dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
+                            log.Info($"{dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
                             dialogues.Add(dialogue);
 
                             var markUpNew = _classCreator.CreateMarkUpClass(applicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
-                            _log.Info(JsonConvert.SerializeObject($"Result of markup -- {updatedMarkUp.BegTime}, {updatedMarkUp.EndTime}"));
+                            log.Info(JsonConvert.SerializeObject($"Result of markup -- {updatedMarkUp.BegTime}, {updatedMarkUp.EndTime}"));
                             _context.DialogueMarkups.Add(markUpNew);
 
                             dialogueVideoAssembleList.Add( new DialogueVideoAssembleRun
@@ -238,7 +229,7 @@ namespace DialogueMarkUp.QuartzJobs
             }
         }
 
-        private List<MarkUp> UpdateMarkUp(MarkUp markUp, double persent = 0.7)
+        private List<MarkUp> UpdateMarkUp(MarkUp markUp, ElasticClient log, double persent = 0.7)
         {
             var updatedMarkUp = new List<MarkUp>();
             var dialogueDuration = markUp.EndTime.Subtract(markUp.BegTime).TotalSeconds;
@@ -279,7 +270,7 @@ namespace DialogueMarkUp.QuartzJobs
                         Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList()
                     });
                     i += takeVideos;
-                    _log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)} ");
+                    log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)} ");
                 }
             }
             return updatedMarkUp;
