@@ -150,8 +150,11 @@ namespace DialogueMarkUp.QuartzJobs
             var dialogueCreationList = new List<DialogueCreationRun>();
             var dialogueVideoAssembleList = new List<DialogueVideoAssembleRun>();
             int markUpCount;
-            _log.Info($"Last date -- {markUps.Last().EndTime.Date}");
-            if (markUps.Last().EndTime.Date < DateTime.Now.Date)
+            _log.Info($"Mark up is not empty -- {markUps.Any()}");
+            _log.Info($"End dates -- {markUps.Select(p => p.EndTime)}");
+            var lastTime = markUps.Max(p =>p.EndTime);
+            _log.Info($"Last date is {lastTime}");
+            if (lastTime.Date < DateTime.Now.Date)
             {
                 framesUser
                     .Where(p => p.FileFrame.Time <= markUps.Last().EndTime)
