@@ -158,11 +158,8 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);                  
 
                 var companysPhrases = _context.PhraseCompanys
-                    .Include(p => p.Phrase)
-                    .Include(p => p.Company)
-                    .Include(p => p.Company.ApplicationUser)
                     .Where(p => (!companyIds.Any() || companyIds.Contains((Guid) p.CompanyId)))
-                    .Select(p => p.Phrase)
+                    .Select(p => p.PhraseId)
                     .ToList();
                 
                 var dialogueIds = _context.Dialogues
@@ -183,7 +180,7 @@ namespace UserOperations.Controllers
                     .Where(p => p.DialogueId.HasValue && dialogueIds.Contains(p.DialogueId.Value)
                          && (!phraseIds.Any() || phraseIds.Contains((Guid) p.PhraseId))
                          && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid) p.Phrase.PhraseTypeId))
-                         && (companysPhrases.Contains(p.Phrase)))
+                         && (companysPhrases.Contains(p.PhraseId)))
                     .Select(p => new {
                         IsClient = p.IsClient,
                         FullName = p.Dialogue.ApplicationUser.FullName,
