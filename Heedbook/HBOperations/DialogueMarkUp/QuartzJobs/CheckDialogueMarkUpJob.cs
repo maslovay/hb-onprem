@@ -99,11 +99,11 @@ namespace DialogueMarkUp.QuartzJobs
                         .Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 10)
                         .OrderBy(p => p.EndTime)
                         .ToList();
-                    
-                    _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps.Select(p => new {p.ApplicationUserId, p.BegTime, p.EndTime, p.Videos}))}");  
-                    _log.Info($"Frames user count - {framesUser.Any()}, applicationUserId - {applicationUserId}, markup count - {markUps.Count()}");
                     if (markUps.Any()) 
                     {
+                        _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}");
+                        _log.Info($"Frames user count -- {framesUser.Count()}");
+                        _log.Info($"ApplicationUserId is {applicationUserId}");
                         CreateMarkUp(markUps, framesUser, applicationUserId);
                     }
                 }
@@ -150,6 +150,7 @@ namespace DialogueMarkUp.QuartzJobs
             var dialogueCreationList = new List<DialogueCreationRun>();
             var dialogueVideoAssembleList = new List<DialogueVideoAssembleRun>();
             int markUpCount;
+            _log.Info($"Last date -- {markUps.Last().EndTime.Date}");
             if (markUps.Last().EndTime.Date < DateTime.Now.Date)
             {
                 framesUser
@@ -169,6 +170,7 @@ namespace DialogueMarkUp.QuartzJobs
                 }
                 markUpCount = markUps.Count() - 1;
             }
+            _log.Info($"Mark up count  - {markUpCount}");
             var dialogues = new List<Dialogue>();
             for (int i = 0; i < markUpCount; ++i)
             {
