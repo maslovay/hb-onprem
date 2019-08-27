@@ -101,10 +101,14 @@ namespace DialogueMarkUp.QuartzJobs
                         .ToList();
                     if (markUps.Any()) 
                     {
-                        _log.Info($"Creating markup {JsonConvert.SerializeObject(markUps)}");
-                        _log.Info($"Frames user count -- {framesUser.Count()}");
-                        _log.Info($"ApplicationUserId is {applicationUserId}");
-                        CreateMarkUp(markUps, framesUser, applicationUserId);
+                        try
+                        {
+                            CreateMarkUp(markUps, framesUser, applicationUserId);
+                        }
+                        catch (Exception e)
+                        {
+                            _log.Fatal($"Exception occured {e}");
+                        }
                     }
                 }
                 _context.SaveChanges();
