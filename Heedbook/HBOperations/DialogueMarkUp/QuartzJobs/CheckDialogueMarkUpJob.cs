@@ -209,7 +209,7 @@ namespace DialogueMarkUp.QuartzJobs
                     }
                 }
                 _context.Dialogues.AddRange(dialogues);
-                _log.Info($"Created dialogues {dialogues.Count()}");
+                log.Info($"Created dialogues {dialogues.Count()}");
                 _context.SaveChanges();
 
                 foreach (var dialogueCreation in dialogueCreationList)
