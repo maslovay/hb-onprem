@@ -244,6 +244,7 @@ namespace DialogueMarkUp.QuartzJobs
                 int i = 0;
                 while (i < videos.Count())
                 {
+                    log.Info($"Current index is {i}");
                     var takeVideos = 1;
                     var begTime = videos[i].BegTime;
                     var endTime = videos[i].EndTime;
