@@ -259,7 +259,7 @@ namespace DialogueMarkUp.QuartzJobs
                             takeVideos = j - i + 1;
                         }
                     }
-                    _log.Info($"i = {i}, takeVideos = {takeVideos}, videos.Count = {videos.Count()}");
+                    log.Info($"i = {i}, takeVideos = {takeVideos}, videos.Count = {videos.Count()}");
                     updatedMarkUp.Add(new MarkUp{
                         ApplicationUserId = markUp.ApplicationUserId,
                         FaceId = markUp.FaceId,
