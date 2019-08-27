@@ -65,6 +65,7 @@ namespace DialogueMarkUp.QuartzJobs
                 
                 foreach (var applicationUserId in appUsers)
                 {
+                    _log.Info($"Processing application user id --{applicationUserId}");
                     var framesUser = frameAttributes
                         .Where(p => p.FileFrame.ApplicationUserId == applicationUserId)
                         .OrderBy(p => p.FileFrame.Time)
@@ -100,7 +101,7 @@ namespace DialogueMarkUp.QuartzJobs
                         .ToList();
                     if (markUps.Any()) 
                     {
-                        
+                        _log.Info($"Creating dialogue for markup {JsonConvert.SerializeObject(markUps.Select(p => new {p.BegTime, p.EndTime}))}");
                         CreateMarkUp(markUps, framesUser, applicationUserId, _log);
                         
                     }
@@ -176,9 +177,8 @@ namespace DialogueMarkUp.QuartzJobs
                     log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}");
                     if (markUps[i] != null)
                     {
-                        log.Info($"Processing markup {i}, {markUps[i].BegTime}, {markUps[i].EndTime}");
                         var updatedMarkUps = UpdateMarkUp(markUps[i], log);
-                        log.Info($"Result of update - {JsonConvert.SerializeObject(updatedMarkUps)}");
+                        log.Info($"Result of update - {JsonConvert.SerializeObject(updatedMarkUps.Select(p => new{p.BegTime, p.EndTime}))}");
                         foreach (var updatedMarkUp in updatedMarkUps)
                         {   
                             var dialogueId = Guid.NewGuid();
@@ -186,7 +186,6 @@ namespace DialogueMarkUp.QuartzJobs
                                 updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
                             log.Info($"Create dialogue --- {dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
                             dialogues.Add(dialogue);
-                            _context.Dialogues.Add(dialogue);
 
                             var markUpNew = _classCreator.CreateMarkUpClass(applicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
                             _context.DialogueMarkups.Add(markUpNew);
@@ -209,6 +208,8 @@ namespace DialogueMarkUp.QuartzJobs
                         }
                     }
                 }
+                _context.Dialogues.AddRange(dialogues);
+                _log.Info($"Created dialogues {dialogues.Count()}");
                 _context.SaveChanges();
 
                 foreach (var dialogueCreation in dialogueCreationList)
@@ -268,8 +269,8 @@ namespace DialogueMarkUp.QuartzJobs
                     markUpTmp.Gender = markUp.Gender;
                     markUpTmp.Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList();
                     updatedMarkUp.Add(markUpTmp);
-                    i += takeVideos;
                     log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)}, Index value - {i},  ");
+                    i += takeVideos;
                 }
             }
             return updatedMarkUp;
