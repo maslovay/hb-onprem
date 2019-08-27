@@ -150,84 +150,88 @@ namespace DialogueMarkUp.QuartzJobs
             var dialogueCreationList = new List<DialogueCreationRun>();
             var dialogueVideoAssembleList = new List<DialogueVideoAssembleRun>();
             int markUpCount;
-            _log.Info($"Mark up is not empty -- {markUps.Any()}");
-            _log.Info($"End dates -- {markUps.Select(p => p.EndTime)}");
-            var lastTime = markUps.Max(p =>p.EndTime);
-            _log.Info($"Last date is {lastTime}");
-            if (lastTime.Date < DateTime.Now.Date)
+            _log.Info($"Mark up is null -- {markUps == null}");
+            if (markUps != null)
             {
-                framesUser
-                    .Where(p => p.FileFrame.Time <= markUps.Last().EndTime)
-                    .ToList()
-                    .ForEach(p => p.FileFrame.StatusNNId = 7);
-                markUpCount = markUps.Count();
-            }
-            else
-            {
-                if (markUps.Count() >= 2 )
+                _log.Info($"Mark up is not empty -- {markUps.Any()}");
+                _log.Info($"End dates -- {markUps.Select(p => p.EndTime)}");
+                var lastTime = markUps.Max(p =>p.EndTime);
+                _log.Info($"Last date is {lastTime}");
+                if (lastTime.Date < DateTime.Now.Date)
                 {
                     framesUser
-                        .Where(p => p.FileFrame.Time <= markUps[markUps.Count() - 2].EndTime)
+                        .Where(p => p.FileFrame.Time <= markUps.Last().EndTime)
                         .ToList()
                         .ForEach(p => p.FileFrame.StatusNNId = 7);
+                    markUpCount = markUps.Count();
                 }
-                markUpCount = markUps.Count() - 1;
-            }
-            _log.Info($"Mark up count  - {markUpCount}");
-            var dialogues = new List<Dialogue>();
-            for (int i = 0; i < markUpCount; ++i)
-            {
-                _log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}, {JsonConvert.SerializeObject(markUps[i])}");
-                if (markUps[i] != null)
+                else
                 {
-                    var updatedMarkUps = UpdateMarkUp(markUps[i]);
-                    foreach (var updatedMarkUp in updatedMarkUps)
-                    {   
-                        var dialogueId = Guid.NewGuid();
+                    if (markUps.Count() >= 2 )
+                    {
+                        framesUser
+                            .Where(p => p.FileFrame.Time <= markUps[markUps.Count() - 2].EndTime)
+                            .ToList()
+                            .ForEach(p => p.FileFrame.StatusNNId = 7);
+                    }
+                    markUpCount = markUps.Count() - 1;
+                }
+                _log.Info($"Mark up count  - {markUpCount}");
+                var dialogues = new List<Dialogue>();
+                for (int i = 0; i < markUpCount; ++i)
+                {
+                    _log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}, {JsonConvert.SerializeObject(markUps[i])}");
+                    if (markUps[i] != null)
+                    {
+                        var updatedMarkUps = UpdateMarkUp(markUps[i]);
+                        foreach (var updatedMarkUp in updatedMarkUps)
+                        {   
+                            var dialogueId = Guid.NewGuid();
 
-                        var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
-                            updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
-                        _log.Info($"{dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
-                        dialogues.Add(dialogue);
+                            var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
+                                updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
+                            _log.Info($"{dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
+                            dialogues.Add(dialogue);
 
-                        var markUpNew = _classCreator.CreateMarkUpClass(applicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
-                        _log.Info(JsonConvert.SerializeObject($"Result of markup -- {updatedMarkUp.BegTime}, {updatedMarkUp.EndTime}"));
-                        _context.DialogueMarkups.Add(markUpNew);
+                            var markUpNew = _classCreator.CreateMarkUpClass(applicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
+                            _log.Info(JsonConvert.SerializeObject($"Result of markup -- {updatedMarkUp.BegTime}, {updatedMarkUp.EndTime}"));
+                            _context.DialogueMarkups.Add(markUpNew);
 
-                        dialogueVideoAssembleList.Add( new DialogueVideoAssembleRun
-                        {
-                            ApplicationUserId = applicationUserId,
-                            DialogueId = dialogueId,
-                            BeginTime = updatedMarkUp.BegTime,
-                            EndTime = updatedMarkUp.EndTime
-                        });
-                        dialogueCreationList.Add(new DialogueCreationRun {
-                            ApplicationUserId = applicationUserId,
-                            DialogueId = dialogueId,
-                            BeginTime = updatedMarkUp.BegTime,
-                            EndTime = updatedMarkUp.EndTime,
-                            AvatarFileName = updatedMarkUp.FileNames.Select(p => p.FileName).First(),
-                            Gender = updatedMarkUp.Gender
-                        });
+                            dialogueVideoAssembleList.Add( new DialogueVideoAssembleRun
+                            {
+                                ApplicationUserId = applicationUserId,
+                                DialogueId = dialogueId,
+                                BeginTime = updatedMarkUp.BegTime,
+                                EndTime = updatedMarkUp.EndTime
+                            });
+                            dialogueCreationList.Add(new DialogueCreationRun {
+                                ApplicationUserId = applicationUserId,
+                                DialogueId = dialogueId,
+                                BeginTime = updatedMarkUp.BegTime,
+                                EndTime = updatedMarkUp.EndTime,
+                                AvatarFileName = updatedMarkUp.FileNames.Select(p => p.FileName).First(),
+                                Gender = updatedMarkUp.Gender
+                            });
+                        }
                     }
                 }
-            }
-            _context.SaveChanges();
+                _context.SaveChanges();
 
-            foreach (var dialogueCreation in dialogueCreationList)
-            {
-                _publisher.Publish(dialogueCreation);
-            }
+                foreach (var dialogueCreation in dialogueCreationList)
+                {
+                    _publisher.Publish(dialogueCreation);
+                }
 
-            foreach (var dialogueAssemble in dialogueVideoAssembleList)
-            {
-                _publisher.Publish(dialogueAssemble);
-            }
+                foreach (var dialogueAssemble in dialogueVideoAssembleList)
+                {
+                    _publisher.Publish(dialogueAssemble);
+                }
 
-            var personDetection = new PersonDetectionRun{
-                ApplicationUserIds = dialogues.Select(p => p.ApplicationUserId).Distinct().ToList()
-            };
-            _publisher.Publish(personDetection);
+                var personDetection = new PersonDetectionRun{
+                    ApplicationUserIds = dialogues.Select(p => p.ApplicationUserId).Distinct().ToList()
+                };
+                _publisher.Publish(personDetection);
+            }
         }
 
         private List<MarkUp> UpdateMarkUp(MarkUp markUp, double persent = 0.7)
