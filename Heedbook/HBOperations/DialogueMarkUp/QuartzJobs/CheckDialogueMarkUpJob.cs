@@ -268,8 +268,8 @@ namespace DialogueMarkUp.QuartzJobs
                     markUpTmp.Gender = markUp.Gender;
                     markUpTmp.Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList();
                     updatedMarkUp.Add(markUpTmp);
-                    i += takeVideos;
                     log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)}, Index value - {i},  ");
+                    i += takeVideos;
                 }
             }
             return updatedMarkUp;
