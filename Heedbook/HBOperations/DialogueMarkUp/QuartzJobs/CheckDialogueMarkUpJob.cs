@@ -172,37 +172,39 @@ namespace DialogueMarkUp.QuartzJobs
             var dialogues = new List<Dialogue>();
             for (int i = 0; i < markUpCount; ++i)
             {
-                var updatedMarkUps = UpdateMarkUp(markUps[i]);
-                _log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}");
-                foreach (var updatedMarkUp in updatedMarkUps)
+                _log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}, {JsonConvert.SerializeObject(markUps[i])}");
+                if (markUps[i] != null)
                 {
-                    
-                    var dialogueId = Guid.NewGuid();
+                    var updatedMarkUps = UpdateMarkUp(markUps[i]);
+                    foreach (var updatedMarkUp in updatedMarkUps)
+                    {   
+                        var dialogueId = Guid.NewGuid();
 
-                    var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
-                        updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
-                    _log.Info($"{dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
-                    dialogues.Add(dialogue);
+                        var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
+                            updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
+                        _log.Info($"{dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
+                        dialogues.Add(dialogue);
 
-                    var markUpNew = _classCreator.CreateMarkUpClass(applicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
-                    _log.Info(JsonConvert.SerializeObject($"Result of markup -- {updatedMarkUp.BegTime}, {updatedMarkUp.EndTime}"));
-                    _context.DialogueMarkups.Add(markUpNew);
+                        var markUpNew = _classCreator.CreateMarkUpClass(applicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
+                        _log.Info(JsonConvert.SerializeObject($"Result of markup -- {updatedMarkUp.BegTime}, {updatedMarkUp.EndTime}"));
+                        _context.DialogueMarkups.Add(markUpNew);
 
-                    dialogueVideoAssembleList.Add( new DialogueVideoAssembleRun
-                    {
-                        ApplicationUserId = applicationUserId,
-                        DialogueId = dialogueId,
-                        BeginTime = updatedMarkUp.BegTime,
-                        EndTime = updatedMarkUp.EndTime
-                    });
-                    dialogueCreationList.Add(new DialogueCreationRun {
-                        ApplicationUserId = applicationUserId,
-                        DialogueId = dialogueId,
-                        BeginTime = updatedMarkUp.BegTime,
-                        EndTime = updatedMarkUp.EndTime,
-                        AvatarFileName = updatedMarkUp.FileNames.Select(p => p.FileName).First(),
-                        Gender = updatedMarkUp.Gender
-                    });
+                        dialogueVideoAssembleList.Add( new DialogueVideoAssembleRun
+                        {
+                            ApplicationUserId = applicationUserId,
+                            DialogueId = dialogueId,
+                            BeginTime = updatedMarkUp.BegTime,
+                            EndTime = updatedMarkUp.EndTime
+                        });
+                        dialogueCreationList.Add(new DialogueCreationRun {
+                            ApplicationUserId = applicationUserId,
+                            DialogueId = dialogueId,
+                            BeginTime = updatedMarkUp.BegTime,
+                            EndTime = updatedMarkUp.EndTime,
+                            AvatarFileName = updatedMarkUp.FileNames.Select(p => p.FileName).First(),
+                            Gender = updatedMarkUp.Gender
+                        });
+                    }
                 }
             }
             _context.SaveChanges();
