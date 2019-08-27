@@ -164,8 +164,7 @@ namespace UserOperations.Controllers
                     .Where(p => (!companyIds.Any() || companyIds.Contains((Guid) p.CompanyId)))
                     .Select(p => p.Phrase)
                     .ToList();
-                foreach(var ph in companysPhrases)
-                    System.Console.WriteLine($"{ph.PhraseText}");
+                
                 var dialogueIds = _context.Dialogues
                     .Where(p => p.EndTime >= begTime
                         && p.EndTime <= endTime
