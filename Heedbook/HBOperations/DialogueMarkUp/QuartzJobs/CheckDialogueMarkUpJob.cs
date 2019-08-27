@@ -173,7 +173,7 @@ namespace DialogueMarkUp.QuartzJobs
                 }
                 log.Info($"Mark up count  - {markUpCount}");
                 var dialogues = new List<Dialogue>();
-                for (int i = 0; i < markUpCount; ++i)
+                for (int i = 0; i < markUpCount; i++)
                 {
                     log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}, {JsonConvert.SerializeObject(markUps[i])}");
                     if (markUps[i] != null)
@@ -243,7 +243,7 @@ namespace DialogueMarkUp.QuartzJobs
             }
             else
             {
-                int i =0;
+                int i = 0;
                 while (i < videos.Count())
                 {
                     var takeVideos = 1;
@@ -259,6 +259,7 @@ namespace DialogueMarkUp.QuartzJobs
                             takeVideos = j - i + 1;
                         }
                     }
+                    _log.Info($"i = {i}, takeVideos = {takeVideos}, videos.Count = {videos.Count()}");
                     updatedMarkUp.Add(new MarkUp{
                         ApplicationUserId = markUp.ApplicationUserId,
                         FaceId = markUp.FaceId,
@@ -270,7 +271,7 @@ namespace DialogueMarkUp.QuartzJobs
                         Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList()
                     });
                     i += takeVideos;
-                    log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)} ");
+                    log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)}, Index value - {i},  ");
                 }
             }
             return updatedMarkUp;
