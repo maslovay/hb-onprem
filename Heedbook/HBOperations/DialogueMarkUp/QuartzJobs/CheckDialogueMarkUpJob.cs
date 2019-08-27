@@ -71,7 +71,6 @@ namespace DialogueMarkUp.QuartzJobs
                         .ToList();
                     var videosUser = videos.Where(p => p.ApplicationUserId == applicationUserId).ToList();
 
-                    _log.Info($"Application user id is {applicationUserId}, Frames to proceed - {framesUser.Count()}");
                     framesUser = FindAllFaceId(framesUser, periodFrame, periodTime);
                     
                     var videoFacesUser = CreateVideoFaces(framesUser, videosUser);
@@ -171,11 +170,10 @@ namespace DialogueMarkUp.QuartzJobs
                     }
                     markUpCount = markUps.Count() - 1;
                 }
-                log.Info($"Mark up count  - {markUpCount}");
                 var dialogues = new List<Dialogue>();
                 for (int i = 0; i < markUpCount; i++)
                 {
-                    log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}, {JsonConvert.SerializeObject(markUps[i])}");
+                    log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}");
                     if (markUps[i] != null)
                     {
                         var updatedMarkUps = UpdateMarkUp(markUps[i], log);
@@ -185,11 +183,11 @@ namespace DialogueMarkUp.QuartzJobs
 
                             var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
                                 updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
-                            log.Info($"{dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
+                            log.Info($"Create dialogue --- {dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
                             dialogues.Add(dialogue);
+                            _context.Dialogues.Add(dialogue);
 
                             var markUpNew = _classCreator.CreateMarkUpClass(applicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
-                            log.Info(JsonConvert.SerializeObject($"Result of markup -- {updatedMarkUp.BegTime}, {updatedMarkUp.EndTime}"));
                             _context.DialogueMarkups.Add(markUpNew);
 
                             dialogueVideoAssembleList.Add( new DialogueVideoAssembleRun
@@ -238,7 +236,6 @@ namespace DialogueMarkUp.QuartzJobs
 
             if (videoDuration / dialogueDuration > persent)
             {
-                System.Console.WriteLine("All good in markup");
                 updatedMarkUp.Add(markUp);
             }
             else
@@ -259,23 +256,18 @@ namespace DialogueMarkUp.QuartzJobs
                             takeVideos = j - i + 1;
                         }
                     }
-                    log.Info($"i = {i}, takeVideos = {takeVideos}, videos.Count = {videos.Count()}");
                     var markUpTmp = new MarkUp();
                     markUpTmp.ApplicationUserId = markUp.ApplicationUserId;
                     markUpTmp.FaceId = markUp.FaceId;
                     markUpTmp.BegTime = videos[i].BegTime;
-                    log.Info($"Beg time  ----- {videos[i].BegTime}");
                     markUpTmp.EndTime = videos[i + takeVideos - 1].EndTime;
-                    log.Info($"End time  ----- {videos[i + takeVideos - 1].EndTime}");
                     markUpTmp.FileNames = markUp.FileNames.Where(p => p.Time >= videos[i].BegTime && p.Time <= videos[i + takeVideos -1].EndTime).ToList();
-                    log.Info($"Filenames  ----- {JsonConvert.SerializeObject(markUpTmp.FileNames)}");
                     markUpTmp.Descriptor = markUp.Descriptor;
                     markUpTmp.Gender = markUp.Gender;
                     markUpTmp.Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList();
-                    log.Info($"Videos  ----- {JsonConvert.SerializeObject(markUpTmp.Videos)}");
                     updatedMarkUp.Add(markUpTmp);
                     i += takeVideos;
-                    // log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)}, Index value - {i},  ");
+                    log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)}, Index value - {i},  ");
                 }
             }
             return updatedMarkUp;
