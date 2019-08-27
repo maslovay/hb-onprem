@@ -176,11 +176,12 @@ namespace DialogueMarkUp.QuartzJobs
                     log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}");
                     if (markUps[i] != null)
                     {
+                        log.Info($"Processing markup {i}, {markUps[i].BegTime}, {markUps[i].EndTime}");
                         var updatedMarkUps = UpdateMarkUp(markUps[i], log);
+                        log.Info($"Result of update - {JsonConvert.SerializeObject(updatedMarkUps)}");
                         foreach (var updatedMarkUp in updatedMarkUps)
                         {   
                             var dialogueId = Guid.NewGuid();
-
                             var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
                                 updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
                             log.Info($"Create dialogue --- {dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
