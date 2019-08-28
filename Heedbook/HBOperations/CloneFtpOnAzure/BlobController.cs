@@ -21,9 +21,9 @@ namespace CloneFtpOnAzure
             var storageCredentials =  new StorageCredentials($"{_storageAccInfo.AccName}",$"{_storageAccInfo.AccKey}");
             var cloudStorageAccount =  new CloudStorageAccount(storageCredentials,  true);
             var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
-            var container = cloudBlobClient.GetContainerReference($"{containerName}");
+            var container = cloudBlobClient.GetContainerReference(containerName);
             await container.CreateIfNotExistsAsync();
-            var newBlob =  container.GetBlockBlobReference($"{name}");
+            var newBlob =  container.GetBlockBlobReference(name);
             await newBlob.UploadFromStreamAsync(stream);
         }
         
