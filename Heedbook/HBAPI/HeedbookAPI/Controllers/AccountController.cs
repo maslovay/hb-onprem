@@ -244,6 +244,25 @@ namespace UserOperations.Controllers
             }
         }
 
+        [HttpPost("ChangePasswordOnDefault")]
+        [SwaggerOperation(Summary = "For own use", Description = "Change password for user on Test_User12345")]
+        public async Task<IActionResult> UserChangePasswordOnDefaultAsync( [FromBody] string email )
+        {
+            try
+            {             
+                var user = _context.ApplicationUsers.FirstOrDefault(x => x.Email.ToUpper() == email.ToUpper());
+                if (user == null) return BadRequest("No such user");
+                user.PasswordHash = _loginService.GeneratePasswordHash("Test_User12345");                  
+                await _context.SaveChangesAsync();
+                return Ok("password changed");
+            }
+            catch (Exception e)
+            {
+                _log.Fatal($"Exception occurred {e}");
+                return BadRequest(e.Message);
+            }
+        }
+
         [HttpPost("Unblock")]
         [SwaggerOperation(Summary = "Unblock in case failed attempts to log in", Description = "Unblock, zero counter of failed log in, hange password for user. Send email with new password")]
         public async Task<IActionResult> Unblock(
