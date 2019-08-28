@@ -49,21 +49,24 @@ namespace CloneFtpOnAzure
                                     d.CreationTime >= DateTime.UtcNow.AddHours(-24))
                         .Select(s => s.DialogueId)
                         .ToList();
+                    var avatarsContainer = _storageAccInfo.AvatarName;
+                    var videosContainer = _storageAccInfo.VideoName;
+                    var audioContainer = _storageAccInfo.AudioName;
                     foreach (var qq in dialogue)
                     {
                         var avatar = qq + ".jpg";
                         var video = qq + ".mkv";
                         var audio = qq + ".wav";
                         
-                        var avatarStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync("clientavatars/" + avatar);
+                        var avatarStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync($"{avatarsContainer}" + "/" + avatar);
                         await _blobController.UploadFileStreamToBlob(avatarStream,
-                            avatar, "clientavatars");
-                        var videosStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync("dialoguevideos/" + video);
+                            avatar, $"{avatarsContainer}");
+                        var videosStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync($"{videosContainer}" + "/" + video);
                         await _blobController.UploadFileStreamToBlob(videosStream,
-                            avatar, "dialoguevideos");
-                        var audioStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync("dialogueaudios/" + audio);
+                            avatar, $"{videosContainer}");
+                        var audioStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync($"{audioContainer}" + "/" + audio);
                         await _blobController.UploadFileStreamToBlob(audioStream,
-                            avatar, "dialogueaudios");
+                            avatar, $"{audioContainer}");
                     }
 
                     _log.Info("Download and Upload finished");
