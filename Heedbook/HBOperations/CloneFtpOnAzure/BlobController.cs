@@ -16,16 +16,24 @@ namespace CloneFtpOnAzure
         {
             _storageAccInfo = storageAccInfo;
         }
-        public async Task UploadFileStreamToBlob(MemoryStream stream, string name,string containerName)
+
+        public async Task UploadFileStreamToBlob(MemoryStream stream, string name, string containerName)
         {
-            var storageCredentials =  new StorageCredentials($"{_storageAccInfo.AccName}",$"{_storageAccInfo.AccKey}");
-            var cloudStorageAccount =  new CloudStorageAccount(storageCredentials,  true);
-            var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
-            var container = cloudBlobClient.GetContainerReference(containerName);
-            await container.CreateIfNotExistsAsync();
-            var newBlob =  container.GetBlockBlobReference(name);
-            await newBlob.UploadFromStreamAsync(stream);
+            try
+            {
+                var storageCredentials = new StorageCredentials(_storageAccInfo.AccName, _storageAccInfo.AccKey);
+                var cloudStorageAccount = new CloudStorageAccount(storageCredentials, true);
+                var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
+                var container = cloudBlobClient.GetContainerReference(containerName);
+                await container.CreateIfNotExistsAsync();
+                var newBlob = container.GetBlockBlobReference(name);
+                await newBlob.UploadFromStreamAsync(stream);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
-        
     }
 }

@@ -10,6 +10,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Quartz;
 using Microsoft.Azure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CloneFtpOnAzure
 {
@@ -20,13 +21,14 @@ namespace CloneFtpOnAzure
         private readonly ElasticClientFactory _elasticClientFactory;
         private StorageAccInfo _storageAccInfo;
         private RecordsContext _context;
-        public FtpJob(SftpClient sftpClient,
+        private readonly IServiceScopeFactory _scopeFactory;
+        public FtpJob(IServiceScopeFactory scopeFactory,
+            SftpClient sftpClient,
             BlobController blobController,
         ElasticClientFactory elasticClientFactory,
-            StorageAccInfo storageAccInfo,
-            RecordsContext context)
+            StorageAccInfo storageAccInfo)
         {
-            _context = context;
+            _scopeFactory = scopeFactory;
             _storageAccInfo = storageAccInfo;
             _elasticClientFactory = elasticClientFactory;
             _blobController = blobController;
@@ -35,35 +37,43 @@ namespace CloneFtpOnAzure
         
         public async Task Execute(IJobExecutionContext context)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
-            try
+            using (var scope = _scopeFactory.CreateScope())
             {
-                var dialogue = _context.Dialogues
-                    .Where(d => d.Status.StatusId == 3 &&
-                                d.CreationTime >= DateTime.UtcNow.AddHours(-24))
-                    .Select(s=>s.DialogueId);
-                foreach (var qq in dialogue)
+                var _log = _elasticClientFactory.GetElasticClient();
+                try
                 {
-                    var avatar = qq + ".jpg";
-                    var video = qq + ".mkv";
-                    var audio = qq + ".wav";
-                    var avstream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync("clientavatars/" + avatar);
-                 await _blobController.UploadFileStreamToBlob(avstream,
-                          avatar, "clientavatars");
-                    var vistream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync("dialoguevideos/" + video);
-                  await _blobController.UploadFileStreamToBlob(vistream,
-                      avatar, "dialoguevideos");
-                    var austream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync("dialogueaudios/" + audio);  
-                   await _blobController.UploadFileStreamToBlob(austream,
-                       avatar, "dialogueaudios");
+                    _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
+                    
+                    var dialogue = _context.Dialogues
+                        .Where(d => d.Status.StatusId == 3 &&
+                                    d.CreationTime >= DateTime.UtcNow.AddHours(-24))
+                        .Select(s => s.DialogueId)
+                        .ToList();
+                    foreach (var qq in dialogue)
+                    {
+                        var avatar = qq + ".jpg";
+                        var video = qq + ".mkv";
+                        var audio = qq + ".wav";
+                        
+                        var avatarStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync("clientavatars/" + avatar);
+                        await _blobController.UploadFileStreamToBlob(avatarStream,
+                            avatar, "clientavatars");
+                        var videosStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync("dialoguevideos/" + video);
+                        await _blobController.UploadFileStreamToBlob(videosStream,
+                            avatar, "dialoguevideos");
+                        var audioStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync("dialogueaudios/" + audio);
+                        await _blobController.UploadFileStreamToBlob(audioStream,
+                            avatar, "dialogueaudios");
+                    }
+
+                    _log.Info("Download and Upload finished");
+
                 }
-                
-                _log.Info("Download and Upload finished");
-            }
-            catch (Exception e)
-            {
-                _log.Fatal($"{e}");
-                throw;
+                catch (Exception e)
+                {
+                    _log.Fatal($"{e}");
+                    throw;
+                }
             }
         }
     }
