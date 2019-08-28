@@ -1,37 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using UserOperations;
-using UserOperations.Models;
+﻿using System.Collections.Generic;
 using HBData.Repository;
 using HBData;
 using HBData.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
-using System.Globalization;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using UserOperations.Services;
-using Microsoft.AspNetCore.Identity;
 using HBLib.Utils;
 using HBLib;
 using UserOperations.Utils;
+using BenchmarkDotNet.Running;
+using BenchmarkDotNet.Attributes;
 
 namespace UserOperations
 {
@@ -71,7 +56,7 @@ namespace UserOperations
             })
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
-            
+      
             services.AddSwaggerGen(c =>
             {
                 c.EnableAnnotations();
@@ -161,6 +146,8 @@ namespace UserOperations
             app.UseCors(MyAllowSpecificOrigins);
             app.UseHttpsRedirection();
             app.UseMvc();
+
+         //  BenchmarkRunner.Run<TestSession>();
         }
 
     }

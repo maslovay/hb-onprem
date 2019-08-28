@@ -1,37 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
 using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-using UserOperations.Models.AnalyticModels;
-using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
-using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using HBLib.Utils;
 using UserOperations.Utils;
-using HBMLHttpClient;
 using System.Collections;
 using System.Text.RegularExpressions;
 using static HBLib.Utils.SftpClient;
@@ -48,16 +26,13 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
         private readonly SftpClient _sftpClient;
-        // private readonly HbMlHttpClient _mlclient;
         private readonly ILoginService _loginService;
-        private Dictionary<string, string> userClaims;
 
         public DemonstrationController(
             RecordsContext context,
             IConfiguration config,
             DBOperations dbOperation,
             SftpClient sftpClient,
-            //     HbMlHttpClient mlclient,
             ILoginService loginService
             )
         {
@@ -65,107 +40,8 @@ namespace UserOperations.Controllers
             _config = config;
             _dbOperation = dbOperation;
             _sftpClient = sftpClient;
-            //   _mlclient = mlclient;
             _loginService = loginService;
-        }
-
-        // [HttpPost("AnalyzeFrames")]
-        // public async Task<IActionResult> AnalyzeFramesAsync([FromQuery(Name = "applicationUserId")] Guid applicationUserId, 
-        //                                     [FromBody] string fileString)
-        // {
-        //     try
-        //     {
-        //         var companyId = _context.ApplicationUsers.First(p => p.Id == applicationUserId).CompanyId;
-        //         var curDate = DateTime.Now;
-        //         var imgBytes = Convert.FromBase64String(fileString);
-        //         var memoryStream = new MemoryStream(imgBytes);
-
-        //         if (FaceDetection.IsFaceDetected(imgBytes, out var faceLength))
-        //         {
-        //             // to do: base 64
-        //             var faceResult = await _mlclient.GetFaceResult(fileString);
-        //             var age = faceResult.FirstOrDefault().Attributes.Age;
-        //             var gender = faceResult.FirstOrDefault().Attributes.Gender;
-        //             var genderId = (gender == "male") ? 1 : 2;
-
-
-        //             var campaigns = _context.CampaignContents
-        //                 .Include(p => p.Campaign)
-        //                 .Include(p => p.Content)
-        //                 .Where(p => p.Campaign.CompanyId == companyId
-        //                     && p.Campaign.BegAge <= age
-        //                     && p.Campaign.EndAge > age
-        //                     && p.Campaign.BegDate <= curDate
-        //                     && p.Campaign.EndDate >= curDate
-        //                     && p.Campaign.StatusId == 3
-        //                     && p.Campaign.IsSplash == false
-        //                     && (p.Campaign.GenderId == 0 | p.Campaign.GenderId == genderId))
-        //                 .Select(p => new ContentInfo {
-        //                     CampaignContentId = p.CampaignId.ToString(),
-        //                     Duration = p.Content.Duration,
-        //                     RawHtml = p.Content.RawHTML,
-        //                     SequenceNumber = p.SequenceNumber,
-        //                 }).ToList();
-
-
-        //             campaigns = campaigns.OrderBy(p => p.CampaignContentId).ThenBy(p => p.SequenceNumber).ToList();
-        //             var iteration = 0;
-        //             foreach (var campaign in campaigns)
-        //             {
-        //                 campaign.SequenceNumber = iteration;
-        //                 iteration += 1;
-        //             };
-        //             var result = new Result
-        //             {
-        //                 Age = (int?) age,
-        //                 Gender = gender,
-        //                 Content = campaigns
-        //             };
-        //             return Ok(JsonConvert.SerializeObject(result));
-
-        //         }
-        //         else
-        //         {
-        //             System.Console.WriteLine("no faces detecrted");
-        //             var campaigns = _context.CampaignContents
-        //                 .Include(p => p.Campaign)
-        //                 .Include(p => p.Content)
-        //                 .Where(p => p.Campaign.CompanyId == companyId
-        //                     && p.Campaign.BegDate <= curDate
-        //                     && p.Campaign.EndDate >= curDate
-        //                     && p.Campaign.StatusId == 3
-        //                     && p.Campaign.IsSplash == true)
-        //                 .Select(p => new ContentInfo
-        //                 {
-        //                     CampaignContentId = p.CampaignContentId.ToString(),
-        //                     Duration = p.Content.Duration,
-        //                     RawHtml = p.Content.RawHTML,
-        //                     SequenceNumber = p.SequenceNumber,
-        //                 }).ToList();
-
-        //             campaigns = campaigns.OrderBy(p => p.CampaignContentId).ThenBy(p => p.SequenceNumber).ToList();
-        //             var iteration = 0;
-        //             foreach (var campaign in campaigns)
-        //             {
-        //                 campaign.SequenceNumber = iteration;
-        //                 iteration += 1;
-        //             };
-        //             var result = new Result
-        //             {
-        //                 Age = null,
-        //                 Gender = null,
-        //                 Content = campaigns
-        //             };
-        //             return Ok(JsonConvert.SerializeObject(result));  
-        //         }
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         return BadRequest(e);
-        //     }
-        // }
-
-      
+        }      
 
         [HttpPost("FlushStats")]
         [SwaggerOperation(Summary = "Save contents display", Description = "Saves data about content display on device (content, user, content type, start and end date) for statistic")]
@@ -246,14 +122,6 @@ namespace UserOperations.Controllers
                     }).ToList()
                 }).ToList();
 
-                // var htmlList = campaigns.SelectMany(x => x.contents.ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML))
-                // .Union(_context.Contents.Where( c => c.CompanyId == companyId && (c.CampaignContents == null || c.CampaignContents.Count() == 0))
-                //     .Select(c => new ContentWithId() { contentWithId = c }).ToList()
-                //     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable())
-                // .Union(_context.Contents.Where( c => c.CompanyId == null)
-                //     .Select(c => new ContentWithId() { contentWithId = c }).ToList()
-                //     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable());
-
                 var htmlList = campaigns
                     .SelectMany(x => x.contents
                     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML))
@@ -270,9 +138,7 @@ namespace UserOperations.Controllers
                 }
                 catch
                 {
-                   // return BadRequest("This company has no any content");
                 }
-            //    List<object> resultMedia = new List<object>();
                 string unmutedVideo = "<video ";
                 string mutedVideo = "<video autoplay muted ";
 
@@ -293,9 +159,6 @@ namespace UserOperations.Controllers
                         {
                             link = link.Replace("&amp", "");
                             link = link.Replace("&quot;", "");
-                            // var fileInfo = media.Where(x=>x.url == link).FirstOrDefault();
-                            // if(fileInfo != null)
-                            //     resultMedia.Add(fileInfo);
                         }
                         match = match.NextMatch();
                     }
@@ -310,7 +173,6 @@ namespace UserOperations.Controllers
                 var responseContent = new List<object>();
                 responseContent.Add(new { campaigns = campaignsList });
                 responseContent.Add(new { htmlRaws = htmlList2 });
-            //    responseContent.Add(new { blobMedia = resultMedia });
                 responseContent.Add(new { blobMedia = media });
                 return Ok(responseContent);
             }
