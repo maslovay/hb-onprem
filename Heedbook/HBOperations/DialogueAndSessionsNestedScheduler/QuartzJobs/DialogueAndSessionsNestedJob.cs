@@ -33,45 +33,53 @@ namespace DialogueAndSessionsNested.QuartzJobs
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _publisher = publisher;
             _elasticClientFactory = elasticClientFactory;
+            _log = _elasticClientFactory.GetElasticClient();    
         }
 
         public async Task Execute(IJobExecutionContext context)
         {   
             System.Console.WriteLine($"started");
-            var _log = _elasticClientFactory.GetElasticClient();    
+            
             _log.Info("Function started");
-            var forLastDays = 1;
+            
             var sessions = _context.Sessions
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.ApplicationUser.Company)
-                .Where(p => p.BegTime >= DateTime.Now.Date.AddDays(-(forLastDays+1)))                
+                .Where(p => p.BegTime >= DateTime.Now.Date.AddDays(-3))                
                 .ToList();
             
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
-                .Where(p => p.BegTime >= DateTime.Now.Date.AddDays(-(forLastDays))
+                .Where(p => p.BegTime >= DateTime.Now.Date.AddDays(-2)
                     && !(p.StatusId == 8 || p.StatusId == 12 || p.StatusId == 13))
                 .Where(p => 
-                    !(sessions.Where(k => k.ApplicationUserId == p.ApplicationUserId
-                        && p.BegTime >= k.BegTime 
-                        && p.EndTime <= k.EndTime)
-                    .Any()))
+                    !(sessions.Any(s => s.ApplicationUserId == p.ApplicationUserId
+                        && p.BegTime >= s.BegTime 
+                        && p.EndTime <= s.EndTime)))
                 .ToList();
-            _log.Info($"Dialogues not nested in sessions count: {dialogues.Count}");                        
-            
+            _log.Info($"Dialogues not nested in sessions count: {dialogues.Count}");  
+
             foreach(var d in dialogues)
-            {                
-                CheckSessionForDialogue(d, sessions);
-                _log.Info($"dialogue {d.DialogueId} passed nesting test");
-            }
-            _context.SaveChanges();          
+            {   
+                try
+                {
+                    CheckSessionForDialogue(d, sessions);
+                    _log.Info($"dialogue {d.DialogueId} passed nesting test");
+                }                
+                catch(Exception ex)
+                {
+                    _log.Fatal(ex.Message);
+                }                
+            }            
+            _context.SaveChanges();      
+            System.Console.WriteLine($"end");    
         }
        
         private void CheckSessionForDialogue(Dialogue dialogue, List<Session> sessions)
         {
             var applicationUser = dialogue.ApplicationUser;
             var applicationUserId = dialogue.ApplicationUserId;            
-            
+
             var intersectSession = sessions.Where(p => p.ApplicationUserId == applicationUserId
                     && (p.StatusId == 6 || p.StatusId == 7)
                     && ((p.BegTime <= dialogue.BegTime
@@ -95,7 +103,7 @@ namespace DialogueAndSessionsNested.QuartzJobs
             {
                 var curTime = DateTime.UtcNow;
                 var oldTime = DateTime.UtcNow.AddDays(-3);
-                var lastSession = _context.Sessions
+                var lastSession = sessions
                         .Where(p => p.ApplicationUserId == applicationUserId 
                             && p.BegTime >= oldTime 
                             && p.EndTime <= dialogue.BegTime)
@@ -117,7 +125,7 @@ namespace DialogueAndSessionsNested.QuartzJobs
                         EndTime = dialogue.EndTime,
                         StatusId = 7
                     };           
-                    sessions.Add(tempSession);
+                    _context.Sessions.Add(tempSession);
                     _log.Info($"For dialogue {dialogue.DialogueId} created session {tempSession}");
                 }
                 return;
@@ -157,7 +165,7 @@ namespace DialogueAndSessionsNested.QuartzJobs
                             EndTime = dialogue.EndTime,
                             StatusId = 7
                         };
-                        sessions.Add(tempSession);  
+                        _context.Sessions.Add(tempSession);  
                         _log.Info($"For dialogue {dialogue.DialogueId} created session {tempSession}");
                         foreach(var s in insideSessions)
                         {
