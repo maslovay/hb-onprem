@@ -86,7 +86,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
                                 var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
 
-                                if ((sttResults.Response == null && differenceHour >= 1)||sttResults.Response.Results==null)
+                                if ((sttResults?.Response == null && differenceHour >= 1)||sttResults?.Response?.Results==null)
                                 {
                                     audio.StatusId = 8;
                                     _log.Error($"Error with stt results for {audio.DialogueId}");
@@ -130,16 +130,9 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                         audio.STTResult = JsonConvert.SerializeObject(recognized);
                                     }
                                     else
-                                    {
-                                        if (sttResults.Response.Results != null)
-                                        {
-                                            audio.StatusId = 7;
-                                            audio.STTResult = "[]";
-                                        }
-                                        else
-                                        {
-                                            _log.Info($"Stt result is null {sttResults.Response.Results == null}");
-                                        }
+                                    {                                        
+                                        audio.StatusId = 7;
+                                        audio.STTResult = "[]";
                                     }
                                     _log.Info($"Has items: {sttResults.Response.Results.Any()}");
                                 }
@@ -310,7 +303,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 {
                     _log.Fatal($"GetPositiveShareInText can't parse string: {posShareStrg.Item1.Trim()} dialogueId: {dialogueId}");
                     // TODO: delete after bug fixing
-                    throw new Exception($"GetPositiveShareInText can't parse string: {posShareStrg.Item1.Trim()} dialogueId: {dialogueId}"); 
+                    result = 0; 
                 }
                 
                 return result;
