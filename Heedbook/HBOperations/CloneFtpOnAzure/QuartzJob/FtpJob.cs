@@ -3,60 +3,80 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using HBData;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Quartz;
 using Microsoft.Azure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CloneFtpOnAzure
 {
     public class FtpJob : IJob
     {
-        public SftpClient _sftpClient;
-        public BlobController _blobController;
+        private SftpClient _sftpClient;
+        private BlobController _blobController;
         private readonly ElasticClientFactory _elasticClientFactory;
         private StorageAccInfo _storageAccInfo;
-        public FtpJob(SftpClient sftpClient,
+        private RecordsContext _context;
+        private readonly IServiceScopeFactory _scopeFactory;
+
+        public FtpJob(IServiceScopeFactory scopeFactory,
+            SftpClient sftpClient,
             BlobController blobController,
-        ElasticClientFactory elasticClientFactory,
+            ElasticClientFactory elasticClientFactory,
             StorageAccInfo storageAccInfo)
         {
+            _scopeFactory = scopeFactory;
             _storageAccInfo = storageAccInfo;
             _elasticClientFactory = elasticClientFactory;
             _blobController = blobController;
             _sftpClient = sftpClient;
         }
-        
+
         public async Task Execute(IJobExecutionContext context)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
-            try
+            using (var scope = _scopeFactory.CreateScope())
             {
-                string[] path = _storageAccInfo.DirectoryName;
-                var files = new Dictionary<string, ICollection<String>>();
-                path.Select(async item => files[item] = await _sftpClient
-                    .ListDirectoryFilesByConditionAsync(item, s => s.LastWriteTime >= DateTime.UtcNow.AddHours(-24)))
-                    .ToList();
-                _log.Info("Try to DownloadOnFtp and UploadBlobOnAzure");
-                foreach (var file in files)
+                var _log = _elasticClientFactory.GetElasticClient();
+                try
                 {
-                    foreach (var fileName in file.Value)
+                    _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
+
+                    var dialogues = _context.Dialogues
+                        .Where(d => d.Status.StatusId == 3 &&
+                                    d.CreationTime >= DateTime.UtcNow.AddHours(-24))
+                        .Select(s => s.DialogueId)
+                        .ToList();
+                    var tasks = new List<Task>();
+                    var dict = new Dictionary<String, String>()
                     {
-                        using (var stream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(file.Key + "/" + fileName))
+                        {_storageAccInfo.AvatarName, ".jpg"},
+                        {_storageAccInfo.VideoName, ".mkv"},
+                        {_storageAccInfo.AudioName, ".wav"}
+                    };
+                    _log.Info("Try to download and upload");
+                    foreach (var dialogue in dialogues)
+                    {
+                        foreach (var (key, value) in dict)
                         {
-                            await _blobController.UploadFileStreamToBlob(stream,
-                                Path.GetFileName(fileName), file.Key);
+                            var filePath = key + "/" + dialogue + value;
+                            var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
+                            tasks.Add(_blobController.UploadFileStreamToBlob(filePath, stream));
                         }
+
                     }
+
+                    await Task.WhenAll(tasks);
+                    _log.Info("Download and Upload finished");
                 }
-                _log.Info("Download and Upload finished");
-            }
-            catch (Exception e)
-            {
-                _log.Fatal($"{e}");
-                throw;
+                catch (Exception e)
+                {
+                    _log.Fatal($"{e}");
+                    throw;
+                }
             }
         }
     }

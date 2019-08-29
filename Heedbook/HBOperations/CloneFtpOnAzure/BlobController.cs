@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure;
 using Microsoft.WindowsAzure.Storage;
@@ -16,16 +18,22 @@ namespace CloneFtpOnAzure
         {
             _storageAccInfo = storageAccInfo;
         }
-        public async Task UploadFileStreamToBlob(MemoryStream stream, string name,string containerName)
+
+        public async Task UploadFileStreamToBlob(String filePath, Stream stream)
         {
-            var storageCredentials =  new StorageCredentials($"{_storageAccInfo.AccName}",$"{_storageAccInfo.AccKey}");
-            var cloudStorageAccount =  new CloudStorageAccount(storageCredentials,  true);
+            
+            var splited = filePath.Split('/');
+            var containerName = splited.First();
+            var fileName = splited.Last();
+            
+            var storageCredentials = new StorageCredentials(_storageAccInfo.AccName, _storageAccInfo.AccKey);
+            var cloudStorageAccount = new CloudStorageAccount(storageCredentials, true);
             var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
-            var container = cloudBlobClient.GetContainerReference($"{containerName}");
+            
+            var container = cloudBlobClient.GetContainerReference(containerName);
             await container.CreateIfNotExistsAsync();
-            var newBlob =  container.GetBlockBlobReference($"{name}");
+            var newBlob = container.GetBlockBlobReference(fileName);
             await newBlob.UploadFromStreamAsync(stream);
         }
-        
     }
 }
