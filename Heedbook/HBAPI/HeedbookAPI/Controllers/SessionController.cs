@@ -32,6 +32,7 @@ using HBData;
 using Microsoft.AspNetCore.Cors;
 using UserOperations.Utils;
 using HBLib.Utils;
+using BenchmarkDotNet.Attributes;
 
 namespace UserOperations.Controllers
 {
@@ -87,7 +88,7 @@ namespace UserOperations.Controllers
                 
                 var lastSession = _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
-                        .ToList().OrderByDescending(p => p.BegTime)
+                        .OrderByDescending(p => p.BegTime)
                         .FirstOrDefault();    
 
                 var alertOpenCloseSession = new Alert();   
@@ -136,6 +137,7 @@ namespace UserOperations.Controllers
                             notClosedSessions[i].StatusId = 7;
                             notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
                             _context.SaveChanges();
+                            _log.Info($"Session/SessionStatus SessionId-{notClosedSessions[i].SessionId} closed with 0 time");
                     }
                     switch (actionId)
                     {
@@ -215,14 +217,14 @@ namespace UserOperations.Controllers
         public IActionResult SessionStatus([FromQuery] Guid applicationUserId)
         {
             try
-            {  
+            {
                 var session = _context.Sessions
                         .Where(p => p.ApplicationUserId == applicationUserId)
-                        .OrderByDescending(p => p.BegTime)
-                        .First();   
-                var result = new { session?.BegTime, session?.StatusId };     
+                         ?.OrderByDescending(p => p.BegTime)
+                         ?.FirstOrDefault();
+                var result = new { session?.BegTime, session?.StatusId };
                 _log.Info($"Get Session/SessionStatus {applicationUserId}");
-                return Ok(result);  
+                return Ok(result);
             }
             catch (Exception e)
             {
@@ -233,8 +235,30 @@ namespace UserOperations.Controllers
             }
         }
 
-      
-       [HttpPost("AlertNotSmile")]
+        [HttpGet("SessionStatus2")]
+        public IActionResult SessionStatus2([FromQuery] Guid applicationUserId)
+        {
+            try
+            {
+                var session = _context.Sessions
+                        .Where(p => p.ApplicationUserId == applicationUserId).ToList()
+                         ?.OrderByDescending(p => p.BegTime)
+                         ?.FirstOrDefault();
+                var result = new { session?.BegTime, session?.StatusId };
+                _log.Info($"Get Session/SessionStatus {applicationUserId}");
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                var response = new Response();
+                response.Message = $"Exception occured {e}";
+                _log.Fatal($"Exception occurred {e}");
+                return BadRequest(response);
+            }
+        }
+
+
+        [HttpPost("AlertNotSmile")]
         public IActionResult AlertNotSmile([FromBody] Guid applicationUserId)
         {
             try

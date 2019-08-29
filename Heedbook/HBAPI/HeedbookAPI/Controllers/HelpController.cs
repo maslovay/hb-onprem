@@ -39,6 +39,7 @@ using HBLib.Utils;
 using UserOperations.Utils;
 using Npgsql;
 using System.Threading;
+using BenchmarkDotNet.Attributes;
 
 namespace UserOperations.Controllers
 {
@@ -46,39 +47,26 @@ namespace UserOperations.Controllers
     [ApiController]
     public class HelpController : Controller
     {
-        private readonly IndexesProvider _indexesProvider;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-        private readonly int activeStatus;
+       // private readonly int activeStatus;
 
 
         public HelpController(
-            IndexesProvider indexesProvider,
-            SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient
             )
         {
-            _indexesProvider = indexesProvider;
-            _signInManager = signInManager;
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-            activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
-        }
-
-        [HttpGet("GetIndex")]
-        public async Task<IActionResult> GetIndex( [FromQuery(Name = "companyId")] Guid companyId)
-        {
-                _indexesProvider.GetData(companyId);
-            return Ok("I've done");
-        }
+           // activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
+        }     
 
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling
@@ -262,37 +250,37 @@ namespace UserOperations.Controllers
 
 
 
-            var dialogues = _context.Dialogues.Where(p => p.StatusId == 8 && p.BegTime >= begTime).ToList();
-            System.Console.WriteLine(dialogues.Count());
-            dialogues = dialogues.Where(p => p.Comment == null || !p.Comment.StartsWith("Too many holes in dialogue")).ToList();
-            System.Console.WriteLine(dialogues.Count());
-            var i = 0;
-            foreach (var dialogue in dialogues)
-            {
-                try
-                {
-                    var url = $"https://slavehb.northeurope.cloudapp.azure.com/user/DialogueRecalculate/CheckRelatedDialogueData?DialogueId={dialogue.DialogueId}";
-                    System.Console.WriteLine($"Processing {dialogue.DialogueId}, Index {i}");
+            //var dialogues = _context.Dialogues.Where(p => p.StatusId == 8 && p.BegTime >= begTime).ToList();
+            //System.Console.WriteLine(dialogues.Count());
+            //dialogues = dialogues.Where(p => p.Comment == null || !p.Comment.StartsWith("Too many holes in dialogue")).ToList();
+            //System.Console.WriteLine(dialogues.Count());
+            //var i = 0;
+            //foreach (var dialogue in dialogues)
+            //{
+            //    try
+            //    {
+            //        var url = $"https://slavehb.northeurope.cloudapp.azure.com/user/DialogueRecalculate/CheckRelatedDialogueData?DialogueId={dialogue.DialogueId}";
+            //        System.Console.WriteLine($"Processing {dialogue.DialogueId}, Index {i}");
 
-                    var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-                    httpWebRequest.ContentType = "application/json";
-                    httpWebRequest.Method = "POST";
+            //        var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            //        httpWebRequest.ContentType = "application/json";
+            //        httpWebRequest.Method = "POST";
 
-                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                    {
-                        var result = streamReader.ReadToEnd();
-                        System.Console.WriteLine("Result ---- " + result);
-                    }
-                    Thread.Sleep(1000);
-                    i++;
-                }
-                catch (Exception e)
-                {
+            //        var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+            //        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            //        {
+            //            var result = streamReader.ReadToEnd();
+            //            System.Console.WriteLine("Result ---- " + result);
+            //        }
+            //        Thread.Sleep(1000);
+            //        i++;
+            //    }
+            //    catch (Exception e)
+            //    {
                     
-                }
+            //    }
             
-            }
+            //}
 
 
             // System.Console.WriteLine(audios.Select(p => p.DialogueId).Distinct().ToList().Count());

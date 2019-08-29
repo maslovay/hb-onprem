@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Renci.SshNet.Messages.Transport;
 using Renci.SshNet.Sftp;
 
@@ -12,28 +13,20 @@ namespace HBLib.Utils
 {
     public class SftpClient : IDisposable
     {
-        private readonly string HttpFileUrl;
+        private readonly string httpFileUrl;
         private readonly Renci.SshNet.SftpClient _client;
         private readonly SftpSettings _sftpSettings;
+        private readonly IConfiguration _config;
 
-        public SftpClient(SftpSettings sftpSettings)
+        public SftpClient(SftpSettings sftpSettings, IConfiguration config)
         {
 
             _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
                 sftpSettings.Password);
-
             _sftpSettings = sftpSettings;
-            // fileref = new FileReference(new SftpSettings()
-            // {
-            //     Host = _sftpSettings.Host,
-            //     Port = _sftpSettings.Port,
-            //     UserName = _sftpSettings.UserName,
-            //     Password = _sftpSettings.Password,
-            //     DestinationPath = _sftpSettings.DestinationPath,
-            //     DownloadPath = _sftpSettings.DownloadPath
-            // });
+            _config = config;
 
-            HttpFileUrl = @"http://filereference.northeurope.cloudapp.azure.com/";
+            httpFileUrl = _config["FileRefPath:url"];
             var _retryCount = 5;
             while (true)
             {
@@ -49,7 +42,6 @@ namespace HBLib.Utils
                     Thread.Sleep(100 * _retryCount);
                 }
             }
-            // ConnectToSftpAsync().Wait();
         }
 
         public void Dispose()
@@ -144,9 +136,7 @@ namespace HBLib.Utils
                 .Select(f =>
                     new FileInfoModel
                     {
-                        url = $"{HttpFileUrl}{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
-
-                        //     url = $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
+                        url = $"{httpFileUrl}{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
                         name = f.Name,
                         date = f.Attributes.LastWriteTime
                     }));
@@ -390,7 +380,7 @@ namespace HBLib.Utils
 
         public FileResult GetFileLink(string directory, string file, DateTime exp = default(DateTime))
         {
-            return new FileResult { path = $"{HttpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
+            return new FileResult { path = $"{httpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
             // return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
         }
         public class FileInfoModel
