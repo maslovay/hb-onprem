@@ -233,29 +233,7 @@ namespace UserOperations.Controllers
                 _log.Fatal($"Exception occurred {e}");
                 return BadRequest(response);
             }
-        }
-
-        [HttpGet("SessionStatus2")]
-        public IActionResult SessionStatus2([FromQuery] Guid applicationUserId)
-        {
-            try
-            {
-                var session = _context.Sessions
-                        .Where(p => p.ApplicationUserId == applicationUserId).ToList()
-                         ?.OrderByDescending(p => p.BegTime)
-                         ?.FirstOrDefault();
-                var result = new { session?.BegTime, session?.StatusId };
-                _log.Info($"Get Session/SessionStatus {applicationUserId}");
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                var response = new Response();
-                response.Message = $"Exception occured {e}";
-                _log.Fatal($"Exception occurred {e}");
-                return BadRequest(response);
-            }
-        }
+        }      
 
 
         [HttpPost("AlertNotSmile")]

@@ -1,5 +1,3 @@
-
-using System.Linq;
 using Microsoft.Extensions.Configuration;
 using UserOperations.Services;
 using HBData;
@@ -13,22 +11,25 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using HBLib;
 using Microsoft.Extensions.Options;
+using System.Collections.Generic;
 
-namespace UserOperations.Controllers
+namespace UserOperations.Controllers.Test
 {
     [InProcess]
     [MemoryDiagnoser]
-    public class TestSession : ServiceTest
+    public class TestAnalyticClientProfile : ServiceTest
     {
         private Startup _startup { get; set; }
         private RecordsContext _context { get; set; }
         private DBOperations _dbOperation { get; set; }
+        private  ILoginService _loginService { get; set; }
+        private  RequestFilters _requestFilters { get; set; }
         private ElasticClient _log { get; set; }
         public IConfiguration _config { get; private set; }
         public ServiceCollection _services { get; private set; }
         public ServiceProvider _serviceProvider { get; private set; }
 
-        private SessionController _sessionController;
+        private TestController _testController;
 
         [GlobalSetup]
         public void GlobalSetup()
@@ -44,18 +45,20 @@ namespace UserOperations.Controllers
             "eff7ec92-ea70-4407-950e-3b0d07738406", "6f0b08a1-45af-4ac7-a306-5a40612d6053", "178bd1e8-e98a-4ed9-ab2c-ac74734d1903",
             "0d1127c8-750e-40fa-a84e-f7647ab8af97", "35feb4f3-c68a-49a5-a7a9-54631e5ffc9f")]
         public string N;
-        [Benchmark(Description = "SessionStatus 1")]
-        public void TestSessionStatusMethod_1()
+        [Benchmark(Description = "EfficiencyDashboardOrigin")]
+        public void TestMethod_1()
         {
-            _sessionController = new SessionController(_context, _config, _dbOperation, _log );
-            _sessionController.SessionStatus(new Guid(N));
+            Guid appUserId = new Guid(N);
+            _testController = new TestController(_config, _loginService, _context, _dbOperation, _requestFilters );
+            _testController.EfficiencyDashboardOrigin("20190807", "20190809",new List<Guid> { appUserId },null,null,null,null);
         }
 
-        [Benchmark(Description = "SessionStatus 2")]
-        public void TestSessionStatusMethod_2()
+        [Benchmark(Description = "EfficiencyDashboardTest")]
+        public void TestMethod_2()
         {
-            _sessionController = new SessionController(_context, _config, _dbOperation, _log);
-          //  _sessionController.SessionStatus2(new Guid(N));
+            Guid appUserId = new Guid(N);
+            _testController = new TestController(_config, _loginService, _context, _dbOperation, _requestFilters);
+            _testController.EfficiencyDashboardOrigin("20190807", "20190809", new List<Guid> { appUserId }, null, null, null, null);
         }
 
         protected override Task PrepareTestData()
@@ -72,7 +75,9 @@ namespace UserOperations.Controllers
         {
             _context = _serviceProvider.GetService<RecordsContext>();
             _log = _serviceProvider.GetService<ElasticClient>();
-          //  _dbOperation = ServiceProvider.GetService<DBOperations>();
+            _loginService = _serviceProvider.GetService<LoginService>();
+            _dbOperation = new DBOperations(_context, _config);
+            _requestFilters = new RequestFilters(_context, _config);
         }
 
         private void InitServiceProvider()
@@ -94,6 +99,8 @@ namespace UserOperations.Controllers
                 return new ElasticClient(settings);
             });
             _services.AddScoped<DBOperations>();
+            _services.AddScoped(typeof(ILoginService), typeof(LoginService));
+            _services.AddScoped(typeof(RequestFilters));
             //     services.AddSingleton(Config);
             _serviceProvider = _services.BuildServiceProvider();
         }

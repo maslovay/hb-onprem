@@ -16,7 +16,7 @@ using HBLib.Utils;
 using HBLib;
 using UserOperations.Utils;
 using BenchmarkDotNet.Running;
-using BenchmarkDotNet.Attributes;
+using UserOperations.Controllers.Test;
 
 namespace UserOperations
 {
@@ -147,7 +147,7 @@ namespace UserOperations
             app.UseHttpsRedirection();
             app.UseMvc();
 
-         //  BenchmarkRunner.Run<TestSession>();
+          //  BenchmarkRunner.Run<TestAnalyticClientProfile>();
         }
 
     }
