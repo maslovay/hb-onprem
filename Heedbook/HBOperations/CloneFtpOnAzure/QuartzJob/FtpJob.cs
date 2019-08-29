@@ -22,10 +22,11 @@ namespace CloneFtpOnAzure
         private StorageAccInfo _storageAccInfo;
         private RecordsContext _context;
         private readonly IServiceScopeFactory _scopeFactory;
+
         public FtpJob(IServiceScopeFactory scopeFactory,
             SftpClient sftpClient,
             BlobController blobController,
-        ElasticClientFactory elasticClientFactory,
+            ElasticClientFactory elasticClientFactory,
             StorageAccInfo storageAccInfo)
         {
             _scopeFactory = scopeFactory;
@@ -34,7 +35,7 @@ namespace CloneFtpOnAzure
             _blobController = blobController;
             _sftpClient = sftpClient;
         }
-        
+
         public async Task Execute(IJobExecutionContext context)
         {
             using (var scope = _scopeFactory.CreateScope())
@@ -43,34 +44,33 @@ namespace CloneFtpOnAzure
                 try
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
-                    
-                    var dialogue = _context.Dialogues
+
+                    var dialogues = _context.Dialogues
                         .Where(d => d.Status.StatusId == 3 &&
                                     d.CreationTime >= DateTime.UtcNow.AddHours(-24))
                         .Select(s => s.DialogueId)
                         .ToList();
-                    var avatarsContainer = _storageAccInfo.AvatarName;
-                    var videosContainer = _storageAccInfo.VideoName;
-                    var audioContainer = _storageAccInfo.AudioName;
-                    foreach (var qq in dialogue)
+                    var tasks = new List<Task>();
+                    var dict = new Dictionary<String, String>()
                     {
-                        var avatar = qq + ".jpg";
-                        var video = qq + ".mkv";
-                        var audio = qq + ".wav";
-                        
-                        var avatarStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync($"{avatarsContainer}" + "/" + avatar);
-                        await _blobController.UploadFileStreamToBlob(avatarStream,
-                            avatar, $"{avatarsContainer}");
-                        var videosStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync($"{videosContainer}" + "/" + video);
-                        await _blobController.UploadFileStreamToBlob(videosStream,
-                            avatar, $"{videosContainer}");
-                        var audioStream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync($"{audioContainer}" + "/" + audio);
-                        await _blobController.UploadFileStreamToBlob(audioStream,
-                            avatar, $"{audioContainer}");
+                        {_storageAccInfo.AvatarName, ".jpg"},
+                        {_storageAccInfo.VideoName, ".mkv"},
+                        {_storageAccInfo.AudioName, ".wav"}
+                    };
+                    _log.Info("Try to download and upload");
+                    foreach (var dialogue in dialogues)
+                    {
+                        foreach (var (key, value) in dict)
+                        {
+                            var filePath = key + "/" + dialogue + value;
+                            var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
+                            tasks.Add(_blobController.UploadFileStreamToBlob(filePath, stream));
+                        }
+
                     }
 
+                    await Task.WhenAll(tasks);
                     _log.Info("Download and Upload finished");
-
                 }
                 catch (Exception e)
                 {
