@@ -15,3 +15,4 @@ WORKDIR /app
 COPY --from=build-env /app/HBOperations/DialoguesRecalculateScheduler/publish .
                                                                          
 ENTRYPOINT ["dotnet", "DialoguesRecalculateScheduler.dll"]
+ENV TESTCLUSTER testcluster

@@ -81,13 +81,22 @@ namespace FillingFrameService
                     })
                         .ToList();
 
-                    var genderCount = attributes.Count(item => item.Gender == "Male");
-                    _log.Info($"Gender count {genderCount}");
+                    string gender; 
+                    if (message.Gender == null)
+                    {
+                        var genderMaleCount = attributes.Count(item => item.Gender == "Male");
+                        var genderFemaleCount = attributes.Count(item => item.Gender == "Female");
+                        gender = genderMaleCount > genderFemaleCount ? "male" : "female";
+                    }
+                    else
+                    {
+                        gender = message.Gender.ToLower();
+                    }
 
                     var dialogueClientProfile = new DialogueClientProfile
                     {
                         DialogueId = message.DialogueId,
-                        Gender = genderCount > 0 ? "male" : "female",
+                        Gender = gender,
                         Age = attributes.Average(item => item.Age),
                         Avatar = $"{message.DialogueId}.jpg"
                     };

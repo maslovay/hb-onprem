@@ -93,85 +93,102 @@ namespace QuartzExtensions.Jobs
                 }
             } 
             _log.Info($"Weekly report sent to {counter} users"); 
-            var mail = new System.Net.Mail.MailMessage();
-            mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);
-            mail.To.Add("krokhmal11@mail.ru");
-            mail.Subject = "Users Weekly Analytic Reports Status";
-            mail.Body = $"Weekly report sent to {counter} users";
-            mail.IsBodyHtml = false;      
-            _smtpClient.SendAsync(mail);        
+            try
+            {
+                var mail = new System.Net.Mail.MailMessage();
+                mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);
+                mail.To.Add("krokhmal11@mail.ru");
+                mail.To.Add("pinarin@heedbook.com");
+                mail.Subject = "Users Weekly Analytic Reports Status";
+                mail.Body = $"Weekly report sent to {counter} users";
+                mail.IsBodyHtml = false;                        
+                _smtpClient.Send(mail);  
+                System.Console.WriteLine($"sent mail");
+            }   
+            catch(Exception ex)
+            {
+                System.Console.WriteLine($"Fatal");
+                _log.Fatal($"Failed send email to krokhmal and pinarin \n{ex.Message}");
+            }   
         }
         private async Task CreateHtmlFromTemplate(ApplicationUser applicationUser)
         {   
-            var fullPath = System.IO.Path.GetFullPath(".");
-            var engine = new RazorLight.RazorLightEngineBuilder()
-                .UseFilesystemProject(fullPath)
-                .UseMemoryCachingProvider()
-                .Build();
-
-            var languageId = applicationUser.Company.LanguageId;
-            var languageTableData = File.ReadAllText("language_table.json");
-            
-            var languageTable = JsonConvert.DeserializeObject<List<LanguageDataReport>>(languageTableData);   
-
-            if(languageId-1>languageTable.Count)
-                languageId = 1;
-
-            var languageDataReport = languageTable[languageId==null ? 0 : (int)languageId-1]; 
-            
-            var userData = await GetUserWeeklyData(applicationUser);   
-            var  UserWeeklyInfo= JsonConvert.DeserializeObject<WeeklyReport>(userData.Authorization);            
-            if(UserWeeklyInfo == null)
+            try
             {
-                _log.Error($"Weekly Data is empty");
-                return;
-            }
-            List<ReportData> parameters = new List<ReportData>
-                {
-                    new ReportData{Name = "Satisfaction", Data = UserWeeklyInfo.Satisfaction, Description = languageDataReport.Indicators.Satisfaction, Thumbnail = true, ColourData=UserWeeklyInfo.Satisfaction.totalAvg},
-                    new ReportData{Name = "PositiveEmotions", Data = UserWeeklyInfo.PositiveEmotions, Description = languageDataReport.Report.Indicators.PositiveEmotions, ColourData=UserWeeklyInfo.PositiveEmotions.totalAvg},
-                    new ReportData{Name = "PositiveIntonations", Data = UserWeeklyInfo.PositiveIntonations, Description = languageDataReport.Report.Indicators.PositiveIntonation, ColourData=UserWeeklyInfo.PositiveIntonations.totalAvg},
-                    new ReportData{Name = "SpeechEmotivity", Data = UserWeeklyInfo.SpeechEmotivity, Description = languageDataReport.Report.Indicators.SpeechEmotivity, ColourData=UserWeeklyInfo.SpeechEmotivity.totalAvg},
-                    new ReportData{Name = "Workload", Data = UserWeeklyInfo.Workload, Description = languageDataReport.Indicators.Workload, Thumbnail = true, ColourData=UserWeeklyInfo.Workload.totalAvg},
-                    new ReportData{Name = "NumberOfDialogues", Data = UserWeeklyInfo.NumberOfDialogues, Description = languageDataReport.Indicators.NumberOfDialogues, ColourData=UserWeeklyInfo.NumberOfDialogues.totalAvg, NotPercentage = true, Integer=true, ReportStyle=2},
-                    new ReportData{Name = "WorkingHours_SessionsTotal", Data = UserWeeklyInfo.WorkingHours_SessionsTotal, Description = languageDataReport.Indicators.WorkingHours_SessionsTotal, ColourData=UserWeeklyInfo.WorkingHours_SessionsTotal.totalAvg, NotPercentage=true, ReportStyle=1},
-                    new ReportData{Name = "AvgDialogueTime", Data = UserWeeklyInfo.AvgDialogueTime, Description = languageDataReport.Indicators.AvgDialogueTime, ColourData=UserWeeklyInfo.AvgDialogueTime.totalAvg, NotPercentage=true, ReportStyle=1},                    
-                    new ReportData{Name = "CrossPhrase", Data = UserWeeklyInfo.CrossPhrase, Description = languageDataReport.Indicators.CrossPhrase, Thumbnail = true, ColourData=UserWeeklyInfo.CrossPhrase.totalAvg},
-                    new ReportData{Name = "AlertPhrase", Data = UserWeeklyInfo.AlertPhrase, Description = languageDataReport.Indicators.AlertPhrase, ColourData=UserWeeklyInfo.AlertPhrase.totalAvg},
-                    new ReportData{Name = "LoyaltyPhrase", Data = UserWeeklyInfo.LoyaltyPhrase, Description = languageDataReport.Indicators.LoyaltyPhrase, ColourData=UserWeeklyInfo.LoyaltyPhrase.totalAvg},
-                    new ReportData{Name = "NecessaryPhrase", Data = UserWeeklyInfo.NecessaryPhrase, Description = languageDataReport.Indicators.NecessaryPhrase, ColourData=UserWeeklyInfo.NecessaryPhrase.totalAvg},
-                    new ReportData{Name = "FillersPhrase", Data = UserWeeklyInfo.FillersPhrase, Description = languageDataReport.Indicators.FillersPhrase, ColourData=UserWeeklyInfo.FillersPhrase.totalAvg}
-                };
-            Dictionary<DateTime, float> points;
-            List<string> base64Images = new List<string>();
-            foreach(var item in parameters)
-            {
-                points = new Dictionary<DateTime, float>();
-                foreach(var avg in item.Data.avgPerDay)
-                {
-                    points.Add(avg.Key, (float)avg.Value);                    
-                }
+                var fullPath = System.IO.Path.GetFullPath(".");
+                var engine = new RazorLight.RazorLightEngineBuilder()
+                    .UseFilesystemProject(fullPath)
+                    .UseMemoryCachingProvider()
+                    .Build();
+
+                var languageId = applicationUser.Company.LanguageId;
+                var languageTableData = File.ReadAllText("language_table.json");
                 
-                byte[] imageBytes = GeneratePng(points, item.Name, item.ColourData, item.ReportStyle).ToArray();
-                item.Base64Image = Convert.ToBase64String(imageBytes);                
+                var languageTable = JsonConvert.DeserializeObject<List<LanguageDataReport>>(languageTableData);   
+
+                if(languageId-1>languageTable.Count)
+                    languageId = 1;
+
+                var languageDataReport = languageTable[languageId==null ? 0 : (int)languageId-1]; 
+                
+                var userData = await GetUserWeeklyData(applicationUser);   
+                var  UserWeeklyInfo= JsonConvert.DeserializeObject<WeeklyReport>(userData.Authorization);            
+                if(UserWeeklyInfo == null)
+                {
+                    _log.Error($"Weekly Data is empty");
+                    return;
+                }
+                List<ReportData> parameters = new List<ReportData>
+                    {
+                        new ReportData{Name = "Satisfaction", Data = UserWeeklyInfo.Satisfaction, Description = languageDataReport.Indicators.Satisfaction, Thumbnail = true, ColourData=UserWeeklyInfo.Satisfaction.totalAvg},
+                        new ReportData{Name = "PositiveEmotions", Data = UserWeeklyInfo.PositiveEmotions, Description = languageDataReport.Report.Indicators.PositiveEmotions, ColourData=UserWeeklyInfo.PositiveEmotions.totalAvg},
+                        new ReportData{Name = "PositiveIntonations", Data = UserWeeklyInfo.PositiveIntonations, Description = languageDataReport.Report.Indicators.PositiveIntonation, ColourData=UserWeeklyInfo.PositiveIntonations.totalAvg},
+                        new ReportData{Name = "SpeechEmotivity", Data = UserWeeklyInfo.SpeechEmotivity, Description = languageDataReport.Report.Indicators.SpeechEmotivity, ColourData=UserWeeklyInfo.SpeechEmotivity.totalAvg},
+                        new ReportData{Name = "Workload", Data = UserWeeklyInfo.Workload, Description = languageDataReport.Indicators.Workload, Thumbnail = true, ColourData=UserWeeklyInfo.Workload.totalAvg},
+                        new ReportData{Name = "NumberOfDialogues", Data = UserWeeklyInfo.NumberOfDialogues, Description = languageDataReport.Indicators.NumberOfDialogues, ColourData=UserWeeklyInfo.NumberOfDialogues.totalAvg, NotPercentage = true, Integer=true, ReportStyle=2},
+                        new ReportData{Name = "WorkingHours_SessionsTotal", Data = UserWeeklyInfo.WorkingHours_SessionsTotal, Description = languageDataReport.Indicators.WorkingHours_SessionsTotal, ColourData=UserWeeklyInfo.WorkingHours_SessionsTotal.totalAvg, NotPercentage=true, ReportStyle=1},
+                        new ReportData{Name = "AvgDialogueTime", Data = UserWeeklyInfo.AvgDialogueTime, Description = languageDataReport.Indicators.AvgDialogueTime, ColourData=UserWeeklyInfo.AvgDialogueTime.totalAvg, NotPercentage=true, ReportStyle=1},                    
+                        new ReportData{Name = "CrossPhrase", Data = UserWeeklyInfo.CrossPhrase, Description = languageDataReport.Indicators.CrossPhrase, Thumbnail = true, ColourData=UserWeeklyInfo.CrossPhrase.totalAvg},
+                        new ReportData{Name = "AlertPhrase", Data = UserWeeklyInfo.AlertPhrase, Description = languageDataReport.Indicators.AlertPhrase, ColourData=UserWeeklyInfo.AlertPhrase.totalAvg},
+                        new ReportData{Name = "LoyaltyPhrase", Data = UserWeeklyInfo.LoyaltyPhrase, Description = languageDataReport.Indicators.LoyaltyPhrase, ColourData=UserWeeklyInfo.LoyaltyPhrase.totalAvg},
+                        new ReportData{Name = "NecessaryPhrase", Data = UserWeeklyInfo.NecessaryPhrase, Description = languageDataReport.Indicators.NecessaryPhrase, ColourData=UserWeeklyInfo.NecessaryPhrase.totalAvg},
+                        new ReportData{Name = "FillersPhrase", Data = UserWeeklyInfo.FillersPhrase, Description = languageDataReport.Indicators.FillersPhrase, ColourData=UserWeeklyInfo.FillersPhrase.totalAvg}
+                    };
+                Dictionary<DateTime, float> points;
+                List<string> base64Images = new List<string>();
+                foreach(var item in parameters)
+                {
+                    points = new Dictionary<DateTime, float>();
+                    foreach(var avg in item.Data.avgPerDay)
+                    {
+                        points.Add(avg.Key, (float)avg.Value);                    
+                    }
+                    
+                    byte[] imageBytes = GeneratePng(points, item.Name, item.ColourData, item.ReportStyle).ToArray();
+                    item.Base64Image = Convert.ToBase64String(imageBytes);                
+                }
+
+                var fullName = applicationUser.FullName;
+                
+                var model = new ViewLanguageDataReport
+                {
+                    ApplicationUserName = fullName,
+                    Parameters = parameters,
+                    LanguageDataReport = languageDataReport                
+                };
+
+                var templatePath = System.IO.Path.GetFullPath("./static/template.cshtml");
+                
+                string result = await engine.CompileRenderAsync("./static/template.cshtml", model); 
+
+                System.IO.File.WriteAllText($"./static/template.html", result);
+
+                SendHttpReport(applicationUser, model);
             }
-
-            var fullName = applicationUser.FullName;
-            
-            var model = new ViewLanguageDataReport
+            catch(Exception ex)
             {
-                ApplicationUserName = fullName,
-                Parameters = parameters,
-                LanguageDataReport = languageDataReport                
-            };
-
-            var templatePath = System.IO.Path.GetFullPath("./static/template.cshtml");
-            
-            string result = await engine.CompileRenderAsync("./static/template.cshtml", model); 
-
-            System.IO.File.WriteAllText($"./static/template.html", result);
-
-            SendHttpReport(applicationUser, model);
+                _log.Fatal($"application user: {applicationUser.Id}. Create user Analyticreport fatal exception {ex.Message}");
+            }            
         }
        
         private async Task<UserWeeklyData> GetUserWeeklyData(ApplicationUser applicationUser)

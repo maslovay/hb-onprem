@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using HBData.Models;
 
 namespace DialogueMarkUp.QuartzJobs
 {
@@ -8,8 +10,9 @@ namespace DialogueMarkUp.QuartzJobs
         public Guid? FaceId;
         public DateTime BegTime;
         public DateTime EndTime;
-        public string BegFileName;
-        public string EndFileName;
+        public List<FileFrame> FileNames;
         public string Descriptor;
+        public string Gender;
+        public List<FileVideo> Videos;
     }
 }

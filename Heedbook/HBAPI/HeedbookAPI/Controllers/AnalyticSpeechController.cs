@@ -157,6 +157,11 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);                  
 
+                var companysPhrases = _context.PhraseCompanys
+                    .Where(p => (!companyIds.Any() || companyIds.Contains((Guid) p.CompanyId)))
+                    .Select(p => p.PhraseId)
+                    .ToList();
+                
                 var dialogueIds = _context.Dialogues
                     .Where(p => p.EndTime >= begTime
                         && p.EndTime <= endTime
@@ -174,7 +179,8 @@ namespace UserOperations.Controllers
                     .Include(p => p.Phrase)
                     .Where(p => p.DialogueId.HasValue && dialogueIds.Contains(p.DialogueId.Value)
                          && (!phraseIds.Any() || phraseIds.Contains((Guid) p.PhraseId))
-                         && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid) p.Phrase.PhraseTypeId)))
+                         && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid) p.Phrase.PhraseTypeId))
+                         && (companysPhrases.Contains(p.PhraseId)))
                     .Select(p => new {
                         IsClient = p.IsClient,
                         FullName = p.Dialogue.ApplicationUser.FullName,

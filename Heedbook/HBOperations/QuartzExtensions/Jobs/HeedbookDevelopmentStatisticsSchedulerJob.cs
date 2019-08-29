@@ -37,6 +37,7 @@ namespace QuartzExtensions.Jobs
             var mail = new System.Net.Mail.MailMessage();
             mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);            
             mail.To.Add(new System.Net.Mail.MailAddress("krokhmal11@mail.ru"));
+            mail.To.Add(new System.Net.Mail.MailAddress("pinarin@heedbook.com"));
             mail.To.Add(new System.Net.Mail.MailAddress(_smtpSettings.ToEmail)); 
             
             mail.Subject = "Heedbook development statistics";

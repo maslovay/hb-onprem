@@ -3,9 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Renci.SshNet.Messages.Transport;
+using Renci.SshNet.Sftp;
 
 namespace HBLib.Utils
 {
@@ -25,7 +27,21 @@ namespace HBLib.Utils
             _config = config;
 
             httpFileUrl = _config["FileRefPath:url"];
-            ConnectToSftpAsync().Wait();
+            var _retryCount = 5;
+            while (true)
+            {
+                try
+                {
+                    ConnectToSftpAsync().Wait();
+                    break;
+                }
+                catch (Exception e)
+                {
+                    _retryCount-- ;
+                    if (_retryCount == 0) throw;
+                    Thread.Sleep(100 * _retryCount);
+                }
+            }
         }
 
         public void Dispose()
@@ -208,15 +224,20 @@ namespace HBLib.Utils
         public async Task<String> DownloadFromFtpToLocalDiskAsync(String remotePath, String localPath = null)
         {
             await ConnectToSftpAsync();
-            var filename = remotePath.Split('/').Last();
+            var filename = Path.GetFileName(remotePath);
 
-            localPath = localPath == null ? localPath = Path.Combine(_sftpSettings.DownloadPath, filename) : Path.Combine(localPath, filename);
+            localPath = localPath == null ? Path.Combine(_sftpSettings.DownloadPath, filename) : Path.Combine(localPath, filename);
             using (var fs = File.OpenWrite(localPath))
             {
-                await Task.Run(() => _client.DownloadFile(remotePath, fs));
+                _client.DownloadFile(remotePath, fs);
+                //await Task.Run(() => _client.DownloadFile(remotePath, fs));
             }
-
             return localPath;
+        }
+
+        public DateTime GetLastWriteTime(string path)
+        {
+            return _client.GetLastWriteTime(path);
         }
 
         /// <summary>
@@ -241,7 +262,7 @@ namespace HBLib.Utils
 
             return localPath;
         }
-
+        
         /// <summary>
         ///     Check file exists on server
         /// </summary>
@@ -309,6 +330,17 @@ namespace HBLib.Utils
             return taskList.ToArray();
         }
 
+        public async Task<List<string>> ListDirectoryFilesByConditionAsync(String path, Func<SftpFile, bool> predicate)
+        {
+            var result = new List<String>();
+            await ConnectToSftpAsync();
+
+            path = _sftpSettings.DestinationPath + path;
+
+            if (!_client.Exists(path))
+                return result;
+            return _client.ListDirectory(path).Where(predicate).Select(f => f.Name).ToList();
+        }
         /// <summary>
         ///     Lists all files in a directory using a pattern
         /// </summary>
@@ -331,6 +363,12 @@ namespace HBLib.Utils
             return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();
         }
 
+        public async Task<IEnumerable<SftpFile>> ListDirectoryAsync(string path)
+        {
+            await ConnectToSftpAsync();
+            path = _sftpSettings.DestinationPath + path;
+            return _client.ListDirectory(path);
+        }
         /// <summary>
         /// Disconnects from a FTP server
         /// </summary>
