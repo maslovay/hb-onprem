@@ -89,6 +89,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 if ((sttResults?.Response == null && differenceHour >= 1)||sttResults?.Response?.Results==null)
                                 {
                                     audio.StatusId = 8;
+                                    audio.STTResult = "[]";
                                     _log.Error($"Error with stt results for {audio.DialogueId}");
                                 }
                                 else
@@ -139,8 +140,9 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             }
                             catch (Exception e)
                             {
-                                _log.Error($"Error parsing result {e}");
+                                _log.Error($"Error parsing result for dialogue {audio.DialogueId}. {e}");
                                 audio.StatusId = 8;
+                                audio.STTResult = "[]";
                             }
                         }
 
@@ -311,6 +313,16 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             catch (Exception ex)
             {
                 _log.Fatal("GetPositiveShareInText exception occurred: " + ex.Message, ex);
+                var newSpeech = new DialogueSpeech
+                            {
+                                DialogueId = dialogueId,
+                                IsClient = true,
+                                SpeechSpeed = 0,
+                                PositiveShare = default(Double),
+                                SilenceShare = 0
+                            };
+                _context.DialogueSpeechs.Add(newSpeech);
+                _context.SaveChanges();
                 throw;
             }
         }
