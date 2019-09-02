@@ -67,7 +67,7 @@ namespace ExtractFramesFromVideoService.Tests
                 Password = _config.GetSection("SftpSettings")["Password"],
                 DestinationPath = _config.GetSection("SftpSettings")["DestinationPath"],
                 DownloadPath = _config.GetSection("SftpSettings")["DownloadPath"]
-            });
+            }, _config);
             
             PrepareDirectories();
             CleanDatabaseRecords();
