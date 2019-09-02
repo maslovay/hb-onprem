@@ -42,11 +42,8 @@ namespace FaceAnalyzeService
             });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
-            services.AddScoped(provider =>
-            {
-                var settings = provider.GetRequiredService<IOptions<SftpSettings>>().Value;
-                return new SftpClient(settings);
-            });
+            services.AddScoped(provider => provider.GetService<IOptions<SftpSettings>>().Value);
+            services.AddScoped<SftpClient>();
             services.AddScoped(provider =>
             {
                 var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
