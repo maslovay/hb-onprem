@@ -32,3 +32,11 @@ docker save  containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest 
 docker save  containerregistryhb.azurecr.io/dialoguemarkupservice:latest > dialoguemarkup &&
 docker save  containerregistryhb.azurecr.io/sessionstatusscheduler:latest > sessionstatus &&
 docker save  containerregistryhb.azurecr.io/persondetectionservice:latest > persondetection 
+
+
+
+
+
+10.1.102.52 - slave
+10.1.102.53 - master, websocket, ftp, postgres
+10.1.102.51 - hbml, asr, frontend
