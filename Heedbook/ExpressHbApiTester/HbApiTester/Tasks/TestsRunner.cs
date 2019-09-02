@@ -108,20 +108,20 @@ namespace HbApiTester.Tasks
                 }
             };
 
-            ApiSuccess += resp =>
-            {
-                foreach (var sender in _senders)
-                {
-                    sender.Send($"SUCCESS: <i>{resp.TaskName}: {resp.ResultMessage}</i>: " +
-                                $"<i>{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}</i> URL: {resp.Url}", "ApiTester");
-                }
-            };
-
-            TestRunStatus += message =>
-            {
-                foreach (var sender in _senders)
-                    sender.Send( $"{DateTime.Now.ToLocalTime().ToString(CultureInfo.InvariantCulture)} {message}", "ApiTester");
-            };
+//            ApiSuccess += resp =>
+//            {
+//                foreach (var sender in _senders)
+//                {
+//                    sender.Send($"SUCCESS: <i>{resp.TaskName}: {resp.ResultMessage}</i>: " +
+//                                $"<i>{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}</i> URL: {resp.Url}", "ApiTester");
+//                }
+//            };
+//
+//            TestRunStatus += message =>
+//            {
+//                foreach (var sender in _senders)
+//                    sender.Send( $"{DateTime.Now.ToLocalTime().ToString(CultureInfo.InvariantCulture)} {message}", "ApiTester");
+//            };
         }
 
         public void RunTests(bool needAuth = true)
