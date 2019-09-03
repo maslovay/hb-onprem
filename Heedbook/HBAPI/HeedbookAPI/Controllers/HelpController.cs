@@ -19,10 +19,10 @@ using Microsoft.Extensions.Configuration;
 using HBData.Models;
 using HBData.Models.AccountViewModels;
 using UserOperations.Services;
+using UserOperations.Models;
 using UserOperations.AccountModels;
 using HBData;
-
-///REMOVE IT
+using UserOperations.Models;
 using System.Data.SqlClient;
 
 
@@ -150,21 +150,62 @@ namespace UserOperations.Controllers
             return "OK";
         }
 
-        [HttpGet("newtest")]
-        public IActionResult newtest()
+        [HttpGet("newtestAsync")]
+        public async Task<IActionResult> newtestAsync([FromQuery] string type)
         {
-            var dialogues = _context.DialogueClientSatisfactions.Where(p => p.MeetingExpectationsTotal < 35).ToList();
-            var random = new Random();
-            foreach (var dialogue in dialogues)
+            List<TestClassPhrase> items;
+            using (StreamReader r = new StreamReader($"phrase_{type}.json"))
             {
-                dialogue.MeetingExpectationsTotal =  Math.Max((double) dialogue.MeetingExpectationsTotal, 35 + random.Next(10));
+                string json = r.ReadToEnd();
+                items = JsonConvert.DeserializeObject<List<TestClassPhrase>>(json);
             }
+            var phraseTypeId = _context.PhraseTypes.Where(p => p.PhraseTypeText.ToLower() == type.ToLower()).First().PhraseTypeId;
+            var phrases = new List<Phrase>();
+            var phraseCompanies = new List<PhraseCompany>();
+
+            foreach (var item in items)
+            {
+                var phrase = new Phrase();
+                phrase.Accurancy = 1;
+                phrase.IsClient = true;
+                phrase.IsTemplate = true;
+                phrase.LanguageId = 1;
+                phrase.PhraseId = Guid.NewGuid();
+                phrase.PhraseText = item.PhraseText;
+                phrase.PhraseTypeId = phraseTypeId;
+                phrase.WordsSpace = 1;
+                phrases.Add(phrase);
+            }
+
+            var companys = _context.Companys.Select(p => p.CompanyId).ToList();
+            foreach( var comp in companys)
+            {
+                foreach (var phrase in phrases)
+                {
+                    var compPhrase = new PhraseCompany();
+                    compPhrase.CompanyId = comp;
+                    compPhrase.PhraseId = phrase.PhraseId;
+                    compPhrase.PhraseCompanyId = Guid.NewGuid(); 
+                    phraseCompanies.Add(compPhrase);
+                }
+            }
+            _context.Phrases.AddRange(phrases);
+            _context.PhraseCompanys.AddRange(phraseCompanies);
             _context.SaveChanges();
-            // var dialogue = _context.Dialogues.Where(p => p.DialogueId.ToString() == "5d90051a-15a9-4126-8988-6e7f6ab256e1").FirstOrDefault();
-            // dialogue.StatusId = 8;
-            // _context.SaveChanges();
-            return Ok();
+
+            return Ok(items);
+            // return Ok();
         }
+        // [HttpGet("AddContent")]
+        // public IActionResult addcontent([FromBody] string companyName)
+        // {
+        //     var companyId = _context.Companys.First(p => p.CompanyName == companyName).CompanyId;
+        //     var companys = _context.Companys.Where(p => p.CompanyName.StartsWith("Sberbank")).ToList();
+        //     companys 
+        //     var content = _context.Contents.Where(p => p.CompanyId == companyId).ToList();
+
+        //     return Ok();
+        // }
 
         [HttpGet("phrase")]
         public IActionResult phrase()

@@ -65,26 +65,40 @@ namespace UserOperations.Controllers
         public FileResult GetReport([FromQuery(Name = "begTime")] string beg,
             [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds)
         {
-            var stringFormat = "yyyyMMddHHmmss";
-            var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
-            System.Console.WriteLine($"{begTime}");
+            try
+            {
+                var stringFormat = "yyyyMMddHHmmss";
+                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
+                System.Console.WriteLine($"{begTime}");
 
-            companyIds = companyIds.Any() ? companyIds : _context.Companys.Where(p => p.StatusId == 3).Select(p=>p.CompanyId).ToList();
+                companyIds = companyIds.Any() ? companyIds : _context.Companys.Where(p => p.StatusId == 3).Select(p=>p.CompanyId).ToList();
 
-            DialogueReport(begTime, companyIds);
+                DialogueReport(begTime, companyIds);
 
-            var dataBytes = System.IO.File.ReadAllBytes("DialogueReport.xlsx");
-            System.IO.File.Delete("DialogueReport.xlsx");
+                var dataBytes = System.IO.File.ReadAllBytes("DialogueReport.xlsx");
+                System.IO.File.Delete("DialogueReport.xlsx");
 
-            var dataStream = new MemoryStream(dataBytes);
-            var fileType = "application/xlsx";
-            var fileName = "DialogueReport.xlsx";
-            return File(dataStream, fileType, fileName);
+                var dataStream = new MemoryStream(dataBytes);
+                var fileType = "application/xlsx";
+                var fileName = "DialogueReport.xlsx";
+                return File(dataStream, fileType, fileName);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
         }  
 
 
         private void DialogueReport(DateTime beginTime, List<Guid> companyIds)
-        {            
+        {      
+            var managerRoleId = _context.Roles.Where(p => p.NormalizedName == "MANAGER").FirstOrDefault().Id;
+            var users = _context.ApplicationUsers
+                .Include(p => p.UserRoles)
+                .Where(p => companyIds.Contains((Guid) p.CompanyId))
+                .ToList();
+
+
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.ApplicationUser.Company)
@@ -101,9 +115,13 @@ namespace UserOperations.Controllers
                 .Include(p => p.DialogueWord)
 
                 .Where(p => p.BegTime > beginTime
+                    && p.StatusId == 3
                     && companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                 .Select(p => new DialogueReportModel
                     {
+                        FullName = p.ApplicationUser.FullName,
+                        Email = p.ApplicationUser.Email,
+                        ManagerName = GetManager(users, p.ApplicationUser, managerRoleId),
                         CompanyName = p.ApplicationUser.Company.CompanyName,
                         CompanyId = (Guid)p.ApplicationUser.CompanyId,
                         DialogueId = p.DialogueId,
@@ -152,6 +170,13 @@ namespace UserOperations.Controllers
             PrintDialogueReport(dialogues);
         }
 
+        private string GetManager(List<ApplicationUser> users, ApplicationUser applicationUser, Guid managerRoleId)
+        {
+            return users.Where(p => p.CompanyId == applicationUser.CompanyId)
+                .Where(p => p.UserRoles.First().RoleId == managerRoleId).First().FullName;
+
+        }
+
         private void PrintDialogueReport(List<DialogueReportModel> DialogueReports)
         {
             using (SpreadsheetDocument document = SpreadsheetDocument.Create("DialogueReport.xlsx", SpreadsheetDocumentType.Workbook))
@@ -171,26 +196,27 @@ namespace UserOperations.Controllers
                 Row row1 = new Row();
 
                 row1.Append(         
-                    ConstructCell("CompanyId", CellValues.String),           
+                    ConstructCell("CompanyName", CellValues.String),           
                     ConstructCell("DialogueId", CellValues.String),
-                    ConstructCell("Employee EmployeeId", CellValues.String),
-                    ConstructCell("Employee WorkerTypeName", CellValues.String),                    
+                    ConstructCell("Full Name", CellValues.String),
+                    ConstructCell("Email", CellValues.String), 
+                    ConstructCell("Manager Name", CellValues.String),                                       
                     ConstructCell("BeginTime", CellValues.String),
                     ConstructCell("EndTime", CellValues.String),
                     ConstructCell("InStatistic", CellValues.String),
                     ConstructCell("Satisfaction MeetingExpectationsTotal", CellValues.String),
-                    ConstructCell("Satisfaction BegMoodTotal", CellValues.String),
-                    ConstructCell("Satisfaction EndMoodTotal", CellValues.String),
-                    ConstructCell("Satisfaction MeetingExpectationsByClient", CellValues.String),
-                    ConstructCell("Satisfaction MeetingExpectationsByEmpoyee", CellValues.String),
-                    ConstructCell("Language", CellValues.String),
-                    ConstructCell("Hints", CellValues.String),
+                    // ConstructCell("Satisfaction BegMoodTotal", CellValues.String),
+                    // ConstructCell("Satisfaction EndMoodTotal", CellValues.String),
+                    // ConstructCell("Satisfaction MeetingExpectationsByClient", CellValues.String),
+                    // ConstructCell("Satisfaction MeetingExpectationsByEmpoyee", CellValues.String),
+                    // ConstructCell("Language", CellValues.String),
+                    // ConstructCell("Hints", CellValues.String),
                     ConstructCell("Client Age", CellValues.String),
                     ConstructCell("Client Gender", CellValues.String),
                     ConstructCell("Visuals Attention", CellValues.String),
-                    ConstructCell("Visuals Contempt", CellValues.String),
-                    ConstructCell("Visuals Disgust", CellValues.String),
-                    ConstructCell("Visuals Fear", CellValues.String),
+                    // ConstructCell("Visuals Contempt", CellValues.String),
+                    // ConstructCell("Visuals Disgust", CellValues.String),
+                    // ConstructCell("Visuals Fear", CellValues.String),
                     ConstructCell("Visuals Happiness", CellValues.String),
                     ConstructCell("Visuals Neutral", CellValues.String),
                     ConstructCell("Visuals Surprise", CellValues.String),
@@ -214,26 +240,27 @@ namespace UserOperations.Controllers
                 {
                     tempRow = new Row();
                     tempRow.Append(
-                        ConstructCell(dr.CompanyId.ToString(), CellValues.String),
+                        ConstructCell(dr.CompanyName.ToString(), CellValues.String),
                         ConstructCell(dr.DialogueId.ToString(), CellValues.String),
-                        ConstructCell(dr.EmployeeEmployeeId.ToString(), CellValues.String),
-                        ConstructCell(dr.EmployeeWorkerTypeName, CellValues.String),                    
+                        ConstructCell(dr.FullName.ToString(), CellValues.String),
+                        ConstructCell(dr.Email.ToString(), CellValues.String),
+                        ConstructCell(dr.ManagerName.ToString(), CellValues.String),                           
                         ConstructCell(dr.BeginTime.ToString(), CellValues.String),
                         ConstructCell(dr.EndTime.ToString(), CellValues.String),
                         ConstructCell(dr.InStatistic.ToString(), CellValues.String),
                         ConstructCell(dr.SatisfactionMeetingExpectationsTotal, CellValues.String),
-                        ConstructCell(dr.SatisfactionBegMoodTotal, CellValues.String),
-                        ConstructCell(dr.SatisfactionEndMoodTotal, CellValues.String),
-                        ConstructCell(dr.SatisfactionMeetingExpectationsByClient, CellValues.String),
-                        ConstructCell(dr.SatisfactionMeetingExpectationsByEmpoyee, CellValues.String),
-                        ConstructCell(dr.Language, CellValues.String),
-                        ConstructCell(dr.Hints, CellValues.String),
+                        // ConstructCell(dr.SatisfactionBegMoodTotal, CellValues.String),
+                        // ConstructCell(dr.SatisfactionEndMoodTotal, CellValues.String),
+                        // ConstructCell(dr.SatisfactionMeetingExpectationsByClient, CellValues.String),
+                        // ConstructCell(dr.SatisfactionMeetingExpectationsByEmpoyee, CellValues.String),
+                        // ConstructCell(dr.Language, CellValues.String),
+                        // ConstructCell(dr.Hints, CellValues.String),
                         ConstructCell(dr.ClientAge, CellValues.String),
                         ConstructCell(dr.ClientGender, CellValues.String),
                         ConstructCell(dr.VisualsAttention, CellValues.String),
-                        ConstructCell(dr.VisualsContempt, CellValues.String),
-                        ConstructCell(dr.VisualsDisgust, CellValues.String),
-                        ConstructCell(dr.VisualsFear, CellValues.String),
+                        // ConstructCell(dr.VisualsContempt, CellValues.String),
+                        // ConstructCell(dr.VisualsDisgust, CellValues.String),
+                        // ConstructCell(dr.VisualsFear, CellValues.String),
                         ConstructCell(dr.VisualsHappiness, CellValues.String),
                         ConstructCell(dr.VisualsNeutral, CellValues.String),
                         ConstructCell(dr.VisualsSurprise, CellValues.String),
@@ -266,6 +293,9 @@ namespace UserOperations.Controllers
     }  
     public class DialogueReportModel
     {
+        public string FullName {get;set;}
+        public string Email {get;set;}
+        public string ManagerName {get;set;}
         public string CompanyName {get; set;}
         public Guid CompanyId {get; set;}
         public Guid DialogueId { get; set; }

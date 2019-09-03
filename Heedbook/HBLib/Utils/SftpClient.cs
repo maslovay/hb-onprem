@@ -77,7 +77,7 @@ namespace HBLib.Utils
         /// <returns></returns>
         public string GetFileUrlFast(String path)
         {
-            return $"http://{_sftpSettings.Host}/{path}";
+            return $"http://{_sftpSettings.Host}/storage/{path}";
         }
         public async Task<List<string>> GetFileNames(String directory)
         {
