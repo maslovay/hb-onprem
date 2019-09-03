@@ -9,36 +9,26 @@ docker build -t containerregistryhb.azurecr.io/audioanalyzeservice:latest -f Aud
 docker build -t containerregistryhb.azurecr.io/toneanalyzeservice:latest -f ToneAnalyzeService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/audioanalyzescheduler:latest -f AudioAnalyzeScheduler.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/dialoguestatuscheckerscheduler:latest -f DialogueStatusCheckerScheduler.Dockerfile . &&
-docker build -t containerregistryhb.azurecr.io/dialoguevideomergeservice:latest -f DialogueVideoMergeService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/fillinghintservice:latest -f FillingHintService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/fillingsatisfactionservice:latest -f FillingSatisfactionService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest -f DialogueVideoAssembleService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/dialoguemarkupservice:latest -f DialogueMarkUpService.Dockerfile . &&
 docker build -t containerregistryhb.azurecr.io/sessionstatusscheduler:latest -f SessionStatusScheduler.Dockerfile . &&
-docker build -t containerregistryhb.azurecr.io/onlinetuiofficesscheduler:latest -f OnlineTuiOfficesScheduler.Dockerfile . &&
-docker build -t containerregistryhb.azurecr.io/heedbookdevelopmentstatisticsscheduler:latest -f HeedbookDevelopmentStatistics.Dockerfile . &&
-docker build -t containerregistryhb.azurecr.io/dialoguesrecalculatescheduler:latest -f DialoguesRecalculateScheduler.Dockerfile . &&
-docker build -t containerregistryhb.azurecr.io/senduseranalyticreportscheduler:latest -f SendUserAnalyticReportScheduler.Dockerfile . &&
-docker build -t containerregistryhb.azurecr.io/dialogueandsessionsnestedscheduler:latest -f DialogueAndSessionsNestedScheduler.Dockerfile .
+docker build -t containerregistryhb.azurecr.io/persondetectionservice:latest -f PersonDetectionService.Dockerfile . && 
 
-docker push containerregistryhb.azurecr.io/faceanalyzeservice:latest &&
-docker push containerregistryhb.azurecr.io/userservice:latest && 
-docker push containerregistryhb.azurecr.io/useroperations:latest && 
-docker push containerregistryhb.azurecr.io/fillingframeservice:latest &&
-docker push containerregistryhb.azurecr.io/extractframesfromvideoservice:latest && 
-docker push containerregistryhb.azurecr.io/videotosoundservice:latest &&
-docker push containerregistryhb.azurecr.io/audioanalyzeservice:latest &&
-docker push containerregistryhb.azurecr.io/toneanalyzeservice:latest &&
-docker push containerregistryhb.azurecr.io/dialoguestatuscheckerscheduler:latest &&
-docker push containerregistryhb.azurecr.io/audioanalyzescheduler:latest &&
-docker push containerregistryhb.azurecr.io/dialoguevideomergeservice:latest &&
-docker push containerregistryhb.azurecr.io/fillinghintservice:latest &&
-docker push containerregistryhb.azurecr.io/fillingsatisfactionservice:latest &&
-docker push containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest &&
-docker push containerregistryhb.azurecr.io/dialoguemarkupservice:latest &&
-docker push containerregistryhb.azurecr.io/sessionstatusscheduler:latest &&
-docker push containerregistryhb.azurecr.io/onlinetuiofficesscheduler:latest &&
-docker push containerregistryhb.azurecr.io/heedbookdevelopmentstatisticsscheduler:latest &&
-docker push containerregistryhb.azurecr.io/dialoguesrecalculatescheduler:latest &&
-docker push containerregistryhb.azurecr.io/senduseranalyticreportscheduler:latest &&
-docker push containerregistryhb.azurecr.io/dialogueandsessionsnestedscheduler:latest
+docker save  containerregistryhb.azurecr.io/faceanalyzeservice:latest > faceanalyze &&
+docker save  containerregistryhb.azurecr.io/userservice:latest > userservice  && 
+docker save  containerregistryhb.azurecr.io/useroperations:latest > useroperations  && 
+docker save  containerregistryhb.azurecr.io/fillingframeservice:latest > fillingframe  &&
+docker save  containerregistryhb.azurecr.io/extractframesfromvideoservice:latest > extractframes &&
+docker save  containerregistryhb.azurecr.io/videotosoundservice:latest > videotosound &&
+docker save  containerregistryhb.azurecr.io/audioanalyzeservice:latest > audioanalyze &&
+docker save  containerregistryhb.azurecr.io/toneanalyzeservice:latest > toneanalyze &&
+docker save  containerregistryhb.azurecr.io/audioanalyzescheduler:latest > audioanalyzescheduler &&
+docker save  containerregistryhb.azurecr.io/dialoguestatuscheckerscheduler:latest > dialoguestatuschecker &&
+docker save  containerregistryhb.azurecr.io/fillinghintservice:latest > fillinghints &&
+docker save  containerregistryhb.azurecr.io/fillingsatisfactionservice:latest > fillingsatisfaction &&
+docker save  containerregistryhb.azurecr.io/dialoguevideoassembleservice:latest > dialoguevideoassemble &&
+docker save  containerregistryhb.azurecr.io/dialoguemarkupservice:latest > dialoguemarkup &&
+docker save  containerregistryhb.azurecr.io/sessionstatusscheduler:latest > sessionstatus &&
+docker save  containerregistryhb.azurecr.io/persondetectionservice:latest > persondetection 
