@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
 using System.IO;
+using System.Transactions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using HBData.Models;
-using UserOperations.Services;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using HBData;
 using Swashbuckle.AspNetCore.Annotations;
+using HBData;
+using HBData.Models;
 using HBLib.Utils;
+using UserOperations.Services;
 using UserOperations.Utils;
 
 namespace UserOperations.Controllers
@@ -68,19 +69,19 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var corporationId = userClaims["corporationId"];
                 var role = userClaims["role"];
-                        users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                            .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled    
-                if ( role == "Admin")
-                        users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                            .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled  
+                users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                    .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled    
+                if (role == "Admin")
+                    users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                        .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled  
                 if (role == "Supervisor" && corporationId != null)
                 {
-                        users = _context.ApplicationUsers
-                            .Include(p => p.UserRoles)
-                            .ThenInclude(x => x.Role)
-                            .Include(x => x.Company)
-                            .Where(p => (p.StatusId == activeStatus || p.StatusId == disabledStatus)
-                            && p.Company.CorporationId.ToString() == corporationId).ToList();     //2 active, 3 - disabled  
+                    users = _context.ApplicationUsers
+                        .Include(p => p.UserRoles)
+                        .ThenInclude(x => x.Role)
+                        .Include(x => x.Company)
+                        .Where(p => (p.StatusId == activeStatus || p.StatusId == disabledStatus)
+                        && p.Company.CorporationId.ToString() == corporationId).ToList();     //2 active, 3 - disabled  
                 }
                 var result = users.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)).path : null));
                 // _log.Info("User/User GET finished");
@@ -240,18 +241,26 @@ namespace UserOperations.Controllers
 
                 if (user != null)
                 {
-                    try
+                    using (var transactionScope = new
+                         TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
+                                                    { IsolationLevel = IsolationLevel.Serializable }))
                     {
-                        await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
-                        _context.RemoveRange(user.UserRoles);
-                        _context.RemoveRange(user.PasswordHistorys);
-                        _context.Remove(user);
-                        await _context.SaveChangesAsync();
-                    }
-                    catch
-                    {
-                        user.StatusId = disabledStatus;
-                        await _context.SaveChangesAsync();
+                        try
+                        {
+                            await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
+                            if (user.UserRoles != null && user.UserRoles.Count() != 0)
+                                _context.RemoveRange(user.UserRoles);
+                            if (user.PasswordHistorys != null && user.PasswordHistorys.Count() != 0)
+                                _context.RemoveRange(user.PasswordHistorys);
+                            _context.Remove(user);
+                            await _context.SaveChangesAsync();
+                            transactionScope.Complete();
+                        }
+                        catch
+                        {
+                            user.StatusId = disabledStatus;
+                            await _context.SaveChangesAsync();
+                        }
                     }
                     // _log.Info("User/User DELETE finished");
                     return Ok("Deleted");
@@ -287,7 +296,7 @@ namespace UserOperations.Controllers
                     var companies = _context.Companys // 2 active, 3 - disabled
                         .Where(p => p.CorporationId == corporationId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();
                     return Ok(companies);
-                }                
+                }
                 return BadRequest("Not allowed access(role)");
             }
             catch (Exception e)
@@ -345,12 +354,12 @@ namespace UserOperations.Controllers
                         x.Phrase.LanguageId.ToString() == languageId)
                     .Select(x => x.Phrase.PhraseId).ToList();
 
-                 var phrases = _context.Phrases
-                    .Where(x =>
-                        x.IsTemplate == true &&
-                        x.PhraseText != null &&
-                        ! phrasesIncluded.Contains(x.PhraseId) &&
-                        x.LanguageId.ToString() == languageId).ToList();
+                var phrases = _context.Phrases
+                   .Where(x =>
+                       x.IsTemplate == true &&
+                       x.PhraseText != null &&
+                       !phrasesIncluded.Contains(x.PhraseId) &&
+                       x.LanguageId.ToString() == languageId).ToList();
 
                 // _log.Info("User/PhraseLib GET finished");
                 return Ok(phrases);
@@ -685,65 +694,66 @@ namespace UserOperations.Controllers
                 return BadRequest(e.Message);
             }
         }
-    
 
-    [HttpGet("Alert")]
-    [SwaggerOperation(Summary = "all alerts for period", Description = "Return all alerts for period, type, employee, worker type, time")]
-    public IActionResult AlertGet([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "alertTypeId[]")] List<Guid> alertTypeIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
-    {
-        if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+
+        [HttpGet("Alert")]
+        [SwaggerOperation(Summary = "all alerts for period", Description = "Return all alerts for period, type, employee, worker type, time")]
+        public IActionResult AlertGet([FromQuery(Name = "begTime")] string beg,
+                                                            [FromQuery(Name = "endTime")] string end,
+                                                            [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                            [FromQuery(Name = "alertTypeId[]")] List<Guid> alertTypeIds,
+                                                            [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                            [FromHeader] string Authorization)
+        {
+            if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                 return BadRequest("Token wrong");
-        var companyId = Guid.Parse(userClaims["companyId"]);
+            var companyId = Guid.Parse(userClaims["companyId"]);
 
 
-        var begTime = _requestFilters.GetBegDate(beg);
-        var endTime = _requestFilters.GetEndDate(end);
+            var begTime = _requestFilters.GetBegDate(beg);
+            var endTime = _requestFilters.GetEndDate(end);
 
-        var dialogues = _context.Dialogues
-                .Include(p => p.ApplicationUser)
-                .Where(p => p.BegTime >= begTime
-                        && p.EndTime <= endTime
-                        // && p.StatusId == 3
-                        // && p.InStatistic == true
-                        // && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                        // && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                        )
-                .Select(p => new                 
-                {
-                    DialogueId = p.DialogueId,
-                    ApplicationUserId = p.ApplicationUserId,
-                    BegTime = p.BegTime,
-                    EndTime = p.EndTime,
-                }).ToList();
+            var dialogues = _context.Dialogues
+                    .Include(p => p.ApplicationUser)
+                    .Where(p => p.BegTime >= begTime
+                            && p.EndTime <= endTime
+                            // && p.StatusId == 3
+                            // && p.InStatistic == true
+                            // && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                            // && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                            )
+                    .Select(p => new
+                    {
+                        DialogueId = p.DialogueId,
+                        ApplicationUserId = p.ApplicationUserId,
+                        BegTime = p.BegTime,
+                        EndTime = p.EndTime,
+                    }).ToList();
 
-        var alerts = _context.Alerts
-          .Include(p => p.ApplicationUser)
-                    .Where(p => p.CreationDate >= begTime
-                            && p.CreationDate <= endTime
-                            && p.ApplicationUser.CompanyId == companyId
-                            && (!alertTypeIds.Any() || alertTypeIds.Contains(p.AlertTypeId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                    .Select(x => new {
-                        x.AlertId,
-                        x.AlertTypeId,
-                        x.ApplicationUserId,
-                        x.CreationDate,
-                        dialogueId = 
-                                (Guid?)dialogues.FirstOrDefault(p => p.ApplicationUserId == x.ApplicationUserId 
-                                    && p.BegTime <= x.CreationDate 
-                                    && p.EndTime >= x.CreationDate).DialogueId
-                    })
-                    .OrderByDescending(x => x.CreationDate)
-                    .ToList();
-        return Ok(alerts);
-    }    
-}
+            var alerts = _context.Alerts
+              .Include(p => p.ApplicationUser)
+                        .Where(p => p.CreationDate >= begTime
+                                && p.CreationDate <= endTime
+                                && p.ApplicationUser.CompanyId == companyId
+                                && (!alertTypeIds.Any() || alertTypeIds.Contains(p.AlertTypeId))
+                                && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                                && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                        .Select(x => new
+                        {
+                            x.AlertId,
+                            x.AlertTypeId,
+                            x.ApplicationUserId,
+                            x.CreationDate,
+                            dialogueId =
+                                    (Guid?)dialogues.FirstOrDefault(p => p.ApplicationUserId == x.ApplicationUserId
+                                        && p.BegTime <= x.CreationDate
+                                        && p.EndTime >= x.CreationDate).DialogueId
+                        })
+                        .OrderByDescending(x => x.CreationDate)
+                        .ToList();
+            return Ok(alerts);
+        }
+    }
 
     public class PostUser
     {
