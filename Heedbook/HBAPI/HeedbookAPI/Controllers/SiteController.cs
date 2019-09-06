@@ -39,15 +39,15 @@ namespace UserOperations.Controllers
     [ApiController]
     public class SiteController : Controller
     {
-        private readonly ILoginService _loginService;
+        private readonly MailSender _mailSender;
         private readonly ElasticClient _log;
 
         public SiteController(
-            ILoginService loginService,
+            MailSender mailSender,
             ElasticClient log
             )
         {
-            _loginService = loginService;
+            _mailSender = mailSender;
             _log = log;
         }
    
@@ -75,8 +75,8 @@ namespace UserOperations.Controllers
                     "<tr><td>phone:</td><td> {2}</td></tr>" +
                     "<tr><td>message:</td><td> {3}</td></tr>" +
                     "</table>", feedback.name, feedback.email, feedback.phone, feedback.body);
-                _loginService.SendEmail("info@heedbook.com", "Message from site", text);
-                 _log.Info("Site/Feedback finished"); 
+                _mailSender.SendSimpleEmail("info@heedbook.com", "Message from site", text);
+                _log.Info("Site/Feedback finished"); 
                 return Ok("Sended");
             }
             catch (Exception e)

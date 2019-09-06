@@ -261,32 +261,13 @@ namespace UserOperations.Services
             // }               
            return true;
         }
-        private string emailAddressSender = "heedbookmailagent@gmail.com";
-        private string emailServerSender = "smtp.gmail.com";
-        private string emailSenderPassword = "Test_User12345";
-        private int emailSenderPort = 587;
+      
 
         // //sendgrid account settings
         // private static string sendGridApiKey = "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";
         // private static string sendGridSenderEmail = "info@wantad.club";
         // private static string sendGridSenderName = "WantAd";
-
-        //create and email notification 
-        public void SendEmail(string email, string messageTitle, string messageText, string senderName = "Heedbook")
-        {
-            MailAddress from = new MailAddress(emailAddressSender, senderName);
-            MailAddress to = new MailAddress(email);
-            // create mail object 
-            MailMessage m = new MailMessage(from, to);
-            // list text
-            m.Body = messageText;
-            m.Subject = messageTitle;
-            m.IsBodyHtml = true;
-            SmtpClient smtp = new SmtpClient(emailServerSender, emailSenderPort);
-            smtp.Credentials = new NetworkCredential(emailAddressSender, emailSenderPassword);
-            smtp.EnableSsl = true;
-            smtp.Send(m);
-        }
+      
         public string GeneratePass(int x)
         {
             string pass = "";
@@ -298,14 +279,7 @@ namespace UserOperations.Services
                     pass += c;
             }
             return pass;
-        }
-        public string GenerateEmailMsg(string pswd, ApplicationUser user)
-        {
-            string msg = "Login:    " + user.Email;
-            msg += "   Password: " + pswd + ".";
-            msg += " You were registred in Heedbook";
-            return msg;
-        }
+        }   
 
         public bool _disposed;
 
