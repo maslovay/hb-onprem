@@ -25,24 +25,18 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
-        private readonly SmtpSettings _smtpSettings;
-        private readonly SmtpClient _smtpClient;
         private readonly MailSender _mailSender;
 
         public AccountController(
             ILoginService loginService,
             RecordsContext context,
-            ElasticClient log,            
-            SmtpSettings smtpSettings,
-            SmtpClient smtpClient,
+            ElasticClient log,      
             MailSender mailSender
             )
         {
             _loginService = loginService;
             _context = context;
             _log = log;
-            _smtpSettings = smtpSettings;  
-            _smtpClient = smtpClient;
             _mailSender = mailSender;
         }
 
@@ -279,15 +273,11 @@ namespace UserOperations.Controllers
                 //---IF USER NOT LOGGINED HE RECEIVE GENERATED PASSWORD ON EMAIL
                 else
                 {
-                    user = _context.ApplicationUsers.FirstOrDefault(x => x.NormalizedEmail == message.UserName.ToUpper());
+                    user = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.NormalizedEmail == message.UserName.ToUpper());
                     if (user == null)
                         return BadRequest("No such user");
                     string password = _loginService.GeneratePass(6);
-                    string text = string.Format("<table>" +
-                      "<tr><td>login:</td><td> {0}</td></tr>" +
-                      "<tr><td>password:</td><td> {1}</td></tr>"+
-                  "</table>", user.Email, password);
-                    _mailSender.SendPasswordChangeEmail(user.Email, text);
+                    await _mailSender.SendPasswordChangeEmail(user, password);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
                 }
                 await _context.SaveChangesAsync();
@@ -329,7 +319,7 @@ namespace UserOperations.Controllers
             try
             {
                 _log.Info("Account/unblock started");
-                ApplicationUser user = _context.ApplicationUsers.FirstOrDefault(x => x.NormalizedEmail == email.ToUpper());
+                ApplicationUser user = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.NormalizedEmail == email.ToUpper());
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
                 {
                     string password = _loginService.GeneratePass(6);
@@ -337,7 +327,7 @@ namespace UserOperations.Controllers
                      "<tr><td>login:</td><td> {0}</td></tr>" +
                      "<tr><td>password:</td><td> {1}</td></tr>" +
                      "</table>", user.Email, password);
-                    _mailSender.SendPasswordChangeEmail(user.Email, text);
+                    _mailSender.SendPasswordChangeEmail(user, text);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
                     user.StatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
                     _loginService.SaveErrorLoginHistory(user.Id, "success");
@@ -376,10 +366,19 @@ namespace UserOperations.Controllers
                     var contents = _context.Contents.Where(x => x.CompanyId == companyId).ToList();
                     var campaigns = _context.Campaigns.Include(x => x.CampaignContents).Where(x => x.CompanyId == companyId).ToList();
                     var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
+                    var phrases = _context.PhraseCompanys.Where(x => x.CompanyId == companyId).ToList();
+                    var pswdHist = _context.PasswordHistorys.Where(x => users.Select(p=>p.Id).Contains( x.UserId)).ToList();
 
-                    _context.RemoveRange(campaignContents);
-                    _context.RemoveRange(campaigns);
-                    _context.RemoveRange(contents);
+                    if (pswdHist.Count() != 0)
+                        _context.RemoveRange(pswdHist);
+                    if (phrases != null && phrases.Count() != 0)
+                    _context.RemoveRange(phrases);
+                    if (campaignContents.Count() != 0)
+                        _context.RemoveRange(campaignContents);
+                    if (campaigns.Count() != 0)
+                        _context.RemoveRange(campaigns);
+                    if (contents.Count() != 0)
+                        _context.RemoveRange(contents);
                     _context.RemoveRange(workerTypes);
                     _context.RemoveRange(userRoles);
                     _context.RemoveRange(transactions);

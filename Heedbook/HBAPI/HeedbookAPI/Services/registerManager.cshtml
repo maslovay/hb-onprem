@@ -49,23 +49,18 @@
                                                                         <table style="background-position: left top;" width="100%" cellspacing="0" cellpadding="0">
                                                                             <tbody>
                                                                                 <tr>
-                                                                                    <td class="esd-block-image es-p5t es-p5b" align="center"><a target="_blank"><img src="http://filereference.northeurope.cloudapp.azure.com/media/dfe841c7-20e7-4f25-8e67-400b4366ce27/b5c5c2d8-7877-40dc-84f6-3fbb875f14cd.png" alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt style="display: block;" height="150" /></a></td>
+                                                                                    <td class="esd-block-image es-p5t es-p5b" align="center"><a target="_blank"><img src="http://filereference.northeurope.cloudapp.azure.com/media/dfe841c7-20e7-4f25-8e67-400b4366ce27/b5c5c2d8-7877-40dc-84f6-3fbb875f14cd.png" alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt style="display: block;" height="150" /></a></td>
                                                                                 </tr>
                                                                                 <tr>
                                                                                     <td align="center" style="line-height: 0px; padding: 20px 0px 0px 0px;">
                                                                                         <h1 style="color: #999999; font-size: 22px;"><strong>@(Model.greeting)</strong></h1><!--Вы зарегистрировались в системе Heedbook-->
                                                                                     </td>
                                                                                 </tr>
-                                                                                @if(Model.body != null)
-                                                                                {
                                                                                 <tr>
                                                                                     <td class="esd-block-text" align="center" style="line-height: 0px; padding: 5px;">
                                                                                         <p style="color: #999999; font-size: 18px;"><strong>@(Model.body)</strong></p>
                                                                                     </td>
                                                                                 </tr>
-                                                                                }
-                                                                                @if(Model.button != null)
-                                                                                {
                                                                                 <tr>
                                                                                     <td align="center" style="padding: 30px 0px 0px 0px;">
                                                                                         <table class="es-button" border="0" cellspacing="0" cellpadding="0">
@@ -78,52 +73,33 @@
                                                                                         </table>
                                                                                     </td>
                                                                                 </tr>
-                                                                                }
-                                                                                @if(Model.login != null)
-                                                                                {
                                                                                 <tr>
-                                                                                    <td class="esd-block-text" align="center" style="line-height: 0px; padding: 5px;">
-                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.login)</strong></p>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                }
-                                                                                @if(Model.pswd != null)
-                                                                                {
-                                                                                <tr>
-                                                                                    <td class="esd-block-text" align="center" style="line-height: 0px; padding: 5px;">
-                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.pswd)</strong></p>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                }
-                                                                                <tr>
-                                                                                    <td align="center" style="padding: 25px 0px 0px; line-height: 0px;">
-                                                                                        <p style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
-                                                                                            @Model.text1
-                                                                                            <a style="color: #999999; text-decoration: none; font-weight: 800;" href="https://www.heedbook.com/"> @Model.text2</a>
-                                                                                            @Model.text3
+                                                                                    <td align="center" style="padding: 25px 0px 15px; line-height: 0px;">
+                                                                                        @if(Model.language == "1")
+                                                                                        {
+                                                                                        <p>
+                                                                                            <a style="color: #999999; text-decoration: none; font-size: 18px; font-family: sans-serif; font-weight:800;" href="https://www.heedbook.com/">@Model.text2</a>
+                                                                                            <span style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
+                                                                                                @Model.text1
+                                                                                            </span>
                                                                                         </p>
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            <p style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
+                                                                                                @Model.text1
+                                                                                            <a style="color: #999999; text-decoration: none; font-weight: 800;" href="https://www.heedbook.com/"> @Model.text2</a>
+                                                                                            </p>
+                                                                                        }
                                                                                     </td>
                                                                                 </tr>
-                                                                                @if(Model.text4 != null)
-                                                                                {
                                                                                 <tr>
-                                                                                    <td align="center" style="padding: -5px 0px 15px;  line-height: 0px;">
-                                                                                        <span style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
-                                                                                            @Model.text4
-                                                                                        </span>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                }
-                                                                                @if(Model.text5 != null)
-                                                                                {
-                                                                                <tr>
-                                                                                    <td align="center" style="padding: 30px 0px 30px;">
-                                                                                        <span style="color: #999999; text-decoration: none; font-size: 18px; font-family: sans-serif;">@(Model.text5)</span>
+                                                                                    <td align="center" style="padding: 0px 0px 30px;">
+                                                                                        <span style="color: #999999; text-decoration: none; font-size: 18px; font-family: sans-serif;">@(Model.text3)</span>
                                                                                         <a href="mailto:support@heedbook.com"><span style="color: #999999; text-decoration: none; font-size: 18px; font-weight: bold; font-family: sans-serif;">support@heedbook.com</span></a>
 
                                                                                     </td>
                                                                                 </tr>
-                                                                                }
                                                                             </tbody>
                                                                         </table>
                                                                     </td>
@@ -134,7 +110,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td class="esd-structure es-p5t es-p60b es-p20l" style="background-position: left top;" align="left">
-                                                        <table width="100%" cellspacing="0" cellpadding="0" style="padding: 10px 0px 30px;">
+                                                        <table width="100%" cellspacing="0" cellpadding="0" style="padding: 0px 0px 30px;">
                                                             <tbody>
                                                                 <tr>
                                                                     <td class="esd-container-frame" width="524" valign="top" align="center">

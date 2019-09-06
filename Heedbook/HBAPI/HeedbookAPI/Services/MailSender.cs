@@ -27,14 +27,31 @@ namespace UserOperations.Services
             SendOldEmail(email, messageTitle, text);
         }
 
-        public void SendRegisterEmail(ApplicationUser user)
+        public async Task SendRegisterEmail(ApplicationUser user)
         {
-            SendEmail(user);
+            LanguageDataEmail model = await ReadLanguageModel(user, "registerManager");
+            string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
+            await SendEmail(user, model.emailSubject, htmlBody);
         }
 
-        public void SendPasswordChangeEmail(string email, string text)
+        public async Task SendUserRegisterEmail(ApplicationUser user, string password)
         {
-            SendOldEmail(email, "Password changed", text);
+            LanguageDataEmail model = await ReadLanguageModel(user, "registerUser");
+            model.greeting += user.FullName;
+            model.pswd += password;
+            model.login = user.Email;
+            string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
+            await SendEmail(user, model.emailSubject, htmlBody);
+        }
+
+        public async Task SendPasswordChangeEmail(ApplicationUser user, string password)
+        {
+            LanguageDataEmail model = await ReadLanguageModel(user, "passwordChange");
+            model.greeting += user.FullName;
+            model.pswd += password;
+            string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
+            await SendEmail(user, model.emailSubject, htmlBody);
+           // SendOldEmail(email, "Password changed", text);
         }
 
         public async Task SendOldEmail(string email, string subject, string text)
@@ -60,18 +77,15 @@ namespace UserOperations.Services
         }
 
         //create and email notification 
-        public async Task SendEmail(ApplicationUser user)
+        private async Task SendEmail(ApplicationUser user, string subject, string htmlBody)
         {
             System.Net.Mail.MailAddress from = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail, "Heedbook");
             System.Net.Mail.MailAddress to = new System.Net.Mail.MailAddress(user.Email);
             // create mail object 
             System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage(from, to);
             mail.BodyEncoding = System.Text.Encoding.UTF8;
-            mail.IsBodyHtml = true;
-
-            LanguageDataEmail model = await ReadLanguageModel(user);
-            string htmlBody = await CreateHtmlFromTemplate(model);
-            mail.Subject = model.emailSubject;
+            mail.IsBodyHtml = true;           
+            mail.Subject = subject;
             mail.Body = htmlBody;
             try
             {
@@ -85,15 +99,17 @@ namespace UserOperations.Services
             }
         }   
 
-        private async Task<LanguageDataEmail> ReadLanguageModel(ApplicationUser user)
+        private async Task<LanguageDataEmail> ReadLanguageModel(ApplicationUser user, string emailType)
         {
             try
             {
                 var languageId = user.Company.LanguageId;
-                var languageRowJson = File.ReadAllText("Services/language_table.json");
+                string path = Path.GetFullPath("./Services/language_table.json");
+                var languageRowJson = File.ReadAllText(path);
 
                 var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
-                var registerLanguages = languageObject.register;
+                var registerLanguages = (List<LanguageDataEmail>)languageObject.GetType().GetProperty(emailType).GetValue(languageObject, null);
+                //var registerLanguages = languageObject.register;
                 if (languageId - 1 > registerLanguages.Count)
                     languageId = 1;
                 return registerLanguages[languageId == null ? 0 : (int)languageId - 1];              
@@ -105,7 +121,7 @@ namespace UserOperations.Services
             }
         }
 
-        private async Task<string> CreateHtmlFromTemplate(LanguageDataEmail model)
+        private async Task<string> CreateHtmlFromTemplate(LanguageDataEmail model, string filename)
         {
             try
             {
@@ -114,12 +130,13 @@ namespace UserOperations.Services
                     .UseFilesystemProject(fullPath)
                     .UseMemoryCachingProvider()
                     .Build();
+            //    string path = Path.GetFullPath("./Services /"+filename);
+                string result = await engine.CompileRenderAsync("./Services/"+filename, model);
 
-                string result = await engine.CompileRenderAsync("./Services/email.cshtml", model);
-                File.WriteAllText($"./Services/temp.html", result);
-                string htmlBody = File.ReadAllText("Services/temp.html");
-                var htmlFileFullPath = Path.GetFullPath("Services/temp.html");
-                File.Delete(htmlFileFullPath);
+                string pathTemp = fullPath + "/Services/temp.html";
+                File.WriteAllText(pathTemp, result);
+                string htmlBody = File.ReadAllText(pathTemp);
+                File.Delete(pathTemp);
                 return htmlBody;
             }
             catch (Exception ex)
@@ -141,11 +158,20 @@ namespace UserOperations.Services
             public string text1 { get; set; }
             public string text2 { get; set; }
             public string text3 { get; set; }
+            public string text4 { get; set; }
+            public string text5 { get; set; }
             public string footer { get; set; }
+            public string login { get; set; }
+            public string pswd { get; set; }
+
     }
-        public class EmailModel
+    public class EmailModel
         {
-            public string userEmail { get; set; }
-            public List<LanguageDataEmail> register { get; set; }
-        }
+            //public string userEmail { get; set; }
+            public string userName { get; set; }
+            public string password { get; set; }
+            public List<LanguageDataEmail> registerManager { get; set; }
+            public List<LanguageDataEmail> registerUser { get; set; }
+            public List<LanguageDataEmail> passwordChange { get; set; }
+    }
 }

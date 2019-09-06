@@ -27,6 +27,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly RequestFilters _requestFilters;
         private readonly SftpClient _sftpClient;
+        private readonly MailSender _mailSender;
         // private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
@@ -38,7 +39,8 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
-            RequestFilters requestFilters
+            RequestFilters requestFilters,
+            MailSender mailSender
             // ElasticClient log
             )
         {
@@ -47,6 +49,7 @@ namespace UserOperations.Controllers
             _context = context;
             _sftpClient = sftpClient;
             _requestFilters = requestFilters;
+            _mailSender = mailSender;
             // _log = log;
             _containerName = "useravatars";
             activeStatus = 3;
@@ -153,8 +156,10 @@ namespace UserOperations.Controllers
                 };
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
-                //    return Ok(JsonConvert.SerializeObject(new UserModel(user, avatarUrl)));
-                // _log.Info("User/User POST finished");
+
+                var userForEmail = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == user.Id);
+
+                _mailSender.SendUserRegisterEmail(userForEmail, message.Password);
                 return Ok(new UserModel(user, avatarUrl));
             }
             catch (Exception e)
