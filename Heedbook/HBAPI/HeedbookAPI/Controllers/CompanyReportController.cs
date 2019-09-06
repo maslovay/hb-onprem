@@ -71,7 +71,7 @@ namespace UserOperations.Controllers
                 var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
                 System.Console.WriteLine($"{begTime}");
 
-                companyIds = companyIds.Any() ? companyIds : _context.Companys.Where(p => p.StatusId == 3).Select(p=>p.CompanyId).ToList();
+                companyIds = companyIds.Any() ? companyIds : _context.Companys.Select(p=>p.CompanyId).ToList();
 
                 DialogueReport(begTime, companyIds);
 
@@ -98,7 +98,6 @@ namespace UserOperations.Controllers
                 .Where(p => companyIds.Contains((Guid) p.CompanyId))
                 .ToList();
 
-
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.ApplicationUser.Company)
@@ -111,7 +110,7 @@ namespace UserOperations.Controllers
                 .Include(p => p.DialogueInterval)
                 .Include(p => p.DialogueSpeech)
                 .Include(p => p.DialogueVisual)
-                .Include(p => p.DialoguePhrase)
+                .Include(p => p.DialoguePhrase).ThenInclude(p => p.Phrase).ThenInclude(p => p.PhraseType)
                 .Include(p => p.DialogueWord)
 
                 .Where(p => p.BegTime > beginTime
@@ -159,14 +158,30 @@ namespace UserOperations.Controllers
                                     phraseText = s.Phrase.PhraseText,
                                     IsClient = s.Phrase.IsClient
                                 })),
-                        WordsWord = JsonConvert.SerializeObject(p.DialogueWord.Select(s => new
-                                {
-                                    Words = s.Words
-                                })),
+                        WordsWord = p.DialogueWord.FirstOrDefault() != null ? p.DialogueWord.FirstOrDefault().Words : "[]", 
                         Video = $"{p.DialogueId}.mkv",
-                        Avatar = p.DialogueClientProfile.FirstOrDefault(s => s.Avatar != null).Avatar
+                        Avatar = p.DialogueClientProfile.FirstOrDefault(s => s.Avatar != null).Avatar,
+                        Cross =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Cross")
+                            .Select(q => q.Phrase.PhraseText).ToList()),
+                        Necessary =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Necessary")
+                            .Select(q => q.Phrase.PhraseText).ToList()),
+                        Loyalty =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Loyalty")
+                            .Select(q => q.Phrase.PhraseText).ToList()),
+                        Alert =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Alert")
+                            .Select(q => q.Phrase.PhraseText).ToList()),
+                        Fillers =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Fillers")
+                            .Select(q => q.Phrase.PhraseText).ToList())
                     })
-                .ToList();            
+                .ToList(); 
+        
+
+            dialogues.ForEach(p => 
+                p.WordsWord = (p.WordsWord == "[]") ? 
+                    "" : 
+                    string.Join(
+                        " ",
+                        JsonConvert.DeserializeObject<List<WordsClass>>(p.WordsWord).Select(q => q.Word)));      
+            
             PrintDialogueReport(dialogues);
         }
 
@@ -228,10 +243,15 @@ namespace UserOperations.Controllers
                     ConstructCell("Speeches PositiveShare", CellValues.String),
                     ConstructCell("Speeches SilenceShare", CellValues.String),
                     ConstructCell("Speeches SpeechSpeed", CellValues.String),
-                    ConstructCell("Phrases PhraseText", CellValues.String),  
+                  //  ConstructCell("Phrases PhraseText", CellValues.String),  
                     ConstructCell("Words Word", CellValues.String),
                     ConstructCell("Video", CellValues.String),
-                    ConstructCell("Avatar", CellValues.String)
+                    ConstructCell("Avatar", CellValues.String),
+                    ConstructCell("Necessary", CellValues.String),
+                    ConstructCell("Loyalty", CellValues.String),  
+                    ConstructCell("Alert", CellValues.String),
+                    ConstructCell("Cross", CellValues.String),
+                    ConstructCell("Fillers", CellValues.String)
                 );
                 sheetData.AppendChild(row1);
 
@@ -272,10 +292,16 @@ namespace UserOperations.Controllers
                         ConstructCell(dr.SpeechesPositiveShare, CellValues.String),
                         ConstructCell(dr.SpeechesSilenceShare, CellValues.String),
                         ConstructCell(dr.SpeechesSpeechSpeed, CellValues.String),
-                        ConstructCell(dr.PhrasesPhraseText, CellValues.String),
+                        // ConstructCell(dr.PhrasesPhraseText, CellValues.String),
                         ConstructCell(dr.WordsWord, CellValues.String),
                         ConstructCell(dr.Video, CellValues.String),
-                        ConstructCell(dr.Avatar, CellValues.String)
+                        ConstructCell(dr.Avatar, CellValues.String),
+
+                        ConstructCell(dr.Necessary, CellValues.String),
+                        ConstructCell(dr.Loyalty, CellValues.String),
+                        ConstructCell(dr.Alert, CellValues.String),
+                        ConstructCell(dr.Cross, CellValues.String),
+                        ConstructCell(dr.Fillers, CellValues.String)
                     );
                     sheetData.AppendChild(tempRow);
                 }
@@ -336,5 +362,23 @@ namespace UserOperations.Controllers
         public string WordsIsClient { get; set; }
         public string Video { get; set; }
         public string Avatar { get; set; }
+        public string Necessary {get;set;}
+        public string Loyalty {get;set;}
+        public string Alert {get;set;}
+        public string Cross {get;set;}
+        public string Fillers {get;set;}
     }   
 }
+
+
+public class WordsClass
+{
+    public string Word {get;set;}
+    public DateTime BegTime {get;set;}
+    public DateTime EndTime {get;set;}
+    public string PhraseId {get;set;}
+    public string PhraseTypeId {get;set;}
+    public int Position {get;set;}
+}
+
+
