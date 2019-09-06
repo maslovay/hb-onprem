@@ -5,7 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="Services\email.cshtml" />
-    <Content Remove="Services\registerManager.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.11.5" />
