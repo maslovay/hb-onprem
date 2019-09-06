@@ -45,7 +45,7 @@ namespace FaceAnalyzeService
             services.AddScoped(provider =>
             {
                 var settings = provider.GetRequiredService<IOptions<SftpSettings>>().Value;
-                return new SftpClient(settings);
+                return new SftpClient(settings, Configuration);
             });
             services.AddScoped(provider =>
             {
