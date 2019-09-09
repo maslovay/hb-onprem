@@ -124,8 +124,34 @@ namespace UserOperations.Services
                     .UseFilesystemProject(fullPath)
                     .UseMemoryCachingProvider()
                     .Build();
-            //    string path = Path.GetFullPath("./Services /"+filename);
+            //    string path = Path.GetFullPath("./Services /"+filename);            
                 string result = await engine.CompileRenderAsync("./Services/"+filename, model);
+
+                //  string pathTemp = fullPath + "/Services/temp.html";
+                //  File.WriteAllText(pathTemp, result);
+                //  string htmlBody = File.ReadAllText(pathTemp);
+                //  File.Delete(pathTemp);
+                //  return htmlBody;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _log.Fatal($"Create user email fatal exception {ex.Message}");
+                return "";
+            }
+        }
+
+        private async Task<string> CreateHtmlFromTemplate2(LanguageDataEmail model, string filename)
+        {
+            try
+            {
+                var fullPath = System.IO.Path.GetFullPath(".");
+                var engine = new RazorLight.RazorLightEngineBuilder()
+                    .UseFilesystemProject(fullPath)
+                    .UseMemoryCachingProvider()
+                    .Build();
+                //    string path = Path.GetFullPath("./Services /"+filename);
+                string result = await engine.CompileRenderAsync("./Services/" + filename, model);
 
                 string pathTemp = fullPath + "/Services/temp.html";
                 File.WriteAllText(pathTemp, result);
@@ -145,29 +171,33 @@ namespace UserOperations.Services
             var fullPath = System.IO.Path.GetFullPath(".");
             string pathTemp = fullPath + "/Services/email.cshtml";
             string htmlBody = File.ReadAllText(pathTemp);
-            return htmlBody;
+            string pathTemp2 = fullPath + "/Services/temp.html";
+            File.WriteAllText(pathTemp2, htmlBody);
+            string htmlBody2 = File.ReadAllText(pathTemp2);
+            File.Delete(pathTemp2);
+            return htmlBody2;
         }
-        public string TestReadFile2()
-        {
-            string htmlBody = File.ReadAllText("Services/email.cshtml");
-            return htmlBody;
-        }
+        //public string TestReadFile2()
+        //{
+        //    string htmlBody = File.ReadAllText("Services/email.cshtml");
+        //    return htmlBody;
+        //}
 
-        public string TestReadFile3()
-        {
-            var fullPath = Directory.GetCurrentDirectory();
-            string pathTemp = fullPath + "/Services/email.cshtml";
-            string htmlBody = File.ReadAllText(pathTemp);
-            return htmlBody;
-        }
+        //public string TestReadFile3()
+        //{
+        //    var fullPath = Directory.GetCurrentDirectory();
+        //    string pathTemp = fullPath + "/Services/email.cshtml";
+        //    string htmlBody = File.ReadAllText(pathTemp);
+        //    return htmlBody;
+        //}
 
-        public string TestReadFile4()
-        {
-            var fullPath = Path.GetDirectoryName(Environment.CurrentDirectory);
-            string pathTemp = fullPath + "/Services/email.cshtml";
-            string htmlBody = File.ReadAllText(pathTemp);
-            return htmlBody;
-        }
+        //public string TestReadFile4()
+        //{
+        //    var fullPath = Path.GetDirectoryName(Environment.CurrentDirectory);
+        //    string pathTemp = fullPath + "/Services/email.cshtml";
+        //    string htmlBody = File.ReadAllText(pathTemp);
+        //    return htmlBody;
+        //}
     }
         public class LanguageDataEmail
         {

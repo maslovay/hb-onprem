@@ -70,16 +70,7 @@ namespace UserOperations.Controllers
         public IActionResult Help()
         {
            string res1 =  _mailSender.TestReadFile1();
-            string res2 = _mailSender.TestReadFile1();
-            string res3 = _mailSender.TestReadFile1();
-            string res4 = _mailSender.TestReadFile1();
-
-            Dictionary<string, string> result = new Dictionary<string, string>();
-            result["1"] = res1;
-            result["2"] = res2;
-            result["3"] = res3;
-            result["4"] = res4;
-            return Ok(result);
+           return Ok(res1);
         }
 
 
