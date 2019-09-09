@@ -18,10 +18,12 @@ namespace HBData.Repository
     public class GenericRepository : IGenericRepository
     {
         private readonly RecordsContext _context;
+        private AssemblyName asmName;
 
         public GenericRepository(RecordsContext context)
         {
             _context = context;
+            asmName = new AssemblyName { Name = "MyDynamicAssembly" };
         }     
 
         public async Task<IEnumerable<T>> FindAllAsync<T>() where T : class
@@ -148,17 +150,24 @@ namespace HBData.Repository
                         dbParameter.Value = p.Value;
                         cmd.Parameters.Add(dbParameter);
                     }
-
+                
                 using (var dataReader = cmd.ExecuteReader())
                 {
                     while (dataReader.Read())
-                    {
+                    {         
                         for (var fieldCount = 0; fieldCount < dataReader.FieldCount; fieldCount++)
                         {
-                            type.GetRuntimeProperties().ToList()[fieldCount].SetValue(instance, dataReader[fieldCount]);
+                            try
+                            {
+                                type.GetRuntimeProperties().ToList()[fieldCount].SetValue(instance, Convert.ToDouble(dataReader.GetFieldValue<object>(fieldCount)),null);                            
+                            
+                            }
+                            catch(Exception ex)
+                            {
+                                System.Console.WriteLine(ex);
+                            }                            
                         }
-
-                        yield return instance;
+                        yield return instance;  
                     }
                 }
             }
@@ -182,7 +191,7 @@ namespace HBData.Repository
         private Object CreateType(List<String> properties, out Type type)
         {
             //TODO: replace it and make generic.
-            var asmName = new AssemblyName { Name = "MyDynamicAssembly" };
+            
             var asmBuilder = AssemblyBuilder.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndCollect);
             var modBuilder =
                 asmBuilder.DefineDynamicModule(asmName.Name);
@@ -196,7 +205,7 @@ namespace HBData.Repository
             foreach (var property in properties)
             {
                 FieldBuilder customerNameBldr = typeBuilder.DefineField($"{property.ToLowerInvariant()}",
-                    typeof(string),
+                    typeof(Double),
                     FieldAttributes.Private);
 
                 var propertyBuilder =
