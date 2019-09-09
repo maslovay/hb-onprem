@@ -113,7 +113,6 @@ namespace UserService.Controllers
 
             return Ok(dialogs.ToList());
         }
-
         
         [HttpPost("[action]")]
         public async Task Test1(DialogueCreationRun message)
