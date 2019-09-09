@@ -36,10 +36,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage;
 using HBLib.Utils;
-using UserOperations.Utils;
-using Npgsql;
-using System.Threading;
-using BenchmarkDotNet.Attributes;
+using System.IO;
 
 namespace UserOperations.Controllers
 {
@@ -51,22 +48,40 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-       // private readonly int activeStatus;
+        private readonly MailSender _mailSender;
 
 
         public HelpController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient
+            SftpClient sftpClient,
+            MailSender mailSender
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-           // activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
-        }     
+            _mailSender = mailSender;
+        }
+
+        [HttpGet("Help")]
+        public IActionResult Help()
+        {
+           string res1 =  _mailSender.TestReadFile1();
+            string res2 = _mailSender.TestReadFile1();
+            string res3 = _mailSender.TestReadFile1();
+            string res4 = _mailSender.TestReadFile1();
+
+            Dictionary<string, string> result = new Dictionary<string, string>();
+            result["1"] = res1;
+            result["2"] = res2;
+            result["3"] = res3;
+            result["4"] = res4;
+            return Ok(result);
+        }
+
 
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling
