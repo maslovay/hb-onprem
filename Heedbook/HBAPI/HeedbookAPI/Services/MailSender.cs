@@ -24,7 +24,24 @@ namespace UserOperations.Services
 
         public void SendSimpleEmail(string email, string messageTitle, string text, string senderName = "Heedbook")
         {
-            SendOldEmail(email, messageTitle, text);
+            System.Net.Mail.MailAddress from = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail, "Heedbook");
+            System.Net.Mail.MailAddress to = new System.Net.Mail.MailAddress(email);
+            // create mail object 
+            System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage(from, to);
+            mail.BodyEncoding = System.Text.Encoding.UTF8;
+            mail.IsBodyHtml = true;
+            mail.Subject = messageTitle;
+            mail.Body = text;
+            try
+            {
+                _smtpClient.Send(mail);
+                //  _log.Info($"email Sended to {email}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                //  _log.Fatal($"Failed email to {email}{ex.Message}");
+            }
         }
 
         public async Task SendRegisterEmail(ApplicationUser user)
@@ -51,30 +68,7 @@ namespace UserOperations.Services
             model.pswd += password;
             string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
             await SendEmail(user, model.emailSubject, htmlBody);
-           // SendOldEmail(email, "Password changed", text);
-        }
-
-        public async Task SendOldEmail(string email, string subject, string text)
-        {
-            System.Net.Mail.MailAddress from = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail, "Heedbook");
-            System.Net.Mail.MailAddress to = new System.Net.Mail.MailAddress(email);
-            // create mail object 
-            System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage(from, to);
-            mail.BodyEncoding = System.Text.Encoding.UTF8;
-            mail.IsBodyHtml = true;
-            mail.Subject = subject;
-            mail.Body = text;
-            try
-            {
-                _smtpClient.Send(mail);
-                //  _log.Info($"email Sended to {email}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                //  _log.Fatal($"Failed email to {email}{ex.Message}");
-            }
-        }
+        }     
 
         //create and email notification 
         private async Task SendEmail(ApplicationUser user, string subject, string htmlBody)
@@ -146,7 +140,34 @@ namespace UserOperations.Services
             }
         }
 
+        public string TestReadFile1()
+        {
+            var fullPath = System.IO.Path.GetFullPath(".");
+            string pathTemp = fullPath + "/Services/email.cshtml";
+            string htmlBody = File.ReadAllText(pathTemp);
+            return htmlBody;
+        }
+        public string TestReadFile2()
+        {
+            string htmlBody = File.ReadAllText("Services/email.cshtml");
+            return htmlBody;
+        }
 
+        public string TestReadFile3()
+        {
+            var fullPath = Directory.GetCurrentDirectory();
+            string pathTemp = fullPath + "/Services/email.cshtml";
+            string htmlBody = File.ReadAllText(pathTemp);
+            return htmlBody;
+        }
+
+        public string TestReadFile4()
+        {
+            var fullPath = Path.GetDirectoryName(Environment.CurrentDirectory);
+            string pathTemp = fullPath + "/Services/email.cshtml";
+            string htmlBody = File.ReadAllText(pathTemp);
+            return htmlBody;
+        }
     }
         public class LanguageDataEmail
         {
