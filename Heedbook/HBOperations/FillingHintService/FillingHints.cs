@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using HBLib;
 using Microsoft.Azure.Management.Search.Fluent;
+using HBData;
 
 namespace FillingHintService
 {
@@ -19,14 +20,16 @@ namespace FillingHintService
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly ElasticClientFactory _elasticClientFactory;
-
+        private RecordsContext _context;
 
         public FillingHints(IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory
+            ElasticClientFactory elasticClientFactory,
+            RecordsContext context
             )
         {
             _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
             _elasticClientFactory = elasticClientFactory;
+            _context = context;
         }
 
         public async Task Run(Guid dialogueId)
@@ -38,6 +41,14 @@ namespace FillingHintService
             System.Console.WriteLine($"Function started: {dialogueId}");
             try
             {
+                var dialogueHints = _context.DialogueHints.Where(p => p.DialogueId == dialogueId).ToList();
+                if(dialogueHints!=null && dialogueHints.Count > 0)
+                {
+                    _context.DialogueHints.RemoveRange(dialogueHints);
+                    _context.SaveChanges();
+                    _log.Info($"Old hints have been removed before selecting new hints for dialogue: {dialogueId}, count: {dialogueHints.Count}");
+                }                
+                
                 var language = _repository.GetWithInclude<Dialogue>(item => item.DialogueId == dialogueId,
                                                item => item.Language)
                                           .Select(item => item.Language.LanguageLocalName)
