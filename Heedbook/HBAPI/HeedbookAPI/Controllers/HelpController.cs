@@ -66,13 +66,13 @@ namespace UserOperations.Controllers
             _mailSender = mailSender;
         }
 
-        [HttpGet("Help")]
-        public IActionResult Help()
+        [HttpGet("Help1")]
+        public async Task<IActionResult> Help1()
         {
-           string res1 =  _mailSender.TestReadFile1();
-           return Ok(res1);
+            string res1 = await _mailSender.TestReadFile1();
+            return Ok(res1);
         }
-
+     
 
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling
