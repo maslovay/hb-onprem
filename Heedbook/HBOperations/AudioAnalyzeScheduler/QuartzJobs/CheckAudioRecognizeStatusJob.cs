@@ -18,6 +18,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Castle.Core.Internal;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 
 namespace AudioAnalyzeScheduler.QuartzJobs
 {
@@ -27,18 +29,20 @@ namespace AudioAnalyzeScheduler.QuartzJobs
         private RecordsContext _context;
         private readonly IServiceScopeFactory _factory;
         private readonly ElasticClientFactory _elasticClientFactory;
-
+        private readonly INotificationPublisher _notificationPublisher;
         private readonly GoogleConnector _googleConnector;
         // private readonly IGenericRepository _repository;
 
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
             ElasticClientFactory elasticClientFactory,
+            INotificationPublisher notificationPublisher,
             GoogleConnector googleConnector)
         {
             // _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _factory = factory;
             _elasticClientFactory = elasticClientFactory;
             _googleConnector = googleConnector;
+            _notificationPublisher = notificationPublisher;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -272,7 +276,14 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         _context.DialoguePhraseCounts.AddRange(phraseCounts);
                         _context.SaveChanges();
                         _log.Info($"Finished processing {audio.DialogueId}");
+                        
+                        _log.Info("sending to filling satisfaction");
+                        _notificationPublisher.Publish(new FillingSatisfactionRun()
+                        {
+                            DialogueId = audio.DialogueId
+                        });
                     }
+                    
                     _log.Info("Function finished.");
                 }
                 catch (Exception e)

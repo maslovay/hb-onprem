@@ -55,6 +55,7 @@ namespace AudioAnalyzeScheduler
             services.AddSingleton<SftpClient>();
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddScoped<IGenericRepository, GenericRepository>();
+            services.AddRabbitMqEventBus(Configuration);
             services.AddAudioRecognizeQuartz(schedulerSettings);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
