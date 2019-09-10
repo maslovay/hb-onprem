@@ -72,7 +72,14 @@ namespace UserOperations.Controllers
             string res1 = await _mailSender.TestReadFile1();
             return Ok(res1);
         }
-     
+
+        [HttpGet("Help2")]
+        public async Task<IActionResult> Help2()
+        {
+            string res1 = await _mailSender.TestReadFile2();
+            return Ok(res1);
+        }
+
 
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling

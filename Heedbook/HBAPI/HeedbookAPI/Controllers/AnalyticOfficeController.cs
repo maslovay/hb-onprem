@@ -133,9 +133,10 @@ namespace UserOperations.Controllers
                 var satisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur);
                 var loadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1));
                 var employeeCount = _dbOperation.EmployeeCount(dialoguesCur);
-                result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
+             //   result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
                 result.DialoguesNumberAvgPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
+                result.DialoguesNumberAvgPerDayOffice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() : 0;
 
                 var diagramDialogDurationPause = sessionCur
                 .GroupBy(p => p.BegTime.Date)

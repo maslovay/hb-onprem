@@ -163,7 +163,7 @@ namespace UserOperations.Services
                 try
                 {
                     string result = await engine.CompileRenderAsync("Services/email.cshtml", model);
-                    string pathTemp = fullPath + "./Services/temp.html";
+                    string pathTemp = fullPath + "/Services/temp.html";
                     File.WriteAllText(pathTemp, result);
                     string htmlBody = File.ReadAllText(pathTemp);
                     File.Delete(pathTemp);
@@ -171,7 +171,7 @@ namespace UserOperations.Services
                 }
                 catch (Exception ex)
                 {
-                    return "engine.CompileRenderAsync dosnt work"+ ex.Message + ", " + ex.InnerException?.Message;
+                    return "engine.CompileRenderAsync dosnt work. " + ex.Message + ", " + ex.StackTrace;
                 }
 
             }
@@ -180,7 +180,35 @@ namespace UserOperations.Services
                 _log.Fatal($"Create user email fatal exception {ex.Message}");
                 return ex.Message +  ex.InnerException?.Message;
             }
-        }     
+        }
+
+        public async Task<string> TestReadFile2()
+        {
+            string path = Path.GetFullPath("./Services/language_table.json");
+            var languageRowJson = File.ReadAllText(path);
+            var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
+            var registerLanguages = (List<LanguageDataEmail>)languageObject.GetType().GetProperty("passwordChange").GetValue(languageObject, null);
+            LanguageDataEmail model = registerLanguages[1];
+            try
+            {
+                var engine = new RazorLight.RazorLightEngineBuilder()
+                  .UseMemoryCachingProvider()
+                  .Build();
+                var fullPath = System.IO.Path.GetFullPath(".");
+                string template = File.ReadAllText(fullPath + "/Services/email.cshtml");
+
+                string result = await engine.CompileRenderAsync("email", template, model);
+                string pathTemp = fullPath + "/Services/temp.html";
+                File.WriteAllText(pathTemp, result);
+                string htmlBody = File.ReadAllText(pathTemp);
+                File.Delete(pathTemp);
+                return htmlBody;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message +" , "+ ex.StackTrace;
+            }
+        }
     }
         public class LanguageDataEmail
         {
