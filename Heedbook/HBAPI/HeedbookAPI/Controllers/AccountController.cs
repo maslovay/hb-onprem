@@ -133,27 +133,14 @@ namespace UserOperations.Controllers
                         await _context.Transactions.AddAsync(transaction);
 
                         //---6---ADD WORKER TYPES CATALOGUE CONNECTED TO NEW COMPANY
-                        var workerTypes = new List<WorkerType>
-                    {
-                        new WorkerType {
+                        var workerType = new WorkerType
+                        {
                             WorkerTypeId = Guid.NewGuid(),
                             CompanyId = companyId,
                             WorkerTypeName = "Employee"
-                        },
-                        new WorkerType {
-                            WorkerTypeId = Guid.NewGuid(),
-                            CompanyId = companyId,
-                            WorkerTypeName = "Bank tellers",
-
-                        },
-                        new WorkerType {
-                            WorkerTypeId = Guid.NewGuid(),
-                            CompanyId = companyId,
-                            WorkerTypeName = "Сashier"
-                        }
-                    };
+                        };
                         _log.Info("WorkerTypes created");
-                        await _context.WorkerTypes.AddRangeAsync(workerTypes);
+                        await _context.WorkerTypes.AddAsync(workerType);
 
                         //---7---content and campaign clone
                         var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);

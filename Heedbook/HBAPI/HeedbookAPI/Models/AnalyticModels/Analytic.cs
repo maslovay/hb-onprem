@@ -265,7 +265,7 @@ namespace UserOperations.Models.AnalyticModels
         // public double? WorkingHoursDelta;
         // public double? DialogueAveragePause;
         public double? AvgDurationDialogue;
-        public double? CorrelationLoadSatisfaction;
+        public double? DialoguesNumberAvgPerDayOffice;
         public Employee BestEmployee;
     }
 
