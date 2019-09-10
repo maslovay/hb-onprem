@@ -73,7 +73,7 @@ namespace UserOperations.Controllers
                 var corporationId = userClaims["corporationId"];
                 var role = userClaims["role"];
                 users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                    .Where(p => p.CompanyId == companyId && p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled    
+                    .Where(p => p.CompanyId == companyId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();     //2 active, 3 - disabled    
                 if (role == "Admin")
                     users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
                         .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled  

@@ -81,6 +81,26 @@ namespace UserOperations.Controllers
         }
 
 
+        [HttpGet("Help3")]
+        public async Task<IActionResult> Help3()
+        {
+            var connectionString = "User ID = postgres; Password = annushka123; Host = 127.0.0.1; Port = 5432; Database = onprem_backup; Pooling = true; Timeout = 120; CommandTimeout = 0";
+            DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
+            dbContextOptionsBuilder.UseNpgsql(connectionString,
+                   dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
+            var localContext = new RecordsContext(dbContextOptionsBuilder.Options);
+            var contentInBackup = localContext.Contents.FirstOrDefault();
+            Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
+            var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
+            contentInBackup.CreationDate = content.CreationDate;
+            contentInBackup.JSONData = content.JSONData;
+            contentInBackup.RawHTML = content.RawHTML;
+            contentInBackup.UpdateDate = content.UpdateDate;
+            localContext.SaveChanges();
+            return Ok();
+        }
+
+
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling
         (
