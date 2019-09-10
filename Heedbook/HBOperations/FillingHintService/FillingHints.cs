@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using HBLib;
 using Microsoft.Azure.Management.Search.Fluent;
 using HBData;
+using Microsoft.EntityFrameworkCore;
 
 namespace FillingHintService
 {
@@ -48,12 +49,12 @@ namespace FillingHintService
                     _context.SaveChanges();
                     _log.Info($"Old hints have been removed before selecting new hints for dialogue: {dialogueId}, count: {dialogueHints.Count}");
                 }                
+                           
+                var language = _context.Dialogues
+                    .Include(p => p.Language)
+                    .FirstOrDefault(p => p.DialogueId == dialogueId).Language.LanguageLocalName;
                 
-                var language = _repository.GetWithInclude<Dialogue>(item => item.DialogueId == dialogueId,
-                                               item => item.Language)
-                                          .Select(item => item.Language.LanguageLocalName)
-                                          .FirstOrDefault();
-                var catalogueHints = await _repository.FindAllAsync<CatalogueHint>();
+                var catalogueHints = _context.CatalogueHints.ToList();
                 if (catalogueHints.Any())
                 {
                     var hints = catalogueHints.Where(ch => ch.HintCondition != null 
@@ -77,7 +78,6 @@ namespace FillingHintService
                             }
                             else
                             {
-
                                 var reqSql = BuildRequest(hintCondition.Table, dialogueId.ToString(),
                                     hintCondition.Condition,
                                     hintCondition.Indexes);
@@ -115,8 +115,8 @@ namespace FillingHintService
                                                     IsAutomatic = true,
                                                     IsPositive = hintCondition.IsPositive,
                                                     Type = hintCondition.Type
-                                                };
-                                                await _repository.CreateAsync(dialogueHint);
+                                                };                                                
+                                                _context.DialogueHints.Add(dialogueHint);
                                             }
                                         }
 
@@ -158,7 +158,7 @@ namespace FillingHintService
                                                     IsPositive = hintCondition.IsPositive,
                                                     Type = hintCondition.Type
                                                 };                                                
-                                                await _repository.CreateAsync(dialogueHint);
+                                                _context.DialogueHints.Add(dialogueHint);
                                             }
                                         }
                                         break;
@@ -171,7 +171,7 @@ namespace FillingHintService
                         }                     
                     }
 
-                    await _repository.SaveAsync();
+                    _context.SaveChanges();
                     System.Console.WriteLine($"function end");
                 }
             }
