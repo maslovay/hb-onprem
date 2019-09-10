@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using HBLib;
 using Microsoft.Azure.Management.Search.Fluent;
+using HBData;
+using Microsoft.EntityFrameworkCore;
 
 namespace FillingHintService
 {
@@ -19,14 +21,16 @@ namespace FillingHintService
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly ElasticClientFactory _elasticClientFactory;
-
+        private RecordsContext _context;
 
         public FillingHints(IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory
+            ElasticClientFactory elasticClientFactory,
+            RecordsContext context
             )
         {
             _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
             _elasticClientFactory = elasticClientFactory;
+            _context = context;
         }
 
         public async Task Run(Guid dialogueId)
@@ -38,11 +42,19 @@ namespace FillingHintService
             System.Console.WriteLine($"Function started: {dialogueId}");
             try
             {
-                var language = _repository.GetWithInclude<Dialogue>(item => item.DialogueId == dialogueId,
-                                               item => item.Language)
-                                          .Select(item => item.Language.LanguageLocalName)
-                                          .FirstOrDefault();
-                var catalogueHints = await _repository.FindAllAsync<CatalogueHint>();
+                var dialogueHints = _context.DialogueHints.Where(p => p.DialogueId == dialogueId).ToList();
+                if(dialogueHints!=null && dialogueHints.Count > 0)
+                {
+                    _context.DialogueHints.RemoveRange(dialogueHints);
+                    _context.SaveChanges();
+                    _log.Info($"Old hints have been removed before selecting new hints for dialogue: {dialogueId}, count: {dialogueHints.Count}");
+                }                
+                           
+                var language = _context.Dialogues
+                    .Include(p => p.Language)
+                    .FirstOrDefault(p => p.DialogueId == dialogueId).Language.LanguageLocalName;
+                
+                var catalogueHints = _context.CatalogueHints.ToList();
                 if (catalogueHints.Any())
                 {
                     var hints = catalogueHints.Where(ch => ch.HintCondition != null 
@@ -66,7 +78,6 @@ namespace FillingHintService
                             }
                             else
                             {
-
                                 var reqSql = BuildRequest(hintCondition.Table, dialogueId.ToString(),
                                     hintCondition.Condition,
                                     hintCondition.Indexes);
@@ -104,8 +115,8 @@ namespace FillingHintService
                                                     IsAutomatic = true,
                                                     IsPositive = hintCondition.IsPositive,
                                                     Type = hintCondition.Type
-                                                };
-                                                await _repository.CreateAsync(dialogueHint);
+                                                };                                                
+                                                _context.DialogueHints.Add(dialogueHint);
                                             }
                                         }
 
@@ -147,7 +158,7 @@ namespace FillingHintService
                                                     IsPositive = hintCondition.IsPositive,
                                                     Type = hintCondition.Type
                                                 };                                                
-                                                await _repository.CreateAsync(dialogueHint);
+                                                _context.DialogueHints.Add(dialogueHint);
                                             }
                                         }
                                         break;
@@ -160,7 +171,7 @@ namespace FillingHintService
                         }                     
                     }
 
-                    await _repository.SaveAsync();
+                    _context.SaveChanges();
                     System.Console.WriteLine($"function end");
                 }
             }
