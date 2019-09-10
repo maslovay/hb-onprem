@@ -36,10 +36,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage;
 using HBLib.Utils;
-using UserOperations.Utils;
-using Npgsql;
-using System.Threading;
-using BenchmarkDotNet.Attributes;
+using System.IO;
 
 namespace UserOperations.Controllers
 {
@@ -51,22 +48,31 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-       // private readonly int activeStatus;
+        private readonly MailSender _mailSender;
 
 
         public HelpController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient
+            SftpClient sftpClient,
+            MailSender mailSender
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-           // activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
-        }     
+            _mailSender = mailSender;
+        }
+
+        [HttpGet("Help1")]
+        public async Task<IActionResult> Help1()
+        {
+            string res1 = await _mailSender.TestReadFile1();
+            return Ok(res1);
+        }
+     
 
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling

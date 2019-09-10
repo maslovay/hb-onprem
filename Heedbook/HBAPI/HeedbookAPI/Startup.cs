@@ -56,7 +56,8 @@ namespace UserOperations
             })
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
-      
+            services.AddScoped<MailSender>();
+
             services.AddSwaggerGen(c =>
             {
                 c.EnableAnnotations();
@@ -112,7 +113,7 @@ namespace UserOperations
 
             services.Configure<SmtpSettings>(Configuration.GetSection(nameof(SmtpSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
-            services.AddSingleton<SmtpClient>();
+            services.AddSingleton<SmtpClient>();          
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -133,7 +134,8 @@ namespace UserOperations
             app.UseCors(MyAllowSpecificOrigins);
             app.UseMvc();
 
-          //  BenchmarkRunner.Run<TestAnalyticClientProfile>();
+            // add seed
+            // BenchmarkRunner.Run<TestAnalyticClientProfile>();
         }
 
     }
