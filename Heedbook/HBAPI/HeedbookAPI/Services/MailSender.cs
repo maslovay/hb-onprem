@@ -120,11 +120,18 @@ namespace UserOperations.Services
             try
             {
                 var fullPath = System.IO.Path.GetFullPath(".");
+                //var engine = new RazorLight.RazorLightEngineBuilder()
+                //    .UseFilesystemProject(fullPath)
+                //    .UseMemoryCachingProvider()
+                //    .Build();
+                //string result = await engine.CompileRenderAsync("/Services/email", model);
+
                 var engine = new RazorLight.RazorLightEngineBuilder()
-                    .UseFilesystemProject(fullPath)
-                    .UseMemoryCachingProvider()
-                    .Build();
-                string result = await engine.CompileRenderAsync("/Services/email", model);
+              .UseMemoryCachingProvider()
+              .Build();
+
+                string template = File.ReadAllText(fullPath+"/Services/email.cshtml");
+                string result = await engine.CompileRenderAsync("email", template, model);
 
                 string pathTemp = fullPath + "/Services/temp.html";
                 File.WriteAllText(pathTemp, result);
@@ -153,18 +160,25 @@ namespace UserOperations.Services
                     .UseFilesystemProject(fullPath)
                     .UseMemoryCachingProvider()
                     .Build();
-                string result = await engine.CompileRenderAsync("./Services/email", model);
+                try
+                {
+                    string result = await engine.CompileRenderAsync("Services/email.cshtml", model);
+                    string pathTemp = fullPath + "./Services/temp.html";
+                    File.WriteAllText(pathTemp, result);
+                    string htmlBody = File.ReadAllText(pathTemp);
+                    File.Delete(pathTemp);
+                    return htmlBody;
+                }
+                catch (Exception ex)
+                {
+                    return "engine.CompileRenderAsync dosnt work"+ ex.Message + ", " + ex.InnerException?.Message;
+                }
 
-                string pathTemp = fullPath + "./Services/temp.html";
-                File.WriteAllText(pathTemp, result);
-                string htmlBody = File.ReadAllText(pathTemp);
-                File.Delete(pathTemp);
-                return htmlBody;
             }
             catch (Exception ex)
             {
                 _log.Fatal($"Create user email fatal exception {ex.Message}");
-                return "";
+                return ex.Message +  ex.InnerException?.Message;
             }
         }     
     }

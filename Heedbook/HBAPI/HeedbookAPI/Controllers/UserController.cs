@@ -159,7 +159,11 @@ namespace UserOperations.Controllers
 
                 var userForEmail = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == user.Id);
 
-                _mailSender.SendUserRegisterEmail(userForEmail, message.Password);
+                try
+                {
+                    await _mailSender.SendUserRegisterEmail(userForEmail, message.Password);
+                }
+                catch { }
                 return Ok(new UserModel(user, avatarUrl));
             }
             catch (Exception e)
