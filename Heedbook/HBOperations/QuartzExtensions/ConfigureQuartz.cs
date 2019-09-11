@@ -132,7 +132,7 @@ namespace QuartzExtensions
                 return TriggerBuilder.Create()
                                     .WithIdentity("SendUserAnalyticReportJob.trigger", "SelfStatistic")
                                     .StartNow()                                       
-                                    .WithSimpleSchedule(s => s.WithIntervalInMinutes(10).RepeatForever())                              
+                                    .WithCronSchedule("0 00 7 ? * MON", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())
                                     .Build();
             });
             services.AddSingleton<ILoginService, LoginService>();
