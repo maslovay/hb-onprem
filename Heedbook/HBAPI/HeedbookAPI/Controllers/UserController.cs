@@ -250,10 +250,10 @@ namespace UserOperations.Controllers
 
                 if (user != null)
                 {
-                    using (var transactionScope = new
-                         TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
-                                                    { IsolationLevel = IsolationLevel.Serializable }))
-                    {
+                    //using (var transactionScope = new
+                    //     TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
+                    //                                { IsolationLevel = IsolationLevel.Serializable }))
+                    //{
                         try
                         {
                             await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
@@ -263,14 +263,15 @@ namespace UserOperations.Controllers
                                 _context.RemoveRange(user.PasswordHistorys);
                             _context.Remove(user);
                             await _context.SaveChangesAsync();
-                            transactionScope.Complete();
+                           // transactionScope.Complete();
                         }
                         catch
                         {
                             user.StatusId = disabledStatus;
                             await _context.SaveChangesAsync();
-                        }
+                            return Ok("Disabled Status");
                     }
+                    //}
                     // _log.Info("User/User DELETE finished");
                     return Ok("Deleted");
                 }
