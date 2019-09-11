@@ -10,6 +10,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Quartz;
 using Microsoft.Azure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CloneFtpOnAzure
@@ -22,6 +23,7 @@ namespace CloneFtpOnAzure
         private StorageAccInfo _storageAccInfo;
         private RecordsContext _context;
         private readonly IServiceScopeFactory _scopeFactory;
+        private IConfiguration _configuration;
 
         public FtpJob(IServiceScopeFactory scopeFactory,
             SftpClient sftpClient,
@@ -43,31 +45,50 @@ namespace CloneFtpOnAzure
                 var _log = _elasticClientFactory.GetElasticClient();
                 try
                 {
-                    _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
-
-                    var dialogues = _context.Dialogues
-                        .Where(d => d.Status.StatusId == 3 &&
-                                    d.CreationTime >= DateTime.UtcNow.AddHours(-24))
-                        .Select(s => s.DialogueId)
-                        .ToList();
-                    var tasks = new List<Task>();
-                    var dict = new Dictionary<String, String>()
+                    _configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+                    var oldSettings = new SftpSettings()
                     {
-                        {_storageAccInfo.AvatarName, ".jpg"},
-                        {_storageAccInfo.VideoName, ".mkv"},
-                        {_storageAccInfo.AudioName, ".wav"}
+                        Host = "40.112.78.6",
+                        Port = 22,
+                        UserName = "nkrokhmal",
+                        Password = "kloppolk_2018",
+                        DestinationPath = "/home/nkrokhmal/storage/",
+                        DownloadPath = "/opt/download/"
+                        
                     };
-                    _log.Info("Try to download and upload");
-                    foreach (var dialogue in dialogues)
+                    var sftpCLientOld = new SftpClient(oldSettings, _configuration);
+                    
+                    var tasks = new List<Task>();
+                    
+                    var oldPath = await sftpCLientOld.ListDirectoryAsync("");
+                    
+                    foreach (var sftpFile in oldPath)
                     {
-                        foreach (var (key, value) in dict)
+                        if (sftpFile.IsDirectory)
                         {
-                            var filePath = key + "/" + dialogue + value;
-                            var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
-                            tasks.Add(_blobController.UploadFileStreamToBlob(filePath, stream));
+                            var files = await sftpCLientOld.ListDirectoryFiles(sftpFile.Name);
+                            Parallel.ForEach(files, async (file) =>
+                            {
+                                using (var stream = await sftpCLientOld.DownloadFromFtpAsMemoryStreamAsync(sftpFile.Name + "/" + file))
+                                {
+                                   await _sftpClient.UploadAsMemoryStreamAsync(stream, sftpFile.Name, file);
+                                   await sftpCLientOld.DeleteFileIfExistsAsync(sftpFile.Name + "/" + file);
+                                }
+                            });
                         }
-
                     }
+                    _log.Info("Try to download and upload");
+//                    foreach (var dialogue in dialogues)
+//                    {
+//                        foreach (var (key, value) in dict)
+//                        { 
+//                            var filePath = key + "/" + dialogues + value;
+//                            var fileName = dialogues + value;
+//                            var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(oldPath);
+//                            tasks.Add(sftpCLientOld.UploadAsMemoryStreamAsync(stream,key,fileName));
+//                        }
+//
+//                    }
 
                     await Task.WhenAll(tasks);
                     _log.Info("Download and Upload finished");
