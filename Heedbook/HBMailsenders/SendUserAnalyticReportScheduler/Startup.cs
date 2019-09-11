@@ -15,6 +15,8 @@ using HBLib;
 using HBLib.Utils;
 using UserOperations.Services;
 using HBData.Models.AccountViewModels;
+using QuartzExtensions.Jobs;
+using QuartzExtensions.Utils.WeeklyReport;
 
 namespace SendUserAnalyticReportScheduler
 {
@@ -45,6 +47,7 @@ namespace SendUserAnalyticReportScheduler
             services.Configure<SmtpSettings>(Configuration.GetSection(nameof(SmtpSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
             services.AddSingleton<SmtpClient>();
+            services.AddSingleton<WeeklyReport>();
 
             services.Configure<AccountAuthorization>(Configuration.GetSection(nameof(AccountAuthorization)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<AccountAuthorization>>().Value);
