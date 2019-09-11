@@ -20,30 +20,26 @@ namespace LinkToBlobController.Controller
             _accInfo = accInfo;
             _create = create;
         }
-        
-        [HttpGet("GetBlobFile")]
-        public async Task GetBlobFile([FromQuery] Guid dialogId)
-        {
-            var containerName = new string[] {_accInfo.VideoName, _accInfo.AvatarName, _accInfo.AudioName};
-            
-            var key = _accInfo.AccKey;
-            
-            var dictList = new List<string>()
-            {
-                dialogId + ".jpg",
-                dialogId + ".mkv",
-                dialogId + ".wav"
-            };
-            foreach (var nameOfContainer in containerName)
-            {
-                var uriPath = _accInfo.UriPath + nameOfContainer + "/";
 
-                foreach (var searchingDialogue in dictList)
-                {
-                    _create.CreateToken(uriPath, searchingDialogue, key);
-                }
+        [HttpGet("GetBlobFile")]
+        public List<string> GetBlobFile([FromQuery] string dialogId)
+        {
+            var key = _accInfo.AccKey;
+
+            var dict = new Dictionary<string, string>()
+            {
+                {_accInfo.VideoName, dialogId + ".mkv"},
+                {_accInfo.AvatarName, dialogId + ".jpg"},
+                {_accInfo.AudioName, dialogId + ".wav"}
+            };
+
+            var token = new List<string>();
+            foreach (var (k, v) in dict)
+            {
+                var uriPath = _accInfo.UriPath + k + "/" + v;
+                token.Add(_create.CreateSasUri(uriPath, k, v));
             }
+            return token;
         }
-        
     }
 }

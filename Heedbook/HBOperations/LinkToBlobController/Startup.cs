@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CloneFtpOnAzure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -27,6 +28,9 @@ namespace LinkToBlobController
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+            services.Configure<StorageAccInfo>(Configuration.GetSection(nameof(StorageAccInfo)));
+            services.AddSingleton(provider=> provider.GetRequiredService<IOptions<StorageAccInfo>>().Value);
+            services.AddSingleton<CreateLinkToBlob>();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info
@@ -55,8 +59,8 @@ namespace LinkToBlobController
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("Linktoblob/swagger/v1", "Sample API");
-                c.RoutePrefix = "Linktoblob/swagger";
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sample API");
+                
             });
         }
     }

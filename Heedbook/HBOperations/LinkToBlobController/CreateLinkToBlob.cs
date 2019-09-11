@@ -1,23 +1,42 @@
 using System;
 using System.Globalization;
+using System.Net;
 using System.Security.Cryptography;
+using System.Security.Policy;
 using System.Text;
 using System.Web;
+using CloneFtpOnAzure;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Auth;
+using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace LinkToBlobController
 {
     public class CreateLinkToBlob
     {
-        public string CreateToken(string resourceUri, string keyName, string key)
+        private StorageAccInfo _storageAccInfo;
+
+        public CreateLinkToBlob(StorageAccInfo storageAccInfo)
         {
-            TimeSpan sinceEpoch = DateTime.UtcNow - new DateTime(1970, 1, 1);
-            var week = 60 * 60 * 24 * 7;
-            var expiry = Convert.ToString((int)sinceEpoch.TotalSeconds + week);
-            string stringToSign = HttpUtility.UrlEncode(resourceUri) + "\n" + expiry;
-            HMACSHA256 hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key));
-            var signature = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(stringToSign)));
-            var sasToken = String.Format(CultureInfo.InvariantCulture, "SharedAccessSignature sr={0}&sig={1}&se={2}&skn={3}", HttpUtility.UrlEncode(resourceUri), HttpUtility.UrlEncode(signature), expiry, keyName);
-            return sasToken;
+            _storageAccInfo = storageAccInfo;
+        }
+        public string CreateSasUri(string resourceUri, string containerName, string fileName)
+        {
+            var storageCredentials = new StorageCredentials(_storageAccInfo.AccName, _storageAccInfo.AccKey);
+            var cloudStorageAccount = new CloudStorageAccount(storageCredentials, true);
+            var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
+
+            var container = cloudBlobClient.GetContainerReference(containerName);
+            var newBlob = container.GetBlockBlobReference(fileName);
+            var policy = new SharedAccessBlobPolicy()
+            {
+                Permissions = SharedAccessBlobPermissions.Read,
+                SharedAccessExpiryTime = DateTimeOffset.UtcNow.AddHours(6),
+                SharedAccessStartTime = DateTimeOffset.UtcNow.AddHours(-1)
+            };
+            var sas = newBlob.GetSharedAccessSignature(policy);
+            var url = new Uri(resourceUri + $"{sas}").ToString();
+            return url;
         }
         
     }
