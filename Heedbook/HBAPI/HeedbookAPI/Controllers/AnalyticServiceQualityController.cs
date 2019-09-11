@@ -266,9 +266,10 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
 
                 var phrasesTypes = _context.PhraseTypes.ToList();
-                var typeIdCross = phrasesTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
-                var typeIdAlert = phrasesTypes.Where(p => p.PhraseTypeText == "Alert").Select(p => p.PhraseTypeId).First();
-                var typeIdNecessary = phrasesTypes.Where(p => p.PhraseTypeText == "Necessary").Select(p => p.PhraseTypeId).First();             
+                //var typeIdCross = phrasesTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
+                //var typeIdAlert = phrasesTypes.Where(p => p.PhraseTypeText == "Alert").Select(p => p.PhraseTypeId).First();
+                //var typeIdNecessary = phrasesTypes.Where(p => p.PhraseTypeText == "Necessary").Select(p => p.PhraseTypeId).First();
+                var typeIdLoyalty = phrasesTypes.Where(p => p.PhraseTypeText == "Loyalty").Select(p => p.PhraseTypeId).First();
 
                 var dialogues = _context.Dialogues
                         .Include(p => p.ApplicationUser)
@@ -291,9 +292,10 @@ namespace UserOperations.Controllers
                             FullName = p.ApplicationUser.FullName,
                             BegTime = p.BegTime,
                             EndTime = p.EndTime,
-                            CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                            AlertCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
-                            NecessaryCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdNecessary).Count(),
+                            //CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                            //AlertCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
+                            //NecessaryCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdNecessary).Count(),
+                            LoyaltyCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdLoyalty).Count(),
                             SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                             PositiveTone = p.DialogueAudio.FirstOrDefault().PositiveTone,
                             AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
@@ -301,6 +303,7 @@ namespace UserOperations.Controllers
                             TextShare = p.DialogueSpeech.FirstOrDefault().PositiveShare,
                         })
                         .ToList(); 
+
                // return Ok(dialogues.Select(p => p.DialogueId).Distinct().Count());
 
                 var result = dialogues
@@ -314,14 +317,16 @@ namespace UserOperations.Controllers
                         AttentionShare = p.Any() ? p.Where(q => q.AttentionShare != null && q.AttentionShare != 0).Average(q => q.AttentionShare) : null,
                         PositiveToneShare =p.Any() ? p.Where(q => q.PositiveTone != null && q.PositiveTone != 0).Average(q => q.PositiveTone) : null,
                    //TODO!!!
-                        TextAlertShare =  _dbOperation.AlertIndex(p),
-                        TextCrossShare =  _dbOperation.CrossIndex(p),
-                        TextNecessaryShare =   _dbOperation.NecessaryIndex(p),
+                        //TextAlertShare =  _dbOperation.AlertIndex(p),
+                        //TextCrossShare =  _dbOperation.CrossIndex(p),
+                        //TextNecessaryShare =   _dbOperation.NecessaryIndex(p),
+                        TextLoyaltyShare = _dbOperation.LoyaltyIndex(p),
                         TextPositiveShare = p.Any()? p.Where(q => q.TextShare != null && q.TextShare!= 0).Average(q => q.TextShare) : null
                     }).ToList();
                
                 result = result.OrderBy(p => p.SatisfactionIndex).ToList();
                 // _log.Info("AnalyticServiceQuality/Rating finished");
+
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
@@ -505,6 +510,7 @@ namespace UserOperations.Controllers
         public int CrossCount;
         public int AlertCount;
         public int NecessaryCount;
+        public int LoyaltyCount;
         public double? SatisfactionScore;
         public double? PositiveTone;
         public double? AttentionShare;
@@ -520,9 +526,10 @@ namespace UserOperations.Controllers
         public double? PositiveEmotionShare;
         public double? AttentionShare;
         public double? PositiveToneShare;
-        public double? TextAlertShare;
-        public double? TextCrossShare;
-        public double? TextNecessaryShare;
+        //public double? TextAlertShare;
+        //public double? TextCrossShare;
+        //public double? TextNecessaryShare;
+        public double? TextLoyaltyShare;
         public double? TextPositiveShare;
         public string Recomendation;
     }
