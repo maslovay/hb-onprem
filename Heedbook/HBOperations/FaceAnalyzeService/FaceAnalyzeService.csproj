@@ -28,4 +28,20 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="publish\nlog.config" />
+    <_ContentIncludedByDefault Remove="publish\web.config" />
+    <_ContentIncludedByDefault Remove="publish\appsettings.Development.json" />
+    <_ContentIncludedByDefault Remove="publish\appsettings.json" />
+    <_ContentIncludedByDefault Remove="publish\appsettings.test.json" />
+    <_ContentIncludedByDefault Remove="publish\FaceAnalyzeService.deps.json" />
+    <_ContentIncludedByDefault Remove="publish\FaceAnalyzeService.runtimeconfig.json" />
+    <_ContentIncludedByDefault Remove="publish\phrase.json" />
+    <_ContentIncludedByDefault Remove="publish\phrase_Alert.json" />
+    <_ContentIncludedByDefault Remove="publish\phrase_Fillers.json" />
+    <_ContentIncludedByDefault Remove="publish\phrase_Loyalty.json" />
+    <_ContentIncludedByDefault Remove="publish\phrase_Necessary.json" />
+    <_ContentIncludedByDefault Remove="publish\Resources\Texts\TestTexts.json" />
+  </ItemGroup>
+
 </Project>

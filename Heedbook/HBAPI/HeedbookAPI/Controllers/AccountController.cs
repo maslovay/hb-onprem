@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -48,6 +49,11 @@ namespace UserOperations.Controllers
                         UserRegister message)
         {
             _log.Info("Account/Register started");
+            
+            ThreadPool.GetMaxThreads(out int workerThreads, out int completionPortThreads);
+            ThreadPool.GetAvailableThreads(out int workerThreadsAvailable, out int completionPortThreadsAvailable);
+            Console.WriteLine($"max: workerT {workerThreads}, completionPortT: {completionPortThreads}" );
+            Console.WriteLine($"available: workerT {workerThreadsAvailable}, completionportT: {completionPortThreadsAvailable}");
             Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
 
             if (_context.Companys.Where(x => x.CompanyName == message.CompanyName).Any() || _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
