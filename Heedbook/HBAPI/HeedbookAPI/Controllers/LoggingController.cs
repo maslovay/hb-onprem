@@ -35,7 +35,8 @@ namespace UserOperations.Controllers
         public async Task<ObjectResult> SendLogPost([FromQuery]string message, [FromQuery]string severity, 
             [FromQuery]string functionName, [FromBody]JObject customDimensions = null)
         {
-            return SendLogInner(message, severity, functionName, customDimensions);
+            //return SendLogInner(message, severity, functionName, customDimensions);
+            return Ok("logged");
         }
 
         /// <summary>
