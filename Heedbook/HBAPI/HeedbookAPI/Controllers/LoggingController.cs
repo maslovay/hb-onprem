@@ -47,7 +47,9 @@ namespace UserOperations.Controllers
         [HttpGet("SendLog")]
         public async Task<ObjectResult> SendLog(string message, string severity, string functionName)
         {
-            return SendLogInner(message, severity, functionName, null);
+            //return SendLogInner(message, severity, functionName, null);
+            Console.WriteLine(message);
+            return Ok("logged");
         }
 
         private ObjectResult SendLogInner(string message, string severity, string functionName, JObject customDimensions)
