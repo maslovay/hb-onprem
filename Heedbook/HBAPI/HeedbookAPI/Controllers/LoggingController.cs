@@ -9,7 +9,7 @@ using HBLib;
 using HBLib.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using System.Threading;
 
 namespace UserOperations.Controllers
 {
@@ -52,6 +52,12 @@ namespace UserOperations.Controllers
 
         private ObjectResult SendLogInner(string message, string severity, string functionName, JObject customDimensions)
         {
+           ThreadPool.GetMaxThreads(out int workerThreads, out int completionPortThreads);
+            ThreadPool.GetAvailableThreads(out int workerThreadsAvailable, out int completionPortThreadsAvailable);
+            Console.WriteLine($"max: workerT {workerThreads}, completionPortT: {completionPortThreads}" );
+            Console.WriteLine($"available: workerT {workerThreadsAvailable}, completionportT: {completionPortThreadsAvailable}");
+
+
             if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(severity))
                 return BadRequest("Please, fill 'message' and 'severity'! ");
 
