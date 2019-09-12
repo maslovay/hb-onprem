@@ -8,8 +8,7 @@ namespace CloneFtpOnAzure
         
         public string AccKey { get; set; }
         
-        public string[] DirectoryName { get; set; }
-        
+        public string UriPath { get; set; }
         public string VideoName { get; set; }
         
         public string AudioName { get; set; }
