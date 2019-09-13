@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netcoreapp2.2</TargetFramework>
         <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
-        <RootNamespace>HeedbookDevelopmentStatisticsScheduler</RootNamespace>
+        <RootNamespace>SendUserAnalyticReportScheduler</RootNamespace>       
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,5 +15,4 @@
       <ProjectReference Include="..\..\HBOperations\Configurations\Configurations.csproj" />
       <ProjectReference Include="..\..\HBOperations\QuartzExtensions\QuartzExtensions.csproj" />
     </ItemGroup>
-
 </Project>
