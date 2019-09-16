@@ -114,6 +114,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeleteOldLogsOnElasticSched
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HBOperations", "Analyze\HBOperations.csproj", "{1CB8FA59-4DB0-4889-8E4A-83937B141C12}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DialogueAnalyze", "DialogueAnalyze\DialogueAnalyze.csproj", "{593954E1-5193-4074-867F-25DA748B4918}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -312,6 +314,10 @@ Global
 		{1CB8FA59-4DB0-4889-8E4A-83937B141C12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1CB8FA59-4DB0-4889-8E4A-83937B141C12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1CB8FA59-4DB0-4889-8E4A-83937B141C12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{593954E1-5193-4074-867F-25DA748B4918}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{593954E1-5193-4074-867F-25DA748B4918}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{593954E1-5193-4074-867F-25DA748B4918}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{593954E1-5193-4074-867F-25DA748B4918}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
