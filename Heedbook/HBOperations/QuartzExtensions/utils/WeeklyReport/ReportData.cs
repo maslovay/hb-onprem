@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using UserOperations.Models.AnalyticModels;
 
-namespace QuartzExtensions.Jobs
+namespace QuartzExtensions.Utils.WeeklyReport
 {           
     public class ReportData
     {

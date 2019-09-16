@@ -23,20 +23,20 @@ namespace UserOperations.Controllers
     {
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly ElasticClient _log;
+//        private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
         private readonly MailSender _mailSender;
 
         public AccountController(
             ILoginService loginService,
             RecordsContext context,
-            ElasticClient log,      
+//            ElasticClient log,      
             MailSender mailSender
             )
         {
             _loginService = loginService;
             _context = context;
-            _log = log;
+//            _log = log;
             _mailSender = mailSender;
         }
 
@@ -47,7 +47,7 @@ namespace UserOperations.Controllers
                         SwaggerParameter("User and company data", Required = true)]
                         UserRegister message)
         {
-            _log.Info("Account/Register started");
+//            _log.Info("Account/Register started");
             Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
 
             if (_context.Companys.Where(x => x.CompanyName == message.CompanyName).Any() || _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
@@ -69,7 +69,7 @@ namespace UserOperations.Controllers
                         StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId//---inactive
                     };
                     await _context.Companys.AddAsync(company);
-                    _log.Info("Company created");
+//                    _log.Info("Company created");
 
                     //---2---user---
                     var user = new ApplicationUser
@@ -87,7 +87,7 @@ namespace UserOperations.Controllers
                     };
                     await _context.AddAsync(user);
                     _loginService.SavePasswordHistory(user.Id, user.PasswordHash);
-                    _log.Info("User created");
+//                    _log.Info("User created");
 
                     //---3--user role---
                     var userRole = new ApplicationUserRole()
@@ -113,7 +113,7 @@ namespace UserOperations.Controllers
                             Rebillid = "",
                             StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Trial").StatusId//---Trial
                         };
-                        _log.Info("Tariff created");
+//                        _log.Info("Tariff created");
 
                         //---5---transaction---
                         var transaction = new HBData.Models.Transaction
@@ -128,7 +128,7 @@ namespace UserOperations.Controllers
                             TransactionComment = "TRIAL TARIFF;FAKE TRANSACTION"
                         };
                         company.StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;//---Active
-                        _log.Info("Transaction created");
+//                        _log.Info("Transaction created");
                         await _context.Tariffs.AddAsync(tariff);
                         await _context.Transactions.AddAsync(transaction);
 
@@ -139,7 +139,7 @@ namespace UserOperations.Controllers
                             CompanyId = companyId,
                             WorkerTypeName = "Employee"
                         };
-                        _log.Info("WorkerTypes created");
+//                        _log.Info("WorkerTypes created");
                         await _context.WorkerTypes.AddAsync(workerType);
 
                         //---7---content and campaign clone
@@ -179,19 +179,19 @@ namespace UserOperations.Controllers
                      //   transactionScope.Complete();
 
                         //_context.Dispose();
-                        _log.Info("All saved in DB");
+//                        _log.Info("All saved in DB");
                     }
                     try
                     {                       
                         await _mailSender.SendRegisterEmail(user);
                     }
                     catch { }
-                    _log.Info("Account/register finished");
+//                    _log.Info("Account/register finished");
                     return Ok("Registred");
                 }
                 catch (Exception e)
                 {
-                    _log.Fatal($"Exception occurred {e}");
+//                    _log.Fatal($"Exception occurred {e}");
                     return BadRequest(e.Message);
                 }
             }
@@ -208,7 +208,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Account/generate token started");
+//                _log.Info("Account/generate token started");
                 ApplicationUser user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == message.UserName.ToUpper()).FirstOrDefault();
                 //---wrong email?
                 if (user == null) return BadRequest("No such user");
@@ -235,7 +235,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest($"Could not create token {e}");
             }
         }
@@ -248,7 +248,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Account/Change password started");
+//                _log.Info("Account/Change password started");
                 ApplicationUser user = null;
                 //---FOR LOGGINED USER CHANGE PASSWORD WITH INPUT (receive new password in body message.Password)
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
@@ -270,12 +270,12 @@ namespace UserOperations.Controllers
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
                 }
                 await _context.SaveChangesAsync();
-                _log.Info("Account/ change password finished");
+//                _log.Info("Account/ change password finished");
                 return Ok("password changed");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -294,7 +294,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -307,7 +307,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Account/unblock started");
+//                _log.Info("Account/unblock started");
                 ApplicationUser user = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.NormalizedEmail == email.ToUpper());
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
                 {
@@ -322,12 +322,12 @@ namespace UserOperations.Controllers
                     _loginService.SaveErrorLoginHistory(user.Id, "success");
                 }
                 await _context.SaveChangesAsync();
-                _log.Info("Account/unblock finished");
+//                _log.Info("Account/unblock finished");
                 return Ok("password changed");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -377,12 +377,12 @@ namespace UserOperations.Controllers
                     _context.SaveChanges();
                     transactionScope.Complete();
 
-                    _log.Info("Account/remove finished");
+//                    _log.Info("Account/remove finished");
                     return Ok("Removed");
                 }
                 catch (Exception e)
                 {
-                    _log.Fatal($"Exception occurred {e}");
+//                    _log.Fatal($"Exception occurred {e}");
                     return BadRequest(e.Message);
                 }
             }

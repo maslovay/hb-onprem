@@ -43,7 +43,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
-        private readonly ElasticClient _log;
+//        private readonly ElasticClient _log;
 
         public SessionController(
             RecordsContext context,
@@ -55,7 +55,7 @@ namespace UserOperations.Controllers
             _context = context;
             _config = config;
             _dbOperation = dbOperation;
-            _log = log;
+//            _log = log;
         }
 
         [HttpPost("SessionStatus")]
@@ -63,22 +63,22 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.SetFormat("{ApplicationUserId}");
-                _log.SetArgs(data.ApplicationUserId);
-                _log.Info($"Session/SessionStatus {data.ApplicationUserId} started");
+//                _log.SetFormat("{ApplicationUserId}");
+//                _log.SetArgs(data.ApplicationUserId);
+//                _log.Info($"Session/SessionStatus {data.ApplicationUserId} started");
 
                 var response = new Response();
 
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
                 {
                     response.Message = "ApplicationUser is empty";
-                    _log.Info($"Session/SessionStatus ApplicationUser is empty");
+//                    _log.Info($"Session/SessionStatus ApplicationUser is empty");
                     return BadRequest(response);
                 }
                 if (data.Action != "open" && data.Action != "close") 
                 {
                     response.Message = "Wrong action";
-                    _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
+//                    _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                     return BadRequest(response);
                 }
 
@@ -115,15 +115,15 @@ namespace UserOperations.Controllers
 
                             _context.SaveChanges();
                             response.Message = "Session successfully opened";
-                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
+//                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                             return Ok(response);
                         case 7:
                             response.Message = "Can't close not opened session";
-                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
+//                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                             return Ok(response);
                         default:
                             response.Message = "Wrong action";
-                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
+//                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                             return BadRequest(response);
                     }
                 }
@@ -137,7 +137,7 @@ namespace UserOperations.Controllers
                             notClosedSessions[i].StatusId = 7;
                             notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
                             _context.SaveChanges();
-                            _log.Info($"Session/SessionStatus SessionId-{notClosedSessions[i].SessionId} closed with 0 time");
+//                            _log.Info($"Session/SessionStatus SessionId-{notClosedSessions[i].SessionId} closed with 0 time");
                     }
                     switch (actionId)
                     {
@@ -145,7 +145,7 @@ namespace UserOperations.Controllers
                             if (lastSession.StatusId == 6) 
                             {
                                 response.Message = "Can't open not closed session";
-                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't open not closed session");
+//                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't open not closed session");
                                 return Ok(response);
                             }
                             var session = new Session{
@@ -163,14 +163,14 @@ namespace UserOperations.Controllers
                             _context.SaveChanges();
 
                             response.Message = "Session successfully opened";
-                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
+//                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                             return Ok(response);
                         
                         case 7:
                             if (lastSession.StatusId == 7) 
                             {
                                 response.Message = "Can't close not opened session";
-                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
+//                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                                 return Ok(response);
                             }
                             lastSession.StatusId = 7;
@@ -195,11 +195,11 @@ namespace UserOperations.Controllers
                             //---
                             _context.SaveChanges();
                             response.Message = "Session successfully closed";
-                            _log.Info($"Session successfully closed {data.ApplicationUserId}"); 
+//                            _log.Info($"Session successfully closed {data.ApplicationUserId}"); 
                             return Ok(response);
                         default:
                             response.Message = "Wrong action";
-                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
+//                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                             return BadRequest(response);
                     }
                 }
@@ -208,7 +208,7 @@ namespace UserOperations.Controllers
             {
                 var response = new Response();
                 response.Message = $"Exception occured {e}";
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(response);
             }
         }
@@ -223,14 +223,14 @@ namespace UserOperations.Controllers
                          ?.OrderByDescending(p => p.BegTime)
                          ?.FirstOrDefault();
                 var result = new { session?.BegTime, session?.StatusId };
-                _log.Info($"Get Session/SessionStatus {applicationUserId}");
+//                _log.Info($"Get Session/SessionStatus {applicationUserId}");
                 return Ok(result);
             }
             catch (Exception e)
             {
                 var response = new Response();
                 response.Message = $"Exception occured {e}";
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(response);
             }
         }      
@@ -259,7 +259,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                 _log.Fatal($"Exception occurred {e}");
+//                 _log.Fatal($"Exception occurred {e}");
                 return BadRequest();
             }
         }
