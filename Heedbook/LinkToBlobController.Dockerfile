@@ -8,4 +8,6 @@ RUN dotnet publish ./HBOperations/LinkToBlobController -c Release -o publish
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/LinkToBlobController/publish .
+<<<<<<< HEAD:Heedbook/LinkToblobController.Dockerfile
 ENTRYPOINT ["dotnet", "LinkToBlobController.dll"]
+
