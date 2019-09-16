@@ -177,7 +177,8 @@ namespace DialogueMarkUp.QuartzJobs
                     log.Info($"Processing markUp {markUps[i].BegTime}, {markUps[i].EndTime}");
                     if (markUps[i] != null)
                     {
-                        var updatedMarkUps = UpdateMarkUp(markUps[i], log);
+                        // var updatedMarkUps = UpdateMarkUp(markUps[i], log);
+                        var updatedMarkUps = new List<MarkUp>{markUps[i]};
                         log.Info($"Result of update - {JsonConvert.SerializeObject(updatedMarkUps.Select(p => new{p.BegTime, p.EndTime}))}");
                         foreach (var updatedMarkUp in updatedMarkUps)
                         {   

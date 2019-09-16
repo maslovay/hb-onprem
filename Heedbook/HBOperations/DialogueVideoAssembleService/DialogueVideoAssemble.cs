@@ -85,7 +85,7 @@ namespace DialogueVideoAssembleService
                 var dialogueDuration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds;
 
                 var videosDuration = _utils.GetTotalVideoDuration(fileVideos, message);
-                if (videosDuration / dialogueDuration < 0.6 || dialogueDuration - videosDuration > 5 * 60)
+                if (dialogueDuration - videosDuration > 6 * 60)
                 {
                     var comment = $"Too many holes in dialogue {dialogue.DialogueId}, Dialogue duration {dialogueDuration}s, Videos duration - {videosDuration}s";
                     _log.Error(comment);
