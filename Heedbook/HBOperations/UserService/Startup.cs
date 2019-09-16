@@ -100,11 +100,6 @@ namespace UserService
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             var service = app.ApplicationServices.GetRequiredService<INotificationService>();
-            if (env.IsDevelopment())
-                app.UseDeveloperExceptionPage();
-            else
-                app.UseHsts();
-
             app.UseSwagger(c => { c.RouteTemplate = "user/swagger/{documentName}/swagger.json"; });
             var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             
