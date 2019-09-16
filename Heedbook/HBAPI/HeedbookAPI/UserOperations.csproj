@@ -43,7 +43,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="BenchmarkDotNet.Artifacts\results\" />
-    <Folder Include="Migrations" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Services\email.cshtml">

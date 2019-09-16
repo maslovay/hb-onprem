@@ -12,6 +12,8 @@ namespace UserOperations.Models.AnalyticModels
 
     public class SessionInfo
     {
+        public Guid? IndustryId;//---!!!for benchmarks only
+        public Guid? CompanyId;//---!!!for benchmarks only
         public Guid ApplicationUserId;
         public DateTime BegTime;
         public DateTime EndTime;
@@ -21,6 +23,8 @@ namespace UserOperations.Models.AnalyticModels
 
     public class DialogueInfo
     {
+        public Guid? IndustryId;//---!!!for benchmarks only
+        public Guid? CompanyId;//---!!!for benchmarks only
         public Guid DialogueId;
         public Guid ApplicationUserId;
         public DateTime BegTime;

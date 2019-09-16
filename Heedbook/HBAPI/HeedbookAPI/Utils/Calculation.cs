@@ -93,14 +93,14 @@ namespace UserOperations.Utils
             return 100 * LoadIndex( sessionHours, dialoguesHours);
         }
 
-        // public double? LoadIndex(List<SessionInfoCompany> sessions, List<DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
-        // {
-        //     var sessionHours = sessions.Any() ? sessions.Sum(p => 
-        //         MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours) : 0;
-        //     var dialoguesHours = dialogues.Any() ? dialogues.Sum(p => 
-        //         MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours) : 0;
-        //     return sessionHours != 0 ? (double?) 100 * dialoguesHours / sessionHours : null;
-        // }
+        public double? LoadIndex(List<SessionInfo> sessions, List<DialogueInfo> dialogues)
+        {
+            var sessionHours = sessions.Any() ? sessions.Sum(p =>
+                p.EndTime.Subtract(p.BegTime).TotalHours) : 0;
+            var dialoguesHours = dialogues.Any() ? dialogues.Sum(p =>
+               (p.EndTime).Subtract((p.BegTime)).TotalHours) : 0;
+            return sessionHours != 0 ? (double?)100 * dialoguesHours / sessionHours : null;
+        }
 
         public double? LoadIndex(List<SessionInfo> sessions, IGrouping<Guid, DialogueInfo> dialogues, DateTime beg, DateTime end)
         {

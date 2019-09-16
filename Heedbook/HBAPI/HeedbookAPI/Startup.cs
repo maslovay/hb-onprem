@@ -57,6 +57,7 @@ namespace UserOperations
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
             services.AddScoped<MailSender>();
+            services.AddScoped<BenchmarkFilling>();
 
             services.AddSwaggerGen(c =>
             {

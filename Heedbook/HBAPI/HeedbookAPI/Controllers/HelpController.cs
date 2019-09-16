@@ -1,42 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-using UserOperations.AccountModels;
 using HBData;
-
-///REMOVE IT
-using System.Data.SqlClient;
-
-
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage;
 using HBLib.Utils;
-using System.IO;
+using UserOperations.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Controllers
 {
@@ -49,6 +24,8 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly MailSender _mailSender;
+        private readonly BenchmarkFilling _benchmark;
+        private readonly RequestFilters _requestFilters;
 
 
         public HelpController(
@@ -56,7 +33,9 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
-            MailSender mailSender
+            MailSender mailSender,
+            BenchmarkFilling  benchmark,
+            RequestFilters requestFilters
             )
         {
             _config = config;
@@ -64,41 +43,56 @@ namespace UserOperations.Controllers
             _context = context;
             _sftpClient = sftpClient;
             _mailSender = mailSender;
+            _benchmark = benchmark;
+            _requestFilters = requestFilters;
         }
 
         [HttpGet("Help1")]
         public async Task<IActionResult> Help1()
         {
-            string res1 = await _mailSender.TestReadFile1();
-            return Ok(res1);
-        }
-
-        [HttpGet("Help2")]
-        public async Task<IActionResult> Help2()
-        {
-            string res1 = await _mailSender.TestReadFile2();
-            return Ok(res1);
-        }
-
-
-        [HttpGet("Help3")]
-        public async Task<IActionResult> Help3()
-        {
-            var connectionString = "User ID = postgres; Password = annushka123; Host = 127.0.0.1; Port = 5432; Database = onprem_backup; Pooling = true; Timeout = 120; CommandTimeout = 0";
-            DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
-            dbContextOptionsBuilder.UseNpgsql(connectionString,
-                   dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
-            var localContext = new RecordsContext(dbContextOptionsBuilder.Options);
-            var contentInBackup = localContext.Contents.FirstOrDefault();
-            Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
-            var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
-            contentInBackup.CreationDate = content.CreationDate;
-            contentInBackup.JSONData = content.JSONData;
-            contentInBackup.RawHTML = content.RawHTML;
-            contentInBackup.UpdateDate = content.UpdateDate;
-            localContext.SaveChanges();
+            _benchmark.FillIndexesForADay();
             return Ok();
         }
+
+        [HttpGet("GetBenchmarks")]
+        public async Task<IActionResult> GetBenchmarks([FromQuery(Name = "begTime")] string beg,
+                                                        [FromQuery(Name = "endTime")] string end,
+                                                        [FromQuery(Name = "userId")] Guid? userId)
+        {
+            var industryId = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == userId).Company.CompanyIndustryId;
+            var begTime = _requestFilters.GetBegDate(beg);
+            var endTime = _requestFilters.GetEndDate(end);
+            var indexes = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
+                                            && (x.IndustryId == industryId || x.IndustryId == null))
+                                            .Join(_context.BenchmarkNames,
+                                                bench => bench.BenchmarkNameId,
+                                                names => names.Id,
+                                                (bench, names) => new { names.Name, bench.Value })
+                                            .GroupBy(x => x.Name)
+                                            .ToDictionary(gr => gr.Key, v => v.Average(p => p.Value));
+                                          //  .ToDictionary(y => y.Key, z => z.val);
+            return Ok(indexes);
+        }
+
+
+        //[HttpGet("Help3")]
+        //public async Task<IActionResult> Help3()
+        //{
+        //    var connectionString = "User ID = postgres; Password = annushka123; Host = 127.0.0.1; Port = 5432; Database = onprem_backup; Pooling = true; Timeout = 120; CommandTimeout = 0";
+        //    DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
+        //    dbContextOptionsBuilder.UseNpgsql(connectionString,
+        //           dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
+        //    var localContext = new RecordsContext(dbContextOptionsBuilder.Options);
+        //    var contentInBackup = localContext.Contents.FirstOrDefault();
+        //    Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
+        //    var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
+        //    contentInBackup.CreationDate = content.CreationDate;
+        //    contentInBackup.JSONData = content.JSONData;
+        //    contentInBackup.RawHTML = content.RawHTML;
+        //    contentInBackup.UpdateDate = content.UpdateDate;
+        //    localContext.SaveChanges();
+        //    return Ok();
+        //}
 
 
         [HttpGet("DatabaseFilling")]

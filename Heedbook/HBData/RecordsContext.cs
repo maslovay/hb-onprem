@@ -124,10 +124,14 @@ namespace HBData
         public DbSet<LoginHistory> LoginHistorys { get; set; }
         public DbSet<AlertType> AlertTypes { get; set; }
         public DbSet<Alert> Alerts { get; set; }
-        public DbSet<VIndexByCompanyDay> VIndexesByCompanysDays { get; set; }        
-        public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
-        public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }        
         public DbSet<TabletAppInfo> TabletAppInfos { get; set; }
         public DbSet<VideoFace> VideoFaces { get; set; }
+
+        public DbSet<Benchmark> Benchmarks { get; set; }
+        public DbSet<BenchmarkName> BenchmarkNames { get; set; }
+        //---VIES
+        //    public DbSet<VIndexByCompanyDay> VIndexesByCompanysDays { get; set; }        
+        public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
+        public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }        
     }
 }
