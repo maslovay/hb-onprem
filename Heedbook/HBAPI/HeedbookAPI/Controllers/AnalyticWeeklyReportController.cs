@@ -28,15 +28,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperationsWeeklyReport _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+//        private readonly ElasticClient _log;
 
         public AnalyticWeeklyReportController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperationsWeeklyReport dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+//            ElasticClient log
             )
         {
             _config = config;
@@ -44,7 +44,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+//            _log = log;
         }
 
         [HttpGet("User")]
@@ -55,7 +55,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticWeeklyReport/User started");
+//                _log.Info("AnalyticWeeklyReport/User started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
 
@@ -331,12 +331,12 @@ namespace UserOperations.Controllers
                 jsonToReturn["RiskPhrase"] = RiskPhrase;
 
 
-                _log.Info("AnalyticRating/Progress finished");
+//                _log.Info("AnalyticRating/Progress finished");
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
