@@ -43,7 +43,7 @@ namespace UserOperations.Controllers
     {
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly ElasticClient _log;
+//        private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
         private readonly RequestFilters _requestFilters;
 
@@ -51,14 +51,14 @@ namespace UserOperations.Controllers
         public PhraseController(
             ILoginService loginService,
             RecordsContext context,
-            ElasticClient log,
+//            ElasticClient log,
             RequestFilters requestFilters
 
             )
         {
             _loginService = loginService;
             _context = context;
-            _log = log;
+//            _log = log;
             _requestFilters = requestFilters;
 
         }
