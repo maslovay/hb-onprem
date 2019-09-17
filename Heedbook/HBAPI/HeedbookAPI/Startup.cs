@@ -17,6 +17,8 @@ using HBLib;
 using UserOperations.Utils;
 using BenchmarkDotNet.Running;
 using UserOperations.Controllers.Test;
+using UserOperations.Services.Scheduler;
+using Quartz;
 
 namespace UserOperations
 {
@@ -57,7 +59,6 @@ namespace UserOperations
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
             services.AddScoped<MailSender>();
-            services.AddScoped<BenchmarkFilling>();
 
             services.AddSwaggerGen(c =>
             {
@@ -104,6 +105,7 @@ namespace UserOperations
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
 
+            services.AddSingleton<ElasticClientFactory>();
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton(provider =>
@@ -114,11 +116,13 @@ namespace UserOperations
 
             services.Configure<SmtpSettings>(Configuration.GetSection(nameof(SmtpSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
-            services.AddSingleton<SmtpClient>();          
+            services.AddSingleton<SmtpClient>();
+
+            services.AddBenchmarkFillQuartzJob(); //-----------
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
 
             if (env.IsDevelopment())
@@ -148,6 +152,9 @@ namespace UserOperations
             app.UseCors(MyAllowSpecificOrigins);
             app.UseHttpsRedirection();
             app.UseMvc();
+
+            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
+             app.ApplicationServices.GetService<ITrigger>());
 
             // add seed
             // BenchmarkRunner.Run<TestAnalyticClientProfile>();

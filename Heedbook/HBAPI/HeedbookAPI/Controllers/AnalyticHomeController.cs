@@ -77,7 +77,8 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);   
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                var industryId = _context.Companys.FirstOrDefault(x => x.CompanyId == companyId).CompanyIndustryId;
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
@@ -128,52 +129,35 @@ namespace UserOperations.Controllers
                             SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
                             SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
                         })
-                        .ToList(); 
-////-----------------FOR BRANCH---------------------------------------------------------------
-//                var companyIdsInIndustryExceptSelected = _requestFilters.CompanyIdsInIndustryExceptSelected(companyIds);  
-//                var companyIdsInIndustry = _requestFilters.CompanyIdsInIndustry(companyIds);  
-//                var companyIdsInHeedbookExceptSelected = _requestFilters.CompanyIdsInHeedbookExceptSelected(companyIds);  
-////-----------------ALL-----------------------
-//                var indexesInIndustryAll = _context.VIndexesByCompanysDays.ToList();
-//                //---for selected period in industries except selected companies
-//                var indexesInIndustryExeptSelectedComp = indexesInIndustryAll
-//                    .Where(p => companyIdsInIndustryExceptSelected.Contains (p.CompanyId)
-//                    && p.Day >= begTime && p.Day <= endTime
-//                    ).ToList();
-//                //---for all period in industries
-//                var indexesInIndustryAllForBenchmark = indexesInIndustryAll
-//                    .Where(p => companyIdsInIndustry.Contains (p.CompanyId)
-//                    ).ToList();
-//                 //---for selected period in industries except selected companies
-//                var indexesInHeedbook = indexesInIndustryAll
-//                    .Where(p => companyIdsInHeedbookExceptSelected.Contains (p.CompanyId)
-//                    && p.Day >= begTime && p.Day <= endTime
-//                     ).ToList();
-
-//                var indexesOwn = indexesInIndustryAll
-//                    .Where(p => p.CompanyId == companyId
-//                    && p.Day >= begTime && p.Day <= endTime
-//                     ).ToList();
+                        .ToList();
+                ////-----------------FOR BRANCH---------------------------------------------------------------
+                var benchmarksList = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
+                                                        && (x.IndustryId == industryId || x.IndustryId == null))
+                                                        .Join(_context.BenchmarkNames,
+                                                            bench => bench.BenchmarkNameId,
+                                                            names => names.Id,
+                                                            (bench, names) => new { names.Name, bench.Value })
+                                                        .ToList();            
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
-                var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();             
+                var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
-                var result =  new DashboardInfo()
-                {                
+                var result = new DashboardInfo()
+                {
                     DialoguesCount = _dbOperation.DialoguesCount(dialoguesCur),
                     DialoguesCountDelta = -_dbOperation.DialoguesCount(dialoguesOld),
 
                     EmployeeCount = _dbOperation.EmployeeCount(dialoguesCur),
-                    EmployeeCountDelta = - _dbOperation.EmployeeCount(dialoguesOld),
+                    EmployeeCountDelta = -_dbOperation.EmployeeCount(dialoguesOld),
 
                     BestEmployee = _dbOperation.BestEmployee(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
                     BestEmployeeEfficiency = _dbOperation.BestEmployeeEfficiency(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
                     BestProgressiveEmployee = _dbOperation.BestProgressiveEmployee(dialogues, begTime),
                     BestProgressiveEmployeeDelta = _dbOperation.BestProgressiveEmployeeDelta(dialogues, begTime),
 
-                    SatisfactionDialogueDelta = _dbOperation.SatisfactionDialogueDelta(dialogues),                  
+                    SatisfactionDialogueDelta = _dbOperation.SatisfactionDialogueDelta(dialogues),
                     SatisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur),
-                    SatisfactionIndexDelta = - _dbOperation.SatisfactionIndex(dialoguesOld),
+                    SatisfactionIndexDelta = -_dbOperation.SatisfactionIndex(dialoguesOld),
 
                     LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
                     LoadIndexDelta = -_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
@@ -181,8 +165,8 @@ namespace UserOperations.Controllers
                     CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
                     CrossIndexDelta = -_dbOperation.CrossIndex(dialoguesOld),
 
-                    AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours( sessionCur, begTime, endTime),
-                    AvgWorkingTimeEmployeesDelta = -_dbOperation.SessionAverageHours( sessionOld, prevBeg, begTime),
+                    AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours(sessionCur, begTime, endTime),
+                    AvgWorkingTimeEmployeesDelta = -_dbOperation.SessionAverageHours(sessionOld, prevBeg, begTime),
 
                     NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
                     NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld)),
@@ -192,23 +176,14 @@ namespace UserOperations.Controllers
 
 
                     //---benchmarks
-                    //SatisfactionIndexIndustryAverage = indexesInIndustryExeptSelectedComp.Count() != 0? 
-                    //                indexesInIndustryExeptSelectedComp.Sum(p => p.SatisfactionIndex)
-                    //                / indexesInIndustryExeptSelectedComp.Count() : 0,
-                    //SatisfactionIndexIndustryBenchmark = indexesInIndustryAllForBenchmark.Max(p => p.SatisfactionIndex),
-                    //SatisfactionIndexTotalAverage = indexesInHeedbook.Sum(p => p.SatisfactionIndex) 
-                    //                / indexesInHeedbook.Count(),
+                    SatisfactionIndexIndustryAverage = benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryAvg").Average(x => x.Value),
+                    SatisfactionIndexIndustryBenchmark = benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryBenchmark").Max(x => x.Value),
 
-                    //LoadIndexIndustryAverage = indexesInIndustryExeptSelectedComp.Count() !=0 ? 
-                    //                100 * indexesInIndustryExeptSelectedComp
-                    //                .Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)
-                    //                / indexesInIndustryExeptSelectedComp.Where(p => p.SessionHours != 0).Count() : 0,
-                    //LoadIndexIndustryBenchmark = 100 * indexesInIndustryAllForBenchmark.Max(p => p.DialoguesHours/ p.SessionHours),
-                    //LoadIndexTotalAverage = 100 * indexesInHeedbook.Where(p => p.SessionHours != 0).Sum(p => p.DialoguesHours / p.SessionHours)/ indexesInHeedbook.Count(),
+                    LoadIndexIndustryAverage = benchmarksList.Where(x => x.Name == "LoadIndexIndustryAvg").Average(x => x.Value),
+                    LoadIndexIndustryBenchmark = benchmarksList.Where(x => x.Name == "LoadIndexIndustryBenchmark").Max(x => x.Value),
 
-                    CrossIndexIndustryAverage =0,//TODO
-                    CrossIndexIndustryBenchmark = 0,//TODO
-                    CrossIndexTotalAverage = 0,//TODO
+                    CrossIndexIndustryAverage = benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg").Average(x => x.Value),
+                    CrossIndexIndustryBenchmark = benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark").Max(x => x.Value)
                 };
 
               

@@ -91,19 +91,16 @@ namespace UserOperations.Models.AnalyticModels
     {
         public double? SatisfactionIndex;
         public double? SatisfactionIndexDelta;
-        public double? SatisfactionIndexTotalAverage;
         public double? SatisfactionIndexIndustryAverage;
         public double? SatisfactionIndexIndustryBenchmark;
 
         public double? LoadIndex;
         public double? LoadIndexDelta;
-        public double? LoadIndexTotalAverage;
         public double? LoadIndexIndustryAverage;
         public double? LoadIndexIndustryBenchmark;
 
         public double? CrossIndex;
         public double? CrossIndexDelta;
-        public double? CrossIndexTotalAverage;
         public double? CrossIndexIndustryAverage;
         public double? CrossIndexIndustryBenchmark;
 

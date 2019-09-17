@@ -130,7 +130,6 @@ namespace HBData
         public DbSet<Benchmark> Benchmarks { get; set; }
         public DbSet<BenchmarkName> BenchmarkNames { get; set; }
         //---VIES
-        //    public DbSet<VIndexByCompanyDay> VIndexesByCompanysDays { get; set; }        
         public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
         public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }        
     }

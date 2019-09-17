@@ -24,7 +24,6 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly MailSender _mailSender;
-        private readonly BenchmarkFilling _benchmark;
         private readonly RequestFilters _requestFilters;
 
 
@@ -34,7 +33,6 @@ namespace UserOperations.Controllers
             RecordsContext context,
             SftpClient sftpClient,
             MailSender mailSender,
-            BenchmarkFilling  benchmark,
             RequestFilters requestFilters
             )
         {
@@ -43,16 +41,10 @@ namespace UserOperations.Controllers
             _context = context;
             _sftpClient = sftpClient;
             _mailSender = mailSender;
-            _benchmark = benchmark;
             _requestFilters = requestFilters;
         }
 
-        [HttpGet("Help1")]
-        public async Task<IActionResult> Help1()
-        {
-            _benchmark.FillIndexesForADay();
-            return Ok();
-        }
+     
 
         [HttpGet("GetBenchmarks")]
         public async Task<IActionResult> GetBenchmarks([FromQuery(Name = "begTime")] string beg,
@@ -68,10 +60,18 @@ namespace UserOperations.Controllers
                                                 bench => bench.BenchmarkNameId,
                                                 names => names.Id,
                                                 (bench, names) => new { names.Name, bench.Value })
+                                            .ToList();
+
+            var result = indexes.Where(x => x.Name.Contains("Avg"))
                                             .GroupBy(x => x.Name)
-                                            .ToDictionary(gr => gr.Key, v => v.Average(p => p.Value));
-                                          //  .ToDictionary(y => y.Key, z => z.val);
-            return Ok(indexes);
+                                            .ToDictionary(gr => gr.Key, v => v.Average(p => p.Value))
+                           .Union(
+                           indexes.Where(x => x.Name.Contains("Benchmark"))
+                                            .GroupBy(x => x.Name)
+                                            .ToDictionary(gr => gr.Key, v => v.Max(p => p.Value))
+                            )
+                            .ToDictionary(gr => gr.Key, v => v.Value);
+            return Ok(result);
         }
 
 
