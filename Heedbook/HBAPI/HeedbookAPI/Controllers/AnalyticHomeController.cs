@@ -176,14 +176,14 @@ namespace UserOperations.Controllers
 
 
                     //---benchmarks
-                    SatisfactionIndexIndustryAverage = benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryAvg").Average(x => x.Value),
-                    SatisfactionIndexIndustryBenchmark = benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryBenchmark").Max(x => x.Value),
+                    SatisfactionIndexIndustryAverage = benchmarksList.Count() != 0? benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryAvg")?.Average(x => x.Value): null,
+                    SatisfactionIndexIndustryBenchmark = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryBenchmark")?.Max(x => x.Value): null,
 
-                    LoadIndexIndustryAverage = benchmarksList.Where(x => x.Name == "LoadIndexIndustryAvg").Average(x => x.Value),
-                    LoadIndexIndustryBenchmark = benchmarksList.Where(x => x.Name == "LoadIndexIndustryBenchmark").Max(x => x.Value),
+                    LoadIndexIndustryAverage = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "LoadIndexIndustryAvg")?.Average(x => x.Value) : null,
+                    LoadIndexIndustryBenchmark = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "LoadIndexIndustryBenchmark")?.Max(x => x.Value) : null,
 
-                    CrossIndexIndustryAverage = benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg").Average(x => x.Value),
-                    CrossIndexIndustryBenchmark = benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark").Max(x => x.Value)
+                    CrossIndexIndustryAverage = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg")?.Average(x => x.Value) : null,
+                    CrossIndexIndustryBenchmark = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark")?.Max(x => x.Value) : null
                 };
 
               
