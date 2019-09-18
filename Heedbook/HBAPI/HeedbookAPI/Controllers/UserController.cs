@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
-using System.Transactions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +14,7 @@ using HBData.Models;
 using HBLib.Utils;
 using UserOperations.Services;
 using UserOperations.Utils;
+using System.Reflection;
 
 namespace UserOperations.Controllers
 {
@@ -615,6 +615,83 @@ namespace UserOperations.Controllers
                 }).ToList();
                 // _log.Info("User/Dialogue GET finished");
                 return Ok(dialogues);
+            }
+            catch (Exception e)
+            {
+                // _log.Fatal($"Exception occurred {e}");
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpGet("DialoguePaginated")]
+        [SwaggerOperation(Description = "Return collection of dialogues from dialogue phrases by filters (one page)")]
+        public IActionResult DialoguePaginatedGet([FromQuery(Name = "begTime")] string beg,
+                                           [FromQuery(Name = "endTime")] string end,
+                                           [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                           [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                           [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                           [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
+                                           [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
+                                           [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+
+                                           [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization,
+                                           [FromQuery(Name = "limit")] int limit = 10,
+                                           [FromQuery(Name = "page")] int page = 0,
+                                           [FromQuery(Name = "orderBy")] string orderBy = "BegTime",
+                                           [FromQuery(Name = "orderDirection")] int orderDirection = 0)
+        {
+            try
+            {
+                // _log.Info("User/Dialogue GET started");
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+                var role = userClaims["role"];
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                var begTime = _requestFilters.GetBegDate(beg);
+                var endTime = _requestFilters.GetEndDate(end);
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+
+
+                var dialogues = _context.Dialogues
+                .Include(p => p.DialogueHint)
+                .Where(p =>
+                    p.BegTime >= begTime &&
+                    p.EndTime <= endTime &&
+                    p.StatusId == activeStatus &&
+                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
+                    (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
+                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
+                    (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid)q.PhraseId))) &&
+                    (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)))
+                )
+                .Select(p => new
+                {
+                    p.DialogueId,
+                    Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
+                    p.ApplicationUserId,
+                    p.ApplicationUser.FullName,
+                    DialogueHints = p.DialogueHint.Count() != 0? "YES": null,
+                    p.BegTime,
+                    p.EndTime,
+                    p.CreationTime,
+                    p.Comment,
+                    p.SysVersion,
+                    p.StatusId,
+                    p.InStatistic,
+                    p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                }).ToList();
+
+
+
+                ////---PAGINATION---
+                var pageCount = (int)Math.Ceiling((double)dialogues.Count() / limit);//---round to the bigger 
+
+                Type dialogueType = dialogues.First().GetType();
+                PropertyInfo prop = dialogueType.GetProperty(orderBy);
+                var dialoguesList = dialogues.OrderBy(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
+
+                // _log.Info("User/Dialogue GET finished");
+                return Ok(new { dialoguesList, pageCount, orderBy, limit, page });
             }
             catch (Exception e)
             {
