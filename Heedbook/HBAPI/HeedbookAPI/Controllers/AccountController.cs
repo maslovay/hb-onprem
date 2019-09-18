@@ -144,34 +144,36 @@ namespace UserOperations.Controllers
 
                         //---7---content and campaign clone
                         var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
-                        content.ContentId = Guid.NewGuid();
-                        content.CompanyId = companyId;
-                        await _context.Contents.AddAsync(content);
-
-                        Campaign campaign = new Campaign
+                        if (content != null)
                         {
-                            CampaignId = Guid.NewGuid(),
-                            CompanyId = companyId,
-                            BegAge = 0,
-                            BegDate = DateTime.Now.AddDays(-1),
-                            CreationDate = DateTime.Now,
-                            EndAge = 100,
-                            EndDate = DateTime.Now.AddDays(30),
-                            GenderId = 0,
-                            IsSplash = true,
-                            Name = "PROTOTYPE",
-                            StatusId = 3
-                        };
-                        await _context.Campaigns.AddAsync(campaign);
-                        CampaignContent campaignContent = new CampaignContent
-                        {
-                            CampaignContentId = Guid.NewGuid(),
-                            CampaignId = campaign.CampaignId,
-                            ContentId = content.ContentId,
-                            SequenceNumber = 1
-                        };
-                        await _context.CampaignContents.AddAsync(campaignContent);
+                            content.ContentId = Guid.NewGuid();
+                            content.CompanyId = companyId;
+                            await _context.Contents.AddAsync(content);
 
+                            Campaign campaign = new Campaign
+                            {
+                                CampaignId = Guid.NewGuid(),
+                                CompanyId = companyId,
+                                BegAge = 0,
+                                BegDate = DateTime.Now.AddDays(-1),
+                                CreationDate = DateTime.Now,
+                                EndAge = 100,
+                                EndDate = DateTime.Now.AddDays(30),
+                                GenderId = 0,
+                                IsSplash = true,
+                                Name = "PROTOTYPE",
+                                StatusId = 3
+                            };
+                            await _context.Campaigns.AddAsync(campaign);
+                            CampaignContent campaignContent = new CampaignContent
+                            {
+                                CampaignContentId = Guid.NewGuid(),
+                                CampaignId = campaign.CampaignId,
+                                ContentId = content.ContentId,
+                                SequenceNumber = 1
+                            };
+                            await _context.CampaignContents.AddAsync(campaignContent);
+                        }
 
                         await _context.SaveChangesAsync();
                      //   transactionScope.Complete();
@@ -181,7 +183,7 @@ namespace UserOperations.Controllers
                     }
                     try
                     {                       
-                        _mailSender.SendRegisterEmail(user);
+                        await _mailSender.SendRegisterEmail(user);
                     }
                     catch { }
 //                    _log.Info("Account/register finished");
