@@ -688,10 +688,17 @@ namespace UserOperations.Controllers
 
                 Type dialogueType = dialogues.First().GetType();
                 PropertyInfo prop = dialogueType.GetProperty(orderBy);
-                var dialoguesList = dialogues.OrderBy(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
-
+                if (orderDirection == 0)
+                {
+                    var dialoguesList = dialogues.OrderBy(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
+                    return Ok(new { dialoguesList, pageCount, orderBy, limit, page });
+                }
+                else
+                {
+                    var dialoguesList = dialogues.OrderByDescending(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
+                    return Ok(new { dialoguesList, pageCount, orderBy, limit, page });
+                }
                 // _log.Info("User/Dialogue GET finished");
-                return Ok(new { dialoguesList, pageCount, orderBy, limit, page });
             }
             catch (Exception e)
             {
