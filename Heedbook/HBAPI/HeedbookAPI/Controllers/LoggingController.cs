@@ -36,6 +36,7 @@ namespace UserOperations.Controllers
             [FromQuery]string functionName, [FromBody]JObject customDimensions = null)
         {
             //return SendLogInner(message, severity, functionName, customDimensions);
+            Console.WriteLine(message);
             return Ok("logged");
         }
 

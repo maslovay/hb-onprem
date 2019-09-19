@@ -126,19 +126,20 @@ namespace UserOperations.Controllers
                         DialogueId = p.DialogueId,
                         EmployeeEmployeeId = p.ApplicationUserId,
                         EmployeeWorkerTypeName = p.ApplicationUser.WorkerType.WorkerTypeName,
-                        BeginTime = p.BegTime,
-                        EndTime = p.EndTime,
+                        BeginTime = p.BegTime.AddHours(3),
+                        EndTime = p.EndTime.AddHours(3),
                         InStatistic = p.InStatistic,
                         SatisfactionMeetingExpectationsTotal = p.DialogueClientSatisfaction.Average(s => s.MeetingExpectationsTotal).ToString(),
                         SatisfactionBegMoodTotal = p.DialogueClientSatisfaction.Average(s => s.BegMoodTotal).ToString(),
                         SatisfactionEndMoodTotal = p.DialogueClientSatisfaction.Average(s => s.EndMoodTotal).ToString(),
                         SatisfactionMeetingExpectationsByClient = p.DialogueClientSatisfaction.Average(s => s.MeetingExpectationsByClient).ToString(),
                         SatisfactionMeetingExpectationsByEmpoyee = p.DialogueClientSatisfaction.Average(s => s.MeetingExpectationsByEmpoyee).ToString(),
-                        Language = p.Language.LanguageName,
+                        SatisfactionDiff = p.DialogueClientSatisfaction.Average(s => s.EndMoodTotal - s.BegMoodTotal).ToString(),
+                        Language = "Russian",
                         Hints = JsonConvert.SerializeObject(p.DialogueHint.Select(s => s.HintText)),
-                        ClientAge = p.DialogueClientProfile.Average(s => s.Age).ToString(),
+                        ClientAge = Math.Round((double) p.DialogueClientProfile.Average(s => s.Age)).ToString(),
                         ClientGender = p.DialogueClientProfile.FirstOrDefault().Gender,
-                        VisualsAttention = p.DialogueVisual.Average(s => s.AttentionShare).ToString(),
+                        VisualsAttention = Math.Round((double) p.DialogueVisual.Average(s => s.AttentionShare)).ToString(),
                         VisualsContempt = p.DialogueVisual.Average(s => s.ContemptShare).ToString(),
                         VisualsDisgust = p.DialogueVisual.Average(s => s.DisgustShare).ToString(),
                         VisualsFear = p.DialogueVisual.Average(s => s.FearShare).ToString(),
@@ -161,15 +162,15 @@ namespace UserOperations.Controllers
                         WordsWord = p.DialogueWord.FirstOrDefault() != null ? p.DialogueWord.FirstOrDefault().Words : "[]", 
                         Video = $"{p.DialogueId}.mkv",
                         Avatar = p.DialogueClientProfile.FirstOrDefault(s => s.Avatar != null).Avatar,
-                        Cross =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Cross")
+                        Cross = ListToText(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Cross")
                             .Select(q => q.Phrase.PhraseText).ToList()),
-                        Necessary =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Necessary")
+                        Necessary = ListToText(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Necessary")
                             .Select(q => q.Phrase.PhraseText).ToList()),
-                        Loyalty =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Loyalty")
+                        Loyalty = ListToText(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Loyalty")
                             .Select(q => q.Phrase.PhraseText).ToList()),
-                        Alert =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Alert")
+                        Alert = ListToText(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Alert")
                             .Select(q => q.Phrase.PhraseText).ToList()),
-                        Fillers =JsonConvert.SerializeObject(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Fillers")
+                        Fillers = ListToText(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Fillers")
                             .Select(q => q.Phrase.PhraseText).ToList())
                     })
                 .ToList(); 
@@ -213,21 +214,26 @@ namespace UserOperations.Controllers
                 row1.Append(         
                     ConstructCell("CompanyName", CellValues.String),           
                     ConstructCell("DialogueId", CellValues.String),
-                    ConstructCell("Full Name", CellValues.String),
+                    ConstructCell("EmployeeId", CellValues.String),
                     ConstructCell("Email", CellValues.String), 
                     ConstructCell("Manager Name", CellValues.String),                                       
                     ConstructCell("BeginTime", CellValues.String),
                     ConstructCell("EndTime", CellValues.String),
                     ConstructCell("InStatistic", CellValues.String),
                     ConstructCell("Satisfaction MeetingExpectationsTotal", CellValues.String),
-                    // ConstructCell("Satisfaction BegMoodTotal", CellValues.String),
-                    // ConstructCell("Satisfaction EndMoodTotal", CellValues.String),
-                    // ConstructCell("Satisfaction MeetingExpectationsByClient", CellValues.String),
-                    // ConstructCell("Satisfaction MeetingExpectationsByEmpoyee", CellValues.String),
-                    // ConstructCell("Language", CellValues.String),
-                    // ConstructCell("Hints", CellValues.String),
+
                     ConstructCell("Client Age", CellValues.String),
                     ConstructCell("Client Gender", CellValues.String),
+
+                    ConstructCell("Satisfaction BegMoodTotal", CellValues.String),
+                    ConstructCell("Satisfaction EndMoodTotal", CellValues.String),
+                    ConstructCell("Satisfaction MeetingExpectationsByClient", CellValues.String),
+                    ConstructCell("Satisfaction MeetingExpectationsByEmpoyee", CellValues.String),
+                    ConstructCell("Satisfaction Diff", CellValues.String),
+
+                    ConstructCell("Language", CellValues.String),
+                    ConstructCell("Hints", CellValues.String),
+
                     ConstructCell("Visuals Attention", CellValues.String),
                     // ConstructCell("Visuals Contempt", CellValues.String),
                     // ConstructCell("Visuals Disgust", CellValues.String),
@@ -245,13 +251,14 @@ namespace UserOperations.Controllers
                     ConstructCell("Speeches SpeechSpeed", CellValues.String),
                   //  ConstructCell("Phrases PhraseText", CellValues.String),  
                     ConstructCell("Words Word", CellValues.String),
-                    ConstructCell("Video", CellValues.String),
-                    ConstructCell("Avatar", CellValues.String),
                     ConstructCell("Necessary", CellValues.String),
                     ConstructCell("Loyalty", CellValues.String),  
                     ConstructCell("Alert", CellValues.String),
                     ConstructCell("Cross", CellValues.String),
-                    ConstructCell("Fillers", CellValues.String)
+                    ConstructCell("Fillers", CellValues.String),
+                    
+                    ConstructCell("Video", CellValues.String),
+                    ConstructCell("Avatar", CellValues.String)
                 );
                 sheetData.AppendChild(row1);
 
@@ -269,14 +276,19 @@ namespace UserOperations.Controllers
                         ConstructCell(dr.EndTime.ToString(), CellValues.String),
                         ConstructCell(dr.InStatistic.ToString(), CellValues.String),
                         ConstructCell(dr.SatisfactionMeetingExpectationsTotal, CellValues.String),
-                        // ConstructCell(dr.SatisfactionBegMoodTotal, CellValues.String),
-                        // ConstructCell(dr.SatisfactionEndMoodTotal, CellValues.String),
-                        // ConstructCell(dr.SatisfactionMeetingExpectationsByClient, CellValues.String),
-                        // ConstructCell(dr.SatisfactionMeetingExpectationsByEmpoyee, CellValues.String),
-                        // ConstructCell(dr.Language, CellValues.String),
-                        // ConstructCell(dr.Hints, CellValues.String),
+
                         ConstructCell(dr.ClientAge, CellValues.String),
                         ConstructCell(dr.ClientGender, CellValues.String),
+
+                        ConstructCell(dr.SatisfactionBegMoodTotal, CellValues.String),
+                        ConstructCell(dr.SatisfactionEndMoodTotal, CellValues.String),
+                        ConstructCell(dr.SatisfactionMeetingExpectationsByClient, CellValues.String),
+                        ConstructCell(dr.SatisfactionMeetingExpectationsByEmpoyee, CellValues.String),
+                        ConstructCell(dr.SatisfactionDiff, CellValues.String),
+
+                        ConstructCell(dr.Language, CellValues.String),
+                        ConstructCell(dr.Hints, CellValues.String),
+
                         ConstructCell(dr.VisualsAttention, CellValues.String),
                         // ConstructCell(dr.VisualsContempt, CellValues.String),
                         // ConstructCell(dr.VisualsDisgust, CellValues.String),
@@ -294,14 +306,14 @@ namespace UserOperations.Controllers
                         ConstructCell(dr.SpeechesSpeechSpeed, CellValues.String),
                         // ConstructCell(dr.PhrasesPhraseText, CellValues.String),
                         ConstructCell(dr.WordsWord, CellValues.String),
-                        ConstructCell(dr.Video, CellValues.String),
-                        ConstructCell(dr.Avatar, CellValues.String),
-
                         ConstructCell(dr.Necessary, CellValues.String),
                         ConstructCell(dr.Loyalty, CellValues.String),
                         ConstructCell(dr.Alert, CellValues.String),
                         ConstructCell(dr.Cross, CellValues.String),
-                        ConstructCell(dr.Fillers, CellValues.String)
+                        ConstructCell(dr.Fillers, CellValues.String),
+                        
+                        ConstructCell(dr.Video, CellValues.String),
+                        ConstructCell(dr.Avatar, CellValues.String)
                     );
                     sheetData.AppendChild(tempRow);
                 }
@@ -315,6 +327,16 @@ namespace UserOperations.Controllers
                 CellValue = new CellValue(value),
                 DataType = new EnumValue<CellValues>(dataType)
             };
+        }
+
+        private string ListToText(List<string> ls)
+        {
+            var text = "";
+            foreach (var l in  ls)
+            {
+                text += $"{l}, ";
+            }
+            return text;
         }        
     }  
     public class DialogueReportModel
@@ -335,6 +357,7 @@ namespace UserOperations.Controllers
         public string SatisfactionEndMoodTotal { get; set; }
         public string SatisfactionMeetingExpectationsByClient { get; set; }
         public string SatisfactionMeetingExpectationsByEmpoyee { get; set; }
+        public string SatisfactionDiff{get;set;}
         public string Language { get; set; }
         public string Hints { get; set; }
         public string ClientAge { get; set; }

@@ -45,7 +45,7 @@ namespace DialogueMarkUp.QuartzJobs
         {
             var _log = _elasticClientFactory.GetElasticClient();
             var periodTime = 5 * 60; 
-            var periodFrame = 10;
+            var periodFrame = 30;
 
             try
             {
@@ -57,6 +57,8 @@ namespace DialogueMarkUp.QuartzJobs
                     .GroupBy(p => p.FileFrame.FileName)
                     .Select(p => p.FirstOrDefault())
                     .ToList();
+                frameAttributes = frameAttributes.Where(p => JsonConvert.DeserializeObject<Value>(p.Value).Height > 135 && 
+                    JsonConvert.DeserializeObject<Value>(p.Value).Height > 135).ToList();
                 System.Console.WriteLine(frameAttributes.Count());
                 var appUsers = frameAttributes.Select(p => p.FileFrame.ApplicationUserId).Distinct().ToList();
                 
@@ -82,7 +84,7 @@ namespace DialogueMarkUp.QuartzJobs
                     }));
 
                     var markUps = framesUser.GroupBy(p => p.FileFrame.FaceId)
-                        .Where(p => p.Count() >= 2)
+                        .Where(p => p.Count() >= 5)
                         .Select(x => new MarkUp {
                             ApplicationUserId = applicationUserId,
                             FaceId = x.Key,
@@ -314,6 +316,14 @@ namespace DialogueMarkUp.QuartzJobs
                 --i;
             }
             return (faceIds.Any()) ?  faceIds.GroupBy(x => x).OrderByDescending(x => x.Count()).First().Key : Guid.NewGuid();
+        }
+
+        public class Value
+        {
+            public int Top {get; set;}
+            public int Width {get; set;}
+            public int Height {get;set;}
+            public int Left {get;set;}
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +27,8 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
         public void RecalculateSatisfaction()
         {
-           var dialogues = _context.Dialogues.Where(p => p.StatusId == 3).ToList();
+            var date = DateTime.UtcNow.AddDays(-1);
+            var dialogues = _context.Dialogues.Where(p => p.StatusId == 3 && p.CreationTime > date).ToList();
             foreach( var dialogue in  dialogues)
             {
                 var message = new FillingSatisfactionRun{

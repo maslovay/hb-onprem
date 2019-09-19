@@ -39,9 +39,9 @@ namespace FillingSatisfactionService.Helper
                 var speech = speechs.Find(p => p.DialogueId == dialogueId);
                 var satisfaction = satisfactions.Find(p => p.DialogueId == dialogueId);
 
-                var TotalScore = Math.Round((Decimal) (80 + visual.HappinessShare + visual.SurpriseShare -
+                var TotalScore = Math.Round((Decimal) (70 + 1 / 3 * (2 * (visual.HappinessShare + visual.SurpriseShare) -
                                                        (visual.FearShare + visual.DisgustShare + visual.SadnessShare +
-                                                        visual.ContemptShare) +
+                                                        visual.ContemptShare)) +
                                                        (audio.PositiveTone * 0.5 - audio.NegativeTone * 0.3) +
                                                        (visual.AttentionShare / 3 - 27) +
                                                        (speech.PositiveShare / 4 - 18)), 0);

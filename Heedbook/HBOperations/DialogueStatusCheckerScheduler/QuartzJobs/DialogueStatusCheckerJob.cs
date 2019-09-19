@@ -69,12 +69,20 @@ namespace QuartzExtensions.Jobs
                             dialogue.DialogueFrame.Any())
                         {
                             _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
-                            dialogue.StatusId = 3;
-                            var @event = new FillingSatisfactionRun
+                            if (CheckDialogue(dialogue))
                             {
-                                DialogueId = dialogue.DialogueId
-                            };
-                            _notificationPublisher.Publish(@event);
+                                dialogue.StatusId = 3;
+                                var @event = new FillingSatisfactionRun
+                                {
+                                    DialogueId = dialogue.DialogueId
+                                };
+                                _notificationPublisher.Publish(@event);
+                            }
+                            else
+                            {
+                                dialogue.StatusId = 8;
+                                dialogue.Comment = "Dialogue exist";
+                            }
                         }
                         else
                         {
@@ -104,6 +112,19 @@ namespace QuartzExtensions.Jobs
                     _log.Fatal($"Exception occured {e}");
                 }
             }
+        }
+
+        private bool CheckDialogue(Dialogue dialogue)
+        {
+            var dialogues = _context.Dialogues.Where(p => p.ApplicationUserId == dialogue.ApplicationUserId && 
+                p.BegTime == dialogue.BegTime &&
+                p.EndTime == dialogue.EndTime &&
+                p.StatusId == 3 ).Count();
+            if (dialogues == 0) 
+                return true;
+            else
+                return false; 
+
         }
 
         // public async Task Execute(IJobExecutionContext context)
