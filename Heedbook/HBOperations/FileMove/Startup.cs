@@ -2,19 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CloneFtpOnAzure;
+using HBData;
+using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
 
-namespace LinkToBlobController
+namespace FileMove
 {
     public class Startup
     {
@@ -28,18 +30,27 @@ namespace LinkToBlobController
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
-            services.Configure<StorageAccInfo>(Configuration.GetSection(nameof(StorageAccInfo)));
-            services.AddSingleton(provider=> provider.GetRequiredService<IOptions<StorageAccInfo>>().Value);
-            services.AddSingleton<CreateLinkToBlob>();
+            services.AddDbContext<RecordsContext>
+            (options =>
+            {
+                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                options.UseNpgsql(connectionString,
+                    dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info
                 {
-                    Title = "User Controller Api",
+                    Title = "User Service Api",
                     Version = "v1"
                 });
             });
+            services.AddTransient<BlobController>();
+            services.Configure<StorageAccInfo>(Configuration.GetSection(nameof(StorageAccInfo)));
+            services.AddTransient(provider=> provider.GetRequiredService<IOptions<StorageAccInfo>>().Value);
+            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient<SftpClient>();
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -55,14 +66,14 @@ namespace LinkToBlobController
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-
-            app.UseMvc();
-            app.UseSwagger();
+            app.UseSwagger(c => { c.RouteTemplate = "api/swagger/{documentName}/swagger.json"; });
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Sample API");
-                
+                c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
+                c.RoutePrefix = "api/swagger";
             });
+            app.UseHttpsRedirection();
+            app.UseMvc();
         }
     }
 }

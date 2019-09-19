@@ -1,3 +1,4 @@
+using CloneFtpOnAzure.QuartzJob;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;

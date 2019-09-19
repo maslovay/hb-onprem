@@ -64,6 +64,7 @@ namespace HBLib.Utils
                 var stream = new MemoryStream();
                 target.Save(stream, ImageFormat.Jpeg);
                 image.Dispose();
+                stream.Seek(0, SeekOrigin.Begin);
                 return stream;
             }
         }

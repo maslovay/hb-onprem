@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-
-namespace CloneFtpOnAzure
+namespace HBLib.Utils
 {
     public class StorageAccInfo
     {
