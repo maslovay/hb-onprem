@@ -31,10 +31,10 @@ namespace FillingSatisfactionService.Helper
             var audio = audios.Find(p => p.DialogueId == dialogueId);
             var speech = speechs.Find(p => p.DialogueId == dialogueId);
 
-            var totalScore = Math.Round((Decimal) (40 + 150 * (visual.HappinessShare + visual.SurpriseShare) -
-                                                    100 * (visual.FearShare + visual.DisgustShare + visual.SadnessShare +
+            var totalScore = Math.Round((Decimal) (60 + 100 * (visual.HappinessShare + visual.SurpriseShare) -
+                                                    60 * (visual.FearShare + visual.DisgustShare + visual.SadnessShare +
                                                     visual.ContemptShare) +
-                                                    (audio.PositiveTone * 0.5 - audio.NegativeTone * 0.3) +
+                                                    (audio.PositiveTone * 50 - audio.NegativeTone * 20) +
                                                     (visual.AttentionShare / 3 - 20) +
                                                     (speech.PositiveShare / 4 - 12)), 0);
 
