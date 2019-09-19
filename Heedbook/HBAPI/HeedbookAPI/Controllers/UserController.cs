@@ -396,19 +396,27 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var languageId = Int32.Parse(userClaims["languageCode"]);
-                var phrase = new Phrase
-                {
-                    PhraseId = Guid.NewGuid(),
-                    PhraseText = message.PhraseText,
-                    PhraseTypeId = message.PhraseTypeId,
-                    LanguageId = languageId,
-                    IsClient = message.IsClient,
-                    WordsSpace = message.WordsSpace,
-                    Accurancy = message.Accurancy,
-                    IsTemplate = false
-                };
+                var phrase = _context.Phrases
+                        .Where(x => x.PhraseText.ToLower() == message.PhraseText.ToLower()
+                        && (x.IsTemplate == true
+                        || x.PhraseCompany.Count()==0)
+                        ).FirstOrDefault();
 
-                await _context.Phrases.AddAsync(phrase);
+                if (phrase == null)
+                {
+                    phrase = new Phrase
+                    {
+                        PhraseId = Guid.NewGuid(),
+                        PhraseText = message.PhraseText,
+                        PhraseTypeId = message.PhraseTypeId,
+                        LanguageId = languageId,
+                        IsClient = message.IsClient,
+                        WordsSpace = message.WordsSpace,
+                        Accurancy = message.Accurancy,
+                        IsTemplate = false
+                    };
+                    await _context.Phrases.AddAsync(phrase);
+                }
                 var phraseCompany = new PhraseCompany();
                 phraseCompany.CompanyId = companyId;
                 phraseCompany.PhraseCompanyId = Guid.NewGuid();

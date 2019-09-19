@@ -180,7 +180,8 @@ namespace UserOperations.Controllers
                     .Where(p => p.DialogueId.HasValue && dialogueIds.Contains(p.DialogueId.Value)
                          && (!phraseIds.Any() || phraseIds.Contains((Guid) p.PhraseId))
                          && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid) p.Phrase.PhraseTypeId))
-                         && (companysPhrases.Contains(p.PhraseId)))
+                         //&& (companysPhrases.Contains(p.PhraseId))
+                         )
                     .Select(p => new {
                         IsClient = p.IsClient,
                         FullName = p.Dialogue.ApplicationUser.FullName,
@@ -193,7 +194,7 @@ namespace UserOperations.Controllers
                     .ToList();
 
                 var result = phrasesInfo
-                    .GroupBy(p => p.PhraseText)
+                    .GroupBy(p => p.PhraseText.ToLower())
                     .Select(p => new {
                         Phrase = p.Key,
                         PhraseId = p.First().PhraseId,
