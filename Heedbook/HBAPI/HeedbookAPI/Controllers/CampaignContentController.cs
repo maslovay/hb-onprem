@@ -60,7 +60,7 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Campaigns list", typeof(List<CampaignGetModel>))]
         public IActionResult CampaignGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -195,7 +195,7 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Content list", typeof(List<Content>))]
         public async Task<IActionResult> ContentGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try

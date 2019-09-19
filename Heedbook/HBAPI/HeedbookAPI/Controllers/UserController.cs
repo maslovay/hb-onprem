@@ -396,11 +396,11 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var languageId = Int32.Parse(userClaims["languageCode"]);
+                //---search phrase that is in library or that is not belong to any company
                 var phrase = _context.Phrases
+                        .Include(x => x.PhraseCompany)
                         .Where(x => x.PhraseText.ToLower() == message.PhraseText.ToLower()
-                        && (x.IsTemplate == true
-                        || x.PhraseCompany.Count()==0)
-                        ).FirstOrDefault();
+                         && (x.IsTemplate == true || x.PhraseCompany.Count()==0)).FirstOrDefault();
 
                 if (phrase == null)
                 {
@@ -573,7 +573,7 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "endTime")] string end,
                                                 [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                 [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
@@ -637,7 +637,7 @@ namespace UserOperations.Controllers
                                            [FromQuery(Name = "endTime")] string end,
                                            [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                            [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                           [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                           [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                            [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                            [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                            [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,

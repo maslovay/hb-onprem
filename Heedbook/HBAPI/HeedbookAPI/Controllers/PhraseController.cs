@@ -66,11 +66,11 @@ namespace UserOperations.Controllers
         [HttpPost("PhraseScripts")]
         public IActionResult PhraseScripts([FromQuery(Name = "begTime")] string beg,
                                             [FromQuery(Name = "endTime")] string end,
-                                            [FromQuery(Name = "applicationUserIds[]")] List<Guid> applicationUserIds,
-                                            [FromQuery(Name = "companyIds[]")] List<Guid> companyIds,
-                                            [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                            [FromQuery(Name = "workerTypeIds[]")] List<Guid> workerTypeIds,
-                                            [FromQuery(Name = "phraseIds[]")] List<Guid> phraseIds,
+                                            [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                            [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                            [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                            [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                            [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                             [FromHeader] string Authorization)
         {
             try

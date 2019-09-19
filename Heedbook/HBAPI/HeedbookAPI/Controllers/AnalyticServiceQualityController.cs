@@ -67,7 +67,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
@@ -179,7 +179,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
@@ -249,7 +249,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
@@ -311,17 +311,17 @@ namespace UserOperations.Controllers
                     .Select(p => new RatingRatingInfo
                     {
                         FullName = p.First().FullName,
-                        SatisfactionIndex = p.Any() ? p.Where(q => q.SatisfactionScore != null && q.SatisfactionScore != 0).Average(q => q.SatisfactionScore) : null,
+                        SatisfactionIndex = p.Any() ? p.Where(q => q.SatisfactionScore != null).Average(q => q.SatisfactionScore) : null,
                         DialoguesCount = p.Any() ? p.Select(q => q.DialogueId).Distinct().Count(): 0,
-                        PositiveEmotionShare = p.Any() ? p.Where(q => q.PositiveEmotion!= null && q.PositiveEmotion != 0).Average(q => q.PositiveEmotion) : null,
-                        AttentionShare = p.Any() ? p.Where(q => q.AttentionShare != null && q.AttentionShare != 0).Average(q => q.AttentionShare) : null,
-                        PositiveToneShare =p.Any() ? p.Where(q => q.PositiveTone != null && q.PositiveTone != 0).Average(q => q.PositiveTone) : null,
+                        PositiveEmotionShare = p.Any() ? p.Where(q => q.PositiveEmotion!= null).Average(q => q.PositiveEmotion) : null,
+                        AttentionShare = p.Any() ? p.Where(q => q.AttentionShare != null).Average(q => q.AttentionShare) : null,
+                        PositiveToneShare =p.Any() ? p.Where(q => q.PositiveTone != null).Average(q => q.PositiveTone) : null,
                    //TODO!!!
                         //TextAlertShare =  _dbOperation.AlertIndex(p),
                         //TextCrossShare =  _dbOperation.CrossIndex(p),
                         //TextNecessaryShare =   _dbOperation.NecessaryIndex(p),
                         TextLoyaltyShare = _dbOperation.LoyaltyIndex(p),
-                        TextPositiveShare = p.Any()? p.Where(q => q.TextShare != null && q.TextShare!= 0).Average(q => q.TextShare) : null
+                        TextPositiveShare = p.Any()? p.Where(q => q.TextShare != null).Average(q => q.TextShare) : null
                     }).ToList();
                
                 result = result.OrderBy(p => p.SatisfactionIndex).ToList();
@@ -341,7 +341,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
