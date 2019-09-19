@@ -190,24 +190,24 @@ namespace FillingSatisfactionService
                     {
                         DialogueClientSatisfactionId = Guid.NewGuid(),
                         DialogueId = dialogueId,
-                        MeetingExpectationsTotal = Math.Max((double) meetingExpectationsTotal, 35 + random.Next(10)),
-                        BegMoodTotal = Math.Max((double) begMoodTotal, 35 + random.Next(10)),
-                        EndMoodTotal = Math.Max((double) endMoodTotal, 35 + random.Next(10)),
-                        MeetingExpectationsByNN = Math.Max((double) meetingExpectationsByNN, 35 + random.Next(10)),
-                        BegMoodByNN = Math.Max((double) begMoodByNN, 35 + random.Next(10)),
-                        EndMoodByNN = Math.Max((double) endMoodByNN, 35 + random.Next(10))
+                        MeetingExpectationsTotal = Math.Max((double) meetingExpectationsTotal, 35),
+                        BegMoodTotal = Math.Max((double) begMoodTotal, 35),
+                        EndMoodTotal = Math.Max((double) endMoodTotal, 35),
+                        MeetingExpectationsByNN = Math.Max((double) meetingExpectationsByNN, 35),
+                        BegMoodByNN = Math.Max((double) begMoodByNN, 35),
+                        EndMoodByNN = Math.Max((double) endMoodByNN, 35)
                     };
                     _log.Info($"Total mood is --- {emp.MeetingExpectationsTotal}");
                     _context.DialogueClientSatisfactions.Add(emp);
                 }
                 else
                 {
-                    satisfactionScore.MeetingExpectationsTotal = Math.Max((double) meetingExpectationsTotal, 35 + random.Next(10));
-                    satisfactionScore.MeetingExpectationsByNN = Math.Max((double) meetingExpectationsByNN, 35 + random.Next(10));
-                    satisfactionScore.BegMoodTotal =  Math.Max((double) begMoodTotal, 35 + random.Next(10));
-                    satisfactionScore.BegMoodByNN = Math.Max((double)  begMoodByNN, 35 + random.Next(10));
-                    satisfactionScore.EndMoodTotal = Math.Max((double)  endMoodTotal, 35 + random.Next(10));
-                    satisfactionScore.EndMoodByNN =  Math.Max((double)  endMoodByNN, 35 + random.Next(10));
+                    satisfactionScore.MeetingExpectationsTotal = Math.Max((double) meetingExpectationsTotal, 35);
+                    satisfactionScore.MeetingExpectationsByNN = Math.Max((double) meetingExpectationsByNN, 35);
+                    satisfactionScore.BegMoodTotal =  Math.Max((double) begMoodTotal, 35);
+                    satisfactionScore.BegMoodByNN = Math.Max((double)  begMoodByNN, 35);
+                    satisfactionScore.EndMoodTotal = Math.Max((double)  endMoodTotal, 35 );
+                    satisfactionScore.EndMoodByNN =  Math.Max((double)  endMoodByNN, 35);
                     _log.Info($"Total mood is --- {satisfactionScore.MeetingExpectationsTotal}");
                 }
 
