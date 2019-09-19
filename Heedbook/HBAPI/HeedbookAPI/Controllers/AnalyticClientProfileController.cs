@@ -128,7 +128,8 @@ namespace UserOperations.Controllers
                     {
                         Age = p.DialogueClientProfile.FirstOrDefault().Age,
                         Gender = p.DialogueClientProfile.FirstOrDefault().Gender,
-                        PersonId = p.PersonId
+                        PersonId = p.PersonId,
+                        p.DialogueId
                     }).ToList();
 
                 var result = new List<GenderAgeStructureResult>();
@@ -157,10 +158,11 @@ namespace UserOperations.Controllers
                     });
                 }
                 var jsonToReturn = new Dictionary<string, object>();
-                jsonToReturn["allClients"] = data.Where(p => p.PersonId != null).Select(p => p.PersonId).Distinct().Count();
+               // jsonToReturn["allClients"] = data.Where(p => p.PersonId != null).Select(p => p.PersonId).Distinct().Count();
+                jsonToReturn["allClients"] = data.Select(p => p.DialogueId).Distinct().Count();
                 jsonToReturn["uniquePerYearClients"] = data
                     .Where(p => p.PersonId != null && !persondIdsPerYear.Contains(p.PersonId))
-                    .Select(p => p.PersonId).Distinct().Count();;
+                    .Select(p => p.PersonId).Distinct().Count() + data.Where(p => p.PersonId == null).Select(p => p.DialogueId).Distinct().Count();
                 jsonToReturn["genderAge"] = result;
 
                 // _log.Info("AnalyticClientProfile/GenderAgeStructure finished");

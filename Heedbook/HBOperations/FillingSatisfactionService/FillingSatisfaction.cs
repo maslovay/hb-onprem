@@ -11,6 +11,7 @@ using RabbitMqEventBus.Events;
 using HBLib;
 using HBData;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace FillingSatisfactionService
 {
@@ -58,10 +59,12 @@ namespace FillingSatisfactionService
                 var positiveTextTone = dialogue.DialogueSpeech.FirstOrDefault() == null ? null: dialogue.DialogueSpeech.FirstOrDefault().PositiveShare;
                 var dialogueInterval = dialogue.DialogueInterval;
 
-                var meetingExpectationsByNN =
-                    _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio,
-                        positiveTextTone);
-                
+                // var meetingExpectationsByNN =
+                    // _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio,
+                        // positiveTextTone);
+                var meetingExpectationsByNN = _calculations.TotalScoreCalculate(dialogue);
+
+
                 Double? begMoodByNN = 0;
                 Double? endMoodByNN = 0;
                 Double nNWeight = 0;
