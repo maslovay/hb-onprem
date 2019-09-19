@@ -42,13 +42,12 @@ namespace CloneFtpOnAzure
         {
             using (var scope = _scopeFactory.CreateScope())
             {
-                var _log = _elasticClientFactory.GetElasticClient();
                 try
                 {
                     _configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
                     var oldSettings = new SftpSettings()
                     {
-                        Host = "40.112.78.6",
+                        Host = "52.169.8.239g",
                         Port = 22,
                         UserName = "nkrokhmal",
                         Password = "kloppolk_2018",
@@ -58,26 +57,25 @@ namespace CloneFtpOnAzure
                     };
                     var sftpCLientOld = new SftpClient(oldSettings, _configuration);
                     
-                    var tasks = new List<Task>();
-                    
                     var oldPath = await sftpCLientOld.ListDirectoryAsync("");
                     
-                    foreach (var sftpFile in oldPath)
+                    foreach (var sftpFile in oldPath.Where(f=> f.Name == "clientavatars"))
                     {
                         if (sftpFile.IsDirectory)
                         {
                             var files = await sftpCLientOld.ListDirectoryFiles(sftpFile.Name);
-                            Parallel.ForEach(files, async (file) =>
+                            foreach(var file in files) 
                             {
                                 using (var stream = await sftpCLientOld.DownloadFromFtpAsMemoryStreamAsync(sftpFile.Name + "/" + file))
                                 {
                                    await _sftpClient.UploadAsMemoryStreamAsync(stream, sftpFile.Name, file);
-                                   await sftpCLientOld.DeleteFileIfExistsAsync(sftpFile.Name + "/" + file);
+                                   Console.WriteLine("Uploaded file " + sftpFile.Name + "/" + file);
                                 }
-                            });
+                            }
                         }
                     }
-                    _log.Info("Try to download and upload");
+
+                    Console.WriteLine("Upload ended");
 //                    foreach (var dialogue in dialogues)
 //                    {
 //                        foreach (var (key, value) in dict)
@@ -89,13 +87,10 @@ namespace CloneFtpOnAzure
 //                        }
 //
 //                    }
-
-                    await Task.WhenAll(tasks);
-                    _log.Info("Download and Upload finished");
                 }
                 catch (Exception e)
                 {
-                    _log.Fatal($"{e}");
+                    Console.WriteLine(e);
                     throw;
                 }
             }
