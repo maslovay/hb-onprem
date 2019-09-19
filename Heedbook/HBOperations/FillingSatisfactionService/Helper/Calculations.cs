@@ -34,9 +34,9 @@ namespace FillingSatisfactionService.Helper
             var totalScore = Math.Round((Decimal) (60 + 100 * (visual.HappinessShare + visual.SurpriseShare) -
                                                     60 * (visual.FearShare + visual.DisgustShare + visual.SadnessShare +
                                                     visual.ContemptShare) +
-                                                    (audio.PositiveTone * 50 - audio.NegativeTone * 20) +
-                                                    (visual.AttentionShare / 3 - 20) +
-                                                    (speech.PositiveShare / 4 - 12)), 0);
+                                                    (audio.PositiveTone * 50 - audio.NegativeTone * 10) +
+                                                    0.5 * (visual.AttentionShare  - 10) +
+                                                    0.3 * (speech.PositiveShare / 4 - 12)), 0);
 
 
             if (totalScore > 99) return 99;
