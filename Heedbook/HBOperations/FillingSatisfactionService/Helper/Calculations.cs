@@ -31,7 +31,7 @@ namespace FillingSatisfactionService.Helper
             var audio = audios.Find(p => p.DialogueId == dialogueId);
             var speech = speechs.Find(p => p.DialogueId == dialogueId);
 
-            var totalScore = 60 + CalculateVisual(visual) + CalculateAudio(audio) + CalculateText(speech);
+            var totalScore = 25 + CalculateVisual(visual) + CalculateAudio(audio) + CalculateText(speech);
             if (totalScore > 99) return 99;
 
             if (totalScore < 10) return 10;
