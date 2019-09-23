@@ -21,8 +21,9 @@ namespace FileMove.Controllers
         private readonly RecordsContext _context;
         private readonly SftpClient _client;
         private readonly BlobController _controller;
+        private int count = 0;
         public FileMoveController(RecordsContext context,
-            SftpClient client, 
+            SftpClient client,
             BlobController controller)
         {
             _context = context;
@@ -34,13 +35,14 @@ namespace FileMove.Controllers
         public async Task<IActionResult> GetBlob()
         {
             var clientProfiles = _context.DialogueClientProfiles
-                .Where(item => item.Dialogue.CreationTime >= DateTime.UtcNow.AddDays(-30) && item.Dialogue.StatusId == 3)
+                .Where(item =>
+                    item.Dialogue.CreationTime >= DateTime.UtcNow.AddDays(-30) && item.Dialogue.StatusId == 3)
                 .ToList();
             var countExists = 0;
             var count = clientProfiles.Count;
             foreach (var dialogueClientProfile in clientProfiles)
             {
-                if ( await _controller.IsFileExists(dialogueClientProfile.Avatar, "clientavatars"))
+                if (await _controller.IsFileExists(dialogueClientProfile.Avatar, "clientavatars"))
                 {
                     countExists += 1;
                 }
@@ -52,28 +54,55 @@ namespace FileMove.Controllers
                 countExists
             });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> CreateAvatar(string fileName, Guid dialogueId)
+        {
+            var fileFrame = _context.FileFrames
+                .Include(item => item.FrameAttribute)
+                .First(item => item.FileName == fileName);
+            var localPath = await _client.DownloadFromFtpToLocalDiskAsync($"frames/{fileName}");
+            var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(fileFrame.FrameAttribute.First().Value);
+            var rectangle = new Rectangle
+            {
+                Height = faceRectangle.Height,
+                Width = faceRectangle.Width,
+                X = faceRectangle.Top,
+                Y = faceRectangle.Left
+            };
+
+            using (var stream = FaceDetection.CreateAvatar(localPath, rectangle))
+            {
+                await _client.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{dialogueId}.jpg");
+            }
+
+            Console.WriteLine("Function ended at: " + DateTime.UtcNow);
+            return Ok(count);
+        }
+
         // GET api/values
         [HttpPost]
         public async Task<IActionResult> Get()
         {
+            Console.WriteLine("Function started at " + DateTime.UtcNow);
             var clientProfiles = _context.DialogueClientProfiles
                 .Include(item => item.Dialogue)
-                .Where(item => item.Dialogue.CreationTime >= DateTime.UtcNow.AddDays(-30) && item.Dialogue.StatusId == 3)
+                .Where(item => item.Dialogue.BegTime >= DateTime.UtcNow.AddDays(-30).Date
+                               && item.Dialogue.BegTime <= DateTime.UtcNow.AddDays(-9).Date
+                               && item.Dialogue.StatusId == 3)
+                .OrderByDescending(item => item.Dialogue.BegTime)
                 .ToList();
             foreach (var clientProfile in clientProfiles)
             {
-                var path = string.Concat("clientavatars/", clientProfile.DialogueId, ".jpg");
-                if (!await _client.IsFileExistsAsync(path))
+                await CreateAvatar(new Message
                 {
-                    await CreateAvatar(new Message
-                    {
-                        BeginTime = clientProfile.Dialogue.BegTime,
-                        EndTime = clientProfile.Dialogue.EndTime,
-                        ApplicationUserId = clientProfile.Dialogue.ApplicationUserId,
-                        DialogueId = clientProfile.DialogueId.Value
-                    });
-                }
+                    BeginTime = clientProfile.Dialogue.BegTime,
+                    EndTime = clientProfile.Dialogue.EndTime,
+                    ApplicationUserId = clientProfile.Dialogue.ApplicationUserId,
+                    DialogueId = clientProfile.DialogueId.Value
+                });
             }
+
             return Ok();
         }
 
@@ -90,7 +119,9 @@ namespace FileMove.Controllers
                     .ToList();
 
 
-            var attributes = frames.Where(p => p.FrameAttribute.Any())
+            var attributes = frames
+                .Where(p => p.FrameAttribute
+                    .Any())
                 .Select(p => p.FrameAttribute.First())
                 .ToList();
 
@@ -113,10 +144,13 @@ namespace FileMove.Controllers
 
                 using (var stream = FaceDetection.CreateAvatar(localPath, rectangle))
                 {
-                    await _client.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await _client.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg", true);
                 }
 
                 Console.WriteLine($"Uploaded avatar: " + message.DialogueId + ".jpg");
+                System.IO.File.Delete(localPath);
+                count += 1;
             }
         }
     }
