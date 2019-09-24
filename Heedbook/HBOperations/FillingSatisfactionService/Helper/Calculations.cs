@@ -31,20 +31,33 @@ namespace FillingSatisfactionService.Helper
             var audio = audios.Find(p => p.DialogueId == dialogueId);
             var speech = speechs.Find(p => p.DialogueId == dialogueId);
 
-            var totalScore = Math.Round((Decimal) (40 + 150 * (visual.HappinessShare + visual.SurpriseShare) -
-                                                    100 * (visual.FearShare + visual.DisgustShare + visual.SadnessShare +
-                                                    visual.ContemptShare) +
-                                                    (audio.PositiveTone * 0.5 - audio.NegativeTone * 0.3) +
-                                                    (visual.AttentionShare / 3 - 20) +
-                                                    (speech.PositiveShare / 4 - 12)), 0);
-
-
+            var totalScore = 25 + CalculateVisual(visual) + CalculateAudio(audio) + CalculateText(speech);
             if (totalScore > 99) return 99;
 
             if (totalScore < 10) return 10;
             
 
             return Convert.ToInt32(totalScore);
+        }
+
+        public int CalculateVisual(DialogueVisual visual)
+        {
+            if (visual == null) return 0;
+            return  Convert.ToInt32(100 * (visual.HappinessShare + visual.SurpriseShare) -
+                                                    60 * (visual.FearShare + visual.DisgustShare + visual.SadnessShare +
+                                                    visual.ContemptShare) +  0.5 * (visual.AttentionShare  - 10));
+        }
+
+        public int CalculateAudio(DialogueAudio audio)
+        {
+            if (audio == null) return 0;
+            return Convert.ToInt32((audio.PositiveTone * 50 - audio.NegativeTone * 10));
+        }
+
+        public int CalculateText(DialogueSpeech speech)
+        {
+            if (speech == null) return 0;
+            return Convert.ToInt32( 0.3 * (speech.PositiveShare / 4 - 12));
         }
 
         public Int32 TotalScoreInsideCalculate(IEnumerable<DialogueFrame> DF, DialogueAudio DA,
