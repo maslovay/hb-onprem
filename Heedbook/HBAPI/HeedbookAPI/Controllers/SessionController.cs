@@ -86,6 +86,7 @@ namespace UserOperations.Controllers
                 var curTime = DateTime.UtcNow;
                 var oldTime = DateTime.UtcNow.AddDays(-3);
                 
+                //---last session for 3 days
                 var lastSession = _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
                         .OrderByDescending(p => p.BegTime)
@@ -94,13 +95,29 @@ namespace UserOperations.Controllers
                 var alertOpenCloseSession = new Alert();   
                 alertOpenCloseSession.ApplicationUserId = data.ApplicationUserId;
                 alertOpenCloseSession.CreationDate = DateTime.UtcNow;
-           
+
+                //---START CLOSE OLD SESSIONS IF NOT CLOSED---
+                var notClosedSessions = lastSession != null ?
+                    _context.Sessions
+                          .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6 && p.SessionId != lastSession.SessionId)
+                          .ToArray() :
+                   _context.Sessions
+                          .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6)
+                          .ToArray();
+
+                for (int i = 0; i < notClosedSessions.Count(); i++)
+                {
+                    notClosedSessions[i].StatusId = 7;
+                    notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
+                }
+                    _context.SaveChanges();
+                //---END
 
                 if (lastSession == null)
                 {
                     switch (actionId)
                     {
-                        case 6:
+                        case 6://---open
                             var session = new Session{
                                 BegTime = DateTime.UtcNow,
                                 EndTime = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1),
@@ -117,7 +134,7 @@ namespace UserOperations.Controllers
                             response.Message = "Session successfully opened";
 //                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                             return Ok(response);
-                        case 7:
+                        case 7://---close
                             response.Message = "Can't close not opened session";
 //                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                             return Ok(response);
@@ -127,21 +144,11 @@ namespace UserOperations.Controllers
                             return BadRequest(response);
                     }
                 }
-                else
-                {
-                    var notClosedSessions = _context.Sessions
-                    .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6 && p.SessionId != lastSession.SessionId)
-                    .ToArray(); 
-                    for( int i = 0; i < notClosedSessions.Count(); i++ )
-                    {                  
-                            notClosedSessions[i].StatusId = 7;
-                            notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
-                            _context.SaveChanges();
-//                            _log.Info($"Session/SessionStatus SessionId-{notClosedSessions[i].SessionId} closed with 0 time");
-                    }
+                else//---if session exist
+                {                                  
                     switch (actionId)
                     {
-                        case 6:
+                        case 6://---open
                             if (lastSession.StatusId == 6) 
                             {
                                 response.Message = "Can't open not closed session";
@@ -166,7 +173,7 @@ namespace UserOperations.Controllers
 //                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                             return Ok(response);
                         
-                        case 7:
+                        case 7://---close
                             if (lastSession.StatusId == 7) 
                             {
                                 response.Message = "Can't close not opened session";

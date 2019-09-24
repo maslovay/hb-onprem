@@ -70,7 +70,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         // [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                         // [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
@@ -140,7 +140,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                         [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
@@ -180,7 +180,8 @@ namespace UserOperations.Controllers
                     .Where(p => p.DialogueId.HasValue && dialogueIds.Contains(p.DialogueId.Value)
                          && (!phraseIds.Any() || phraseIds.Contains((Guid) p.PhraseId))
                          && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid) p.Phrase.PhraseTypeId))
-                         && (companysPhrases.Contains(p.PhraseId)))
+                         //&& (companysPhrases.Contains(p.PhraseId))
+                         )
                     .Select(p => new {
                         IsClient = p.IsClient,
                         FullName = p.Dialogue.ApplicationUser.FullName,
@@ -193,7 +194,7 @@ namespace UserOperations.Controllers
                     .ToList();
 
                 var result = phrasesInfo
-                    .GroupBy(p => p.PhraseText)
+                    .GroupBy(p => p.PhraseText.ToLower())
                     .Select(p => new {
                         Phrase = p.Key,
                         PhraseId = p.First().PhraseId,
@@ -222,7 +223,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                         [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
@@ -341,7 +342,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                         [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,

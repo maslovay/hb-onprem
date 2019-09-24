@@ -11,8 +11,6 @@ using HBData.Models;
 using HBData.Models.AccountViewModels;
 using UserOperations.Services;
 using UserOperations.AccountModels;
-using HBLib;
-using HBLib.Utils;
 using System.Transactions;
 
 namespace UserOperations.Controllers
@@ -66,6 +64,7 @@ namespace UserOperations.Controllers
                         LanguageId = message.LanguageId,
                         CreationDate = DateTime.UtcNow,
                         CountryId = message.CountryId,
+                        CorporationId = message.CorporationId,
                         StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId//---inactive
                     };
                     await _context.Companys.AddAsync(company);
@@ -87,13 +86,14 @@ namespace UserOperations.Controllers
                     };
                     await _context.AddAsync(user);
                     _loginService.SavePasswordHistory(user.Id, user.PasswordHash);
-//                    _log.Info("User created");
+                    //                    _log.Info("User created");
 
                     //---3--user role---
+                    message.Role = message.Role ?? "Manager";
                     var userRole = new ApplicationUserRole()
                     {
                         UserId = user.Id,
-                        RoleId = _context.Roles.First(p => p.Name == "Manager").Id //Manager role
+                        RoleId = _context.Roles.First(p => p.Name == message.Role).Id //Manager or Supervisor role
                     };
                     await _context.ApplicationUserRoles.AddAsync(userRole);
 
@@ -333,7 +333,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("Remove")]
-        [SwaggerOperation(Summary = "Delete user, company, trial tariff")]
+        [SwaggerOperation(Summary = "Delete user, company, trial tariff - only for developers")]
         public async Task<IActionResult> AccountDelete([FromQuery,
                         SwaggerParameter("Company Id", Required = true)]
                         Guid companyId)

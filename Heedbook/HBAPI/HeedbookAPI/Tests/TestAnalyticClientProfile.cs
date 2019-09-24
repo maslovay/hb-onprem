@@ -28,6 +28,7 @@ namespace UserOperations.Controllers.Test
         public IConfiguration _config { get; private set; }
         public ServiceCollection _services { get; private set; }
         public ServiceProvider _serviceProvider { get; private set; }
+     //   public SftpClient _sftpClient { get; private set; }
 
         private TestController _testController;
 
@@ -45,20 +46,23 @@ namespace UserOperations.Controllers.Test
             "eff7ec92-ea70-4407-950e-3b0d07738406", "6f0b08a1-45af-4ac7-a306-5a40612d6053", "178bd1e8-e98a-4ed9-ab2c-ac74734d1903",
             "0d1127c8-750e-40fa-a84e-f7647ab8af97", "35feb4f3-c68a-49a5-a7a9-54631e5ffc9f")]
         public string N;
-        [Benchmark(Description = "EfficiencyDashboardOrigin")]
+        [Benchmark(Description = "Origin")]
         public void TestMethod_1()
         {
             Guid appUserId = new Guid(N);
-            _testController = new TestController(_config, _loginService, _context, _dbOperation, _requestFilters );
-            _testController.EfficiencyDashboardOrigin("20190807", "20190809",new List<Guid> { appUserId },null,null,null,null);
+            var token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpbmZvQGhlZWRib29rLmNvbSIsImp0aSI6IjYyOGZlYTJhLWI5ZjYtNDJjNy1hMThiLWE2N2M0NDFhYjUzYSIsImFwcGxpY2F0aW9uVXNlcklkIjoiNDk4YTliNzYtMzBjYS00MTVmLTk0OTctNWE4NGY5MzE2MDllIiwiYXBwbGljYXRpb25Vc2VyTmFtZSI6ItCi0LXRgdGC0L7QstGL0LkiLCJjb21wYW55TmFtZSI6ImhlZWRib29rIiwiY29tcGFueUlkIjoiZGZlODQxYzctMjBlNy00ZjI1LThlNjctNDAwYjQzNjZjZTI3IiwiY29ycG9yYXRpb25JZCI6IjQyNDAyMzU1LWVmN2MtNDFiZC1iMjhlLTQyMzRhODg5YzNiYSIsImxhbmd1YWdlQ29kZSI6IjIiLCJyb2xlIjoiTWFuYWdlciIsImV4cCI6MTU3MTM5OTI2OCwiaXNzIjoiaHR0cHM6Ly9oZWVkYm9vay5jb20iLCJhdWQiOiJodHRwczovL2hlZWRib29rLmNvbSJ9.sYf-Es10P1gfsIwx1EyxpGx5M4J0QmleOGUOgIHrPVs";
+            _testController = new TestController(_config, _loginService, _context, _dbOperation, _requestFilters, _sftpClient );
+            _testController.DialoguePaginatedGet("20190807", "20190809",new List<Guid> { appUserId },null,null,null,null, null, token);
         }
 
-        [Benchmark(Description = "EfficiencyDashboardTest")]
+        [Benchmark(Description = "Test")]
         public void TestMethod_2()
         {
             Guid appUserId = new Guid(N);
-            _testController = new TestController(_config, _loginService, _context, _dbOperation, _requestFilters);
-            _testController.EfficiencyDashboardOrigin("20190807", "20190809", new List<Guid> { appUserId }, null, null, null, null);
+            _testController = new TestController(_config, _loginService, _context, _dbOperation, _requestFilters, _sftpClient);
+            var token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpbmZvQGhlZWRib29rLmNvbSIsImp0aSI6IjYyOGZlYTJhLWI5ZjYtNDJjNy1hMThiLWE2N2M0NDFhYjUzYSIsImFwcGxpY2F0aW9uVXNlcklkIjoiNDk4YTliNzYtMzBjYS00MTVmLTk0OTctNWE4NGY5MzE2MDllIiwiYXBwbGljYXRpb25Vc2VyTmFtZSI6ItCi0LXRgdGC0L7QstGL0LkiLCJjb21wYW55TmFtZSI6ImhlZWRib29rIiwiY29tcGFueUlkIjoiZGZlODQxYzctMjBlNy00ZjI1LThlNjctNDAwYjQzNjZjZTI3IiwiY29ycG9yYXRpb25JZCI6IjQyNDAyMzU1LWVmN2MtNDFiZC1iMjhlLTQyMzRhODg5YzNiYSIsImxhbmd1YWdlQ29kZSI6IjIiLCJyb2xlIjoiTWFuYWdlciIsImV4cCI6MTU3MTM5OTI2OCwiaXNzIjoiaHR0cHM6Ly9oZWVkYm9vay5jb20iLCJhdWQiOiJodHRwczovL2hlZWRib29rLmNvbSJ9.sYf-Es10P1gfsIwx1EyxpGx5M4J0QmleOGUOgIHrPVs";
+
+            _testController.DialoguePaginatedTestGet("20190915", "20190919", new List<Guid> { appUserId }, null, null, null, null, null, token);
         }
 
         protected override Task PrepareTestData()
@@ -78,6 +82,7 @@ namespace UserOperations.Controllers.Test
             _loginService = _serviceProvider.GetService<LoginService>();
             _dbOperation = new DBOperations(_context, _config);
             _requestFilters = new RequestFilters(_context, _config);
+        //    _sftpClient = new SftpClient(_sftpSettings, _config);
         }
 
         private void InitServiceProvider()

@@ -14,7 +14,7 @@ namespace UserOperations.AccountModels
         public int LanguageId;
         public Guid CountryId;
         public Guid CompanyIndustryId; 
-        public Guid? CorporationId;   
-
+        public Guid? CorporationId;
+        public string Role;
     }
 }

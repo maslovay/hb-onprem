@@ -180,9 +180,8 @@ namespace UserOperations.Controllers
                                                            [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "campaignIds[]")] List<Guid> campaignIds,
-                                                        [FromQuery(Name = "contentIds[]")] List<Guid> contentIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -204,7 +203,8 @@ namespace UserOperations.Controllers
                             && p.StatusId == 3
                             && p.InStatistic == true
                             && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
+                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new DialogueInfoWithFrames
                     {
                         DialogueId = p.DialogueId,
@@ -228,8 +228,7 @@ namespace UserOperations.Controllers
                              && p.BegTime <= endTime
                              && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                              && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
-                             && (!campaignIds.Any() || campaignIds.Contains((Guid)p.CampaignContent.CampaignId))
-                             && (!contentIds.Any() || contentIds.Contains((Guid)p.CampaignContent.ContentId)))
+                             && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                              .Select(p =>
                                  new SlideShowInfo
                                  {
@@ -311,9 +310,8 @@ namespace UserOperations.Controllers
                                                            [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "campaignIds[]")] List<Guid> campaignIds,
-                                                        [FromQuery(Name = "contentIds[]")] List<Guid> contentIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromHeader] string Authorization)
         {
             try
@@ -336,7 +334,8 @@ namespace UserOperations.Controllers
                             && p.StatusId == 3
                             && p.InStatistic == true
                             && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
+                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                     .Select(p => new DialogueInfoWithFrames
                     {
                         DialogueId = p.DialogueId,
@@ -360,8 +359,7 @@ namespace UserOperations.Controllers
                              && p.BegTime <= endTime
                              && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                              && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
-                             && (!campaignIds.Any() || campaignIds.Contains((Guid)p.CampaignContent.CampaignId))
-                             && (!contentIds.Any() || contentIds.Contains((Guid)p.CampaignContent.ContentId))
+                             && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
                              && p.CampaignContent != null)
                              .Select(p =>
                                  new SlideShowInfo

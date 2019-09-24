@@ -41,9 +41,9 @@ namespace UserOperations.Utils
 
         public RequestFilters(RecordsContext context, IConfiguration config)
         {
-            _context = context; 
+            _context = context;
             _config = config;
-        } 
+        }
 
         public DateTime GetBegDate(string beg)
         {
@@ -62,81 +62,84 @@ namespace UserOperations.Utils
         {
             List<Guid> compIds = companyIds;
             //--- admin can view any companies in any corporation
-                   if ( role == "Admin" )
-                    {             
-                        //---take all companyIds in filter or all company ids in corporations
-                        if (!compIds.Any() && !corporationIds.Any()) 
-                        {
-                        compIds =  _context.Companys
-                            //.Where(x => x.StatusId == 3)
-                            .Select(x => x.CompanyId).ToList();
-                        }
-                        else if (!compIds.Any())
-                        {
-                        compIds = _context.Companys
-                            .Where(x => corporationIds.Contains( (Guid)x.CorporationId ))
-                            .Select(x => x.CompanyId).ToList();
-                        }
-                    }
-                    //--- supervisor can view companies from filter or companies from own corporation -------
-                   else if ( role == "Supervisor" )
-                   {
-                        if (!compIds.Any())//--- if filter by companies not set ---
-                        {//--- select own corporation
-                            var corporation = _context.Companys.Include(x => x.Corporation).Where(x => x.CompanyId == companyId).FirstOrDefault().Corporation;
-                        //--- return all companies from own corporation
-                            compIds = _context.Companys.Where(x => x.CorporationId == corporation.Id ).Select(x => x.CompanyId).ToList();
-                        }
-                   }                 
-                    //--- for simple user return only for own company
-                   else
-                    {
+            if (role == "Admin")
+            {
+                //---take all companyIds in filter or all company ids in corporations
+                if (!compIds.Any() && !corporationIds.Any())
+                {
+                    compIds = _context.Companys
+                        //.Where(x => x.StatusId == 3)
+                        .Select(x => x.CompanyId).ToList();
+                }
+                else if (!compIds.Any())
+                {
+                    compIds = _context.Companys
+                        .Where(x => corporationIds.Contains((Guid)x.CorporationId))
+                        .Select(x => x.CompanyId).ToList();
+                }
+            }
+            //--- supervisor can view companies from filter or companies from own corporation -------
+            else if (role == "Supervisor")
+            {
+                if (!compIds.Any())//--- if filter by companies not set ---
+                {//--- select own corporation
+                    var corporation = _context.Companys.Include(x => x.Corporation).Where(x => x.CompanyId == companyId).FirstOrDefault()?.Corporation;
+                    //--- return all companies from own corporation
+                    if (corporation != null)
+                        compIds = _context.Companys.Where(x => x.CorporationId == corporation.Id).Select(x => x.CompanyId).ToList();
+                    else
                         compIds = new List<Guid> { companyId };
-                    }
-                    companyIds = compIds;
+                }
+            }
+            //--- for simple user return only for own company
+            else
+            {
+                compIds = new List<Guid> { companyId };
+            }
+            companyIds = compIds;
         }
 
         public List<Guid> IndustryIdsForCompany(List<Guid> companyIds)
         {
             return _context.Companys
                     .Include(x => x.CompanyIndustry)
-                    .Where(x => companyIds.Contains( x.CompanyId ) 
+                    .Where(x => companyIds.Contains(x.CompanyId)
                     && x.CompanyIndustryId != null)
                     .Select(x => (Guid)x.CompanyIndustryId)
                     .Distinct()
-                    .ToList();            
+                    .ToList();
         }
 
         public List<Guid> CompanyIdsInIndustryExceptSelected(List<Guid> companyIds)
         {
             List<Guid> companyIndustryIds = IndustryIdsForCompany(companyIds);
-            return _context.Companys                    
-                    .Where(x => !companyIds.Contains( x.CompanyId ) 
+            return _context.Companys
+                    .Where(x => !companyIds.Contains(x.CompanyId)
                      && x.CompanyIndustryId != null
                     && companyIndustryIds.Contains((Guid)x.CompanyIndustryId))
                     .Select(x => x.CompanyId)
-                    .ToList();            
+                    .ToList();
         }
 
         public List<Guid> CompanyIdsInIndustry(List<Guid> companyIds)
         {
             List<Guid> companyIndustryIds = IndustryIdsForCompany(companyIds);
-            return _context.Companys                    
-                    .Where(x => 
+            return _context.Companys
+                    .Where(x =>
                     x.CompanyIndustryId != null
                     && companyIndustryIds.Contains((Guid)x.CompanyIndustryId))
                     .Select(x => x.CompanyId)
-                    .ToList();            
+                    .ToList();
         }
 
         public List<Guid> CompanyIdsInHeedbookExceptSelected(List<Guid> companyIds)
         {
             List<Guid> companyIndustryIds = IndustryIdsForCompany(companyIds);
-            return _context.Companys                    
-                    .Where(x => !companyIds.Contains( x.CompanyId ))
+            return _context.Companys
+                    .Where(x => !companyIds.Contains(x.CompanyId))
                     .Select(x => x.CompanyId)
-                    .ToList();            
+                    .ToList();
         }
-        
+
     }
 }
