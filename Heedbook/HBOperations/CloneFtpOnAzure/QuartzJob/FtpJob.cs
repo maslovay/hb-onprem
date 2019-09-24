@@ -77,17 +77,6 @@ namespace CloneFtpOnAzure
                     }
 
                     Console.WriteLine("Upload ended");
-//                    foreach (var dialogue in dialogues)
-//                    {
-//                        foreach (var (key, value) in dict)
-//                        { 
-//                            var filePath = key + "/" + dialogues + value;
-//                            var fileName = dialogues + value;
-//                            var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(oldPath);
-//                            tasks.Add(sftpCLientOld.UploadAsMemoryStreamAsync(stream,key,fileName));
-//                        }
-//
-//                    }
                 }
                 catch (Exception e)
                 {
