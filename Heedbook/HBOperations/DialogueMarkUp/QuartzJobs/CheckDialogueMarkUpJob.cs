@@ -103,7 +103,6 @@ namespace DialogueMarkUp.QuartzJobs
                     {
                         _log.Info($"Creating dialogue for markup {JsonConvert.SerializeObject(markUps.Select(p => new {p.BegTime, p.EndTime}))}");
                         CreateMarkUp(markUps, framesUser, applicationUserId, _log);
-                        
                     }
                 }
                 _context.SaveChanges();

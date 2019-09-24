@@ -44,7 +44,7 @@ namespace UserService.Controllers
             try
             {  
 //                _log.Info("Function Video save info started");
-                duration = duration == null ? 15 : duration;
+                duration = duration ?? 15;
                 var memoryStream = formData.Files.FirstOrDefault().OpenReadStream();
                 if (memoryStream == null)   return BadRequest("No video file or file is empty");
                 var languageId = _context.ApplicationUsers

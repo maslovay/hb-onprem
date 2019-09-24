@@ -80,6 +80,8 @@ namespace UserService
                 var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
+            
+            services.AddTransient<GoogleConnector>();
 
             // (!isCalledFromUnitTest)
                 services.AddRabbitMqEventBus(Configuration);
@@ -90,9 +92,14 @@ namespace UserService
 //                StartupExtensions.MockNotificationHandler(services);
 //                StartupExtensions.MockTransmissionEnvironment<IntegrationEvent>(services);                
 //            }
+
+            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
+            services.AddTransient<FFMpegSettings>();
+            services.AddTransient<FFMpegWrapper>();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
+            services.AddScoped<DescriptorCalculations>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

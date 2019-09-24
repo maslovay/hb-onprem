@@ -72,7 +72,6 @@ namespace PersonDetectionService
             foreach (var dialogue in dialogues)
             {
                 var cosResult = _calc.Cos(curDialogue.PersonFaceDescriptor, dialogue.PersonFaceDescriptor);
-                System.Console.WriteLine($"Cos distance is -- {cosResult}");
                 if (cosResult > threshold) return dialogue.PersonId;
             }
             return Guid.NewGuid();

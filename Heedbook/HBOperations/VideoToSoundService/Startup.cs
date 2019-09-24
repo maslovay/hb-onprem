@@ -31,12 +31,13 @@ namespace VideoToSoundService
             services.AddTransient<VideoToSound>();
             services.AddTransient<VideoToSoundRunHandler>();
             services.AddTransient<SftpClient>();
-            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
+
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<FFMpegSettings>>().Value);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddScoped<ElasticClientFactory>();
+            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
             services.AddTransient<FFMpegWrapper>();
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddRabbitMqEventBus(Configuration);
