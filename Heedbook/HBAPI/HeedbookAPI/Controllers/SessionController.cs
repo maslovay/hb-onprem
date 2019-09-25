@@ -61,28 +61,28 @@ namespace UserOperations.Controllers
         [HttpPost("SessionStatus")]
         public IActionResult SessionStatus([FromBody] SessionParams data)
         {
+            const int OPEN = 6;
+            const int CLOSE = 7;
             try
             {
 //                _log.SetFormat("{ApplicationUserId}");
 //                _log.SetArgs(data.ApplicationUserId);
 //                _log.Info($"Session/SessionStatus {data.ApplicationUserId} started");
-
                 var response = new Response();
-
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
                 {
-                    response.Message = "ApplicationUser is empty";
 //                    _log.Info($"Session/SessionStatus ApplicationUser is empty");
+                    response.Message = "ApplicationUser is empty";
                     return BadRequest(response);
                 }
                 if (data.Action != "open" && data.Action != "close") 
                 {
-                    response.Message = "Wrong action";
 //                    _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
+                    response.Message = "Wrong action";
                     return BadRequest(response);
                 }
 
-                var actionId = data.Action == "open" ? 6 : 7;
+                var actionId = data.Action == "open" ? OPEN : CLOSE;
                 var curTime = DateTime.UtcNow;
                 var oldTime = DateTime.UtcNow.AddDays(-3);
                 
@@ -90,132 +90,131 @@ namespace UserOperations.Controllers
                 var lastSession = _context.Sessions
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
                         .OrderByDescending(p => p.BegTime)
-                        .FirstOrDefault();    
+                        .FirstOrDefault();
 
-                var alertOpenCloseSession = new Alert();   
+                var alertOpenCloseSession = new Alert();
                 alertOpenCloseSession.ApplicationUserId = data.ApplicationUserId;
                 alertOpenCloseSession.CreationDate = DateTime.UtcNow;
 
-                //---START CLOSE OLD SESSIONS IF NOT CLOSED---
-                var notClosedSessions = lastSession != null ?
-                    _context.Sessions
-                          .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6 && p.SessionId != lastSession.SessionId)
-                          .ToArray() :
-                   _context.Sessions
-                          .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == 6)
+                //---START CLOSE OLD SESSIONS IF NOT CLOSED and DEVIDE TIME FOR LONG SESSIONS---
+                var lastSessionId = lastSession != null ? lastSession.SessionId : Guid.Empty;
+              
+                var veryLongSessions = _context.Sessions
+                          .Where(p => p.ApplicationUserId == data.ApplicationUserId
+                           && p.SessionId != lastSessionId
+                           && p.EndTime.Subtract(p.BegTime).TotalHours > 24 )
                           .ToArray();
+                for (int i = 0; i < veryLongSessions.Count(); i++)
+                {
+                    var longSes = veryLongSessions[i];
+                    var longSesBeg = longSes.BegTime;
+                    var longSesEnd = longSes.EndTime;
 
+                    var sessionDuration =  longSesEnd.Subtract(longSesBeg).TotalHours;
+
+                    for (var begTime = longSesBeg.AddHours(24); begTime < longSesEnd; begTime = begTime.AddHours(24))
+                    {
+                        Session session = new Session();
+                        session.ApplicationUserId = longSes.ApplicationUserId;
+                        session.BegTime = begTime;
+                        session.EndTime = begTime.AddHours(24) < longSesEnd ? begTime.AddHours(24) : longSesEnd;
+                        session.IsDesktop = longSes.IsDesktop;
+                        session.StatusId = CLOSE;
+                        _context.Sessions.Add(session);
+                    }
+                    longSes.EndTime = longSesBeg.AddHours(24);
+                }
+              //  _context.SaveChanges();
+
+                var notClosedSessions = _context.Sessions
+                        .Where(p => p.ApplicationUserId == data.ApplicationUserId
+                        && p.SessionId != lastSessionId
+                        && p.StatusId == OPEN)
+                        .ToArray();
                 for (int i = 0; i < notClosedSessions.Count(); i++)
                 {
-                    notClosedSessions[i].StatusId = 7;
-                    notClosedSessions[i].EndTime = notClosedSessions[i].BegTime;
+                    var nextSessionByTime = _context.Sessions
+                            .Where(x => x.BegTime > notClosedSessions[i].BegTime 
+                             && x.ApplicationUserId == data.ApplicationUserId)
+                             .OrderBy(x => x.BegTime).FirstOrDefault();
+                    if (nextSessionByTime != null && nextSessionByTime.BegTime.Subtract(notClosedSessions[i].BegTime).TotalHours < 24)
+                        notClosedSessions[i].EndTime = nextSessionByTime.BegTime;
+                    else
+                        notClosedSessions[i].EndTime = notClosedSessions[i].BegTime.AddHours(24);
+                    notClosedSessions[i].StatusId = CLOSE;
                 }
-                    _context.SaveChanges();
+                _context.SaveChanges();
                 //---END
 
-                if (lastSession == null)
+                if (lastSession != null && actionId == lastSession.StatusId)
                 {
-                    switch (actionId)
-                    {
-                        case 6://---open
-                            var session = new Session{
-                                BegTime = DateTime.UtcNow,
-                                EndTime = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1),
-                                ApplicationUserId = data.ApplicationUserId,
-                                StatusId = actionId,
-                                IsDesktop = (bool)data.IsDesktop
-                            };
-                            _context.Sessions.Add(session);
-
-                            alertOpenCloseSession.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
-                            _context.Alerts.Add(alertOpenCloseSession);
-
-                            _context.SaveChanges();
-                            response.Message = "Session successfully opened";
-//                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
-                            return Ok(response);
-                        case 7://---close
-                            response.Message = "Can't close not opened session";
-//                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
-                            return Ok(response);
-                        default:
-                            response.Message = "Wrong action";
-//                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
-                            return BadRequest(response);
-                    }
+                    response.Message = $"Can't {data.Action} session";
+                    return Ok(response);
+                    // _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't {data.Action} session");
                 }
-                else//---if session exist
-                {                                  
-                    switch (actionId)
-                    {
-                        case 6://---open
-                            if (lastSession.StatusId == 6) 
-                            {
-                                response.Message = "Can't open not closed session";
-//                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't open not closed session");
-                                return Ok(response);
-                            }
-                            var session = new Session{
-                                BegTime = DateTime.UtcNow,
-                                EndTime = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1),
-                                ApplicationUserId = data.ApplicationUserId,
-                                StatusId = actionId,
-                                IsDesktop = (bool)data.IsDesktop
-                            };
-                            _context.Sessions.Add(session);
 
-                            alertOpenCloseSession.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
-                            _context.Alerts.Add(alertOpenCloseSession);
-
-                            _context.SaveChanges();
-
-                            response.Message = "Session successfully opened";
-//                            _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
-                            return Ok(response);
-                        
-                        case 7://---close
-                            if (lastSession.StatusId == 7) 
-                            {
-                                response.Message = "Can't close not opened session";
-//                                _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
-                                return Ok(response);
-                            }
-                            lastSession.StatusId = 7;
-                            lastSession.EndTime = DateTime.UtcNow;
-
-                            //---add alerts---
-                            alertOpenCloseSession.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "session close").AlertTypeId;
-                            _context.Alerts.Add(alertOpenCloseSession);
-
-                            var dialoquesAmount = _context.Dialogues
-                                .Where(x => x.BegTime >= lastSession.BegTime 
-                                && x.EndTime <= lastSession.EndTime 
-                                && x.ApplicationUserId == lastSession.ApplicationUserId && x.StatusId == 3 && x.InStatistic == true).Count();
-                            if( dialoquesAmount == 0 )
-                            {
-                                var alertNoDialogues = new Alert();   
-                                alertNoDialogues.ApplicationUserId = data.ApplicationUserId;
-                                alertNoDialogues.CreationDate = DateTime.UtcNow;
-                                alertNoDialogues.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "no conversations").AlertTypeId;
-                                _context.Alerts.Add(alertNoDialogues);
-                            }
-                            //---
-                            _context.SaveChanges();
-                            response.Message = "Session successfully closed";
-//                            _log.Info($"Session successfully closed {data.ApplicationUserId}"); 
-                            return Ok(response);
-                        default:
-                            response.Message = "Wrong action";
-//                            _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
-                            return BadRequest(response);
-                    }
+                if (lastSession == null && actionId == CLOSE)
+                {
+                    response.Message = "Can't close not opened session";
+                    return Ok(response);
+                    // _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                 }
+
+                if ( actionId == OPEN )
+                {
+                    var session = new Session {
+                        BegTime = DateTime.UtcNow,
+                        EndTime = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1),
+                        ApplicationUserId = data.ApplicationUserId,
+                        StatusId = actionId,
+                        IsDesktop = (bool)data.IsDesktop
+                    };
+                    alertOpenCloseSession.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
+                    _context.Sessions.Add(session);
+                    _context.Alerts.Add(alertOpenCloseSession);
+                    _context.SaveChanges();
+                    response.Message = "Session successfully opened";
+                    return Ok(response);
+                    // _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
+                }
+
+                if (lastSession != null && actionId == CLOSE)
+                {
+                    lastSession.StatusId = CLOSE;
+                    lastSession.EndTime = DateTime.UtcNow;
+
+                    //---add alerts-- -
+                    alertOpenCloseSession.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "session close").AlertTypeId;
+                    _context.Alerts.Add(alertOpenCloseSession);
+
+                    var dialoquesAmount = _context.Dialogues
+                        .Where(x => x.BegTime >= lastSession.BegTime
+                        && x.EndTime <= lastSession.EndTime
+                        && x.ApplicationUserId == lastSession.ApplicationUserId && x.StatusId == 3 && x.InStatistic == true).Count();
+                    if (dialoquesAmount == 0)
+                    {
+                        var alertNoDialogues = new Alert();
+                        alertNoDialogues.ApplicationUserId = data.ApplicationUserId;
+                        alertNoDialogues.CreationDate = DateTime.UtcNow;
+                        alertNoDialogues.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "no conversations").AlertTypeId;
+                        _context.Alerts.Add(alertNoDialogues);
+                    }
+                    //---
+                    _context.SaveChanges();
+                    response.Message = "Session successfully closed";
+                    return Ok(response);
+                    // _log.Info($"Session successfully closed {data.ApplicationUserId}"); 
+                }
+
+                response.Message = "Wrong action";
+//              _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
+                return BadRequest(response);
             }
             catch (Exception e)
             {
                 var response = new Response();
                 response.Message = $"Exception occured {e}";
-//                _log.Fatal($"Exception occurred {e}");
+//              _log.Fatal($"Exception occurred {e}");
                 return BadRequest(response);
             }
         }
