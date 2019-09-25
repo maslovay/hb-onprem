@@ -105,6 +105,35 @@ namespace UserOperations.Controllers
             _context.SaveChanges();
             return Ok();
         }
+        [HttpGet("CheckDialogues2")]
+        public async Task<IActionResult> CheckDialogues2()
+        {
+            var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
+            var dialogues = _context.Dialogues.Where(x => x.StatusId == 3 && x.InStatistic == true).ToList();
+            var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+            int counter = 0;
+
+            foreach (var item in grouping)
+            {
+                var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
+                var dialoguesUser = dialogues.Where(x => x.ApplicationUserId == item.Key).ToList();
+                foreach (var dialogue in dialoguesUser)
+                {
+                    if(!sesInUser.Any(x => dialogue.BegTime >= x.BegTime && dialogue.EndTime <= x.EndTime))
+                    {
+                        if (!sesInUser.Any(x => dialogue.BegTime >= x.BegTime && dialogue.BegTime <= x.EndTime))
+                        {
+                            if (!sesInUser.Any(x => dialogue.EndTime >= x.BegTime && dialogue.EndTime <= x.EndTime))
+                            {
+                                counter++;
+                            }
+                            }
+                        }
+                }
+            }
+            return Ok(counter);
+        }
+
 
         [HttpGet("CheckDialogues")]
         public async Task<IActionResult> CheckDialogues()
@@ -112,6 +141,7 @@ namespace UserOperations.Controllers
             var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
             var dialogues = _context.Dialogues.Where(x => x.StatusId == 3).ToList();
             var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+            int counter = 0;
 
             foreach (var item in grouping)
             {
@@ -124,28 +154,37 @@ namespace UserOperations.Controllers
                     if(sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime ))
                     {
                         //---початок потрапив до сесії
-                        var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime);
-                        var nextSession = sesInUser?.FirstOrDefault(x => x.BegTime > session.BegTime);
-                        if (nextSession.BegTime < dialogue.EndTime)
-                        {
-                           nextSession.BegTime = dialogue.EndTime;
-                        }
-                            session.EndTime = dialogue.EndTime.AddSeconds(1);
+                        //var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime);
+                        //var nextSession = sesInUser?.FirstOrDefault(x => x.BegTime > session.BegTime);
+                        //if (nextSession.BegTime < dialogue.EndTime)
+                        //{
+                        //   nextSession.BegTime = dialogue.EndTime;
+                        //}
+                        //    session.EndTime = dialogue.EndTime.AddSeconds(1);
                     }
                     else if (sesInUser.Any(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime))
                     {
                         //---кінець потрапив до сесії
-                        var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime);
-                        var prevSession = sesInUser?.FirstOrDefault(x => x.BegTime < session.BegTime);
-                        if (prevSession.EndTime > dialogue.BegTime)
-                        {
-                           prevSession.EndTime = dialogue.BegTime;
-                        }
-                            session.BegTime = dialogue.BegTime.AddSeconds(-1);
+                        //var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime);
+                        //var prevSession = sesInUser?.FirstOrDefault(x => x.BegTime < session.BegTime);
+                        //if (prevSession.EndTime > dialogue.BegTime)
+                        //{
+                        //   prevSession.EndTime = dialogue.BegTime;
+                        //}
+                        //    session.BegTime = dialogue.BegTime.AddSeconds(-1);
                     }
                     else
                     {
-
+                        var session = new Session
+                        {
+                            BegTime = dialogue.BegTime.AddSeconds(-1),
+                            EndTime = dialogue.EndTime.AddSeconds(1),
+                            ApplicationUserId = dialogue.ApplicationUserId,
+                            StatusId = 7,
+                            IsDesktop = true
+                        };
+                        _context.Sessions.Add(session);
+                        counter++;
                     }
                 }
 
