@@ -10,6 +10,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Quartz;
 using Microsoft.Azure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CloneFtpOnAzure
@@ -22,6 +23,7 @@ namespace CloneFtpOnAzure
         private StorageAccInfo _storageAccInfo;
         private RecordsContext _context;
         private readonly IServiceScopeFactory _scopeFactory;
+        private IConfiguration _configuration;
 
         public FtpJob(IServiceScopeFactory scopeFactory,
             SftpClient sftpClient,
@@ -40,41 +42,45 @@ namespace CloneFtpOnAzure
         {
             using (var scope = _scopeFactory.CreateScope())
             {
-                var _log = _elasticClientFactory.GetElasticClient();
                 try
                 {
-                    _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
-
-                    var dialogues = _context.Dialogues
-                        .Where(d => d.Status.StatusId == 3 &&
-                                    d.CreationTime >= DateTime.UtcNow.AddHours(-24))
-                        .Select(s => s.DialogueId)
-                        .ToList();
-                    var tasks = new List<Task>();
-                    var dict = new Dictionary<String, String>()
+                    _configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+                    var oldSettings = new SftpSettings()
                     {
-                        {_storageAccInfo.AvatarName, ".jpg"},
-                        {_storageAccInfo.VideoName, ".mkv"},
-                        {_storageAccInfo.AudioName, ".wav"}
+                        Host = "40.112.78.6",
+                        Port = 22,
+                        UserName = "nkrokhmal",
+                        Password = "kloppolk_2018",
+                        DestinationPath = "/home/nkrokhmal/storage/",
+                        DownloadPath = "/opt/download/"
                     };
-                    _log.Info("Try to download and upload");
-                    foreach (var dialogue in dialogues)
-                    {
-                        foreach (var (key, value) in dict)
-                        {
-                            var filePath = key + "/" + dialogue + value;
-                            var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
-                            tasks.Add(_blobController.UploadFileStreamToBlob(filePath, stream));
-                        }
+                    var sftpCLientOld = new SftpClient(oldSettings, _configuration);
 
+                    var oldPath = await sftpCLientOld.ListDirectoryAsync("");
+
+                    foreach (var sftpFile in oldPath.Where(f => f.Name != "frames"))
+                    {
+                        if (sftpFile.IsDirectory)
+                        {
+                            var files = await sftpCLientOld.ListDirectoryFiles(sftpFile.Name);
+                            foreach (var file in files)
+                            {
+                                using (var stream =
+                                    await sftpCLientOld.DownloadFromFtpAsMemoryStreamAsync(sftpFile.Name + "/" + file))
+                                {
+                                    stream.Seek(0, SeekOrigin.Begin);
+                                    await _sftpClient.UploadAsMemoryStreamAsync(stream, sftpFile.Name, file, true);
+                                    Console.WriteLine("Uploaded file " + sftpFile.Name + "/" + file);
+                                }
+                            }
+                        }
                     }
 
-                    await Task.WhenAll(tasks);
-                    _log.Info("Download and Upload finished");
+                    Console.WriteLine("Upload ended");
                 }
                 catch (Exception e)
                 {
-                    _log.Fatal($"{e}");
+                    Console.WriteLine(e);
                     throw;
                 }
             }
