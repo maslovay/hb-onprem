@@ -117,6 +117,7 @@ namespace UserOperations.Controllers
 
                 var isAdmin = userClaims["role"] == "Admin";
                 message.RoleId = message.RoleId != null && isAdmin ? message.RoleId : _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id.ToString(); //Manager role
+                message.WorkerTypeId = message.WorkerTypeId?? _context.WorkerTypes.FirstOrDefault(x => x.WorkerTypeName == "Employee")?.WorkerTypeId; //Employee type
                 message.CompanyId = message.CompanyId != null && isAdmin ? message.CompanyId : userClaims["companyId"];
 
                 //string password = GeneratePass(6);

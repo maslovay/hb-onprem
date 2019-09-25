@@ -1,36 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
 using UserOperations.Models.AnalyticModels;
-using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using UserOperations.Utils;
-using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -186,14 +164,14 @@ namespace UserOperations.Controllers
                     .GroupBy(p => p.ApplicationUserId)
                     .Select(p => new 
                     {
-                        FullName = p.First().FullName,
+                        p.First().FullName,
                         ApplicationUserId = p.Key,
                         LoadIndexAverage = _dbOperation.LoadIndex(p, dialogues, begTime, endTime),
                         PeriodInfo = p.GroupBy(q => q.BegTime.Date).Select(q => new ReportPartDayEmployeeInfo
                         {
                             Date = q.Key,
-                            WorkingHours = _dbOperation.MaxDouble(_dbOperation.SessionAverageHours(q), _dbOperation.DialogueSumDuration(q, dialogues, p.Key)),
-                            DialogueHours = _dbOperation.DialogueSumDuration(q, dialogues, p.Key),
+                            WorkingHours = _dbOperation.Min(24, _dbOperation.MaxDouble(_dbOperation.SessionAverageHours(q), _dbOperation.DialogueSumDuration(q, dialogues, p.Key))?? 0),
+                            DialogueHours = _dbOperation.Min(24, _dbOperation.DialogueSumDuration(q, dialogues, p.Key)?? 0),
                             LoadIndex = 100 * _dbOperation.LoadIndex(_dbOperation.SessionAverageHours(q), _dbOperation.DialogueSumDuration(q, dialogues, p.Key)),
                             DialogueCount = _dbOperation.DialoguesCount(dialogues, p.Key, q.Key)
                         }).ToList()
@@ -201,7 +179,7 @@ namespace UserOperations.Controllers
 
                 var emptyUsers = usersToAdd.Select(p => new 
                     {
-                        FullName = p.FullName,
+                        p.FullName,
                         ApplicationUserId = p.Id,
                         LoadIndexAverage = (double?)0,
                         PeriodInfo =  new List<ReportPartDayEmployeeInfo>()

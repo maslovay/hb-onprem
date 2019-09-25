@@ -74,6 +74,88 @@ namespace UserOperations.Controllers
             return Ok(result);
         }
 
+        [HttpGet("CheckSessions")]
+        public async Task<IActionResult> CheckSessions()
+        {
+            var sessions = _context.Sessions.Where(x=> x.StatusId==7 ).ToList();
+            var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+
+            foreach (var item in grouping)
+            {
+                var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
+                for (int i = 0; i < sesInUser.Count()-1; i++)
+                {
+                    if(sesInUser[i+1].BegTime < sesInUser[i].EndTime)
+                    {
+                        if (sesInUser[i + 1].EndTime < sesInUser[i].EndTime)
+                        {
+                            sesInUser[i + 1].StatusId = 8;
+                            i++;
+                        }
+                        else
+                        {
+                            sesInUser[i].EndTime = sesInUser[i + 1].BegTime;
+                            i++;
+                        }
+                    }
+                    
+                }
+            }
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpGet("CheckDialogues")]
+        public async Task<IActionResult> CheckDialogues()
+        {
+            var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
+            var dialogues = _context.Dialogues.Where(x => x.StatusId == 3).ToList();
+            var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+
+            foreach (var item in grouping)
+            {
+                var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
+                var dialoguesUser = dialogues.Where(x => x.ApplicationUserId == item.Key).ToList();
+                foreach (var dialogue in dialoguesUser)
+                {
+                    if (sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.EndTime <= x.EndTime ))
+                        continue;
+                    if(sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime ))
+                    {
+                        //---початок потрапив до сесії
+                        var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime);
+                        var nextSession = sesInUser?.FirstOrDefault(x => x.BegTime > session.BegTime);
+                        if (nextSession.BegTime < dialogue.EndTime)
+                        {
+                           nextSession.BegTime = dialogue.EndTime;
+                        }
+                            session.EndTime = dialogue.EndTime.AddSeconds(1);
+                    }
+                    else if (sesInUser.Any(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime))
+                    {
+                        //---кінець потрапив до сесії
+                        var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime);
+                        var prevSession = sesInUser?.FirstOrDefault(x => x.BegTime < session.BegTime);
+                        if (prevSession.EndTime > dialogue.BegTime)
+                        {
+                           prevSession.EndTime = dialogue.BegTime;
+                        }
+                            session.BegTime = dialogue.BegTime.AddSeconds(-1);
+                    }
+                    else
+                    {
+
+                    }
+                }
+
+                }
+            
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
 
         //[HttpGet("Help3")]
         //public async Task<IActionResult> Help3()

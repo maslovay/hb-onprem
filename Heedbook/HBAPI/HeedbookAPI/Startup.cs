@@ -154,8 +154,8 @@ namespace UserOperations
             app.UseHttpsRedirection();
             app.UseMvc();
 
-            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
-             app.ApplicationServices.GetService<ITrigger>());
+            //scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
+            // app.ApplicationServices.GetService<ITrigger>());
 
             // add seed
             //BenchmarkRunner.Run<TestAnalyticClientProfile>();
