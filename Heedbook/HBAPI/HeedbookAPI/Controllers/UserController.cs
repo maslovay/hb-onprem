@@ -799,6 +799,45 @@ namespace UserOperations.Controllers
         }
 
 
+        [HttpPut("DialogueSatisfaction")]
+        [SwaggerOperation(Summary = "Change Satisfaction ", Description = "Change Satisfaction (true/false) of dialogue")]
+        public IActionResult DialogueSatisfactionPut(
+            [FromBody] DialogueSatisfactionPut message,
+            [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        {
+            try
+            {
+                // _log.Info("Function DialogueSatisfactionPut started");
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+
+                var role = userClaims["role"];
+                if (role == "Admin" || role == "Supervisor")
+                {
+                    var dialogueClientSatisfaction = _context.DialogueClientSatisfactions.FirstOrDefault(x => x.DialogueId == message.DialogueId);
+                    dialogueClientSatisfaction.MeetingExpectationsTotal = message.Satisfaction;
+                    dialogueClientSatisfaction.MeetingExpectationsByNN = message.Satisfaction;
+                    dialogueClientSatisfaction.MeetingExpectationsByTeacher = message.Satisfaction;
+                    dialogueClientSatisfaction.BegMoodTotal = message.BegMoodTotal;
+                    dialogueClientSatisfaction.BegMoodByNN = message.BegMoodTotal;
+                    dialogueClientSatisfaction.BegMoodByTeacher = message.BegMoodTotal;
+                    dialogueClientSatisfaction.EndMoodTotal = message.EndMoodTotal;
+                    dialogueClientSatisfaction.EndMoodByNN = message.EndMoodTotal;
+                    dialogueClientSatisfaction.EndMoodByTeacher = message.EndMoodTotal;
+
+                    _context.SaveChanges();
+                    // _log.Info("Function DialogueSatisfactionPut finished");
+                    return Ok(dialogueClientSatisfaction);
+                }
+                return BadRequest("No permission");
+            }
+            catch (Exception e)
+            {
+                // _log.Fatal($"Exception occurred while executing DialogueSatisfactionPut {e}");
+                return BadRequest(e.Message);
+            }
+        }
+
         [HttpGet("Alert")]
         [SwaggerOperation(Summary = "all alerts for period", Description = "Return all alerts for period, type, employee, worker type, time")]
         public IActionResult AlertGet([FromQuery(Name = "begTime")] string beg,
@@ -913,5 +952,13 @@ namespace UserOperations.Controllers
     {
         public Guid DialogueId;
         public bool InStatistic;
+    }
+
+    public class DialogueSatisfactionPut
+    {
+        public Guid DialogueId;
+        public double Satisfaction;
+        public double BegMoodTotal;
+        public double EndMoodTotal;
     }
 }

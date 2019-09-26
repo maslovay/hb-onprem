@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using HBLib.Utils;
 using UserOperations.Utils;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace UserOperations.Controllers
 {
@@ -72,6 +73,38 @@ namespace UserOperations.Controllers
                             )
                             .ToDictionary(gr => gr.Key, v => v.Value);
             return Ok(result);
+        }
+
+
+        [HttpGet("SendDialogueMake")]
+        public async Task<IActionResult> SendDialogueMake(
+                                                     [FromQuery(Name = "companyId")] Guid? companyId)
+        {
+
+            var begTime = new DateTime(2019, 09, 20);
+            var endTime = new DateTime(2019, 09, 26);
+
+            var companyIds = _context.Companys.Where(x => x.CorporationId.ToString() == "72402355-ef7c-41bd-b28e-4234a889c3ba").Select(x=> x.CompanyId).ToList();
+            var userIds = _context.Users.Where(x => companyIds.Contains((Guid)x.CompanyId)).Select(x => x.Id).ToList();
+            var dialoguesVideos = _context.FileVideos.Where(x => userIds.Contains(x.ApplicationUserId) && x.BegTime >= begTime && x.EndTime <= endTime)
+                .Select(x=>x.FileName).ToList();
+
+            string html = string.Empty;
+            foreach (var item in dialoguesVideos)
+            {
+                string url = @"https://heedbookslave.northeurope.cloudapp.azure.com/user/Test/ResendVideoForFraming?fileName=videos%"+item;
+
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.AutomaticDecompression = DecompressionMethods.GZip;
+
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                using (Stream stream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    html = reader.ReadToEnd();
+                }
+            }
+            return Ok(html);
         }
 
         [HttpGet("CheckSessions")]
