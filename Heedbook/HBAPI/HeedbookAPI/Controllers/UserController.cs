@@ -812,8 +812,17 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
 
                 var role = userClaims["role"];
-                if (role == "Admin" || role == "Supervisor")
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                if (role != "Admin" && role != "Supervisor")
+                    return BadRequest("No permission");
+                if (role == "Supervisor")
                 {
+                    var companyForDialogueId = _context.Dialogues
+                        .Include(x => x.ApplicationUser)
+                        .FirstOrDefault(x => x.DialogueId == message.DialogueId)
+                        .ApplicationUser.CompanyId;
+                    if(companyForDialogueId != companyId) return BadRequest("No permission");
+                }
                     var dialogueClientSatisfaction = _context.DialogueClientSatisfactions.FirstOrDefault(x => x.DialogueId == message.DialogueId);
                     dialogueClientSatisfaction.MeetingExpectationsTotal = message.Satisfaction;
                     dialogueClientSatisfaction.MeetingExpectationsByNN = message.Satisfaction;
@@ -827,9 +836,7 @@ namespace UserOperations.Controllers
 
                     _context.SaveChanges();
                     // _log.Info("Function DialogueSatisfactionPut finished");
-                    return Ok(dialogueClientSatisfaction);
-                }
-                return BadRequest("No permission");
+                    return Ok(JsonConvert.SerializeObject(dialogueClientSatisfaction));
             }
             catch (Exception e)
             {
