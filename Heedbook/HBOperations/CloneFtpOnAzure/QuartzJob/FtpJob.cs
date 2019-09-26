@@ -42,7 +42,6 @@ namespace CloneFtpOnAzure
         {
             using (var scope = _scopeFactory.CreateScope())
             {
-                var _log = _elasticClientFactory.GetElasticClient();
                 try
                 {
                     _configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
@@ -54,48 +53,34 @@ namespace CloneFtpOnAzure
                         Password = "kloppolk_2018",
                         DestinationPath = "/home/nkrokhmal/storage/",
                         DownloadPath = "/opt/download/"
-                        
                     };
                     var sftpCLientOld = new SftpClient(oldSettings, _configuration);
-                    
-                    var tasks = new List<Task>();
-                    
+
                     var oldPath = await sftpCLientOld.ListDirectoryAsync("");
-                    
-                    foreach (var sftpFile in oldPath)
+
+                    foreach (var sftpFile in oldPath.Where(f => f.Name != "frames"))
                     {
                         if (sftpFile.IsDirectory)
                         {
                             var files = await sftpCLientOld.ListDirectoryFiles(sftpFile.Name);
-                            Parallel.ForEach(files, async (file) =>
+                            foreach (var file in files)
                             {
-                                using (var stream = await sftpCLientOld.DownloadFromFtpAsMemoryStreamAsync(sftpFile.Name + "/" + file))
+                                using (var stream =
+                                    await sftpCLientOld.DownloadFromFtpAsMemoryStreamAsync(sftpFile.Name + "/" + file))
                                 {
-                                   await _sftpClient.UploadAsMemoryStreamAsync(stream, sftpFile.Name, file);
-                                   await sftpCLientOld.DeleteFileIfExistsAsync(sftpFile.Name + "/" + file);
+                                    stream.Seek(0, SeekOrigin.Begin);
+                                    await _sftpClient.UploadAsMemoryStreamAsync(stream, sftpFile.Name, file, true);
+                                    Console.WriteLine("Uploaded file " + sftpFile.Name + "/" + file);
                                 }
-                            });
+                            }
                         }
                     }
-                    _log.Info("Try to download and upload");
-//                    foreach (var dialogue in dialogues)
-//                    {
-//                        foreach (var (key, value) in dict)
-//                        { 
-//                            var filePath = key + "/" + dialogues + value;
-//                            var fileName = dialogues + value;
-//                            var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(oldPath);
-//                            tasks.Add(sftpCLientOld.UploadAsMemoryStreamAsync(stream,key,fileName));
-//                        }
-//
-//                    }
 
-                    await Task.WhenAll(tasks);
-                    _log.Info("Download and Upload finished");
+                    Console.WriteLine("Upload ended");
                 }
                 catch (Exception e)
                 {
-                    _log.Fatal($"{e}");
+                    Console.WriteLine(e);
                     throw;
                 }
             }

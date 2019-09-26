@@ -24,7 +24,24 @@ namespace UserOperations.Services
 
         public void SendSimpleEmail(string email, string messageTitle, string text, string senderName = "Heedbook")
         {
-            SendOldEmail(email, messageTitle, text);
+            System.Net.Mail.MailAddress from = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail, "Heedbook");
+            System.Net.Mail.MailAddress to = new System.Net.Mail.MailAddress(email);
+            // create mail object 
+            System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage(from, to);
+            mail.BodyEncoding = System.Text.Encoding.UTF8;
+            mail.IsBodyHtml = true;
+            mail.Subject = messageTitle;
+            mail.Body = text;
+            try
+            {
+                _smtpClient.Send(mail);
+                //  _log.Info($"email Sended to {email}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                //  _log.Fatal($"Failed email to {email}{ex.Message}");
+            }
         }
 
         public async Task SendRegisterEmail(ApplicationUser user)
@@ -51,30 +68,7 @@ namespace UserOperations.Services
             model.pswd += password;
             string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
             await SendEmail(user, model.emailSubject, htmlBody);
-           // SendOldEmail(email, "Password changed", text);
-        }
-
-        public async Task SendOldEmail(string email, string subject, string text)
-        {
-            System.Net.Mail.MailAddress from = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail, "Heedbook");
-            System.Net.Mail.MailAddress to = new System.Net.Mail.MailAddress(email);
-            // create mail object 
-            System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage(from, to);
-            mail.BodyEncoding = System.Text.Encoding.UTF8;
-            mail.IsBodyHtml = true;
-            mail.Subject = subject;
-            mail.Body = text;
-            try
-            {
-                _smtpClient.Send(mail);
-                //  _log.Info($"email Sended to {email}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                //  _log.Fatal($"Failed email to {email}{ex.Message}");
-            }
-        }
+        }     
 
         //create and email notification 
         private async Task SendEmail(ApplicationUser user, string subject, string htmlBody)
@@ -119,19 +113,25 @@ namespace UserOperations.Services
                 _log.Fatal($"Read Languages fatal {ex.Message}");
                 return null;
             }
-        }
+        }    
 
         private async Task<string> CreateHtmlFromTemplate(LanguageDataEmail model, string filename)
         {
             try
             {
                 var fullPath = System.IO.Path.GetFullPath(".");
+                //var engine = new RazorLight.RazorLightEngineBuilder()
+                //    .UseFilesystemProject(fullPath)
+                //    .UseMemoryCachingProvider()
+                //    .Build();
+                //string result = await engine.CompileRenderAsync("/Services/email", model);
+
                 var engine = new RazorLight.RazorLightEngineBuilder()
-                    .UseFilesystemProject(fullPath)
-                    .UseMemoryCachingProvider()
-                    .Build();
-            //    string path = Path.GetFullPath("./Services /"+filename);
-                string result = await engine.CompileRenderAsync("./Services/"+filename, model);
+              .UseMemoryCachingProvider()
+              .Build();
+
+                string template = File.ReadAllText(fullPath+"/Services/email.cshtml");
+                string result = await engine.CompileRenderAsync("email", template, model);
 
                 string pathTemp = fullPath + "/Services/temp.html";
                 File.WriteAllText(pathTemp, result);
@@ -146,7 +146,69 @@ namespace UserOperations.Services
             }
         }
 
+        public async Task<string> TestReadFile1()
+        {
+            string path = Path.GetFullPath("./Services/language_table.json");
+            var languageRowJson = File.ReadAllText(path);
+            var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
+            var registerLanguages = (List<LanguageDataEmail>)languageObject.GetType().GetProperty("passwordChange").GetValue(languageObject, null);
+            LanguageDataEmail model =  registerLanguages[1];
+            try
+            {
+                var fullPath = System.IO.Path.GetFullPath(".");
+                var engine = new RazorLight.RazorLightEngineBuilder()
+                    .UseFilesystemProject(fullPath)
+                    .UseMemoryCachingProvider()
+                    .Build();
+                try
+                {
+                    string result = await engine.CompileRenderAsync("Services/email.cshtml", model);
+                    string pathTemp = fullPath + "/Services/temp.html";
+                    File.WriteAllText(pathTemp, result);
+                    string htmlBody = File.ReadAllText(pathTemp);
+                    File.Delete(pathTemp);
+                    return htmlBody;
+                }
+                catch (Exception ex)
+                {
+                    return "engine.CompileRenderAsync dosnt work. " + ex.Message + ", " + ex.StackTrace;
+                }
 
+            }
+            catch (Exception ex)
+            {
+                _log.Fatal($"Create user email fatal exception {ex.Message}");
+                return ex.Message +  ex.InnerException?.Message;
+            }
+        }
+
+        public async Task<string> TestReadFile2()
+        {
+            string path = Path.GetFullPath("./Services/language_table.json");
+            var languageRowJson = File.ReadAllText(path);
+            var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
+            var registerLanguages = (List<LanguageDataEmail>)languageObject.GetType().GetProperty("passwordChange").GetValue(languageObject, null);
+            LanguageDataEmail model = registerLanguages[1];
+            try
+            {
+                var engine = new RazorLight.RazorLightEngineBuilder()
+                  .UseMemoryCachingProvider()
+                  .Build();
+                var fullPath = System.IO.Path.GetFullPath(".");
+                string template = File.ReadAllText(fullPath + "/Services/email.cshtml");
+
+                string result = await engine.CompileRenderAsync("email", template, model);
+                string pathTemp = fullPath + "/Services/temp.html";
+                File.WriteAllText(pathTemp, result);
+                string htmlBody = File.ReadAllText(pathTemp);
+                File.Delete(pathTemp);
+                return htmlBody;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message +" , "+ ex.StackTrace;
+            }
+        }
     }
         public class LanguageDataEmail
         {

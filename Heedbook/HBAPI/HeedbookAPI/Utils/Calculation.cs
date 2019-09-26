@@ -93,14 +93,14 @@ namespace UserOperations.Utils
             return 100 * LoadIndex( sessionHours, dialoguesHours);
         }
 
-        // public double? LoadIndex(List<SessionInfoCompany> sessions, List<DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
-        // {
-        //     var sessionHours = sessions.Any() ? sessions.Sum(p => 
-        //         MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours) : 0;
-        //     var dialoguesHours = dialogues.Any() ? dialogues.Sum(p => 
-        //         MinTime(p.EndTime, end).Subtract(MaxTime(p.BegTime, beg)).TotalHours) : 0;
-        //     return sessionHours != 0 ? (double?) 100 * dialoguesHours / sessionHours : null;
-        // }
+        public double? LoadIndex(List<SessionInfo> sessions, List<DialogueInfo> dialogues)
+        {
+            var sessionHours = sessions.Any() ? sessions.Sum(p =>
+                p.EndTime.Subtract(p.BegTime).TotalHours) : 0;
+            var dialoguesHours = dialogues.Any() ? dialogues.Sum(p =>
+               (p.EndTime).Subtract((p.BegTime)).TotalHours) : 0;
+            return sessionHours != 0 ? (double?)100 * dialoguesHours / sessionHours : null;
+        }
 
         public double? LoadIndex(List<SessionInfo> sessions, IGrouping<Guid, DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
@@ -203,6 +203,13 @@ namespace UserOperations.Utils
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var necessaryDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.NecessaryCount, 1)) : 0;
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(necessaryDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
+        }
+
+        public double? LoyaltyIndex(IGrouping<string, RatingDialogueInfo> dialogues)
+        {
+            var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
+            var loyaltyDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.LoyaltyCount, 1)) : 0;
+            return dialoguesCount != 0 ? 100 * Convert.ToDouble(loyaltyDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
 
         public double? LoyaltyIndex(List<ComponentsDialogueInfo> dialogues)
@@ -478,34 +485,68 @@ namespace UserOperations.Utils
 
         public List<double> DialogueAvgPauseListInMinutes(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
+            int counter = 0;
             List<double> pauses = new List<double>();
             if (!sessions.Any() || !dialogues.Any()) return null;
-            foreach( var sessionGrouping in sessions.GroupBy(x => x.ApplicationUserId))
+
+            //double pauseTotalTest = 0;
+            //double pauseTotalTest2 = 0;
+            //var d = dialogues.Where(x => !sessions.Any(ses => x.BegTime >= ses.BegTime && x.BegTime <= ses.EndTime)).ToList();
+            //var s = sessions.Where(x => x.BegTime.Date == (new DateTime(2019, 09, 03)).Date).ToList();
+            //var err1 = dialogues.Where(x => x.EndTime < x.BegTime).ToList();
+            //var err2 = sessions.Where(x => x.EndTime < x.BegTime).ToList();
+
+            foreach ( var sessionGrouping in sessions.GroupBy(x => x.ApplicationUserId))
             {
             foreach( var ses in sessionGrouping.OrderBy(p => p.BegTime))
             {
                 var dialogInSession = dialogues
                         .Where(p => 
                         p.ApplicationUserId == ses.ApplicationUserId
-                        && p.BegTime >= Max(ses.BegTime, beg) 
-                        && p.EndTime <= Min(ses.EndTime, end))
+                        && p.BegTime >= ses.BegTime
+                        && p.BegTime <= ses.EndTime)
                         .OrderBy(p => p.BegTime)
                         .ToArray();
-                if(dialogInSession != null && dialogInSession.Count() != 0)
-                {
-                    pauses.Add(dialogInSession.First().BegTime.Subtract(Max(ses.BegTime, beg)).TotalMinutes);
-                    for ( int i = 1; i < dialogInSession.Length - 1; i++)
+                List<DateTime> times = new List<DateTime>();
+                    times.Add(ses.BegTime);
+                    foreach (var item in dialogInSession)
                     {
-                        pauses.Add(dialogInSession[i].BegTime.Subtract(dialogInSession[i-1].EndTime).TotalMinutes);
+                        times.Add(item.BegTime);
+                        times.Add(item.EndTime);
                     }
-                    pauses.Add(Min(ses.EndTime, end).Subtract(dialogInSession.Last().EndTime).TotalMinutes);
+                    times.Add(ses.EndTime);
+
+                    for (int i = 0; i< times.Count()-1; i+=2)
+                    {
+                        var pause = (times[i + 1].Subtract(times[i])).TotalMinutes;
+                       // pauseTotalTest2 += pause;
+                        pauses.Add(pause);
+                    }
+
+                   // pauseTotalTest += Min(ses.EndTime, end).Subtract(Max(ses.BegTime, beg)).TotalMinutes - dialogInSession.Sum(x => Min(x.EndTime, end).Subtract(x.BegTime).TotalMinutes);
+                    counter += dialogInSession.Count();
                 }
-                else
-                pauses.Add(Min(ses.EndTime, end).Subtract(Max(ses.BegTime, beg)).TotalMinutes);
             }
+
+            //---TODO: there are some mistakes in sessions and dialogues:
+            //---1) some dialogues dont belong to any session
+            //---2) some dialogues have the same time (or one dialogue begin earler than another dialogue ends - so pause is minus)
+            //---so I make some corections into pauses - to have the same LOAD index in result
+
+            var pausesSum = pauses.Sum();
+            var sessionHours = sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalMinutes);
+            var dialoguesHours = dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalMinutes);
+            var pauseTotal = sessionHours - dialoguesHours;
+            double diff = pauses.Sum() - pauseTotal;
+
+            if (Math.Abs(diff) > 1)
+            {
+                pauses = pauses.Select(x =>  x*(pauseTotal/pauses.Sum())).ToList();
             }
             return pauses;
         }
+
+
         public double? DialogueAveragePause(List<SessionInfoCompany> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
         {
             var sessionHours = sessions.Where(p => p.CompanyId == dialogues.Key).Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours);

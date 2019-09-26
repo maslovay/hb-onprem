@@ -40,15 +40,15 @@ namespace UserOperations.Controllers
     public class SiteController : Controller
     {
         private readonly MailSender _mailSender;
-        private readonly ElasticClient _log;
+//        private readonly ElasticClient _log;
 
         public SiteController(
-            MailSender mailSender,
-            ElasticClient log
+            MailSender mailSender
+//            ElasticClient log
             )
         {
             _mailSender = mailSender;
-            _log = log;
+//            _log = log;
         }
    
 
@@ -61,7 +61,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Site/Feedback started"); 
+//                _log.Info("Site/Feedback started"); 
                 if (string.IsNullOrEmpty(feedback.name)
                       || string.IsNullOrEmpty(feedback.phone)
                       || string.IsNullOrEmpty(feedback.email)
@@ -76,12 +76,12 @@ namespace UserOperations.Controllers
                     "<tr><td>message:</td><td> {3}</td></tr>" +
                     "</table>", feedback.name, feedback.email, feedback.phone, feedback.body);
                 _mailSender.SendSimpleEmail("info@heedbook.com", "Message from site", text);
-                _log.Info("Site/Feedback finished"); 
+//                _log.Info("Site/Feedback finished"); 
                 return Ok("Sended");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest($"Could not send email {e}");
             }
         }        

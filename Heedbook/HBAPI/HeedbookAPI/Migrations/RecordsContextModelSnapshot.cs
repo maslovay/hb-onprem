@@ -160,6 +160,42 @@ namespace UserOperations.Migrations
                     b.ToTable("AspNetUserRoles");
                 });
 
+            modelBuilder.Entity("HBData.Models.Benchmark", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("BenchmarkNameId");
+
+                    b.Property<DateTime>("Day");
+
+                    b.Property<Guid>("IndustryId");
+
+                    b.Property<double>("Value");
+
+                    b.Property<double>("Veight");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BenchmarkNameId");
+
+                    b.HasIndex("IndustryId");
+
+                    b.ToTable("Benchmarks");
+                });
+
+            modelBuilder.Entity("HBData.Models.BenchmarkName", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BenchmarkNames");
+                });
+
             modelBuilder.Entity("HBData.Models.Campaign", b =>
                 {
                     b.Property<Guid>("CampaignId")
@@ -1144,7 +1180,7 @@ namespace UserOperations.Migrations
 
                     b.HasKey("TabletAppVersion");
 
-                    b.ToTable("TableAppInfos");
+                    b.ToTable("TabletAppInfos");
                 });
 
             modelBuilder.Entity("HBData.Models.Tariff", b =>
@@ -1211,28 +1247,6 @@ namespace UserOperations.Migrations
                     b.ToTable("Transactions");
                 });
 
-            modelBuilder.Entity("HBData.Models.VIndexByCompanyDay", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<Guid>("CompanyId");
-
-                    b.Property<Guid>("CompanyIndustryId");
-
-                    b.Property<DateTime>("Day");
-
-                    b.Property<double?>("DialoguesHours");
-
-                    b.Property<double?>("SatisfactionIndex");
-
-                    b.Property<double?>("SessionHours");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("VIndexesByCompanysDays");
-                });
-
             modelBuilder.Entity("HBData.Models.VSessionUserWeeklyReport", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1291,6 +1305,22 @@ namespace UserOperations.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("VWeeklyUserReports");
+                });
+
+            modelBuilder.Entity("HBData.Models.VideoFace", b =>
+                {
+                    b.Property<Guid>("VideoFaceId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("FaceId");
+
+                    b.Property<Guid>("FileVideoId");
+
+                    b.HasKey("VideoFaceId");
+
+                    b.HasIndex("FileVideoId");
+
+                    b.ToTable("VideoFaces");
                 });
 
             modelBuilder.Entity("HBData.Models.WorkerType", b =>
@@ -1417,6 +1447,19 @@ namespace UserOperations.Migrations
                     b.HasOne("HBData.Models.ApplicationUser", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("HBData.Models.Benchmark", b =>
+                {
+                    b.HasOne("HBData.Models.BenchmarkName", "BenchmarkName")
+                        .WithMany()
+                        .HasForeignKey("BenchmarkNameId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("HBData.Models.CompanyIndustry", "Industry")
+                        .WithMany()
+                        .HasForeignKey("IndustryId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
@@ -1770,6 +1813,14 @@ namespace UserOperations.Migrations
                     b.HasOne("HBData.Models.Tariff", "Tariff")
                         .WithMany("Transactions")
                         .HasForeignKey("TariffId");
+                });
+
+            modelBuilder.Entity("HBData.Models.VideoFace", b =>
+                {
+                    b.HasOne("HBData.Models.FileVideo", "FileVideo")
+                        .WithMany()
+                        .HasForeignKey("FileVideoId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("HBData.Models.WorkerType", b =>

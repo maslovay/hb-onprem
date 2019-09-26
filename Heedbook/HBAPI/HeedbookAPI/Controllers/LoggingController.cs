@@ -9,7 +9,7 @@ using HBLib;
 using HBLib.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using System.Threading;
 
 namespace UserOperations.Controllers
 {
@@ -47,52 +47,59 @@ namespace UserOperations.Controllers
         [HttpGet("SendLog")]
         public async Task<ObjectResult> SendLog(string message, string severity, string functionName)
         {
-            return SendLogInner(message, severity, functionName, null);
+          //  return SendLogInner(message, severity, functionName, null);
+          return Ok("logged");
         }
 
         private ObjectResult SendLogInner(string message, string severity, string functionName, JObject customDimensions)
         {
-            if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(severity))
-                return BadRequest("Please, fill 'message' and 'severity'! ");
-
-            _settings.FunctionName = functionName;
-
-            var log = new ElasticClient(_settings);
-            if (customDimensions != null)
-            {
-                var parseDoc = customDimensions;
-                var parNames = string.Empty;
-                var parValues = new List<object>(5);
-
-                foreach (var (key, value) in parseDoc)
-                {
-                    parNames += "{" + key + "},";
-                    parValues.Add(value);
-                }
-
-                log.SetFormat(parNames);
-                log.SetArgs(parValues.ToArray());
-            }
-
-            switch (severity.ToUpper())
-            {
-                case "FATAL":
-                    log.Fatal(message);
-                    break;
-                case "DEBUG":
-                    log.Debug(message);
-                    break;
-                case "ERROR":
-                    log.Error(message);
-                    break;
-                case "WARNING":
-                    log.Warning(message);
-                    break;
-                default:
-                case "INFO":
-                    log.Info(message);
-                    break;
-            }
+//           ThreadPool.GetMaxThreads(out int workerThreads, out int completionPortThreads);
+//            ThreadPool.GetAvailableThreads(out int workerThreadsAvailable, out int completionPortThreadsAvailable);
+//            Console.WriteLine($"max: workerT {workerThreads}, completionPortT: {completionPortThreads}" );
+//            Console.WriteLine($"available: workerT {workerThreadsAvailable}, completionportT: {completionPortThreadsAvailable}");
+//
+//
+//            if (string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(severity))
+//                return BadRequest("Please, fill 'message' and 'severity'! ");
+//
+//            _settings.FunctionName = functionName;
+//
+//            var log = new ElasticClient(_settings);
+//            if (customDimensions != null)
+//            {
+//                var parseDoc = customDimensions;
+//                var parNames = string.Empty;
+//                var parValues = new List<object>(5);
+//
+//                foreach (var (key, value) in parseDoc)
+//                {
+//                    parNames += "{" + key + "},";
+//                    parValues.Add(value);
+//                }
+//
+//                log.SetFormat(parNames);
+//                log.SetArgs(parValues.ToArray());
+//            }
+//
+//            switch (severity.ToUpper())
+//            {
+//                case "FATAL":
+//                    log.Fatal(message);
+//                    break;
+//                case "DEBUG":
+//                    log.Debug(message);
+//                    break;
+//                case "ERROR":
+//                    log.Error(message);
+//                    break;
+//                case "WARNING":
+//                    log.Warning(message);
+//                    break;
+//                default:
+//                case "INFO":
+//                    log.Info(message);
+//                    break;
+//            }
 
             return Ok("Logged");
         }

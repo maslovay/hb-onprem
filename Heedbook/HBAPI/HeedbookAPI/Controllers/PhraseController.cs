@@ -43,7 +43,7 @@ namespace UserOperations.Controllers
     {
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly ElasticClient _log;
+//        private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
         private readonly RequestFilters _requestFilters;
 
@@ -51,14 +51,14 @@ namespace UserOperations.Controllers
         public PhraseController(
             ILoginService loginService,
             RecordsContext context,
-            ElasticClient log,
+//            ElasticClient log,
             RequestFilters requestFilters
 
             )
         {
             _loginService = loginService;
             _context = context;
-            _log = log;
+//            _log = log;
             _requestFilters = requestFilters;
 
         }
@@ -66,11 +66,11 @@ namespace UserOperations.Controllers
         [HttpPost("PhraseScripts")]
         public IActionResult PhraseScripts([FromQuery(Name = "begTime")] string beg,
                                             [FromQuery(Name = "endTime")] string end,
-                                            [FromQuery(Name = "applicationUserIds[]")] List<Guid> applicationUserIds,
-                                            [FromQuery(Name = "companyIds[]")] List<Guid> companyIds,
-                                            [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                            [FromQuery(Name = "workerTypeIds[]")] List<Guid> workerTypeIds,
-                                            [FromQuery(Name = "phraseIds[]")] List<Guid> phraseIds,
+                                            [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                            [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                            [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                            [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                            [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                             [FromHeader] string Authorization)
         {
             try
