@@ -102,6 +102,7 @@ namespace FillingFrameService
                     };
 
                     var yawShare = emotions.Average(item => item.YawShare);
+                    yawShare = Math.Abs((double) yawShare);
 
                     var dialogueVisual = new DialogueVisual
                     {
@@ -114,7 +115,7 @@ namespace FillingFrameService
                         SadnessShare = emotions.Average(item => item.SadnessShare),
                         SurpriseShare = emotions.Average(item => item.SurpriseShare),
                         HappinessShare = emotions.Average(item => item.HappinessShare),
-                        AttentionShare = yawShare >= -10 && yawShare <= 10 ? 100 : 0
+                        AttentionShare = 10 * (10 - Math.Min((double)yawShare, 10) / 1.4)
                     };
 
                     var insertTasks = new List<Task>

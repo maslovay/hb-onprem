@@ -1,14 +1,17 @@
-﻿@model UserOperations.Services.LanguageDataEmail
+﻿@model QuartzExtensions.Utils.WeeklyReport.ViewLanguageDataReport
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html style="width:100%;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0;">
 <head>
-    <meta charset="UTF-8" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <!-- <meta charset="UTF-8" /> -->
+    <!-- <meta content="width=device-width, initial-scale=1" name="viewport" /> -->
     <meta name="x-apple-disable-message-reformatting" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta content="telephone=no" name="format-detection" />
-    <title>Новий шаблон</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heedbook</title>
     <!--[if (mso 16)]>
       <style type="text/css">
       a {text-decoration: none;}
@@ -16,11 +19,9 @@
       <![endif]-->
     <!--[if gte mso 9]><style>sup { font-size: 100% !important; }</style><![endif]-->
     <style type="text/css">
-        @@media only screen and (max-width:600px) {
-            p, ul li, ol li, a {
-                font-size: 16px !important;
-                line-height: 130% !important
-            }          
+        .super{
+		vertical-align: super;
+		}       
     </style>
 </head>
 <body>
@@ -38,68 +39,115 @@
                             <tbody>
                                 <tr>
                                     <td class="esd-stripe" style="background-color: rgb(27, 57, 109);" bgcolor="#1b396d" align="center">
-                                        <table class="es-content-body" style="border-left:8px solid #1b396d;border-right:8px solid #1b396d;border-top:8px solid #1b396d;background-color: rgb(255, 255, 255);" width="580" cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center">
+                                        <table class="es-content-body" style="border-left:8px solid #1b396d;border-right:8px solid #1b396d;border-top:8px solid #1b396d;background-color: rgb(255, 255, 255);" width="800" cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center">
                                             <tbody>
                                                 <tr>
                                                     <td class="esd-structure es-p40t es-p20r es-p20l" style="padding:10px; background-color: rgb(255, 255, 255); background-position: left top;" bgcolor="transparent" align="left">
                                                         <table width="100%" cellspacing="0" cellpadding="0">
                                                             <tbody>
                                                                 <tr>
+                                                                    <td class="esd-block-image es-p5t es-p5b" align="center"><a target="_blank"><img src="http://filereference.northeurope.cloudapp.azure.com/media/dfe841c7-20e7-4f25-8e67-400b4366ce27/b5c5c2d8-7877-40dc-84f6-3fbb875f14cd.png" style="display: block;" height="150" /></a></td>
+                                                                </tr>
+                                                                <tr>
                                                                     <td class="esd-container-frame" width="524" valign="middle" align="center">
-                                                                        <table style="background-position: left top;" width="100%" cellspacing="0" cellpadding="0">
+                                                                        <p>@(Model.LanguageDataReport.IntroductionGreeting), @(Model.ApplicationUserName) </p>
+                                                                        <p>@(Model.LanguageDataReport.IntroductionDescription)</p>								
+                                                                        <table class="footable table table-stripped toggle-arrow-tiny">
+                                                                            <thead>                                                                                
+                                                                                <tr>
+                                                                                    <th style="width: 15%;">@(Model.LanguageDataReport.Report.Indicators.Title)</th>
+                                                                                    <th style="text-align: center; width: 15%;">@(Model.LanguageDataReport.Report.Dynamics)</th>
+                                                                                    <th style="width: 20%;">@(Model.LanguageDataReport.Report.Value)</th>
+                                                                                    <th style="width: 25%;">@(Model.LanguageDataReport.Report.OfficeRating) @(Model.Parameters.FirstOrDefault().Data.amountUsersInCompany)</th>
+                                                                                    @if(Model.Parameters.FirstOrDefault().Data.amountUsersInCorporation>0)
+                                                                                    {
+                                                                                        <th style="width: 25%;">@(Model.LanguageDataReport.Report.CorporationRating) @(Model.Parameters.FirstOrDefault().Data.amountUsersInCorporation)</th>
+                                                                                    }
+                                                                                    
+                                                                                </tr>
+                                                                            </thead>
                                                                             <tbody>
-                                                                                <tr>
-                                                                                    <td class="esd-block-image es-p5t es-p5b" align="center"><a target="_blank"><img src="http://filereference.northeurope.cloudapp.azure.com/media/dfe841c7-20e7-4f25-8e67-400b4366ce27/b5c5c2d8-7877-40dc-84f6-3fbb875f14cd.png" alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt alt=alt style="display: block;" height="150" /></a></td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td align="center" style="line-height: 0px; padding: 20px 0px 0px 0px;">
-                                                                                        <h1 style="color: #999999; font-size: 22px;"><strong>@(Model.greeting)</strong></h1><!--Вы зарегистрировались в системе Heedbook-->
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td class="esd-block-text" align="center" style="line-height: 0px; padding: 5px;">
-                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.body)</strong></p>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td align="center" style="padding: 30px 0px 0px 0px;">
-                                                                                        <table class="es-button" border="0" cellspacing="0" cellpadding="0">
-                                                                                            <tr>
-                                                                                                <td class="button es-button" height="70" style="border-radius: 10px !important; border-color: rgb(61, 92, 163); background: rgb(27, 57, 109); text-align: center; font-size: 22px; font-family: sans-serif; font-weight: bold; padding: 0 70px 0 70px;">
-                                                                                                    <!--ТЕКСТ И ССЫЛКА КНОПКИ-->
-                                                                                                    <a style="color: #d2d5da; text-decoration: none;" href="https://app.heedbook.com/">@(Model.button)</a>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                        </table>
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td align="center" style="padding: 25px 0px 15px; line-height: 0px;">
-                                                                                        @if(Model.language == "1")
+                                                                                @foreach (var item in Model.Parameters)
+                                                                                {
+                                                                                    <tr>		
+                                                                                        @if(item.Thumbnail) 
                                                                                         {
-                                                                                        <p>
-                                                                                            <a style="color: #999999; text-decoration: none; font-size: 18px; font-family: sans-serif; font-weight:800;" href="https://www.heedbook.com/">@Model.text2</a>
-                                                                                            <span style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
-                                                                                                @Model.text1
-                                                                                            </span>
-                                                                                        </p>
-                                                                                        }
+                                                                                            <td><b>@item.Description</b></td>
+                                                                                        }	
                                                                                         else
                                                                                         {
-                                                                                            <p style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
-                                                                                                @Model.text1
-                                                                                            <a style="color: #999999; text-decoration: none; font-weight: 800;" href="https://www.heedbook.com/"> @Model.text2</a>
-                                                                                            </p>
+                                                                                            <td>@item.Description</td>
                                                                                         }
-                                                                                    </td>
-                                                                                </tr>
-                                                                                <tr>
-                                                                                    <td align="center" style="padding: 0px 0px 30px;">
-                                                                                        <span style="color: #999999; text-decoration: none; font-size: 18px; font-family: sans-serif;">@(Model.text3)</span>
-                                                                                        <a href="mailto:support@heedbook.com"><span style="color: #999999; text-decoration: none; font-size: 18px; font-weight: bold; font-family: sans-serif;">support@heedbook.com</span></a>
-
-                                                                                    </td>
-                                                                                </tr>
+                                                                                        <td>
+                                                                                            <div style="width: 200px; height: 100px;">	
+                                                                                                <img width="200" height="100" src='data:image/jpeg;base64, @(item.Base64Image)'/>													
+                                                                                            </div>
+                                                                                        </td>													
+                                                                                        <td class="value-size" align="center">	
+                                                                                            @if(item.NotPercentage)
+                                                                                            {
+                                                                                                <p>@(item.Integer ? item.Data.totalAvg.ToString() : item.Data.totalAvg.ToString("#,##0.00"))
+                                                                                                    @if(item.Data.dynamic>0)
+                                                                                                    {
+                                                                                                        <span class="super" style="color:#2ab978; font-size: 12px;">@(item.Integer ?  item.Data.dynamic.ToString() : item.Data.dynamic.ToString("#,##0.00"))</span>
+                                                                                                    }
+                                                                                                    else if(item.Data.dynamic<0)
+                                                                                                    {
+                                                                                                        <span class="super" style="color:#bf1626; font-size: 12px;">@(item.Integer ?  item.Data.dynamic.ToString() : item.Data.dynamic.ToString("#,##0.00"))</span>																
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        <span class="super" style="font-size: 12px;">@(item.Integer ?  item.Data.dynamic.ToString() : item.Data.dynamic.ToString("#,##0.00"))</span>
+                                                                                                    }
+                                                                                                </p>
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                <p>@item.Data.totalAvg.ToString("#,##0.00")%	
+                                                                                                    @if(item.Data.dynamic>0)
+                                                                                                    {
+                                                                                                        <span class="super" style="color:#2ab978; font-size: 12px;">@item.Data.dynamic.ToString("#,##0.00")%</span>
+                                                                                                    }
+                                                                                                    else if(item.Data.dynamic<0)
+                                                                                                    {
+                                                                                                        <span class="super" style="color:#bf1626; font-size: 12px;">@item.Data.dynamic.ToString("#,##0.00")%</span>																
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        <span class="super" style="font-size: 12px;">@item.Data.dynamic.ToString("#,##0.00")%</span>
+                                                                                                    }
+                                                                                                </p>
+                                                                                            }
+                                                                                                                                                    
+                                                                                        <td class="value-size" align="center">														
+                                                                                            <p>@(item.Data.officeRating+1)														
+                                                                                                @if(item.Data.officeRatingChanges>0)
+                                                                                                {																		
+                                                                                                    <span class="super" style="color:#2ab978; font-size: 12px;">@item.Data.officeRatingChanges</span>															
+                                                                                                }
+                                                                                                else if(item.Data.officeRatingChanges<0)
+                                                                                                {			
+                                                                                                    <span class="super" style="color:#bf1626; font-size: 12px;">@item.Data.officeRatingChanges</span>														
+                                                                                                }															
+                                                                                            </p>														
+                                                                                        </td>
+                                                                                        @if(Model.Parameters.FirstOrDefault().Data.amountUsersInCorporation>0)
+                                                                                        {
+                                                                                            <td class="value-size" align="center">														
+                                                                                                <p>@(item.Data.corporationRating+1)														
+                                                                                                    @if(item.Data.corporationRatingChanges>0)
+                                                                                                    {
+                                                                                                        <span class="super" style="color:#2ab978; font-size: 12px;" >@item.Data.corporationRatingChanges</span>
+                                                                                                    }
+                                                                                                    else if(item.Data.corporationRatingChanges<0)
+                                                                                                    {
+                                                                                                        <span class="super" style="color:#bf1626; font-size: 12px;">@item.Data.corporationRatingChanges</span>	
+                                                                                                    }
+                                                                                                </p>
+                                                                                            </td>
+                                                                                        }													
+                                                                                    </tr>
+                                                                                }										
                                                                             </tbody>
                                                                         </table>
                                                                     </td>
@@ -107,28 +155,7 @@
                                                             </tbody>
                                                         </table>
                                                     </td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="esd-structure es-p5t es-p60b es-p20l" style="background-position: left top;" align="left">
-                                                        <table width="100%" cellspacing="0" cellpadding="0" style="padding: 0px 0px 30px;">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td class="esd-container-frame" width="524" valign="top" align="center">
-                                                                        <table width="100%" cellspacing="0" cellpadding="0">
-                                                                            <tbody>
-                                                                                <tr>
-                                                                                    <td class="esd-block-text" esd-links-color="#ffffff" align="center">
-                                                                                        <p style="font-size: 18px; font-family: sans-serif; color: rgb(27, 57, 109);">- @(Model.footer)</p>
-                                                                                    </td>
-                                                                                </tr>
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </td>
-                                                </tr>
+                                                </tr>                                                
                                             </tbody>
                                         </table>
                                     </td>

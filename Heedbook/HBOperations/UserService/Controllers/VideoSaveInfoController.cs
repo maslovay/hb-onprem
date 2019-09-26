@@ -23,15 +23,15 @@ namespace UserService.Controllers
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
-        private readonly ElasticClient _log;
+//        private readonly ElasticClient _log;
 
 
-        public VideoSaveInfoController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient, ElasticClient log)
+        public VideoSaveInfoController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient /*, ElasticClient log*/)
         {
             _handler = handler;
             _context = context;
             _sftpClient = sftpClient;
-            _log = log;
+//            _log = log;
 
         }
 
@@ -44,7 +44,7 @@ namespace UserService.Controllers
         {
             try
             {   
-                _log.Info("Function Video save info started");
+//                _log.Info("Function Video save info started");
                 duration = duration == null ? 15 : duration;
                 var languageId = _context.ApplicationUsers
                                          .Include(p => p.Company)
@@ -111,19 +111,19 @@ namespace UserService.Controllers
                 {
                     var message = new FramesFromVideoRun();
                     message.Path = $"videos/{fileName}";
-                    _log.Info($"Sending message {JsonConvert.SerializeObject(message)}");
+//                    _log.Info($"Sending message {JsonConvert.SerializeObject(message)}");
                     _handler.EventRaised(message);
                 }
                 else
                 {
-                    _log.Error($"No such file videos/{fileName}");
+//                    _log.Error($"No such file videos/{fileName}");
                 }
-                _log.Info("Function Video save info finished");
+//                _log.Info("Function Video save info finished");
                 return Ok();
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occured while executing Video save info {e}");
+//                _log.Fatal($"Exception occured while executing Video save info {e}");
                 return BadRequest(e.Message);
             }
         }

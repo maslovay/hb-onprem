@@ -12,6 +12,8 @@ namespace UserOperations.Models.AnalyticModels
 
     public class SessionInfo
     {
+        public Guid? IndustryId;//---!!!for benchmarks only
+        public Guid? CompanyId;//---!!!for benchmarks only
         public Guid ApplicationUserId;
         public DateTime BegTime;
         public DateTime EndTime;
@@ -21,6 +23,8 @@ namespace UserOperations.Models.AnalyticModels
 
     public class DialogueInfo
     {
+        public Guid? IndustryId;//---!!!for benchmarks only
+        public Guid? CompanyId;//---!!!for benchmarks only
         public Guid DialogueId;
         public Guid ApplicationUserId;
         public DateTime BegTime;
@@ -87,19 +91,16 @@ namespace UserOperations.Models.AnalyticModels
     {
         public double? SatisfactionIndex;
         public double? SatisfactionIndexDelta;
-        public double? SatisfactionIndexTotalAverage;
         public double? SatisfactionIndexIndustryAverage;
         public double? SatisfactionIndexIndustryBenchmark;
 
         public double? LoadIndex;
         public double? LoadIndexDelta;
-        public double? LoadIndexTotalAverage;
         public double? LoadIndexIndustryAverage;
         public double? LoadIndexIndustryBenchmark;
 
         public double? CrossIndex;
         public double? CrossIndexDelta;
-        public double? CrossIndexTotalAverage;
         public double? CrossIndexIndustryAverage;
         public double? CrossIndexIndustryBenchmark;
 
@@ -265,7 +266,7 @@ namespace UserOperations.Models.AnalyticModels
         // public double? WorkingHoursDelta;
         // public double? DialogueAveragePause;
         public double? AvgDurationDialogue;
-        public double? CorrelationLoadSatisfaction;
+        public double? DialoguesNumberAvgPerDayOffice;
         public Employee BestEmployee;
     }
 

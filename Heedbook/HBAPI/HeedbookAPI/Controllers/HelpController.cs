@@ -1,45 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-using UserOperations.AccountModels;
 using HBData;
-
-///REMOVE IT
-using System.Data.SqlClient;
-
-
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage;
 using HBLib.Utils;
 using UserOperations.Utils;
-using Npgsql;
-using System.Threading;
-using BenchmarkDotNet.Attributes;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Controllers
 {
@@ -51,22 +23,198 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-       // private readonly int activeStatus;
+        private readonly MailSender _mailSender;
+        private readonly RequestFilters _requestFilters;
 
 
         public HelpController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient
+            SftpClient sftpClient,
+            MailSender mailSender,
+            RequestFilters requestFilters
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-           // activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
-        }     
+            _mailSender = mailSender;
+            _requestFilters = requestFilters;
+        }
+
+     
+
+        [HttpGet("GetBenchmarks")]
+        public async Task<IActionResult> GetBenchmarks([FromQuery(Name = "begTime")] string beg,
+                                                        [FromQuery(Name = "endTime")] string end,
+                                                        [FromQuery(Name = "userId")] Guid? userId)
+        {
+            var industryId = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == userId).Company.CompanyIndustryId;
+            var begTime = _requestFilters.GetBegDate(beg);
+            var endTime = _requestFilters.GetEndDate(end);
+            var indexes = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
+                                            && (x.IndustryId == industryId || x.IndustryId == null))
+                                            .Join(_context.BenchmarkNames,
+                                                bench => bench.BenchmarkNameId,
+                                                names => names.Id,
+                                                (bench, names) => new { names.Name, bench.Value })
+                                            .ToList();
+
+            var result = indexes.Where(x => x.Name.Contains("Avg"))
+                                            .GroupBy(x => x.Name)
+                                            .ToDictionary(gr => gr.Key, v => v.Average(p => p.Value))
+                           .Union(
+                           indexes.Where(x => x.Name.Contains("Benchmark"))
+                                            .GroupBy(x => x.Name)
+                                            .ToDictionary(gr => gr.Key, v => v.Max(p => p.Value))
+                            )
+                            .ToDictionary(gr => gr.Key, v => v.Value);
+            return Ok(result);
+        }
+
+        [HttpGet("CheckSessions")]
+        public async Task<IActionResult> CheckSessions()
+        {
+            var sessions = _context.Sessions.Where(x=> x.StatusId==7 ).ToList();
+            var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+
+            foreach (var item in grouping)
+            {
+                var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
+                for (int i = 0; i < sesInUser.Count()-1; i++)
+                {
+                    if(sesInUser[i+1].BegTime < sesInUser[i].EndTime)
+                    {
+                        if (sesInUser[i + 1].EndTime < sesInUser[i].EndTime)
+                        {
+                            sesInUser[i + 1].StatusId = 8;
+                            i++;
+                        }
+                        else
+                        {
+                            sesInUser[i].EndTime = sesInUser[i + 1].BegTime;
+                            i++;
+                        }
+                    }
+                    
+                }
+            }
+
+            _context.SaveChanges();
+            return Ok();
+        }
+        [HttpGet("CheckDialogues2")]
+        public async Task<IActionResult> CheckDialogues2()
+        {
+            var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
+            var dialogues = _context.Dialogues.Where(x => x.StatusId == 3 && x.InStatistic == true).ToList();
+            var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+            int counter = 0;
+
+            foreach (var item in grouping)
+            {
+                var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
+                var dialoguesUser = dialogues.Where(x => x.ApplicationUserId == item.Key).ToList();
+                foreach (var dialogue in dialoguesUser)
+                {
+                    if(!sesInUser.Any(x => dialogue.BegTime >= x.BegTime && dialogue.EndTime <= x.EndTime))
+                    {
+                        if (!sesInUser.Any(x => dialogue.BegTime >= x.BegTime && dialogue.BegTime <= x.EndTime))
+                        {
+                            if (!sesInUser.Any(x => dialogue.EndTime >= x.BegTime && dialogue.EndTime <= x.EndTime))
+                            {
+                                counter++;
+                            }
+                            }
+                        }
+                }
+            }
+            return Ok(counter);
+        }
+
+
+        [HttpGet("CheckDialogues")]
+        public async Task<IActionResult> CheckDialogues()
+        {
+            var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
+            var dialogues = _context.Dialogues.Where(x => x.StatusId == 3).ToList();
+            var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+            int counter = 0;
+
+            foreach (var item in grouping)
+            {
+                var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
+                var dialoguesUser = dialogues.Where(x => x.ApplicationUserId == item.Key).ToList();
+                foreach (var dialogue in dialoguesUser)
+                {
+                    if (sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.EndTime <= x.EndTime ))
+                        continue;
+                    if(sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime ))
+                    {
+                        //---початок потрапив до сесії
+                        //var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime);
+                        //var nextSession = sesInUser?.FirstOrDefault(x => x.BegTime > session.BegTime);
+                        //if (nextSession.BegTime < dialogue.EndTime)
+                        //{
+                        //   nextSession.BegTime = dialogue.EndTime;
+                        //}
+                        //    session.EndTime = dialogue.EndTime.AddSeconds(1);
+                    }
+                    else if (sesInUser.Any(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime))
+                    {
+                        //---кінець потрапив до сесії
+                        //var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime);
+                        //var prevSession = sesInUser?.FirstOrDefault(x => x.BegTime < session.BegTime);
+                        //if (prevSession.EndTime > dialogue.BegTime)
+                        //{
+                        //   prevSession.EndTime = dialogue.BegTime;
+                        //}
+                        //    session.BegTime = dialogue.BegTime.AddSeconds(-1);
+                    }
+                    else
+                    {
+                        var session = new Session
+                        {
+                            BegTime = dialogue.BegTime.AddSeconds(-1),
+                            EndTime = dialogue.EndTime.AddSeconds(1),
+                            ApplicationUserId = dialogue.ApplicationUserId,
+                            StatusId = 7,
+                            IsDesktop = true
+                        };
+                        _context.Sessions.Add(session);
+                        counter++;
+                    }
+                }
+
+                }
+            
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
+
+        //[HttpGet("Help3")]
+        //public async Task<IActionResult> Help3()
+        //{
+        //    var connectionString = "User ID = postgres; Password = annushka123; Host = 127.0.0.1; Port = 5432; Database = onprem_backup; Pooling = true; Timeout = 120; CommandTimeout = 0";
+        //    DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
+        //    dbContextOptionsBuilder.UseNpgsql(connectionString,
+        //           dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
+        //    var localContext = new RecordsContext(dbContextOptionsBuilder.Options);
+        //    var contentInBackup = localContext.Contents.FirstOrDefault();
+        //    Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
+        //    var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
+        //    contentInBackup.CreationDate = content.CreationDate;
+        //    contentInBackup.JSONData = content.JSONData;
+        //    contentInBackup.RawHTML = content.RawHTML;
+        //    contentInBackup.UpdateDate = content.UpdateDate;
+        //    localContext.SaveChanges();
+        //    return Ok();
+        //}
+
 
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling
