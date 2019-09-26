@@ -40,7 +40,7 @@ namespace UserOperations.Controllers
             {
 //                _log.SetFormat("{ApplicationUserId}");
 //                _log.SetArgs(data.ApplicationUserId);
-                _log.Info($"Session/SessionStatus {data.ApplicationUserId} try {data.Action}");
+                _log.Info($"session /sessionStatus {data.ApplicationUserId} try {data.Action}");
                 var response = new Response();
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
                 {
@@ -174,8 +174,8 @@ namespace UserOperations.Controllers
                     }
                     //---
                     _context.SaveChanges();
-                    response.Message = "Session successfully closed";
-                    _log.Info($"Session successfully closed {data.ApplicationUserId}"); 
+                    response.Message = "session successfully closed";
+                    _log.Info($"session successfully closed {data.ApplicationUserId}"); 
                     return Ok(response);
                 }
 

@@ -40,15 +40,14 @@ namespace UserOperations.Services.Scheduler
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     _dbOperation = scope.ServiceProvider.GetRequiredService<DBOperations>();
 
-                    for (int i = 0; i < 365; i++)
+                    for (int i = 0; i < 7; i++)
                     {
-
-                    DateTime today = DateTime.Now.AddDays(-i).Date;
-                   // if (!_context.Benchmarks.Any(x => x.Day == today))
-                    {
-                        FillIndexesForADay(today);
-                      //  _log.Info("Calculation of benchmarks finished");
-                    }
+                        DateTime today = DateTime.Now.AddDays(-i).Date;
+                        if (!_context.Benchmarks.Any(x => x.Day == today))
+                        {
+                            FillIndexesForADay(today);
+                          //  _log.Info("Calculation of benchmarks finished");
+                        }
                     }
                 }
                 catch (Exception e)
@@ -116,9 +115,9 @@ namespace UserOperations.Services.Scheduler
                         var satisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesInIndustry);
                         var crossIndex = _dbOperation.CrossIndex(dialoguesInIndustry);
                         var loadIndex = _dbOperation.LoadIndex(sessionsInIndustry, dialoguesInIndustry, today, nextDay);
-                        AddNewBenchmark((double)satisfactionIndex, benchmarkSatisfIndustryAvgId, today, groupIndustry.Key);
-                        AddNewBenchmark((double)crossIndex, benchmarkCrossIndustryAvgId, today, groupIndustry.Key);
-                        AddNewBenchmark((double)loadIndex, benchmarkLoadIndustryAvgId, today, groupIndustry.Key);
+                        if (satisfactionIndex != null) AddNewBenchmark((double)satisfactionIndex, benchmarkSatisfIndustryAvgId, today, groupIndustry.Key);
+                        if (crossIndex != null) AddNewBenchmark((double)crossIndex, benchmarkCrossIndustryAvgId, today, groupIndustry.Key);
+                        if (loadIndex != null) AddNewBenchmark((double)loadIndex, benchmarkLoadIndustryAvgId, today, groupIndustry.Key);
 
                         var maxSatisfInd = dialoguesInIndustry.GroupBy(x => x.CompanyId).Max(x => _dbOperation.SatisfactionIndex(x.ToList()));
                         var maxCrossIndex = dialoguesInIndustry.GroupBy(x => x.CompanyId).Max(x => _dbOperation.CrossIndex(x.ToList()));
@@ -130,9 +129,9 @@ namespace UserOperations.Services.Scheduler
                                 today,
                                 nextDay));
 
-                        AddNewBenchmark((double)maxSatisfInd, benchmarkSatisfIndustryMaxId, today, groupIndustry.Key);
-                        AddNewBenchmark((double)maxCrossIndex, benchmarkCrossIndustryMaxId, today, groupIndustry.Key);
-                        AddNewBenchmark((double)maxLoadIndex, benchmarkLoadIndustryMaxId, today, groupIndustry.Key);
+                        if (maxSatisfInd != null) AddNewBenchmark((double)maxSatisfInd, benchmarkSatisfIndustryMaxId, today, groupIndustry.Key);
+                        if (maxCrossIndex != null) AddNewBenchmark((double)maxCrossIndex, benchmarkCrossIndustryMaxId, today, groupIndustry.Key);
+                        if (maxLoadIndex != null) AddNewBenchmark((double)maxLoadIndex, benchmarkLoadIndustryMaxId, today, groupIndustry.Key);
                     }
                 }
 
