@@ -51,6 +51,13 @@ sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
 ```sh
 sudo apt install kubeadm
 ```
+!!! Поскольку наши yaml-скрипты пока бвзируются на устаревшем API v1beta1, мы не можем ставить kubernetes весрии выше 1.15.x
+Поэтому перед установкой kubeadm лучше выполнить поиск подходящей версии:
+```
+ apt list -a kubeadm 
+ sudo apt install kubeadm=1.15.0
+```
+
 #### 4. Развертывание kubernetes. 
 - Отключаем свап:
 ```sh
