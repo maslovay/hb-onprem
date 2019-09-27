@@ -824,14 +824,8 @@ namespace UserOperations.Controllers
                     if(companyForDialogueId != companyId) return BadRequest("No permission");
                 }
                     var dialogueClientSatisfaction = _context.DialogueClientSatisfactions.FirstOrDefault(x => x.DialogueId == message.DialogueId);
-                    dialogueClientSatisfaction.MeetingExpectationsTotal = message.Satisfaction;
-                    dialogueClientSatisfaction.MeetingExpectationsByNN = message.Satisfaction;
                     dialogueClientSatisfaction.MeetingExpectationsByTeacher = message.Satisfaction;
-                    dialogueClientSatisfaction.BegMoodTotal = message.BegMoodTotal;
-                    dialogueClientSatisfaction.BegMoodByNN = message.BegMoodTotal;
                     dialogueClientSatisfaction.BegMoodByTeacher = message.BegMoodTotal;
-                    dialogueClientSatisfaction.EndMoodTotal = message.EndMoodTotal;
-                    dialogueClientSatisfaction.EndMoodByNN = message.EndMoodTotal;
                     dialogueClientSatisfaction.EndMoodByTeacher = message.EndMoodTotal;
 
                     _context.SaveChanges();
