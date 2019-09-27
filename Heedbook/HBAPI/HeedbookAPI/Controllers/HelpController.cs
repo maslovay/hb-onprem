@@ -13,6 +13,9 @@ using HBLib.Utils;
 using UserOperations.Utils;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
+using System.Globalization;
+using HBLib;
+using RabbitMqEventBus.Events;
 
 namespace UserOperations.Controllers
 {
@@ -26,6 +29,7 @@ namespace UserOperations.Controllers
         private readonly SftpClient _sftpClient;
         private readonly MailSender _mailSender;
         private readonly RequestFilters _requestFilters;
+        private readonly SftpSettings _sftpSettings;
 
 
         public HelpController(
@@ -34,7 +38,8 @@ namespace UserOperations.Controllers
             RecordsContext context,
             SftpClient sftpClient,
             MailSender mailSender,
-            RequestFilters requestFilters
+            RequestFilters requestFilters,
+              SftpSettings sftpSettings
             )
         {
             _config = config;
@@ -43,6 +48,7 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
             _mailSender = mailSender;
             _requestFilters = requestFilters;
+            _sftpSettings = sftpSettings;
         }
 
      
@@ -81,8 +87,8 @@ namespace UserOperations.Controllers
                                                      [FromQuery(Name = "companyId")] Guid? companyId)
         {
 
-            var begTime = new DateTime(2019, 09, 20);
-            var endTime = new DateTime(2019, 09, 26);
+            var begTime = new DateTime(2019, 09, 21);
+            var endTime = new DateTime(2019, 09, 22);
 
             var companyIds = _context.Companys.Where(x => x.CorporationId.ToString() == "72402355-ef7c-41bd-b28e-4234a889c3ba").Select(x=> x.CompanyId).ToList();
             var userIds = _context.Users.Where(x => companyIds.Contains((Guid)x.CompanyId)).Select(x => x.Id).ToList();
@@ -107,7 +113,115 @@ namespace UserOperations.Controllers
             return Ok(html);
         }
 
-        [HttpGet("CheckSessions")]
+
+        //[HttpGet("DialogueFrames")]
+        //public async Task<IActionResult> DialogueFrames(
+        //                                                [FromQuery(Name = "path")] string videoBlobRelativePath)
+        //{
+        //    try
+        //    {
+        //        var fileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
+        //        var applicationUserId = fileName.Split(("_"))[0];
+        //        var videoTimeStamp =
+        //            DateTime.ParseExact(fileName.Split(("_"))[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+
+        //        var pathClient = new PathClient();
+        //        var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
+
+        //        var ffmpeg = new FFMpegWrapper(
+        //            new FFMpegSettings
+        //            {
+        //                FFMpegPath = Path.Combine(pathClient.BinPath(), "ffmpeg.exe")
+        //            });
+
+        //        await _sftpClient.DownloadFromFtpToLocalDiskAsync(
+        //                $"{_sftpSettings.DestinationPath}{videoBlobRelativePath}", sessionDir);
+        //        var localFilePath = Path.Combine(sessionDir, Path.GetFileName(videoBlobRelativePath));
+
+        //        var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
+        //        var frames = GetLocalFilesInformation(applicationUserId, sessionDir, videoTimeStamp);
+        //        var tasks = frames.Select(p => {
+        //            return Task.Run(async () =>
+        //            {
+        //                await _sftpClient.UploadAsync(p.FramePath, "frames", p.FrameName);
+        //            });
+        //        });
+        //        await Task.WhenAll(tasks);
+
+        //       // _log.Info($"Processing frames {JsonConvert.SerializeObject(frames)}");
+        //        foreach (var frame in frames)
+        //        {
+        //            var fileFrame = await CreateFileFrameAsync(applicationUserId, frame.FrameTime, frame.FrameName);
+        //            _context.FileFrames.Add(fileFrame);
+        //            _context.SaveChanges();
+        //         //   _log.Info($"Creating frame - {frame.FrameName}");
+        //            RaiseNewFrameEvent(frame.FrameName);
+        //        }
+        //      //  _log.Info("Deleting local files");
+        //        Directory.Delete(sessionDir, true);
+
+        //        System.Console.WriteLine("Function finished");
+        //        //    _log.Info("Function finished");
+        //        return Ok();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //     //   _log.Fatal($"Exception occured {e}");
+        //        System.Console.WriteLine($"{e}");
+        //        return BadRequest(e.Message);
+        //    }
+        //}
+
+        //private async Task<FileFrame> CreateFileFrameAsync(string applicationUserId, string frameTime, string fileName)
+        //{
+        //    var fileFrame = new FileFrame
+        //    {
+        //        FileFrameId = Guid.NewGuid(),
+        //        ApplicationUserId = Guid.Parse(applicationUserId),
+        //        FaceLength = 0,
+        //        FileContainer = "frames",
+        //        FileExist = true,
+        //        FileName = fileName,
+        //        IsFacePresent = false,
+        //        StatusId = 6,
+        //        StatusNNId = 6,
+        //        Time = DateTime.ParseExact(frameTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
+        //    };
+        //    return fileFrame;
+        //}
+
+        //private List<FrameInfo> GetLocalFilesInformation(string applicationUserId, string sessionDir, DateTime videoTimeStamp)
+        //{
+        //    var frames = Directory.GetFiles(sessionDir, "*.jpg")
+        //        .OrderBy(p => Convert.ToInt32((Path.GetFileNameWithoutExtension(p))))
+        //        .Select(p => new FrameInfo
+        //        {
+        //            FramePath = p,
+        //        })
+        //        .ToList();
+        //    for (int i = 0; i < frames.Count(); i++)
+        //    {
+        //        frames[i].FrameTime = videoTimeStamp.AddSeconds(i * 3).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+        //        frames[i].FrameName = $"{applicationUserId}_{frames[i].FrameTime}.jpg";
+        //    }
+        //    return frames;
+        //}
+
+        //private void RaiseNewFrameEvent(string filename)
+        //{
+        //    string FrameContainerName = "frames";
+        //    var message = new FaceAnalyzeRun
+        //    {
+        //        Path = $"{FrameContainerName}/{filename}"
+        //    };
+
+        //  //  _handler.EventRaised(message);
+        //}
+    
+
+    
+
+    [HttpGet("CheckSessions")]
         public async Task<IActionResult> CheckSessions()
         {
             var sessions = _context.Sessions.Where(x=> x.StatusId==7 ).ToList();
@@ -548,5 +662,12 @@ namespace UserOperations.Controllers
             return Ok();
 
         }
+    }
+
+    public class FrameInfo
+    {
+        public string FramePath;
+        public string FrameTime;
+        public string FrameName;
     }
 }
