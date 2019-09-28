@@ -1,38 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
 using HBData.Models;
-using HBData.Models.AccountViewModels;
-using UserOperations.Services;
-using UserOperations.Models.AnalyticModels;
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
-using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using HBData;
-using Microsoft.AspNetCore.Cors;
 using UserOperations.Utils;
 using HBLib.Utils;
-using BenchmarkDotNet.Attributes;
 
 namespace UserOperations.Controllers
 {
@@ -43,7 +16,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly DBOperations _dbOperation;
-//        private readonly ElasticClient _log;
+        private readonly ElasticClient _log;
 
         public SessionController(
             RecordsContext context,
@@ -55,7 +28,7 @@ namespace UserOperations.Controllers
             _context = context;
             _config = config;
             _dbOperation = dbOperation;
-//            _log = log;
+            _log = log;
         }
 
         [HttpPost("SessionStatus")]
@@ -67,7 +40,7 @@ namespace UserOperations.Controllers
             {
 //                _log.SetFormat("{ApplicationUserId}");
 //                _log.SetArgs(data.ApplicationUserId);
-//                _log.Info($"Session/SessionStatus {data.ApplicationUserId} started");
+                _log.Info($"session /sessionStatus {data.ApplicationUserId} try {data.Action}");
                 var response = new Response();
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
                 {
@@ -174,8 +147,8 @@ namespace UserOperations.Controllers
                     _context.Alerts.Add(alertOpenCloseSession);
                     _context.SaveChanges();
                     response.Message = "Session successfully opened";
+                    _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                     return Ok(response);
-                    // _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                 }
 
                 if (lastSession != null && actionId == CLOSE)
@@ -201,9 +174,9 @@ namespace UserOperations.Controllers
                     }
                     //---
                     _context.SaveChanges();
-                    response.Message = "Session successfully closed";
+                    response.Message = "session successfully closed";
+                    _log.Info($"session successfully closed {data.ApplicationUserId}"); 
                     return Ok(response);
-                    // _log.Info($"Session successfully closed {data.ApplicationUserId}"); 
                 }
 
                 response.Message = "Wrong action";
