@@ -1,44 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-using UserOperations.AccountModels;
 using HBData;
-
-///REMOVE IT
-using System.Data.SqlClient;
-
-
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage;
 using HBLib.Utils;
 using UserOperations.Utils;
-using Npgsql;
-using System.Threading;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Controllers
 {
@@ -46,39 +19,163 @@ namespace UserOperations.Controllers
     [ApiController]
     public class HelpController : Controller
     {
-        private readonly IndexesProvider _indexesProvider;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-        private readonly int activeStatus;
+        private readonly MailSender _mailSender;
+        private readonly RequestFilters _requestFilters;
 
 
         public HelpController(
-            IndexesProvider indexesProvider,
-            SignInManager<ApplicationUser> signInManager,
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient
+            SftpClient sftpClient,
+            MailSender mailSender,
+            RequestFilters requestFilters
             )
         {
-            _indexesProvider = indexesProvider;
-            _signInManager = signInManager;
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-            activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
+            _mailSender = mailSender;
+            _requestFilters = requestFilters;
         }
 
-        [HttpGet("GetIndex")]
-        public async Task<IActionResult> GetIndex( [FromQuery(Name = "companyId")] Guid companyId)
+     
+
+        [HttpGet("GetBenchmarks")]
+        public async Task<IActionResult> GetBenchmarks([FromQuery(Name = "begTime")] string beg,
+                                                        [FromQuery(Name = "endTime")] string end,
+                                                        [FromQuery(Name = "userId")] Guid? userId)
         {
-                _indexesProvider.GetData(companyId);
-            return Ok("I've done");
+            var industryId = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == userId).Company.CompanyIndustryId;
+            var begTime = _requestFilters.GetBegDate(beg);
+            var endTime = _requestFilters.GetEndDate(end);
+            var indexes = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
+                                            && (x.IndustryId == industryId || x.IndustryId == null))
+                                            .Join(_context.BenchmarkNames,
+                                                bench => bench.BenchmarkNameId,
+                                                names => names.Id,
+                                                (bench, names) => new { names.Name, bench.Value })
+                                            .ToList();
+
+            var result = indexes.Where(x => x.Name.Contains("Avg"))
+                                            .GroupBy(x => x.Name)
+                                            .ToDictionary(gr => gr.Key, v => v.Average(p => p.Value))
+                           .Union(
+                           indexes.Where(x => x.Name.Contains("Benchmark"))
+                                            .GroupBy(x => x.Name)
+                                            .ToDictionary(gr => gr.Key, v => v.Max(p => p.Value))
+                            )
+                            .ToDictionary(gr => gr.Key, v => v.Value);
+            return Ok(result);
         }
+
+        [HttpGet("CheckSessions")]
+        public async Task<IActionResult> CheckSessions()
+        {
+            var sessions = _context.Sessions.Where(x=> x.StatusId==7 ).ToList();
+            var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+
+            foreach (var item in grouping)
+            {
+                var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
+                for (int i = 0; i < sesInUser.Count()-1; i++)
+                {
+                    if(sesInUser[i+1].BegTime < sesInUser[i].EndTime)
+                    {
+                        if (sesInUser[i + 1].EndTime < sesInUser[i].EndTime)
+                        {
+                            sesInUser[i + 1].StatusId = 8;
+                            i++;
+                        }
+                        else
+                        {
+                            sesInUser[i].EndTime = sesInUser[i + 1].BegTime;
+                            i++;
+                        }
+                    }
+                    
+                }
+            }
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
+        [HttpGet("CheckDialogues")]
+        public async Task<IActionResult> CheckDialogues()
+        {
+            var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
+            var dialogues = _context.Dialogues.Where(x => x.StatusId == 3).ToList();
+            var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+
+            foreach (var item in grouping)
+            {
+                var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
+                var dialoguesUser = dialogues.Where(x => x.ApplicationUserId == item.Key).ToList();
+                foreach (var dialogue in dialoguesUser)
+                {
+                    if (sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.EndTime <= x.EndTime ))
+                        continue;
+                    if(sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime ))
+                    {
+                        //---початок потрапив до сесії
+                        var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime);
+                        var nextSession = sesInUser?.FirstOrDefault(x => x.BegTime > session.BegTime);
+                        if (nextSession.BegTime < dialogue.EndTime)
+                        {
+                           nextSession.BegTime = dialogue.EndTime;
+                        }
+                            session.EndTime = dialogue.EndTime.AddSeconds(1);
+                    }
+                    else if (sesInUser.Any(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime))
+                    {
+                        //---кінець потрапив до сесії
+                        var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime);
+                        var prevSession = sesInUser?.FirstOrDefault(x => x.BegTime < session.BegTime);
+                        if (prevSession.EndTime > dialogue.BegTime)
+                        {
+                           prevSession.EndTime = dialogue.BegTime;
+                        }
+                            session.BegTime = dialogue.BegTime.AddSeconds(-1);
+                    }
+                    else
+                    {
+
+                    }
+                }
+
+                }
+            
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
+
+        //[HttpGet("Help3")]
+        //public async Task<IActionResult> Help3()
+        //{
+        //    var connectionString = "User ID = postgres; Password = annushka123; Host = 127.0.0.1; Port = 5432; Database = onprem_backup; Pooling = true; Timeout = 120; CommandTimeout = 0";
+        //    DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
+        //    dbContextOptionsBuilder.UseNpgsql(connectionString,
+        //           dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
+        //    var localContext = new RecordsContext(dbContextOptionsBuilder.Options);
+        //    var contentInBackup = localContext.Contents.FirstOrDefault();
+        //    Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
+        //    var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
+        //    contentInBackup.CreationDate = content.CreationDate;
+        //    contentInBackup.JSONData = content.JSONData;
+        //    contentInBackup.RawHTML = content.RawHTML;
+        //    contentInBackup.UpdateDate = content.UpdateDate;
+        //    localContext.SaveChanges();
+        //    return Ok();
+        //}
+
 
         [HttpGet("DatabaseFilling")]
         public string DatabaseFilling
@@ -262,37 +359,37 @@ namespace UserOperations.Controllers
 
 
 
-            var dialogues = _context.Dialogues.Where(p => p.StatusId == 8 && p.BegTime >= begTime).ToList();
-            System.Console.WriteLine(dialogues.Count());
-            dialogues = dialogues.Where(p => p.Comment == null || !p.Comment.StartsWith("Too many holes in dialogue")).ToList();
-            System.Console.WriteLine(dialogues.Count());
-            var i = 0;
-            foreach (var dialogue in dialogues)
-            {
-                try
-                {
-                    var url = $"https://slavehb.northeurope.cloudapp.azure.com/user/DialogueRecalculate/CheckRelatedDialogueData?DialogueId={dialogue.DialogueId}";
-                    System.Console.WriteLine($"Processing {dialogue.DialogueId}, Index {i}");
+            //var dialogues = _context.Dialogues.Where(p => p.StatusId == 8 && p.BegTime >= begTime).ToList();
+            //System.Console.WriteLine(dialogues.Count());
+            //dialogues = dialogues.Where(p => p.Comment == null || !p.Comment.StartsWith("Too many holes in dialogue")).ToList();
+            //System.Console.WriteLine(dialogues.Count());
+            //var i = 0;
+            //foreach (var dialogue in dialogues)
+            //{
+            //    try
+            //    {
+            //        var url = $"https://slavehb.northeurope.cloudapp.azure.com/user/DialogueRecalculate/CheckRelatedDialogueData?DialogueId={dialogue.DialogueId}";
+            //        System.Console.WriteLine($"Processing {dialogue.DialogueId}, Index {i}");
 
-                    var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-                    httpWebRequest.ContentType = "application/json";
-                    httpWebRequest.Method = "POST";
+            //        var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            //        httpWebRequest.ContentType = "application/json";
+            //        httpWebRequest.Method = "POST";
 
-                    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-                    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-                    {
-                        var result = streamReader.ReadToEnd();
-                        System.Console.WriteLine("Result ---- " + result);
-                    }
-                    Thread.Sleep(1000);
-                    i++;
-                }
-                catch (Exception e)
-                {
+            //        var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+            //        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+            //        {
+            //            var result = streamReader.ReadToEnd();
+            //            System.Console.WriteLine("Result ---- " + result);
+            //        }
+            //        Thread.Sleep(1000);
+            //        i++;
+            //    }
+            //    catch (Exception e)
+            //    {
                     
-                }
+            //    }
             
-            }
+            //}
 
 
             // System.Console.WriteLine(audios.Select(p => p.DialogueId).Distinct().ToList().Count());

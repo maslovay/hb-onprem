@@ -39,16 +39,16 @@ namespace UserOperations.Controllers
     [ApiController]
     public class SiteController : Controller
     {
-        private readonly ILoginService _loginService;
-        private readonly ElasticClient _log;
+        private readonly MailSender _mailSender;
+//        private readonly ElasticClient _log;
 
         public SiteController(
-            ILoginService loginService,
-            ElasticClient log
+            MailSender mailSender
+//            ElasticClient log
             )
         {
-            _loginService = loginService;
-            _log = log;
+            _mailSender = mailSender;
+//            _log = log;
         }
    
 
@@ -61,7 +61,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("Site/Feedback started"); 
+//                _log.Info("Site/Feedback started"); 
                 if (string.IsNullOrEmpty(feedback.name)
                       || string.IsNullOrEmpty(feedback.phone)
                       || string.IsNullOrEmpty(feedback.email)
@@ -75,13 +75,13 @@ namespace UserOperations.Controllers
                     "<tr><td>phone:</td><td> {2}</td></tr>" +
                     "<tr><td>message:</td><td> {3}</td></tr>" +
                     "</table>", feedback.name, feedback.email, feedback.phone, feedback.body);
-                _loginService.SendEmail("info@heedbook.com", "Message from site", text);
-                 _log.Info("Site/Feedback finished"); 
+                _mailSender.SendSimpleEmail("info@heedbook.com", "Message from site", text);
+//                _log.Info("Site/Feedback finished"); 
                 return Ok("Sended");
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest($"Could not send email {e}");
             }
         }        

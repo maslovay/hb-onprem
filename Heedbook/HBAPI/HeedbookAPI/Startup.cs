@@ -1,38 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using UserOperations;
-using UserOperations.Models;
+﻿using System.Collections.Generic;
 using HBData.Repository;
 using HBData;
 using HBData.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
-using System.Globalization;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using UserOperations.Services;
-using Microsoft.AspNetCore.Identity;
 using HBLib.Utils;
 using HBLib;
 using LinkToBlobController.Controller;
 using UserOperations.Utils;
+using BenchmarkDotNet.Running;
+using UserOperations.Controllers.Test;
+using UserOperations.Services.Scheduler;
+using Quartz;
 
 namespace UserOperations
 {
@@ -54,6 +41,7 @@ namespace UserOperations
             (options =>
             {
                 var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                //var connectionString = "User ID=postgres;Password=annushka123;Host=127.0.0.1;Port=5432;Database=onprem_backup;Pooling=true;Timeout=120;CommandTimeout=0";
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
             });
@@ -72,7 +60,8 @@ namespace UserOperations
             })
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
-            
+            services.AddScoped<MailSender>();
+
             services.AddSwaggerGen(c =>
             {
                 c.EnableAnnotations();
@@ -118,8 +107,12 @@ namespace UserOperations
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
 
+
             services.Configure<StorageAccInfo>(Configuration.GetSection(nameof(StorageAccInfo)));
             services.AddSingleton(provider=> provider.GetRequiredService<IOptions<StorageAccInfo>>().Value);
+
+            services.AddSingleton<ElasticClientFactory>();
+
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton(provider =>
@@ -131,10 +124,12 @@ namespace UserOperations
             services.Configure<SmtpSettings>(Configuration.GetSection(nameof(SmtpSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
             services.AddSingleton<SmtpClient>();
+
+            services.AddBenchmarkFillQuartzJob(); //-----------
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
 
             if (env.IsDevelopment())
@@ -164,6 +159,12 @@ namespace UserOperations
             app.UseCors(MyAllowSpecificOrigins);
             app.UseHttpsRedirection();
             app.UseMvc();
+
+            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
+             app.ApplicationServices.GetService<ITrigger>());
+
+            // add seed
+            //BenchmarkRunner.Run<TestAnalyticClientProfile>();
         }
 
     }

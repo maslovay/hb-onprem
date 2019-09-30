@@ -44,7 +44,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly ElasticClient _log;
+//        private readonly ElasticClient _log;
 
 
         public AnalyticSpeechController(
@@ -52,8 +52,8 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters,
-            ElasticClient log
+            RequestFilters requestFilters
+//            ElasticClient log
             )
         {
             _config = config;
@@ -61,7 +61,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _log = log;
+//            _log = log;
         }
   
 
@@ -70,7 +70,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         // [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                         // [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
@@ -78,7 +78,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticSpeech/EmployeeRating started");
+//                _log.Info("AnalyticSpeech/EmployeeRating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -126,7 +126,7 @@ namespace UserOperations.Controllers
                         CrossFreq = _dbOperation.CrossIndex(p),
                         AlertFreq = _dbOperation.AlertIndex(p)
                     });
-                _log.Info("AnalyticSpeech/EmployeeRating finished");
+//                _log.Info("AnalyticSpeech/EmployeeRating finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
@@ -140,7 +140,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                         [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
@@ -148,7 +148,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticSpeech/PhraseTable started");
+//                _log.Info("AnalyticSpeech/PhraseTable started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -157,6 +157,11 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);                  
 
+                var companysPhrases = _context.PhraseCompanys
+                    .Where(p => (!companyIds.Any() || companyIds.Contains((Guid) p.CompanyId)))
+                    .Select(p => p.PhraseId)
+                    .ToList();
+                
                 var dialogueIds = _context.Dialogues
                     .Where(p => p.EndTime >= begTime
                         && p.EndTime <= endTime
@@ -174,7 +179,9 @@ namespace UserOperations.Controllers
                     .Include(p => p.Phrase)
                     .Where(p => p.DialogueId.HasValue && dialogueIds.Contains(p.DialogueId.Value)
                          && (!phraseIds.Any() || phraseIds.Contains((Guid) p.PhraseId))
-                         && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid) p.Phrase.PhraseTypeId)))
+                         && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid) p.Phrase.PhraseTypeId))
+                         //&& (companysPhrases.Contains(p.PhraseId))
+                         )
                     .Select(p => new {
                         IsClient = p.IsClient,
                         FullName = p.Dialogue.ApplicationUser.FullName,
@@ -187,7 +194,7 @@ namespace UserOperations.Controllers
                     .ToList();
 
                 var result = phrasesInfo
-                    .GroupBy(p => p.PhraseText)
+                    .GroupBy(p => p.PhraseText.ToLower())
                     .Select(p => new {
                         Phrase = p.Key,
                         PhraseId = p.First().PhraseId,
@@ -201,7 +208,7 @@ namespace UserOperations.Controllers
                             Math.Round(Convert.ToDouble(p.GroupBy(q => q.ApplicationUserId).Max(q => q.Count())) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()), 2) :
                             0
                     });
-                _log.Info("AnalyticSpeech/PhraseTable finished");
+//                _log.Info("AnalyticSpeech/PhraseTable finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
@@ -216,7 +223,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                         [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
@@ -224,7 +231,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticSpeech/PhraseTypeCount started");
+//                _log.Info("AnalyticSpeech/PhraseTypeCount started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -320,12 +327,12 @@ namespace UserOperations.Controllers
                 totalInfo.Employee = employee;
                 totalInfo.Total = total;
 
-                _log.Info("AnalyticSpeech/PhraseTypeCount finished");
+//                _log.Info("AnalyticSpeech/PhraseTypeCount finished");
                 return Ok(totalInfo);
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);            
             }
         }
@@ -335,7 +342,7 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                         [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                         [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
@@ -343,7 +350,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                _log.Info("AnalyticSpeech/WordCloud started");
+//                _log.Info("AnalyticSpeech/WordCloud started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -379,12 +386,12 @@ namespace UserOperations.Controllers
                         Weight = 2 * p.Count(),
                         Colour = p.First().PhraseColor});
 
-                _log.Info("AnalyticSpeech/WordCloud finished");
+//                _log.Info("AnalyticSpeech/WordCloud finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
             {
-                _log.Fatal($"Exception occurred {e}");
+//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }

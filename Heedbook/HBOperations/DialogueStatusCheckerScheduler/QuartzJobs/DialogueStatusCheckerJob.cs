@@ -95,8 +95,8 @@ namespace QuartzExtensions.Jobs
                                 _log.Info($"Dialogue {dialogue.DialogueId} not proceeded");
                             }
                         }
+                        _context.SaveChanges();
                     }
-                    _context.SaveChanges();
                     _log.Info("Function  finished.");
                 }
                 catch (Exception e)

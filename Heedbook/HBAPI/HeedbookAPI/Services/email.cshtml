@@ -1,0 +1,264 @@
+﻿@model UserOperations.Services.LanguageDataEmail
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="width:100%;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0;">
+<head>
+    <meta charset="UTF-8" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta content="telephone=no" name="format-detection" />
+    <title>Heedbook</title>
+    <!--[if (mso 16)]>
+      <style type="text/css">
+      a {text-decoration: none;}
+      </style>
+      <![endif]-->
+    <!--[if gte mso 9]><style>sup { font-size: 100% !important; }</style><![endif]-->
+    <style type="text/css">
+        @@media only screen and (max-width:600px) {
+            p, ul li, ol li, a {
+                font-size: 16px !important;
+                line-height: 130% !important
+            }          
+    </style>
+</head>
+<body>
+    <!--<div class="es-wrapper-color">-->
+        <!--[if gte mso 9]>
+            <v:background xmlns:v="urn:schemas-microsoft-com:vml" fill="t">
+                <v:fill type="tile" color="#fafafa"></v:fill>
+            </v:background>
+        <![endif]-->
+        <table  width="100%" cellspacing="0" cellpadding="0">
+            <tbody>
+                <tr>
+                    <td valign="top" bgcolor="#1c396d">
+                        <table cellspacing="0" cellpadding="0" align="center">
+                            <tbody>
+                                <tr>
+                                    <td style="background-color: rgb(27, 57, 109);" bgcolor="#1b396d" align="center">
+                                        <table style="border-left:8px solid #1b396d;border-right:8px solid #1b396d;border-top:8px solid #1b396d;background-color: rgb(255, 255, 255);" width="600" cellspacing="0" cellpadding="0" bgcolor="#ffffff" align="center">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="padding:10px; background-color: rgb(255, 255, 255); background-position: left top;" bgcolor="transparent" align="left">
+                                                        <table width="100%" cellspacing="0" cellpadding="0">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td width="524" valign="middle" align="center">
+                                                                        <table style="background-position: left top;" width="100%" cellspacing="0" cellpadding="0">
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td align="center"><a target="_blank"><img src="http://filereference.northeurope.cloudapp.azure.com/media/dfe841c7-20e7-4f25-8e67-400b4366ce27/b5c5c2d8-7877-40dc-84f6-3fbb875f14cd.png" style="display: block;" height="150" /></a></td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td align="center" style="line-height: 0px; padding: 20px 0px 0px 0px;">
+                                                                                        <h1 style="color: #999999; font-size: 22px;"><strong>@(Model.greeting)</strong></h1><!--Вы зарегистрировались в системе Heedbook-->
+                                                                                    </td>
+                                                                                </tr>
+                                                                                @if(Model.body != null)
+                                                                                {
+                                                                                <tr>
+                                                                                    <td align="center" style="line-height: 0px; padding: 5px;">
+                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.body)</strong></p>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                }
+                                                                                @if(Model.button != null)
+                                                                                {
+                                                                                <tr>
+                                                                                    <td align="center" style="padding: 30px 0px 0px 0px;">
+                                                                                        <table border="0" cellspacing="0" cellpadding="0">
+                                                                                            <tr>
+                                                                                                <td height="70" style="border-radius: 10px !important; border-color: rgb(61, 92, 163); background: rgb(27, 57, 109); text-align: center; font-size: 22px; font-family: sans-serif; font-weight: bold; padding: 0 70px 0 70px;">
+                                                                                                    <!--ТЕКСТ И ССЫЛКА КНОПКИ-->
+                                                                                                    <a style="color: #d2d5da; text-decoration: none;" href="https://app.heedbook.com/">@(Model.button)</a>
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                }
+                                                                                @if(Model.login != null)
+                                                                                {
+                                                                                <tr>
+                                                                                    <td align="center" style="line-height: 0px; padding: 5px;">
+                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.login)</strong></p>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                }
+                                                                                @if(Model.pswd != null)
+                                                                                {
+                                                                                <tr>
+                                                                                    <td align="center" style="line-height: 0px; padding: 5px;">
+                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.pswd)</strong></p>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                }
+                                                                                <tr>
+                                                                                    <td align="center" style="padding: 25px 0px 0px; line-height: 0px;">
+                                                                                        <p style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
+                                                                                            @Model.text1
+                                                                                            <a style="color: #999999; text-decoration: none; font-weight: 800;" href="https://www.heedbook.com/"> @Model.text2</a>
+                                                                                            @Model.text3
+                                                                                        </p>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                @if(Model.text4 != null)
+                                                                                {
+                                                                                <tr>
+                                                                                    <td align="center" style="padding: -5px 0px 15px;  line-height: 0px;">
+                                                                                        <span style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
+                                                                                            @Model.text4
+                                                                                        </span>
+                                                                                    </td>
+                                                                                </tr>
+                                                                                }
+                                                                                @if(Model.text5 != null)
+                                                                                {
+                                                                                <tr>
+                                                                                    <td align="center" style="padding: 30px 0px 30px;">
+                                                                                        <span style="color: #999999; text-decoration: none; font-size: 18px; font-family: sans-serif;">@(Model.text5)</span>
+                                                                                        <a href="mailto:support@heedbook.com"><span style="color: #999999; text-decoration: none; font-size: 18px; font-weight: bold; font-family: sans-serif;">support@heedbook.com</span></a>
+
+                                                                                    </td>
+                                                                                </tr>
+                                                                                }
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="background-position: left top;" align="left">
+                                                        <table width="100%" cellspacing="0" cellpadding="0" style="padding: 10px 0px 30px;">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td width="524" valign="top" align="center">
+                                                                        <table width="100%" cellspacing="0" cellpadding="0">
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td esd-links-color="#ffffff" align="center">
+                                                                                        <p style="font-size: 18px; font-family: sans-serif; color: rgb(27, 57, 109);">- @(Model.footer)</p>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <table cellpadding="0" cellspacing="0" align="center">
+                            <tbody>
+                                <tr>
+                                    <td align="center">
+                                        <table align="center" cellpadding="0" cellspacing="0" width="580">
+                                            <tbody>
+                                                <tr>
+                                                    <td align="left" style="background-color: rgb(27, 57, 109); padding: 20px 30px 20px 30px;">
+                                                        <table width="530" cellpadding="0" cellspacing="0">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td valign="top">
+                                                                        <table cellpadding="0" cellspacing="0" class="es-left" align="left">
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td width="350" align="center">
+                                                                                        <table cellpadding="0" cellspacing="0" width="100%">
+                                                                                            <tbody>
+                                                                                                <tr>
+                                                                                                    <td align="left" esd-links-color="#d2d5da" style="padding: 10px;">
+                                                                                                        <a style="color: #d2d5da; font-size: 22px; font-family: sans-serif;  text-decoration: none;" href="https://www.heedbook.com/">heedbook.com</a>
+                                                                                                    </td>
+                                                                                                </tr>
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                    <td width="10"></td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </td>
+
+                                                                    <td class="esdev-mso-td" valign="top">
+                                                                        <table cellpadding="0" cellspacing="0" class="es-left" align="left">
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td width="60" class="esd-container-frame" align="center">
+                                                                                        <table cellpadding="0" cellspacing="0" width="100%">
+                                                                                            <tbody>
+                                                                                                <tr>
+                                                                                                    <td align="center" class="esd-block-image es-p10"><a href="https://www.facebook.com/heedbook"><img class="adapt-img" src="http://filereference.northeurope.cloudapp.azure.com/media/fbLogo.png" style="display: block;" width="45" /></a></td>
+                                                                                                </tr>
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                    <td width="5"></td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </td>
+                                                                    <td class="esdev-mso-td" valign="top">
+                                                                        <table cellpadding="0" cellspacing="0" class="es-left" align="left">
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td width="60" class="esd-container-frame" align="center">
+                                                                                        <table cellpadding="0" cellspacing="0" width="100%">
+                                                                                            <tbody>
+                                                                                                <tr>
+                                                                                                    <td align="center" class="esd-block-image es-p10"><a href="https://www.instagram.com/heedbook/"><img class="adapt-img" src="http://filereference.northeurope.cloudapp.azure.com/media/instaLogo.png" style="display: block;" width="45" /></a></td>
+                                                                                                </tr>
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                    <td width="5"></td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </td>
+                                                                    <td class="esdev-mso-td" valign="top">
+                                                                        <table cellpadding="0" cellspacing="0" class="es-right" align="right">
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td width="60" align="center" class="esd-container-frame">
+                                                                                        <table cellpadding="0" cellspacing="0" width="100%">
+                                                                                            <tbody>
+                                                                                                <tr>
+                                                                                                    <td align="center" class="esd-block-image es-p10"><a href="https://www.youtube.com/channel/UCmJ1XAToncoc8IWFoImObdQ"><img class="adapt-img" src="http://filereference.northeurope.cloudapp.azure.com/media/youtubeLogo.png" style="display: block;" width="45" /></a></td>
+                                                                                                </tr>
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    <!--</div>-->
+</body>
+</html>
