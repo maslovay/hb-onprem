@@ -29,11 +29,13 @@ namespace UserService.Controllers
     {
         private readonly IGenericRepository _repository;
         private readonly RecordsContext _context;
+        private readonly INotificationHandler _handler;
         
-        public TestController(RecordsContext context, IGenericRepository repository)
+        public TestController(RecordsContext context, IGenericRepository repository, INotificationHandler handler )
         {
             _context = context;
             _repository = repository;
+            _handler = handler;
         }
 
         [HttpGet("[action]/{timelInHours}")]
@@ -182,6 +184,31 @@ namespace UserService.Controllers
            {
                return BadRequest(e);
            }
+       }
+
+       [HttpGet("[action]")]
+       public async Task ResendVideosForFraming(string fileNamesString)
+       {
+           var names = fileNamesString.Split(',');
+
+           int i = 0;
+
+           foreach (var name in names)
+           {
+               if ( i % 30 == 0 )
+                   Thread.Sleep(60000);
+               ++i;
+               await ResendVideoForFraming(name);
+           }
+       }
+       
+       [HttpGet("[action]")]
+       public async Task ResendVideoForFraming(string fileName)
+       {
+           var message = new FramesFromVideoRun();
+           message.Path = $"videos/{fileName}";
+           Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
+           _handler.EventRaised(message);
        }
     }
 }

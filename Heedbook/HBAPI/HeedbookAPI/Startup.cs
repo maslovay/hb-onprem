@@ -14,7 +14,6 @@ using Swashbuckle.AspNetCore.Swagger;
 using UserOperations.Services;
 using HBLib.Utils;
 using HBLib;
-using LinkToBlobController.Controller;
 using UserOperations.Utils;
 using BenchmarkDotNet.Running;
 using UserOperations.Controllers.Test;
@@ -107,12 +106,7 @@ namespace UserOperations
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
 
-
-            services.Configure<StorageAccInfo>(Configuration.GetSection(nameof(StorageAccInfo)));
-            services.AddSingleton(provider=> provider.GetRequiredService<IOptions<StorageAccInfo>>().Value);
-
             services.AddSingleton<ElasticClientFactory>();
-
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton(provider =>

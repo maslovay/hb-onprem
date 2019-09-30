@@ -12,6 +12,10 @@ using Newtonsoft.Json;
 using HBLib.Utils;
 using UserOperations.Utils;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Globalization;
+using HBLib;
+using RabbitMqEventBus.Events;
 
 namespace UserOperations.Controllers
 {
@@ -25,6 +29,8 @@ namespace UserOperations.Controllers
         private readonly SftpClient _sftpClient;
         private readonly MailSender _mailSender;
         private readonly RequestFilters _requestFilters;
+        private readonly SftpSettings _sftpSettings;
+        private readonly ElasticClient _log;
 
 
         public HelpController(
@@ -33,7 +39,9 @@ namespace UserOperations.Controllers
             RecordsContext context,
             SftpClient sftpClient,
             MailSender mailSender,
-            RequestFilters requestFilters
+            RequestFilters requestFilters,
+            SftpSettings sftpSettings,
+            ElasticClient log
             )
         {
             _config = config;
@@ -42,6 +50,8 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
             _mailSender = mailSender;
             _requestFilters = requestFilters;
+            _sftpSettings = sftpSettings;
+            _log = log;
         }
 
      
@@ -74,7 +84,133 @@ namespace UserOperations.Controllers
             return Ok(result);
         }
 
-        [HttpGet("CheckSessions")]
+
+        [HttpGet("SendDialogueMake")]
+        public async Task<IActionResult> SendDialogueMake(
+                                                     [FromQuery(Name = "companyId")] Guid? companyId)
+        {
+
+            var begTime = new DateTime(2019, 09, 21);
+            var endTime = new DateTime(2019, 09, 22);
+
+            var companyIds = _context.Companys.Where(x => x.CorporationId.ToString() == "72402355-ef7c-41bd-b28e-4234a889c3ba").Select(x=> x.CompanyId).ToList();
+            var userIds = _context.Users.Where(x => companyIds.Contains((Guid)x.CompanyId)).Select(x => x.Id).ToList();
+            var dialoguesVideos = _context.FileVideos.Where(x => userIds.Contains(x.ApplicationUserId) && x.BegTime >= begTime && x.EndTime <= endTime)
+                .Select(x=>x.FileName).ToList();
+
+            string html = string.Empty;
+            foreach (var item in dialoguesVideos)
+            {
+                string url = @"https://heedbookslave.northeurope.cloudapp.azure.com/user/Test/ResendVideoForFraming?fileName=videos%"+item;
+
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.AutomaticDecompression = DecompressionMethods.GZip;
+
+                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                using (Stream stream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    html = reader.ReadToEnd();
+                }
+            }
+            return Ok(html);
+        }
+
+
+        [HttpGet("DialogueFrames")]
+        public async Task<IActionResult> DialogueFrames(
+                                                        [FromQuery(Name = "path")] string videoBlobRelativePath)
+        {
+            try
+            {
+                var fileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
+                var applicationUserId = fileName.Split(("_"))[0];
+                var videoTimeStamp =
+                    DateTime.ParseExact(fileName.Split(("_"))[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+
+                var pathClient = new PathClient();
+                var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
+
+                var ffmpeg = new FFMpegWrapper(
+                    new FFMpegSettings
+                    {
+                        FFMpegPath = Path.Combine(pathClient.BinPath(), "ffmpeg.exe")
+                    });
+
+                await _sftpClient.DownloadFromFtpToLocalDiskAsync(
+                        $"{_sftpSettings.DestinationPath}{videoBlobRelativePath}", sessionDir);
+                var localFilePath = Path.Combine(sessionDir, Path.GetFileName(videoBlobRelativePath));
+
+                var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
+                var frames = Directory.GetFiles(sessionDir, "*.jpg")
+                     .OrderBy(p => Convert.ToInt32((Path.GetFileNameWithoutExtension(p))))
+                     .Select(p => new FrameInfo
+                     {
+                         FramePath = p,
+                     })
+                     .ToList();
+                        for (int i = 0; i < frames.Count(); i++)
+                        {
+                            frames[i].FrameTime = videoTimeStamp.AddSeconds(i * 3).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+                            frames[i].FrameName = $"{applicationUserId}_{frames[i].FrameTime}.jpg";
+                        }
+
+                var tasks = frames.Select(p => {
+                    return Task.Run(async () =>
+                    {
+                        await _sftpClient.UploadAsync(p.FramePath, "frames", p.FrameName);
+                    });
+                });
+                await Task.WhenAll(tasks);
+
+                _log.Info($"TEST FRAME "+ videoBlobRelativePath);
+                foreach (var frame in frames)
+                {
+                    var fileFrame = new FileFrame
+                    {
+                        FileFrameId = Guid.NewGuid(),
+                        ApplicationUserId = Guid.Parse(applicationUserId),
+                        FaceLength = 0,
+                        FileContainer = "frames",
+                        FileExist = true,
+                        FileName = frame.FrameName,
+                        IsFacePresent = false,
+                        StatusId = 6,
+                        StatusNNId = 6,
+                        Time = DateTime.ParseExact(frame.FrameTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
+                    };
+                    _context.FileFrames.Add(fileFrame);
+                    _context.SaveChanges();
+                    _log.Info($"Creating frame - {frame.FrameName}");
+                    string FrameContainerName = "frames";
+                    var message = new FaceAnalyzeRun
+                    {
+                        Path = $"{FrameContainerName}/{frame.FrameName}"
+                    };
+
+                 //   _handler.EventRaised(message);
+                }
+              //  _log.Info("Deleting local files");
+                Directory.Delete(sessionDir, true);
+
+                System.Console.WriteLine("Function finished");
+                _log.Info($"TEST FRAME " + videoBlobRelativePath+ "  FINISHED");
+                return Ok();
+            }
+            catch (Exception e)
+            {
+             //   _log.Fatal($"Exception occured {e}");
+                System.Console.WriteLine($"{e}");
+                return BadRequest(e.Message);
+            }
+        }   
+
+    
+    
+
+    
+
+    [HttpGet("CheckSessions")]
         public async Task<IActionResult> CheckSessions()
         {
             var sessions = _context.Sessions.Where(x=> x.StatusId==7 ).ToList();
@@ -105,6 +241,35 @@ namespace UserOperations.Controllers
             _context.SaveChanges();
             return Ok();
         }
+        [HttpGet("CheckDialogues2")]
+        public async Task<IActionResult> CheckDialogues2()
+        {
+            var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
+            var dialogues = _context.Dialogues.Where(x => x.StatusId == 3 && x.InStatistic == true).ToList();
+            var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+            int counter = 0;
+
+            foreach (var item in grouping)
+            {
+                var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
+                var dialoguesUser = dialogues.Where(x => x.ApplicationUserId == item.Key).ToList();
+                foreach (var dialogue in dialoguesUser)
+                {
+                    if(!sesInUser.Any(x => dialogue.BegTime >= x.BegTime && dialogue.EndTime <= x.EndTime))
+                    {
+                        if (!sesInUser.Any(x => dialogue.BegTime >= x.BegTime && dialogue.BegTime <= x.EndTime))
+                        {
+                            if (!sesInUser.Any(x => dialogue.EndTime >= x.BegTime && dialogue.EndTime <= x.EndTime))
+                            {
+                                counter++;
+                            }
+                            }
+                        }
+                }
+            }
+            return Ok(counter);
+        }
+
 
         [HttpGet("CheckDialogues")]
         public async Task<IActionResult> CheckDialogues()
@@ -112,6 +277,7 @@ namespace UserOperations.Controllers
             var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
             var dialogues = _context.Dialogues.Where(x => x.StatusId == 3).ToList();
             var grouping = sessions.GroupBy(x => x.ApplicationUserId);
+            int counter = 0;
 
             foreach (var item in grouping)
             {
@@ -124,28 +290,37 @@ namespace UserOperations.Controllers
                     if(sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime ))
                     {
                         //---початок потрапив до сесії
-                        var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime);
-                        var nextSession = sesInUser?.FirstOrDefault(x => x.BegTime > session.BegTime);
-                        if (nextSession.BegTime < dialogue.EndTime)
-                        {
-                           nextSession.BegTime = dialogue.EndTime;
-                        }
-                            session.EndTime = dialogue.EndTime.AddSeconds(1);
+                        //var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime);
+                        //var nextSession = sesInUser?.FirstOrDefault(x => x.BegTime > session.BegTime);
+                        //if (nextSession.BegTime < dialogue.EndTime)
+                        //{
+                        //   nextSession.BegTime = dialogue.EndTime;
+                        //}
+                        //    session.EndTime = dialogue.EndTime.AddSeconds(1);
                     }
                     else if (sesInUser.Any(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime))
                     {
                         //---кінець потрапив до сесії
-                        var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime);
-                        var prevSession = sesInUser?.FirstOrDefault(x => x.BegTime < session.BegTime);
-                        if (prevSession.EndTime > dialogue.BegTime)
-                        {
-                           prevSession.EndTime = dialogue.BegTime;
-                        }
-                            session.BegTime = dialogue.BegTime.AddSeconds(-1);
+                        //var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.EndTime && dialogue.EndTime <= x.EndTime);
+                        //var prevSession = sesInUser?.FirstOrDefault(x => x.BegTime < session.BegTime);
+                        //if (prevSession.EndTime > dialogue.BegTime)
+                        //{
+                        //   prevSession.EndTime = dialogue.BegTime;
+                        //}
+                        //    session.BegTime = dialogue.BegTime.AddSeconds(-1);
                     }
                     else
                     {
-
+                        var session = new Session
+                        {
+                            BegTime = dialogue.BegTime.AddSeconds(-1),
+                            EndTime = dialogue.EndTime.AddSeconds(1),
+                            ApplicationUserId = dialogue.ApplicationUserId,
+                            StatusId = 7,
+                            IsDesktop = true
+                        };
+                        _context.Sessions.Add(session);
+                        counter++;
                     }
                 }
 
@@ -476,5 +651,12 @@ namespace UserOperations.Controllers
             return Ok();
 
         }
+    }
+
+    public class FrameInfo
+    {
+        public string FramePath;
+        public string FrameTime;
+        public string FrameName;
     }
 }

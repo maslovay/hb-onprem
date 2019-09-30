@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Text;
 using System.Web;
-using LinkToBlobController.Controller;
+using CloneFtpOnAzure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Blob;
