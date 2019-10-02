@@ -19,6 +19,10 @@ using BenchmarkDotNet.Running;
 using UserOperations.Controllers.Test;
 using UserOperations.Services.Scheduler;
 using Quartz;
+using Notifications.Base;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
+using HBMLHttpClient;
 
 namespace UserOperations
 {
@@ -119,13 +123,20 @@ namespace UserOperations
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
             services.AddSingleton<SmtpClient>();
 
+            //services.AddScoped(typeof(INotificationHandler), typeof(NotificationHandler));
+            //services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
+            //services.AddScoped(provider =>
+            //{
+            //    var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
+            //    return new HbMlHttpClient(settings);
+            //});
+
             services.AddBenchmarkFillQuartzJob(); //-----------
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

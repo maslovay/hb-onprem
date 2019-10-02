@@ -97,7 +97,7 @@ namespace FillingSatisfactionService
                     nNWeight = 0;
                 }
 
-                var satisfactionScore = new DialogueClientSatisfaction();
+                DialogueClientSatisfaction satisfactionScore = null;
                 try
                 {
                     satisfactionScore =
@@ -115,17 +115,19 @@ namespace FillingSatisfactionService
                 double employeeEndScore = 0, teacherEndScore = 0;
                 if (satisfactionScore != null)
                 {
-                    if (satisfactionScore.MeetingExpectationsByClient != null)
-                    {
-                        clientTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByClient);
-                        clientWeight = Convert.ToDouble(_config.ClientWeight);
-                    }
-                    else
-                    {
-                        clientTotalScore = 0;
-                        clientWeight = 0;
-                    }
-
+                    //if (satisfactionScore.MeetingExpectationsByClient != null)
+                    //{
+                    //    clientTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByClient);
+                    //    clientWeight = Convert.ToDouble(_config.ClientWeight);
+                    //}
+                    //else
+                    //{
+                    //    clientTotalScore = 0;
+                    //    clientWeight = 0;
+                    //}
+                    satisfactionScore.MeetingExpectationsByClient = _calculations.MeetingExpectationsByClientCalculate(dialogue);
+                    clientTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByClient);
+                    clientWeight = Convert.ToDouble(_config.ClientWeight);
                     if (satisfactionScore.MeetingExpectationsByEmpoyee != null)
                     {
                         employeeTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByEmpoyee);
@@ -195,8 +197,9 @@ namespace FillingSatisfactionService
                         EndMoodTotal = Math.Max((double) endMoodTotal, 35),
                         MeetingExpectationsByNN = Math.Max((double) meetingExpectationsByNN, 35),
                         BegMoodByNN = Math.Max((double) begMoodByNN, 35),
-                        EndMoodByNN = Math.Max((double) endMoodByNN, 35)
-                    };
+                        EndMoodByNN = Math.Max((double) endMoodByNN, 35),
+                        MeetingExpectationsByClient = _calculations.MeetingExpectationsByClientCalculate(dialogue)
+                };
                     _log.Info($"Total mood is --- {emp.MeetingExpectationsTotal}");
                     _context.DialogueClientSatisfactions.Add(emp);
                 }

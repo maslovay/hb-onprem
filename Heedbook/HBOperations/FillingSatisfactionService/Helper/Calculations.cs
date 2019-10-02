@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HBData;
 using HBData.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FillingSatisfactionService.Helper
@@ -33,11 +34,57 @@ namespace FillingSatisfactionService.Helper
 
             var totalScore = 25 + CalculateVisual(visual) + CalculateAudio(audio) + CalculateText(speech);
             if (totalScore > 99) return 99;
-
             if (totalScore < 10) return 10;
-            
-
             return Convert.ToInt32(totalScore);
+        }
+
+        public double MeetingExpectationsByClientCalculate(Dialogue dialogue)
+        {
+            try
+            {
+                var campaignContentIds = _context.SlideShowSessions
+                        .Where(p => p.BegTime >= dialogue.BegTime
+                                && p.BegTime <= dialogue.EndTime
+                                && p.ApplicationUserId == dialogue.ApplicationUserId
+                                && p.IsPoll)
+                        .Select(p => p.CampaignContentId).ToList();
+
+                Func<string, double> intParse = (string answer) =>
+                {
+                    switch (answer)
+                    {
+                        case "EMOTION_ANGRY":
+                            return 0;
+                        case "EMOTION_BAD":
+                            return 2.5;
+                        case "EMOTION_NEUTRAL":
+                            return 5;
+                        case "EMOTION_GOOD":
+                            return 7.5;
+                        case "EMOTION_EXCELLENT":
+                            return 10;
+                        default:
+                            {
+                                Int32.TryParse(answer, out int res);
+                                return res != 0? Convert.ToDouble(res): -1;
+                            }
+                    }
+
+                };
+                var pollAnswersAvg = _context.CampaignContentAnswers
+                      .Where(x => campaignContentIds.Contains(x.CampaignContentId)
+                          && x.Time >= dialogue.BegTime
+                          && x.Time <= dialogue.EndTime
+                          && x.ApplicationUserId == dialogue.ApplicationUserId).ToList()
+                      .Select(x => intParse(x.Answer))
+                      .Where(res => res >= 0)
+                      .Average() * 10;
+                return pollAnswersAvg > 100 ? 100 : pollAnswersAvg;
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
         public int CalculateVisual(DialogueVisual visual)

@@ -40,10 +40,10 @@ namespace UserOperations.Services.Scheduler
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     _dbOperation = scope.ServiceProvider.GetRequiredService<DBOperations>();
 
-                    for (int i = 0; i < 7; i++)
+                    for (int i = 0; i < 5; i++)
                     {
                         DateTime today = DateTime.Now.AddDays(-i).Date;
-                        if (!_context.Benchmarks.Any(x => x.Day == today))
+                        if (!_context.Benchmarks.Any(x => x.Day.Date == today))
                         {
                             FillIndexesForADay(today);
                           //  _log.Info("Calculation of benchmarks finished");
