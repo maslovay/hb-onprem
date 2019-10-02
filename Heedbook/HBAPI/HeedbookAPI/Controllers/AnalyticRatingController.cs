@@ -233,7 +233,7 @@ namespace UserOperations.Controllers
                     }).ToList();
 
                 var emptyUsers = sessions.GroupBy(p => p.ApplicationUserId)
-                  //  .Where(p => !result.Select(x=>x.FullName).Contains(p.First().FullName))
+                    .Where(p => !result.Select(x=>x.FullName).Contains(p.First().FullName))
                     .Select(p => new RatingUserInfo
                     {
                         FullName = p.First().FullName,
