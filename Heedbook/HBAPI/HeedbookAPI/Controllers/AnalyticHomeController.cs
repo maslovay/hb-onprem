@@ -131,13 +131,21 @@ namespace UserOperations.Controllers
                         })
                         .ToList();
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                var benchmarksList = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
-                                                        && (x.IndustryId == industryId || x.IndustryId == null))
-                                                        .Join(_context.BenchmarkNames,
-                                                            bench => bench.BenchmarkNameId,
-                                                            names => names.Id,
-                                                            (bench, names) => new { names.Name, bench.Value })
-                                                        .ToList();            
+                List<BenchmarkModel> benchmarksList = null;
+                try
+                {
+                    benchmarksList = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
+                                                           && (x.IndustryId == industryId || x.IndustryId == null))
+                                                            .Join(_context.BenchmarkNames,
+                                                                bench => bench.BenchmarkNameId,
+                                                                names => names.Id,
+                                                                (bench, names) => new BenchmarkModel { Name = names.Name, Value = bench.Value })
+                                                            .ToList();
+                }
+                catch
+                {
+
+                }
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
@@ -172,38 +180,37 @@ namespace UserOperations.Controllers
                     NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld)),
 
                     DialogueDuration = _dbOperation.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                    DialogueDurationDelta = -_dbOperation.DialogueAverageDuration(dialoguesOld, prevBeg, begTime),
-
-
-                    //---benchmarks
-                    SatisfactionIndexIndustryAverage = benchmarksList.Count() != 0? benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryAvg")?.Average(x => x.Value): null,
-                    SatisfactionIndexIndustryBenchmark = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryBenchmark")?.Max(x => x.Value): null,
-
-                    LoadIndexIndustryAverage = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "LoadIndexIndustryAvg")?.Average(x => x.Value) : null,
-                    LoadIndexIndustryBenchmark = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "LoadIndexIndustryBenchmark")?.Max(x => x.Value) : null,
-
-                    CrossIndexIndustryAverage = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg")?.Average(x => x.Value) : null,
-                    CrossIndexIndustryBenchmark = benchmarksList.Count() != 0 ? benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark")?.Max(x => x.Value) : null
+                    DialogueDurationDelta = -_dbOperation.DialogueAverageDuration(dialoguesOld, prevBeg, begTime)                 
                 };
 
-              
+
+                //---benchmarks
+                if (benchmarksList != null && benchmarksList.Count() != 0)
+                {
+                    result.SatisfactionIndexIndustryAverage = benchmarksList.Any(x => x.Name == "SatisfactionIndexIndustryAvg")? (double?)benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryAvg").Average(x => x.Value): null;
+                    result.SatisfactionIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "SatisfactionIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+
+                    result.LoadIndexIndustryAverage = benchmarksList.Any(x => x.Name == "LoadIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "LoadIndexIndustryAvg")?.Average(x => x.Value): null;
+                    result.LoadIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "LoadIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "LoadIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+
+                    result.CrossIndexIndustryAverage = benchmarksList.Any(x => x.Name == "CrossIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg")?.Average(x => x.Value) : null;
+                    result.CrossIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "CrossIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+                }
                 // result.NumberOfDialoguesPerEmployees = result.DialoguesCount / result.EmployeeCount;   
                 // result.NumberOfDialoguesPerEmployeesDelta =  - result.DialoguesCountDelta 
                 //     / (result.EmployeeCountDelta != 0? result.EmployeeCountDelta : 1) + result.NumberOfDialoguesPerEmployees; 
 
                 result.NumberOfDialoguesPerEmployeesDelta += result.NumberOfDialoguesPerEmployees;
-                
                 result.AvgWorkingTimeEmployeesDelta +=result.AvgWorkingTimeEmployees;
                 result.EmployeeCountDelta += result.EmployeeCount;
                 result.CrossIndexDelta += result.CrossIndex;
                 result.LoadIndexDelta += result.LoadIndex;
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.DialoguesCountDelta += result.DialoguesCount;
-                result.DialogueDurationDelta += result.DialogueDuration;                             
+                result.DialogueDurationDelta += result.DialogueDuration;
 
-
-                var jsonToReturn = JsonConvert.SerializeObject(result);  
-//                _log.Info("AnalyticHome/Dashboard finished");          
+                var jsonToReturn = JsonConvert.SerializeObject(result);
+//                _log.Info("AnalyticHome/Dashboard finished");
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
@@ -282,5 +289,11 @@ namespace UserOperations.Controllers
 //            _log.Info("AnalyticHome/Recomendation finished");
             return Ok(JsonConvert.SerializeObject(topHints));
         }                                                
+    }
+
+    public class BenchmarkModel
+    {
+        public string Name { get; set; }
+        public double Value { get; set; }
     }
 }
