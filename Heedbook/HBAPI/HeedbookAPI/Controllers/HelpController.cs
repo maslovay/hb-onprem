@@ -150,14 +150,14 @@ namespace UserOperations.Controllers
                     //}
                     //else
                     //{
-                  //  attribute = attributes.First();
-                 //   }
+                    //  attribute = attributes.First();
+                    //   }
 
                     if (await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "clientavatars/" + $"{dialogue.DialogueId}.jpg"))
                     {
                         continue;
                     }
-                    if(! await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "frames/" + attribute.FileFrame.FileName))
+                    if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "frames/" + attribute.FileFrame.FileName))
                     {
                         continue;
                     }
@@ -179,15 +179,16 @@ namespace UserOperations.Controllers
                             Y = faceRectangle.Left
                         };
 
-                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
-                    stream.Seek(0, SeekOrigin.Begin);
-                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{dialogue.DialogueId}.jpg");
-                    stream.Dispose();
-                    stream.Close();
-                    _sftpClient.DisconnectAsync();
+                        var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+                        stream.Seek(0, SeekOrigin.Begin);
+                        await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{dialogue.DialogueId}.jpg");
+                        stream.Dispose();
+                        stream.Close();
+                        _sftpClient.DisconnectAsync();
+                    }
+                    catch (Exception ex)
+                    { return BadRequest(); }
                 }
-                catch (Exception ex)
-                { return BadRequest(); }
             }
             Dictionary<string, string> result = new Dictionary<string, string>();
             result["success"] = counter200.ToString();
