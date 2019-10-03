@@ -145,7 +145,10 @@ namespace UserOperations.Controllers
                         .Where(p => slideShowSessionsAll
                         .Select(x => x.CampaignContentId)
                         .Distinct()
-                        .Contains(p.CampaignContentId ) && p.Time >= dialogue.BegTime && p.Time <= dialogue.EndTime).ToList();
+                        .Contains(p.CampaignContentId ) 
+                            && p.Time >= dialogue.BegTime 
+                            && p.Time <= dialogue.EndTime 
+                            && p.ApplicationUserId == dialogue.ApplicationUserId).ToList();
                   
                 var answersByContent = pollAmount.Where(x => x.Key2 != null).Select(x => new
                 {
@@ -386,7 +389,8 @@ namespace UserOperations.Controllers
                         .Where(p => slideShowSessionsAll
                         .Select(x => x.CampaignContent.CampaignContentId)
                         .Distinct()
-                        .Contains(p.CampaignContentId) && p.Time >= begTime && p.Time <= endTime).ToList();
+                        .Contains(p.CampaignContentId) && p.Time >= begTime && p.Time <= endTime 
+                        && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))).ToList();
 
                 var views = slideShowSessionsAll.Count();
                 var clients =slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();

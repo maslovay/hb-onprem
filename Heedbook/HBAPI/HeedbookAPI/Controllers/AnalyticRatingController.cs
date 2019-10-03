@@ -187,7 +187,9 @@ namespace UserOperations.Controllers
                     {
                         ApplicationUserId = p.ApplicationUserId,
                         BegTime = p.BegTime,
-                        EndTime = p.EndTime
+                        EndTime = p.EndTime,
+                        FullName = p.ApplicationUser.FullName,
+                        CompanyId = p.ApplicationUser.CompanyId
                     })
                     .ToList();
 
@@ -208,6 +210,7 @@ namespace UserOperations.Controllers
                     .Select(p => new DialogueInfo
                     {
                         DialogueId = p.DialogueId,
+                        CompanyId = p.ApplicationUser.CompanyId,
                         ApplicationUserId = p.ApplicationUserId,
                         BegTime = p.BegTime,
                         EndTime = p.EndTime,
@@ -225,17 +228,23 @@ namespace UserOperations.Controllers
                         SatisfactionIndex = _dbOperation.SatisfactionIndex(p),
                         LoadIndex = _dbOperation.LoadIndex(sessions, p, begTime, endTime),
                         CrossIndex = _dbOperation.CrossIndex(p),
-                        EfficiencyIndex = _dbOperation.EfficiencyIndex(sessions, p, begTime, endTime),
-                        Recommendation = "",
                         DialoguesCount = p.Select(q => q.DialogueId).Distinct().Count(),
-                        DaysCount = p.Select(q => q.BegTime.Date).Distinct().Count(),
-                        WorkingHoursDaily = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
-                        DialogueAverageDuration = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
-                        DialogueAveragePause = _dbOperation.DialogueAveragePause(sessions, p, begTime, endTime),
-                        //TODO: look at dbOperations -- error in this place -- important
-                        //ClientsWorkingHoursDaily = _dbOperation.DialogueAverageDurationDaily(p, begTime, endTime)
+                        CompanyId = p.First().CompanyId.ToString()
                     }).ToList();
-                result = result.OrderBy(p => p.EfficiencyIndex).ToList();
+
+                var emptyUsers = sessions.GroupBy(p => p.ApplicationUserId)
+                    .Where(p => !result.Select(x=>x.FullName).Contains(p.First().FullName))
+                    .Select(p => new RatingUserInfo
+                    {
+                        FullName = p.First().FullName,
+                        SatisfactionIndex = 0,
+                        LoadIndex = 0,
+                        CrossIndex = 0,
+                        DialoguesCount = 0,
+                        CompanyId = p.First().CompanyId.ToString()
+                    }).ToList();
+
+                result = result.Union(emptyUsers).OrderByDescending(p => p.SatisfactionIndex).ToList();
                 // _log.Info("AnalyticRating/RatingUsers finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
@@ -310,7 +319,7 @@ namespace UserOperations.Controllers
 
                 var result = dialogues
                     .GroupBy(p => p.CompanyId)
-                    .Select(p => new RatingUserInfo
+                    .Select(p => new RatingOfficeInfo
                     {
                         CompanyId = p.Key.ToString(),
                         FullName = p.First().FullName,
@@ -354,6 +363,16 @@ namespace UserOperations.Controllers
     }
 
     public class RatingUserInfo
+    {
+        public string CompanyId;
+        public string FullName;
+        public double? SatisfactionIndex;
+        public double? LoadIndex;
+        public double? CrossIndex;
+        public int DialoguesCount;
+    }
+
+    public class RatingOfficeInfo
     {
         public string CompanyId;
         public string FullName;

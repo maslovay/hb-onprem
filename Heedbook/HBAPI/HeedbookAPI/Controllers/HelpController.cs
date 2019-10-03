@@ -16,6 +16,10 @@ using System.Net;
 using System.Globalization;
 using HBLib;
 using RabbitMqEventBus.Events;
+using Notifications.Base;
+using HBMLHttpClient;
+using Renci.SshNet.Common;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Controllers
 {
@@ -31,6 +35,11 @@ namespace UserOperations.Controllers
         private readonly RequestFilters _requestFilters;
         private readonly SftpSettings _sftpSettings;
         private readonly ElasticClient _log;
+        private readonly DBOperations _dbOperation;
+        //   private readonly INotificationHandler _handler;
+        //    private readonly HbMlHttpClient _client;
+
+        private readonly Object _syncRoot = new Object();
 
 
         public HelpController(
@@ -41,7 +50,10 @@ namespace UserOperations.Controllers
             MailSender mailSender,
             RequestFilters requestFilters,
             SftpSettings sftpSettings,
-            ElasticClient log
+            ElasticClient log,
+            DBOperations dBOperations
+            //     INotificationHandler handler,
+            //     HbMlHttpClient client
             )
         {
             _config = config;
@@ -52,37 +64,120 @@ namespace UserOperations.Controllers
             _requestFilters = requestFilters;
             _sftpSettings = sftpSettings;
             _log = log;
+            _dbOperation = dBOperations;
+            //   _handler = handler;
+            //   _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-     
 
-        [HttpGet("GetBenchmarks")]
-        public async Task<IActionResult> GetBenchmarks([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "userId")] Guid? userId)
-        {
-            var industryId = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == userId).Company.CompanyIndustryId;
-            var begTime = _requestFilters.GetBegDate(beg);
-            var endTime = _requestFilters.GetEndDate(end);
-            var indexes = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
-                                            && (x.IndustryId == industryId || x.IndustryId == null))
-                                            .Join(_context.BenchmarkNames,
-                                                bench => bench.BenchmarkNameId,
-                                                names => names.Id,
-                                                (bench, names) => new { names.Name, bench.Value })
-                                            .ToList();
 
-            var result = indexes.Where(x => x.Name.Contains("Avg"))
-                                            .GroupBy(x => x.Name)
-                                            .ToDictionary(gr => gr.Key, v => v.Average(p => p.Value))
-                           .Union(
-                           indexes.Where(x => x.Name.Contains("Benchmark"))
-                                            .GroupBy(x => x.Name)
-                                            .ToDictionary(gr => gr.Key, v => v.Max(p => p.Value))
-                            )
-                            .ToDictionary(gr => gr.Key, v => v.Value);
-            return Ok(result);
-        }
+        //[HttpGet("Benchmarks")]
+        //public async Task<IActionResult> Benchmarks()
+        //{
+        //    for (int i = 0; i < 700; i++)
+        //    {
+        //        DateTime today = DateTime.Now.AddDays(-i).Date;
+        //        if (!_context.Benchmarks.Any(x => x.Day.Date == today))
+        //        {
+        //            var nextDay = today.AddDays(1);
+        //            var typeIdCross = _context.PhraseTypes
+        //                   .Where(p => p.PhraseTypeText == "Cross")
+        //                   .Select(p => p.PhraseTypeId)
+        //                   .First();
+        //            var dialogues = _context.Dialogues
+        //                     .Where(p => p.BegTime.Date == today
+        //                             && p.StatusId == 3
+        //                             && p.InStatistic == true
+        //                             && p.ApplicationUser.Company.CompanyIndustryId != null)
+        //                     .Select(p => new DialogueInfo
+        //                     {
+        //                         IndustryId = p.ApplicationUser.Company.CompanyIndustryId,
+        //                         CompanyId = p.ApplicationUser.CompanyId,
+        //                         DialogueId = p.DialogueId,
+        //                         CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+        //                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+        //                         BegTime = p.BegTime,
+        //                         EndTime = p.EndTime
+        //                     })
+        //                     .ToList();
+
+        //            var sessions = _context.Sessions
+        //                     .Where(p => p.BegTime.Date == today
+        //                           && p.StatusId == 7)
+        //                   .Select(p => new SessionInfo
+        //                   {
+        //                       IndustryId = p.ApplicationUser.Company.CompanyIndustryId,
+        //                       CompanyId = p.ApplicationUser.CompanyId,
+        //                       BegTime = p.BegTime,
+        //                       EndTime = p.EndTime
+        //                   })
+        //                   .ToList();
+
+        //            var benchmarkNames = _context.BenchmarkNames.ToList();
+        //            var benchmarkSatisfIndustryAvgId = GetBenchmarkNameId("SatisfactionIndexIndustryAvg", benchmarkNames);
+        //            var benchmarkSatisfIndustryMaxId = GetBenchmarkNameId("SatisfactionIndexIndustryBenchmark", benchmarkNames);
+
+        //            var benchmarkCrossIndustryAvgId = GetBenchmarkNameId("CrossIndexIndustryAvg", benchmarkNames);
+        //            var benchmarkCrossIndustryMaxId = GetBenchmarkNameId("CrossIndexIndustryBenchmark", benchmarkNames);
+
+        //            var benchmarkLoadIndustryAvgId = GetBenchmarkNameId("LoadIndexIndustryAvg", benchmarkNames);
+        //            var benchmarkLoadIndustryMaxId = GetBenchmarkNameId("LoadIndexIndustryBenchmark", benchmarkNames);
+
+        //            if (dialogues.Count() != 0)
+        //            {
+        //                foreach (var groupIndustry in dialogues.GroupBy(x => x.IndustryId))
+        //                {
+        //                    var dialoguesInIndustry = groupIndustry.ToList();
+        //                    var sessionsInIndustry = sessions.Where(x => x.IndustryId == groupIndustry.Key).ToList();
+        //                    //  if (dialoguesInIndustry.Count() != 0 && sessionsInIndustry.Count() != 0)
+        //                    {
+        //                        var satisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesInIndustry);
+        //                        var crossIndex = _dbOperation.CrossIndex(dialoguesInIndustry);
+        //                        var loadIndex = _dbOperation.LoadIndex(sessionsInIndustry, dialoguesInIndustry, today, nextDay);
+        //                        if (satisfactionIndex != null) AddNewBenchmark((double)satisfactionIndex, benchmarkSatisfIndustryAvgId, today, groupIndustry.Key);
+        //                        if (crossIndex != null) AddNewBenchmark((double)crossIndex, benchmarkCrossIndustryAvgId, today, groupIndustry.Key);
+        //                        if (loadIndex != null) AddNewBenchmark((double)loadIndex, benchmarkLoadIndustryAvgId, today, groupIndustry.Key);
+
+        //                        var maxSatisfInd = dialoguesInIndustry.GroupBy(x => x.CompanyId).Max(x => _dbOperation.SatisfactionIndex(x.ToList()));
+        //                        var maxCrossIndex = dialoguesInIndustry.GroupBy(x => x.CompanyId).Max(x => _dbOperation.CrossIndex(x.ToList()));
+        //                        var maxLoadIndex = dialoguesInIndustry.GroupBy(x => x.CompanyId)
+        //                            .Max(p =>
+        //                            _dbOperation.LoadIndex(
+        //                                sessionsInIndustry.Where(s => s.CompanyId == p.Key).ToList(),
+        //                                p.ToList(),
+        //                                today,
+        //                                nextDay));
+
+        //                        if (maxSatisfInd != null) AddNewBenchmark((double)maxSatisfInd, benchmarkSatisfIndustryMaxId, today, groupIndustry.Key);
+        //                        if (maxCrossIndex != null) AddNewBenchmark((double)maxCrossIndex, benchmarkCrossIndustryMaxId, today, groupIndustry.Key);
+        //                        if (maxLoadIndex != null) AddNewBenchmark((double)maxLoadIndex, benchmarkLoadIndustryMaxId, today, groupIndustry.Key);
+        //                    }
+        //                }
+
+        //                _context.SaveChanges();
+        //            }
+        //        }
+        //    }
+        //    return Ok();
+        //}
+
+        //private void AddNewBenchmark(double val, Guid benchmarkNameId, DateTime today, Guid? industryId = null)
+        //{
+        //    Benchmark benchmark = new Benchmark()
+        //    {
+        //        IndustryId = industryId,
+        //        Value = val,
+        //        Weight = 1,// dialoguesInCompany.Count();
+        //        Day = today,
+        //        BenchmarkNameId = benchmarkNameId
+        //    };
+        //    _context.Benchmarks.Add(benchmark);
+        //}
+
+        //private Guid GetBenchmarkNameId(string name, List<BenchmarkName> benchmarkNames)
+        //{
+        //    return benchmarkNames.FirstOrDefault(x => x.Name == name).Id;
+        //}
 
 
         [HttpGet("SendDialogueMake")]
@@ -91,17 +186,19 @@ namespace UserOperations.Controllers
         {
 
             var begTime = new DateTime(2019, 09, 21);
-            var endTime = new DateTime(2019, 09, 22);
+            var endTime = new DateTime(2019, 09, 24);
 
-            var companyIds = _context.Companys.Where(x => x.CorporationId.ToString() == "72402355-ef7c-41bd-b28e-4234a889c3ba").Select(x=> x.CompanyId).ToList();
+            var companyIds = _context.Companys.Where(x => x.CorporationId.ToString() == "72402355-ef7c-41bd-b28e-4234a889c3ba").Select(x => x.CompanyId).ToList();
             var userIds = _context.Users.Where(x => companyIds.Contains((Guid)x.CompanyId)).Select(x => x.Id).ToList();
+
+            // var userIds = _context.Users.Where(x => companyId == (Guid)x.CompanyId).Select(x => x.Id).ToList();
             var dialoguesVideos = _context.FileVideos.Where(x => userIds.Contains(x.ApplicationUserId) && x.BegTime >= begTime && x.EndTime <= endTime)
-                .Select(x=>x.FileName).ToList();
+                .Select(x => x.FileName).ToList();
 
             string html = string.Empty;
             foreach (var item in dialoguesVideos)
             {
-                string url = @"https://heedbookslave.northeurope.cloudapp.azure.com/user/Test/ResendVideoForFraming?fileName=videos%"+item;
+                string url = @"https://heedbookslave.northeurope.cloudapp.azure.com/user/Test/ResendVideoForFraming?fileName=videos%" + item;
 
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.AutomaticDecompression = DecompressionMethods.GZip;
@@ -117,100 +214,240 @@ namespace UserOperations.Controllers
         }
 
 
-        [HttpGet("DialogueFrames")]
-        public async Task<IActionResult> DialogueFrames(
-                                                        [FromQuery(Name = "path")] string videoBlobRelativePath)
+        //[HttpGet("DialogueFrames")]
+        //public async Task<IActionResult> DialogueFrames(
+        //                                                [FromQuery(Name = "path")] string videoBlobRelativePath)
+        //{
+        //    try
+        //    {
+        //        var fileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
+        //        var applicationUserId = fileName.Split(("_"))[0];
+        //        var videoTimeStamp =
+        //            DateTime.ParseExact(fileName.Split(("_"))[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+
+        //        var pathClient = new PathClient();
+        //        var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
+
+        //        var ffmpeg = new FFMpegWrapper(
+        //            new FFMpegSettings
+        //            {
+        //                FFMpegPath = Path.Combine(pathClient.BinPath(), "ffmpeg.exe")
+        //            });
+
+        //        await _sftpClient.DownloadFromFtpToLocalDiskAsync(
+        //                $"{_sftpSettings.DestinationPath}{videoBlobRelativePath}", sessionDir);
+        //        var localFilePath = Path.Combine(sessionDir, Path.GetFileName(videoBlobRelativePath));
+
+        //        var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
+        //        var frames = Directory.GetFiles(sessionDir, "*.jpg")
+        //             .OrderBy(p => Convert.ToInt32((Path.GetFileNameWithoutExtension(p))))
+        //             .Select(p => new FrameInfo
+        //             {
+        //                 FramePath = p,
+        //             })
+        //             .ToList();
+        //                for (int i = 0; i < frames.Count(); i++)
+        //                {
+        //                    frames[i].FrameTime = videoTimeStamp.AddSeconds(i * 3).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+        //                    frames[i].FrameName = $"{applicationUserId}_{frames[i].FrameTime}.jpg";
+        //                }
+
+        //        //var tasks = frames.Select(p => {
+        //        //    return Task.Run(async () =>
+        //        //    {
+        //        //        await _sftpClient.UploadAsync(p.FramePath, "frames", p.FrameName);
+        //        //    });
+        //        //});
+        //        //await Task.WhenAll(tasks);
+        //        foreach (var p in frames)
+        //        {
+        //            await _sftpClient.UploadAsync(p.FramePath, "frames", p.FrameName);
+        //        }
+
+        //        _log.Info($"TEST FRAME "+ videoBlobRelativePath);
+        //        foreach (var frame in frames)
+        //        {
+        //            var fileFrame = new FileFrame
+        //            {
+        //                FileFrameId = Guid.NewGuid(),
+        //                ApplicationUserId = Guid.Parse(applicationUserId),
+        //                FaceLength = 0,
+        //                FileContainer = "frames",
+        //                FileExist = true,
+        //                FileName = frame.FrameName,
+        //                IsFacePresent = false,
+        //                StatusId = 6,
+        //                StatusNNId = 6,
+        //                Time = DateTime.ParseExact(frame.FrameTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
+        //            };
+        //            _context.FileFrames.Add(fileFrame);
+        //            _context.SaveChanges();
+        //            _log.Info($"Creating frame - {frame.FrameName}");
+        //            string FrameContainerName = "frames";
+        //            //var message = new FaceAnalyzeRun
+        //            //{
+        //            //    Path = $"{FrameContainerName}/{frame.FrameName}"
+        //            //};
+        //            var remotePath = $"{_sftpSettings.DestinationPath}{FrameContainerName}/{frame.FrameName}";
+
+        //            try
+        //            {
+        //                _log.Info($"Function started");
+        //                if (await _sftpClient.IsFileExistsAsync(remotePath))
+        //                {
+        //                    string localPath = default;
+        //                    lock (_syncRoot)
+        //                    {
+        //                        localPath = _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath, "D://1/").GetAwaiter().GetResult();
+        //                    }
+        //                    _log.Info($"Download to path - {localPath}");
+        //                    if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
+        //                    {
+        //                        _log.Info($"{localPath}: Face detected!");
+
+        //                        var byteArray = await System.IO.File.ReadAllBytesAsync(localPath);
+        //                        var base64String = Convert.ToBase64String(byteArray);
+
+        //                        var faceResult = await _client.GetFaceResult(base64String);
+        //                        _log.Info($"Face result is {JsonConvert.SerializeObject(faceResult)}");
+        //                        var fileName1 = localPath.Split('/').Last();
+        //                        FileFrame fileFrame1;
+        //                        lock (_context)
+        //                        {
+        //                            fileFrame = _context.FileFrames.Where(entity => entity.FileName == fileName1).FirstOrDefault();
+        //                        }
+        //                        if (fileFrame != null && faceResult.Any())
+        //                        {
+        //                            var frameEmotion = new FrameEmotion
+        //                            {
+        //                                FileFrameId = fileFrame.FileFrameId,
+        //                                AngerShare = faceResult.Average(item => item.Emotions.Anger),
+        //                                ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
+        //                                DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
+        //                                FearShare = faceResult.Average(item => item.Emotions.Fear),
+        //                                HappinessShare = faceResult.Average(item => item.Emotions.Happiness),
+        //                                NeutralShare = faceResult.Average(item => item.Emotions.Neutral),
+        //                                SadnessShare = faceResult.Average(item => item.Emotions.Sadness),
+        //                                SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
+        //                                YawShare = faceResult.Average(item => item.Headpose.Yaw)
+        //                            };
+
+        //                            var frameAttribute = faceResult.Select(item => new FrameAttribute
+        //                            {
+        //                                Age = item.Attributes.Age,
+        //                                Gender = item.Attributes.Gender,
+        //                                Descriptor = JsonConvert.SerializeObject(item.Descriptor),
+        //                                FileFrameId = fileFrame.FileFrameId,
+        //                                Value = JsonConvert.SerializeObject(item.Rectangle)
+        //                            }).FirstOrDefault();
+
+        //                            fileFrame.FaceLength = faceLength;
+        //                            fileFrame.IsFacePresent = true;
+
+        //                            if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
+        //                            _context.FrameEmotions.Add(frameEmotion);
+        //                            lock (_context)
+        //                            {
+        //                                _context.SaveChanges();
+        //                            }
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        _log.Info($"{localPath}: No face detected!");
+        //                    }
+        //                    _log.Info("Function finished");
+
+        //                    System.IO.File.Delete(localPath);
+        //                }
+        //                else
+        //                {
+        //                    _log.Info($"No such file {remotePath}");
+        //                }
+
+        //                _log.Info("Function face analyze finished");
+
+        //            }
+        //            catch (SftpPathNotFoundException e)
+        //            {
+        //                _log.Fatal($"{e}");
+        //            }
+        //            catch (Exception e)
+        //            {
+        //                _log.Fatal($"Exception occured {e}");
+        //              //  throw new FaceAnalyzeServiceException(e.Message, e);
+        //            }
+        //        }
+        //      //  _log.Info("Deleting local files");
+        //        Directory.Delete(sessionDir, true);
+
+        //        System.Console.WriteLine("Function finished");
+        //        _log.Info($"TEST FRAME " + videoBlobRelativePath+ "  FINISHED");
+        //        return Ok();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //     //   _log.Fatal($"Exception occured {e}");
+        //        System.Console.WriteLine($"{e}");
+        //        return BadRequest(e.Message);
+        //    }
+        //}   
+
+
+
+        [HttpGet("SatisfByClient")]
+        public async Task<IActionResult> SatisfByClient(Guid dialogueId)
         {
+            var dialogue = _context.Dialogues
+                  .FirstOrDefault(p => p.DialogueId == dialogueId);
             try
             {
-                var fileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
-                var applicationUserId = fileName.Split(("_"))[0];
-                var videoTimeStamp =
-                    DateTime.ParseExact(fileName.Split(("_"))[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+                var campaignContentIds = _context.SlideShowSessions
+                        .Where(p => p.BegTime >= dialogue.BegTime
+                                && p.BegTime <= dialogue.EndTime
+                                && p.ApplicationUserId == dialogue.ApplicationUserId
+                                && p.IsPoll)
+                        .Select(p => p.CampaignContentId).ToList();
 
-                var pathClient = new PathClient();
-                var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
-
-                var ffmpeg = new FFMpegWrapper(
-                    new FFMpegSettings
-                    {
-                        FFMpegPath = Path.Combine(pathClient.BinPath(), "ffmpeg.exe")
-                    });
-
-                await _sftpClient.DownloadFromFtpToLocalDiskAsync(
-                        $"{_sftpSettings.DestinationPath}{videoBlobRelativePath}", sessionDir);
-                var localFilePath = Path.Combine(sessionDir, Path.GetFileName(videoBlobRelativePath));
-
-                var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
-                var frames = Directory.GetFiles(sessionDir, "*.jpg")
-                     .OrderBy(p => Convert.ToInt32((Path.GetFileNameWithoutExtension(p))))
-                     .Select(p => new FrameInfo
-                     {
-                         FramePath = p,
-                     })
-                     .ToList();
-                        for (int i = 0; i < frames.Count(); i++)
-                        {
-                            frames[i].FrameTime = videoTimeStamp.AddSeconds(i * 3).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-                            frames[i].FrameName = $"{applicationUserId}_{frames[i].FrameTime}.jpg";
-                        }
-
-                var tasks = frames.Select(p => {
-                    return Task.Run(async () =>
-                    {
-                        await _sftpClient.UploadAsync(p.FramePath, "frames", p.FrameName);
-                    });
-                });
-                await Task.WhenAll(tasks);
-
-                _log.Info($"TEST FRAME "+ videoBlobRelativePath);
-                foreach (var frame in frames)
+                Func<string, double> intParse = (string answer) =>
                 {
-                    var fileFrame = new FileFrame
+                    switch (answer)
                     {
-                        FileFrameId = Guid.NewGuid(),
-                        ApplicationUserId = Guid.Parse(applicationUserId),
-                        FaceLength = 0,
-                        FileContainer = "frames",
-                        FileExist = true,
-                        FileName = frame.FrameName,
-                        IsFacePresent = false,
-                        StatusId = 6,
-                        StatusNNId = 6,
-                        Time = DateTime.ParseExact(frame.FrameTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
-                    };
-                    _context.FileFrames.Add(fileFrame);
-                    _context.SaveChanges();
-                    _log.Info($"Creating frame - {frame.FrameName}");
-                    string FrameContainerName = "frames";
-                    var message = new FaceAnalyzeRun
-                    {
-                        Path = $"{FrameContainerName}/{frame.FrameName}"
-                    };
+                        case "EMOTION_ANGRY":
+                            return 0.1;
+                        case "EMOTION_BAD":
+                            return 2.5;
+                        case "EMOTION_NEUTRAL":
+                            return 5;
+                        case "EMOTION_GOOD":
+                            return 7.5;
+                        case "EMOTION_EXCELLENT":
+                            return 10;
+                        default:
+                            {
+                                Int32.TryParse(answer, out int res);
+                                return Convert.ToDouble(res);
+                            }
+                    }
 
-                 //   _handler.EventRaised(message);
-                }
-              //  _log.Info("Deleting local files");
-                Directory.Delete(sessionDir, true);
-
-                System.Console.WriteLine("Function finished");
-                _log.Info($"TEST FRAME " + videoBlobRelativePath+ "  FINISHED");
+                };
+                var pollAnswersAvg = _context.CampaignContentAnswers
+                      .Where(x => campaignContentIds.Contains(x.CampaignContentId)
+                          && x.Time >= dialogue.BegTime
+                          && x.Time <= dialogue.EndTime
+                          && x.ApplicationUserId == dialogue.ApplicationUserId).ToList()
+                      .Select(x => intParse(x.Answer))
+                      .Where(res => res != 0)
+                      .Average() * 10;
+                return Ok(pollAnswersAvg > 100 ? 100 : pollAnswersAvg);
+            }
+            catch
+            {
                 return Ok();
             }
-            catch (Exception e)
-            {
-             //   _log.Fatal($"Exception occured {e}");
-                System.Console.WriteLine($"{e}");
-                return BadRequest(e.Message);
-            }
-        }   
+        }
 
-    
-    
-
-    
-
-    [HttpGet("CheckSessions")]
+        [HttpGet("CheckSessions")]
         public async Task<IActionResult> CheckSessions()
         {
             var sessions = _context.Sessions.Where(x=> x.StatusId==7 ).ToList();
