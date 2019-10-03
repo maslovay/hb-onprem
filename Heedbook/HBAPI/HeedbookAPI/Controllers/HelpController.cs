@@ -187,7 +187,8 @@ namespace UserOperations.Controllers
                         _sftpClient.DisconnectAsync();
                     }
                     catch (Exception ex)
-                    { return BadRequest(); }
+                    {
+                    }
                 }
             }
             Dictionary<string, string> result = new Dictionary<string, string>();
