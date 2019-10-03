@@ -179,20 +179,15 @@ namespace UserOperations.Controllers
                             Y = faceRectangle.Left
                         };
 
-                        var stream = FaceDetection.CreateAvatar(localPath, rectangle);
-                        stream.Seek(0, SeekOrigin.Begin);
-                        await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{dialogue.DialogueId}.jpg");
-                        stream.Dispose();
-                        stream.Close();
-                        _sftpClient.DisconnectAsync();
-                     //   Directory.Delete(sessionDir, true);
-                        counter200++;
-                    }
-                    catch (Exception ex)
-                    {
-                        counter500++;
-                    }
+                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{dialogue.DialogueId}.jpg");
+                    stream.Dispose();
+                    stream.Close();
+                    _sftpClient.DisconnectAsync();
                 }
+                catch (Exception ex)
+                { return BadRequest(); }
             }
             Dictionary<string, string> result = new Dictionary<string, string>();
             result["success"] = counter200.ToString();
@@ -201,7 +196,7 @@ namespace UserOperations.Controllers
 
 
             return Ok();
-        }
+}
 
 
         //[HttpGet("Benchmarks")]
