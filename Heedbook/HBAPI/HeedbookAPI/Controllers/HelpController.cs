@@ -20,6 +20,8 @@ using Notifications.Base;
 using HBMLHttpClient;
 using Renci.SshNet.Common;
 using UserOperations.Models.AnalyticModels;
+using HBMLHttpClient.Model;
+using System.Drawing;
 
 namespace UserOperations.Controllers
 {
@@ -69,6 +71,82 @@ namespace UserOperations.Controllers
             //   _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
+        [HttpGet("ClientAvatarMaker")]
+        public async Task<IActionResult> ClientAvatarMaker(
+                            [ FromQuery(Name = "ApplicationUserId")] Guid? ApplicationUserId
+                            )
+        {
+           // var dialogue = _context.Dialogues.Where(x => x.DialogueId == dialogueId).FirstOrDefault();
+         
+
+            DateTime date = new DateTime(2019, 09, 20);
+            var allDialogues = _context.Dialogues.Where(x => x.ApplicationUserId == ApplicationUserId && x.BegTime <= date).OrderByDescending(x => x.BegTime).ToList();
+            //  var atr = _context.FileFrames.Where(item => item.FileName == AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
+
+            foreach (var dialogue in allDialogues)
+            {
+                var frames =
+                        _context.FileFrames
+                            .Include(p => p.FrameAttribute)
+                            .Where(item =>
+                                item.ApplicationUserId == ApplicationUserId
+                                && item.Time >= dialogue.BegTime
+                                && item.Time <= dialogue.EndTime)
+                            .ToList();
+
+                var attributes = frames.Where(p => p.FrameAttribute.Any())
+                    .Select(p => p.FrameAttribute.First())
+                    .ToList();
+                var AvatarFileName = dialogue.DialogueId.ToString() + ".jpg";
+               // var attributes2 = frames.SelectMany(p => p.FrameAttribute).FirstOrDefault();
+
+                if (attributes.Count() == 0 && !frames.Any(item => item.FileName == AvatarFileName))
+                    continue;
+
+
+                FrameAttribute attribute;
+                if (!string.IsNullOrWhiteSpace(AvatarFileName))
+                {
+                    attribute = frames.Where(item => item.FileName == AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
+                    attribute = attribute ?? attributes.First();
+                }
+                else
+                {
+                    attribute = attributes.First();
+                }
+
+                if (await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "clientavatars/" + $"{dialogue.DialogueId}.jpg"))
+                {
+                    continue;
+                }
+                var pathClient = new PathClient();
+                var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
+                try
+                {
+                    var localPath =
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName, sessionDir);
+
+                    var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
+                    var rectangle = new Rectangle
+                    {
+                        Height = faceRectangle.Height,
+                        Width = faceRectangle.Width,
+                        X = faceRectangle.Top,
+                        Y = faceRectangle.Left
+                    };
+
+                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{dialogue.DialogueId}.jpg");
+                    stream.Dispose();
+                    stream.Close();
+                    _sftpClient.DisconnectAsync();
+                }
+                catch (Exception ex)
+                { return BadRequest(); }
+            }
+                return Ok();
+}
 
 
         //[HttpGet("Benchmarks")]
