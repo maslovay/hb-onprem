@@ -141,6 +141,7 @@ namespace UserOperations.Controllers
                     stream.Dispose();
                     stream.Close();
                     _sftpClient.DisconnectAsync();
+                    Directory.Delete(sessionDir, true);
                 }
                 catch (Exception ex)
                 { return BadRequest(); }
