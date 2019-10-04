@@ -252,6 +252,17 @@ namespace HBLib.Utils
             var res = cmd.runCMD(FfPath, arguments);
             return res;
         }
+        public string CreateVideoFromAudioAndOneFrame(string framePath, string audioPath)
+        {
+            var cmd = new CMDWithOutput();
+            var filename = Path.GetFileNameWithoutExtension($"{audioPath}");
+            var directoryPath = Path.GetDirectoryName($"{audioPath}");
+            var newName = $"{directoryPath}/{filename}.mkv";
+
+            var arguments = $"-loop 1 -y -i {framePath} -i {audioPath} -shortest -acodec copy -vcodec mjpeg {newName}";
+            var res = cmd.runCMD(FfPath, arguments);
+            return res;
+        }
 
         public String ConcatSameCodecsAndFrames(List<FFmpegCommand> fns, String outputFn, String dir = null)
         {
