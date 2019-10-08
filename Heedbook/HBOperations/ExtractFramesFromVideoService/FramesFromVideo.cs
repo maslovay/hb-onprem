@@ -89,8 +89,11 @@ namespace ExtractFramesFromVideo
                 {
                     var fileFrame = await CreateFileFrameAsync(applicationUserId, frame.FrameTime, frame.FrameName);
                     _context.FileFrames.Add(fileFrame);
-                    _context.SaveChanges();
-                    _log.Info($"Creating frame - {frame.FrameName}");
+                }
+                _context.SaveChanges();
+
+                foreach (var frame in frames)
+                {
                     RaiseNewFrameEvent(frame.FrameName);
                 }
                 _log.Info("Deleting local files");

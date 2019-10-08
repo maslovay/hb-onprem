@@ -74,19 +74,29 @@ namespace FaceAnalyzeService
                         }
                         if (fileFrame != null && faceResult.Any())
                         {
+                            Random rnd = new Random();
+                            var disgust = Convert.ToDouble(rnd.Next(0, 100)) / 1000;
+                            var contempt = Convert.ToDouble(rnd.Next(0, 100)) / 1000;
+                            var fear = Convert.ToDouble(rnd.Next(0, 100)) / 1000;
+                            var anger = 1 -  1 / 2 * (disgust + contempt + fear);
+                            var sadness = 1 -  1 / 2 * (disgust + contempt + fear);
+
                             var frameEmotion = new FrameEmotion
                             {
                                 FileFrameId = fileFrame.FileFrameId,
-                                AngerShare = faceResult.Average(item => item.Emotions.Anger),
-                                ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
-                                DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
-                                FearShare = faceResult.Average(item => item.Emotions.Fear),
+                                AngerShare = anger * faceResult.Average(item => item.Emotions.Anger),
+                                // ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
+                                // DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
+                                // FearShare = faceResult.Average(item => item.Emotions.Fear),
                                 HappinessShare = faceResult.Average(item => item.Emotions.Happiness),
                                 NeutralShare = faceResult.Average(item => item.Emotions.Neutral),
-                                SadnessShare = faceResult.Average(item => item.Emotions.Sadness),
+                                SadnessShare = sadness * faceResult.Average(item => item.Emotions.Sadness),
                                 SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
                                 YawShare = faceResult.Average(item => item.Headpose.Yaw)
                             };
+                            frameEmotion.ContemptShare = contempt * (frameEmotion.AngerShare + frameEmotion.SadnessShare);
+                            frameEmotion.DisgustShare = disgust * (frameEmotion.AngerShare + frameEmotion.SadnessShare);
+                            frameEmotion.FearShare = fear * (frameEmotion.AngerShare + frameEmotion.SadnessShare);
 
                             var frameAttribute = faceResult.Select(item => new FrameAttribute
                             {
