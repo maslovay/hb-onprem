@@ -72,16 +72,18 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
 
                 var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
-                Func<Campaign, Campaign> campaignContentActiveChoose = (Campaign ñ) =>
-                {
-                    var campContent = ñ.CampaignContents.AsEnumerable();
-                    if (campContent != null && campContent.Count() != 0 )
-                        campContent = campContent.Where(x => x.StatusId != statusInactiveId);
-                    return ñ;
-                };
                 var campaigns = _context.Campaigns.Include(x =>  x.CampaignContents)
                         .Where(x => companyIds.Contains(x.CompanyId) && x.StatusId != statusInactiveId).ToList();
-                var result = campaigns.Select(x => campaignContentActiveChoose(x));
+
+                List<Campaign> result = new List<Campaign>();
+                foreach (var camp in campaigns)
+                {
+                    var campContent = camp.CampaignContents.AsEnumerable();
+                    if (campContent != null && campContent.Count() != 0)
+                        campContent = campContent.Where(x => x.StatusId != statusInactiveId);
+                    camp.CampaignContents = campContent.ToList();
+                    result.Add(camp);
+                }
                 return Ok(result);
             }
             catch (Exception e)
