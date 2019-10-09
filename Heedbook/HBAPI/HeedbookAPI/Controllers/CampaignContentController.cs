@@ -65,7 +65,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("Campaign get started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -73,14 +72,20 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
 
                 var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
-                var campaigns = _context.Campaigns.Include(x => x.CampaignContents)
+                Func<Campaign, Campaign> campaignContentActiveChoose = (Campaign ñ) =>
+                {
+                    var campContent = ñ.CampaignContents.AsEnumerable();
+                    if (campContent != null && campContent.Count() != 0 )
+                        campContent = campContent.Where(x => x.StatusId != statusInactiveId);
+                    return ñ;
+                };
+                var campaigns = _context.Campaigns.Include(x =>  x.CampaignContents)
                         .Where(x => companyIds.Contains(x.CompanyId) && x.StatusId != statusInactiveId).ToList();
-                //  _log.Info("campaign get finished");
-                return Ok(campaigns);
+                var result = campaigns.Select(x => campaignContentActiveChoose(x));
+                return Ok(result);
             }
             catch (Exception e)
             {
-                //  _log.Fatal($"Exception occurred {e}");
                 return BadRequest("Error");
             }
         }
@@ -164,28 +169,34 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("Campaign")]
-        [SwaggerOperation(Summary = "Set campaign inactive", Description = "Set campaign status Inactive and delete all content relations for this campaign")]
+        [SwaggerOperation(Summary = "Delete or set campaign inactive", Description = "Delete or set campaign status Inactive and delete all content relations for this campaign")]
         public IActionResult CampaignDelete([FromQuery] Guid campaignId, [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-            // _log.Info("Campaign DELETE started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
+
             var campaign = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == campaignId).FirstOrDefault();
             if (campaign != null)
             {
-                campaign.StatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
+                var inactiveStatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
+                var links = campaign.CampaignContents.ToList();
+                foreach (var campaignContent in links)
+                {
+                    campaignContent.StatusId = inactiveStatusId;
+                }
+                campaign.StatusId = inactiveStatusId;
                 _context.SaveChanges();
                 try
                 {
                     _context.RemoveRange(campaign.CampaignContents);
+                    _context.Remove(campaign);
                     _context.SaveChanges();
                 }
                 catch
                 {
                     return Ok("Set inactive");
                 }
-                // _log.Info("Campaign DELETE finished");
-                return Ok("OK");
+                return Ok("Deleted");
             }
             return BadRequest("No such campaign");
         }
@@ -196,24 +207,27 @@ namespace UserOperations.Controllers
         public async Task<IActionResult> ContentGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                [FromQuery(Name = "inActive")] bool? inActive,
                                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
-                //  _log.Info("Content GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
 
-                var contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToList();
-                //  _log.Info("Content get finished");
+                var activeStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
+                List<Content> contents;
+                if(inActive == true)
+                    contents = _context.Contents.Where(x => x.StatusId == activeStatusId && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))).ToList();
+                else
+                    contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToList();
                 return Ok(contents);
             }
             catch (Exception e)
             {
-                //  _log.Fatal($"Exception occurred {e}");
                 return BadRequest("Error");
             }
         }
@@ -223,7 +237,6 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "New content", typeof(Content))]
         public async Task<IActionResult> ContentPost([FromBody] Content content, [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-            // _log.Info("Content POST started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
             var companyId = Guid.Parse(userClaims["companyId"]);
@@ -231,12 +244,11 @@ namespace UserOperations.Controllers
             if (!content.IsTemplate) content.CompanyId = (Guid)companyId; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
-            //content.StatusId = 3;
+            content.StatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
             // TODO: content.IsTemplate = false;
-            // content.StatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;;
+
             _context.Add(content);
             _context.SaveChanges();
-            // _log.Info("Content POST finished");
             return Ok(content);
         }
 
@@ -272,31 +284,28 @@ namespace UserOperations.Controllers
             var contentEntity = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
             if (contentEntity != null)
             {
-                try
+                var inactiveStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Inactive").StatusId;
+                    var links = contentEntity.CampaignContents.ToList();
+                if (links.Count() != 0)
                 {
-                    if (contentEntity.CampaignContents != null && contentEntity.CampaignContents.Count() != 0)
+                    foreach (var campaignContent in links)
                     {
-                        var shownCampContentIds = _context.SlideShowSessions.Select(p => p.CampaignContentId).Distinct().ToList();
-                        var campContententForRemove = contentEntity.CampaignContents
-                                .Where(x => !shownCampContentIds.Contains((Guid)x.CampaignContentId)).ToList();
-                        _context.RemoveRange(campContententForRemove);
+                        campaignContent.StatusId = inactiveStatusId;
+                    }
+                    contentEntity.StatusId = inactiveStatusId;
+                    _context.SaveChanges();
+                    try
+                    {
+                        _context.RemoveRange(links);
+                        _context.Remove(contentEntity);
                         _context.SaveChanges();
                     }
-                    if (contentEntity.CampaignContents != null && contentEntity.CampaignContents.Count() != 0)
-                    {
-                        //contentEntity.StatusId = 5;
+                    catch
+                    {                      
+                        return Ok("Set inactive");
                     }
-                    else
-                        _context.Remove(contentEntity);
-                    _context.SaveChanges();
-                    // _log.Info("Content DELETE finished");
-                    return Ok("OK");
                 }
-                catch (Exception e)
-                {
-                    // _log.Fatal($"Exception occurred {e}");
-                    return BadRequest(e.Message);
-                }
+                return Ok("Removed");
             }
             return BadRequest("No such content");
         }

@@ -22,6 +22,7 @@ using Renci.SshNet.Common;
 using UserOperations.Models.AnalyticModels;
 using HBMLHttpClient.Model;
 using System.Drawing;
+using System.Transactions;
 
 namespace UserOperations.Controllers
 {
@@ -71,63 +72,185 @@ namespace UserOperations.Controllers
             //   _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-        [HttpGet("SendToAvatarMake")]
-        public async Task<IActionResult> SendToAvatarMake(int start)
+        [HttpGet("FindOldComapies")]
+        public async Task<IActionResult> FindOldComapies()
         {
-            string html = string.Empty;
-            int counter200 = 0;
-            int counter500 = 0;
+            var date = new DateTime(2019, 01, 01);
+            
+         //   var users = _context.ApplicationUsers.Include(x => x.Dialogue).Include(x =>x.Session).OrderBy(x => x.CreationDate).Take(50).ToList();
+            var users = _context.ApplicationUsers.Include(x => x.Dialogue).OrderBy(x => x.CreationDate).ToList();
 
-            var users = _context.ApplicationUsers.Skip(start).Take(100).Select(x => x.Id).ToList();
-            foreach (var item in users)
+            int userC = 0;
+            int counterInDialogue = 0;
+        //    Dictionary<Guid, List<ConflictDialogues>> result = new Dictionary<Guid, List<ConflictDialogues>>();
+            Dialogue dialogueForRemove = null;
+        //    for (int i = 0; i < 5; i++)
+        //    {
+                userC = 0;
+            foreach (var user in users)
             {
-                string url = @"https://heedbookslave.northeurope.cloudapp.azure.com/api/Help/ClientAvatarMaker?ApplicationUserId=" + item;
-
-                HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
-                request.Method = "GET";
-                String test = String.Empty;
-                try {
-                    using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                userC++;
+                    //    for (var i = date.Date; i < DateTime.Now.Date; i = i.AddDays(1))
                     {
-                        counter200++;
-                    }
+                        //   var end = i.AddDays(1);
+                        //  var dialogues = user.Dialogue.Where(x => x.BegTime >= i && x.BegTime <= end && x.StatusId == 3).OrderBy(x => x.BegTime).ToList();
+                        var dialogues = user.Dialogue.Where(x => x.StatusId == 3 && x.BegTime >= date).OrderBy(x => x.BegTime).ToList();
+                        //  var sessions = user.Session.Where(x => x.BegTime >= i && x.BegTime <= end && x.StatusId == 7).OrderBy(x => x.BegTime).ToList();
+                        //  List<ConflictDialogues> conflictDialogues = new List<ConflictDialogues>();                    
+                        foreach (var d1 in dialogues)
+                        {
+                            var d2 = dialogues
+                                .Where(x => x.DialogueId != d1.DialogueId).ToList()
+                                .FirstOrDefault(x => (x.BegTime < d1.BegTime && d1.EndTime < x.EndTime) || (x.BegTime < d1.BegTime && d1.BegTime < x.EndTime)
+                                || (x.BegTime < d1.EndTime && d1.EndTime < x.EndTime));
+                            if (d2 != null)
+                            {
+                                if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "dialoguevideos/" + $"{d1.DialogueId}.mkv"))
+                                {
+                                    dialogueForRemove = d1;
+                                }
+                                else if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "dialoguevideos/" + $"{d2.DialogueId}.mkv"))
+                                {
+                                    dialogueForRemove = d2;
+                                }
+                                else
+                                {
+                                    var time1 = d1.EndTime.Subtract(d1.BegTime).TotalHours;
+                                    var time2 = d2.EndTime.Subtract(d2.BegTime).TotalHours;
+                                    if (time1 > time2)
+                                    {
+                                        dialogueForRemove = d2;
+                                    }
+                                    else
+                                    {
+                                        dialogueForRemove = d1;
+                                    }
+                                }
+
+                                dialogueForRemove.StatusId = 8;
+                                if (dialogueForRemove.Comment == null)
+                                    dialogueForRemove.Comment = "repeat dialogue";
+
+                                _context.SaveChanges();
+
+
+                                //ConflictDialogues conflictDialogue = new ConflictDialogues();
+
+                                //conflictDialogue.dialog1 = new DialogueWithErrors();
+                                //conflictDialogue.dialog1.beg = d1.BegTime;
+                                //conflictDialogue.dialog1.end = d1.EndTime;
+                                //conflictDialogue.dialog1.dialogueId = d1.DialogueId;
+                                //conflictDialogue.dialog2 = new DialogueWithErrors();
+                                //conflictDialogue.dialog2.beg = d2.BegTime;
+                                //conflictDialogue.dialog2.end = d2.EndTime;
+                                //conflictDialogue.dialog2.dialogueId = d2.DialogueId;
+                                //conflictDialogues.Add(conflictDialogue);
+                                counterInDialogue++;
+                                break;
+                            }
+                        }
+                 //   }
+                    //if(conflictDialogues.Count() != 0)
+                    //result[user.Id] = conflictDialogues;
                 }
-                catch
-                {
-                    counter500++;
-                }
-                }
-            return Ok(html);
+            }
+
+
+            //    foreach (var user in users)
+            //{
+            //    for (var i = date.Date; i < DateTime.Now.Date; i = i.AddDays(1))
+            //    {
+            //        var end = i.AddDays(1);
+            //        var dialogues = user.Dialogue.Where(x => x.BegTime >= i && x.BegTime <= end).OrderBy(x => x.BegTime).ToList();
+            //        var sessions = user.Session.Where(x => x.BegTime >= i && x.BegTime <= end).OrderBy(x => x.BegTime).ToList();
+
+            //        foreach (var d in dialogues)
+            //        {
+            //            if(dialogues.Any(x => x.BegTime < d.BegTime && d.EndTime < x.EndTime))
+            //            {
+            //                counterInDialogue++;
+            //            }
+            //            else if (dialogues.Any(x => x.BegTime < d.BegTime && d.BegTime < x.EndTime))
+            //            {
+            //                counterInDialogue++;
+            //            }
+            //            else if (dialogues.Any(x => x.BegTime < d.EndTime && d.EndTime < x.EndTime))
+            //            {
+            //                counterInDialogue++;
+            //            }
+            //            if (!sessions.Any(x => d.BegTime >= x.BegTime && d.BegTime <= x.EndTime))
+            //            {                           
+
+            //                var nextSession = sessions.Where(x => x.BegTime >= d.BegTime).FirstOrDefault();
+            //                if ((nextSession.BegTime - d.BegTime).TotalHours < 6)
+            //                {
+            //                    counter++;
+            //                    // nextSession.BegTime = d.BegTime;
+            //                    //_context.SaveChanges();
+            //                }
+            //            }
+            //        }
+            //    }
+
+            //}
+
+            return Ok(counterInDialogue);
         }
 
+        public class ConflictDialogues
+        {
+           public  DialogueWithErrors dialog1;
+           public DialogueWithErrors dialog2;
+        }
+
+        public class DialogueWithErrors
+        {
+            public DateTime beg { get; set; }
+            public DateTime end { get; set; }
+            public Guid dialogueId { get; set; }
+        }
 
         [HttpGet("ClientAvatarMaker")]
         public async Task<IActionResult> ClientAvatarMaker(
-                            //[ FromQuery(Name = "ApplicationUserId")] Guid? ApplicationUserId,
-                            [FromQuery(Name = "start")] int start
+                            //[ FromQuery(Name = "take")] int take,
+                            //[FromQuery(Name = "start")] int start
+                 [FromQuery(Name = "userId")] Guid userId
                             )
         {
-            // var dialogue = _context.Dialogues.Where(x => x.DialogueId == dialogueId).FirstOrDefault();
-
             int userCounter = 0;
             int counter200 = 0;
             int counter500 = 0;
 
-            var users = _context.ApplicationUsers.Skip(start).Take(100).Select(x => x.Id).ToList();
-            foreach (var ApplicationUserId in users)
-            {
-                userCounter++;
-                DateTime date = new DateTime(2019, 09, 20);
-                var allDialogues = _context.Dialogues.Where(x => x.ApplicationUserId == ApplicationUserId && x.BegTime <= date).OrderByDescending(x => x.BegTime).ToList();
+            //var users = _context.ApplicationUsers.Skip(start).Take(take).Select(x => x.Id).ToList();
+            //foreach (var ApplicationUserId in users)
+            //{
+                int existCounter = 0;
+                int noFrames = 0;
+                DateTime dateEnd = new DateTime(2019, 09, 21);
+                DateTime dateBeg = new DateTime(2019, 08, 01);
+                var allDialogues = _context.Dialogues.Where(x => x.ApplicationUserId == userId && x.BegTime <= dateEnd && x.BegTime >= dateBeg).OrderByDescending(x => x.BegTime).ToList();
                 //  var atr = _context.FileFrames.Where(item => item.FileName == AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
 
                 foreach (var dialogue in allDialogues)
                 {
+                userCounter++;
+                    try
+                    {
+                        if (await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "clientavatars/" + $"{dialogue.DialogueId}.jpg"))
+                        {
+                            continue;
+                        }
+                    }
+                    catch
+                    {
+                        counter500++;
+                    }
+
                     var frames =
                             _context.FileFrames
                                 .Include(p => p.FrameAttribute)
                                 .Where(item =>
-                                    item.ApplicationUserId == ApplicationUserId
+                                    item.ApplicationUserId == userId
                                     && item.Time >= dialogue.BegTime
                                     && item.Time <= dialogue.EndTime)
                                 .ToList();
@@ -135,40 +258,25 @@ namespace UserOperations.Controllers
                     var attributes = frames.Where(p => p.FrameAttribute.Any())
                         .Select(p => p.FrameAttribute.First())
                         .ToList();
-                    var AvatarFileName = dialogue.DialogueId.ToString() + ".jpg";
-                    // var attributes2 = frames.SelectMany(p => p.FrameAttribute).FirstOrDefault();
-
-                    if (attributes.Count() == 0 && !frames.Any(item => item.FileName == AvatarFileName))
+                    if (attributes.Count() == 0)
                         continue;
 
 
                     FrameAttribute attribute = attributes.First();
-                    //if (!string.IsNullOrWhiteSpace(AvatarFileName))
-                    //{
-                    //    attribute = frames.Where(item => item.FileName == AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
-                    //    attribute = attribute ?? attributes.First();
-                    //}
-                    //else
-                    //{
-                    //  attribute = attributes.First();
-                    //   }
-
-                    if (await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "clientavatars/" + $"{dialogue.DialogueId}.jpg"))
-                    {
-                        continue;
-                    }
                     if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "frames/" + attribute.FileFrame.FileName))
                     {
+                        noFrames++;
+                        if (noFrames == 50) break;
                         continue;
                     }
                     var pathClient = new PathClient();
                     var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
                     try
                     {
-                        //var localPath =
-                        //    await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName, sessionDir);
                         var localPath =
-                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
+                            await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName, sessionDir);
+                        //var localPath =
+                        //await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
 
                         var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
                         var rectangle = new Rectangle
@@ -184,20 +292,23 @@ namespace UserOperations.Controllers
                         await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{dialogue.DialogueId}.jpg");
                         stream.Dispose();
                         stream.Close();
-                        _sftpClient.DisconnectAsync();
+                     await _sftpClient.DisconnectAsync();
+                        Directory.Delete(sessionDir, true);
+                        counter200++;
                     }
                     catch (Exception ex)
                     {
+                        counter500++;
                     }
                 }
-            }
-            Dictionary<string, string> result = new Dictionary<string, string>();
-            result["success"] = counter200.ToString();
+        //    }
+        Dictionary<string, string> result = new Dictionary<string, string>();
+        result["success"] = counter200.ToString();
             result["error"] = counter500.ToString();
             result["users"] = userCounter.ToString();
 
 
-            return Ok();
+            return Ok(result);
 }
 
 

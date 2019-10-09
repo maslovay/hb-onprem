@@ -62,14 +62,12 @@ namespace HBData.Models
         ///     Company to differentiate access
         /// </summary>
         public Guid CompanyId { get; set; }
-
         [JsonIgnore] public Company Company { get; set; }
 
         /// <summary>
         ///     Status
         /// </summary>
         public Int32? StatusId { get; set; }
-
         [JsonIgnore] public Status Status { get; set; }
 
         public ICollection<CampaignContent> CampaignContents { get; set; }

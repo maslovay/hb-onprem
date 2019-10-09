@@ -40,7 +40,7 @@ namespace UserOperations.Services.Scheduler
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     _dbOperation = scope.ServiceProvider.GetRequiredService<DBOperations>();
 
-                    for (int i = 0; i < 5; i++)
+                    for (int i = 1; i < 6; i++)
                     {
                         DateTime today = DateTime.Now.AddDays(-i).Date;
                         if (!_context.Benchmarks.Any(x => x.Day.Date == today))
