@@ -111,9 +111,7 @@ namespace UserOperations.Controllers
                              && x.ApplicationUserId == data.ApplicationUserId)
                              .OrderBy(x => x.BegTime).FirstOrDefault();
                     if (nextSessionByTime != null && nextSessionByTime.BegTime.Subtract(notClosedSessions[i].BegTime).TotalHours < 24)
-                        notClosedSessions[i].EndTime = nextSessionByTime.BegTime;
-                    else
-                        notClosedSessions[i].EndTime = notClosedSessions[i].BegTime.AddHours(24);
+                        notClosedSessions[i].EndTime = nextSessionByTime.BegTime;                  
                     notClosedSessions[i].StatusId = CLOSE;
                 }
                 _context.SaveChanges();

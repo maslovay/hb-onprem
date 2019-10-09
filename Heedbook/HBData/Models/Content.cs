@@ -57,6 +57,9 @@ namespace HBData.Models
         /// </summary>
         public DateTime? UpdateDate { get; set; }
 
+        public Int32? StatusId { get; set; }
+        [JsonIgnore] public Status Status { get; set; }
+
         [JsonIgnore] public ICollection<CampaignContent> CampaignContents { get; set; }
     }
 }

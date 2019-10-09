@@ -47,6 +47,7 @@ namespace UserOperations.Controllers
         {
 //            _log.Info("Account/Register started");
             Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
+            var statusActiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;//---active
 
             if (_context.Companys.Where(x => x.CompanyName == message.CompanyName).Any() || _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                 return BadRequest("Company name or user email not unique");
@@ -82,7 +83,7 @@ namespace UserOperations.Controllers
                         CreationDate = DateTime.UtcNow,
                         FullName = message.FullName,
                         PasswordHash = _loginService.GeneratePasswordHash(message.Password),
-                        StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId//---active
+                        StatusId = statusActiveId
                     };
                     await _context.AddAsync(user);
                     _loginService.SavePasswordHistory(user.Id, user.PasswordHash);
@@ -127,7 +128,7 @@ namespace UserOperations.Controllers
                             PaymentDate = DateTime.UtcNow,
                             TransactionComment = "TRIAL TARIFF;FAKE TRANSACTION"
                         };
-                        company.StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;//---Active
+                        company.StatusId = statusActiveId;
 //                        _log.Info("Transaction created");
                         await _context.Tariffs.AddAsync(tariff);
                         await _context.Transactions.AddAsync(transaction);
@@ -148,6 +149,7 @@ namespace UserOperations.Controllers
                         {
                             content.ContentId = Guid.NewGuid();
                             content.CompanyId = companyId;
+                            content.StatusId = statusActiveId;
                             await _context.Contents.AddAsync(content);
 
                             Campaign campaign = new Campaign
@@ -162,7 +164,7 @@ namespace UserOperations.Controllers
                                 GenderId = 0,
                                 IsSplash = true,
                                 Name = "PROTOTYPE",
-                                StatusId = 3
+                                StatusId = statusActiveId
                             };
                             await _context.Campaigns.AddAsync(campaign);
                             CampaignContent campaignContent = new CampaignContent
@@ -170,7 +172,8 @@ namespace UserOperations.Controllers
                                 CampaignContentId = Guid.NewGuid(),
                                 CampaignId = campaign.CampaignId,
                                 ContentId = content.ContentId,
-                                SequenceNumber = 1
+                                SequenceNumber = 1,
+                                StatusId = statusActiveId
                             };
                             await _context.CampaignContents.AddAsync(campaignContent);
                         }

@@ -29,8 +29,11 @@ namespace HBData.Models
         ///     Link to campaign
         /// </summary>
         public Guid CampaignId { get; set; }
-
         [JsonIgnore] public Campaign Campaign { get; set; }
+
+        public Int32? StatusId { get; set; }
+        [JsonIgnore] public Status Status { get; set; }
+
         [JsonIgnore] public ICollection<SlideShowSession> SlideShowSession {get;set;}
     }
 }

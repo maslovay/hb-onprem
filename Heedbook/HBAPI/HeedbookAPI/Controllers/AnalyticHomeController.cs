@@ -78,10 +78,15 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var industryId = _context.Companys.FirstOrDefault(x => x.CompanyId == companyId).CompanyIndustryId;
+
+
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                var industryIds = _context.Companys
+                 .Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId))?
+                     .Select(x => x.CompanyIndustryId).ToList();
+
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var sessions = _context.Sessions
@@ -135,7 +140,7 @@ namespace UserOperations.Controllers
                 try
                 {
                     benchmarksList = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
-                                                           && (x.IndustryId == industryId || x.IndustryId == null))
+                                                           && industryIds.Contains (x.IndustryId))
                                                             .Join(_context.BenchmarkNames,
                                                                 bench => bench.BenchmarkNameId,
                                                                 names => names.Id,
@@ -219,6 +224,113 @@ namespace UserOperations.Controllers
                 return BadRequest(e);
             }
         }
+
+
+        [HttpGet("DashboardFiltered")]
+        public IActionResult GetDashboardFiltered([FromQuery(Name = "begTime")] string beg,
+                                                  [FromQuery(Name = "endTime")] string end,
+                                                  [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                  [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                  [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                  [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                  [FromHeader] string Authorization)
+        {
+            try
+            {
+                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                    return BadRequest("Token wrong");
+                var role = userClaims["role"];
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                var begTime = _requestFilters.GetBegDate(beg);
+                var endTime = _requestFilters.GetEndDate(end);
+                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                var companyIdsUsersFilter = _context.ApplicationUsers.Where(x => applicationUserIds.Contains(x.Id)).Select(x => x.CompanyId).Distinct().ToList();
+                var industryIds = _context.Companys
+                    .Where(x =>
+                        (!companyIds.Any() || companyIds.Contains(x.CompanyId))
+                        && (!companyIdsUsersFilter.Any() || companyIdsUsersFilter.Contains(x.CompanyId)))?
+                        .Select(x => x.CompanyIndustryId).ToList();
+
+                var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+
+                var typeIdCross = _context.PhraseTypes
+                                    .Where(p => p.PhraseTypeText == "Cross")
+                                    .Select(p => p.PhraseTypeId).First();
+                var dialogues = _context.Dialogues
+                         .Include(p => p.ApplicationUser)
+                         .Include(p => p.DialogueClientSatisfaction)
+                         .Include(p => p.DialoguePhrase)
+                         .Where(p => p.BegTime >= prevBeg
+                                 && p.EndTime <= endTime
+                                 && p.StatusId == 3
+                                 && p.InStatistic == true
+                                 && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                                 && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                                 && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
+                         .Select(p => new DialogueInfo
+                         {
+                             DialogueId = p.DialogueId,
+                             ApplicationUserId = p.ApplicationUserId,
+                             BegTime = p.BegTime,
+                             EndTime = p.EndTime,
+                             CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
+                         })
+                         .ToList();
+
+
+                ////-----------------FOR BRANCH---------------------------------------------------------------
+                List<BenchmarkModel> benchmarksList = null;
+                try
+                {
+                    benchmarksList = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
+                                                           && (industryIds.Contains(x.IndustryId) || x.IndustryId == null))
+                                                            .Join(_context.BenchmarkNames,
+                                                                bench => bench.BenchmarkNameId,
+                                                                names => names.Id,
+                                                                (bench, names) => new BenchmarkModel { Name = names.Name, Value = bench.Value })
+                                                            .ToList();
+                }
+                catch
+                {
+
+                }
+
+                var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
+                var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
+
+                double? crossIndexIndustryAverage = null, crossIndexIndustryBenchmark = null;
+                var crossIndex = _dbOperation.CrossIndex(dialoguesCur);
+                var dialoguesCount = _dbOperation.DialoguesCount(dialoguesCur);
+
+                //---benchmarks
+                if (benchmarksList != null && benchmarksList.Count() != 0)
+                {
+                    crossIndexIndustryAverage = benchmarksList.Any(x => x.Name == "CrossIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg")?.Average(x => x.Value) : null;
+                    crossIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "CrossIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+                }
+
+                var result = new
+                {
+                    DialoguesCount = dialoguesCount,
+                    DialoguesCountDelta = dialoguesCount - _dbOperation.DialoguesCount(dialoguesOld),
+
+                    CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
+                    CrossIndexDelta = crossIndex - _dbOperation.CrossIndex(dialoguesOld),
+
+                    CrossIndexIndustryAverage = crossIndexIndustryAverage,
+                    CrossIndexIndustryBenchmark = crossIndexIndustryBenchmark
+                };
+
+
+                var jsonToReturn = JsonConvert.SerializeObject(result);
+                return Ok(jsonToReturn);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+
 
         [HttpGet("Recomendation")]
         public IActionResult GetRecomendation([FromQuery(Name = "begTime")] string beg,

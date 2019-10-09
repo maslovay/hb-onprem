@@ -62,8 +62,7 @@ namespace UserOperations.Controllers
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
 //            _log = log;
-        }
-  
+        }    
 
         [HttpGet("EmployeeRating")]
         public IActionResult SpeechEmployeeRating([FromQuery(Name = "begTime")] string beg,
