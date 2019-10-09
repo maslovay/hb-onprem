@@ -252,6 +252,29 @@ namespace HBLib.Utils
             var res = cmd.runCMD(FfPath, arguments);
             return res;
         }
+        public string CreateVideoFromAudioAndOneFrame(string framePath, string audioPath)
+        {
+            var cmd = new CMDWithOutput();
+            var filename = Path.GetFileNameWithoutExtension($"{audioPath}");
+            var directoryPath = Path.GetDirectoryName($"{audioPath}");
+            var newName = $"{directoryPath}/{filename}.mkv";
+
+            var arguments = $"-loop 1 -y -i {framePath} -i {audioPath} -shortest -acodec copy -vcodec mjpeg {newName}";
+            var res = cmd.runCMD(FfPath, arguments);
+            return res;
+        }
+        public string ChangeBitrateTo8000(string audioPath)
+        {
+            var cmd = new CMDWithOutput();
+            var filename = Path.GetFileNameWithoutExtension($"{audioPath}");
+            var directoryPath = Path.GetDirectoryName($"{audioPath}");
+            var newName = $"{directoryPath}/newdirectory/{filename}.wav";
+
+            var arguments = $"-i {audioPath} -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:a +bitexact {newName}";
+            //ffmpeg -i 0a78acd6-8115-4c34-a6c4-7802c50d7858.wav -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:a +bitexact 123.wav
+            var res = cmd.runCMD(FfPath, arguments);
+            return res;
+        }
 
         public String ConcatSameCodecsAndFrames(List<FFmpegCommand> fns, String outputFn, String dir = null)
         {
