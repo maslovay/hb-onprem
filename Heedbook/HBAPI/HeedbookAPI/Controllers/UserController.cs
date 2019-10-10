@@ -773,7 +773,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("Dialogue")]
-        [SwaggerOperation(Summary = "Change InStatistic", Description = "Change InStatistic(true/false) of dialogue")]
+        [SwaggerOperation(Summary = "Change InStatistic", Description = "Change InStatistic(true/false) of dialogue/dialogues")]
         public IActionResult DialoguePut(
                 [FromBody] DialoguePut message,
                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
@@ -784,8 +784,15 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var dialogue = _context.Dialogues.FirstOrDefault(p => p.DialogueId == message.DialogueId);
-                dialogue.InStatistic = message.InStatistic;
+                List<Dialogue> dialogues;
+                if(message.DialogueIds!= null)
+                    dialogues = _context.Dialogues.Where(x => message.DialogueIds.Contains(x.DialogueId)).ToList();
+                else
+                    dialogues = _context.Dialogues.Where(p => p.DialogueId == message.DialogueId).ToList();
+                foreach (var dialogue in dialogues)
+                {
+                    dialogue.InStatistic = message.InStatistic;
+                }
                 _context.SaveChanges();
                 // _log.Info("Function DialoguePut finished");
                 return Ok(message.InStatistic);
@@ -951,6 +958,7 @@ namespace UserOperations.Controllers
     public class DialoguePut
     {
         public Guid DialogueId;
+        public List<Guid> DialogueIds;//--this done for versions
         public bool InStatistic;
     }
 
