@@ -600,6 +600,7 @@ namespace UserOperations.Controllers
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
                     p.StatusId == activeStatus &&
+                    p.InStatistic == true &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
@@ -608,19 +609,17 @@ namespace UserOperations.Controllers
                 )
                 .Select(p => new
                 {
-                    DialogueId = p.DialogueId,
+                    p.DialogueId,
                     Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
-                    ApplicationUserId = p.ApplicationUserId,
-                    FullName = p.ApplicationUser.FullName,
+                    p.ApplicationUserId,
+                    p.ApplicationUser.FullName,
                     DialogueHints = p.DialogueHint,
-                    BegTime = p.BegTime,
-                    EndTime = p.EndTime,
-                    CreationTime = p.CreationTime,
-                    Comment = p.Comment,
-                    SysVersion = p.SysVersion,
-                    StatusId = p.StatusId,
-                    InStatistic = p.InStatistic,
-                    MeetingExpectationsTotal = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                    p.BegTime,
+                    p.EndTime,
+                    duration = p.EndTime.Subtract(p.BegTime),
+                    p.StatusId,
+                    p.InStatistic,
+                    p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 }).ToList();
                 // _log.Info("User/Dialogue GET finished");
                 return Ok(dialogues);
@@ -633,7 +632,8 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("DialoguePaginated")]
-        [SwaggerOperation(Description = "Return collection of dialogues from dialogue phrases by filters (one page)")]
+        [SwaggerOperation(Description =
+            "Return collection of dialogues from dialogue phrases by filters (one page). limit=10, page=0, orderBy=begTime/endTime/fullName/duration/meetingExpectationsTotal, orderDirection=desc/asc")]
         public IActionResult DialoguePaginatedGet([FromQuery(Name = "begTime")] string beg,
                                            [FromQuery(Name = "endTime")] string end,
                                            [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
@@ -646,8 +646,8 @@ namespace UserOperations.Controllers
                                            [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization,
                                            [FromQuery(Name = "limit")] int limit = 10,
                                            [FromQuery(Name = "page")] int page = 0,
-                                           [FromQuery(Name = "orderBy")] string orderBy = "BegTime",
-                                           [FromQuery(Name = "orderDirection")] int orderDirection = 0)
+                                           [FromQuery(Name = "orderBy")] string orderBy = "begTime",
+                                           [FromQuery(Name = "orderDirection")] string orderDirection = "desc")
         {
             try
             {
@@ -667,6 +667,7 @@ namespace UserOperations.Controllers
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
                     p.StatusId == activeStatus &&
+                    p.InStatistic == true &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
@@ -675,29 +676,27 @@ namespace UserOperations.Controllers
                 )
                 .Select(p => new
                 {
-                    p.DialogueId,
-                    Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
-                    p.ApplicationUserId,
-                    p.ApplicationUser.FullName,
-                    DialogueHints = p.DialogueHint.Count() != 0? "YES": null,
-                    p.BegTime,
-                    p.EndTime,
-                    p.CreationTime,
-                    p.Comment,
-                    p.SysVersion,
-                    p.StatusId,
-                    p.InStatistic,
-                    p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                    dialogueId = p.DialogueId,
+                    avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
+                    applicationUserId = p.ApplicationUserId,
+                    fullName = p.ApplicationUser.FullName,
+                    dialogueHints = p.DialogueHint.Count() != 0? "YES": null,
+                    begTime = p.BegTime,
+                    endTime = p.EndTime,
+                    duration = p.EndTime.Subtract(p.BegTime),
+                    statusId = p.StatusId,
+                    inStatistic = p.InStatistic,
+                    meetingExpectationsTotal = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 }).ToList();
 
-
+                if (dialogues.Count() == 0) return Ok(dialogues);
 
                 ////---PAGINATION---
                 var pageCount = (int)Math.Ceiling((double)dialogues.Count() / limit);//---round to the bigger 
 
                 Type dialogueType = dialogues.First().GetType();
                 PropertyInfo prop = dialogueType.GetProperty(orderBy);
-                if (orderDirection == 0)
+                if (orderDirection == "asc")
                 {
                     var dialoguesList = dialogues.OrderBy(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
                     return Ok(new { dialoguesList, pageCount, orderBy, limit, page });
