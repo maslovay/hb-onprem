@@ -32,9 +32,17 @@ namespace FillingSatisfactionService.Helper
             var audio = audios.Find(p => p.DialogueId == dialogueId);
             var speech = speechs.Find(p => p.DialogueId == dialogueId);
 
-            var totalScore = 25 + CalculateVisual(visual) + CalculateAudio(audio) + CalculateText(speech);
+            var totalScore = 35 + CalculateVisual(visual) + CalculateAudio(audio) + CalculateText(speech);
+
+            var ACot11 = 2.5*(Math.PI/2-Math.Atan((totalScore-10)*0.25)) + 1.05;
+            var ACot12 = 0.06*(Math.PI/2-Math.Atan((totalScore-80)*0.1)) + 0.75;
+            var ATan13 = 0.3*Math.Atan((totalScore-2.5)*1) + 0.465;
+            var ACot21 = 0.245*(Math.PI/2-Math.Atan((totalScore-34)*0.7)) + 1.1;
+            var ATan22 = 0.12*Math.Atan((totalScore-21)*0.3) + 0.8;
+
+            totalScore = Convert.ToInt16(totalScore * (ACot11 * ACot12 * ATan13 * ACot21 * ATan22));
             if (totalScore > 99) return 99;
-            if (totalScore < 10) return 10;
+            if (totalScore < 35) return 35;
             return Convert.ToInt32(totalScore);
         }
 
