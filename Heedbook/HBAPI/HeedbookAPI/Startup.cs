@@ -52,7 +52,6 @@ namespace UserOperations
             services.AddScoped<Utils.DBOperations>();
             services.AddScoped<Utils.DBOperationsWeeklyReport>();
             services.AddScoped<RequestFilters>();
-            services.AddScoped<IndexesProvider>();       
             services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
             {
                 p.Password.RequireDigit = true;
@@ -68,6 +67,7 @@ namespace UserOperations
             services.AddSwaggerGen(c =>
             {
                 c.EnableAnnotations();
+                c.OperationFilter<FileOperationFilter>();
                 c.SwaggerDoc("v1", new Info
                 {
                     Title = "User Service Api",
