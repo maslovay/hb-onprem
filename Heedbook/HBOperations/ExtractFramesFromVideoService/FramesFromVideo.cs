@@ -102,10 +102,9 @@ namespace ExtractFramesFromVideo
                         _log.Info($"Creating frame - {frame.FrameName}");
                         RaiseNewFrameEvent(frame.FrameName);
                     }
-
-                    _context.FileFrames.AddRange(fileFrames);
-                    _context.SaveChanges();
                 }
+                _context.FileFrames.AddRange(fileFrames);
+                _context.SaveChanges();
                 _log.Info("Deleting local files");
                 Directory.Delete(sessionDir, true);
 
