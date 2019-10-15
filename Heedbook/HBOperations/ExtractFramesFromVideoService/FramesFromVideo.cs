@@ -52,6 +52,9 @@ namespace ExtractFramesFromVideo
 
         public async Task Run(string videoBlobRelativePath)
         {
+            _log.SetFormat("{Path}");
+            _log.SetArgs(videoBlobRelativePath);
+
             try
             {
                 _log.Info("Function Extract Frames From Video Started");            
@@ -76,6 +79,7 @@ namespace ExtractFramesFromVideo
 
                 var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
                 var frames = GetLocalFilesInformation(applicationUserId, sessionDir, videoTimeStamp);
+                System.Console.WriteLine($"Frames info - {JsonConvert.SerializeObject(frames)}");
                 var tasks = frames.Select(p => {
                     return Task.Run(async() => 
                     {
