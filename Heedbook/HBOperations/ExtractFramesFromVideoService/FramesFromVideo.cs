@@ -87,17 +87,20 @@ namespace ExtractFramesFromVideo
                 _log.Info($"Processing frames {JsonConvert.SerializeObject(frames)}");
                 var existedFrames = _context.FileFrames.Where(p => p.ApplicationUserId == Guid.Parse(applicationUserId))
                     .ToList();
+                var fileFrames = new List<FileFrame>();
                 foreach (var frame in frames)
                 {
                     var existedFrame = existedFrames?.FirstOrDefault(p => p.FileName == frame.FrameName);
                     if(existedFrame == null)
                     {
                         var fileFrame = await CreateFileFrameAsync(applicationUserId, frame.FrameTime, frame.FrameName);
-                        _context.FileFrames.Add(fileFrame);
-                        _context.SaveChanges();
+                        fileFrames.Add(fileFrame);
                         _log.Info($"Creating frame - {frame.FrameName}");
                         RaiseNewFrameEvent(frame.FrameName);
                     }
+
+                    _context.FileFrames.AddRange(fileFrames);
+                    _context.SaveChanges();
                 }
                 _log.Info("Deleting local files");
                 Directory.Delete(sessionDir, true);
