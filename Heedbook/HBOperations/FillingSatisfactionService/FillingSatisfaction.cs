@@ -113,7 +113,7 @@ namespace FillingSatisfactionService
                 double employeeEndScore = 0, teacherEndScore = 0;
                 if (satisfactionScore != null)
                 {
-                    if (satisfactionScore.MeetingExpectationsByClient != null)
+                    if (satisfactionScore.MeetingExpectationsByClient != null && satisfactionScore.MeetingExpectationsByClient != 0)
                     {
                         clientTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByClient);
                         clientWeight = Convert.ToDouble(_config.ClientWeight);
@@ -193,9 +193,10 @@ namespace FillingSatisfactionService
                         EndMoodTotal = Math.Max((double) endMoodTotal, 35 ),
                         MeetingExpectationsByNN = Math.Max((double) meetingExpectationsByNN, 35),
                         BegMoodByNN = Math.Max((double) begMoodByNN, 35 ),
-                        EndMoodByNN = Math.Max((double) endMoodByNN, 35 )
+                        EndMoodByNN = Math.Max((double) endMoodByNN, 35 ),
+                        MeetingExpectationsByClient = _calculations.MeetingExpectationsByClientCalculate(dialogue) == 0 ? null : (double?)_calculations.MeetingExpectationsByClientCalculate(dialogue)
                     };
-                    _log.Info($"Total mood is --- {emp.MeetingExpectationsTotal}");
+                    _log.Info($"Total mood is --- {emp.MeetingExpectationsTotal}, By Client -- {emp.MeetingExpectationsByClient}");
                     _context.DialogueClientSatisfactions.Add(emp);
                 }
                 else

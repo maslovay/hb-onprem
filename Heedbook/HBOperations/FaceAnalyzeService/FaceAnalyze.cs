@@ -98,6 +98,18 @@ namespace FaceAnalyzeService
                             frameEmotion.DisgustShare = disgust * (frameEmotion.AngerShare + frameEmotion.SadnessShare);
                             frameEmotion.FearShare = fear * (frameEmotion.AngerShare + frameEmotion.SadnessShare);
 
+                            var sum = frameEmotion.AngerShare + frameEmotion.HappinessShare + frameEmotion.NeutralShare + frameEmotion.SadnessShare 
+                                + frameEmotion.SurpriseShare + frameEmotion.ContemptShare + frameEmotion.DisgustShare + frameEmotion.FearShare;
+                            
+                            frameEmotion.AngerShare = frameEmotion.AngerShare / sum;
+                            frameEmotion.HappinessShare = frameEmotion.HappinessShare / sum;
+                            frameEmotion.NeutralShare = frameEmotion.NeutralShare / sum;
+                            frameEmotion.SadnessShare = frameEmotion.SadnessShare / sum;
+                            frameEmotion.SurpriseShare = frameEmotion.SurpriseShare / sum;
+                            frameEmotion.ContemptShare = frameEmotion.ContemptShare / sum;
+                            frameEmotion.DisgustShare = frameEmotion.DisgustShare / sum;
+                            frameEmotion.FearShare = frameEmotion.FearShare / sum;
+
                             var frameAttribute = faceResult.Select(item => new FrameAttribute
                             {
                                 Age = item.Attributes.Age,

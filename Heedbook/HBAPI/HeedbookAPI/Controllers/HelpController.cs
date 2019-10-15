@@ -24,6 +24,7 @@ using UserOperations.AccountModels;
 using HBData;
 using UserOperations.Models;
 using System.Data.SqlClient;
+using System.Threading;
 
 
 using System.Globalization;
@@ -257,11 +258,36 @@ namespace UserOperations.Controllers
             return Ok();
         }
         
-        [HttpGet("test")]
-        public IActionResult test()
+        [HttpPost("test")]
+        public IActionResult test([FromBody]DateTime dateTime)
         {
            
-            var begTime = DateTime.Now.AddDays(-10);
+            var dialogues = _context.Dialogues
+                .Include(p => p.DialogueWord)
+                .Where(p => !p.DialogueWord.Any() && p.BegTime >= dateTime)
+                .Select(p => p.DialogueId)
+                .ToList();
+            
+            foreach (var dialogueId in dialogues)
+            {
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create("http://10.32.10.115/user/AudioAnalyze/audio-analyze");
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                   var dict = new Dictionary<string, string>();
+                   dict["Path"] = $"dialogueaudios/{dialogueId}.wav";
+                    streamWriter.Write(JsonConvert.SerializeObject(dict));
+                }
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    var result = streamReader.ReadToEnd();
+                    System.Console.WriteLine("Result" + result);
+                }
+
+                Thread.Sleep(300);
+            }
             // var frameLast = _context.FileFrames.Where(p => p.FileName == "f62f320f-e448-40a1-90d3-9af1c745303d_20190709150711.jpg").FirstOrDefault();
             // var begTime = frameLast.Time;
             // var EndTime = DateTime.UtcNow.AddHours(-13);

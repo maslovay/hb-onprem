@@ -97,6 +97,46 @@ namespace UserOperations.Controllers
             }
         }
 
+        [HttpPut("DialogueSatisfaction")]
+        [SwaggerOperation(Summary = "Change Satisfaction ", Description = "Change Satisfaction (true/false) of dialogue")]
+        public IActionResult DialogueSatisfactionPut(
+            [FromBody] DialogueSatisfactionPut message,
+            [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        {
+            try
+            {
+                // _log.Info("Function DialogueSatisfactionPut started");
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+
+                var role = userClaims["role"];
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                if (role != "Admin" && role != "Supervisor")
+                    return BadRequest("No permission");
+                if (role == "Supervisor")
+                {
+                    var companyForDialogueId = _context.Dialogues
+                        .Include(x => x.ApplicationUser)
+                        .FirstOrDefault(x => x.DialogueId == message.DialogueId)
+                        .ApplicationUser.CompanyId;
+                    if(companyForDialogueId != companyId) return BadRequest("No permission");
+                }
+                    var dialogueClientSatisfaction = _context.DialogueClientSatisfactions.FirstOrDefault(x => x.DialogueId == message.DialogueId);
+                    dialogueClientSatisfaction.MeetingExpectationsByTeacher = message.Satisfaction;
+                    dialogueClientSatisfaction.BegMoodByTeacher = message.BegMoodTotal;
+                    dialogueClientSatisfaction.EndMoodByTeacher = message.EndMoodTotal;
+
+                    _context.SaveChanges();
+                    // _log.Info("Function DialogueSatisfactionPut finished");
+                    return Ok(JsonConvert.SerializeObject(dialogueClientSatisfaction));
+            }
+            catch (Exception e)
+            {
+                // _log.Fatal($"Exception occurred while executing DialogueSatisfactionPut {e}");
+                return BadRequest(e.Message);
+            }
+        }
+
         [HttpPost("User")]
         [SwaggerOperation(Description = "Create new user with role Employee in loggined company (taked from token) and can save avatar for user / Return new user")]
         [SwaggerResponse(200, "User", typeof(UserModel))]
@@ -815,5 +855,13 @@ namespace UserOperations.Controllers
     {
         public Guid DialogueId;
         public bool InStatistic;
+    }
+
+    public class DialogueSatisfactionPut
+    {
+        public Guid DialogueId;
+        public double Satisfaction;
+        public double BegMoodTotal;
+        public double EndMoodTotal;
     }
 }

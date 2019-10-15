@@ -198,7 +198,7 @@ namespace UserOperations.Controllers
             }
             catch( Exception e)
             {
-                return BadRequest("Error");
+                return BadRequest($"Error {e}");
             }
         }
     }   
