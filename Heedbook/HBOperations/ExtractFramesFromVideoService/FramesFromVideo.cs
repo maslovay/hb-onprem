@@ -103,8 +103,12 @@ namespace ExtractFramesFromVideo
                         RaiseNewFrameEvent(frame.FrameName);
                     }
                 }
-                _context.FileFrames.AddRange(fileFrames);
-                _context.SaveChanges();
+                _log.Info($"Frames for adding - {JsonConvert.SerializeObject(fileFrames)}");
+                if (fileFrames.Any())
+                {
+                    _context.FileFrames.AddRange(fileFrames);
+                    _context.SaveChanges();
+                }
                 _log.Info("Deleting local files");
                 Directory.Delete(sessionDir, true);
 
