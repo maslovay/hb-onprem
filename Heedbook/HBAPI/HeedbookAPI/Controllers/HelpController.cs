@@ -72,148 +72,173 @@ namespace UserOperations.Controllers
             //   _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-        [HttpGet("FindOldComapies")]
-        public async Task<IActionResult> FindOldComapies()
-        {
-            var date = new DateTime(2019, 01, 01);
-            
-         //   var users = _context.ApplicationUsers.Include(x => x.Dialogue).Include(x =>x.Session).OrderBy(x => x.CreationDate).Take(50).ToList();
-            var users = _context.ApplicationUsers.Include(x => x.Dialogue).OrderBy(x => x.CreationDate).ToList();
+    
 
+        [HttpGet("FindTheSameDialogues")]
+        public async Task<IActionResult> FindTheSameDialogues()
+        {
+            var date = new DateTime(2019, 10, 01);
+            var users = _context.ApplicationUsers.Include(x => x.Dialogue).OrderBy(x => x.CreationDate).ToList();
             int userC = 0;
             int counterInDialogue = 0;
-        //    Dictionary<Guid, List<ConflictDialogues>> result = new Dictionary<Guid, List<ConflictDialogues>>();
             Dialogue dialogueForRemove = null;
-        //    for (int i = 0; i < 5; i++)
-        //    {
-                userC = 0;
+            userC = 0;
             foreach (var user in users)
             {
                 userC++;
-                    //    for (var i = date.Date; i < DateTime.Now.Date; i = i.AddDays(1))
+                var dialogues = user.Dialogue.Where(x => x.StatusId == 3 && x.BegTime >= date).OrderBy(x => x.BegTime).ToList();
+                foreach (var d1 in dialogues)
+                {
+                    var d2 = dialogues
+                        .Where(x => x.DialogueId != d1.DialogueId).ToList()
+                        .FirstOrDefault(x => (x.BegTime < d1.BegTime && d1.EndTime < x.EndTime) || (x.BegTime < d1.BegTime && d1.BegTime < x.EndTime)
+                        || (x.BegTime < d1.EndTime && d1.EndTime < x.EndTime));
+                    if (d2 != null)
                     {
-                        //   var end = i.AddDays(1);
-                        //  var dialogues = user.Dialogue.Where(x => x.BegTime >= i && x.BegTime <= end && x.StatusId == 3).OrderBy(x => x.BegTime).ToList();
-                        var dialogues = user.Dialogue.Where(x => x.StatusId == 3 && x.BegTime >= date).OrderBy(x => x.BegTime).ToList();
-                        //  var sessions = user.Session.Where(x => x.BegTime >= i && x.BegTime <= end && x.StatusId == 7).OrderBy(x => x.BegTime).ToList();
-                        //  List<ConflictDialogues> conflictDialogues = new List<ConflictDialogues>();                    
-                        foreach (var d1 in dialogues)
+                        if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "dialoguevideos/" + $"{d1.DialogueId}.mkv"))
                         {
-                            var d2 = dialogues
-                                .Where(x => x.DialogueId != d1.DialogueId).ToList()
-                                .FirstOrDefault(x => (x.BegTime < d1.BegTime && d1.EndTime < x.EndTime) || (x.BegTime < d1.BegTime && d1.BegTime < x.EndTime)
-                                || (x.BegTime < d1.EndTime && d1.EndTime < x.EndTime));
-                            if (d2 != null)
+                            dialogueForRemove = d1;
+                        }
+                        else if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "dialoguevideos/" + $"{d2.DialogueId}.mkv"))
+                        {
+                            dialogueForRemove = d2;
+                        }
+                        else
+                        {
+                            var time1 = d1.EndTime.Subtract(d1.BegTime).TotalHours;
+                            var time2 = d2.EndTime.Subtract(d2.BegTime).TotalHours;
+                            if (time1 > time2)
                             {
-                                if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "dialoguevideos/" + $"{d1.DialogueId}.mkv"))
-                                {
-                                    dialogueForRemove = d1;
-                                }
-                                else if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "dialoguevideos/" + $"{d2.DialogueId}.mkv"))
-                                {
-                                    dialogueForRemove = d2;
-                                }
-                                else
-                                {
-                                    var time1 = d1.EndTime.Subtract(d1.BegTime).TotalHours;
-                                    var time2 = d2.EndTime.Subtract(d2.BegTime).TotalHours;
-                                    if (time1 > time2)
-                                    {
-                                        dialogueForRemove = d2;
-                                    }
-                                    else
-                                    {
-                                        dialogueForRemove = d1;
-                                    }
-                                }
-
-                                dialogueForRemove.StatusId = 8;
-                                if (dialogueForRemove.Comment == null)
-                                    dialogueForRemove.Comment = "repeat dialogue";
-
-                                _context.SaveChanges();
-
-
-                                //ConflictDialogues conflictDialogue = new ConflictDialogues();
-
-                                //conflictDialogue.dialog1 = new DialogueWithErrors();
-                                //conflictDialogue.dialog1.beg = d1.BegTime;
-                                //conflictDialogue.dialog1.end = d1.EndTime;
-                                //conflictDialogue.dialog1.dialogueId = d1.DialogueId;
-                                //conflictDialogue.dialog2 = new DialogueWithErrors();
-                                //conflictDialogue.dialog2.beg = d2.BegTime;
-                                //conflictDialogue.dialog2.end = d2.EndTime;
-                                //conflictDialogue.dialog2.dialogueId = d2.DialogueId;
-                                //conflictDialogues.Add(conflictDialogue);
-                                counterInDialogue++;
-                                break;
+                                dialogueForRemove = d2;
+                            }
+                            else
+                            {
+                                dialogueForRemove = d1;
                             }
                         }
-                 //   }
-                    //if(conflictDialogues.Count() != 0)
-                    //result[user.Id] = conflictDialogues;
+                        dialogueForRemove.StatusId = 8;
+                        if (dialogueForRemove.Comment == null)
+                            dialogueForRemove.Comment = "repeat dialogue";
+
+                        _context.SaveChanges();
+                        counterInDialogue++;
+                        break;
+                    }
                 }
             }
-
-
-            //    foreach (var user in users)
-            //{
-            //    for (var i = date.Date; i < DateTime.Now.Date; i = i.AddDays(1))
-            //    {
-            //        var end = i.AddDays(1);
-            //        var dialogues = user.Dialogue.Where(x => x.BegTime >= i && x.BegTime <= end).OrderBy(x => x.BegTime).ToList();
-            //        var sessions = user.Session.Where(x => x.BegTime >= i && x.BegTime <= end).OrderBy(x => x.BegTime).ToList();
-
-            //        foreach (var d in dialogues)
-            //        {
-            //            if(dialogues.Any(x => x.BegTime < d.BegTime && d.EndTime < x.EndTime))
-            //            {
-            //                counterInDialogue++;
-            //            }
-            //            else if (dialogues.Any(x => x.BegTime < d.BegTime && d.BegTime < x.EndTime))
-            //            {
-            //                counterInDialogue++;
-            //            }
-            //            else if (dialogues.Any(x => x.BegTime < d.EndTime && d.EndTime < x.EndTime))
-            //            {
-            //                counterInDialogue++;
-            //            }
-            //            if (!sessions.Any(x => d.BegTime >= x.BegTime && d.BegTime <= x.EndTime))
-            //            {                           
-
-            //                var nextSession = sessions.Where(x => x.BegTime >= d.BegTime).FirstOrDefault();
-            //                if ((nextSession.BegTime - d.BegTime).TotalHours < 6)
-            //                {
-            //                    counter++;
-            //                    // nextSession.BegTime = d.BegTime;
-            //                    //_context.SaveChanges();
-            //                }
-            //            }
-            //        }
-            //    }
-
-            //}
-
             return Ok(counterInDialogue);
         }
 
-        public class ConflictDialogues
+
+        [HttpGet("FindTheSameSessions")]
+        public async Task<IActionResult> FindTheSameSessions()
         {
-           public  DialogueWithErrors dialog1;
-           public DialogueWithErrors dialog2;
+            var dateEnd = new DateTime(2019, 10, 01);
+            var date = new DateTime(2019, 01, 01);
+            var users = _context.ApplicationUsers.Where(x => x.Email != "bogan77test@bk.ru").Include(x => x.Session).Include(x => x.Dialogue).OrderBy(x => x.CreationDate).ToList();
+            int userC = 0;
+            int counterInSes = 0;
+            userC = 0;
+            foreach (var user in users)
+            {
+                userC++;
+                var sessions = user.Session.Where(x => x.StatusId == 7 && x.BegTime >= date && x.BegTime <= dateEnd).OrderBy(x => x.BegTime).ToList();
+                var dialogues = user.Dialogue.Where(x => x.StatusId == 3 && x.BegTime >= date && x.BegTime <= dateEnd).ToList();
+                foreach (var s1 in sessions)
+                {
+                    //var s2 = sessions
+                    //    .Where(x => x.SessionId != s1.SessionId).ToList()
+                    //    .FirstOrDefault(x => (x.BegTime <= s1.BegTime && s1.EndTime <= x.EndTime));//сессія в середині іншої сессії
+
+                    //if (s2 != null)
+                    //{
+                    //    s1.StatusId = 8;//error                        
+                    //    counterInSes++;
+                    //  //  break;
+                    //}
+                    //else
+                    //{
+                    var s2 = sessions
+                     .Where(x => x.SessionId != s1.SessionId).ToList()
+                     .FirstOrDefault(x => (x.BegTime < s1.BegTime && s1.BegTime < x.EndTime));//---сессiя s1 почалась в середины іншої (s2) сессії а закінчилась пізніше
+
+                    if (s2 != null)
+                    {
+                       // s1.BegTime = s2.EndTime;
+
+                        var dialogueInSess1 = dialogues.Where(d => d.BegTime >= s1.BegTime && d.EndTime <= s1.EndTime).ToList();
+                        var dialogueInSess2 = dialogues.Where(d => d.BegTime >= s2.BegTime && d.EndTime <= s2.EndTime).ToList();
+                        if (dialogueInSess1.Count() == 0)//---якщо в s1 немає діалога всередині
+                        {
+                            s1.BegTime = s2.EndTime.AddMilliseconds(5);
+                            counterInSes++;
+                        }
+                        else if (dialogueInSess2.Count() == 0)//---якщо в s2 немає діалога всередині                                
+                        {
+                            s2.EndTime = s1.BegTime;
+                            counterInSes++;
+                        }
+                        //else
+                        //{
+                        //    //---якщо в обох сессіях є діалог - 1
+                        //    s2.EndTime = dialogueInSess1.OrderByDescending(x => x.EndTime).First().EndTime;
+                        //    s1.BegTime = dialogueInSess2.OrderBy(x => x.BegTime).First().BegTime;
+                        //}
+                        counterInSes++;
+                        break;
+                    }
+                    //    }
+                }              
+            }
+
+            _context.SaveChanges();
+            return Ok(counterInSes);
         }
 
-        public class DialogueWithErrors
+
+        [HttpGet("FindDialoguesWithoutSessions")]
+        public async Task<IActionResult> FindDialoguesWithoutSessions()
         {
-            public DateTime beg { get; set; }
-            public DateTime end { get; set; }
-            public Guid dialogueId { get; set; }
+            var date = new DateTime(2019, 01, 01);
+            var users = _context.ApplicationUsers.Include(x => x.Dialogue).OrderBy(x => x.CreationDate).ToList();
+            int userC = 0;
+            int counter = 0;
+            Dialogue dialogueForRemove = null;
+            userC = 0;
+            foreach (var user in users)
+            {
+                    var dialogues = user.Dialogue.OrderBy(x => x.BegTime).ToList();
+                    var sessions = user.Session.OrderBy(x => x.BegTime).ToList();
+
+                    foreach (var dial in dialogues)
+                    {                     
+                        if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---діалог в середині сессії відсутній
+                        {
+                        if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.BegTime <= ses.EndTime))//---є діалог що почався в сессії
+                        {
+
+                        }
+                        else if (!sessions.Any(ses => dial.EndTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---є діалог що закінчився в сессії
+                        { 
+
+                            var nextSession = sessions.Where(x => x.BegTime >= dial.BegTime).FirstOrDefault();
+                            if ((nextSession.BegTime - dial.BegTime).TotalHours < 6)
+                            {
+                                counter++;
+                                nextSession.BegTime = dial.BegTime;
+                                _context.SaveChanges();
+                            }
+                        }
+                        }
+                    }
+            }
+            return Ok();
         }
 
         [HttpGet("ClientAvatarMaker")]
         public async Task<IActionResult> ClientAvatarMaker(
-                            //[ FromQuery(Name = "take")] int take,
-                            //[FromQuery(Name = "start")] int start
+                 //[ FromQuery(Name = "take")] int take,
+                 //[FromQuery(Name = "start")] int start
                  [FromQuery(Name = "userId")] Guid userId
                             )
         {
@@ -224,201 +249,93 @@ namespace UserOperations.Controllers
             //var users = _context.ApplicationUsers.Skip(start).Take(take).Select(x => x.Id).ToList();
             //foreach (var ApplicationUserId in users)
             //{
-                int existCounter = 0;
-                int noFrames = 0;
-                DateTime dateEnd = new DateTime(2019, 09, 21);
-                DateTime dateBeg = new DateTime(2019, 08, 01);
-                var allDialogues = _context.Dialogues.Where(x => x.ApplicationUserId == userId && x.BegTime <= dateEnd && x.BegTime >= dateBeg).OrderByDescending(x => x.BegTime).ToList();
-                //  var atr = _context.FileFrames.Where(item => item.FileName == AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
+            int existCounter = 0;
+            int noFrames = 0;
+            DateTime dateEnd = new DateTime(2019, 09, 21);
+            DateTime dateBeg = new DateTime(2019, 08, 01);
+            var allDialogues = _context.Dialogues.Where(x => x.ApplicationUserId == userId && x.BegTime <= dateEnd && x.BegTime >= dateBeg).OrderByDescending(x => x.BegTime).ToList();
+            //  var atr = _context.FileFrames.Where(item => item.FileName == AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
 
-                foreach (var dialogue in allDialogues)
-                {
+            foreach (var dialogue in allDialogues)
+            {
                 userCounter++;
-                    try
+                try
+                {
+                    if (await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "clientavatars/" + $"{dialogue.DialogueId}.jpg"))
                     {
-                        if (await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "clientavatars/" + $"{dialogue.DialogueId}.jpg"))
-                        {
-                            continue;
-                        }
-                    }
-                    catch
-                    {
-                        counter500++;
-                    }
-
-                    var frames =
-                            _context.FileFrames
-                                .Include(p => p.FrameAttribute)
-                                .Where(item =>
-                                    item.ApplicationUserId == userId
-                                    && item.Time >= dialogue.BegTime
-                                    && item.Time <= dialogue.EndTime)
-                                .ToList();
-
-                    var attributes = frames.Where(p => p.FrameAttribute.Any())
-                        .Select(p => p.FrameAttribute.First())
-                        .ToList();
-                    if (attributes.Count() == 0)
                         continue;
-
-
-                    FrameAttribute attribute = attributes.First();
-                    if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "frames/" + attribute.FileFrame.FileName))
-                    {
-                        noFrames++;
-                        if (noFrames == 50) break;
-                        continue;
-                    }
-                    var pathClient = new PathClient();
-                    var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
-                    try
-                    {
-                        var localPath =
-                            await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName, sessionDir);
-                        //var localPath =
-                        //await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
-
-                        var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
-                        var rectangle = new Rectangle
-                        {
-                            Height = faceRectangle.Height,
-                            Width = faceRectangle.Width,
-                            X = faceRectangle.Top,
-                            Y = faceRectangle.Left
-                        };
-
-                        var stream = FaceDetection.CreateAvatar(localPath, rectangle);
-                        stream.Seek(0, SeekOrigin.Begin);
-                        await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{dialogue.DialogueId}.jpg");
-                        stream.Dispose();
-                        stream.Close();
-                     await _sftpClient.DisconnectAsync();
-                        Directory.Delete(sessionDir, true);
-                        counter200++;
-                    }
-                    catch (Exception ex)
-                    {
-                        counter500++;
                     }
                 }
-        //    }
-        Dictionary<string, string> result = new Dictionary<string, string>();
-        result["success"] = counter200.ToString();
+                catch
+                {
+                    counter500++;
+                }
+
+                var frames =
+                        _context.FileFrames
+                            .Include(p => p.FrameAttribute)
+                            .Where(item =>
+                                item.ApplicationUserId == userId
+                                && item.Time >= dialogue.BegTime
+                                && item.Time <= dialogue.EndTime)
+                            .ToList();
+
+                var attributes = frames.Where(p => p.FrameAttribute.Any())
+                    .Select(p => p.FrameAttribute.First())
+                    .ToList();
+                if (attributes.Count() == 0)
+                    continue;
+
+
+                FrameAttribute attribute = attributes.First();
+                if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "frames/" + attribute.FileFrame.FileName))
+                {
+                    noFrames++;
+                    if (noFrames == 50) break;
+                    continue;
+                }
+                var pathClient = new PathClient();
+                var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
+                try
+                {
+                    var localPath =
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName, sessionDir);
+                    //var localPath =
+                    //await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
+
+                    var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
+                    var rectangle = new Rectangle
+                    {
+                        Height = faceRectangle.Height,
+                        Width = faceRectangle.Width,
+                        X = faceRectangle.Top,
+                        Y = faceRectangle.Left
+                    };
+
+                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{dialogue.DialogueId}.jpg");
+                    stream.Dispose();
+                    stream.Close();
+                    await _sftpClient.DisconnectAsync();
+                    Directory.Delete(sessionDir, true);
+                    counter200++;
+                }
+                catch (Exception ex)
+                {
+                    counter500++;
+                }
+            }
+            //    }
+            Dictionary<string, string> result = new Dictionary<string, string>();
+            result["success"] = counter200.ToString();
             result["error"] = counter500.ToString();
             result["users"] = userCounter.ToString();
 
 
             return Ok(result);
-}
+        }
 
-
-        //[HttpGet("Benchmarks")]
-        //public async Task<IActionResult> Benchmarks()
-        //{
-        //    for (int i = 0; i < 700; i++)
-        //    {
-        //        DateTime today = DateTime.Now.AddDays(-i).Date;
-        //        if (!_context.Benchmarks.Any(x => x.Day.Date == today))
-        //        {
-        //            var nextDay = today.AddDays(1);
-        //            var typeIdCross = _context.PhraseTypes
-        //                   .Where(p => p.PhraseTypeText == "Cross")
-        //                   .Select(p => p.PhraseTypeId)
-        //                   .First();
-        //            var dialogues = _context.Dialogues
-        //                     .Where(p => p.BegTime.Date == today
-        //                             && p.StatusId == 3
-        //                             && p.InStatistic == true
-        //                             && p.ApplicationUser.Company.CompanyIndustryId != null)
-        //                     .Select(p => new DialogueInfo
-        //                     {
-        //                         IndustryId = p.ApplicationUser.Company.CompanyIndustryId,
-        //                         CompanyId = p.ApplicationUser.CompanyId,
-        //                         DialogueId = p.DialogueId,
-        //                         CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-        //                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-        //                         BegTime = p.BegTime,
-        //                         EndTime = p.EndTime
-        //                     })
-        //                     .ToList();
-
-        //            var sessions = _context.Sessions
-        //                     .Where(p => p.BegTime.Date == today
-        //                           && p.StatusId == 7)
-        //                   .Select(p => new SessionInfo
-        //                   {
-        //                       IndustryId = p.ApplicationUser.Company.CompanyIndustryId,
-        //                       CompanyId = p.ApplicationUser.CompanyId,
-        //                       BegTime = p.BegTime,
-        //                       EndTime = p.EndTime
-        //                   })
-        //                   .ToList();
-
-        //            var benchmarkNames = _context.BenchmarkNames.ToList();
-        //            var benchmarkSatisfIndustryAvgId = GetBenchmarkNameId("SatisfactionIndexIndustryAvg", benchmarkNames);
-        //            var benchmarkSatisfIndustryMaxId = GetBenchmarkNameId("SatisfactionIndexIndustryBenchmark", benchmarkNames);
-
-        //            var benchmarkCrossIndustryAvgId = GetBenchmarkNameId("CrossIndexIndustryAvg", benchmarkNames);
-        //            var benchmarkCrossIndustryMaxId = GetBenchmarkNameId("CrossIndexIndustryBenchmark", benchmarkNames);
-
-        //            var benchmarkLoadIndustryAvgId = GetBenchmarkNameId("LoadIndexIndustryAvg", benchmarkNames);
-        //            var benchmarkLoadIndustryMaxId = GetBenchmarkNameId("LoadIndexIndustryBenchmark", benchmarkNames);
-
-        //            if (dialogues.Count() != 0)
-        //            {
-        //                foreach (var groupIndustry in dialogues.GroupBy(x => x.IndustryId))
-        //                {
-        //                    var dialoguesInIndustry = groupIndustry.ToList();
-        //                    var sessionsInIndustry = sessions.Where(x => x.IndustryId == groupIndustry.Key).ToList();
-        //                    //  if (dialoguesInIndustry.Count() != 0 && sessionsInIndustry.Count() != 0)
-        //                    {
-        //                        var satisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesInIndustry);
-        //                        var crossIndex = _dbOperation.CrossIndex(dialoguesInIndustry);
-        //                        var loadIndex = _dbOperation.LoadIndex(sessionsInIndustry, dialoguesInIndustry, today, nextDay);
-        //                        if (satisfactionIndex != null) AddNewBenchmark((double)satisfactionIndex, benchmarkSatisfIndustryAvgId, today, groupIndustry.Key);
-        //                        if (crossIndex != null) AddNewBenchmark((double)crossIndex, benchmarkCrossIndustryAvgId, today, groupIndustry.Key);
-        //                        if (loadIndex != null) AddNewBenchmark((double)loadIndex, benchmarkLoadIndustryAvgId, today, groupIndustry.Key);
-
-        //                        var maxSatisfInd = dialoguesInIndustry.GroupBy(x => x.CompanyId).Max(x => _dbOperation.SatisfactionIndex(x.ToList()));
-        //                        var maxCrossIndex = dialoguesInIndustry.GroupBy(x => x.CompanyId).Max(x => _dbOperation.CrossIndex(x.ToList()));
-        //                        var maxLoadIndex = dialoguesInIndustry.GroupBy(x => x.CompanyId)
-        //                            .Max(p =>
-        //                            _dbOperation.LoadIndex(
-        //                                sessionsInIndustry.Where(s => s.CompanyId == p.Key).ToList(),
-        //                                p.ToList(),
-        //                                today,
-        //                                nextDay));
-
-        //                        if (maxSatisfInd != null) AddNewBenchmark((double)maxSatisfInd, benchmarkSatisfIndustryMaxId, today, groupIndustry.Key);
-        //                        if (maxCrossIndex != null) AddNewBenchmark((double)maxCrossIndex, benchmarkCrossIndustryMaxId, today, groupIndustry.Key);
-        //                        if (maxLoadIndex != null) AddNewBenchmark((double)maxLoadIndex, benchmarkLoadIndustryMaxId, today, groupIndustry.Key);
-        //                    }
-        //                }
-
-        //                _context.SaveChanges();
-        //            }
-        //        }
-        //    }
-        //    return Ok();
-        //}
-
-        //private void AddNewBenchmark(double val, Guid benchmarkNameId, DateTime today, Guid? industryId = null)
-        //{
-        //    Benchmark benchmark = new Benchmark()
-        //    {
-        //        IndustryId = industryId,
-        //        Value = val,
-        //        Weight = 1,// dialoguesInCompany.Count();
-        //        Day = today,
-        //        BenchmarkNameId = benchmarkNameId
-        //    };
-        //    _context.Benchmarks.Add(benchmark);
-        //}
-
-        //private Guid GetBenchmarkNameId(string name, List<BenchmarkName> benchmarkNames)
-        //{
-        //    return benchmarkNames.FirstOrDefault(x => x.Name == name).Id;
-        //}
 
 
         [HttpGet("SendDialogueMake")]
@@ -636,70 +553,18 @@ namespace UserOperations.Controllers
 
 
 
-        [HttpGet("SatisfByClient")]
-        public async Task<IActionResult> SatisfByClient(Guid dialogueId)
-        {
-            var dialogue = _context.Dialogues
-                  .FirstOrDefault(p => p.DialogueId == dialogueId);
-            try
-            {
-                var campaignContentIds = _context.SlideShowSessions
-                        .Where(p => p.BegTime >= dialogue.BegTime
-                                && p.BegTime <= dialogue.EndTime
-                                && p.ApplicationUserId == dialogue.ApplicationUserId
-                                && p.IsPoll)
-                        .Select(p => p.CampaignContentId).ToList();
-
-                Func<string, double> intParse = (string answer) =>
-                {
-                    switch (answer)
-                    {
-                        case "EMOTION_ANGRY":
-                            return 0.1;
-                        case "EMOTION_BAD":
-                            return 2.5;
-                        case "EMOTION_NEUTRAL":
-                            return 5;
-                        case "EMOTION_GOOD":
-                            return 7.5;
-                        case "EMOTION_EXCELLENT":
-                            return 10;
-                        default:
-                            {
-                                Int32.TryParse(answer, out int res);
-                                return Convert.ToDouble(res);
-                            }
-                    }
-
-                };
-                var pollAnswersAvg = _context.CampaignContentAnswers
-                      .Where(x => campaignContentIds.Contains(x.CampaignContentId)
-                          && x.Time >= dialogue.BegTime
-                          && x.Time <= dialogue.EndTime
-                          && x.ApplicationUserId == dialogue.ApplicationUserId).ToList()
-                      .Select(x => intParse(x.Answer))
-                      .Where(res => res != 0)
-                      .Average() * 10;
-                return Ok(pollAnswersAvg > 100 ? 100 : pollAnswersAvg);
-            }
-            catch
-            {
-                return Ok();
-            }
-        }
-
         [HttpGet("CheckSessions")]
         public async Task<IActionResult> CheckSessions()
         {
-            var sessions = _context.Sessions.Where(x=> x.StatusId==7 ).ToList();
+            var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
             var grouping = sessions.GroupBy(x => x.ApplicationUserId);
 
             foreach (var item in grouping)
             {
                 var sesInUser = item.OrderBy(x => x.BegTime).ToArray();
-                for (int i = 0; i < sesInUser.Count()-1; i++)
+                for (int i = 0; i < sesInUser.Count() - 1; i++)
                 {
-                    if(sesInUser[i+1].BegTime < sesInUser[i].EndTime)
+                    if (sesInUser[i + 1].BegTime < sesInUser[i].EndTime)
                     {
                         if (sesInUser[i + 1].EndTime < sesInUser[i].EndTime)
                         {
@@ -712,7 +577,7 @@ namespace UserOperations.Controllers
                             i++;
                         }
                     }
-                    
+
                 }
             }
 
@@ -733,7 +598,7 @@ namespace UserOperations.Controllers
                 var dialoguesUser = dialogues.Where(x => x.ApplicationUserId == item.Key).ToList();
                 foreach (var dialogue in dialoguesUser)
                 {
-                    if(!sesInUser.Any(x => dialogue.BegTime >= x.BegTime && dialogue.EndTime <= x.EndTime))
+                    if (!sesInUser.Any(x => dialogue.BegTime >= x.BegTime && dialogue.EndTime <= x.EndTime))
                     {
                         if (!sesInUser.Any(x => dialogue.BegTime >= x.BegTime && dialogue.BegTime <= x.EndTime))
                         {
@@ -741,8 +606,8 @@ namespace UserOperations.Controllers
                             {
                                 counter++;
                             }
-                            }
                         }
+                    }
                 }
             }
             return Ok(counter);
@@ -763,9 +628,9 @@ namespace UserOperations.Controllers
                 var dialoguesUser = dialogues.Where(x => x.ApplicationUserId == item.Key).ToList();
                 foreach (var dialogue in dialoguesUser)
                 {
-                    if (sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.EndTime <= x.EndTime ))
+                    if (sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.EndTime <= x.EndTime))
                         continue;
-                    if(sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime ))
+                    if (sesInUser.Any(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime))
                     {
                         //---початок потрапив до сесії
                         //var session = sesInUser?.FirstOrDefault(x => x.BegTime <= dialogue.BegTime && dialogue.BegTime <= x.EndTime);
@@ -802,8 +667,8 @@ namespace UserOperations.Controllers
                     }
                 }
 
-                }
-            
+            }
+
 
             _context.SaveChanges();
             return Ok();
@@ -829,89 +694,6 @@ namespace UserOperations.Controllers
         //    return Ok();
         //}
 
-
-        [HttpGet("DatabaseFilling")]
-        public string DatabaseFilling
-        (
-            [FromQuery]string countryName = null,
-            [FromQuery]string companyIndustryName = null,
-            [FromQuery]string corporationName = null,
-            [FromQuery]string languageName = null,
-            [FromQuery]string languageShortName = null)
-        {
-            // add country
-            if (countryName != null)
-            {
-                var countryId = Guid.NewGuid();
-                var country = new Country
-                {
-                    CountryId = countryId,
-                    CountryName = countryName,
-                };
-                _context.Countrys.Add(country);
-                _context.SaveChanges();
-            }
-
-            // add language
-            if (languageName != null && languageShortName != null)
-            {
-                var language = new Language
-                {
-                    // LanguageId = 1,
-                    LanguageName = languageName,
-                    LanguageLocalName = languageName,
-                    LanguageShortName = languageShortName
-                };
-                _context.Languages.Add(language);
-                _context.SaveChanges();
-            }
-
-            // create company industry
-            if (companyIndustryName != null)
-            {
-                var companyIndustryId = Guid.NewGuid();
-                var companyIndustry = new CompanyIndustry
-                {
-                    CompanyIndustryId = companyIndustryId,
-                    CompanyIndustryName = companyIndustryName,
-                    CrossSalesIndex = 100,
-                    LoadIndex = 100,
-                    SatisfactionIndex = 100
-                };
-                _context.CompanyIndustrys.Add(companyIndustry);
-                _context.SaveChanges();
-            }
-
-            // create new corporation
-            if (corporationName != null)
-            {
-                var corporationId = Guid.NewGuid();
-                var corp = new Corporation
-                {
-                    Id = corporationId,
-                    Name = corporationName
-                };
-                _context.Corporations.Add(corp);
-                _context.SaveChanges();
-            }
-
-            //     add statuss
-            List<string> statuses = new List<string>(new string[] { "Online", "Offline", "Active", "Disabled", "Inactive", "InProgress", "Finished", "Error", "Pending disabled", "Trial", "AutoActive", "AutoFinished", "AutoError" });
-
-
-            for (int i = 1; i < statuses.Count() + 1; i++)
-            {
-                var status = new Status
-                {
-                    StatusId = i,
-                    StatusName = statuses[i]
-                };
-                _context.Statuss.Add(status);
-                _context.SaveChanges();
-            }
-            return "OK";
-        }
-
         [HttpGet("newtest")]
         public IActionResult newtest()
         {
@@ -919,7 +701,7 @@ namespace UserOperations.Controllers
             var random = new Random();
             foreach (var dialogue in dialogues)
             {
-                dialogue.MeetingExpectationsTotal =  Math.Max((double) dialogue.MeetingExpectationsTotal, 35 + random.Next(10));
+                dialogue.MeetingExpectationsTotal = Math.Max((double)dialogue.MeetingExpectationsTotal, 35 + random.Next(10));
             }
             _context.SaveChanges();
             // var dialogue = _context.Dialogues.Where(p => p.DialogueId.ToString() == "5d90051a-15a9-4126-8988-6e7f6ab256e1").FirstOrDefault();
@@ -939,7 +721,7 @@ namespace UserOperations.Controllers
             {
                 phrases = JsonConvert.DeserializeObject<List<Phrase>>(r.ReadToEnd());
             }
-             using (StreamReader r = new StreamReader(pathCompanyPhrase))
+            using (StreamReader r = new StreamReader(pathCompanyPhrase))
             {
                 companyPhrases = JsonConvert.DeserializeObject<List<PhraseCompany>>(r.ReadToEnd());
             }
@@ -949,33 +731,10 @@ namespace UserOperations.Controllers
             return Ok();
         }
 
-        [HttpGet("samedialogues")]
-        public IActionResult samedialogues()
-        {
-            var begTime = DateTime.Now.AddDays(-10);
-            var dialogues = _context.Dialogues.Where(p => p.BegTime >= begTime && p.StatusId == 3)
-                .ToList()
-                .OrderBy(p => p.BegTime)
-                .ToList();
-
-            for (int i = 1; i< dialogues.Count(); i++)
-            {
-                if (dialogues[i].BegTime == dialogues[i-1].BegTime && dialogues[i].ApplicationUserId == dialogues[i-1].ApplicationUserId)
-                {
-                    System.Console.WriteLine(dialogues[i].DialogueId);
-                    System.Console.WriteLine(dialogues[i-1].DialogueId);
-
-                    dialogues[i-1].StatusId = 8;
-                }
-                _context.SaveChanges();
-            }
-            return Ok();
-        }
-        
         [HttpGet("test")]
         public IActionResult test()
         {
-           
+
             var begTime = DateTime.Now.AddDays(-10);
             // var frameLast = _context.FileFrames.Where(p => p.FileName == "f62f320f-e448-40a1-90d3-9af1c745303d_20190709150711.jpg").FirstOrDefault();
             // var begTime = frameLast.Time;
@@ -1039,9 +798,9 @@ namespace UserOperations.Controllers
             //    }
             //    catch (Exception e)
             //    {
-                    
+
             //    }
-            
+
             //}
 
 
@@ -1071,7 +830,7 @@ namespace UserOperations.Controllers
 
             //     Thread.Sleep(1500);    
             // }
-           
+
 
 
 

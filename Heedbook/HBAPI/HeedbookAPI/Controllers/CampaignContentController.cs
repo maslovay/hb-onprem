@@ -141,26 +141,33 @@ namespace UserOperations.Controllers
                     if (p.GetValue(modelCampaign, null) != null && p.GetValue(modelCampaign, null).ToString() != Guid.Empty.ToString())
                         p.SetValue(campaignEntity, p.GetValue(modelCampaign, null), null);
                 }
-                //_context.SaveChanges();
+                   
+                var inactiveStatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
+                var activeStatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;
+                var activeCampaignContents = campaignEntity.CampaignContents.Where(x => x.StatusId != inactiveStatusId).ToList();
 
-                // try
-                // {
-                    if (model.CampaignContents != null && model.CampaignContents.Count != 0)
+                if (model.CampaignContents != null && model.CampaignContents.Count != 0)
+                {
+                    foreach (var item in activeCampaignContents)
                     {
-                        _context.RemoveRange(campaignEntity.CampaignContents);
-                        foreach (var campCont in model.CampaignContents)
+                        if (!model.CampaignContents.Select(x => x.CampaignContentId).Contains(item.CampaignContentId))
+                        {
+                            item.StatusId = inactiveStatusId;
+                        }
+                    }
+
+                    foreach (var campCont in model.CampaignContents)
+                    {
+                        if (!activeCampaignContents.Select(x => x.CampaignContentId).Contains(campCont.CampaignContentId))
                         {
                             campCont.CampaignId = campaignEntity.CampaignId;
+                            campCont.StatusId = activeStatusId;
                             _context.Add(campCont);
                         }
                     }
-                    _context.SaveChanges(); 
-                // }               
-                // catch(Exception e)
-                // {
-                //     throw new Exception("The fields have been changed but the links cannot be changed");
-                // }            
-                // _log.Info("Campaign PUT finished");
+                }
+                _context.SaveChanges();
+                campaignEntity.CampaignContents = campaignEntity.CampaignContents.Where(x => x.StatusId != inactiveStatusId).ToList();
                 return Ok(campaignEntity);
             }
             catch (Exception e)
