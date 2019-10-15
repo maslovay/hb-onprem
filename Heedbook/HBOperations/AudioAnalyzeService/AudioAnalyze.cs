@@ -19,11 +19,13 @@ namespace AudioAnalyzeService
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly GoogleConnector _googleConnector;
+        private readonly SftpClient _sftpclient;
         public AudioAnalyze(
             IServiceScopeFactory factory,
             AsrHttpClient.AsrHttpClient asrHttpClient,
             ElasticClientFactory elasticClientFactory,
-            GoogleConnector googleConnector
+            GoogleConnector googleConnector,
+            SftpClient sftpclient
         )
         {
             // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
@@ -31,6 +33,7 @@ namespace AudioAnalyzeService
             _asrHttpClient = asrHttpClient;
             _elasticClientFactory = elasticClientFactory;
             _googleConnector = googleConnector;
+            _sftpclient = sftpclient;
         }
 
         public async Task Run(String path)
@@ -43,13 +46,23 @@ namespace AudioAnalyzeService
             try
             {
                 if (!String.IsNullOrWhiteSpace(path))
-                {
+                {     
                     var splitedString = path.Split('/');
                     var fileName = splitedString[1];
                     var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
                     var dialogue = _context.Dialogues
                         .FirstOrDefault(p => p.DialogueId == dialogueId);
 
+                    var fileExist = await _sftpclient.IsFileExistsAsync(path);
+                    if(!fileExist)
+                    {
+                        dialogue.Comment += " dialogue not have audio";
+                        dialogue.StatusId = 8;
+                        _context.SaveChanges();
+                        _log.Info($"dialogue {dialogue.DialogueId} not have dialogueAudio");                        
+                        return;
+                    }
+                    
                     if (dialogue != null)
                     {
                         var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId).ToList();
