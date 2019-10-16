@@ -64,7 +64,7 @@ namespace ExtractFramesFromVideo
                 var videoTimeStamp =
                     DateTime.ParseExact(fileName.Split(("_"))[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
                 
-                var pathClient = new PathClient();
+                    var pathClient = new PathClient();
                 var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
 
                 var ffmpeg = new FFMpegWrapper(
@@ -103,8 +103,15 @@ namespace ExtractFramesFromVideo
                         RaiseNewFrameEvent(frame.FrameName);
                     }
                 }
-                _context.FileFrames.AddRange(fileFrames);
-                _context.SaveChanges();
+                _log.Info($"Frames for adding - {JsonConvert.SerializeObject(fileFrames)}");
+                if (fileFrames.Any())
+                {
+                    lock (_context)
+                    {
+                        _context.FileFrames.AddRange(fileFrames);
+                        _context.SaveChanges();
+                    }
+                }
                 _log.Info("Deleting local files");
                 Directory.Delete(sessionDir, true);
 
