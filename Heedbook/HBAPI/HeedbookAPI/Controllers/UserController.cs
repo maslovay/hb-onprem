@@ -578,6 +578,7 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                 [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                [FromQuery(Name = "inStatistic")] bool inStatistic,
                                                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -600,7 +601,7 @@ namespace UserOperations.Controllers
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
                     p.StatusId == activeStatus &&
-                    p.InStatistic == true &&
+                    p.InStatistic == inStatistic &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
@@ -644,6 +645,7 @@ namespace UserOperations.Controllers
                                            [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
 
                                            [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization,
+                                           [FromQuery(Name = "inStatistic")] bool inStatistic,
                                            [FromQuery(Name = "limit")] int limit = 10,
                                            [FromQuery(Name = "page")] int page = 0,
                                            [FromQuery(Name = "orderBy")] string orderBy = "begTime",
@@ -667,7 +669,7 @@ namespace UserOperations.Controllers
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
                     p.StatusId == activeStatus &&
-                    p.InStatistic == true &&
+                    p.InStatistic == inStatistic &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
