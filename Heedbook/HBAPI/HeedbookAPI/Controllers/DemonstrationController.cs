@@ -100,7 +100,7 @@ namespace UserOperations.Controllers
                     new
                     {
                         campaign = p,
-                        contents = p.CampaignContents
+                        contents = p.CampaignContents.Where(x=> x.StatusId == active)
                                 .Select(c => new ContentWithId() { contentWithId = c.Content, campaignContentId = c.CampaignContentId, htmlId = c.ContentId.ToString() }).ToList()                        
                     }                
                 ).ToList();
@@ -125,7 +125,7 @@ namespace UserOperations.Controllers
                 var htmlList = campaigns
                     .SelectMany(x => x.contents
                     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML))
-                    .Union(_context.Contents.Where( c => c.CompanyId == companyId && (c.CampaignContents == null || c.CampaignContents.Count() == 0))
+                    .Union(_context.Contents.Where( c => c.CompanyId == companyId && c.StatusId == active && (c.CampaignContents == null || c.CampaignContents.Count() == 0))
                     .Select(c => new ContentWithId() { contentWithId = c, htmlId = c.ContentId.ToString() }).ToList()
                     .ToDictionary(v => v.htmlId, v => v.contentWithId.RawHTML).AsEnumerable());
 
