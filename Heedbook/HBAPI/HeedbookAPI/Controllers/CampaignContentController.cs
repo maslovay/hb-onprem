@@ -2,16 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
 using Microsoft.Extensions.Configuration;
 using HBData.Models;
 using UserOperations.Services;
 using Microsoft.EntityFrameworkCore;
 using HBData;
-using HBLib.Utils;
-using Microsoft.Extensions.Primitives;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.CommonModels;
 using UserOperations.Utils;
@@ -25,10 +21,8 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
-        private readonly string _containerName;
         private Dictionary<string, string> userClaims;
         private readonly RequestFilters _requestFilters;
-        // private readonly ElasticClient _log;
 
 
         public CampaignContentController(
@@ -36,7 +30,6 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RequestFilters requestFilters
-            // ElasticClient log
             )
         {
             try
@@ -45,13 +38,9 @@ namespace UserOperations.Controllers
                 _config = config;
                 _loginService = loginService;
                 _requestFilters = requestFilters;
-                // _log = log;
-                _containerName = "content-screenshots";
-                //  _log.Info("Constructor of CampaignContent controller done");
             }
             catch (Exception e)
             {
-                // log.Fatal($"Exception occurred {e}");
             }
         }
 
@@ -103,17 +92,18 @@ namespace UserOperations.Controllers
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
             var companyId = Guid.Parse(userClaims["companyId"]);
-
+            var activeStatus = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
             Campaign campaign = model.Campaign;
             campaign.CompanyId = (Guid)companyId;
             campaign.CreationDate = DateTime.UtcNow;
-            campaign.StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;
+            campaign.StatusId = activeStatus;
             campaign.CampaignContents = new List<CampaignContent>();
             _context.Add(campaign);
             _context.SaveChanges();
             foreach (var campCont in model.CampaignContents)
             {
                 campCont.CampaignId = campaign.CampaignId;
+                campCont.StatusId = activeStatus;
                 _context.Add(campCont);
             }
             _context.SaveChanges();
