@@ -11,6 +11,7 @@ using HBData;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.CommonModels;
 using UserOperations.Utils;
+using Newtonsoft.Json;
 
 namespace UserOperations.Controllers
 {
@@ -239,7 +240,25 @@ namespace UserOperations.Controllers
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
             var companyId = Guid.Parse(userClaims["companyId"]);
+            var corporationId = userClaims["corporationId"];
+            var role = userClaims["role"];
 
+            var contentCompanyId = content.CompanyId;
+            if(contentCompanyId is null)
+                return BadRequest($"content.CompanyId is empty");
+
+            if(role == "Supervisor")
+            { 
+                var contentCompany = _context.Companys.First(p => p.CompanyId == content.CompanyId);
+                if(Guid.Parse(corporationId) != contentCompany.CorporationId)
+                    return BadRequest($"content.Company.corporationId and Authorization.corporationId not same");
+            }
+            else if(role == "Manager")
+            {
+                if(companyId != contentCompanyId)
+                    return BadRequest($"content.CompanyId and Authorization not same");
+            }
+            
             if (!content.IsTemplate) content.CompanyId = (Guid)companyId; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
@@ -261,6 +280,23 @@ namespace UserOperations.Controllers
             // _log.Info("Content PUT started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
+
+            var companyId = Guid.Parse(userClaims["companyId"]);
+            var corporationId = userClaims["corporationId"];
+            var role = userClaims["role"];
+
+            if(role == "Supervisor")
+            { 
+                var contentCompany = _context.Companys.First(p => p.CompanyId == content.CompanyId);
+                if(Guid.Parse(corporationId) != contentCompany.CorporationId)
+                    return BadRequest($"content.Company.corporationId and Authorization.corporationId not same");
+            }
+            else if(role == "Manager")
+            {
+                if(companyId != content.CompanyId)
+                    return BadRequest($"content.CompanyId and Authorization not same");
+            }
+
             Content contentEntity = _context.Contents.Where(p => p.ContentId == content.ContentId).FirstOrDefault();
             foreach (var p in typeof(Content).GetProperties())
             {
@@ -280,6 +316,27 @@ namespace UserOperations.Controllers
             // _log.Info("Content DELETE started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
+
+            var companyId = Guid.Parse(userClaims["companyId"]);
+            var corporationId = userClaims["corporationId"];
+            var role = userClaims["role"];
+
+            var content = _context.Contents.First(p => p.ContentId == contentId);
+            if(content is null)
+                return BadRequest($"not exist content with ID: {contentId}");
+
+            if(role == "Supervisor")
+            { 
+                var contentCompany = _context.Companys.First(p => p.CompanyId == content.CompanyId);
+                if(Guid.Parse(corporationId) != contentCompany.CorporationId)
+                    return BadRequest($"content.Company.corporationId and Authorization.corporationId not same");
+            }
+            else if(role == "Manager")
+            {
+                if(companyId != content.CompanyId)
+                    return BadRequest($"content.CompanyId and Authorization not same");
+            }
+
             var contentEntity = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
             if (contentEntity != null)
             {
