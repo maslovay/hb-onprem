@@ -78,7 +78,7 @@ namespace QuartzExtensions.Jobs
                         }
                         else
                         {
-                            if ((DateTime.UtcNow - dialogue.CreationTime).Hours > 2)
+                            if ((DateTime.UtcNow - dialogue.CreationTime).Minutes > 30)
                             {
                                 _log.Error($"Error dialogue. Dialogue id {dialogue.DialogueId}");
                                 dialogue.StatusId = 8;
