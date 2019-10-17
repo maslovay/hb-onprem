@@ -848,7 +848,7 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                 [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                [FromQuery(Name = "inStatistic")] bool inStatistic,
+                                                [FromQuery(Name = "inStatistic")] bool? inStatistic,
                                                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -861,6 +861,7 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                inStatistic = inStatistic ?? true;
 
                 var dialogues = _context.Dialogues
                 .Include(p => p.DialoguePhrase)
@@ -915,7 +916,7 @@ namespace UserOperations.Controllers
                                            [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
 
                                            [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization,
-                                           [FromQuery(Name = "inStatistic")] bool inStatistic,
+                                           [FromQuery(Name = "inStatistic")] bool? inStatistic,
                                            [FromQuery(Name = "limit")] int limit = 10,
                                            [FromQuery(Name = "page")] int page = 0,
                                            [FromQuery(Name = "orderBy")] string orderBy = "begTime",
@@ -931,7 +932,7 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
-
+                inStatistic = inStatistic ?? true;
 
                 var dialogues = _context.Dialogues
                 .Include(p => p.DialogueHint)
