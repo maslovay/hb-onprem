@@ -76,8 +76,8 @@ namespace UserOperations.Services
                         new Claim("corporationId", user.Company.CorporationId.ToString()),
                         new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
-                        new Claim("fullName", user.FullName),
-                        new Claim("avatar", AvatarExist(user.Avatar) ? user.Avatar:null),
+                        //new Claim("fullName", user.FullName),
+                        //new Claim("avatar", AvatarExist(user.Avatar) ? user.Avatar:null),
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
