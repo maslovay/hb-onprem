@@ -19,6 +19,7 @@ using System.Security.Cryptography;
 using System.Net.Mail;
 using System.Net;
 using HBLib.Utils;
+using HBLib;
 
 namespace UserOperations.Services
 {
@@ -28,15 +29,17 @@ namespace UserOperations.Services
         private readonly IConfiguration _config;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
+        private readonly SftpSettings _sftpSettings;
         private const int PASSWORDS_TO_SAVE = 5;
         private const int ATTEMPT_TO_FAIL_LOG_IN = 5;
 
-        public LoginService(IGenericRepository repository, IConfiguration config, RecordsContext context, SftpClient sftpClient)
+        public LoginService(IGenericRepository repository, IConfiguration config, RecordsContext context, SftpClient sftpClient, SftpSettings sftpSettings)
         {
             _repository = repository;
             _config = config;
             _context = context;
             _sftpClient = sftpClient;
+            _sftpSettings = sftpSettings;
         }
 
         public string GeneratePasswordHash(string password)
@@ -77,7 +80,7 @@ namespace UserOperations.Services
                         new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
                         new Claim("fullName", user.FullName),
-                        new Claim("avatar", AvatarExist(user.Avatar) ? user.Avatar:""),
+                        new Claim("avatar", AvatarExist(user.Avatar) ? $"http://{_sftpSettings.Host}/useravatars/{user.Avatar}":""),
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
