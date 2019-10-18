@@ -91,8 +91,8 @@ namespace UserOperations.Controllers
                             .Include(p => p.UserRoles).ThenInclude(x => x.Role)
                             .Include(p => p.Company)
                             .Where(p => p.CompanyId == companyId
-                                && (p.StatusId == activeStatus || p.StatusId == disabledStatus)
-                                && p.Id != empployeeId)
+                                && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
+                                //&& p.Id != empployeeId)
                             .ToList();
                     }
                     else if(isSupervisor)
@@ -101,8 +101,8 @@ namespace UserOperations.Controllers
                             .Include(p => p.UserRoles).ThenInclude(x => x.Role)
                             .Include(p => p.Company)
                             .Where(p => p.Company.CorporationId.ToString() == corporationId
-                                && (p.StatusId == activeStatus || p.StatusId == disabledStatus)
-                                && p.Id != empployeeId)
+                                && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
+                               // && p.Id != empployeeId)
                             .ToList();
                     }                
                     else
