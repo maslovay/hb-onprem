@@ -18,6 +18,7 @@ using HBData.Repository;
 using System.Security.Cryptography;
 using System.Net.Mail;
 using System.Net;
+using HBLib.Utils;
 
 namespace UserOperations.Services
 {
@@ -26,14 +27,16 @@ namespace UserOperations.Services
         private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
         private readonly RecordsContext _context;
+        private readonly SftpClient _sftpClient;
         private const int PASSWORDS_TO_SAVE = 5;
         private const int ATTEMPT_TO_FAIL_LOG_IN = 5;
 
-        public LoginService(IGenericRepository repository, IConfiguration config, RecordsContext context)
+        public LoginService(IGenericRepository repository, IConfiguration config, RecordsContext context, SftpClient sftpClient)
         {
             _repository = repository;
             _config = config;
             _context = context;
+            _sftpClient = sftpClient;
         }
 
         public string GeneratePasswordHash(string password)
@@ -73,6 +76,8 @@ namespace UserOperations.Services
                         new Claim("corporationId", user.Company.CorporationId.ToString()),
                         new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
+                        new Claim("FullName", user.FullName),
+                        new Claim("Avatar", AvatarExist(user.Avatar) ? user.Avatar:null),
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -299,6 +304,15 @@ namespace UserOperations.Services
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+        private bool AvatarExist(string avatarPath)
+        {
+            if(String.IsNullOrEmpty(avatarPath))
+                return false;
+            var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");      
+            task.Wait();
+            bool exist = task.Result;      
+            return exist;
         }
     }
 }
