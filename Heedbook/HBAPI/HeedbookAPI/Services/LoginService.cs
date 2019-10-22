@@ -194,23 +194,6 @@ namespace UserOperations.Services
             return true;
         }
 
-        public bool CheckAccess(Dictionary<string, string> claims, List<string> companyIds)
-        {
-            //manager with one company in request
-            var managerRoles = _config["Roles:ManagerRoles"].Split(',');
-            if (companyIds.Contains(claims["companyId"])
-                && companyIds.Count() == 1
-                && managerRoles.Contains(claims["role"]))
-                return true;
-            //Supervisor or Admin with one company in request
-            var supervisorRoles = _config["Roles:SupervisorRoles"].Split(',');
-            if (companyIds.Contains(claims["companyId"])
-                && companyIds.Count() == 1 && supervisorRoles.Contains(claims["role"])
-                && _context.Companys.Where(p => companyIds.Contains(p.CompanyId.ToString())).All(p => p.CorporationId.ToString() == claims["corporationId"]))
-                return true;
-            //reject if non succeded request
-            return false;
-        }
         
         public bool SavePasswordHistory(Guid userId, string passwordHash)
         {

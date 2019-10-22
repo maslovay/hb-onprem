@@ -54,7 +54,7 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var sessions = _context.Sessions
                     .Include(p => p.ApplicationUser)
                     .Where(p => p.StatusId == 6
@@ -95,7 +95,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var employeeRole = _context.Roles.FirstOrDefault(x =>x.Name == "Employee").Id;
                 var sessions = _context.Sessions
@@ -215,7 +215,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);    
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);    
                 var employeeRole = _context.Roles.FirstOrDefault(x =>x.Name == "Employee").Id;
 
                 var sessions = _context.Sessions

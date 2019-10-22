@@ -76,7 +76,7 @@ namespace UserOperations.Controllers
 
                 users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
                     .Where(p => p.CompanyId == companyId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();     //2 active, 3 - disabled    
-                
+
                 if (role == "Admin")
                     users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
                         .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled                  
@@ -85,26 +85,26 @@ namespace UserOperations.Controllers
                     var isManager = role == "Manager";
                     var isSupervisor = role == "Supervisor";
 
-                    if(isManager)
+                    if (isManager)
                     {
                         users = _context.ApplicationUsers
                             .Include(p => p.UserRoles).ThenInclude(x => x.Role)
                             .Include(p => p.Company)
                             .Where(p => p.CompanyId == companyId
                                 && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
-                                //&& p.Id != empployeeId)
+                            //&& p.Id != empployeeId)
                             .ToList();
                     }
-                    else if(isSupervisor)
+                    else if (isSupervisor)
                     {
                         users = _context.ApplicationUsers
                             .Include(p => p.UserRoles).ThenInclude(x => x.Role)
                             .Include(p => p.Company)
                             .Where(p => p.Company.CorporationId.ToString() == corporationId
                                 && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
-                               // && p.Id != empployeeId)
+                            // && p.Id != empployeeId)
                             .ToList();
-                    }                
+                    }
                     else
                         return BadRequest($"Not allowed new user role for employee role: {role}");
                 }
@@ -123,67 +123,35 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Create new user with role Employee in loggined company (taked from token) and can save avatar for user / Return new user")]
         [SwaggerResponse(200, "User", typeof(UserModel))]
         public async Task<IActionResult> UserPostAsync(
-                    //  [FromBody] PostUser message,  
                     [FromForm, SwaggerParameter("json user (include password and unique email) in FormData with key 'data' + file avatar (not required)")] IFormCollection formData,
                     [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
-                // _log.Info("User/User POST started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");                
+                    return BadRequest("Token wrong");
 
-                // var isAdmin = userClaims["role"] == "Admin";
-                // message.RoleId = message.RoleId != null && isAdmin ? message.RoleId : _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id.ToString(); //Manager role
-                // message.WorkerTypeId = message.WorkerTypeId?? _context.WorkerTypes.FirstOrDefault(x => x.WorkerTypeName == "Employee")?.WorkerTypeId; //Employee type
-                // message.CompanyId = message.CompanyId != null && isAdmin ? message.CompanyId : userClaims["companyId"];
-
-                var companyId = userClaims["companyId"];
-                var corporationId = Guid.Parse(userClaims["corporationId"]);
-                var role = userClaims["role"];
+                var companyIdInToken = userClaims["companyId"];
+                var corporationIdInToken = userClaims["corporationId"];
+                var roleInToken = userClaims["role"];
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-                
+
                 PostUser message = JsonConvert.DeserializeObject<PostUser>(userDataJson);
                 if (_context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
                     return BadRequest("User email not unique");
 
-                var isAdmin = role == "Admin";
-                var isManager = role == "Manager";
-                var isSupervisor = role == "Supervisor";
+                //---for supervisor is allowed to create user with any role. Manager can create only Employee
+                message.RoleId = _requestFilters.CheckAndGetAllowedRole(message.RoleId, roleInToken);
+                message.CompanyId = message.CompanyId != null? message.CompanyId : userClaims["companyId"];
 
-                if(isAdmin)
-                {
-                    message.RoleId = message.RoleId != null && isAdmin ? message.RoleId : _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id.ToString(); //Manager role
-                    message.CompanyId = message.CompanyId != null && isAdmin ? message.CompanyId : userClaims["companyId"];
-                }
-                else 
-                {
-                    var allRoles = _context.Roles.ToList();
-                    List<ApplicationRole> allowedEmployeeRoles = null;
+                List<Guid> allowedEmployeeRoles = _requestFilters.GetAllowedRoles(roleInToken);
+                bool isCompanyBelongToUser = _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, message.CompanyId, roleInToken);
 
-                    if(isSupervisor)
-                    {
-                        allowedEmployeeRoles = allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher").ToList();
-                        var companys = _context.Companys.Where(p => p.CorporationId == corporationId)
-                            .Select(p => p.CompanyId)
-                            .ToList();
-                        if(!companys.Contains(Guid.Parse(message.CompanyId)))
-                            return BadRequest($"new user company does not contain in Supervisor corporporation");
-                    }                        
-                    else if(isManager)
-                    {
-                        allowedEmployeeRoles = allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher" && p.Name != "Supervisor").ToList();
-                        if(companyId != message.CompanyId)
-                            return BadRequest($"new user companyId and Manager companyId not same");
-                    }                        
-                    else
-                        return BadRequest($"Not allowed user role {allRoles.FirstOrDefault(p => p.Id == Guid.Parse(message.RoleId)).Name} for employee role: {role}");
+                if (isCompanyBelongToUser == false)
+                    return BadRequest($"Not allowed user role");
 
-                    if(allowedEmployeeRoles == null || !allowedEmployeeRoles.Where(p => p.Id == Guid.Parse(message.RoleId)).Any())
-                        return BadRequest($"Not allowed new user role: {allRoles.FirstOrDefault(p => p.Id == Guid.Parse(message.RoleId)).Name} for employee role: {role}");
-                }
-
-                //string password = GeneratePass(6);
+                if (allowedEmployeeRoles == null || !allowedEmployeeRoles.Where(p => p == Guid.Parse(message.RoleId)).Any())
+                    return BadRequest($"Not allowed new user role for employee role: {roleInToken}");
                 
                 var user = new ApplicationUser
                 {
@@ -198,18 +166,16 @@ namespace UserOperations.Controllers
                     PasswordHash = _loginService.GeneratePasswordHash(message.Password),
                     StatusId = activeStatus,//3
                     EmpoyeeId = message.EmployeeId,
-                    WorkerTypeId = message.WorkerTypeId?? _context.WorkerTypes.FirstOrDefault(x => x.WorkerTypeName == "Employee")?.WorkerTypeId
+                    WorkerTypeId = message.WorkerTypeId ?? _context.WorkerTypes.FirstOrDefault(x => x.WorkerTypeName == "Employee")?.WorkerTypeId
                 };
                 await _context.AddAsync(user);
-                _loginService.SavePasswordHistory(user.Id, user.PasswordHash);//---save password
-                string avatarUrl = null;
+
                 //---save avatar---
+                string avatarUrl = null;
                 if (formData.Files.Count != 0)
                 {
                     FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
                     var fn = user.Id + fileInfo.Extension;
-                    // var memoryStream = formData.Files[0].OpenReadStream();
-                    // await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
                     user.Avatar = fn;
                     avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default(DateTime)).path;
                 }
@@ -219,12 +185,10 @@ namespace UserOperations.Controllers
                     UserId = user.Id,
                     RoleId = Guid.Parse(message.RoleId)
                 };
-                System.Console.WriteLine(JsonConvert.SerializeObject(userRole));
                 await _context.ApplicationUserRoles.AddAsync(userRole);
                 await _context.SaveChangesAsync();
 
                 var userForEmail = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == user.Id);
-
                 try
                 {
                     await _mailSender.SendUserRegisterEmail(userForEmail, message.Password);
@@ -234,7 +198,6 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -254,16 +217,16 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
 
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-                ApplicationUser message = JsonConvert.DeserializeObject<ApplicationUser>(userDataJson);  
+                ApplicationUser message = JsonConvert.DeserializeObject<ApplicationUser>(userDataJson);
                 var user = _context.ApplicationUsers
-                    .Include(p => p.UserRoles)// 2 - active, 3 - disabled
+                    .Include(p => p.UserRoles)
                     .Include(p => p.Company)
                     .Where(p => p.Id == message.Id
-                        && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
+                        && (p.StatusId == activeStatus || p.StatusId == disabledStatus))// 2 - active, 3 - disabled
                     .FirstOrDefault();
-                
+
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var corporationId = Guid.Parse(userClaims["corporationId"]);
+                var corporationId = userClaims["corporationId"];
                 var role = userClaims["role"];
                 var empployeeId = Guid.Parse(userClaims["applicationUserId"]);
 
@@ -271,27 +234,25 @@ namespace UserOperations.Controllers
                 var isManager = role == "Manager";
                 var isSupervisor = role == "Supervisor";
 
-                if(role == "Manager" || role =="Supervisor")
+                if (role == "Manager" || role == "Supervisor")
                 {
                     var allRoles = _context.Roles.ToList();
-                    List<ApplicationRole> allowedEmployeeRoles = null;
+                    List<Guid> allowedEmployeeRoles = _requestFilters.GetAllowedRoles(role);
                     var changedUserCompany = _context.Companys.FirstOrDefault(p => p.CompanyId == user.CompanyId);
-                    if(isSupervisor)
+                    if (isSupervisor)
                     {
-                        allowedEmployeeRoles = allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher").ToList();  
-                        if(changedUserCompany == null || corporationId!=changedUserCompany.CorporationId)
+                        if (changedUserCompany == null || (corporationId != null && corporationId != changedUserCompany.CorporationId.ToString()))
                             BadRequest($"Changed user company are not from the same corporation: {corporationId}!");
-                    }                        
-                    else if(isManager)
+                    }
+                    else if (isManager)
                     {
-                        allowedEmployeeRoles = allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher" && p.Name != "Supervisor").ToList();     
-                        if(changedUserCompany == null || companyId!=user.CompanyId)
-                            BadRequest($"Changed user are not from the same company: {corporationId}!");                            
-                    }                                   
+                        if (changedUserCompany == null || companyId != user.CompanyId)
+                            BadRequest($"Changed user are not from the same company: {corporationId}!");
+                    }
                     else
                         BadRequest($"Not allowed new user role for employee role: {role}");
-                    
-                    if(user.UserRoles.Where(p => !allowedEmployeeRoles.Contains(p.Role)).Any())
+
+                    if (user.UserRoles.Where(p => !allowedEmployeeRoles.Contains(p.Role.Id)).Any())
                         return BadRequest($"Not allowed change user for {role}");
                 }
 
@@ -356,15 +317,9 @@ namespace UserOperations.Controllers
                 var isSupervisor = role == "Supervisor";
 
                 var allRoles = _context.Roles.ToList();
-                List<ApplicationRole> allowedEmployeeRoles = null;
-                if(isSupervisor)
-                {
-                    allowedEmployeeRoles = allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher" && p.Name != "Supervisor").ToList();
-                }          
-                else
-                    return BadRequest($"Not allowed new user role for employee role: {role}");
-                
-                if(allowedEmployeeRoles == null || user.UserRoles.Where(p => !allowedEmployeeRoles.Contains(p.Role)).Any())
+               List < Guid > allowedEmployeeRoles = _requestFilters.GetAllowedRoles(role);              
+
+                if (allowedEmployeeRoles == null || user.UserRoles.Where(p => !allowedEmployeeRoles.Contains(p.Role.Id)).Any())
                     return BadRequest($"Not allowed remove user with employee {role}");
 
                 if (user != null)
@@ -373,22 +328,22 @@ namespace UserOperations.Controllers
                     //     TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
                     //                                { IsolationLevel = IsolationLevel.Serializable }))
                     //{
-                        try
-                        {
-                            await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
-                            if (user.UserRoles != null && user.UserRoles.Count() != 0)
-                                _context.RemoveRange(user.UserRoles);
-                            if (user.PasswordHistorys != null && user.PasswordHistorys.Count() != 0)
-                                _context.RemoveRange(user.PasswordHistorys);
-                            _context.Remove(user);
-                            await _context.SaveChangesAsync();
-                           // transactionScope.Complete();
-                        }
-                        catch
-                        {
-                            user.StatusId = disabledStatus;
-                            await _context.SaveChangesAsync();
-                            return Ok("Disabled Status");
+                    try
+                    {
+                        await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
+                        if (user.UserRoles != null && user.UserRoles.Count() != 0)
+                            _context.RemoveRange(user.UserRoles);
+                        if (user.PasswordHistorys != null && user.PasswordHistorys.Count() != 0)
+                            _context.RemoveRange(user.PasswordHistorys);
+                        _context.Remove(user);
+                        await _context.SaveChangesAsync();
+                        // transactionScope.Complete();
+                    }
+                    catch
+                    {
+                        user.StatusId = disabledStatus;
+                        await _context.SaveChangesAsync();
+                        return Ok("Disabled Status");
                     }
                     //}
                     // _log.Info("User/User DELETE finished");
@@ -449,39 +404,39 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
                 var companyModel = JsonConvert.DeserializeObject<CompanyModel>(userDataJson);
-                if(companyModel is null)
+                if (companyModel is null)
                     BadRequest("Company Model not deserialized");
 
-                var companyId = Guid.Parse(userClaims["companyId"]);            
-                var role = userClaims["role"];            
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                var role = userClaims["role"];
                 Company newCompany;
                 Guid newCompanyGuid = Guid.NewGuid();
 
-                if(role == "Supervisor" || role == "Admin")
+                if (role == "Supervisor" || role == "Admin")
                 {
-                    if(role == "Admin")
+                    if (role == "Admin")
                     {
-                        if(companyModel.CompanyName is null)
+                        if (companyModel.CompanyName is null)
                             return BadRequest("Company name is null");
 
                         CompanyIndustry companyIndustry = _context.CompanyIndustrys.FirstOrDefault(p => p.CompanyIndustryId == companyModel.CompanyIndustryId);
-                        if(companyIndustry is null)
-                            return BadRequest("Company industry is null");                                           
+                        if (companyIndustry is null)
+                            return BadRequest("Company industry is null");
 
                         Language language = _context.Languages.FirstOrDefault(p => p.LanguageId == companyModel.LanguageId);
-                        if(language is null)
+                        if (language is null)
                             return BadRequest("Company language is null");
-                        
+
                         Country country = _context.Countrys.FirstOrDefault(p => p.CountryId == companyModel.CountryId);
-                        if(country is null)
+                        if (country is null)
                             return BadRequest("Company country is null");
 
                         Status status = _context.Statuss.FirstOrDefault(p => p.StatusId == companyModel.StatusId);
-                        if(status is null)
+                        if (status is null)
                             return BadRequest("Company status is null");
 
                         Corporation corporation = _context.Corporations.FirstOrDefault(p => p.Id == companyModel.CorporationId);
-                        if(companyModel.CorporationId != null && corporation == null)
+                        if (companyModel.CorporationId != null && corporation == null)
                             BadRequest("Company corporation is null");
 
                         newCompany = new Company()
@@ -503,16 +458,16 @@ namespace UserOperations.Controllers
                         };
                         _context.Companys.Add(newCompany);
                     }
-                    else if(role == "Supervisor")
+                    else if (role == "Supervisor")
                     {
-                        if(companyModel.CompanyName is null)
+                        if (companyModel.CompanyName is null)
                             return BadRequest("Company name is null");
 
                         var employeeCompany = _context.Companys
                             .Include(p => p.CompanyIndustry)
                             .Include(p => p.Language)
-                            .FirstOrDefault(p => p.CompanyId == companyId);                    
-                            
+                            .FirstOrDefault(p => p.CompanyId == companyId);
+
                         newCompany = new Company()
                         {
                             CompanyId = newCompanyGuid,
@@ -531,17 +486,17 @@ namespace UserOperations.Controllers
                             Corporation = employeeCompany.Corporation
                         };
                         _context.Companys.Add(newCompany);
-                    }  
-                    _context.SaveChanges();   
+                    }
+                    _context.SaveChanges();
                     var company = _context.Companys.FirstOrDefault(p => p.CompanyId == newCompanyGuid);
-                    return Ok(company);           
+                    return Ok(company);
                 }
                 return BadRequest("employee role is not accessible for create company");
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return BadRequest(e.Message);
-            }            
+            }
         }
 
         [HttpPut("Company")]
@@ -553,24 +508,24 @@ namespace UserOperations.Controllers
                     [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
+                return BadRequest("Token wrong");
             var companyId = Guid.Parse(userClaims["companyId"]);
             var corporationId = Guid.Parse(userClaims["corporationId"]);
             var role = userClaims["role"];
 
             var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-            Company message = JsonConvert.DeserializeObject<Company>(userDataJson);  
+            Company message = JsonConvert.DeserializeObject<Company>(userDataJson);
 
-            if(role == "Admin" || role == "Supervisor")
+            if (role == "Admin" || role == "Supervisor")
             {
                 var company = _context.Companys.FirstOrDefault(p => p.CompanyId == message.CompanyId);
-                if(company is null)
+                if (company is null)
                     return BadRequest($"company with such companyId: {message.CompanyId} not exist");
 
-                if(role == "Supervisor")
+                if (role == "Supervisor")
                 {
                     var supervisorCompany = _context.Companys.FirstOrDefault(p => p.CompanyId == companyId);
-                    if(supervisorCompany.CorporationId != message.CorporationId)
+                    if (message.CorporationId!= null && supervisorCompany.CorporationId != message.CorporationId)
                         return BadRequest($"changable company corporationId and supervisor corporationId not equal");
                 }
 
@@ -578,10 +533,10 @@ namespace UserOperations.Controllers
                 {
                     if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
                         p.SetValue(company, p.GetValue(message, null), null);
-                }            
+                }
                 await _context.SaveChangesAsync();
-                
-                return Ok(company);                          
+
+                return Ok(company);
             }
             else
                 return BadRequest($"employee with role: {role} cant change companys");
@@ -671,7 +626,7 @@ namespace UserOperations.Controllers
                 var phrase = _context.Phrases
                         .Include(x => x.PhraseCompany)
                         .Where(x => x.PhraseText.ToLower() == message.PhraseText.ToLower()
-                         && (x.IsTemplate == true || x.PhraseCompany.Count()==0)).FirstOrDefault();
+                         && (x.IsTemplate == true || x.PhraseCompany.Count() == 0)).FirstOrDefault();
 
                 if (phrase == null)
                 {
@@ -860,7 +815,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 inStatistic = inStatistic ?? true;
 
                 var dialogues = _context.Dialogues
@@ -931,7 +886,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 inStatistic = inStatistic ?? true;
 
                 var dialogues = _context.Dialogues
@@ -953,7 +908,7 @@ namespace UserOperations.Controllers
                     avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
                     applicationUserId = p.ApplicationUserId,
                     fullName = p.ApplicationUser.FullName,
-                    dialogueHints = p.DialogueHint.Count() != 0? "YES": null,
+                    dialogueHints = p.DialogueHint.Count() != 0 ? "YES" : null,
                     begTime = p.BegTime,
                     endTime = p.EndTime,
                     duration = p.EndTime.Subtract(p.BegTime),
@@ -1058,7 +1013,7 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 List<Dialogue> dialogues;
-                if(message.DialogueIds!= null)
+                if (message.DialogueIds != null)
                     dialogues = _context.Dialogues.Where(x => message.DialogueIds.Contains(x.DialogueId)).ToList();
                 else
                     dialogues = _context.Dialogues.Where(p => p.DialogueId == message.DialogueId).ToList();
@@ -1100,16 +1055,16 @@ namespace UserOperations.Controllers
                         .Include(x => x.ApplicationUser)
                         .FirstOrDefault(x => x.DialogueId == message.DialogueId)
                         .ApplicationUser.CompanyId;
-                    if(companyForDialogueId != companyId) return BadRequest("No permission");
+                    if (companyForDialogueId != companyId) return BadRequest("No permission");
                 }
-                    var dialogueClientSatisfaction = _context.DialogueClientSatisfactions.FirstOrDefault(x => x.DialogueId == message.DialogueId);
-                    dialogueClientSatisfaction.MeetingExpectationsByTeacher = message.Satisfaction;
-                    dialogueClientSatisfaction.BegMoodByTeacher = message.BegMoodTotal;
-                    dialogueClientSatisfaction.EndMoodByTeacher = message.EndMoodTotal;
+                var dialogueClientSatisfaction = _context.DialogueClientSatisfactions.FirstOrDefault(x => x.DialogueId == message.DialogueId);
+                dialogueClientSatisfaction.MeetingExpectationsByTeacher = message.Satisfaction;
+                dialogueClientSatisfaction.BegMoodByTeacher = message.BegMoodTotal;
+                dialogueClientSatisfaction.EndMoodByTeacher = message.EndMoodTotal;
 
-                    _context.SaveChanges();
-                    // _log.Info("Function DialogueSatisfactionPut finished");
-                    return Ok(JsonConvert.SerializeObject(dialogueClientSatisfaction));
+                _context.SaveChanges();
+                // _log.Info("Function DialogueSatisfactionPut finished");
+                return Ok(JsonConvert.SerializeObject(dialogueClientSatisfaction));
             }
             catch (Exception e)
             {

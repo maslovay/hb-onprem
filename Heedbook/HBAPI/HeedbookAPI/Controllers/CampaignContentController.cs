@@ -59,7 +59,7 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
                 var campaigns = _context.Campaigns.Include(x =>  x.CampaignContents)
@@ -216,7 +216,7 @@ namespace UserOperations.Controllers
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var activeStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
                 List<Content> contents;
