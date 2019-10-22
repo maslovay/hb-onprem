@@ -82,7 +82,7 @@ namespace UserOperations.Controllers
 
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var industryIds = _context.Companys
                  .Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId))?
                      .Select(x => x.CompanyIndustryId).ToList();
@@ -243,7 +243,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var companyIdsUsersFilter = _context.ApplicationUsers.Where(x => applicationUserIds.Contains(x.Id)).Select(x => x.CompanyId).Distinct().ToList();
                 var industryIds = _context.Companys
                     .Where(x =>
@@ -349,7 +349,7 @@ namespace UserOperations.Controllers
             var companyId = Guid.Parse(userClaims["companyId"]);     
             var begTime = _requestFilters.GetBegDate(beg);
             var endTime = _requestFilters.GetEndDate(end);
-            _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+            _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
             var hintCount = !String.IsNullOrEmpty(_config["hint : hintCount"]) ? Convert.ToInt32(_config["hint : hintCount"]): 3;
           
 

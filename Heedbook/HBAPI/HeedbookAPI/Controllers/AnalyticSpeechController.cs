@@ -85,7 +85,7 @@ namespace UserOperations.Controllers
 
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId); 
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId); 
                 var typeIdCross = _context.PhraseTypes
                                     .Where(p => p.PhraseTypeText == "Cross")
                                     .Select(p => p.PhraseTypeId).First();
@@ -154,7 +154,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);                  
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);                  
 
                 var companysPhrases = _context.PhraseCompanys
                     .Where(p => (!companyIds.Any() || companyIds.Contains((Guid) p.CompanyId)))
@@ -237,7 +237,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
                 var dialogueIds = _context.Dialogues
                     .Where(p => p.EndTime >= begTime
@@ -356,7 +356,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
                 var dialogueIds = _context.Dialogues
                     .Where(p => p.EndTime >= begTime

@@ -102,7 +102,7 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 var begYearTime = endTime.AddYears(-1);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);   
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);   
 
                 var persondIdsPerYear = _context.Dialogues
                     .Where(p => p.BegTime >= begYearTime &&

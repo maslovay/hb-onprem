@@ -72,7 +72,60 @@ namespace UserOperations.Controllers
             //   _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-    
+
+
+        [HttpGet("TestSftp")]
+        public async Task<IActionResult> TestSftp(
+              [FromQuery(Name = "start")] int start,
+              [FromQuery(Name = "userId")] Guid userId
+                         )
+        {
+            int noFrames = 0;
+            DateTime dateEnd = new DateTime(2019, 09, 21);
+            DateTime dateBeg = new DateTime(2019, 09, 01);
+            var dialogue = _context.Dialogues.Where(x => x.ApplicationUserId == userId && x.BegTime <= dateEnd && x.BegTime >= dateBeg).Skip(start).FirstOrDefault();
+
+                var frames =
+                        _context.FileFrames
+                            .Include(p => p.FrameAttribute)
+                            .Where(item =>
+                                item.ApplicationUserId == userId
+                                && item.Time >= dialogue.BegTime
+                                && item.Time <= dialogue.EndTime)
+                            .ToList();
+
+                var attributes = frames.Where(p => p.FrameAttribute.Any())
+                    .Select(p => p.FrameAttribute.First())
+                    .ToList();
+
+                FrameAttribute attribute = attributes.First();
+                if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "frames/" + attribute.FileFrame.FileName))
+                {
+                }
+              
+                    var localPath =
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
+                   
+                    var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
+                    var rectangle = new Rectangle()
+                    {
+                        Height = faceRectangle.Height,
+                        Width = faceRectangle.Width,
+                        X = faceRectangle.Top,
+                        Y = faceRectangle.Left
+                    };
+
+                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "test/", $"{dialogue.DialogueId}.jpg");
+                    stream.Dispose();
+                    stream.Close();
+                  //  await _sftpClient.DisconnectAsync();
+            return Ok();
+        }
+
+
+
 
         [HttpGet("FindTheSameDialogues")]
         public async Task<IActionResult> FindTheSameDialogues()
@@ -130,12 +183,13 @@ namespace UserOperations.Controllers
         }
 
 
-        [HttpGet("FindTheSameSessions")]
-        public async Task<IActionResult> FindTheSameSessions()
+        //----PART 1---
+        [HttpGet("FindTheSessionInSession")]
+        public async Task<IActionResult> FindTheSessionInSession()
         {
-            var dateEnd = new DateTime(2019, 10, 01);
+            var dateEnd = new DateTime(2019, 11, 01);
             var date = new DateTime(2019, 01, 01);
-            var users = _context.ApplicationUsers.Where(x => x.Email != "bogan77test@bk.ru").Include(x => x.Session).Include(x => x.Dialogue).OrderBy(x => x.CreationDate).ToList();
+            var users = _context.ApplicationUsers.Include(x => x.Session).Include(x => x.Dialogue).OrderBy(x => x.CreationDate).ToList();
             int userC = 0;
             int counterInSes = 0;
             userC = 0;
@@ -143,54 +197,54 @@ namespace UserOperations.Controllers
             {
                 userC++;
                 var sessions = user.Session.Where(x => x.StatusId == 7 && x.BegTime >= date && x.BegTime <= dateEnd).OrderBy(x => x.BegTime).ToList();
-                var dialogues = user.Dialogue.Where(x => x.StatusId == 3 && x.BegTime >= date && x.BegTime <= dateEnd).ToList();
                 foreach (var s1 in sessions)
                 {
-                    //var s2 = sessions
-                    //    .Where(x => x.SessionId != s1.SessionId).ToList()
-                    //    .FirstOrDefault(x => (x.BegTime <= s1.BegTime && s1.EndTime <= x.EndTime));//сессія в середині іншої сессії
+                    //---FIRST PART---
+                    //---CHECK SESSION IN SESSION
+                    var s2 = sessions
+                        .Where(x => x.SessionId != s1.SessionId).ToList()
+                        .FirstOrDefault(x => (x.BegTime <= s1.BegTime && s1.EndTime <= x.EndTime));//сессія в середині іншої сессії
 
-                    //if (s2 != null)
-                    //{
-                    //    s1.StatusId = 8;//error                        
-                    //    counterInSes++;
-                    //  //  break;
-                    //}
-                    //else
-                    //{
+                    if (s2 != null && s1.StatusId != 8)
+                    {
+                        s1.StatusId = 8;//error                        
+                        counterInSes++;
+                    }
+                }
+            }
+            _context.SaveChanges();
+            return Ok(counterInSes);
+        }
+
+
+        //---STEP 2---
+        [HttpGet("FindTheSessionsOneOnAnother")]
+        public async Task<IActionResult> FindTheSessionsOneOnAnother()
+        {
+            var dateEnd = new DateTime(2019, 11, 01);
+            var date = new DateTime(2019, 01, 01);
+            var users = _context.ApplicationUsers.Include(x => x.Session).Include(x => x.Dialogue).OrderBy(x => x.CreationDate).ToList();
+            int userC = 0;
+            int counterInSes = 0;
+            userC = 0;
+            foreach (var user in users)
+            {
+                userC++;
+                var sessions = user.Session.Where(x => x.StatusId == 7 && x.BegTime >= date && x.BegTime <= dateEnd).OrderBy(x => x.BegTime).ToList();
+                foreach (var s1 in sessions)
+                {
                     var s2 = sessions
                      .Where(x => x.SessionId != s1.SessionId).ToList()
                      .FirstOrDefault(x => (x.BegTime < s1.BegTime && s1.BegTime < x.EndTime));//---сессiя s1 почалась в середины іншої (s2) сессії а закінчилась пізніше
 
                     if (s2 != null)
                     {
-                       // s1.BegTime = s2.EndTime;
-
-                        var dialogueInSess1 = dialogues.Where(d => d.BegTime >= s1.BegTime && d.EndTime <= s1.EndTime).ToList();
-                        var dialogueInSess2 = dialogues.Where(d => d.BegTime >= s2.BegTime && d.EndTime <= s2.EndTime).ToList();
-                        if (dialogueInSess1.Count() == 0)//---якщо в s1 немає діалога всередині
-                        {
-                            s1.BegTime = s2.EndTime.AddMilliseconds(5);
-                            counterInSes++;
-                        }
-                        else if (dialogueInSess2.Count() == 0)//---якщо в s2 немає діалога всередині                                
-                        {
-                            s2.EndTime = s1.BegTime;
-                            counterInSes++;
-                        }
-                        //else
-                        //{
-                        //    //---якщо в обох сессіях є діалог - 1
-                        //    s2.EndTime = dialogueInSess1.OrderByDescending(x => x.EndTime).First().EndTime;
-                        //    s1.BegTime = dialogueInSess2.OrderBy(x => x.BegTime).First().BegTime;
-                        //}
+                        s1.BegTime = s2.BegTime;
+                        s2.StatusId = 8;
                         counterInSes++;
-                        break;
                     }
-                    //    }
-                }              
             }
-
+            }
             _context.SaveChanges();
             return Ok(counterInSes);
         }
@@ -200,39 +254,57 @@ namespace UserOperations.Controllers
         public async Task<IActionResult> FindDialoguesWithoutSessions()
         {
             var date = new DateTime(2019, 01, 01);
-            var users = _context.ApplicationUsers.Include(x => x.Dialogue).OrderBy(x => x.CreationDate).ToList();
-            int userC = 0;
+            var users = _context.ApplicationUsers.Include(x => x.Dialogue).Include(x => x.Session).OrderBy(x => x.CreationDate).ToList();
             int counter = 0;
-            Dialogue dialogueForRemove = null;
-            userC = 0;
+            var userC = 0;
             foreach (var user in users)
             {
-                    var dialogues = user.Dialogue.OrderBy(x => x.BegTime).ToList();
+                    var dialogues = user.Dialogue.Where(x => x.StatusId == 3 && x.InStatistic == true).OrderBy(x => x.BegTime).ToList();
                     var sessions = user.Session.OrderBy(x => x.BegTime).ToList();
 
                     foreach (var dial in dialogues)
-                    {                     
-                        if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---діалог в середині сессії відсутній
+                    {
+                    //---NO ANY SESSION INCLUDED DIALOGUE
+                    if (!sessions.Any(ses =>
+                           (ses.BegTime <= dial.BegTime && ses.EndTime >= dial.EndTime)
+                        || (ses.BegTime >= dial.BegTime && ses.BegTime <= dial.EndTime)
+                        || (ses.EndTime >= dial.BegTime && ses.EndTime <= dial.EndTime)))
                         {
-                        if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.BegTime <= ses.EndTime))//---є діалог що почався в сессії
-                        {
-
-                        }
-                        else if (!sessions.Any(ses => dial.EndTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---є діалог що закінчився в сессії
-                        { 
-
-                            var nextSession = sessions.Where(x => x.BegTime >= dial.BegTime).FirstOrDefault();
-                            if ((nextSession.BegTime - dial.BegTime).TotalHours < 6)
+                            Session newSession = new Session()
                             {
-                                counter++;
-                                nextSession.BegTime = dial.BegTime;
-                                _context.SaveChanges();
-                            }
+                                ApplicationUserId = dial.ApplicationUserId,
+                                BegTime = dial.BegTime,
+                                EndTime = dial.EndTime,
+                                IsDesktop = true,
+                                StatusId = 7
+                            };
+                        _context.Sessions.Add(newSession);
+                        counter++;
                         }
-                        }
+
                     }
+                        //if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---діалог в середині сессії відсутній
+                        //{
+                        //if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.BegTime <= ses.EndTime))//---є діалог що почався в сессії
+                        //{
+
+                        //}
+                        //else if (!sessions.Any(ses => dial.EndTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---є діалог що закінчився в сессії
+                        //{ 
+
+                        //    var nextSession = sessions.Where(x => x.BegTime >= dial.BegTime).FirstOrDefault();
+                        //    if ((nextSession.BegTime - dial.BegTime).TotalHours < 6)
+                        //    {
+                        //        counter++;
+                        //        nextSession.BegTime = dial.BegTime;
+                        //        _context.SaveChanges();
+                        //    }
+                        //}
+                        //}
+                  //  }
             }
-            return Ok();
+            _context.SaveChanges();
+            return Ok(counter);
         }
 
         [HttpGet("ClientAvatarMaker")]
@@ -335,6 +407,9 @@ namespace UserOperations.Controllers
 
             return Ok(result);
         }
+
+
+
 
 
 

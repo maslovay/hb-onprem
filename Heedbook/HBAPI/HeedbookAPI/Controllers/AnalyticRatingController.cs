@@ -80,7 +80,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
                 var typeIdCross = _context.PhraseTypes
                     .Where(p => p.PhraseTypeText == "Cross")
@@ -172,7 +172,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                // var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var sessions = _context.Sessions
@@ -273,7 +273,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                 //var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var sessions = _context.Sessions

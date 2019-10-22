@@ -229,8 +229,17 @@ namespace HBLib.Utils
             localPath = localPath == null ? Path.Combine(_sftpSettings.DownloadPath, filename) : Path.Combine(localPath, filename);
             using (var fs = File.OpenWrite(localPath))
             {
+                try
+                { 
                 _client.DownloadFile(remotePath, fs);
-                //await Task.Run(() => _client.DownloadFile(remotePath, fs));
+                    //await Task.Run(() => _client.DownloadFile(remotePath, fs));
+                }
+                catch
+                {
+                    _client.Disconnect();
+                    await ConnectToSftpAsync();
+                    _client.DownloadFile(remotePath, fs);
+                }
             }
             return localPath;
         }

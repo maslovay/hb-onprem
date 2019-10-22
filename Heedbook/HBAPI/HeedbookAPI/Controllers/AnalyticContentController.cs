@@ -195,7 +195,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)
@@ -326,7 +326,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var dialogues = _context.Dialogues
                     .Include(p => p.ApplicationUser)

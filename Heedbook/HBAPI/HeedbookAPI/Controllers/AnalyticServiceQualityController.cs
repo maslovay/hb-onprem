@@ -80,7 +80,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
                 var phraseTypes = _context.PhraseTypes
                     .Select(p => new ComponentsPhraseInfo {
@@ -192,7 +192,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var dialogues = _context.Dialogues
@@ -263,7 +263,7 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
                 var phrasesTypes = _context.PhraseTypes.ToList();
                 //var typeIdCross = phrasesTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
@@ -354,7 +354,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);     
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var dialogues = _context.Dialogues
