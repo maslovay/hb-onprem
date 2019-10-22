@@ -130,7 +130,7 @@ namespace RabbitMqEventBus
                 try
                 {
                     var @event = ea.RoutingKey;
-                    var message = Encoding.UTF8.GetString(ea.Body);
+                    var message = Encoding.UTF8.GetString(ea?.Body ?? new byte[0]);
                     var eventMessage = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event)));
                     if (eventMessage.RetryCount >= _deliveryCount)
                     {
@@ -145,7 +145,7 @@ namespace RabbitMqEventBus
                 }
                 catch (Exception e)
                 {
-                    var encodingString = Encoding.UTF8.GetString(ea.Body);
+                    var encodingString = Encoding.UTF8.GetString(ea?.Body ?? new byte[0]);
                     var @event = (IntegrationEvent)JsonConvert.DeserializeObject(encodingString,
                         _subsManager.GetEventTypeByName(ea.RoutingKey));
                     Console.WriteLine(@event.RetryCount);
