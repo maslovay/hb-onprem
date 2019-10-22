@@ -200,10 +200,7 @@ namespace UserOperations.Controllers
 
                     result.CrossIndexIndustryAverage = benchmarksList.Any(x => x.Name == "CrossIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg")?.Average(x => x.Value) : null;
                     result.CrossIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "CrossIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark")?.Max(x => x.Value) : null;
-                }
-                // result.NumberOfDialoguesPerEmployees = result.DialoguesCount / result.EmployeeCount;   
-                // result.NumberOfDialoguesPerEmployeesDelta =  - result.DialoguesCountDelta 
-                //     / (result.EmployeeCountDelta != 0? result.EmployeeCountDelta : 1) + result.NumberOfDialoguesPerEmployees; 
+                }           
 
                 result.NumberOfDialoguesPerEmployeesDelta += result.NumberOfDialoguesPerEmployees;
                 result.AvgWorkingTimeEmployeesDelta +=result.AvgWorkingTimeEmployees;
@@ -277,6 +274,23 @@ namespace UserOperations.Controllers
                          })
                          .ToList();
 
+                var sessions = _context.Sessions
+                      .Include(p => p.ApplicationUser)
+                      .Where(p => p.BegTime >= prevBeg
+                              && p.EndTime <= endTime
+                              && p.StatusId == 7
+                              && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                              && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                      .Select(p => new SessionInfo
+                      {
+                          ApplicationUserId = p.ApplicationUserId,
+                          BegTime = p.BegTime,
+                          EndTime = p.EndTime
+                      })
+                      .ToList();
+
+                var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
+                var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
                 List<BenchmarkModel> benchmarksList = null;
@@ -292,14 +306,16 @@ namespace UserOperations.Controllers
                 }
                 catch
                 {
-
                 }
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
                 double? crossIndexIndustryAverage = null, crossIndexIndustryBenchmark = null;
+                double? loadIndexIndustryAverage = null, loadIndexIndustryBenchmark = null;
+
                 var crossIndex = _dbOperation.CrossIndex(dialoguesCur);
+                var loadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1));
                 var dialoguesCount = _dbOperation.DialoguesCount(dialoguesCur);
 
                 //---benchmarks
@@ -307,6 +323,9 @@ namespace UserOperations.Controllers
                 {
                     crossIndexIndustryAverage = benchmarksList.Any(x => x.Name == "CrossIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg")?.Average(x => x.Value) : null;
                     crossIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "CrossIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+
+                    loadIndexIndustryAverage = benchmarksList.Any(x => x.Name == "LoadIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "LoadIndexIndustryAvg")?.Average(x => x.Value) : null;
+                    loadIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "LoadIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "LoadIndexIndustryBenchmark")?.Max(x => x.Value) : null;
                 }
 
                 var result = new
@@ -318,9 +337,14 @@ namespace UserOperations.Controllers
                     CrossIndexDelta = crossIndex - _dbOperation.CrossIndex(dialoguesOld),
 
                     CrossIndexIndustryAverage = crossIndexIndustryAverage,
-                    CrossIndexIndustryBenchmark = crossIndexIndustryBenchmark
-                };
+                    CrossIndexIndustryBenchmark = crossIndexIndustryBenchmark,
 
+                    LoadIndex = loadIndex,
+                    LoadIndexDelta = loadIndex -_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+
+                    LoadIndexIndustryAverage = loadIndexIndustryAverage,
+                    LoadIndexIndustryBenchmark = loadIndexIndustryBenchmark
+            };
 
                 var jsonToReturn = JsonConvert.SerializeObject(result);
                 return Ok(jsonToReturn);
