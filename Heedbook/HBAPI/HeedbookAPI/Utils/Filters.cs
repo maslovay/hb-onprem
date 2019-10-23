@@ -61,22 +61,20 @@ namespace UserOperations.Utils
         public async Task<bool> AddOrChangeUserRoles(Guid userId, string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId = null)
         {
             var newCorrectedRole = GetRoleToCreateChangeUser(roleInToken, newUserRoleId, oldUserRoleId);
-            if (oldUserRoleId != null && newCorrectedRole != oldUserRoleId)//---edit user
-            {
-                var userRole = _context.ApplicationUserRoles.FirstOrDefault(x => x.UserId == userId);
-                userRole.RoleId = newCorrectedRole;
-            }
-            else if(oldUserRoleId == null)//---post user
-            {
-                var userRole = new ApplicationUserRole()
-                {
-                    UserId = userId,
-                    RoleId = GetRoleToCreateChangeUser(roleInToken, newUserRoleId, oldUserRoleId)
-                };
-                await _context.ApplicationUserRoles.AddAsync(userRole);
-            }
-            else return true;//---no changes in user
+            if (newCorrectedRole == oldUserRoleId)//---post user
+                return true;//---no changes in user
 
+            if (oldUserRoleId != null)//---edit user
+            {
+                var oldUserRole = _context.ApplicationUserRoles.FirstOrDefault(x => x.UserId == userId);
+                _context.ApplicationUserRoles.Remove(oldUserRole);
+            }          
+            var userRole = new ApplicationUserRole()
+            {
+                UserId = userId,
+                RoleId = GetRoleToCreateChangeUser(roleInToken, newUserRoleId, oldUserRoleId)
+            };
+            await _context.ApplicationUserRoles.AddAsync(userRole);
             await _context.SaveChangesAsync();
             return true;
         }

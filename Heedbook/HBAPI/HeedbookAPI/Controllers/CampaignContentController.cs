@@ -308,7 +308,7 @@ namespace UserOperations.Controllers
                     {
                         campaignContent.StatusId = inactiveStatusId;
                     }
-                content.StatusId = inactiveStatusId;
+                    content.StatusId = inactiveStatusId;
                     _context.SaveChanges();
                     try
                     {
