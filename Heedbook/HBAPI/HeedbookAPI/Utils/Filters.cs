@@ -61,30 +61,29 @@ namespace UserOperations.Utils
         public async Task<bool> AddOrChangeUserRoles(Guid userId, string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId = null)
         {
             var newCorrectedRole = GetRoleToCreateChangeUser(roleInToken, newUserRoleId, oldUserRoleId);
-            if (oldUserRoleId != null && newCorrectedRole != oldUserRoleId)//---edit user
-            {
-                var userRole = _context.ApplicationUserRoles.FirstOrDefault(x => x.UserId == userId);
-                userRole.RoleId = newCorrectedRole;
-            }
-            else if(oldUserRoleId == null)//---post user
-            {
-                var userRole = new ApplicationUserRole()
-                {
-                    UserId = userId,
-                    RoleId = GetRoleToCreateChangeUser(roleInToken, newUserRoleId, oldUserRoleId)
-                };
-                await _context.ApplicationUserRoles.AddAsync(userRole);
-            }
-            else return true;//---no changes in user
+            if (newCorrectedRole == oldUserRoleId)//---post user
+                return true;//---no changes in user
 
+            if (oldUserRoleId != null)//---edit user
+            {
+                var oldUserRole = _context.ApplicationUserRoles.FirstOrDefault(x => x.UserId == userId);
+                _context.ApplicationUserRoles.Remove(oldUserRole);
+            }          
+            var userRole = new ApplicationUserRole()
+            {
+                UserId = userId,
+                RoleId = GetRoleToCreateChangeUser(roleInToken, newUserRoleId, oldUserRoleId)
+            };
+            await _context.ApplicationUserRoles.AddAsync(userRole);
             await _context.SaveChangesAsync();
             return true;
         }
         public bool CheckAbilityToCreateOrChangeUser(string roleInToken, Guid? newUserRoleId)
         {
-            if (newUserRoleId == null) return true;
             List<Guid> allowedEmployeeRoles = GetAllowedRoles(roleInToken);
-            if (allowedEmployeeRoles == null || !allowedEmployeeRoles.Where(p => p == newUserRoleId).Any())
+            if (allowedEmployeeRoles == null) return false;
+            if (newUserRoleId == null) return true;
+            if ( !allowedEmployeeRoles.Any(p => p == newUserRoleId))
                 return false;
             return true;
         }
@@ -97,10 +96,8 @@ namespace UserOperations.Utils
             var isSupervisor = roleInToken == "Supervisor";
 
             if (isAdmin) return true;
-            if (isSupervisor)
-                return deletedUserRoleName != "Admin" ? true : false;
-            if (isManager)
-                return deletedUserRoleName != "Admin" && deletedUserRoleName != "Supervisor" ? true : false;
+            if (isSupervisor) return deletedUserRoleName != "Admin" ? true : false;
+            if (isManager) return deletedUserRoleName != "Admin" && deletedUserRoleName != "Supervisor" ? true : false;
             return false;
         }
 
@@ -111,18 +108,9 @@ namespace UserOperations.Utils
             var isManager = roleInToken == "Manager";
             var isSupervisor = roleInToken == "Supervisor";
 
-            if (isAdmin)
-            {
-                return allRoles.Where(p => p.Name != "Admin").Select(x => x.Id).ToList();
-            }
-            if (isSupervisor)
-            {
-                return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher").Select(x => x.Id).ToList();
-            }
-            if (isManager)
-            {
-                return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher" && p.Name != "Supervisor").Select(x => x.Id).ToList();
-            }
+            if (isAdmin) return allRoles.Where(p => p.Name != "Admin").Select(x => x.Id).ToList();
+            if (isSupervisor) return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher").Select(x => x.Id).ToList();
+            if (isManager) return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher" && p.Name != "Supervisor").Select(x => x.Id).ToList();
             return null;
         }
 
@@ -135,24 +123,23 @@ namespace UserOperations.Utils
 
         private bool IsCompanyBelongToCorporation(Guid? corporationIdInToken, Guid? companyId)
         {
-           if (corporationIdInToken == null) return true;
-           if (companyId == null) return false;
+           if (corporationIdInToken == null || corporationIdInToken == Guid.Empty) return true;
+           if (companyId == null || companyId == Guid.Empty) return false;
            var companiesInCorporation =  _context.Companys.Where(p => p.CorporationId == corporationIdInToken)
                         .Select(p => p.CompanyId)
                         .ToList();
-            return !companiesInCorporation.Contains((Guid)companyId);
+            return companiesInCorporation.Contains((Guid)companyId);
         }
 
         public bool IsCompanyBelongToUser(Guid? corporationIdInToken, Guid? companyIdInToken, Guid? companyIdInParams, string roleInToken)
         {
             var isAdmin = roleInToken == "Admin";
-            var isManager = roleInToken == "Manager";
             var isSupervisor = roleInToken == "Supervisor";
             if (isSupervisor && IsCompanyBelongToCorporation(corporationIdInToken, companyIdInParams) == false)
                     return false;
-            if (isManager && (companyIdInParams == null || companyIdInToken != companyIdInParams))
-                return false;
             if (isAdmin) return true;
+            if (!isSupervisor &&  (companyIdInParams == null || companyIdInToken != companyIdInParams))
+                return false;
             return true;
         }   
 
