@@ -34,7 +34,7 @@ namespace UserOperations.Utils
                         Name = "data",
                         In = "formData",
                         Type = "object",
-                        Default = JsonConvert.SerializeObject(new PostUser() { CompanyId="Guid", Email="uniqueField", Password="required", RoleId="Guid"}),
+                        Default = JsonConvert.SerializeObject(new PostUser() { CompanyId=Guid.NewGuid(), Email="uniqueField", Password="required", RoleId=Guid.NewGuid()}),
                         Description = "fill the user fields",
                         Required = true
                     });
