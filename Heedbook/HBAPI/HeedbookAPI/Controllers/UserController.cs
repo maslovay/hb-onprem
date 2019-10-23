@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 using HBData;
 using HBData.Models;
+using HBLib;
 using HBLib.Utils;
 using UserOperations.Services;
 using UserOperations.Utils;
@@ -27,6 +28,8 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly RequestFilters _requestFilters;
         private readonly SftpClient _sftpClient;
+        private readonly SmtpSettings _smtpSetting;
+        private readonly SmtpClient _smtpClient;
         private readonly MailSender _mailSender;
         // private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
@@ -40,7 +43,9 @@ namespace UserOperations.Controllers
             RecordsContext context,
             SftpClient sftpClient,
             RequestFilters requestFilters,
-            MailSender mailSender
+            MailSender mailSender,
+            SmtpSettings smtpSetting,
+            SmtpClient smtpClient
             // ElasticClient log
             )
         {
@@ -54,6 +59,8 @@ namespace UserOperations.Controllers
             _containerName = "useravatars";
             activeStatus = 3;
             disabledStatus = 4;
+            _smtpSetting = smtpSetting;
+            _smtpClient = smtpClient;
         }
 
         [HttpGet("User")]
@@ -1130,6 +1137,92 @@ namespace UserOperations.Controllers
                         .ToList();
             return Ok(alerts);
         }
+        [HttpPost("VideoMessage")]
+        [SwaggerOperation(Summary = "SendVideoMessageToManager",
+                Description = "Send video messgae to office manager")]
+        public async Task<IActionResult> SendVideo(
+                    [FromForm, SwaggerParameter("json message with key 'data' in FormData")] IFormCollection formData,
+                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        {
+            try
+            {
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                return BadRequest("Token wrong");
+
+                var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
+                Message message = JsonConvert.DeserializeObject<Message>(userDataJson);  
+
+                var companyIdFromToken = Guid.Parse(userClaims["companyId"]);
+                Guid corporationIdFromToken;
+                var corporationIdExist = Guid.TryParse(userClaims["corporationId"], out corporationIdFromToken);
+                var roleFromToken = userClaims["role"];
+                var empployeeIdFromToken = Guid.Parse(userClaims["applicationUserId"]);
+                var user = _context.ApplicationUsers.First(p => p.Id == empployeeIdFromToken);
+
+                List<ApplicationUser> recepients = null;
+                if(roleFromToken == "Employee")
+                {
+                    var managerRole = _context.Roles.First(p => p.Name == "Manager");
+                    recepients = _context.ApplicationUsers.Where(p => p.CompanyId == companyIdFromToken
+                            && p.UserRoles.Where(r => r.Role == managerRole).Any())
+                        .Distinct()
+                        .ToList();
+                }
+                else if(roleFromToken == "Manager" && corporationIdExist)
+                {
+                    var supervisorRole = _context.Roles.First(p => p.Name == "Supervisor");
+                    recepients = _context.ApplicationUsers
+                        .Include(p => p.Company)
+                        .Where(p => p.Company.CorporationId == corporationIdFromToken
+                            && p.UserRoles.Where(r => r.Role == supervisorRole).Any())
+                        .Distinct()
+                        .ToList();
+                }
+                else
+                    return BadRequest($"{roleFromToken} not have leader");
+
+                if (formData.Files.Count != 0 && recepients != null && recepients.Count != 0)
+                {
+                    var mail = new System.Net.Mail.MailMessage();
+                    mail.From = new System.Net.Mail.MailAddress(_smtpSetting.FromEmail);     
+                    mail.Subject =user.FullName + " - " + message.Subject;
+                    mail.Body = message.Body;
+                    mail.IsBodyHtml = false;
+
+                    foreach(var r in recepients)
+                    {
+                        mail.To.Add(r.Email);
+                    }
+                        
+                    var amountAttachmentsSize = 0f;
+                    foreach(var f in formData.Files)
+                    {
+                        var fn = user.FullName + "_" + formData.Files[0].FileName;                        
+                        var memoryStream = f.OpenReadStream();
+                        amountAttachmentsSize += (memoryStream.Length / 1024f) / 1024f;
+                        
+                        memoryStream.Position = 0;
+                        var attachment = new System.Net.Mail.Attachment(memoryStream, fn);
+                        mail.Attachments.Add(attachment);
+                    }
+                    if(amountAttachmentsSize > 25)
+                    {
+                        return BadRequest($"Files size more than 25 MB");
+                    }
+
+                    _smtpClient.Send(mail);                            
+                }
+                else
+                {
+                    return BadRequest("Video File is null");
+                }
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                return BadRequest($"{ex.Message}");
+            }
+        }
     }
 
     public class PostUser
@@ -1204,5 +1297,10 @@ namespace UserOperations.Controllers
         public double Satisfaction;
         public double BegMoodTotal;
         public double EndMoodTotal;
+    }
+    public class Message
+    {
+        public string Subject;
+        public string Body;
     }
 }
