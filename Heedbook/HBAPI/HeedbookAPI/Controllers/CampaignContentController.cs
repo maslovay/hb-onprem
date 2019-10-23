@@ -239,32 +239,17 @@ namespace UserOperations.Controllers
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
-            var companyId = Guid.Parse(userClaims["companyId"]);
-            var corporationId = userClaims["corporationId"];
-            var role = userClaims["role"];
+            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
+            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
+            var roleInToken = userClaims["role"];
 
-            var contentCompanyId = content.CompanyId;
-            if(contentCompanyId is null)
-                return BadRequest($"content.CompanyId is empty");
+            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken))
+                return BadRequest($"Not allowed user company");
 
-            if(role == "Supervisor")
-            { 
-                var contentCompany = _context.Companys.First(p => p.CompanyId == content.CompanyId);
-                if(Guid.Parse(corporationId) != contentCompany.CorporationId)
-                    return BadRequest($"content.Company.corporationId and Authorization.corporationId not same");
-            }
-            else if(role == "Manager")
-            {
-                if(companyId != contentCompanyId)
-                    return BadRequest($"content.CompanyId and Authorization not same");
-            }
-            
-            if (!content.IsTemplate) content.CompanyId = (Guid)companyId; // only for not templates we create content for partiqular company/ Templates have no any compane relations
+            if (!content.IsTemplate) content.CompanyId = companyIdInToken; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
             content.StatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
-            // TODO: content.IsTemplate = false;
-
             _context.Add(content);
             _context.SaveChanges();
             return Ok(content);
@@ -277,25 +262,15 @@ namespace UserOperations.Controllers
                     [FromBody] Content content,
                     [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-            // _log.Info("Content PUT started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
 
-            var companyId = Guid.Parse(userClaims["companyId"]);
-            var corporationId = userClaims["corporationId"];
-            var role = userClaims["role"];
+            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
+            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
+            var roleInToken = userClaims["role"];
 
-            if(role == "Supervisor")
-            { 
-                var contentCompany = _context.Companys.First(p => p.CompanyId == content.CompanyId);
-                if(Guid.Parse(corporationId) != contentCompany.CorporationId)
-                    return BadRequest($"content.Company.corporationId and Authorization.corporationId not same");
-            }
-            else if(role == "Manager")
-            {
-                if(companyId != content.CompanyId)
-                    return BadRequest($"content.CompanyId and Authorization not same");
-            }
+            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken))
+                return BadRequest($"Not allowed user company");
 
             Content contentEntity = _context.Contents.Where(p => p.ContentId == content.ContentId).FirstOrDefault();
             foreach (var p in typeof(Content).GetProperties())
@@ -304,8 +279,7 @@ namespace UserOperations.Controllers
                     p.SetValue(contentEntity, p.GetValue(content, null), null);
             }
             contentEntity.UpdateDate = DateTime.UtcNow;
-            _context.SaveChanges();
-            // _log.Info("Content PUT finished");
+            await _context.SaveChangesAsync();
             return Ok(contentEntity);
         }
 
@@ -317,43 +291,29 @@ namespace UserOperations.Controllers
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
 
-            var companyId = Guid.Parse(userClaims["companyId"]);
-            var corporationId = userClaims["corporationId"];
-            var role = userClaims["role"];
+            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
+            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
+            var roleInToken = userClaims["role"];
 
-            var content = _context.Contents.First(p => p.ContentId == contentId);
-            if(content is null)
-                return BadRequest($"not exist content with ID: {contentId}");
+            var content = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
+            if (content == null) return BadRequest("No such content");
+            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken))
+                return BadRequest($"Not allowed user company");
 
-            if(role == "Supervisor")
-            { 
-                var contentCompany = _context.Companys.First(p => p.CompanyId == content.CompanyId);
-                if(Guid.Parse(corporationId) != contentCompany.CorporationId)
-                    return BadRequest($"content.Company.corporationId and Authorization.corporationId not same");
-            }
-            else if(role == "Manager")
-            {
-                if(companyId != content.CompanyId)
-                    return BadRequest($"content.CompanyId and Authorization not same");
-            }
-
-            var contentEntity = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
-            if (contentEntity != null)
-            {
                 var inactiveStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Inactive").StatusId;
-                    var links = contentEntity.CampaignContents.ToList();
+                    var links = content.CampaignContents.ToList();
                 if (links.Count() != 0)
                 {
                     foreach (var campaignContent in links)
                     {
                         campaignContent.StatusId = inactiveStatusId;
                     }
-                    contentEntity.StatusId = inactiveStatusId;
+                content.StatusId = inactiveStatusId;
                     _context.SaveChanges();
                     try
                     {
                         _context.RemoveRange(links);
-                        _context.Remove(contentEntity);
+                        _context.Remove(content);
                         _context.SaveChanges();
                     }
                     catch
@@ -362,8 +322,6 @@ namespace UserOperations.Controllers
                     }
                 }
                 return Ok("Removed");
-            }
-            return BadRequest("No such content");
         }
     }
 }

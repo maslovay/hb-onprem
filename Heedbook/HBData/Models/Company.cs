@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
 
 namespace HBData.Models
@@ -14,6 +15,7 @@ namespace HBData.Models
         ///     Company id
         /// </summary>
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid CompanyId { get; set; }
         /// <summary>
         ///     Company name
