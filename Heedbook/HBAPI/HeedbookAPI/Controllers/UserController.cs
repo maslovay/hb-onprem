@@ -1153,7 +1153,8 @@ namespace UserOperations.Controllers
                 Message message = JsonConvert.DeserializeObject<Message>(userDataJson);  
 
                 var companyIdFromToken = Guid.Parse(userClaims["companyId"]);
-                var corporationIdFromToken = Guid.Parse(userClaims["corporationId"]);
+                Guid corporationIdFromToken;
+                var corporationIdExist = Guid.TryParse(userClaims["corporationId"], out corporationIdFromToken);
                 var roleFromToken = userClaims["role"];
                 var empployeeIdFromToken = Guid.Parse(userClaims["applicationUserId"]);
                 var user = _context.ApplicationUsers.First(p => p.Id == empployeeIdFromToken);
@@ -1167,7 +1168,7 @@ namespace UserOperations.Controllers
                         .Distinct()
                         .ToList();
                 }
-                else if(roleFromToken == "Manager")
+                else if(roleFromToken == "Manager" && corporationIdExist)
                 {
                     var supervisorRole = _context.Roles.First(p => p.Name == "Supervisor");
                     recepients = _context.ApplicationUsers
