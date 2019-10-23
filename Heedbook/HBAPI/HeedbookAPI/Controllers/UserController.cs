@@ -161,7 +161,6 @@ namespace UserOperations.Controllers
                     NormalizedUserName = message.Email.ToUpper(),
                     Email = message.Email,
                     NormalizedEmail = message.Email.ToUpper(),
-                  //  Id = Guid.NewGuid(),
                     CompanyId = (Guid)message.CompanyId,
                     CreationDate = DateTime.UtcNow,
                     FullName = message.FullName,
@@ -242,9 +241,7 @@ namespace UserOperations.Controllers
                         if (p.Name == "EmployeeId")//---its a mistake in DB
                             userType.GetProperty("EmpoyeeId").SetValue(user, val);
                         else if(p.Name == "Role")
-                        {
                             await _requestFilters.AddOrChangeUserRoles(user.Id, roleInToken, message.Role.Id, user.UserRoles.FirstOrDefault().RoleId);
-                        }
                         else
                             userType.GetProperty(p.Name).SetValue(user, val);
                     }
