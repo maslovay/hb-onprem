@@ -252,11 +252,7 @@ namespace UserOperations.Controllers
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
             Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
             var roleInToken = userClaims["role"];
-
-            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken) == false)
-                return BadRequest($"Not allowed user company");
 
             if (!content.IsTemplate) content.CompanyId = companyIdInToken; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
