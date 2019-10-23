@@ -62,7 +62,7 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var statusInactiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId;
-                var campaigns = _context.Campaigns.Include(x =>  x.CampaignContents)
+                var campaigns = _context.Campaigns.Include(x => x.CampaignContents)
                         .Where(x => companyIds.Contains(x.CompanyId) && x.StatusId != statusInactiveId).ToList();
 
                 List<Campaign> result = new List<Campaign>();
@@ -120,19 +120,25 @@ namespace UserOperations.Controllers
                 SwaggerParameter("Send content separately from the campaign or send CampaignContents:[] if you dont need to change content relations", Required = true)]
                 CampaignPutPostModel model, [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
-            //  _log.Info("Campaign PUT started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims)) return BadRequest("Token wrong");
+            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
+            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
+            var roleInToken = userClaims["role"];
+
             Campaign modelCampaign = model.Campaign;
             try
             {
                 var campaignEntity = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == modelCampaign.CampaignId).FirstOrDefault();
                 if (campaignEntity == null) return null;
+                if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, campaignEntity.CompanyId, roleInToken) == false)
+                    return BadRequest($"Not allowed user company");
+
                 foreach (var p in typeof(Campaign).GetProperties())
                 {
                     if (p.GetValue(modelCampaign, null) != null && p.GetValue(modelCampaign, null).ToString() != Guid.Empty.ToString())
                         p.SetValue(campaignEntity, p.GetValue(modelCampaign, null), null);
                 }
-                   
+
                 var inactiveStatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
                 var activeStatusId = _context.Statuss.Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;
                 var activeCampaignContents = campaignEntity.CampaignContents.Where(x => x.StatusId != inactiveStatusId).ToList();
@@ -175,7 +181,13 @@ namespace UserOperations.Controllers
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
 
+            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
+            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
+            var roleInToken = userClaims["role"];
+
             var campaign = _context.Campaigns.Include(x => x.CampaignContents).Where(p => p.CampaignId == campaignId).FirstOrDefault();
+            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, campaign.CompanyId, roleInToken) == false)
+                return BadRequest($"Not allowed user company");
             if (campaign != null)
             {
                 var inactiveStatusId = _context.Statuss.Where(p => p.StatusName == "Inactive").FirstOrDefault().StatusId;
@@ -220,7 +232,7 @@ namespace UserOperations.Controllers
 
                 var activeStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
                 List<Content> contents;
-                if(inActive == true)
+                if (inActive == true)
                     contents = _context.Contents.Where(x => x.StatusId == activeStatusId && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))).ToList();
                 else
                     contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToList();
@@ -243,7 +255,7 @@ namespace UserOperations.Controllers
             Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
             var roleInToken = userClaims["role"];
 
-            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken))
+            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken) == false)
                 return BadRequest($"Not allowed user company");
 
             if (!content.IsTemplate) content.CompanyId = companyIdInToken; // only for not templates we create content for partiqular company/ Templates have no any compane relations
@@ -269,7 +281,7 @@ namespace UserOperations.Controllers
             Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
             var roleInToken = userClaims["role"];
 
-            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken))
+            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken) == false)
                 return BadRequest($"Not allowed user company");
 
             Content contentEntity = _context.Contents.Where(p => p.ContentId == content.ContentId).FirstOrDefault();
@@ -297,31 +309,31 @@ namespace UserOperations.Controllers
 
             var content = _context.Contents.Include(x => x.CampaignContents).Where(p => p.ContentId == contentId).FirstOrDefault();
             if (content == null) return BadRequest("No such content");
-            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken))
+            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken) == false)
                 return BadRequest($"Not allowed user company");
 
-                var inactiveStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Inactive").StatusId;
-                    var links = content.CampaignContents.ToList();
-                if (links.Count() != 0)
+            var inactiveStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Inactive").StatusId;
+            var links = content.CampaignContents.ToList();
+            if (links.Count() != 0)
+            {
+                foreach (var campaignContent in links)
                 {
-                    foreach (var campaignContent in links)
-                    {
-                        campaignContent.StatusId = inactiveStatusId;
-                    }
-                    content.StatusId = inactiveStatusId;
-                    _context.SaveChanges();
-                    try
-                    {
-                        _context.RemoveRange(links);
-                        _context.Remove(content);
-                        _context.SaveChanges();
-                    }
-                    catch
-                    {                      
-                        return Ok("Set inactive");
-                    }
+                    campaignContent.StatusId = inactiveStatusId;
                 }
-                return Ok("Removed");
+            }
+            content.StatusId = inactiveStatusId;
+            _context.SaveChanges();
+            try
+            {
+                _context.RemoveRange(links);
+                _context.Remove(content);
+                _context.SaveChanges();
+            }
+            catch
+            {
+                return Ok("Set inactive");
+            }
+            return Ok("Removed");
         }
     }
 }
