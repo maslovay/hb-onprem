@@ -1,37 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using HBLib.Utils;
-using HBLib;
-using Microsoft.Extensions.Primitives;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
@@ -44,7 +22,6 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-        // private readonly ElasticClient _log;
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
       
@@ -54,14 +31,12 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient
-            // ElasticClient log  
             )
         {
             _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
-            // _log = log;
             _containerName = "media";         
         }
 
@@ -74,7 +49,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("MediaFile/File GET started");    
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                         return BadRequest("Token wrong");
                 var companyId = userClaims["companyId"];
@@ -84,18 +58,17 @@ namespace UserOperations.Controllers
                 if (fileName != null)
                 {
                     var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fileName, (DateTime)expirationDate);
-                    // _log.Info("MediaFile/File finished"); 
                     return Ok(JsonConvert.SerializeObject(result));
                 }
                 else
                 {
+                    await _sftpClient.CreateIfDirNoExistsAsync(_containerName + "/" + companyId);
                     var files = await _sftpClient.GetFileNames(_containerName+"/"+companyId);  
                     List<object> result = new List<object>();        
                     foreach(var file in files)         
                     {
                         result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
                     }
-                    // _log.Info("MediaFile/File GET finished"); 
                     return Ok(JsonConvert.SerializeObject(result));
                 }
             }
