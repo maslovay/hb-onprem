@@ -23,6 +23,7 @@ using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using HBMLHttpClient;
+using UserOperations.Providers;
 
 namespace UserOperations
 {
@@ -63,6 +64,7 @@ namespace UserOperations
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
             services.AddScoped<MailSender>();
+            services.AddScoped<AnalyticContentProvider>();
 
             services.AddSwaggerGen(c =>
             {
