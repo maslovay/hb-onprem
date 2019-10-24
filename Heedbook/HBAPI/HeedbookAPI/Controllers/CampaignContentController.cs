@@ -247,13 +247,10 @@ namespace UserOperations.Controllers
         {
             try
             {
-                System.Console.WriteLine($"inActive: {inActive}");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
-                System.Console.WriteLine($"role: {role}");
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                System.Console.WriteLine($"companyId: {companyId}");
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var activeStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
@@ -263,7 +260,6 @@ namespace UserOperations.Controllers
                 else
                     contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToList();
 
-                System.Console.WriteLine($"contents.Count: {contents.Count}");
                 if(contents.Count == 0) return Ok(contents);
 
                 ////---PAGINATION---
@@ -275,14 +271,11 @@ namespace UserOperations.Controllers
                 if (orderDirection == "asc")
                 {
                     var contentsList = contents.OrderBy(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
-                    System.Console.WriteLine($"asc");
-                    System.Console.WriteLine($"desc: {JsonConvert.SerializeObject(new { contentsList, pageCount, orderBy, limit, page })}");
                     return Ok(new { contentsList, pageCount, orderBy, limit, page });                    
                 }
                 else
                 {
                     var contentsList = contents.OrderByDescending(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
-                    System.Console.WriteLine($"desc: {JsonConvert.SerializeObject(new { contentsList, pageCount, orderBy, limit, page })}");
                     return Ok(new { contentsList, pageCount, orderBy, limit, page });                    
                 }
             }
