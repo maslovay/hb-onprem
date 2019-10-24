@@ -12,6 +12,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.CommonModels;
 using UserOperations.Utils;
 using Newtonsoft.Json;
+using System.Reflection;
 
 namespace UserOperations.Controllers
 {
@@ -237,6 +238,58 @@ namespace UserOperations.Controllers
                 else
                     contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToList();
                 return Ok(contents);
+            }
+            catch (Exception e)
+            {
+                return BadRequest("Error");
+            }
+        }
+        [HttpGet("ContentPaginated")]
+        [SwaggerOperation(Summary = "Get all content", Description = "Return content for loggined company with screenshot url links (one page). limit=10, page=0, orderBy=Name/CreationDate/UpdateDate, orderDirection=desc/asc")]
+        [SwaggerResponse(200, "Content list", typeof(List<Content>))]
+        public async Task<IActionResult> ContentPaginatedGet(
+                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                [FromQuery(Name = "inActive")] bool? inActive,
+                                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization,
+                                [FromQuery(Name = "limit")] int limit = 10,
+                                [FromQuery(Name = "page")] int page = 0,
+                                [FromQuery(Name = "orderBy")] string orderBy = "Name",
+                                [FromQuery(Name = "orderDirection")] string orderDirection = "desc")
+        {
+            try
+            {
+                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
+                    return BadRequest("Token wrong");
+                var role = userClaims["role"];
+                var companyId = Guid.Parse(userClaims["companyId"]);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+
+                var activeStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
+                List<Content> contents;
+                if(inActive == true)
+                    contents = _context.Contents.Where(x => x.StatusId == activeStatusId && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))).ToList();
+                else
+                    contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToList();
+
+                if(contents.Count == 0) return Ok(contents);
+
+                ////---PAGINATION---
+                var pageCount = (int)Math.Ceiling((double)contents.Count() / limit);//---round to the bigger 
+
+                Type contentType = contents.First().GetType();
+                PropertyInfo prop = contentType.GetProperty(orderBy);
+                
+                if (orderDirection == "asc")
+                {
+                    var contentsList = contents.OrderBy(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
+                    return Ok(new { contentsList, pageCount, orderBy, limit, page });                    
+                }
+                else
+                {
+                    var contentsList = contents.OrderByDescending(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
+                    return Ok(new { contentsList, pageCount, orderBy, limit, page });                    
+                }
             }
             catch (Exception e)
             {
