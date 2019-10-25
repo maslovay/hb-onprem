@@ -268,7 +268,7 @@ namespace UserOperations.Controllers
                     user = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.NormalizedEmail == message.UserName.ToUpper());
                     if (user == null)
                         return BadRequest("No such user");
-                    string password = "123456";// _loginService.GeneratePass(6);
+                    string password = _loginService.GeneratePass(6);
                     await _mailSender.SendPasswordChangeEmail(user, password);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
                 }
