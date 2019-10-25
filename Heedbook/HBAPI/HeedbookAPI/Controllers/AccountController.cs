@@ -338,8 +338,8 @@ namespace UserOperations.Controllers
         [HttpDelete("Remove")]
         [SwaggerOperation(Summary = "Delete user, company, trial tariff - only for developers")]
         public async Task<IActionResult> AccountDelete([FromQuery,
-                        SwaggerParameter("Company Id", Required = true)]
-                        Guid companyId)
+                        SwaggerParameter("user email", Required = true)]
+                        string email)
         {
             using (var transactionScope = new
                         TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
@@ -349,16 +349,17 @@ namespace UserOperations.Controllers
             {
                 try
                 {
-                    Company company = _context.Companys.FirstOrDefault(x => x.CompanyId == companyId);
-                    var users = _context.ApplicationUsers.Include(x=>x.UserRoles).Where(x => x.CompanyId == companyId).ToList();
-                    var tariff = _context.Tariffs.FirstOrDefault(x => x.CompanyId == companyId);
+                    var user = _context.ApplicationUsers.FirstOrDefault(p => p.Email == email);
+                    Company company = _context.Companys.FirstOrDefault(x => x.CompanyId == user.CompanyId);
+                    var users = _context.ApplicationUsers.Include(x=>x.UserRoles).Where(x => x.CompanyId == company.CompanyId).ToList();
+                    var tariff = _context.Tariffs.FirstOrDefault(x => x.CompanyId == company.CompanyId);
                     var transactions = _context.Transactions.Where(x => x.TariffId == tariff.TariffId).ToList();
                     var userRoles = users.SelectMany(x => x.UserRoles).ToList();
-                    var workerTypes = _context.WorkerTypes.Where(x => x.CompanyId == companyId).ToList();
-                    var contents = _context.Contents.Where(x => x.CompanyId == companyId).ToList();
-                    var campaigns = _context.Campaigns.Include(x => x.CampaignContents).Where(x => x.CompanyId == companyId).ToList();
+                    var workerTypes = _context.WorkerTypes.Where(x => x.CompanyId == company.CompanyId).ToList();
+                    var contents = _context.Contents.Where(x => x.CompanyId == company.CompanyId).ToList();
+                    var campaigns = _context.Campaigns.Include(x => x.CampaignContents).Where(x => x.CompanyId == company.CompanyId).ToList();
                     var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
-                    var phrases = _context.PhraseCompanys.Where(x => x.CompanyId == companyId).ToList();
+                    var phrases = _context.PhraseCompanys.Where(x => x.CompanyId == company.CompanyId).ToList();
                     var pswdHist = _context.PasswordHistorys.Where(x => users.Select(p=>p.Id).Contains( x.UserId)).ToList();
 
                     if (pswdHist.Count() != 0)

@@ -1,38 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
-
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
 using UserOperations.Models.AnalyticModels;
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using HBData;
-using static UserOperations.Utils.DBOperations;
 using UserOperations.Utils;
-using HBLib.Utils;
+using UserOperations.Providers;
+using System.Threading.Tasks;
 
 namespace UserOperations.Controllers
 {
@@ -40,31 +17,31 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticHomeController : Controller
     {
-      private readonly IConfiguration _config;        
+        private readonly AnalyticCommonProvider _analyticCommonProvider;
+        private readonly AnalyticHomeProvider _analyticHomeProvider;
+        private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
-        private readonly RecordsContext _context;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-//        private readonly ElasticClient _log;
         public AnalyticHomeController(
             IConfiguration config,
             ILoginService loginService,
-            RecordsContext context,
             DBOperations dbOperation,
-            RequestFilters requestFilters
-//            ElasticClient log
+            RequestFilters requestFilters,
+            AnalyticCommonProvider analyticProvider,
+            AnalyticHomeProvider homeProvider
             )
         {
             _config = config;
             _loginService = loginService;
-            _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-//            _log = log;
+            _analyticCommonProvider = analyticProvider;
+            _analyticHomeProvider = homeProvider;
         }
 
         [HttpGet("Dashboard")]
-        public IActionResult GetDashboard([FromQuery(Name = "begTime")] string beg,
+        public async Task<IActionResult> GetDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
@@ -73,7 +50,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-//                _log.Info("AnalyticHome/Dashboard started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -82,75 +58,31 @@ namespace UserOperations.Controllers
 
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
-                var industryIds = _context.Companys
-                 .Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId))?
-                     .Select(x => x.CompanyIndustryId).ToList();
-
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var sessions = _context.Sessions
-                        .Include(p => p.ApplicationUser)
-                        .Where(p => p.BegTime >= prevBeg
-                                && p.EndTime <= endTime
-                                && p.StatusId == 7
-                                && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                                && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                        .Select(p => new SessionInfo
-                        {
-                            ApplicationUserId = p.ApplicationUserId,
-                            BegTime = p.BegTime,
-                            EndTime = p.EndTime
-                        })
-                        .ToList();
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);               
 
+                var sessions = await _analyticCommonProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
+                var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
 
-                var typeIdCross = _context.PhraseTypes
-                    .Where(p => p.PhraseTypeText == "Cross")
-                    .Select(p => p.PhraseTypeId)
-                    .First();
+                var dialogues = _analyticCommonProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds)
+                       .Select(p => new DialogueInfo
+                       {
+                           DialogueId = p.DialogueId,
+                           ApplicationUserId = p.ApplicationUserId,
+                           FullName = p.ApplicationUser.FullName,
+                           BegTime = p.BegTime,
+                           EndTime = p.EndTime,
+                           CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                           SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                           SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
+                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
+                       }).ToList();
 
-                var dialogues = _context.Dialogues
-                        .Include(p => p.ApplicationUser)
-                        .Include(p => p.DialogueClientSatisfaction)
-                        .Include(p => p.DialoguePhrase)
-                        .Where(p => p.BegTime >= prevBeg
-                                && p.EndTime <= endTime
-                                && p.StatusId == 3
-                                && p.InStatistic == true
-                                && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                                && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                        .Select(p => new DialogueInfo
-                        {
-                            DialogueId = p.DialogueId,
-                            ApplicationUserId = p.ApplicationUserId,
-                            FullName = p.ApplicationUser.FullName,
-                            BegTime = p.BegTime,
-                            EndTime = p.EndTime,
-                            CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                            SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                            SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
-                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
-                        })
-                        .ToList();
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = null;
-                try
-                {
-                    benchmarksList = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
-                                                           && industryIds.Contains (x.IndustryId))
-                                                            .Join(_context.BenchmarkNames,
-                                                                bench => bench.BenchmarkNameId,
-                                                                names => names.Id,
-                                                                (bench, names) => new BenchmarkModel { Name = names.Name, Value = bench.Value })
-                                                            .ToList();
-                }
-                catch
-                {
-
-                }
+                List<BenchmarkModel> benchmarksList = await _analyticHomeProvider.GetBenchmarksListAsync(begTime, endTime, companyIds);
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
@@ -192,14 +124,14 @@ namespace UserOperations.Controllers
                 //---benchmarks
                 if (benchmarksList != null && benchmarksList.Count() != 0)
                 {
-                    result.SatisfactionIndexIndustryAverage = benchmarksList.Any(x => x.Name == "SatisfactionIndexIndustryAvg")? (double?)benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryAvg").Average(x => x.Value): null;
-                    result.SatisfactionIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "SatisfactionIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "SatisfactionIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+                    result.SatisfactionIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "SatisfactionIndexIndustryAvg");
+                    result.SatisfactionIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "SatisfactionIndexIndustryBenchmark");
 
-                    result.LoadIndexIndustryAverage = benchmarksList.Any(x => x.Name == "LoadIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "LoadIndexIndustryAvg")?.Average(x => x.Value): null;
-                    result.LoadIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "LoadIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "LoadIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+                    result.LoadIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
+                    result.LoadIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark"); 
 
-                    result.CrossIndexIndustryAverage = benchmarksList.Any(x => x.Name == "CrossIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg")?.Average(x => x.Value) : null;
-                    result.CrossIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "CrossIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+                    result.CrossIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg"); 
+                    result.CrossIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
                 }           
 
                 result.NumberOfDialoguesPerEmployeesDelta += result.NumberOfDialoguesPerEmployees;
@@ -212,19 +144,17 @@ namespace UserOperations.Controllers
                 result.DialogueDurationDelta += result.DialogueDuration;
 
                 var jsonToReturn = JsonConvert.SerializeObject(result);
-//                _log.Info("AnalyticHome/Dashboard finished");
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
             {
-//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
 
 
         [HttpGet("DashboardFiltered")]
-        public IActionResult GetDashboardFiltered([FromQuery(Name = "begTime")] string beg,
+        public async Task<IActionResult> GetDashboardFiltered([FromQuery(Name = "begTime")] string beg,
                                                   [FromQuery(Name = "endTime")] string end,
                                                   [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                   [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -240,31 +170,13 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
-                var companyIdsUsersFilter = _context.ApplicationUsers.Where(x => applicationUserIds.Contains(x.Id)).Select(x => x.CompanyId).Distinct().ToList();
-                var industryIds = _context.Companys
-                    .Where(x =>
-                        (!companyIds.Any() || companyIds.Contains(x.CompanyId))
-                        && (!companyIdsUsersFilter.Any() || companyIdsUsersFilter.Contains(x.CompanyId)))?
-                        .Select(x => x.CompanyIndustryId).ToList();
-
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var typeIdCross = _context.PhraseTypes
-                                    .Where(p => p.PhraseTypeText == "Cross")
-                                    .Select(p => p.PhraseTypeId).First();
-                var dialogues = _context.Dialogues
-                         .Include(p => p.ApplicationUser)
-                         .Include(p => p.DialogueClientSatisfaction)
-                         .Include(p => p.DialoguePhrase)
-                         .Where(p => p.BegTime >= prevBeg
-                                 && p.EndTime <= endTime
-                                 && p.StatusId == 3
-                                 && p.InStatistic == true
-                                 && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                                 && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                                 && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
-                         .Select(p => new DialogueInfo
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+
+                var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
+                var dialogues = _analyticCommonProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                        .Select(p => new DialogueInfo
                          {
                              DialogueId = p.DialogueId,
                              ApplicationUserId = p.ApplicationUserId,
@@ -274,39 +186,13 @@ namespace UserOperations.Controllers
                          })
                          .ToList();
 
-                var sessions = _context.Sessions
-                      .Include(p => p.ApplicationUser)
-                      .Where(p => p.BegTime >= prevBeg
-                              && p.EndTime <= endTime
-                              && p.StatusId == 7
-                              && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                              && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                      .Select(p => new SessionInfo
-                      {
-                          ApplicationUserId = p.ApplicationUserId,
-                          BegTime = p.BegTime,
-                          EndTime = p.EndTime
-                      })
-                      .ToList();
+                var sessions = await _analyticCommonProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds);
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = null;
-                try
-                {
-                    benchmarksList = _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
-                                                           && (industryIds.Contains(x.IndustryId) || x.IndustryId == null))
-                                                            .Join(_context.BenchmarkNames,
-                                                                bench => bench.BenchmarkNameId,
-                                                                names => names.Id,
-                                                                (bench, names) => new BenchmarkModel { Name = names.Name, Value = bench.Value })
-                                                            .ToList();
-                }
-                catch
-                {
-                }
+                List<BenchmarkModel> benchmarksList = await _analyticHomeProvider.GetBenchmarksListAsync(begTime, endTime, companyIds);
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
@@ -321,11 +207,11 @@ namespace UserOperations.Controllers
                 //---benchmarks
                 if (benchmarksList != null && benchmarksList.Count() != 0)
                 {
-                    crossIndexIndustryAverage = benchmarksList.Any(x => x.Name == "CrossIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryAvg")?.Average(x => x.Value) : null;
-                    crossIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "CrossIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "CrossIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+                    loadIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
+                    loadIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark");
 
-                    loadIndexIndustryAverage = benchmarksList.Any(x => x.Name == "LoadIndexIndustryAvg") ? (double?)benchmarksList.Where(x => x.Name == "LoadIndexIndustryAvg")?.Average(x => x.Value) : null;
-                    loadIndexIndustryBenchmark = benchmarksList.Any(x => x.Name == "LoadIndexIndustryBenchmark") ? (double?)benchmarksList.Where(x => x.Name == "LoadIndexIndustryBenchmark")?.Max(x => x.Value) : null;
+                    crossIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg");
+                    crossIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
                 }
 
                 var result = new
@@ -355,81 +241,66 @@ namespace UserOperations.Controllers
             }
         }
 
+        //[HttpGet("Recomendation")]
+        //public IActionResult GetRecomendation([FromQuery(Name = "begTime")] string beg,
+        //                                                [FromQuery(Name = "endTime")] string end, 
+        //                                                [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+        //                                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+        //                                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+        //                                                [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+        //                                                [FromHeader] string Authorization)
 
-        [HttpGet("Recomendation")]
-        public IActionResult GetRecomendation([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
-
-        {
-//            _log.Info("AnalyticHome/Recomendation started");
-            if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-            var role = userClaims["role"];
-            var companyId = Guid.Parse(userClaims["companyId"]);     
-            var begTime = _requestFilters.GetBegDate(beg);
-            var endTime = _requestFilters.GetEndDate(end);
-            _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
-            var hintCount = !String.IsNullOrEmpty(_config["hint : hintCount"]) ? Convert.ToInt32(_config["hint : hintCount"]): 3;
+        //{
+        //    if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+        //            return BadRequest("Token wrong");
+        //    var role = userClaims["role"];
+        //    var companyId = Guid.Parse(userClaims["companyId"]);     
+        //    var begTime = _requestFilters.GetBegDate(beg);
+        //    var endTime = _requestFilters.GetEndDate(end);
+        //    _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
+        //    var hintCount = !String.IsNullOrEmpty(_config["hint : hintCount"]) ? Convert.ToInt32(_config["hint : hintCount"]): 3;
           
 
-            var hints =_context.DialogueHints
-                    .Include(p => p.Dialogue)
-                    .Include(p => p.Dialogue.ApplicationUser)
-                    .Where(p => p.Dialogue.BegTime >= begTime && p.Dialogue.EndTime <= endTime
-                            && p.Dialogue.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.Dialogue.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.Dialogue.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.Dialogue.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new
-                    {
-                        HintText = p.HintText,
-                        IsAutomatic = p.IsAutomatic,
-                        IsPositive = p.IsPositive,
-                        Type = p.Type
-                    }).ToList();
+        //    var hints = _analyticHomeProvider.GetDialogueHints(begTime, endTime, companyIds, applicationUserIds, workerTypeIds)
+        //            .Select(p => new
+        //            {
+        //                p.HintText,
+        //                p.IsAutomatic,
+        //                p.IsPositive,
+        //                p.Type
+        //            }).ToList();
 
-            var positiveTopHints = hints.Where(p => p.IsPositive == true)
-                .GroupBy(p => p.HintText)
-                .Select(p => new
-                {
-                    HintText = p.Key,
-                    HintCount = p.Count()
-                })
-                .OrderByDescending(p => p.HintCount).Take(hintCount).Select(p => p.HintText).ToList();
+        //    var positiveTopHints = hints.Where(p => p.IsPositive == true)
+        //        .GroupBy(p => p.HintText)
+        //        .Select(p => new
+        //        {
+        //            HintText = p.Key,
+        //            HintCount = p.Count()
+        //        })
+        //        .OrderByDescending(p => p.HintCount).Take(hintCount).Select(p => p.HintText).ToList();
 
-            var negativeTopHints = hints.Where(p => p.IsPositive == false)
-                .GroupBy(p => p.HintText)
-                .Select(p => new
-                {
-                    HintText = p.Key,
-                    HintCount = p.Count()
-                })
-                .OrderByDescending(p => p.HintCount).Take(hintCount).Select(p => p.HintText).ToList();
-            var topHints = new List<TopHintInfo>();
-            topHints.Add(new TopHintInfo
-            {
-                IsPositive = true,
-                Hints = positiveTopHints
-            });
+        //    var negativeTopHints = hints.Where(p => p.IsPositive == false)
+        //        .GroupBy(p => p.HintText)
+        //        .Select(p => new
+        //        {
+        //            HintText = p.Key,
+        //            HintCount = p.Count()
+        //        })
+        //        .OrderByDescending(p => p.HintCount).Take(hintCount).Select(p => p.HintText).ToList();
+        //    var topHints = new List<TopHintInfo>();
+        //    topHints.Add(new TopHintInfo
+        //    {
+        //        IsPositive = true,
+        //        Hints = positiveTopHints
+        //    });
 
-            topHints.Add(new TopHintInfo
-            {
-                IsPositive = false,
-                Hints = negativeTopHints
-            });
-//            _log.Info("AnalyticHome/Recomendation finished");
-            return Ok(JsonConvert.SerializeObject(topHints));
-        }                                                
+        //    topHints.Add(new TopHintInfo
+        //    {
+        //        IsPositive = false,
+        //        Hints = negativeTopHints
+        //    });
+        //    return Ok(JsonConvert.SerializeObject(topHints));
+        //}
     }
 
-    public class BenchmarkModel
-    {
-        public string Name { get; set; }
-        public double Value { get; set; }
-    }
 }

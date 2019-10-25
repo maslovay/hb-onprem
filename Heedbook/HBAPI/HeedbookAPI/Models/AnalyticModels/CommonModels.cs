@@ -1,10 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using HBData.Models;
 
 namespace UserOperations.Models.AnalyticModels
@@ -87,90 +82,16 @@ namespace UserOperations.Models.AnalyticModels
     }
 
 
-    class DashboardInfo
-    {
-        public double? SatisfactionIndex;
-        public double? SatisfactionIndexDelta;
-        public double? SatisfactionIndexIndustryAverage;
-        public double? SatisfactionIndexIndustryBenchmark;
-
-        public double? LoadIndex;
-        public double? LoadIndexDelta;
-        public double? LoadIndexIndustryAverage;
-        public double? LoadIndexIndustryBenchmark;
-
-        public double? CrossIndex;
-        public double? CrossIndexDelta;
-        public double? CrossIndexIndustryAverage;
-        public double? CrossIndexIndustryBenchmark;
-
-        public int? EmployeeCount;
-        public int? EmployeeCountDelta;
-        public int? DialoguesCount;
-        public int? DialoguesCountDelta;
-        public int? NumberOfDialoguesPerEmployees;
-        public int? NumberOfDialoguesPerEmployeesDelta;
-        public double? AvgWorkingTimeEmployees;
-        public double? AvgWorkingTimeEmployeesDelta;
-        public string BestEmployee;
-        public double? BestEmployeeEfficiency;
-        public string BestProgressiveEmployee;
-        public double? BestProgressiveEmployeeDelta;
-        public double? SatisfactionDialogueDelta;
-        public double? DialogueDuration;
-
-        public double? DialogueDurationDelta;
-    }
-
-    public class TopHintInfo
-    {
-        public bool IsPositive;
-        public List<string> Hints;
-    }
-
-    class EfficiencyDashboardInfo
-    {
-        public double? LoadIndex;
-        public double? LoadIndexDelta;
-        public int? DialoguesCount;
-        public double? EmployeeCount;
-        public double? DialoguesPerEmployee;
-        public int? EmployeeOptimalCount;
-        public double? WorkingHours;
-        public double? WorkingHoursDelta;
-        public double? DialogueAveragePause;
-        public double? DialogueAverageDuration;
-    }
-
-    public class EfficiencyRatingInfo
-    {
-        public string FullName;
-        public double? LoadIndex;
-        public int? DialoguesCount;
-        public int? WorkingDaysCount;
-        public double? WorkingHoursDaily;
-        public double? DialogueAverageDuration;
-        public double? DialogueAveragePause;
-        public double? ClientsWorkingHoursDaily;
-    }
+    //public class TopHintInfo
+    //{
+    //    public bool IsPositive;
+    //    public List<string> Hints;
+    //}
 
     public class EfficiencyOptimizationHourInfo
     {
         public double Load;
         public int UsersCount;
-    }
-
-    public class EfficiencyOptimizationDayInfo
-    {
-        public List<EfficiencyOptimizationHourInfo> DayLoads;
-        public DateTime Date;
-    }
-
-    public class EfficiencyOptimizationEmployeeInfo
-    {
-        public TimeSpan Time;
-        public int OptimalEmployeeCount;
-        public double? RealEmployeeCount;
     }
 
     public class EfficiencyLoadClientTimeInfo
@@ -191,14 +112,6 @@ namespace UserOperations.Models.AnalyticModels
         public double? SatisfactionIndex;
         public double? LoadIndex;
     }
-
-    public class EfficiencyLoadClientsCountInfo
-    {
-        public List<EfficiencyLoadClientTimeInfo> ClientTimeInfo;
-        public List<EfficiencyLoadClientDayInfo> ClientDayInfo;
-        public List<EfficiencyLoadEmployeeTimeInfo> EmployeeTimeInfo;
-    }
-
 
     public class EfficiencyLoadDialogueTimeSatisfactionInfo
     {
@@ -259,12 +172,8 @@ namespace UserOperations.Models.AnalyticModels
         public double? WorkloadValueAvg;
         public double? WorkloadDynamics;
         public int? DialoguesCount;
-        // public double? EmployeeCount;
         public double? DialoguesNumberAvgPerEmployee;
-        // public int? EmployeeOptimalCount;
         public double? AvgWorkingTime;
-        // public double? WorkingHoursDelta;
-        // public double? DialogueAveragePause;
         public double? AvgDurationDialogue;
         public double? DialoguesNumberAvgPerDayOffice;
         public Employee BestEmployee;
@@ -279,17 +188,14 @@ namespace UserOperations.Models.AnalyticModels
             AmountUsersInCorporation = corp;
         }
         public double? TotalAvg;
-       // public double? TotalAvgOld;
         public double? Dynamic;
         public Dictionary<DateTime, double> AvgPerDay;
         public int? OfficeRating;
-       // public int? OfficeRatingOld;
         public int? OfficeRatingChanges;
         public int? CorporationRating;
-       // public int? OfficeRatingOld;
         public int? CorporationRatingChanges;
         public int AmountUsersInCorporation { get; set; }
         public int AmountUsersInCompany { get; set; }
 
-    }
+    }   
 }

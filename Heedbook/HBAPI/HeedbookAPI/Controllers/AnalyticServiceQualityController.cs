@@ -31,6 +31,7 @@ using Microsoft.Extensions.DependencyInjection;
 using HBData;
 using UserOperations.Utils;
 using HBLib.Utils;
+using UserOperations.Providers;
 //---OLD---
 namespace UserOperations.Controllers
 {
@@ -38,6 +39,7 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticServiceQualityController : Controller
     {
+        private readonly AnalyticCommonProvider _analyticProvider;
         private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
@@ -46,6 +48,7 @@ namespace UserOperations.Controllers
         // private readonly ElasticClient _log;
 
         public AnalyticServiceQualityController(
+            AnalyticCommonProvider analyticProvider,
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
@@ -54,6 +57,7 @@ namespace UserOperations.Controllers
             // ElasticClient log
             )
         {
+            _analyticProvider = analyticProvider;
             _config = config;
             _loginService = loginService;
             _context = context;
@@ -195,16 +199,7 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = _context.Dialogues
-                        .Include(p => p.ApplicationUser)
-                        .Include(p => p.DialogueClientSatisfaction)
-                        .Where(p => p.BegTime >= prevBeg
-                                && p.EndTime <= endTime
-                                && p.StatusId == 3
-                                && p.InStatistic == true
-                                && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                                && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                                && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                var dialogues = _analyticProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
                         .Select(p => new DialogueInfo
                         {
                             DialogueId = p.DialogueId,
