@@ -65,6 +65,8 @@ namespace UserOperations
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
             services.AddScoped<MailSender>();
             services.AddScoped<AnalyticContentProvider>();
+            services.AddScoped<AnalyticCommonProvider>();
+            services.AddScoped<AnalyticHomeProvider>();
 
             services.AddSwaggerGen(c =>
             {

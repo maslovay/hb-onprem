@@ -98,7 +98,7 @@ namespace UserOperations.Services
             try
             {
                 var languageId = user.Company.LanguageId;
-                string path = Path.GetFullPath("./Services/language_table.json");
+                string path = Path.GetFullPath("./Utils/language_table.json");
                 var languageRowJson = File.ReadAllText(path);
 
                 var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
@@ -124,16 +124,16 @@ namespace UserOperations.Services
                 //    .UseFilesystemProject(fullPath)
                 //    .UseMemoryCachingProvider()
                 //    .Build();
-                //string result = await engine.CompileRenderAsync("/Services/email", model);
+                //string result = await engine.CompileRenderAsync("/Utils/email", model);
 
                 var engine = new RazorLight.RazorLightEngineBuilder()
               .UseMemoryCachingProvider()
               .Build();
 
-                string template = File.ReadAllText(fullPath+"/Services/email.cshtml");
+                string template = File.ReadAllText(fullPath+"/Utils/email.cshtml");
                 string result = await engine.CompileRenderAsync("email", template, model);
 
-                string pathTemp = fullPath + "/Services/temp.html";
+                string pathTemp = fullPath + "/Utils/temp.html";
                 File.WriteAllText(pathTemp, result);
                 string htmlBody = File.ReadAllText(pathTemp);
                 File.Delete(pathTemp);
@@ -148,7 +148,7 @@ namespace UserOperations.Services
 
         public async Task<string> TestReadFile1()
         {
-            string path = Path.GetFullPath("./Services/language_table.json");
+            string path = Path.GetFullPath("./Utils/language_table.json");
             var languageRowJson = File.ReadAllText(path);
             var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
             var registerLanguages = (List<LanguageDataEmail>)languageObject.GetType().GetProperty("passwordChange").GetValue(languageObject, null);
@@ -162,8 +162,8 @@ namespace UserOperations.Services
                     .Build();
                 try
                 {
-                    string result = await engine.CompileRenderAsync("Services/email.cshtml", model);
-                    string pathTemp = fullPath + "/Services/temp.html";
+                    string result = await engine.CompileRenderAsync("Utils/email.cshtml", model);
+                    string pathTemp = fullPath + "/Utils/temp.html";
                     File.WriteAllText(pathTemp, result);
                     string htmlBody = File.ReadAllText(pathTemp);
                     File.Delete(pathTemp);
@@ -184,7 +184,7 @@ namespace UserOperations.Services
 
         public async Task<string> TestReadFile2()
         {
-            string path = Path.GetFullPath("./Services/language_table.json");
+            string path = Path.GetFullPath("./Utils/language_table.json");
             var languageRowJson = File.ReadAllText(path);
             var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
             var registerLanguages = (List<LanguageDataEmail>)languageObject.GetType().GetProperty("passwordChange").GetValue(languageObject, null);
@@ -195,10 +195,10 @@ namespace UserOperations.Services
                   .UseMemoryCachingProvider()
                   .Build();
                 var fullPath = System.IO.Path.GetFullPath(".");
-                string template = File.ReadAllText(fullPath + "/Services/email.cshtml");
+                string template = File.ReadAllText(fullPath + "/Utils/email.cshtml");
 
                 string result = await engine.CompileRenderAsync("email", template, model);
-                string pathTemp = fullPath + "/Services/temp.html";
+                string pathTemp = fullPath + "/Utils/temp.html";
                 File.WriteAllText(pathTemp, result);
                 string htmlBody = File.ReadAllText(pathTemp);
                 File.Delete(pathTemp);
