@@ -7,6 +7,7 @@ using HBData.Models.AccountViewModels;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.AccountModels;
 using UserOperations.Services;
+using Newtonsoft.Json;
 
 namespace UserOperations.Providers
 {
@@ -172,22 +173,8 @@ namespace UserOperations.Providers
         }
         public async void SaveChangesAsync()
         {
-            // Task.Run(() => 
-            // {
-            //     _context.SaveChangesAsync();
-            // }).Wait(); 
             await _context.SaveChangesAsync();           
-        }
-        public async Task SaveUserAsync(ApplicationUser user)
-        {
-            // var task = Task.Run(() => 
-            // {
-            //     _context.SaveChangesAsync();
-            // });
-            // task.Wait();
-            // _context.Update(user);
-            await _context.SaveChangesAsync();           
-        }
+        }        
         public void SaveChanges()
         {
             _context.SaveChanges();
@@ -195,7 +182,7 @@ namespace UserOperations.Providers
 
         public ApplicationUser GetApplicationUser(string email)
         {
-            var user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == email.ToUpper()).FirstOrDefault();
+            var user = _context.ApplicationUsers.First(p => p.NormalizedEmail == email.ToUpper());
             return user;
         }
         public ApplicationUser GetApplicationUser(Guid userId, AccountAuthorization message)

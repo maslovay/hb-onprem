@@ -154,11 +154,8 @@ namespace UserOperations.Controllers
                 //---FOR LOGGINED USER CHANGE PASSWORD WITH INPUT (receive new password in body message.Password)
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
                 {
-                    System.Console.WriteLine($"1");
                     var userId = Guid.Parse(userClaims["applicationUserId"]);
                     user = _accountProvider.GetApplicationUser(userId, message);
-                    System.Console.WriteLine(JsonConvert.SerializeObject(user));
-                    System.Console.WriteLine($"11");
                     user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
                     if (!_loginService.SavePasswordHistory(user.Id, user.PasswordHash))//---check 5 last passwords
                         return BadRequest("password was used");
@@ -166,7 +163,6 @@ namespace UserOperations.Controllers
                 //---IF USER NOT LOGGINED HE RECEIVE GENERATED PASSWORD ON EMAIL
                 else
                 {
-                    System.Console.WriteLine($"2");
                     user = _accountProvider.GetApplicationUser(message.UserName);
                     if (user == null)
                         return BadRequest("No such user");
@@ -174,9 +170,9 @@ namespace UserOperations.Controllers
                     await _mailSender.SendPasswordChangeEmail(user, password);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
                 }
-                System.Console.WriteLine($"savechanges");
-                _accountProvider.SaveUserAsync(user);
-//                _log.Info("Account/ change password finished");
+                
+                _accountProvider.SaveChanges();
+
                 return Ok("password changed");
             }
             catch (Exception e)
@@ -195,7 +191,7 @@ namespace UserOperations.Controllers
                 var user = _accountProvider.GetApplicationUser(email);
                 if (user == null) return BadRequest("No such user");
                 user.PasswordHash = _loginService.GeneratePasswordHash("Test_User12345");                  
-                _accountProvider.SaveChangesAsync();
+                _accountProvider.SaveChanges();
                 return Ok("password changed");
             }
             catch (Exception e)
@@ -227,7 +223,7 @@ namespace UserOperations.Controllers
                     user.StatusId = _accountProvider.GetStatusId("Active");
                     _loginService.SaveErrorLoginHistory(user.Id, "success");
                 }
-                _accountProvider.SaveChangesAsync();
+                _accountProvider.SaveChanges();
 //                _log.Info("Account/unblock finished");
                 return Ok("password changed");
             }
