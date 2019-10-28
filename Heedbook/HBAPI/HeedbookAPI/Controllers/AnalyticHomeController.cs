@@ -67,7 +67,7 @@ namespace UserOperations.Controllers
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
                 var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
 
-                var dialogues = _analyticCommonProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds)
+                var dialogues = _analyticCommonProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
@@ -82,7 +82,7 @@ namespace UserOperations.Controllers
                        }).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = await _analyticHomeProvider.GetBenchmarksListAsync(begTime, endTime, companyIds);
+                List<BenchmarkModel> benchmarksList = (await _analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
@@ -175,7 +175,7 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
-                var dialogues = _analyticCommonProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                var dialogues = _analyticCommonProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
                         .Select(p => new DialogueInfo
                          {
                              DialogueId = p.DialogueId,
@@ -192,7 +192,7 @@ namespace UserOperations.Controllers
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = await _analyticHomeProvider.GetBenchmarksListAsync(begTime, endTime, companyIds);
+                List<BenchmarkModel> benchmarksList = (await _analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();

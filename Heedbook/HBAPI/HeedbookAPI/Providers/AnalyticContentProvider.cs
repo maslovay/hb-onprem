@@ -58,9 +58,7 @@ namespace UserOperations.Providers
         }
 
 
-        public async Task<List<SlideShowInfo>> GetSlideShowFilteredByUserAsync(
-          Dialogue dialogue
-           )
+        public async Task<List<SlideShowInfo>> GetSlideShowsForOneDialogueAsync( Dialogue dialogue )
         {
             var slideShows = await _context.SlideShowSessions
                     .Include(p => p.CampaignContent)
@@ -80,7 +78,7 @@ namespace UserOperations.Providers
                                      IsPoll = p.IsPoll,
                                      Url = p.Url,
                                      ApplicationUserId = (Guid)p.ApplicationUserId,
-                                     EmotionAttention = SatisfactionDuringAdv(p, dialogue)
+                                     EmotionAttention = EmotionAttentionCalculate(p.BegTime, p.EndTime, dialogue.DialogueFrame.ToList())
                                  }
                              )
                             .ToListAsync();
@@ -156,72 +154,71 @@ namespace UserOperations.Providers
 
         //------------------FOR CONTENT ANALYTIC------------------------
 
-        public EmotionAttention SatisfactionDuringAdv(List<SlideShowInfo> sessions, List<DialogueInfoWithFrames> dialogues)
+        public EmotionAttention EmotionsDuringAdv2(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues)
         {
-            EmotionAttention result = new EmotionAttention();
+            List<EmotionAttention> emotionAttentionList = new List<EmotionAttention>();
             if (dialogues != null)
             {
-                foreach (var session in sessions)
+                foreach (var show in shows)
                 {
-                    List<DialogueFrame> frames = dialogues.Where(x => x.DialogueId == session.DialogueId).FirstOrDefault()?.DialogueFrame.ToList();
-                    var beg = session.BegTime;
-                    var end = session.EndTime;
-                    frames = frames != null ? frames.Where(x => x.Time >= beg && x.Time <= end).ToList() : null;
-                    if (frames != null && frames.Count() != 0)
-                    {
-                        result.Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20);
-                        result.Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare);
-                        result.Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare);
-                        result.Neutral = frames.Average(x => x.NeutralShare);
-                        return result;
-                    }
+                    var dialogue = dialogues.Where(x => x.DialogueId == show.DialogueId).FirstOrDefault();
+                    var emotionAttention = EmotionAttentionCalculate(show.BegTime, show.EndTime, dialogue.DialogueFrame);
+                    if (emotionAttention != null)
+                    emotionAttentionList.Add(emotionAttention);
                 }
+                return new EmotionAttention
+                {
+                    Attention = emotionAttentionList.Average(x => x.Attention),
+                    Negative = emotionAttentionList.Average(x => x.Negative),
+                    Neutral = emotionAttentionList.Average(x => x.Neutral),
+                    Positive = emotionAttentionList.Average(x => x.Positive)
+                };
             }
             return null;
         }
 
-        public EmotionAttention SatisfactionDuringAdv(List<SlideShowInfo> sessions, Dialogue dialogue)
+        public EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues)
         {
-            EmotionAttention result = new EmotionAttention();
-            if (dialogue != null)
+            var frames = dialogues != null ? dialogues.SelectMany(x => x.DialogueFrame).ToList() : null;
+            return EmotionDuringAdvOneDialogue(shows, frames);
+        }
+
+        public EmotionAttention EmotionDuringAdvOneDialogue(List<SlideShowInfo> shows, List<DialogueFrame> frames)
+        {
+            List<EmotionAttention> emotionAttentionList = new List<EmotionAttention>();
+            if (frames != null && frames.Count() != 0)
             {
-                foreach (var session in sessions)
+                foreach (var show in shows)
                 {
-                    List<DialogueFrame> frames = dialogue.DialogueFrame.ToList();
-                    var beg = session.BegTime;
-                    var end = session.EndTime;
-                    frames = frames != null ? frames.Where(x => x.Time >= beg && x.Time <= end).ToList() : null;
-                    if (frames != null && frames.Count() != 0)
-                    {
-                        result.Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20);
-                        result.Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare);
-                        result.Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare);
-                        result.Neutral = frames.Average(x => x.NeutralShare);
-                        return result;
-                    }
+                    var emotionAttention = EmotionAttentionCalculate(show.BegTime, show.EndTime, frames);
+                    if (emotionAttention != null)
+                        emotionAttentionList.Add(emotionAttention);
                 }
+                return new EmotionAttention
+                {
+                    Attention = emotionAttentionList.Average(x => x.Attention),
+                    Negative = emotionAttentionList.Average(x => x.Negative),
+                    Neutral = emotionAttentionList.Average(x => x.Neutral),
+                    Positive = emotionAttentionList.Average(x => x.Positive)
+                };
             }
             return null;
         }
 
-        public EmotionAttention SatisfactionDuringAdv(SlideShowSession session, Dialogue dialogue)
+        private EmotionAttention EmotionAttentionCalculate(DateTime begTime, DateTime endTime, List<DialogueFrame> frames)
         {
-            EmotionAttention result = new EmotionAttention();
-            if (dialogue != null)
-            {
-                List<DialogueFrame> frames = dialogue.DialogueFrame.ToList();
-                var beg = session.BegTime;
-                var end = session.EndTime;
-                frames = frames != null ? frames.Where(x => x.Time >= beg && x.Time <= end).ToList() : null;
-                if (frames != null && frames.Count() != 0)
+            //---time - advertaisment begin and end
+            frames = frames.Where(x => x.Time >= begTime && x.Time <= endTime).ToList();
+                if (frames?.Count() != 0)
                 {
-                    result.Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20);
-                    result.Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare);
-                    result.Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare);
-                    result.Neutral = frames.Average(x => x.NeutralShare);
-                    return result;
+                    return new EmotionAttention
+                    {
+                        Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20),
+                        Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare),
+                        Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare),
+                        Neutral = frames.Average(x => x.NeutralShare)
+                    };
                 }
-            }
             return null;
         }
     }

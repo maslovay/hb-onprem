@@ -36,7 +36,20 @@ namespace UserOperations.Providers
             return sessions;
         }
 
-        public IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> applicationUserIds = null)
+        private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        {
+            var data = _context.Dialogues
+                     .Where(p => p.BegTime >= begTime &&
+                         p.EndTime <= endTime &&
+                         p.StatusId == 3 &&
+                         p.InStatistic == true &&
+                         (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
+                         (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
+                         (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
+            return data;
+        }
+
+        public IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> applicationUserIds = null)
         {
             var dialogues = _context.Dialogues
                        .Include(p => p.ApplicationUser)
@@ -52,7 +65,6 @@ namespace UserOperations.Providers
             return dialogues;
         }
 
-
         public IQueryable<Dialogue> GetDialoguesIncludedClientProfile(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
         {
             var data = _context.Dialogues
@@ -67,17 +79,13 @@ namespace UserOperations.Providers
                          (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
             return data;
         }
+
         public async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
-            var persondIds = await _context.Dialogues
-                  .Where(p => p.BegTime >= begTime &&
-                      p.EndTime < endTime &&
-                      p.StatusId == 3 &&
-                      p.InStatistic == true &&
-                      p.PersonId != null &&
-                      (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)))
-                  .Select(p => p.PersonId).Distinct()
-                  .ToListAsync();
+            var persondIds = await GetDialogues(begTime, endTime, companyIds)
+                    .Where ( p => p.PersonId != null )
+                    .Select(p => p.PersonId).Distinct()
+                    .ToListAsync();
             return persondIds;
         }
 

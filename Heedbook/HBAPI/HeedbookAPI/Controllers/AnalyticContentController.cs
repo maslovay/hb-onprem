@@ -45,7 +45,7 @@ namespace UserOperations.Controllers
                 var dialogue = await _analyticContentProvider.GetDialogueIncludedFramesByIdAsync(dialogueId);
                 if (dialogue == null) return BadRequest("No such dialogue");
 
-                var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByUserAsync(dialogue);
+                var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowsForOneDialogueAsync(dialogue);
 
                 var contentsShownGroup = slideShowSessionsAll.Where(p => !p.IsPoll)
                     .GroupBy(p => new { p.ContentType,  p.ContentId, p.Url }, (key, group) => new
@@ -66,14 +66,14 @@ namespace UserOperations.Controllers
                         AmountOne = x.Result.Count(),
                         ContentType = x.Key1,
                         ContentName = x.Result.FirstOrDefault().ContentName,
-                        EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogue)
+                        EmotionAttention = _analyticContentProvider.EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList())
                     })
                     .Union(contentsShownGroup.Where(x => x.Key2 == null).Select(x => new ContentOneInfo
                     {
                         Content = x.Key3,
                         AmountOne = x.Result.Count(),
                         ContentType = x.Key1,
-                        EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogue),
+                        EmotionAttention = _analyticContentProvider.EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList()),
                     }
                     )).ToList()
                 };
@@ -98,7 +98,7 @@ namespace UserOperations.Controllers
                             .Where(p => x.Result
                             .Select(r => r.CampaignContentId).Contains(p.CampaignContentId))
                             .Select(p => new { p.Answer, p.Time }),
-                    EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogue),
+                    EmotionAttention = _analyticContentProvider.EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList()),
                 })
                     .ToList();
 
@@ -147,16 +147,16 @@ namespace UserOperations.Controllers
                 slideShowSessionsAll = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
 
                 var views = slideShowSessionsAll.Count();
-               // var splashShows = slideShowSessionsAll.Where(x => x.CampaignContent!= null &&  x.CampaignContent.Campaign!= null && x.CampaignContent.Campaign.IsSplash).Count();
                 var clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();
                
                 var contentsShownGroup = slideShowSessionsAll
-                    .GroupBy(p => new { ContentId = p.ContentId, p.Url }, (key, group) => new
+                    .GroupBy(p => new { p.ContentId, p.Url }, (key, group) => new
                     {
                         Key1 = key.ContentId,
                         Key2 = key.Url,
                         Result = group.ToList()
                     }).ToList();
+
                 var contentInfo = new 
                 {
                     Views = views,
@@ -165,7 +165,7 @@ namespace UserOperations.Controllers
                     {
                         Content = x.Key2.ToString(),
                         AmountViews = x.Result.Where(p =>  p.DialogueId != null && p.DialogueId != default(Guid)).Count(),                            
-                        EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogues),
+                        EmotionAttention = _analyticContentProvider.EmotionsDuringAdv(x.Result, dialogues),
                         Age = x.Result.Where(p => p.DialogueId != null).Average(p => p.Age),
                         Male = x.Result.Where(p => p.Gender == "male").Count(),
                         Female = x.Result.Where(p => p.Gender == "female").Count()
@@ -175,7 +175,7 @@ namespace UserOperations.Controllers
                         Content = x.Key1.ToString(),
                         AmountViews = x.Result.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
                         ContentName = x.Result.FirstOrDefault().ContentName,  
-                        EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogues),
+                        EmotionAttention = _analyticContentProvider.EmotionsDuringAdv(x.Result, dialogues),
                         Age = x.Result.Where(p => p.DialogueId != null).Average(p => p.Age),
                         Male = x.Result.Where(p => p.Gender == "male").Count(),
                         Female = x.Result.Where(p => p.Gender == "female").Count()

@@ -199,7 +199,7 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = _analyticProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                var dialogues = _analyticProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
                         .Select(p => new DialogueInfo
                         {
                             DialogueId = p.DialogueId,
