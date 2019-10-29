@@ -12,6 +12,8 @@ using HBData.Models.AccountViewModels;
 using UserOperations.Services;
 using UserOperations.AccountModels;
 using System.Transactions;
+using UserOperations.Providers;
+using Newtonsoft.Json;
 
 namespace UserOperations.Controllers
 {
@@ -20,22 +22,22 @@ namespace UserOperations.Controllers
     public class AccountController : Controller
     {
         private readonly ILoginService _loginService;
-        private readonly RecordsContext _context;
 //        private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
-        private readonly IMailSender _mailSender;
+        private readonly MailSender _mailSender;
+        private readonly AccountProvider _accountProvider;
 
         public AccountController(
             ILoginService loginService,
-            RecordsContext context,
 //            ElasticClient log,      
-            IMailSender mailSender
+            MailSender mailSender,
+            AccountProvider accountProvider
             )
         {
             _loginService = loginService;
-            _context = context;
 //            _log = log;
             _mailSender = mailSender;
+            _accountProvider = accountProvider;
         }
 
         [HttpPost("Register")]
@@ -46,139 +48,36 @@ namespace UserOperations.Controllers
                         UserRegister message)
         {
 //            _log.Info("Account/Register started");
-            Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
-            var statusActiveId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Active").StatusId;//---active
-
-            if (_context.Companys.Where(x => x.CompanyName == message.CompanyName).Any() || _context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
+            
+            var statusActiveId = _accountProvider.GetStatusId("Active");
+            if (await _accountProvider.CompanyExist(message.CompanyName) || await _accountProvider.EmailExist(message.Email))
                 return BadRequest("Company name or user email not unique");
            // using (var transactionScope = new TransactionScope())
             {
                 try
                 {
                     //---1---company---
-                    var companyId = Guid.NewGuid();
-                    var company = new Company
-                    {
-                        CompanyId = companyId,
-                        CompanyIndustryId = message.CompanyIndustryId,
-                        CompanyName = message.CompanyName,
-                        LanguageId = message.LanguageId,
-                        CreationDate = DateTime.UtcNow,
-                        CountryId = message.CountryId,
-                        CorporationId = message.CorporationId,
-                        StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Inactive").StatusId//---inactive
-                    };
-                    await _context.Companys.AddAsync(company);
+                    var companyId = Guid.NewGuid();                
+                    var company = await _accountProvider.AddNewCompanysInBase(message, companyId);
 //                    _log.Info("Company created");
-
                     //---2---user---
-                    var user = new ApplicationUser
-                    {
-                        UserName = message.Email,
-                        NormalizedUserName = message.Email.ToUpper(),
-                        Email = message.Email,
-                        NormalizedEmail = message.Email.ToUpper(),
-                        Id = Guid.NewGuid(),
-                        CompanyId = companyId,
-                        CreationDate = DateTime.UtcNow,
-                        FullName = message.FullName,
-                        PasswordHash = _loginService.GeneratePasswordHash(message.Password),
-                        StatusId = statusActiveId
-                    };
-                    await _context.AddAsync(user);
-                    _loginService.SavePasswordHistory(user.Id, user.PasswordHash);
+                    var user = await _accountProvider.AddNewUserInBase(message, companyId);
                     //                    _log.Info("User created");
-
                     //---3--user role---
-                    message.Role = message.Role ?? "Manager";
-                    var userRole = new ApplicationUserRole()
-                    {
-                        UserId = user.Id,
-                        RoleId = _context.Roles.First(p => p.Name == message.Role).Id //Manager or Supervisor role
-                    };
-                    await _context.ApplicationUserRoles.AddAsync(userRole);
+                    await _accountProvider.AddUserRoleInBase(message, user);
 
-                    //---4---tariff---
-                    if (_context.Tariffs.Where(item => item.CompanyId == companyId).ToList().Count() == 0)
+                    if (_accountProvider.GetTariffs(companyId) == 0)
                     {
-                        var tariff = new Tariff
-                        {
-                            TariffId = Guid.NewGuid(),
-                            TotalRate = 0,
-                            CompanyId = companyId,
-                            CreationDate = DateTime.UtcNow,
-                            CustomerKey = "",
-                            EmployeeNo = 2,
-                            ExpirationDate = DateTime.UtcNow.AddDays(5),
-                            isMonthly = false,
-                            Rebillid = "",
-                            StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Trial").StatusId//---Trial
-                        };
-//                        _log.Info("Tariff created");
-
-                        //---5---transaction---
-                        var transaction = new HBData.Models.Transaction
-                        {
-                            TransactionId = Guid.NewGuid(),
-                            Amount = 0,
-                            OrderId = "",
-                            PaymentId = "",
-                            TariffId = tariff.TariffId,
-                            StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Finished").StatusId,//---finished
-                            PaymentDate = DateTime.UtcNow,
-                            TransactionComment = "TRIAL TARIFF;FAKE TRANSACTION"
-                        };
-                        company.StatusId = statusActiveId;
-//                        _log.Info("Transaction created");
-                        await _context.Tariffs.AddAsync(tariff);
-                        await _context.Transactions.AddAsync(transaction);
+                        //---4---tariff and transaction---
+                        await _accountProvider.CreateCompanyTariffAndtransaction(company);
 
                         //---6---ADD WORKER TYPES CATALOGUE CONNECTED TO NEW COMPANY
-                        var workerType = new WorkerType
-                        {
-                            WorkerTypeId = Guid.NewGuid(),
-                            CompanyId = companyId,
-                            WorkerTypeName = "Employee"
-                        };
-//                        _log.Info("WorkerTypes created");
-                        await _context.WorkerTypes.AddAsync(workerType);
+                        await _accountProvider.AddWorkerType(company);
 
                         //---7---content and campaign clone
-                        var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
-                        if (content != null)
-                        {
-                            content.ContentId = Guid.NewGuid();
-                            content.CompanyId = companyId;
-                            content.StatusId = statusActiveId;
-                            await _context.Contents.AddAsync(content);
+                        await _accountProvider.AddContentAndCampaign(company);
 
-                            Campaign campaign = new Campaign
-                            {
-                                CampaignId = Guid.NewGuid(),
-                                CompanyId = companyId,
-                                BegAge = 0,
-                                BegDate = DateTime.Now.AddDays(-1),
-                                CreationDate = DateTime.Now,
-                                EndAge = 100,
-                                EndDate = DateTime.Now.AddDays(30),
-                                GenderId = 0,
-                                IsSplash = true,
-                                Name = "PROTOTYPE",
-                                StatusId = statusActiveId
-                            };
-                            await _context.Campaigns.AddAsync(campaign);
-                            CampaignContent campaignContent = new CampaignContent
-                            {
-                                CampaignContentId = Guid.NewGuid(),
-                                CampaignId = campaign.CampaignId,
-                                ContentId = content.ContentId,
-                                SequenceNumber = 1,
-                                StatusId = statusActiveId
-                            };
-                            await _context.CampaignContents.AddAsync(campaignContent);
-                        }
-
-                        await _context.SaveChangesAsync();
+                        _accountProvider.SaveChangesAsync();
                      //   transactionScope.Complete();
 
                         //_context.Dispose();
@@ -211,12 +110,10 @@ namespace UserOperations.Controllers
         {
             try
             {
-//                _log.Info("Account/generate token started");
-                ApplicationUser user = _context.ApplicationUsers.Include(p => p.Company).Where(p => p.NormalizedEmail == message.UserName.ToUpper()).FirstOrDefault();
-                //---wrong email?
-                if (user == null) return BadRequest("No such user");
+                var user = _accountProvider.GetUserIncludeCompany(message.UserName);
+                if (user is null) return BadRequest("No such user");
                 //---blocked?
-                if (user.StatusId != _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId) return BadRequest("User not activated");
+                if (user.StatusId != _accountProvider.GetStatusId("Active")) return BadRequest("User not activated");
                 //---success?
                 if (_loginService.CheckUserLogin(message.UserName, message.Password))
                 {
@@ -230,8 +127,8 @@ namespace UserOperations.Controllers
                         return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Error in username or password");
                     else//---block user if this is the 3-rd failed attempt to log in
                     {
-                        user.StatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Inactive").StatusId;
-                        _context.SaveChanges();
+                        user.StatusId = _accountProvider.GetStatusId("Inactive");
+                        _accountProvider.SaveChangesAsync();
                         return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Blocked");
                     }
                 }
@@ -257,7 +154,7 @@ namespace UserOperations.Controllers
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
                 {
                     var userId = Guid.Parse(userClaims["applicationUserId"]);
-                    user = _context.ApplicationUsers.FirstOrDefault(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper());
+                    user = _accountProvider.GetUserIncludeCompany(userId, message);
                     user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
                     if (!_loginService.SavePasswordHistory(user.Id, user.PasswordHash))//---check 5 last passwords
                         return BadRequest("password was used");
@@ -265,15 +162,16 @@ namespace UserOperations.Controllers
                 //---IF USER NOT LOGGINED HE RECEIVE GENERATED PASSWORD ON EMAIL
                 else
                 {
-                    user = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.NormalizedEmail == message.UserName.ToUpper());
+                    user = _accountProvider.GetUserIncludeCompany(message.UserName);
                     if (user == null)
                         return BadRequest("No such user");
                     string password = _loginService.GeneratePass(6);
                     await _mailSender.SendPasswordChangeEmail(user, password);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
                 }
-                await _context.SaveChangesAsync();
-//                _log.Info("Account/ change password finished");
+                
+                _accountProvider.SaveChanges();
+
                 return Ok("password changed");
             }
             catch (Exception e)
@@ -289,10 +187,10 @@ namespace UserOperations.Controllers
         {
             try
             {             
-                var user = _context.ApplicationUsers.FirstOrDefault(x => x.Email.ToUpper() == email.ToUpper());
+                var user = _accountProvider.GetUserIncludeCompany(email);
                 if (user == null) return BadRequest("No such user");
                 user.PasswordHash = _loginService.GeneratePasswordHash("Test_User12345");                  
-                await _context.SaveChangesAsync();
+                _accountProvider.SaveChanges();
                 return Ok("password changed");
             }
             catch (Exception e)
@@ -311,7 +209,7 @@ namespace UserOperations.Controllers
             try
             {
 //                _log.Info("Account/unblock started");
-                ApplicationUser user = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.NormalizedEmail == email.ToUpper());
+                ApplicationUser user = _accountProvider.GetUserIncludeCompany(email);
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
                 {
                     string password = _loginService.GeneratePass(6);
@@ -321,10 +219,10 @@ namespace UserOperations.Controllers
                      "</table>", user.Email, password);
                     _mailSender.SendPasswordChangeEmail(user, text);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
-                    user.StatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
+                    user.StatusId = _accountProvider.GetStatusId("Active");
                     _loginService.SaveErrorLoginHistory(user.Id, "success");
                 }
-                await _context.SaveChangesAsync();
+                _accountProvider.SaveChanges();
 //                _log.Info("Account/unblock finished");
                 return Ok("password changed");
             }
@@ -349,36 +247,7 @@ namespace UserOperations.Controllers
             {
                 try
                 {
-                    var user = _context.ApplicationUsers.FirstOrDefault(p => p.Email == email);
-                    Company company = _context.Companys.FirstOrDefault(x => x.CompanyId == user.CompanyId);
-                    var users = _context.ApplicationUsers.Include(x=>x.UserRoles).Where(x => x.CompanyId == company.CompanyId).ToList();
-                    var tariff = _context.Tariffs.FirstOrDefault(x => x.CompanyId == company.CompanyId);
-                    var transactions = _context.Transactions.Where(x => x.TariffId == tariff.TariffId).ToList();
-                    var userRoles = users.SelectMany(x => x.UserRoles).ToList();
-                    var workerTypes = _context.WorkerTypes.Where(x => x.CompanyId == company.CompanyId).ToList();
-                    var contents = _context.Contents.Where(x => x.CompanyId == company.CompanyId).ToList();
-                    var campaigns = _context.Campaigns.Include(x => x.CampaignContents).Where(x => x.CompanyId == company.CompanyId).ToList();
-                    var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
-                    var phrases = _context.PhraseCompanys.Where(x => x.CompanyId == company.CompanyId).ToList();
-                    var pswdHist = _context.PasswordHistorys.Where(x => users.Select(p=>p.Id).Contains( x.UserId)).ToList();
-
-                    if (pswdHist.Count() != 0)
-                        _context.RemoveRange(pswdHist);
-                    if (phrases != null && phrases.Count() != 0)
-                    _context.RemoveRange(phrases);
-                    if (campaignContents.Count() != 0)
-                        _context.RemoveRange(campaignContents);
-                    if (campaigns.Count() != 0)
-                        _context.RemoveRange(campaigns);
-                    if (contents.Count() != 0)
-                        _context.RemoveRange(contents);
-                    _context.RemoveRange(workerTypes);
-                    _context.RemoveRange(userRoles);
-                    _context.RemoveRange(transactions);
-                    _context.RemoveRange(users);
-                    _context.Remove(tariff);
-                    _context.Remove(company);
-                    _context.SaveChanges();
+                    _accountProvider.RemoveAccount(email);
                     transactionScope.Complete();
 
 //                    _log.Info("Account/remove finished");
