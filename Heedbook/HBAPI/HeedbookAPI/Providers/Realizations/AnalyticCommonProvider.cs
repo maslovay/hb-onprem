@@ -9,7 +9,7 @@ using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Providers
 {
-    public class AnalyticCommonProvider
+    public class AnalyticCommonProvider : IAnalyticCommonProvider
     {
         private readonly RecordsContext _context;
         public AnalyticCommonProvider(RecordsContext context)
@@ -39,13 +39,13 @@ namespace UserOperations.Providers
         private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
         {
             var data = _context.Dialogues
-                     .Where(p => p.BegTime >= begTime &&
-                         p.EndTime <= endTime &&
-                         p.StatusId == 3 &&
-                         p.InStatistic == true &&
-                         (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
-                         (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
-                         (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
+                    .Where(p => p.BegTime >= begTime &&
+                        p.EndTime <= endTime &&
+                        p.StatusId == 3 &&
+                        p.InStatistic == true &&
+                        (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))) &&
+                        (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
+                        (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))).AsQueryable();
             return data;
         }
 

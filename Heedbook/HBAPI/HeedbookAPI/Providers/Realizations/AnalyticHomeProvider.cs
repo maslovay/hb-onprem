@@ -10,7 +10,7 @@ using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Providers
 {
-    public class AnalyticHomeProvider
+    public class AnalyticHomeProvider : IAnalyticHomeProvider
     {
         private readonly IGenericRepository _repository;
         public AnalyticHomeProvider(IGenericRepository repository)

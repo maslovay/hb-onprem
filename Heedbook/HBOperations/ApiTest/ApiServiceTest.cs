@@ -1,31 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using AlarmSender;
 using HBData;
-using HBData.Models;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
-using Microsoft.AspNetCore.Antiforgery.Internal;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
-using NUnit.Framework;
-using RabbitMqEventBus;
 using ServiceExtensions;
 using UserOperations.Providers;
 
@@ -52,7 +34,7 @@ namespace ApiTests
 
             InitServiceProvider();
             InitGeneralServices();
-           // PrepareDatabase();
+            // PrepareDatabase();
         }
 
         private void InitServiceProvider()
@@ -78,7 +60,7 @@ namespace ApiTests
             Services.AddScoped<AnalyticCommonProvider>();
             Services.AddScoped<AnalyticHomeProvider>();
 
-           
+
 
             ServiceProvider = Services.BuildServiceProvider();
         }

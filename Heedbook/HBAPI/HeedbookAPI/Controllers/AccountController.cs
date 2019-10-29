@@ -23,13 +23,13 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
 //        private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
-        private readonly MailSender _mailSender;
+        private readonly IMailSender _mailSender;
 
         public AccountController(
             ILoginService loginService,
             RecordsContext context,
 //            ElasticClient log,      
-            MailSender mailSender
+            IMailSender mailSender
             )
         {
             _loginService = loginService;

@@ -16,14 +16,14 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticContentController : Controller
     {
-        private readonly AnalyticContentProvider _analyticContentProvider;
+        private readonly IAnalyticContentProvider _analyticContentProvider;
         private readonly ILoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly IRequestFilters _requestFilters;
 
         public AnalyticContentController(
-            AnalyticContentProvider analyticProvider,
+            IAnalyticContentProvider analyticProvider,
             ILoginService loginService,
-            RequestFilters requestFilters
+            IRequestFilters requestFilters
             )
         {
             _analyticContentProvider = analyticProvider;

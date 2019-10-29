@@ -17,19 +17,19 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticHomeController : Controller
     {
-        private readonly AnalyticCommonProvider _analyticCommonProvider;
-        private readonly AnalyticHomeProvider _analyticHomeProvider;
+        private readonly IAnalyticCommonProvider _analyticCommonProvider;
+        private readonly IAnalyticHomeProvider _analyticHomeProvider;
         private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
-        private readonly DBOperations _dbOperation;
-        private readonly RequestFilters _requestFilters;
+        private readonly IDBOperations _dbOperation;
+        private readonly IRequestFilters _requestFilters;
         public AnalyticHomeController(
             IConfiguration config,
             ILoginService loginService,
-            DBOperations dbOperation,
-            RequestFilters requestFilters,
-            AnalyticCommonProvider analyticProvider,
-            AnalyticHomeProvider homeProvider
+            IDBOperations dbOperation,
+            IRequestFilters requestFilters,
+            IAnalyticCommonProvider analyticProvider,
+            IAnalyticHomeProvider homeProvider
             )
         {
             _config = config;

@@ -10,7 +10,7 @@ using System.Net.Mime;
 
 namespace UserOperations.Services
 {
-    public class MailSender
+    public class MailSender : IMailSender
     {
         private readonly SmtpSettings _smtpSettings;
         private readonly SmtpClient _smtpClient;

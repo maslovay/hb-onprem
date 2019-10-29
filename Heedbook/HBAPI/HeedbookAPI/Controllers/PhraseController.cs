@@ -45,14 +45,14 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
 //        private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
-        private readonly RequestFilters _requestFilters;
+        private readonly IRequestFilters _requestFilters;
 
 
         public PhraseController(
             ILoginService loginService,
             RecordsContext context,
 //            ElasticClient log,
-            RequestFilters requestFilters
+            IRequestFilters requestFilters
 
             )
         {

@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit.core" Version="2.4.1" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -14,7 +14,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\HBAPI\HeedbookAPI\UserOperations.csproj" />
-    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\HBData\HBData.csproj" />
+    <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
   </ItemGroup>
 
 </Project>

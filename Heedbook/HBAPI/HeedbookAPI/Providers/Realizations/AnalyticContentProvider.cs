@@ -9,7 +9,7 @@ using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Providers
 {
-    public class AnalyticContentProvider
+    public class AnalyticContentProvider : IAnalyticContentProvider
     {
         private readonly RecordsContext _context;
         public AnalyticContentProvider(RecordsContext context)
@@ -154,28 +154,28 @@ namespace UserOperations.Providers
 
         //------------------FOR CONTENT ANALYTIC------------------------
 
-        public EmotionAttention EmotionsDuringAdv2(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues)
-        {
-            List<EmotionAttention> emotionAttentionList = new List<EmotionAttention>();
-            if (dialogues != null)
-            {
-                foreach (var show in shows)
-                {
-                    var dialogue = dialogues.Where(x => x.DialogueId == show.DialogueId).FirstOrDefault();
-                    var emotionAttention = EmotionAttentionCalculate(show.BegTime, show.EndTime, dialogue.DialogueFrame);
-                    if (emotionAttention != null)
-                    emotionAttentionList.Add(emotionAttention);
-                }
-                return new EmotionAttention
-                {
-                    Attention = emotionAttentionList.Average(x => x.Attention),
-                    Negative = emotionAttentionList.Average(x => x.Negative),
-                    Neutral = emotionAttentionList.Average(x => x.Neutral),
-                    Positive = emotionAttentionList.Average(x => x.Positive)
-                };
-            }
-            return null;
-        }
+        //public EmotionAttention EmotionsDuringAdv2(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues)
+        //{
+        //    List<EmotionAttention> emotionAttentionList = new List<EmotionAttention>();
+        //    if (dialogues != null)
+        //    {
+        //        foreach (var show in shows)
+        //        {
+        //            var dialogue = dialogues.Where(x => x.DialogueId == show.DialogueId).FirstOrDefault();
+        //            var emotionAttention = EmotionAttentionCalculate(show.BegTime, show.EndTime, dialogue.DialogueFrame);
+        //            if (emotionAttention != null)
+        //            emotionAttentionList.Add(emotionAttention);
+        //        }
+        //        return new EmotionAttention
+        //        {
+        //            Attention = emotionAttentionList.Average(x => x.Attention),
+        //            Negative = emotionAttentionList.Average(x => x.Negative),
+        //            Neutral = emotionAttentionList.Average(x => x.Neutral),
+        //            Positive = emotionAttentionList.Average(x => x.Positive)
+        //        };
+        //    }
+        //    return null;
+        //}
 
         public EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues)
         {
