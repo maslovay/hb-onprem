@@ -110,8 +110,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-//                _log.Info("Account/generate token started");
-                var user = _accountProvider.GetApplicationUser(message.UserName);
+                var user = _accountProvider.GetUserIncludeCompany(message.UserName);
                 if (user is null) return BadRequest("No such user");
                 //---blocked?
                 if (user.StatusId != _accountProvider.GetStatusId("Active")) return BadRequest("User not activated");
@@ -155,7 +154,7 @@ namespace UserOperations.Controllers
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
                 {
                     var userId = Guid.Parse(userClaims["applicationUserId"]);
-                    user = _accountProvider.GetApplicationUser(userId, message);
+                    user = _accountProvider.GetUserIncludeCompany(userId, message);
                     user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
                     if (!_loginService.SavePasswordHistory(user.Id, user.PasswordHash))//---check 5 last passwords
                         return BadRequest("password was used");
@@ -163,7 +162,7 @@ namespace UserOperations.Controllers
                 //---IF USER NOT LOGGINED HE RECEIVE GENERATED PASSWORD ON EMAIL
                 else
                 {
-                    user = _accountProvider.GetApplicationUser(message.UserName);
+                    user = _accountProvider.GetUserIncludeCompany(message.UserName);
                     if (user == null)
                         return BadRequest("No such user");
                     string password = _loginService.GeneratePass(6);
@@ -188,7 +187,7 @@ namespace UserOperations.Controllers
         {
             try
             {             
-                var user = _accountProvider.GetApplicationUser(email);
+                var user = _accountProvider.GetUserIncludeCompany(email);
                 if (user == null) return BadRequest("No such user");
                 user.PasswordHash = _loginService.GeneratePasswordHash("Test_User12345");                  
                 _accountProvider.SaveChanges();
@@ -210,7 +209,7 @@ namespace UserOperations.Controllers
             try
             {
 //                _log.Info("Account/unblock started");
-                ApplicationUser user = _accountProvider.GetApplicationUser(email);
+                ApplicationUser user = _accountProvider.GetUserIncludeCompany(email);
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
                 {
                     string password = _loginService.GeneratePass(6);
