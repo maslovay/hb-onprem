@@ -1,78 +1,220 @@
 ﻿using System;
-using AlarmSender;
-using HBData;
-using HBData.Repository;
-using HBLib;
-using HBLib.Utils;
-using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using HBData.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using ServiceExtensions;
+using Moq;
+using UserOperations.Models.AnalyticModels;
 using UserOperations.Providers;
+using UserOperations.Services;
+using UserOperations.Utils;
 
 namespace ApiTests
 {
     public abstract class ApiServiceTest : IDisposable
     {
-        protected IGenericRepository _repository;
-        protected AnalyticHomeProvider _analyticHomeProvider;
-        protected SftpClient _sftpClient;
+        protected Mock<IRequestFilters> filterMock;
+        protected Mock<IConfiguration> configMock;
+        protected Mock<ILoginService> loginMock;
+        protected Mock<IDBOperations> dbOperationMock;
+        protected Mock<IAnalyticHomeProvider> homeProviderMock;
+        protected Mock<IAnalyticCommonProvider> commonProviderMock;
 
-        public IConfiguration Config { get; private set; }
-        public ServiceCollection Services { get; private set; }
-        public ServiceProvider ServiceProvider { get; private set; }
+        protected string beg, end;
+        protected DateTime begDate, endDate, prevDate;
+        protected string token;
+        protected Dictionary<string, string> tokenclaims;
+        protected List<Guid> companyIds;
 
-        public IServiceScopeFactory ScopeFactory { get; private set; }
+        protected virtual void InitData()
+        {
 
+        }
+
+        protected virtual void InitServices() { }
         public void Setup()
-
         {
-            Config = new ConfigurationBuilder()
-                .ConfigureBuilderForTests()
-                .Build();
+            filterMock = new Mock<IRequestFilters>(MockBehavior.Loose);
+            configMock = new Mock<IConfiguration>();
+            loginMock = new Mock<ILoginService>(MockBehavior.Loose);
+            dbOperationMock = new Mock<IDBOperations>();
+            homeProviderMock = new Mock<IAnalyticHomeProvider>();
+            commonProviderMock = new Mock<IAnalyticCommonProvider>();
 
-            InitServiceProvider();
-            InitGeneralServices();
-            // PrepareDatabase();
+            InitData();
+            InitServices();
         }
 
-        private void InitServiceProvider()
-        {
-            Services = new ServiceCollection();
 
-            Services.AddDbContext<RecordsContext>(options =>
+        /// <summary>
+        ///     GET DATA
+        /// </summary>
+        /// <returns></returns>
+
+        protected Dictionary<string, string> GetClaims()
+        {
+            return new Dictionary<string, string>
             {
-                var connectionString = Config.GetSection("ConnectionStrings")["DefaultConnection"];
-                options.UseNpgsql(connectionString,
-                    dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
-            });
-
-            Services.Configure<SftpSettings>(Config.GetSection(nameof(SftpSettings)));
-            Services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            Services.AddTransient<SftpClient>();
-
-            Services.AddScoped<IGenericRepository, GenericRepository>();
-            Services.AddSingleton(Config);
-            Services.AddSingleton<TelegramSender>();
-
-            Services.AddScoped<AnalyticContentProvider>();
-            Services.AddScoped<AnalyticCommonProvider>();
-            Services.AddScoped<AnalyticHomeProvider>();
-
-
-
-            ServiceProvider = Services.BuildServiceProvider();
+                {"sub", "tuisv@heedbook.com"} ,{"jti", "afd7fc64 - 802e-486b - a9b2 - 4ef824cb3b89"},
+                {"applicationUserId", "8d5cd62c-2ea0-406e-8ec1-a544d048a9d0" },
+                {"applicationUserName", "tuisv@heedbook.com"},
+                {"companyName", "TUI Supervisor"},
+                {"companyId", "82560395-2cc3-46e8-bcef-c844f1048182"},
+                {"corporationId", "71aa39f1-649d-48d6-b1ae-10c518ed5979"},
+                {"languageCode", "2"},
+                {"role", "Supervisor"},
+                {"fullName", "tuisv@heedbook.com"},
+                {"avatar",null},
+                {"exp", "1575021022"},
+                {"iss", "https://heedbook.com"},
+                {"aud", "https://heedbook.com"}
+         };
         }
 
-        private void InitGeneralServices()
+        protected List<Guid> GetCompanyIds()
         {
-            _sftpClient = ServiceProvider.GetRequiredService<SftpClient>();
-            _repository = ServiceProvider.GetRequiredService<IGenericRepository>();
-            ScopeFactory = ServiceProvider.GetRequiredService<IServiceScopeFactory>();
-
-            _analyticHomeProvider = ServiceProvider.GetService<AnalyticHomeProvider>();
+            return new List<Guid>
+            {
+                Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182")//,
+              //  Guid.Parse("ddaa6e0b-3439-4c78-915e-2e0245332db3"),
+              //  Guid.Parse("ddaa7e0b-3439-4c78-915e-2e0245332db4")
+            };
         }
+
+        protected async Task<IEnumerable<SessionInfo>> GetSessions()
+        {
+            return new List<SessionInfo>
+            {
+                new SessionInfo
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 12, 19,00),
+                    EndTime = new DateTime(2019,10,04,12,20,25),
+                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                    FullName = "tuisv@heedbook.com",
+                    IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
+                },
+                  new SessionInfo
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 18, 19,00),
+                    EndTime = new DateTime(2019,10,04,18,25,30),
+                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                    FullName = "tuisv@heedbook.com",
+                    IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
+                }
+            };
+        }
+
+
+        protected async Task<IEnumerable<SessionInfo>> GetEmptySessions()
+        {
+            return null;
+        }
+
+        protected async Task<Guid> GetCrossPhraseId()
+        {
+            return Guid.Parse("55560395-2cc3-46e8-bcef-c844f1048555");
+        }
+
+        protected IQueryable<Dialogue> GetDialogues()
+        {
+            var dialogues = new List<Dialogue>
+            {
+                new Dialogue
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 12, 19,00),
+                    EndTime = new DateTime(2019,10,04,12,20,25),
+                    CreationTime = new DateTime(2019,10,04, 12, 19,00),
+                    InStatistic = true,
+                    StatusId = 3,
+                    PersonId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
+                    DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                    LanguageId = 2                    ,
+                    DialoguePhrase = new List<DialoguePhrase>
+                    {
+                        new DialoguePhrase
+                        {
+                            DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                            DialoguePhraseId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d2"),
+                            IsClient = true,
+                            PhraseId = Guid.Parse("6d6cd66c-6ea0-606e-8ec1-a544d012a2d2"),
+                            PhraseTypeId =  Guid.Parse("55560395-2cc3-46e8-bcef-c844f1048555")//cross
+        }
+                    },
+                   ApplicationUser = new ApplicationUser
+                   {
+                       FullName = "tuisv@heedbook.com"
+                   },
+                   DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
+                   {
+                       new DialogueClientSatisfaction
+                       {
+                           MeetingExpectationsTotal = 0.45,
+                           BegMoodByNN = 0.4,
+                           EndMoodByNN = 0.7
+                       }
+                   }
+                },
+                  new Dialogue
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 18, 19,00),
+                    EndTime = new DateTime(2019,10,04,18,25,30),
+                    CreationTime = new DateTime(2019,10,04, 19, 19,00),
+                    InStatistic = true,
+                    StatusId = 3,
+                    PersonId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
+                    DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
+                    LanguageId = 2,
+                    DialoguePhrase = new List<DialoguePhrase>
+                    {
+                        new DialoguePhrase
+                        {
+                            DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
+                            DialoguePhraseId = Guid.Parse("7d5cd55c-5ea0-406e-8ec1-a544d012a2d7"),
+                            IsClient = true,
+                            PhraseId = Guid.Parse("6d6cd66c-6ea0-606e-8ec1-a544d012a2d2"),
+                            PhraseTypeId = Guid.Parse("7d7cd77c-7ea0-406e-7ec1-a544d012a2d2")
+                        }
+                    },
+                   ApplicationUser = new ApplicationUser
+                   {
+                       FullName = "tuisv@heedbook.com"
+                   },
+                   DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
+                   {
+                       new DialogueClientSatisfaction
+                       {
+                           MeetingExpectationsTotal = 0.5,
+                           BegMoodByNN = 0.5,
+                           EndMoodByNN = 0.6
+                       }
+                   }
+                }
+            };
+            return dialogues.AsQueryable();
+        }
+
+        protected IQueryable<Dialogue> GetEmptyDialogues()
+        {
+            return new List<Dialogue>().AsQueryable();
+        }
+
+        protected async Task<IEnumerable<BenchmarkModel>> GetBenchmarkList()
+        {
+            return new List<BenchmarkModel>{
+                new BenchmarkModel
+                {
+                    Name = "SatisfactionIndexIndustryAvg",
+                    Value = 0.7
+                }};
+
+        }
+
+
 
         public void Dispose()
         {
