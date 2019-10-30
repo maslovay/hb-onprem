@@ -118,7 +118,7 @@ namespace ApiTests
             return Guid.Parse("55560395-2cc3-46e8-bcef-c844f1048555");
         }
 
-        protected IQueryable<Dialogue> GetDialogues()
+        protected IQueryable<Dialogue> GetDialoguesWithUserPhrasesSatisfaction()
         {
             var dialogues = new List<Dialogue>
             {
