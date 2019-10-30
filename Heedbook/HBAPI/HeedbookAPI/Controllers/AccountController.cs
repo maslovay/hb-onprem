@@ -25,13 +25,13 @@ namespace UserOperations.Controllers
 //        private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
         private readonly IMailSender _mailSender;
-        private readonly AccountProvider _accountProvider;
+        private readonly IAccountProvider _accountProvider;
 
         public AccountController(
             ILoginService loginService,
 //            ElasticClient log,      
             IMailSender mailSender,
-            AccountProvider accountProvider
+            IAccountProvider accountProvider
             )
         {
             _loginService = loginService;

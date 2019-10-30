@@ -180,14 +180,14 @@ namespace UserOperations.Providers
             _context.SaveChanges();
         }
 
-        public ApplicationUser GetUserIncludeCompany(string email)
+        public ApplicationUser GetApplicationUser(string email)
         {
-            var user = _context.ApplicationUsers.Include(x => x.Company).First(p => p.NormalizedEmail == email.ToUpper());
+            var user = _context.ApplicationUsers.First(p => p.NormalizedEmail == email.ToUpper());
             return user;
         }
-        public ApplicationUser GetUserIncludeCompany(Guid userId, AccountAuthorization message)
+        public ApplicationUser GetApplicationUser(Guid userId, AccountAuthorization message)
         {
-            var user = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper());
+            var user = _context.ApplicationUsers.FirstOrDefault(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper());
             return user;
         }
         public void RemoveAccount(string email)
