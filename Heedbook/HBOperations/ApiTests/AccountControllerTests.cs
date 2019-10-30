@@ -27,7 +27,7 @@ namespace ApiTests
         public void RegisterPostTest()
         {
             //Arrange
-            MockInterfaces mockProvider = new MockInterfaces();
+            var mockProvider = new MockInterfaceProviders();
 
             var moqILoginService = new Mock<ILoginService>();
             moqILoginService = mockProvider.MockILoginService(moqILoginService);            
@@ -41,80 +41,164 @@ namespace ApiTests
             var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
-            var actionResult = accountController.UserRegister(new UserRegister());
-            System.Console.WriteLine(JsonConvert.SerializeObject(actionResult));
-            var task = actionResult;
+            var task = accountController.UserRegister(new UserRegister());            
             task.Wait();
             var okResult = task.Result as OkObjectResult;
-            var result = okResult.Value.ToString();            
-            System.Console.WriteLine(result);
+            var result = okResult.Value.ToString();    
 
             //Assert
             Assert.IsTrue(result == "Registred");
         }
+        [Test]
         public void GenerateTokenPostTest()
         {
             //Arrange
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
+            
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
+
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
+
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
-
-            //Assert
-            Assert.Pass();
+            var okResult = accountController.GenerateToken(new AccountAuthorization()) as OkObjectResult;
+            var result = okResult.Value.ToString();
+            
+            //Assert         
+            Assert.IsTrue(result == "Token");
         }
+        [Test]
         public void ChangePasswordPostTest()
         {
             //Arrange
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
+            
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
+
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
+
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
+            var task = accountController.UserChangePasswordAsync(new AccountAuthorization(), $"Bearer Token");
+            task.Wait();
+            var OkResult = task.Result as OkObjectResult;
+            var result = OkResult.Value.ToString();
 
             //Assert
-            Assert.Pass();
+            Assert.IsTrue(result == "password changed");
         }
+        [Test]
         public void UserChangePasswordOnDefaultAsyncPostTest()
         {
             //Arrange
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
+            
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
+
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
+
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
+            var task = accountController.UserChangePasswordOnDefaultAsync($"test@heedbook.com");
+            task.Wait();
+            var OkResult = task.Result as OkObjectResult;
+            var result = OkResult.Value.ToString();
 
             //Assert
-            Assert.Pass();
+            Assert.IsTrue(result == "password changed");
         }
+        [Test]
         public void UnblockPostTest()
         {
             //Arrange
 
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
+            
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
+
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
+
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
+
             //Act
+            var task = accountController.Unblock($"test@heedbook.com", $"Bearer Token");
+            task.Wait();
+            var OkResult = task.Result as OkObjectResult;
+            var result = OkResult.Value.ToString();
 
             //Assert
-            Assert.Pass();
+            Assert.IsTrue(result == "password changed");
         }
+        [Test]
         public void RemoveDeleteTest()
         {
             //Arrange
 
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
+            
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
+
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
+
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
+
             //Act
+            var task = accountController.AccountDelete($"test@heedbook.com");
+            task.Wait();
+            var OkResult = task.Result as OkObjectResult;
+            var result = OkResult.Value.ToString();
 
             //Assert
-            Assert.Pass();
+            Assert.IsTrue(result == "Removed");
         }
     }
-    public class MockInterfaces
+    public class MockInterfaceProviders
     {
         public Mock<ILoginService> MockILoginService(Mock<ILoginService> moqILoginService)
         {
-            moqILoginService.Setup(p => p.CheckUserLogin("test", "test"))
+            moqILoginService.Setup(p => p.CheckUserLogin(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(true);
-            moqILoginService.Setup(p => p.SaveErrorLoginHistory(Guid.NewGuid(), "test"))
+            moqILoginService.Setup(p => p.SaveErrorLoginHistory(It.IsAny<Guid>(), It.IsAny<string>()))
                 .Returns(true);
             var dict = new Dictionary<string, string>{};
             moqILoginService.Setup(p => p.GetDataFromToken("Token", out dict, ""))
                 .Returns(true);
-            moqILoginService.Setup(p => p.GeneratePasswordHash("password"))
+            moqILoginService.Setup(p => p.GeneratePasswordHash(It.IsAny<string>()))
                 .Returns("Hash");
-            moqILoginService.Setup(p => p.SavePasswordHistory(Guid.NewGuid(), "passwordHash"))
+            moqILoginService.Setup(p => p.SavePasswordHistory(It.IsAny<Guid>(), It.IsAny<string>()))
                 .Returns(true);
             moqILoginService.Setup(p => p.GeneratePass(6))
                 .Returns("123456");
+            moqILoginService.Setup(p => p.CreateTokenForUser(It.IsAny<ApplicationUser>(), It.IsAny<bool>()))
+                .Returns("Token");
             return moqILoginService;
         }
         public Mock<IMailSender> MockIMailSender(Mock<IMailSender> moqIMailSender)
@@ -126,9 +210,9 @@ namespace ApiTests
             return moqIMailSender;
         }
         public Mock<IAccountProvider> MockIAccountProvider(Mock<IAccountProvider> moqIAccountProvider)
-        {
+        {            
             moqIAccountProvider.Setup(p => p.GetStatusId(It.IsAny<string>()))
-                .Returns(GetStatus(It.IsAny<string>()));
+                .Returns((string p) => p == "Active" ? 3 : (p == "Inactive" ? 5 : 0));
             moqIAccountProvider.Setup(p => p.CompanyExist(It.IsAny<string>()))
                 .Returns(Task.FromResult(false));
             moqIAccountProvider.Setup(p => p.EmailExist(It.IsAny<string>()))
@@ -151,17 +235,19 @@ namespace ApiTests
                 .Callback(() => {});
             moqIAccountProvider.Setup(p => p.SaveChanges())
                 .Callback(() => {});
-            moqIAccountProvider.Setup(p => p.GetUserIncludeCompany("email"))
-                .Returns(new ApplicationUser());
+            var user = new ApplicationUser(){UserName = "TestUser", StatusId = 3};
+            moqIAccountProvider.Setup(p => p.GetUserIncludeCompany(It.IsAny<string>()))
+                .Returns(user);
             moqIAccountProvider.Setup(p => p.GetUserIncludeCompany(Guid.NewGuid(), new AccountAuthorization()))
-                .Returns(new ApplicationUser());
+                .Returns(user);
             moqIAccountProvider.Setup(p => p.RemoveAccount("email"))
                 .Callback(() => {});          
             return moqIAccountProvider;
         }
         private int GetStatus(string status)
         {
-            return status == "Active" ? 3 : (status == "Inactive" ? 5 : 0);
-        }
+            var value = status == "Active" ? 3 : (status == "Inactive" ? 5 : 0);
+            return value;
+        }            
     }
 }
