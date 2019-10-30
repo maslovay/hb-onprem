@@ -11,8 +11,9 @@
     <PackageReference Include="Moq" Version="4.13.1"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\HBAPI\HeedbookAPI\UserOperations.csproj"/>
-    <ProjectReference Include="..\..\HBData\HBData.csproj"/>
-    <ProjectReference Include="..\..\HBLib\HBLib.csproj"/>
+    <ProjectReference Include="..\..\..\HBAPI\HeedbookAPI\UserOperations.csproj"/>
+    <ProjectReference Include="..\..\..\HBData\HBData.csproj"/>
+    <ProjectReference Include="..\..\..\HBLib\HBLib.csproj"/>
+    <ProjectReference Include="..\..\..\HBOperations\Common\Common.csproj" />
   </ItemGroup>
 </Project>
