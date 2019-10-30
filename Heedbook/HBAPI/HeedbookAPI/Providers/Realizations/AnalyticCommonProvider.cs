@@ -16,7 +16,7 @@ namespace UserOperations.Providers
         {
             _context = context;
         }
-        public async Task<List<SessionInfo>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
+        public async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
         {
             var sessions = await _context.Sessions
                          .Include(p => p.ApplicationUser)
@@ -80,7 +80,7 @@ namespace UserOperations.Providers
             return data;
         }
 
-        public async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
+        public async Task<IEnumerable<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
             var persondIds = await GetDialogues(begTime, endTime, companyIds)
                     .Where ( p => p.PersonId != null )

@@ -11,7 +11,7 @@ namespace UserOperations.Providers
 {
     public interface IAnalyticCommonProvider
     {
-        Task<List<SessionInfo>> GetSessionInfoAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds,
+        Task<IEnumerable<SessionInfo>> GetSessionInfoAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds,
             List<Guid> userIds = null);
 
 
@@ -21,7 +21,7 @@ namespace UserOperations.Providers
         IQueryable<Dialogue> GetDialoguesIncludedClientProfile(DateTime begTime, DateTime endTime, List<Guid> companyIds,
             List<Guid> applicationUserIds, List<Guid> workerTypeIds);
 
-        Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds);
+        Task<IEnumerable<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds);
 
         Task<Guid> GetCrossPhraseTypeIdAsync();
     }

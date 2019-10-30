@@ -55,7 +55,6 @@ namespace UserOperations.Controllers
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);
 
-
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
@@ -63,8 +62,8 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);               
 
                 var sessions = await _analyticCommonProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
-                var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
-                var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
+                var sessionCur = sessions != null? sessions.Where(p => p.BegTime.Date >= begTime).ToList() : null;
+                var sessionOld = sessions != null ? sessions.Where(p => p.BegTime.Date < begTime).ToList() : null;
                 var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
 
                 var dialogues = _analyticCommonProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
@@ -148,7 +147,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e);
+                return BadRequest(e.Message);
             }
         }
 

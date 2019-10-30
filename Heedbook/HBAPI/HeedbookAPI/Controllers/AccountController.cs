@@ -30,7 +30,7 @@ namespace UserOperations.Controllers
         public AccountController(
             ILoginService loginService,
 //            ElasticClient log,      
-            MailSender mailSender,
+            IMailSender mailSender,
             AccountProvider accountProvider
             )
         {

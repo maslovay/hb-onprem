@@ -47,16 +47,30 @@ namespace UserOperations.Utils
 
         public DateTime GetBegDate(string beg)
         {
-            var stringFormat = "yyyyMMdd";
-            var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-            return begTime.Date;
+            try
+            {
+                var stringFormat = "yyyyMMdd";
+                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+                return begTime.Date;
+            }
+            catch
+            {
+                throw new FormatException("wrong date format");
+            }
         }
         public DateTime GetEndDate(string end)
         {
-            var stringFormat = "yyyyMMdd";
+            try
+            {
+                var stringFormat = "yyyyMMdd";
             var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
             return endTime.Date.AddDays(1);
-        }
+            }
+            catch
+            {
+                throw new FormatException("wrong date format");
+            }
+}
 
         public async Task<bool> AddOrChangeUserRoles(Guid userId, string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId = null)
         {

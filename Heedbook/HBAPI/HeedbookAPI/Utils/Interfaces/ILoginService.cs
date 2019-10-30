@@ -16,5 +16,6 @@ namespace UserOperations.Services
         string GeneratePass(int x);
         bool SavePasswordHistory(Guid userId, string passwordHash);
         bool SaveErrorLoginHistory(Guid userId, string type);
+
     }
 }
