@@ -15,30 +15,30 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ApiTests
 {
-    public class AccountControllerTests : ApiServiceTest
-    {        
-        protected Mock<IAccountProvider> accountProviderMock;
-        protected MockInterfaceProviders mockProvider;
-
+    public class AccountControllerTests
+    {
         [SetUp]
         public void Setup()
         {
-            mockProvider = new MockInterfaceProviders();
-            accountProviderMock = new Mock<IAccountProvider>();
-            base.Setup();
+            
         }
        
         [Test]
         public void RegisterPostTest()
         {
             //Arrange
-            base.loginMock = mockProvider.MockILoginService(base.loginMock);            
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
             
-            base.mailSenderMock = mockProvider.MockIMailSender(base.mailSenderMock);
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
 
-            accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
             var task = accountController.UserRegister(new UserRegister());            
@@ -49,18 +49,22 @@ namespace ApiTests
             //Assert
             Assert.IsTrue(result == "Registred");
         }
-       
         [Test]
         public void GenerateTokenPostTest()
         {
             //Arrange
-            loginMock = mockProvider.MockILoginService(loginMock);            
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
             
-            mailSenderMock = mockProvider.MockIMailSender(mailSenderMock);
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
 
-            accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
             var okResult = accountController.GenerateToken(new AccountAuthorization()) as OkObjectResult;
@@ -69,18 +73,22 @@ namespace ApiTests
             //Assert         
             Assert.IsTrue(result == "Token");
         }
-        
         [Test]
         public void ChangePasswordPostTest()
         {
             //Arrange
-            loginMock = mockProvider.MockILoginService(loginMock);            
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
             
-            mailSenderMock = mockProvider.MockIMailSender(mailSenderMock);
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
 
-            accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
             var task = accountController.UserChangePasswordAsync(new AccountAuthorization(), $"Bearer Token");
@@ -91,18 +99,22 @@ namespace ApiTests
             //Assert
             Assert.IsTrue(result == "password changed");
         }
-        
         [Test]
         public void UserChangePasswordOnDefaultAsyncPostTest()
         {
             //Arrange
-            loginMock = mockProvider.MockILoginService(loginMock);            
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
             
-            mailSenderMock = mockProvider.MockIMailSender(mailSenderMock);
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
 
-            accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
             var task = accountController.UserChangePasswordOnDefaultAsync($"test@heedbook.com");
@@ -113,18 +125,23 @@ namespace ApiTests
             //Assert
             Assert.IsTrue(result == "password changed");
         }
-
         [Test]
         public void UnblockPostTest()
         {
             //Arrange
-            loginMock = mockProvider.MockILoginService(loginMock);            
+
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
             
-            mailSenderMock = mockProvider.MockIMailSender(mailSenderMock);
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
 
-            accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
             var task = accountController.Unblock($"test@heedbook.com", $"Bearer Token");
@@ -135,18 +152,23 @@ namespace ApiTests
             //Assert
             Assert.IsTrue(result == "password changed");
         }
-        
         [Test]
         public void RemoveDeleteTest()
         {
             //Arrange
-            loginMock = mockProvider.MockILoginService(loginMock);            
+
+            var mockProvider = new MockInterfaceProviders();
+
+            var moqILoginService = new Mock<ILoginService>();
+            moqILoginService = mockProvider.MockILoginService(moqILoginService);            
             
-            mailSenderMock = mockProvider.MockIMailSender(mailSenderMock);
+            var moqIMailSender = new Mock<IMailSender>();
+            moqIMailSender = mockProvider.MockIMailSender(moqIMailSender);
 
-            accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
+            var moqIAccountProvider = new Mock<IAccountProvider>();
+            moqIAccountProvider = mockProvider.MockIAccountProvider(moqIAccountProvider);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            var accountController = new AccountController(moqILoginService.Object, moqIMailSender.Object, moqIAccountProvider.Object);
 
             //Act
             var task = accountController.AccountDelete($"test@heedbook.com");
@@ -158,7 +180,7 @@ namespace ApiTests
             Assert.IsTrue(result == "Removed");
         }
     }
-    public class MockInterfaceProviders : ApiServiceTest
+    public class MockInterfaceProviders
     {
         public Mock<ILoginService> MockILoginService(Mock<ILoginService> moqILoginService)
         {

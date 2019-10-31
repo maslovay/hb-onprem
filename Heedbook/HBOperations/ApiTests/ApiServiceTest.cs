@@ -20,7 +20,6 @@ namespace ApiTests
         protected Mock<IDBOperations> dbOperationMock;
         protected Mock<IAnalyticHomeProvider> homeProviderMock;
         protected Mock<IAnalyticCommonProvider> commonProviderMock;
-        protected Mock<IMailSender> mailSenderMock;
 
         protected string beg, end;
         protected DateTime begDate, endDate, prevDate;
@@ -42,7 +41,6 @@ namespace ApiTests
             dbOperationMock = new Mock<IDBOperations>();
             homeProviderMock = new Mock<IAnalyticHomeProvider>();
             commonProviderMock = new Mock<IAnalyticCommonProvider>();
-            mailSenderMock = new Mock<IMailSender>();
 
             InitData();
             InitServices();
