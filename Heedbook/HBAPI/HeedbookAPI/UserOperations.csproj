@@ -44,4 +44,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Providers\Interfaces\" />
+    <Folder Include="Utils\Interfaces\" />
+    <Folder Include="Utils\Realizations\" />
+  </ItemGroup>
 </Project>
