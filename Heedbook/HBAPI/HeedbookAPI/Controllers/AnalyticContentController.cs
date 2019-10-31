@@ -221,7 +221,6 @@ namespace UserOperations.Controllers
                     session.DialogueId = dialog?.DialogueId;
                 }
                 slideShowSessionsAll =  slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
-
                 var answersList = await _analyticContentProvider.GetAnswersInDialoguesAsync(slideShowSessionsAll, begTime, endTime, applicationUserIds);
                 var views = slideShowSessionsAll.Count();
                 var clients =slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();
@@ -242,9 +241,14 @@ namespace UserOperations.Controllers
                         Content = x.Key.ToString(),
                         AmountViews = x.Count(),// x.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
                         ContentName = x.FirstOrDefault().ContentName,
-                        Answers = _analyticContentProvider.GetAnswersForOneContent(answersList, x.ToList()),
-                        AnswersAmount = _analyticContentProvider.GetAnswersForOneContent(answersList, x.ToList()).Count(),
-                        Conversion = (double) _analyticContentProvider.GetAnswersForOneContent(answersList, x.ToList()).Count() / (double) x.Count()
+                        Answers = answersList
+                            .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId))
+                            .Select(p => new AnswerInfo.AnswerOne { Answer =  p.Answer, Time = p.Time }).ToList(),
+                        AnswersAmount = answersList
+                            .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId))
+                            .Select(p => new { p.Answer, p.Time }).Count(),
+                        Conversion = (double)answersList
+                            .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId)).Count() / (double)x.Count()
                     }
                     ).ToList()};
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
