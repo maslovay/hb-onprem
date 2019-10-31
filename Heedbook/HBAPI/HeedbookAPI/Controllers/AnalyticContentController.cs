@@ -17,19 +17,16 @@ namespace UserOperations.Controllers
     public class AnalyticContentController : Controller
     {
         private readonly AnalyticContentProvider _analyticContentProvider;
-        private readonly AnalyticCommonProvider _analyticCommonProvider;
         private readonly ILoginService _loginService;
         private readonly IRequestFilters _requestFilters;
 
         public AnalyticContentController(
-            AnalyticContentProvider analyticContentProvider,
-            AnalyticCommonProvider analyticCommonProvider,
+            AnalyticContentProvider analyticProvider,
             ILoginService loginService,
             IRequestFilters requestFilters
             )
         {
-            _analyticContentProvider = analyticContentProvider;
-            _analyticCommonProvider = analyticCommonProvider;
+            _analyticContentProvider = analyticProvider;
             _loginService = loginService;
             _requestFilters = requestFilters;
         }
@@ -45,7 +42,7 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
 
-                var dialogue = await _analyticCommonProvider.GetDialogueIncludedFramesByIdAsync(dialogueId);
+                var dialogue = await _analyticContentProvider.GetDialogueIncludedFramesByIdAsync(dialogueId);
                 if (dialogue == null) return BadRequest("No such dialogue");
 
                 var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowsForOneDialogueAsync(dialogue);
@@ -136,7 +133,7 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await _analyticCommonProvider.GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await _analyticContentProvider.GetDialoguesWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
                 var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, false);
 
                 foreach ( var session in slideShowSessionsAll )
@@ -196,12 +193,12 @@ namespace UserOperations.Controllers
 
         [HttpGet("Poll")]
         public async Task<IActionResult> Poll([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                     [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                     [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                     [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                     [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                     [FromHeader] string Authorization)
+                                                           [FromQuery(Name = "endTime")] string end,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                        [FromHeader] string Authorization)
         {
             try
             {
@@ -214,34 +211,42 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await _analyticCommonProvider.GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await _analyticContentProvider.GetDialoguesWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
                 var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, true);
-                slideShowSessionsAll = _analyticContentProvider.AddDialogueIdToShow(slideShowSessionsAll, dialogues);
-                var answers = await _analyticContentProvider.GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
 
-                double conversion = _analyticContentProvider.GetConversion(slideShowSessionsAll.Count(), answers.Count());
+                foreach ( var session in slideShowSessionsAll )
+                {
+                    var dialog =  dialogues.Where(x => x.BegTime <= session.BegTime &&  x.EndTime >= session.BegTime)
+                            .FirstOrDefault();
+                    session.DialogueId = dialog?.DialogueId;
+                }
+                slideShowSessionsAll =  slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
 
-                var slideShowInfoGroupByContent = slideShowSessionsAll
-                    .GroupBy(p => p.ContentId)
-                    .Select(ssh => new AnswerInfo
-                    {
-                        Content = ssh.Key.ToString(),
-                        AmountViews = ssh.Count(),
-                        ContentName = ssh.FirstOrDefault().ContentName,
-                        Answers = _analyticContentProvider.GetAnswersForOneContent(answers, ssh.Key),
-                        AnswersAmount = _analyticContentProvider.GetAnswersForOneContent(answers, ssh.Key).Count(),
-                        Conversion = (double)_analyticContentProvider.GetAnswersForOneContent(answers, ssh.Key).Count() / (double)ssh.Count()
-                    });
-
+                var answersList = await _analyticContentProvider.GetAnswersInDialoguesAsync(slideShowSessionsAll, begTime, endTime, applicationUserIds);
+                var views = slideShowSessionsAll.Count();
+                var clients =slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();
+                var answers = answersList.Count();
+                double conversion = views != 0 ? (double)answers / (double)views : 0;
+               
+                var contentsShownGroup = slideShowSessionsAll
+                    .GroupBy(p => p.ContentId).ToList();
+                    
                 var contentInfo = new
                 {
-                    Views = slideShowSessionsAll.Count(),
-                    Clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count(),
-                    Answers = answers.Count(),
+                    Views = views,
+                    Clients = clients,
+                    Answers = answers,
                     Conversion = conversion,
-                    ContentFullInfo = slideShowInfoGroupByContent
-                };
-
+                    ContentFullInfo = contentsShownGroup.Select(x => new AnswerInfo
+                    {
+                        Content = x.Key.ToString(),
+                        AmountViews = x.Count(),// x.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
+                        ContentName = x.FirstOrDefault().ContentName,
+                        Answers = _analyticContentProvider.GetAnswersForOneContent(answersList, x.ToList()),
+                        AnswersAmount = _analyticContentProvider.GetAnswersForOneContent(answersList, x.ToList()).Count(),
+                        Conversion = (double) _analyticContentProvider.GetAnswersForOneContent(answersList, x.ToList()).Count() / (double) x.Count()
+                    }
+                    ).ToList()};
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
                 return Ok(jsonToReturn);
             }
@@ -249,6 +254,7 @@ namespace UserOperations.Controllers
             {
                 return BadRequest(e);
             }
+
         }
     }
 }
