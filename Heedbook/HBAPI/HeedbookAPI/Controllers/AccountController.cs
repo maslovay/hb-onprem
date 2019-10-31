@@ -24,14 +24,14 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
 //        private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
-        private readonly MailSender _mailSender;
-        private readonly AccountProvider _accountProvider;
+        private readonly IMailSender _mailSender;
+        private readonly IAccountProvider _accountProvider;
 
         public AccountController(
             ILoginService loginService,
 //            ElasticClient log,      
-            MailSender mailSender,
-            AccountProvider accountProvider
+            IMailSender mailSender,
+            IAccountProvider accountProvider
             )
         {
             _loginService = loginService;

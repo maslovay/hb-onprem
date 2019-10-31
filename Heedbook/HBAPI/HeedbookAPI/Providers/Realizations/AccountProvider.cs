@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace UserOperations.Providers
 {
-    public class AccountProvider
+    public class AccountProvider : IAccountProvider
     {
         private readonly RecordsContext _context;
         private readonly ILoginService _loginService;
@@ -182,12 +182,12 @@ namespace UserOperations.Providers
 
         public ApplicationUser GetUserIncludeCompany(string email)
         {
-            var user = _context.ApplicationUsers.Include(x => x.Company).First(p => p.NormalizedEmail == email.ToUpper());
+            var user = _context.ApplicationUsers.First(p => p.NormalizedEmail == email.ToUpper());
             return user;
         }
         public ApplicationUser GetUserIncludeCompany(Guid userId, AccountAuthorization message)
         {
-            var user = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper());
+            var user = _context.ApplicationUsers.FirstOrDefault(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper());
             return user;
         }
         public void RemoveAccount(string email)

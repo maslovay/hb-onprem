@@ -10,14 +10,14 @@ using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Providers
 {
-    public class AnalyticCommonProvider
+    public class AnalyticCommonProvider : IAnalyticCommonProvider
     {
         private readonly RecordsContext _context;
         public AnalyticCommonProvider(RecordsContext context)
         {
             _context = context;
         }
-        public async Task<List<SessionInfo>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
+        public async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
         {
             var sessions = await _context.Sessions
                          .Include(p => p.ApplicationUser)
@@ -37,7 +37,20 @@ namespace UserOperations.Providers
             return sessions;
         }
 
-        public IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> applicationUserIds = null)
+        private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        {
+            var data = _context.Dialogues
+                    .Where(p => p.BegTime >= begTime &&
+                        p.EndTime <= endTime &&
+                        p.StatusId == 3 &&
+                        p.InStatistic == true &&
+                        (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))) &&
+                        (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
+                        (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))).AsQueryable();
+            return data;
+        }
+
+        public IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> applicationUserIds = null)
         {
             var dialogues = _context.Dialogues
                        .Include(p => p.ApplicationUser)
@@ -52,7 +65,6 @@ namespace UserOperations.Providers
                                && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))).AsQueryable();
             return dialogues;
         }
-
 
         public IQueryable<Dialogue> GetDialoguesIncludedClientProfile(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
         {
@@ -112,15 +124,10 @@ namespace UserOperations.Providers
 
         public async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
-            var persondIds = await _context.Dialogues
-                  .Where(p => p.BegTime >= begTime &&
-                      p.EndTime < endTime &&
-                      p.StatusId == 3 &&
-                      p.InStatistic == true &&
-                      p.PersonId != null &&
-                      (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)))
-                  .Select(p => p.PersonId).Distinct()
-                  .ToListAsync();
+            var persondIds = await GetDialogues(begTime, endTime, companyIds)
+                    .Where ( p => p.PersonId != null )
+                    .Select(p => p.PersonId).Distinct()
+                    .ToListAsync();
             return persondIds;
         }
 
@@ -190,6 +197,7 @@ namespace UserOperations.Providers
                     Colour = p.Colour
                 }).ToList();
         }
+
         public List<RatingDialogueInfo> GetRatingDialogueInfos(
             DateTime begTime, 
             DateTime endTime, 
@@ -231,6 +239,7 @@ namespace UserOperations.Providers
                 })
                 .ToList(); 
         }
+
         public List<DialogueInfo> GetDialogueInfos(
             DateTime begTime, 
             DateTime endTime, 

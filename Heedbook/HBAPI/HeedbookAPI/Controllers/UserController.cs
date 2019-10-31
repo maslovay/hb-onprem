@@ -26,11 +26,11 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly RequestFilters _requestFilters;
+        private readonly IRequestFilters _requestFilters;
         private readonly SftpClient _sftpClient;
         private readonly SmtpSettings _smtpSetting;
         private readonly SmtpClient _smtpClient;
-        private readonly MailSender _mailSender;
+        private readonly IMailSender _mailSender;
         // private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
@@ -42,8 +42,8 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
-            RequestFilters requestFilters,
-            MailSender mailSender,
+            IRequestFilters requestFilters,
+            IMailSender mailSender,
             SmtpSettings smtpSetting,
             SmtpClient smtpClient
             // ElasticClient log
