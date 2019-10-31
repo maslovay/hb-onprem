@@ -100,7 +100,7 @@ namespace UserOperations.Providers
 
         public List<AnswerInfo.AnswerOne> GetAnswersForOneContent(List<AnswerInfo.AnswerOne> answers, Guid? contentId)
         {
-            return answers.Where(x => x.ContentId == contentId).ToList();
+            return null;// answers.Where(x => x.ContentId == contentId).ToList();
         }
 
         public double GetConversion(double viewsAmount, double answersAmount)
