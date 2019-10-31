@@ -43,8 +43,8 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly IDBOperations _dbOperation;
-        private readonly IRequestFilters _requestFilters;
+        private readonly DBOperations _dbOperation;
+        private readonly RequestFilters _requestFilters;
         // private readonly ElasticClient _log;
 
         public AnalyticServiceQualityController(
@@ -52,8 +52,8 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            IDBOperations dbOperation,
-            IRequestFilters requestFilters
+            DBOperations dbOperation,
+            RequestFilters requestFilters
             // ElasticClient log
             )
         {
@@ -199,7 +199,7 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = _analyticProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                var dialogues = _analyticProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
                         .Select(p => new DialogueInfo
                         {
                             DialogueId = p.DialogueId,
