@@ -68,6 +68,48 @@ namespace UserOperations.Providers
                          (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
             return data;
         }
+
+        public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId)
+        {
+            var dialogue = await _context.Dialogues
+                      .Include(p => p.DialogueFrame)
+                      .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
+            return dialogue;
+        }
+
+        public async Task<List<DialogueInfoWithFrames>> GetDialoguesInfoWithFramesAsync(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds
+            )
+        {
+            var dialogues = await _context.Dialogues
+                   .Include(p => p.ApplicationUser)
+                   .Include(p => p.DialogueClientSatisfaction)
+                   .Include(p => p.DialogueFrame)
+                   .Where(p => p.BegTime >= begTime
+                           && p.EndTime <= endTime
+                           && p.StatusId == 3
+                           && p.InStatistic == true
+                           && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                           && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                           && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                   .Select(p => new DialogueInfoWithFrames
+                   {
+                       DialogueId = p.DialogueId,
+                       ApplicationUserId = p.ApplicationUserId,
+                       BegTime = p.BegTime,
+                       EndTime = p.EndTime,
+                       DialogueFrame = p.DialogueFrame.ToList(),
+                       Gender = p.DialogueClientProfile.Max(x => x.Gender),
+                       Age = p.DialogueClientProfile.Average(x => x.Age)
+                   })
+                   .ToListAsync();
+            return dialogues;
+        }
+
         public async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
             var persondIds = await _context.Dialogues
