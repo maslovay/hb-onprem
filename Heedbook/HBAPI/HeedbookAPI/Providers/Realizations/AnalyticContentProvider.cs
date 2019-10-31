@@ -15,47 +15,7 @@ namespace UserOperations.Providers
         public AnalyticContentProvider(RecordsContext context)
         {
             _context = context;
-        }
-        public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync( Guid dialogueId )
-        {
-            var dialogue = await _context.Dialogues
-                      .Include(p => p.DialogueFrame)
-                      .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
-            return dialogue;
-        }
-
-        public async Task<List<DialogueInfoWithFrames>> GetDialoguesWithFramesAsync(
-            DateTime begTime,
-            DateTime endTime,
-            List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds
-            )
-        {
-            var dialogues = await _context.Dialogues
-                   .Include(p => p.ApplicationUser)
-                   .Include(p => p.DialogueClientSatisfaction)
-                   .Include(p => p.DialogueFrame)
-                   .Where(p => p.BegTime >= begTime
-                           && p.EndTime <= endTime
-                           && p.StatusId == 3
-                           && p.InStatistic == true
-                           && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                           && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                           && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                   .Select(p => new DialogueInfoWithFrames
-                   {
-                       DialogueId = p.DialogueId,
-                       ApplicationUserId = p.ApplicationUserId,
-                       BegTime = p.BegTime,
-                       EndTime = p.EndTime,
-                       DialogueFrame = p.DialogueFrame.ToList(),
-                       Gender = p.DialogueClientProfile.Max(x => x.Gender),
-                       Age = p.DialogueClientProfile.Average(x => x.Age)
-                   })
-                   .ToListAsync();
-            return dialogues;
-        }
+        } 
 
 
         public async Task<List<SlideShowInfo>> GetSlideShowsForOneDialogueAsync( Dialogue dialogue )
@@ -138,44 +98,56 @@ namespace UserOperations.Providers
             return answers;
         }
 
-        public async Task<List<CampaignContentAnswer>> GetAnswersInDialoguesAsync(List<SlideShowInfo> slideShowInfos, DateTime begTime, DateTime endTime, List<Guid> applicationUserIds)
+        public List<AnswerInfo.AnswerOne> GetAnswersForOneContent(List<AnswerInfo.AnswerOne> answers, Guid? contentId)
         {
-            var answers = await _context.CampaignContentAnswers
-                        .Where(p => slideShowInfos
-                        .Select(x => x.CampaignContent.CampaignContentId)
-                        .Distinct()
-                        .Contains(p.CampaignContentId) 
-                            && p.Time >= begTime 
-                            && p.Time <= endTime
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))).ToListAsync();
-            return answers;
+            return answers.Where(x => x.ContentId == contentId).ToList();
         }
 
+        public double GetConversion(double viewsAmount, double answersAmount)
+        {
+            return viewsAmount != 0 ? answersAmount / viewsAmount : 0;
+        }    
 
+        public async Task<List<AnswerInfo.AnswerOne>> GetAnswersFullAsync(List<SlideShowInfo> slideShowSessionsAll, DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
+        {
+            var answers = await GetAnswersAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+
+            List<AnswerInfo.AnswerOne> answersResult = new List<AnswerInfo.AnswerOne>();
+            foreach (var answ in answers)
+            {
+                var slideShowSessionForAnswer = slideShowSessionsAll.Where(x => x.BegTime <= answ.Time
+                                                        && x.EndTime >= answ.Time
+                                                        && x.ApplicationUserId == answ.ApplicationUserId)
+                                                        .FirstOrDefault();
+                var dialogueId = slideShowSessionForAnswer != null ? slideShowSessionForAnswer.DialogueId : null;
+
+                AnswerInfo.AnswerOne oneAnswer = new AnswerInfo.AnswerOne
+                {
+                    Answer = answ.Answer,
+                    Time = answ.Time,
+                    DialogueId = dialogueId,
+                    ContentId = answ.CampaignContent?.ContentId
+                };
+                answersResult.Add(oneAnswer);
+            }
+            return answersResult;
+        }
+
+        public List<SlideShowInfo> AddDialogueIdToShow(List<SlideShowInfo> slideShowSessionsAll, List<DialogueInfoWithFrames> dialogues)
+        {
+            foreach (var session in slideShowSessionsAll)
+            {
+                var dialog = dialogues.Where(x => x.BegTime <= session.BegTime && x.EndTime >= session.BegTime)
+                        .FirstOrDefault();
+                session.DialogueId = dialog?.DialogueId;
+            }
+            slideShowSessionsAll = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
+            return slideShowSessionsAll;
+        }
+
+        
+        
         //------------------FOR CONTENT ANALYTIC------------------------
-
-        //public EmotionAttention EmotionsDuringAdv2(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues)
-        //{
-        //    List<EmotionAttention> emotionAttentionList = new List<EmotionAttention>();
-        //    if (dialogues != null)
-        //    {
-        //        foreach (var show in shows)
-        //        {
-        //            var dialogue = dialogues.Where(x => x.DialogueId == show.DialogueId).FirstOrDefault();
-        //            var emotionAttention = EmotionAttentionCalculate(show.BegTime, show.EndTime, dialogue.DialogueFrame);
-        //            if (emotionAttention != null)
-        //            emotionAttentionList.Add(emotionAttention);
-        //        }
-        //        return new EmotionAttention
-        //        {
-        //            Attention = emotionAttentionList.Average(x => x.Attention),
-        //            Negative = emotionAttentionList.Average(x => x.Negative),
-        //            Neutral = emotionAttentionList.Average(x => x.Neutral),
-        //            Positive = emotionAttentionList.Average(x => x.Positive)
-        //        };
-        //    }
-        //    return null;
-        //}
 
         public EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues)
         {
@@ -203,8 +175,9 @@ namespace UserOperations.Providers
                 };
             }
             return null;
-        }
+        }      
 
+        //---PRIVATE---
         private EmotionAttention EmotionAttentionCalculate(DateTime begTime, DateTime endTime, List<DialogueFrame> frames)
         {
             //---time - advertaisment begin and end
@@ -220,6 +193,21 @@ namespace UserOperations.Providers
                     };
                 }
             return null;
+        }
+
+        private async Task<List<CampaignContentAnswer>> GetAnswersAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
+        {
+            //---all answers in period for company/user
+            var result = await _context.CampaignContentAnswers
+                                  .Where(p =>
+                                   p.CampaignContent != null
+                                   && (p.Time >= begTime && p.Time <= endTime)
+                                   && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                                   && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                                   && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                                    ).ToListAsync();
+
+            return result;
         }
     }
 }

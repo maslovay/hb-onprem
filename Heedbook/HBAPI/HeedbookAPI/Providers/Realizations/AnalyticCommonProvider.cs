@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UserOperations.Controllers;
 using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Providers
@@ -80,7 +81,48 @@ namespace UserOperations.Providers
             return data;
         }
 
-        public async Task<IEnumerable<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
+        public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId)
+        {
+            var dialogue = await _context.Dialogues
+                      .Include(p => p.DialogueFrame)
+                      .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
+            return dialogue;
+        }
+
+        public async Task<List<DialogueInfoWithFrames>> GetDialoguesInfoWithFramesAsync(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds
+            )
+        {
+            var dialogues = await _context.Dialogues
+                   .Include(p => p.ApplicationUser)
+                   .Include(p => p.DialogueClientSatisfaction)
+                   .Include(p => p.DialogueFrame)
+                   .Where(p => p.BegTime >= begTime
+                           && p.EndTime <= endTime
+                           && p.StatusId == 3
+                           && p.InStatistic == true
+                           && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                           && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                           && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                   .Select(p => new DialogueInfoWithFrames
+                   {
+                       DialogueId = p.DialogueId,
+                       ApplicationUserId = p.ApplicationUserId,
+                       BegTime = p.BegTime,
+                       EndTime = p.EndTime,
+                       DialogueFrame = p.DialogueFrame.ToList(),
+                       Gender = p.DialogueClientProfile.Max(x => x.Gender),
+                       Age = p.DialogueClientProfile.Average(x => x.Age)
+                   })
+                   .ToListAsync();
+            return dialogues;
+        }
+
+        public async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
             var persondIds = await GetDialogues(begTime, endTime, companyIds)
                     .Where ( p => p.PersonId != null )
@@ -96,6 +138,132 @@ namespace UserOperations.Providers
                     .Select(p => p.PhraseTypeId)
                     .FirstOrDefaultAsync();
             return typeIdCross;
+        }
+        public List<ComponentsDialogueInfo> GetComponentsDialogueInfo(
+            DateTime begTime, 
+            DateTime endTime, 
+            List<Guid> companyIds, 
+            List<Guid> applicationUserIds, 
+            List<Guid> workerTypeIds,
+            Guid loyaltyTypeId)
+        {
+            var dialogues = _context.Dialogues
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.DialoguePhraseCount)
+                .Include(p => p.DialogueAudio)
+                .Include(p => p.DialogueSpeech)
+                .Include(p => p.DialogueVisual)
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new ComponentsDialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    PositiveTone = p.DialogueAudio.Average(q => q.PositiveTone),
+                    NegativeTone = p.DialogueAudio.Average(q => q.NegativeTone),
+                    NeutralityTone = p.DialogueAudio.Average(q => q.NeutralityTone),
+
+                    EmotivityShare = p.DialogueSpeech.Average(q => q.PositiveShare),
+
+                    HappinessShare = p.DialogueVisual.Average(q => q.HappinessShare),
+                    NeutralShare = p.DialogueVisual.Average(q => q.NeutralShare),
+                    SurpriseShare = p.DialogueVisual.Average(q => q.SurpriseShare),
+                    SadnessShare = p.DialogueVisual.Average(q => q.SadnessShare),
+                    AngerShare = p.DialogueVisual.Average(q => q.AngerShare),
+                    DisgustShare = p.DialogueVisual.Average(q => q.DisgustShare),
+                    ContemptShare = p.DialogueVisual.Average(q => q.ContemptShare),
+                    FearShare = p.DialogueVisual.Average(q => q.FearShare),
+
+                    AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
+                    Loyalty = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Sum(q => q.PhraseCount),
+                })
+                .ToList();
+            return dialogues;
+        }
+        public List<PhraseType> GetPhraseTypes()
+        {
+            return _context.PhraseTypes.ToList();
+        }
+        public List<ComponentsPhraseInfo> GetComponentsPhraseInfo()
+        {
+            return _context.PhraseTypes
+                .Select(p => new ComponentsPhraseInfo {
+                    PhraseTypeId = p.PhraseTypeId,
+                    PhraseTypeText = p.PhraseTypeText,
+                    Colour = p.Colour
+                }).ToList();
+        }
+
+        public List<RatingDialogueInfo> GetRatingDialogueInfos(
+            DateTime begTime, 
+            DateTime endTime, 
+            List<Guid> companyIds, 
+            List<Guid> applicationUserIds, 
+            List<Guid> workerTypeIds,
+            Guid typeIdLoyalty)
+        {
+            return _context.Dialogues
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.DialogueClientSatisfaction)
+                .Include(p => p.DialoguePhrase)
+                .Include(p => p.DialogueAudio)
+                .Include(p => p.DialogueVisual)
+                .Include(p => p.DialogueSpeech)
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new RatingDialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId.ToString(),
+                    FullName = p.ApplicationUser.FullName,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    //CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                    //AlertCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
+                    //NecessaryCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdNecessary).Count(),
+                    LoyaltyCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdLoyalty).Count(),
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    PositiveTone = p.DialogueAudio.FirstOrDefault().PositiveTone,
+                    AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
+                    PositiveEmotion = p.DialogueVisual.FirstOrDefault().SurpriseShare + p.DialogueVisual.FirstOrDefault().HappinessShare,
+                    TextShare = p.DialogueSpeech.FirstOrDefault().PositiveShare,
+                })
+                .ToList(); 
+        }
+
+        public List<DialogueInfo> GetDialogueInfos(
+            DateTime begTime, 
+            DateTime endTime, 
+            List<Guid> companyIds, 
+            List<Guid> applicationUserIds, 
+            List<Guid> workerTypeIds)
+        {
+            return _context.Dialogues
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.DialogueClientSatisfaction)
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new DialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    BegTime = p.BegTime,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                })
+                .ToList();
         }
     }
 }

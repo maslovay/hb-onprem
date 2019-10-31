@@ -11,33 +11,24 @@ namespace UserOperations.Providers
 {
     public interface IAnalyticContentProvider
     {
-        Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId);
-
-        Task<List<DialogueInfoWithFrames>> GetDialoguesWithFramesAsync(
-            DateTime begTime,
-            DateTime endTime,
-            List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds
-            );
 
         Task<List<SlideShowInfo>> GetSlideShowsForOneDialogueAsync(Dialogue dialogue);
 
 
-        Task<List<SlideShowInfo>> GetSlideShowFilteredByPoolAsync(
-           DateTime begTime,
-           DateTime endTime,
-           List<Guid> companyIds,
-           List<Guid> applicationUserIds,
-           List<Guid> workerTypeIds,
-           bool isPool
-           );
-        Task<List<CampaignContentAnswer>> GetAnswersInOneDialogueAsync(List<SlideShowInfo> slideShowInfos, DateTime begTime,
-            DateTime endTime, Guid applicationUserId);
+        Task<List<SlideShowInfo>> GetSlideShowFilteredByPoolAsync(DateTime begTime, DateTime endTime,
+          List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds, bool isPool);
 
-        Task<List<CampaignContentAnswer>> GetAnswersInDialoguesAsync(List<SlideShowInfo> slideShowInfos, DateTime begTime,
-            DateTime endTime, List<Guid> applicationUserIds);
+        Task<List<CampaignContentAnswer>> GetAnswersInOneDialogueAsync(List<SlideShowInfo> slideShowInfos, DateTime begTime, DateTime endTime, Guid applicationUserId);
 
+        List<AnswerInfo.AnswerOne> GetAnswersForOneContent(List<AnswerInfo.AnswerOne> answers, Guid? contentId);
+
+        double GetConversion(double viewsAmount, double answersAmount);
+
+        Task<List<AnswerInfo.AnswerOne>> GetAnswersFullAsync(List<SlideShowInfo> slideShowSessionsAll,
+            DateTime begTime, DateTime endTime,
+            List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds);
+
+        List<SlideShowInfo> AddDialogueIdToShow(List<SlideShowInfo> slideShowSessionsAll, List<DialogueInfoWithFrames> dialogues);
 
         //------------------FOR CONTENT ANALYTIC------------------------
 
