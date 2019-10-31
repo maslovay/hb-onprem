@@ -10,14 +10,14 @@ using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Providers
 {
-    public class AnalyticCommonProvider : IAnalyticCommonProvider
+    public class AnalyticCommonProvider //: IAnalyticCommonProvider
     {
         private readonly RecordsContext _context;
         public AnalyticCommonProvider(RecordsContext context)
         {
             _context = context;
         }
-        public async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
+        public async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
         {
             var sessions = await _context.Sessions
                          .Include(p => p.ApplicationUser)
@@ -37,7 +37,7 @@ namespace UserOperations.Providers
             return sessions;
         }
 
-        private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        public IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
         {
             var data = _context.Dialogues
                     .Where(p => p.BegTime >= begTime &&
@@ -125,7 +125,7 @@ namespace UserOperations.Providers
         public async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
             var persondIds = await GetDialogues(begTime, endTime, companyIds)
-                    .Where ( p => p.PersonId != null )
+                    .Where(p => p.PersonId != null)
                     .Select(p => p.PersonId).Distinct()
                     .ToListAsync();
             return persondIds;
@@ -140,10 +140,10 @@ namespace UserOperations.Providers
             return typeIdCross;
         }
         public List<ComponentsDialogueInfo> GetComponentsDialogueInfo(
-            DateTime begTime, 
-            DateTime endTime, 
-            List<Guid> companyIds, 
-            List<Guid> applicationUserIds, 
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
             List<Guid> workerTypeIds,
             Guid loyaltyTypeId)
         {
@@ -157,9 +157,9 @@ namespace UserOperations.Providers
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                 .Select(p => new ComponentsDialogueInfo
                 {
                     DialogueId = p.DialogueId,
@@ -191,7 +191,8 @@ namespace UserOperations.Providers
         public List<ComponentsPhraseInfo> GetComponentsPhraseInfo()
         {
             return _context.PhraseTypes
-                .Select(p => new ComponentsPhraseInfo {
+                .Select(p => new ComponentsPhraseInfo
+                {
                     PhraseTypeId = p.PhraseTypeId,
                     PhraseTypeText = p.PhraseTypeText,
                     Colour = p.Colour
@@ -199,10 +200,10 @@ namespace UserOperations.Providers
         }
 
         public List<RatingDialogueInfo> GetRatingDialogueInfos(
-            DateTime begTime, 
-            DateTime endTime, 
-            List<Guid> companyIds, 
-            List<Guid> applicationUserIds, 
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
             List<Guid> workerTypeIds,
             Guid typeIdLoyalty)
         {
@@ -217,9 +218,9 @@ namespace UserOperations.Providers
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                 .Select(p => new RatingDialogueInfo
                 {
                     DialogueId = p.DialogueId,
@@ -237,14 +238,14 @@ namespace UserOperations.Providers
                     PositiveEmotion = p.DialogueVisual.FirstOrDefault().SurpriseShare + p.DialogueVisual.FirstOrDefault().HappinessShare,
                     TextShare = p.DialogueSpeech.FirstOrDefault().PositiveShare,
                 })
-                .ToList(); 
+                .ToList();
         }
 
         public List<DialogueInfo> GetDialogueInfos(
-            DateTime begTime, 
-            DateTime endTime, 
-            List<Guid> companyIds, 
-            List<Guid> applicationUserIds, 
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
             List<Guid> workerTypeIds)
         {
             return _context.Dialogues
@@ -254,9 +255,9 @@ namespace UserOperations.Providers
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
