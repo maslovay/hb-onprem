@@ -1,12 +1,36 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System.IO;
+using Microsoft.AspNetCore.Http;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Microsoft.Extensions.Configuration;
+using UserOperations.AccountModels;
+using HBData.Models;
+using HBData.Models.AccountViewModels;
 using UserOperations.Services;
 using UserOperations.Models.AnalyticModels;
+using System.Globalization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using System.Net.Http;
+using System.Net;
 using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
+using HBData;
 using UserOperations.Utils;
+using HBLib.Utils;
 using UserOperations.Providers;
 //---OLD---
 namespace UserOperations.Controllers
@@ -18,15 +42,18 @@ namespace UserOperations.Controllers
         private readonly AnalyticCommonProvider _analyticProvider;
         private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
-        private readonly IDBOperations _dbOperation;
-        private readonly IRequestFilters _requestFilters;
+        private readonly DBOperations _dbOperation;
+        private readonly RequestFilters _requestFilters;
+        private readonly AccountProvider analyticServiceQualityProvider;
+        // private readonly ElasticClient _log;
 
         public AnalyticServiceQualityController(
             AnalyticCommonProvider analyticProvider,
             IConfiguration config,
             ILoginService loginService,
-            IDBOperations dbOperation,
-            IRequestFilters requestFilters
+            DBOperations dbOperation,
+            RequestFilters requestFilters
+            // ElasticClient log
             )
         {
             _analyticProvider = analyticProvider;
@@ -34,6 +61,7 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
+            // _log = log;
         }
 
         [HttpGet("Components")]
@@ -47,6 +75,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                // _log.Info("AnalyticServiceQuality/Components started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -98,10 +127,12 @@ namespace UserOperations.Controllers
                         RiskColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Risk").Colour
                     }
                 };
+                // _log.Info("AnalyticServiceQuality/Components finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e )
             {
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -117,6 +148,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                // _log.Info("AnalyticServiceQuality/Dashboard started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -126,7 +158,7 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = _analyticProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                var dialogues = _analyticProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
                         .Select(p => new DialogueInfo
                         {
                             DialogueId = p.DialogueId,
@@ -156,6 +188,7 @@ namespace UserOperations.Controllers
                     BestProgressiveEmployeeDelta = _dbOperation.BestProgressiveEmployeeDelta(dialogues, begTime)
                 };
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
+                // _log.Info("AnalyticServiceQuality/Dashboard finished");
                 return Ok(JsonConvert.SerializeObject(result));
             }
             catch (Exception e)
@@ -176,6 +209,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                // _log.Info("AnalyticServiceQuality/Rating started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -220,6 +254,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
+                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
         }
@@ -235,6 +270,7 @@ namespace UserOperations.Controllers
         {
             try
             {
+                // _log.Info("AnalyticServiceQuality/SatisfactionStats started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
