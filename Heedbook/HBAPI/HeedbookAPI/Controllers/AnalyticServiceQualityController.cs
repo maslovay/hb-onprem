@@ -44,7 +44,6 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
-        private readonly AccountProvider analyticServiceQualityProvider;
         // private readonly ElasticClient _log;
 
         public AnalyticServiceQualityController(
