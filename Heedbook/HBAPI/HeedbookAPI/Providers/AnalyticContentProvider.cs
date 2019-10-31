@@ -149,8 +149,22 @@ namespace UserOperations.Providers
                         .Contains(p.CampaignContentId) 
                             && p.Time >= begTime 
                             && p.Time <= endTime
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))).ToListAsync();
+                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
+                            .ToListAsync();
             return answers;
+        }
+
+        public List<AnswerInfo.AnswerOne> GetAnswersForOneContent(List<CampaignContentAnswer> answersEntities,List<SlideShowInfo> shows)
+        {
+            var campaignContentIds = shows.Select(r => r.CampaignContent.CampaignContentId).ToList();
+            return answersEntities.Where(p => campaignContentIds.Contains(p.CampaignContentId))
+                                  .Select(p => 
+                                        new AnswerInfo.AnswerOne
+                                            {
+                                                Answer = p.Answer,
+                                                Time = p.Time,
+                                                DialogueId = shows.Where(sh=> sh.BegTime<= p.Time && sh.EndTime >= p.Time).FirstOrDefault()?.DialogueId
+                                            }).ToList();
         }
 
 
