@@ -1,4 +1,4 @@
-﻿using HBData;
+using HBData;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
 using System;

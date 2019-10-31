@@ -41,16 +41,16 @@ namespace UserOperations.Controllers
       private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly DBOperations _dbOperation;
-        private readonly RequestFilters _requestFilters;
+        private readonly IDBOperations _dbOperation;
+        private readonly IRequestFilters _requestFilters;
         // private readonly ElasticClient _log;
 
         public AnalyticRatingController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation,
-            RequestFilters requestFilters
+            IDBOperations dbOperation,
+            IRequestFilters requestFilters
             // ElasticClient log
             )
         {
