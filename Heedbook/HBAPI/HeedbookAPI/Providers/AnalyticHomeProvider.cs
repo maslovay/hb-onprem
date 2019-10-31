@@ -1,6 +1,5 @@
 ﻿using HBData;
 using HBData.Models;
-using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,12 +9,12 @@ using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Providers
 {
-    public class AnalyticHomeProvider : IAnalyticHomeProvider
+    public class AnalyticHomeProvider
     {
-        private readonly IGenericRepository _repository;
-        public AnalyticHomeProvider(IGenericRepository repository)
+        private readonly RecordsContext _context;
+        public AnalyticHomeProvider(RecordsContext context)
         {
-            _repository = repository;
+            _context = context;
         }
 
         //public IQueryable<DialogueHint> GetDialogueHints(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
@@ -32,17 +31,18 @@ namespace UserOperations.Providers
         //    return hints;
         //}
 
-        public async Task<IEnumerable<BenchmarkModel>> GetBenchmarksList(DateTime begTime, DateTime endTime, List<Guid> companyIds)
+        public async Task<List<BenchmarkModel>> GetBenchmarksListAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
             var industryIds = await GetIndustryIdsAsync(companyIds);
             try
             {
-                var benchmarksList = _repository.Get<Benchmark>().Where(x => x.Day >= begTime && x.Day <= endTime
-                                                             && industryIds.Contains(x.IndustryId))
-                                                              .Join(_repository.Get<BenchmarkName>(),
-                                                              bench => bench.BenchmarkNameId,
-                                                              names => names.Id,
-                                                              (bench, names) => new BenchmarkModel { Name = names.Name, Value = bench.Value });
+                var benchmarksList = await _context.Benchmarks.Where(x => x.Day >= begTime && x.Day <= endTime
+                                                                && industryIds.Contains(x.IndustryId))
+                                                                 .Join(_context.BenchmarkNames,
+                                                                 bench => bench.BenchmarkNameId,
+                                                                 names => names.Id,
+                                                                 (bench, names) => new BenchmarkModel { Name = names.Name, Value = bench.Value })
+                                                                 .ToListAsync();
                 return benchmarksList;
             }
             catch
@@ -65,10 +65,11 @@ namespace UserOperations.Providers
                  (double?)benchmarksList.Where(x => x.Name == banchmarkName).Max(x => x.Value) : null;
         }
 
-        public async Task<IEnumerable<Guid?>> GetIndustryIdsAsync(List<Guid> companyIds)
+        public async Task<List<Guid?>> GetIndustryIdsAsync(List<Guid> companyIds)
         {
-            var industryIds = (await _repository.FindByConditionAsync<Company>(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)))?
-                     .Select(x => x.CompanyIndustryId).Distinct();
+            var industryIds = await _context.Companys
+                 .Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId))?
+                     .Select(x => x.CompanyIndustryId).Distinct().ToListAsync();
             return industryIds;
         }
     }

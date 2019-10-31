@@ -17,19 +17,19 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticHomeController : Controller
     {
-        private readonly IAnalyticCommonProvider _analyticCommonProvider;
-        private readonly IAnalyticHomeProvider _analyticHomeProvider;
+        private readonly AnalyticCommonProvider _analyticCommonProvider;
+        private readonly AnalyticHomeProvider _analyticHomeProvider;
         private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
-        private readonly IDBOperations _dbOperation;
-        private readonly IRequestFilters _requestFilters;
+        private readonly DBOperations _dbOperation;
+        private readonly RequestFilters _requestFilters;
         public AnalyticHomeController(
             IConfiguration config,
             ILoginService loginService,
-            IDBOperations dbOperation,
-            IRequestFilters requestFilters,
-            IAnalyticCommonProvider analyticProvider,
-            IAnalyticHomeProvider homeProvider
+            DBOperations dbOperation,
+            RequestFilters requestFilters,
+            AnalyticCommonProvider analyticProvider,
+            AnalyticHomeProvider homeProvider
             )
         {
             _config = config;
@@ -55,6 +55,7 @@ namespace UserOperations.Controllers
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);
 
+
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
@@ -62,11 +63,11 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);               
 
                 var sessions = await _analyticCommonProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
-                var sessionCur = sessions != null? sessions.Where(p => p.BegTime.Date >= begTime).ToList() : null;
-                var sessionOld = sessions != null ? sessions.Where(p => p.BegTime.Date < begTime).ToList() : null;
+                var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
+                var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
                 var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
 
-                var dialogues = _analyticCommonProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
+                var dialogues = _analyticCommonProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
@@ -81,7 +82,7 @@ namespace UserOperations.Controllers
                        }).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = (await _analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds)).ToList();
+                List<BenchmarkModel> benchmarksList = await _analyticHomeProvider.GetBenchmarksListAsync(begTime, endTime, companyIds);
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
@@ -147,7 +148,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest(e);
             }
         }
 
@@ -174,7 +175,7 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
-                var dialogues = _analyticCommonProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                var dialogues = _analyticCommonProvider.GetDialogues(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
                         .Select(p => new DialogueInfo
                          {
                              DialogueId = p.DialogueId,
@@ -191,7 +192,7 @@ namespace UserOperations.Controllers
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = (await _analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds)).ToList();
+                List<BenchmarkModel> benchmarksList = await _analyticHomeProvider.GetBenchmarksListAsync(begTime, endTime, companyIds);
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();

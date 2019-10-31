@@ -18,17 +18,17 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticClientProfileController : Controller
     {
-        private readonly IAnalyticCommonProvider _analyticProvider;
+        private readonly AnalyticCommonProvider _analyticProvider;
         private readonly ILoginService _loginService;
-        private readonly IDBOperations _dbOperation;
-        private readonly IRequestFilters _requestFilters;
+        private readonly DBOperations _dbOperation;
+        private readonly RequestFilters _requestFilters;
         private readonly List<AgeBoarder> _ageBoarders;
 
         public AnalyticClientProfileController(
-            IAnalyticCommonProvider analyticProvider,
+            AnalyticCommonProvider analyticProvider,
             ILoginService loginService,
-            IDBOperations dbOperation,
-            IRequestFilters requestFilters
+            DBOperations dbOperation,
+            RequestFilters requestFilters
             )
         {
             _analyticProvider = analyticProvider;

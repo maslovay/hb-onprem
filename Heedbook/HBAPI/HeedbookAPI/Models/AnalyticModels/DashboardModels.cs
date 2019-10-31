@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace UserOperations.Models.AnalyticModels
 {
-    public class DashboardInfo
+    class DashboardInfo
     {
         public double? SatisfactionIndex;
         public double? SatisfactionIndexDelta;

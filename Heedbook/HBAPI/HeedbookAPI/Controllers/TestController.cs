@@ -21,8 +21,8 @@ namespace UserOperations.Controllers.Test
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly IDBOperations _dbOperation;
-        private readonly IRequestFilters _requestFilters;
+        private readonly DBOperations _dbOperation;
+        private readonly RequestFilters _requestFilters;
         // private readonly ElasticClient _log;
         private readonly SftpClient _sftpClient;
 
@@ -30,8 +30,8 @@ namespace UserOperations.Controllers.Test
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            IDBOperations dbOperation,
-            IRequestFilters requestFilters,
+            DBOperations dbOperation,
+            RequestFilters requestFilters,
             SftpClient sftpClient
             // ElasticClient log
             )

@@ -35,9 +35,6 @@ namespace UserOperations.Models.AnalyticModels
         {
             public string Answer { get; set; }
             public DateTime Time { get; set; }
-            public Guid? DialogueId { get; set; }
-            public Guid? ContentId { get; set; }
-
         }
     }
 }

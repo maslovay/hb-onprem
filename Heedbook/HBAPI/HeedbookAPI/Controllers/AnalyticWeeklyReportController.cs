@@ -27,7 +27,7 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperationsWeeklyReport _dbOperation;
-        private readonly IRequestFilters _requestFilters;
+        private readonly RequestFilters _requestFilters;
 //        private readonly ElasticClient _log;
 
         public AnalyticWeeklyReportController(
@@ -35,7 +35,7 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             DBOperationsWeeklyReport dbOperation,
-            IRequestFilters requestFilters
+            RequestFilters requestFilters
 //            ElasticClient log
             )
         {
