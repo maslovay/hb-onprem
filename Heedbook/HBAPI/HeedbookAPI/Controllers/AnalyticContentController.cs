@@ -17,24 +17,21 @@ namespace UserOperations.Controllers
     public class AnalyticContentController : Controller
     {
         private readonly AnalyticContentProvider _analyticContentProvider;
-        private readonly AnalyticCommonProvider _analyticCommonProvider;
         private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly RequestFilters _requestFilters;
 
         public AnalyticContentController(
-            AnalyticContentProvider analyticContentProvider,
-            AnalyticCommonProvider analyticCommonProvider,
+            AnalyticContentProvider analyticProvider,
             ILoginService loginService,
-            IRequestFilters requestFilters
+            RequestFilters requestFilters
             )
         {
-            _analyticContentProvider = analyticContentProvider;
-            _analyticCommonProvider = analyticCommonProvider;
+            _analyticContentProvider = analyticProvider;
             _loginService = loginService;
             _requestFilters = requestFilters;
         }
 
-        //---FOR ONE DIALOGUE---
+//---FOR ONE DIALOGUE---
         [HttpGet("ContentShows")]
         public async Task<IActionResult> ContentShows([FromQuery(Name = "dialogueId")] Guid dialogueId,
                                                         [FromHeader] string Authorization)
@@ -45,13 +42,13 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
 
-                var dialogue = await _analyticCommonProvider.GetDialogueIncludedFramesByIdAsync(dialogueId);
+                var dialogue = await _analyticContentProvider.GetDialogueIncludedFramesByIdAsync(dialogueId);
                 if (dialogue == null) return BadRequest("No such dialogue");
 
-                var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowsForOneDialogueAsync(dialogue);
+                var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByUserAsync(dialogue);
 
                 var contentsShownGroup = slideShowSessionsAll.Where(p => !p.IsPoll)
-                    .GroupBy(p => new { p.ContentType, p.ContentId, p.Url }, (key, group) => new
+                    .GroupBy(p => new { p.ContentType,  p.ContentId, p.Url }, (key, group) => new
                     {
                         Key1 = key.ContentType,
                         Key2 = key.ContentId,
@@ -69,14 +66,14 @@ namespace UserOperations.Controllers
                         AmountOne = x.Result.Count(),
                         ContentType = x.Key1,
                         ContentName = x.Result.FirstOrDefault().ContentName,
-                        EmotionAttention = _analyticContentProvider.EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList())
+                        EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogue)
                     })
                     .Union(contentsShownGroup.Where(x => x.Key2 == null).Select(x => new ContentOneInfo
                     {
                         Content = x.Key3,
                         AmountOne = x.Result.Count(),
                         ContentType = x.Key1,
-                        EmotionAttention = _analyticContentProvider.EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList()),
+                        EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogue),
                     }
                     )).ToList()
                 };
@@ -91,7 +88,7 @@ namespace UserOperations.Controllers
                 var answersAmount = slideShowSessionsAll.Where(p => p.IsPoll).Count();
                 var answers = await _analyticContentProvider
                     .GetAnswersInOneDialogueAsync(slideShowSessionsAll, dialogue.BegTime, dialogue.EndTime, dialogue.ApplicationUserId);
-
+                  
                 var answersByContent = pollAmount.Where(x => x.Key2 != null).Select(x => new
                 {
                     Content = x.Key2.ToString(),
@@ -101,7 +98,7 @@ namespace UserOperations.Controllers
                             .Where(p => x.Result
                             .Select(r => r.CampaignContentId).Contains(p.CampaignContentId))
                             .Select(p => new { p.Answer, p.Time }),
-                    EmotionAttention = _analyticContentProvider.EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList()),
+                    EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogue),
                 })
                     .ToList();
 
@@ -136,12 +133,12 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await _analyticCommonProvider.GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await _analyticContentProvider.GetDialoguesWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
                 var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, false);
 
-                foreach (var session in slideShowSessionsAll)
+                foreach ( var session in slideShowSessionsAll )
                 {
-                    var dialog = dialogues.Where(x => x.BegTime <= session.BegTime && x.EndTime >= session.BegTime)
+                    var dialog =  dialogues.Where(x => x.BegTime <= session.BegTime &&  x.EndTime >= session.BegTime)
                             .FirstOrDefault();
                     session.DialogueId = dialog?.DialogueId;
                     session.Age = dialog?.Age;
@@ -150,25 +147,25 @@ namespace UserOperations.Controllers
                 slideShowSessionsAll = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
 
                 var views = slideShowSessionsAll.Count();
+               // var splashShows = slideShowSessionsAll.Where(x => x.CampaignContent!= null &&  x.CampaignContent.Campaign!= null && x.CampaignContent.Campaign.IsSplash).Count();
                 var clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();
-
+               
                 var contentsShownGroup = slideShowSessionsAll
-                    .GroupBy(p => new { p.ContentId, p.Url }, (key, group) => new
+                    .GroupBy(p => new { ContentId = p.ContentId, p.Url }, (key, group) => new
                     {
                         Key1 = key.ContentId,
                         Key2 = key.Url,
                         Result = group.ToList()
                     }).ToList();
-
-                var contentInfo = new
+                var contentInfo = new 
                 {
                     Views = views,
                     Clients = clients,
                     ContentFullInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentFullOneInfo
                     {
                         Content = x.Key2.ToString(),
-                        AmountViews = x.Result.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),
-                        EmotionAttention = _analyticContentProvider.EmotionsDuringAdv(x.Result, dialogues),
+                        AmountViews = x.Result.Where(p =>  p.DialogueId != null && p.DialogueId != default(Guid)).Count(),                            
+                        EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogues),
                         Age = x.Result.Where(p => p.DialogueId != null).Average(p => p.Age),
                         Male = x.Result.Where(p => p.Gender == "male").Count(),
                         Female = x.Result.Where(p => p.Gender == "female").Count()
@@ -177,14 +174,14 @@ namespace UserOperations.Controllers
                     {
                         Content = x.Key1.ToString(),
                         AmountViews = x.Result.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
-                        ContentName = x.Result.FirstOrDefault().ContentName,
-                        EmotionAttention = _analyticContentProvider.EmotionsDuringAdv(x.Result, dialogues),
+                        ContentName = x.Result.FirstOrDefault().ContentName,  
+                        EmotionAttention = _analyticContentProvider.SatisfactionDuringAdv(x.Result, dialogues),
                         Age = x.Result.Where(p => p.DialogueId != null).Average(p => p.Age),
                         Male = x.Result.Where(p => p.Gender == "male").Count(),
                         Female = x.Result.Where(p => p.Gender == "female").Count()
                     }
                     )).ToList()
-                };
+                };              
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
                 return Ok(jsonToReturn);
             }
@@ -196,12 +193,12 @@ namespace UserOperations.Controllers
 
         [HttpGet("Poll")]
         public async Task<IActionResult> Poll([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                     [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                     [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                     [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                     [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                     [FromHeader] string Authorization)
+                                                           [FromQuery(Name = "endTime")] string end,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                        [FromHeader] string Authorization)
         {
             try
             {
@@ -214,34 +211,46 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await _analyticCommonProvider.GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await _analyticContentProvider.GetDialoguesWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
                 var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, true);
-                slideShowSessionsAll = _analyticContentProvider.AddDialogueIdToShow(slideShowSessionsAll, dialogues);
-                var answers = await _analyticContentProvider.GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
 
-                double conversion = _analyticContentProvider.GetConversion(slideShowSessionsAll.Count(), answers.Count());
-
-                var slideShowInfoGroupByContent = slideShowSessionsAll
-                    .GroupBy(p => p.ContentId)
-                    .Select(ssh => new AnswerInfo
-                    {
-                        Content = ssh.Key.ToString(),
-                        AmountViews = ssh.Count(),
-                        ContentName = ssh.FirstOrDefault().ContentName,
-                        Answers = _analyticContentProvider.GetAnswersForOneContent(answers, ssh.Key),
-                        AnswersAmount = _analyticContentProvider.GetAnswersForOneContent(answers, ssh.Key).Count(),
-                        Conversion = (double)_analyticContentProvider.GetAnswersForOneContent(answers, ssh.Key).Count() / (double)ssh.Count()
-                    });
-
+                foreach ( var session in slideShowSessionsAll )
+                {
+                    var dialog =  dialogues.Where(x => x.BegTime <= session.BegTime &&  x.EndTime >= session.BegTime)
+                            .FirstOrDefault();
+                    session.DialogueId = dialog?.DialogueId;
+                }
+                slideShowSessionsAll =  slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
+                var answersList = await _analyticContentProvider.GetAnswersInDialoguesAsync(slideShowSessionsAll, begTime, endTime, applicationUserIds);
+                var views = slideShowSessionsAll.Count();
+                var clients =slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();
+                var answers = answersList.Count();
+                double conversion = views != 0 ? (double)answers / (double)views : 0;
+               
+                var contentsShownGroup = slideShowSessionsAll
+                    .GroupBy(p => p.ContentId).ToList();
+                    
                 var contentInfo = new
                 {
-                    Views = slideShowSessionsAll.Count(),
-                    Clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count(),
-                    Answers = answers.Count(),
+                    Views = views,
+                    Clients = clients,
+                    Answers = answers,
                     Conversion = conversion,
-                    ContentFullInfo = slideShowInfoGroupByContent
-                };
-
+                    ContentFullInfo = contentsShownGroup.Select(x => new AnswerInfo
+                    {
+                        Content = x.Key.ToString(),
+                        AmountViews = x.Count(),// x.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
+                        ContentName = x.FirstOrDefault().ContentName,
+                        Answers = answersList
+                            .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId))
+                            .Select(p => new AnswerInfo.AnswerOne { Answer =  p.Answer, Time = p.Time }).ToList(),
+                        AnswersAmount = answersList
+                            .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId))
+                            .Select(p => new { p.Answer, p.Time }).Count(),
+                        Conversion = (double)answersList
+                            .Where(p => x.Select(r => r.CampaignContent.CampaignContentId).Contains(p.CampaignContentId)).Count() / (double)x.Count()
+                    }
+                    ).ToList()};
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
                 return Ok(jsonToReturn);
             }
@@ -249,8 +258,9 @@ namespace UserOperations.Controllers
             {
                 return BadRequest(e);
             }
+
         }
     }
 }
 
-
+ 

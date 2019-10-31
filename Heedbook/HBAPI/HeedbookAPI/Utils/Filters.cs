@@ -34,7 +34,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Utils
 {
-    public class RequestFilters : IRequestFilters
+    public class RequestFilters
     {
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
@@ -47,30 +47,16 @@ namespace UserOperations.Utils
 
         public DateTime GetBegDate(string beg)
         {
-            try
-            {
-                var stringFormat = "yyyyMMdd";
-                var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
-                return begTime.Date;
-            }
-            catch
-            {
-                throw new FormatException("wrong date format");
-            }
+            var stringFormat = "yyyyMMdd";
+            var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-6);
+            return begTime.Date;
         }
         public DateTime GetEndDate(string end)
         {
-            try
-            {
-                var stringFormat = "yyyyMMdd";
+            var stringFormat = "yyyyMMdd";
             var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
             return endTime.Date.AddDays(1);
-            }
-            catch
-            {
-                throw new FormatException("wrong date format");
-            }
-}
+        }
 
         public async Task<bool> AddOrChangeUserRoles(Guid userId, string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId = null)
         {
@@ -114,6 +100,37 @@ namespace UserOperations.Utils
             if (isManager) return deletedUserRoleName != "Admin" && deletedUserRoleName != "Supervisor" ? true : false;
             return false;
         }
+
+        private List<Guid> GetAllowedRoles(string roleInToken)
+        {
+            var allRoles = _context.Roles.ToList();
+            var isAdmin = roleInToken == "Admin";
+            var isManager = roleInToken == "Manager";
+            var isSupervisor = roleInToken == "Supervisor";
+
+            if (isAdmin) return allRoles.Where(p => p.Name != "Admin").Select(x => x.Id).ToList();
+            if (isSupervisor) return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher").Select(x => x.Id).ToList();
+            if (isManager) return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher" && p.Name != "Supervisor").Select(x => x.Id).ToList();
+            return null;
+        }
+
+        private Guid GetRoleToCreateChangeUser(string roleInToken, Guid? newUserRole, Guid? oldUserRole)
+        {
+            if ( newUserRole == null )
+                return oldUserRole != null ? (Guid)oldUserRole : _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id;
+            return (Guid)newUserRole;
+        }
+
+        private bool IsCompanyBelongToCorporation(Guid? corporationIdInToken, Guid? companyId)
+        {
+           if (corporationIdInToken == null || corporationIdInToken == Guid.Empty) return true;
+           if (companyId == null || companyId == Guid.Empty) return false;
+           var companiesInCorporation =  _context.Companys.Where(p => p.CorporationId == corporationIdInToken)
+                        .Select(p => p.CompanyId)
+                        .ToList();
+            return companiesInCorporation.Contains((Guid)companyId);
+        }
+
         public bool IsCompanyBelongToUser(Guid? corporationIdInToken, Guid? companyIdInToken, Guid? companyIdInParams, string roleInToken)
         {
             var isAdmin = roleInToken == "Admin";
@@ -166,39 +183,6 @@ namespace UserOperations.Utils
             }
             companyIdsInFilter = companyIdsForResult;
         }
-
-        //---PRIVATE---
-        private List<Guid> GetAllowedRoles(string roleInToken)
-        {
-            var allRoles = _context.Roles.ToList();
-            var isAdmin = roleInToken == "Admin";
-            var isManager = roleInToken == "Manager";
-            var isSupervisor = roleInToken == "Supervisor";
-
-            if (isAdmin) return allRoles.Where(p => p.Name != "Admin").Select(x => x.Id).ToList();
-            if (isSupervisor) return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher").Select(x => x.Id).ToList();
-            if (isManager) return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher" && p.Name != "Supervisor").Select(x => x.Id).ToList();
-            return null;
-        }
-
-        private Guid GetRoleToCreateChangeUser(string roleInToken, Guid? newUserRole, Guid? oldUserRole)
-        {
-            if ( newUserRole == null )
-                return oldUserRole != null ? (Guid)oldUserRole : _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id;
-            return (Guid)newUserRole;
-        }
-
-        private bool IsCompanyBelongToCorporation(Guid? corporationIdInToken, Guid? companyId)
-        {
-           if (corporationIdInToken == null || corporationIdInToken == Guid.Empty) return true;
-           if (companyId == null || companyId == Guid.Empty) return false;
-           var companiesInCorporation =  _context.Companys.Where(p => p.CorporationId == corporationIdInToken)
-                        .Select(p => p.CompanyId)
-                        .ToList();
-            return companiesInCorporation.Contains((Guid)companyId);
-        }
-
-
 
         //public List<Guid> IndustryIdsForCompany(List<Guid> companyIds)
         //{

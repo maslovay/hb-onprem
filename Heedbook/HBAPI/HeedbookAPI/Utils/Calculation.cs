@@ -11,7 +11,7 @@ using System.Reflection;
 
 namespace UserOperations.Utils
 {
-    public class DBOperations : IDBOperations
+    public class DBOperations
     {
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;

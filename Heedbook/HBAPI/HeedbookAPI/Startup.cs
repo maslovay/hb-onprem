@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
 using UserOperations.Services;
@@ -18,6 +19,10 @@ using BenchmarkDotNet.Running;
 using UserOperations.Controllers.Test;
 using UserOperations.Services.Scheduler;
 using Quartz;
+using Notifications.Base;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
+using HBMLHttpClient;
 using UserOperations.Providers;
 
 namespace UserOperations
@@ -45,9 +50,9 @@ namespace UserOperations
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddScoped<IDBOperations, Utils.DBOperations>();
+            services.AddScoped<Utils.DBOperations>();
             services.AddScoped<Utils.DBOperationsWeeklyReport>();
-            services.AddScoped<IRequestFilters, RequestFilters>();
+            services.AddScoped<RequestFilters>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
             {
                 p.Password.RequireDigit = true;
@@ -58,11 +63,11 @@ namespace UserOperations
             })
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
-            services.AddScoped<IMailSender, MailSender>();
-            services.AddScoped<IAnalyticContentProvider, AnalyticContentProvider>();
-            //services.AddScoped<IAnalyticCommonProvider, AnalyticCommonProvider>();
-            services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();
-            services.AddScoped<IAccountProvider, AccountProvider>();
+            services.AddScoped<MailSender>();
+            services.AddScoped<AccountProvider>();
+            services.AddScoped<AnalyticContentProvider>();
+            services.AddScoped<AnalyticCommonProvider>();
+            services.AddScoped<AnalyticHomeProvider>();
 
             services.AddSwaggerGen(c =>
             {

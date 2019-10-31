@@ -41,6 +41,7 @@ namespace UserOperations.Services
             _sftpClient = sftpClient;
             _sftpSettings = sftpSettings;
         }
+
         public string GeneratePasswordHash(string password)
         {
             var crypt = new SHA256Managed();

@@ -24,14 +24,14 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private Dictionary<string, string> userClaims;
-        private readonly IRequestFilters _requestFilters;
+        private readonly RequestFilters _requestFilters;
 
 
         public CampaignContentController(
             RecordsContext context,
             IConfiguration config,
             ILoginService loginService,
-            IRequestFilters requestFilters
+            RequestFilters requestFilters
             )
         {
             try

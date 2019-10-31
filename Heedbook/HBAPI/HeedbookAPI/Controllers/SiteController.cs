@@ -39,11 +39,11 @@ namespace UserOperations.Controllers
     [ApiController]
     public class SiteController : Controller
     {
-        private readonly IMailSender _mailSender;
+        private readonly MailSender _mailSender;
 //        private readonly ElasticClient _log;
 
         public SiteController(
-            IMailSender mailSender
+            MailSender mailSender
 //            ElasticClient log
             )
         {
