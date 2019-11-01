@@ -20,6 +20,7 @@ namespace UserOperations.Providers.Realizations
         public HelpProvider( RecordsContext context )
         {
             _context = context;
+            //xlsx
         }
 
         public void AddComanyPhrases()
@@ -111,7 +112,7 @@ namespace UserOperations.Providers.Realizations
                 }
             }
         }
-        public void CreatePoolAnswersSheet(List<AnswerInfo> answers)
+        public MemoryStream CreatePoolAnswersSheet(List<AnswerInfo> answers)
         {
             var answersModified = answers.SelectMany(x => x.Answers).ToList();
             List<List<string>> answersList = new List<List<string>>();
@@ -120,8 +121,8 @@ namespace UserOperations.Providers.Realizations
                 answersList.Add(new List<string> { answ.Time.ToString(), answ.ContentId.ToString(), answ.DialogueId.ToString(), answ.Answer});
             }
 
-            var sheetData = FillSheetFromData(answersList);
-            CreateSpreadsheetDocument("D:/test.xlsx", "ann", sheetData);
+            var sheetData = FillSheetFromData(answersList, new List<string> { "Time","ContentId", "DialogueId", "Answer"});
+            return CreateSpreadsheetDocument("ann", sheetData);
         }
 
         //-----READ------
@@ -142,10 +143,11 @@ namespace UserOperations.Providers.Realizations
         }
         
         //-----CREATE----------
-        private void CreateSpreadsheetDocument(string documentName, string sheetName, SheetData sheetData)
+        private MemoryStream CreateSpreadsheetDocument(string sheetName, SheetData sheetData)
         {
+            MemoryStream memoryStream = new MemoryStream();
             SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.
-                Create(documentName, SpreadsheetDocumentType.Workbook);
+                Create(memoryStream, SpreadsheetDocumentType.Workbook);
 
             // Add a WorkbookPart to the document.  
             WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
@@ -177,7 +179,7 @@ namespace UserOperations.Providers.Realizations
 
             // Close the document.  
             spreadsheetDocument.Close();
-
+            return memoryStream;
         }
 
         private SheetData CreateSheetData(List<Row> rows)
@@ -210,10 +212,26 @@ namespace UserOperations.Providers.Realizations
             };
         }
 
-        private SheetData FillSheetFromData(List<List<string>> data)
+
+        private Row CreateHeaderRow(List<string> headers)
+        {
+            List<Cell> headerCells = new List<Cell>();
+            char startCol = 'A';
+            foreach (var item in headers)
+            {
+                Cell newCell = CreateCell(item, startCol.ToString() + "1");
+                headerCells.Add(newCell);
+                startCol++;
+            }
+
+            return CreateRow(headerCells, 1);
+        }
+        private SheetData FillSheetFromData(List<List<string>> data, List<string> headers)
         {
             int startRow = 2;
             List<Row> rows = new List<Row>();
+            rows.Add(CreateHeaderRow(headers));
+
             foreach (var row in data)
             {
                 char startCol = 'A';
