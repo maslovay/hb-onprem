@@ -31,7 +31,6 @@ namespace UserOperations.Controllers
         private readonly SmtpSettings _smtpSetting;
         private readonly SmtpClient _smtpClient;
         private readonly IMailSender _mailSender;
-        // private readonly ElasticClient _log;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
         private readonly int activeStatus;
