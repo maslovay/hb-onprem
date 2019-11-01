@@ -10,6 +10,7 @@ namespace UserOperations.Providers.Interfaces
     public interface IHelpProvider
     {
         void AddComanyPhrases();
+        void CreateSpreadsheetDocument();
         ///Method for get Cell Value
      //   string GetCellValue(SpreadsheetDocument document, Cell cell);
     }
