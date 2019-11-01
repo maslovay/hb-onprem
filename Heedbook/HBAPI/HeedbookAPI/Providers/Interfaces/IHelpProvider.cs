@@ -4,14 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Providers.Interfaces
 {
     public interface IHelpProvider
     {
         void AddComanyPhrases();
-        void CreateSpreadsheetDocument();
-        ///Method for get Cell Value
-     //   string GetCellValue(SpreadsheetDocument document, Cell cell);
+        void CreatePoolAnswersSheet(List<AnswerInfo> answers);
     }
 }
