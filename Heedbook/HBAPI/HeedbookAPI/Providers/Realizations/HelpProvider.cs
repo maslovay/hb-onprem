@@ -10,20 +10,18 @@ using Microsoft.EntityFrameworkCore;
 using HBData.Models;
 using DocumentFormat.OpenXml;
 using UserOperations.Providers.Interfaces;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Providers.Realizations
 {
     public class HelpProvider : IHelpProvider
     {
         private readonly RecordsContext _context;
-        public HelpProvider(
-            RecordsContext context
-        )
+        public HelpProvider( RecordsContext context )
         {
             _context = context;
         }
 
-        //-----READ------
         public void AddComanyPhrases()
         {
             var filePath = "/home/oleg/Downloads/Phrases.xlsx";
@@ -113,6 +111,20 @@ namespace UserOperations.Providers.Realizations
                 }
             }
         }
+        public void CreatePoolAnswersSheet(List<AnswerInfo> answers)
+        {
+            var answersModified = answers.SelectMany(x => x.Answers).ToList();
+            List<List<string>> answersList = new List<List<string>>();
+            foreach (var answ in answersModified)
+            {
+                answersList.Add(new List<string> { answ.Time.ToString(), answ.ContentId.ToString(), answ.DialogueId.ToString(), answ.Answer});
+            }
+
+            var sheetData = FillSheetFromData(answersList);
+            CreateSpreadsheetDocument("D:/test.xlsx", "ann", sheetData);
+        }
+
+        //-----READ------
         ///Method for get Cell Value
         private static string GetCellValue(SpreadsheetDocument document, Cell cell)
         {
@@ -128,15 +140,12 @@ namespace UserOperations.Providers.Realizations
                 return value;
             }
         }
-
-
-
+        
         //-----CREATE----------
-        public void CreateSpreadsheetDocument()
+        private void CreateSpreadsheetDocument(string documentName, string sheetName, SheetData sheetData)
         {
-            var fileName = "D:/test.xlsx";
             SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.
-                Create(fileName, SpreadsheetDocumentType.Workbook);
+                Create(documentName, SpreadsheetDocumentType.Workbook);
 
             // Add a WorkbookPart to the document.  
             WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
@@ -153,31 +162,14 @@ namespace UserOperations.Providers.Realizations
             // Append a new worksheet and associate it with the workbook.  
             Sheet sheet = new Sheet()
             {
-                Id = spreadsheetDocument.WorkbookPart.
-                GetIdOfPart(worksheetPart),
+                Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart),
                 SheetId = 1,
-                Name = "mySheet"
+                Name = sheetName
             };
             sheets.Append(sheet);
 
             Worksheet worksheet = new Worksheet();
-            SheetData sheetData = new SheetData();
-
-            Row row =
-                new Row()
-                {
-                    RowIndex = 2U,
-                    Spans = new ListValue<StringValue>() { InnerText = "2:2" }
-                };
-            Cell cell =
-                new Cell()
-                {
-                    CellReference = "A2",
-                    DataType = CellValues.String,
-                    CellValue = new CellValue("Microsoft")
-                };
-            row.Append(cell);
-            sheetData.Append(row);
+            //---ADD DATA HERE---
             worksheet.Append(sheetData);
             worksheetPart.Worksheet = worksheet;
 
@@ -186,51 +178,60 @@ namespace UserOperations.Providers.Realizations
             // Close the document.  
             spreadsheetDocument.Close();
 
-            Console.WriteLine("The hyperlink has been inserted.\nPress a key.");
-            Console.ReadKey();
         }
-        private void GenerateSharedStringTablePart1Content(SharedStringTablePart sharedStringTablePart1)
+
+        private SheetData CreateSheetData(List<Row> rows)
         {
-            SharedStringTable sharedStringTable1 = new SharedStringTable() { Count = (UInt32Value)5U, UniqueCount = (UInt32Value)5U };
-
-            SharedStringItem sharedStringItem1 = new SharedStringItem();
-            Text text1 = new Text();
-            text1.Text = "HeaderVal";
-
-            sharedStringItem1.Append(text1);
-
-            SharedStringItem sharedStringItem2 = new SharedStringItem();
-            Text text2 = new Text();
-            text2.Text = "HeaderNumber";
-
-            sharedStringItem2.Append(text2);
-
-            SharedStringItem sharedStringItem3 = new SharedStringItem();
-            Text text3 = new Text();
-            text3.Text = "HeaderLink";
-
-            sharedStringItem3.Append(text3);
-
-            SharedStringItem sharedStringItem4 = new SharedStringItem();
-            Text text4 = new Text();
-            text4.Text = "test";
-
-            sharedStringItem4.Append(text4);
-
-            SharedStringItem sharedStringItem5 = new SharedStringItem();
-            Text text5 = new Text();
-            text5.Text = "http://google.com";
-
-            sharedStringItem5.Append(text5);
-
-            sharedStringTable1.Append(sharedStringItem1);
-            sharedStringTable1.Append(sharedStringItem2);
-            sharedStringTable1.Append(sharedStringItem3);
-            sharedStringTable1.Append(sharedStringItem4);
-            sharedStringTable1.Append(sharedStringItem5);
-
-            sharedStringTablePart1.SharedStringTable = sharedStringTable1;
+            SheetData sheetData = new SheetData();
+            foreach (var row in rows)
+            {
+                sheetData.Append(row);
+            }
+            return sheetData;
         }
+
+        private Row CreateRow(List<Cell> cells, uint index)
+        {
+            Row row =  new Row() { RowIndex = index, Spans = new ListValue<StringValue>() { InnerText = "2:2" } };
+            foreach (var cell in cells)
+            {
+                row.Append(cell);
+            }
+            return row;
+        }
+
+        private Cell CreateCell(string text, string index)
+        {
+            return new Cell()
+            {
+                CellReference = index,// "A2",
+                DataType = CellValues.String,
+                CellValue = new CellValue(text)
+            };
+        }
+
+        private SheetData FillSheetFromData(List<List<string>> data)
+        {
+            int startRow = 2;
+            List<Row> rows = new List<Row>();
+            foreach (var row in data)
+            {
+                char startCol = 'A';
+                List<Cell> cells = new List<Cell>();
+                foreach (var text in row)
+                {
+                    Cell cell = CreateCell(text, startCol.ToString() + startRow.ToString());
+                    cells.Add(cell);
+                    startCol++;
+                }
+                Row newRow = CreateRow(cells, (uint)startRow);
+                rows.Add(newRow);
+                startRow++;
+            }
+            SheetData sheetData = CreateSheetData(rows);
+            return sheetData;
+        }
+
         private static void SetCellValue(SharedStringTablePart shareStringTablePart, Cell cell, string value)
         {
             if (cell == null || cell.CellValue.Text.Equals(string.Empty))

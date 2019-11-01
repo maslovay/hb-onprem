@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using UserOperations.Utils;
 using UserOperations.Providers;
 using System.Threading.Tasks;
+using UserOperations.Providers.Interfaces;
 
 namespace UserOperations.Controllers
 {
@@ -18,18 +19,21 @@ namespace UserOperations.Controllers
     {
         private readonly IAnalyticContentProvider _analyticContentProvider;
         private readonly IAnalyticCommonProvider _analyticCommonProvider;
+        private readonly IHelpProvider _helpProvider;
         private readonly ILoginService _loginService;
         private readonly IRequestFilters _requestFilters;
 
         public AnalyticContentController(
             IAnalyticContentProvider analyticContentProvider,
             IAnalyticCommonProvider analyticCommonProvider,
+            IHelpProvider helpProvider,
             ILoginService loginService,
             IRequestFilters requestFilters
             )
         {
             _analyticContentProvider = analyticContentProvider;
             _analyticCommonProvider = analyticCommonProvider;
+            _helpProvider = helpProvider;
             _loginService = loginService;
             _requestFilters = requestFilters;
         }
@@ -241,9 +245,31 @@ namespace UserOperations.Controllers
                     Conversion = conversion,
                     ContentFullInfo = slideShowInfoGroupByContent
                 };
+            //    _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList());
 
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
                 return Ok(jsonToReturn);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+
+        [HttpGet("PollXlsx")]
+        public async Task<IActionResult> PollXlsx([FromQuery(Name = "begTime")] string beg,
+                                                     [FromQuery(Name = "endTime")] string end,
+                                                  [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                  [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                  [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                  [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                  [FromHeader] string Authorization)
+        {
+            try
+            {
+
+              //  _helpProvider.CreatePoolAnswersSheet();
+                return Ok();
             }
             catch (Exception e)
             {
