@@ -14,6 +14,7 @@ using UserOperations.AccountModels;
 using System.Transactions;
 using UserOperations.Providers;
 using Newtonsoft.Json;
+using UserOperations.Providers.Interfaces;
 
 namespace UserOperations.Controllers
 {
@@ -24,17 +25,20 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly IMailSender _mailSender;
         private readonly IAccountProvider _accountProvider;
+        private readonly IHelpProvider _helpProvider;
         private Dictionary<string, string> userClaims;
 
         public AccountController(
             ILoginService loginService,
             IMailSender mailSender,
-            IAccountProvider accountProvider
+            IAccountProvider accountProvider,
+            IHelpProvider helpProvider
             )
         {
             _loginService = loginService;
             _mailSender = mailSender;
             _accountProvider = accountProvider;
+            _helpProvider = helpProvider;
         }
 
         [HttpPost("Register")]
@@ -256,5 +260,11 @@ namespace UserOperations.Controllers
             }
         }
 
+
+        [HttpGet("[action]")]
+        public async Task AddCompanyDictionary(string fileName)
+        {
+            _helpProvider.AddComanyPhrases();
+        }
     }
 }
