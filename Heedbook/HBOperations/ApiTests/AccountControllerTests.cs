@@ -12,6 +12,8 @@ using HBData.Models;
 using HBData.Models.AccountViewModels;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
+using UserOperations.Utils;
+using UserOperations.Providers.Interfaces;
 
 namespace ApiTests
 {
@@ -19,12 +21,14 @@ namespace ApiTests
     {        
         protected Mock<IAccountProvider> accountProviderMock;
         protected MockInterfaceProviders mockProvider;
+        protected Mock<IHelpProvider> helpProvider;
 
         [SetUp]
         public void Setup()
         {
             mockProvider = new MockInterfaceProviders();
             accountProviderMock = new Mock<IAccountProvider>();
+            helpProvider = new Mock<IHelpProvider>();
             base.Setup();
         }
        
@@ -38,7 +42,9 @@ namespace ApiTests
 
             accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            helpProvider = mockProvider.MockIHelpProvider(helpProvider);
+
+            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
             var task = accountController.UserRegister(new UserRegister());            
@@ -60,7 +66,9 @@ namespace ApiTests
 
             accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            helpProvider = mockProvider.MockIHelpProvider(helpProvider);
+
+            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
             var okResult = accountController.GenerateToken(new AccountAuthorization()) as OkObjectResult;
@@ -80,7 +88,9 @@ namespace ApiTests
 
             accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
+
+            helpProvider = mockProvider.MockIHelpProvider(helpProvider);
 
             //Act
             var task = accountController.UserChangePasswordAsync(new AccountAuthorization(), $"Bearer Token");
@@ -102,7 +112,9 @@ namespace ApiTests
 
             accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            helpProvider = mockProvider.MockIHelpProvider(helpProvider);
+
+            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
             var task = accountController.UserChangePasswordOnDefaultAsync($"test@heedbook.com");
@@ -124,7 +136,9 @@ namespace ApiTests
 
             accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            helpProvider = mockProvider.MockIHelpProvider(helpProvider);
+
+            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
             var task = accountController.Unblock($"test@heedbook.com", $"Bearer Token");
@@ -146,7 +160,9 @@ namespace ApiTests
 
             accountProviderMock = mockProvider.MockIAccountProvider(accountProviderMock);
 
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object);
+            helpProvider = mockProvider.MockIHelpProvider(helpProvider);
+
+            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
             var task = accountController.AccountDelete($"test@heedbook.com");
@@ -166,7 +182,11 @@ namespace ApiTests
                 .Returns(true);
             moqILoginService.Setup(p => p.SaveErrorLoginHistory(It.IsAny<Guid>(), It.IsAny<string>()))
                 .Returns(true);
-            var dict = new Dictionary<string, string>{};
+            var dict = new Dictionary<string, string>
+            {
+                {"role", "role"},
+                {"companyId", "b1ec1819-5782-4215-86d0-b3ccbeaddaef"}
+            };
             moqILoginService.Setup(p => p.GetDataFromToken("Token", out dict, ""))
                 .Returns(true);
             moqILoginService.Setup(p => p.GeneratePasswordHash(It.IsAny<string>()))
@@ -221,6 +241,12 @@ namespace ApiTests
             moqIAccountProvider.Setup(p => p.RemoveAccount("email"))
                 .Callback(() => {});          
             return moqIAccountProvider;
+        }
+        public Mock<IHelpProvider> MockIHelpProvider(Mock<IHelpProvider> moqIHelpProvider)
+        {
+            moqIHelpProvider.Setup(p => p.AddComanyPhrases());
+            moqIHelpProvider.Setup(p => p.CreateSpreadsheetDocument());
+            return moqIHelpProvider;
         }
         private int GetStatus(string status)
         {
