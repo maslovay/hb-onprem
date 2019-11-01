@@ -10,6 +10,7 @@ using UserOperations.Utils;
 using UserOperations.Providers;
 using System.Threading.Tasks;
 using UserOperations.Providers.Interfaces;
+using System.IO;
 
 namespace UserOperations.Controllers
 {
@@ -205,7 +206,9 @@ namespace UserOperations.Controllers
                                                      [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                      [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                      [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                     [FromHeader] string Authorization)
+                                                     [FromHeader] string Authorization,
+                                                     [FromQuery(Name = "type")] string type = "json"
+                                                     )
         {
             try
             {
@@ -245,8 +248,15 @@ namespace UserOperations.Controllers
                     Conversion = conversion,
                     ContentFullInfo = slideShowInfoGroupByContent
                 };
-            //    _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList());
 
+                if (type != "json")
+                {
+                    MemoryStream excelDocStream = _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList());
+                    excelDocStream.Seek(0, SeekOrigin.Begin);
+                    return new FileStreamResult(excelDocStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                   // return new FileStreamResult(excelDocStream, "application/ms-excel");
+                    
+                }
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
                 return Ok(jsonToReturn);
             }
@@ -256,26 +266,6 @@ namespace UserOperations.Controllers
             }
         }
 
-        [HttpGet("PollXlsx")]
-        public async Task<IActionResult> PollXlsx([FromQuery(Name = "begTime")] string beg,
-                                                     [FromQuery(Name = "endTime")] string end,
-                                                  [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                  [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                  [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                  [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                  [FromHeader] string Authorization)
-        {
-            try
-            {
-
-              //  _helpProvider.CreatePoolAnswersSheet();
-                return Ok();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
-        }
     }
 }
 
