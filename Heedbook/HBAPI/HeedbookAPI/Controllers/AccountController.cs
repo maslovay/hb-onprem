@@ -58,41 +58,25 @@ namespace UserOperations.Controllers
                     //---1---company---
                     var companyId = Guid.NewGuid();                
                     var company = await _accountProvider.AddNewCompanysInBase(message, companyId);
-//                    _log.Info("Company created");
-                    //---2---user---
                     var user = await _accountProvider.AddNewUserInBase(message, companyId);
-                    //                    _log.Info("User created");
-                    //---3--user role---
                     await _accountProvider.AddUserRoleInBase(message, user);
 
                     if (_accountProvider.GetTariffs(companyId) == 0)
                     {
-                        //---4---tariff and transaction---
                         await _accountProvider.CreateCompanyTariffAndtransaction(company);
-
-                        //---6---ADD WORKER TYPES CATALOGUE CONNECTED TO NEW COMPANY
                         await _accountProvider.AddWorkerType(company);
-
-                        //---7---content and campaign clone
                         await _accountProvider.AddContentAndCampaign(company);
-
                         _accountProvider.SaveChangesAsync();
-                     //   transactionScope.Complete();
-
-                        //_context.Dispose();
-//                        _log.Info("All saved in DB");
                     }
                     try
                     {                       
                         await _mailSender.SendRegisterEmail(user);
                     }
                     catch { }
-//                    _log.Info("Account/register finished");
                     return Ok("Registred");
                 }
                 catch (Exception e)
                 {
-//                    _log.Fatal($"Exception occurred {e}");
                     return BadRequest(e.Message);
                 }
             }
