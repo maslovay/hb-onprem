@@ -22,20 +22,17 @@ namespace UserOperations.Controllers
     public class AccountController : Controller
     {
         private readonly ILoginService _loginService;
-//        private readonly ElasticClient _log;
+        private readonly IMailSender _mailSender;
+        private readonly IAccountProvider _accountProvider;
         private Dictionary<string, string> userClaims;
-        private readonly MailSender _mailSender;
-        private readonly AccountProvider _accountProvider;
 
         public AccountController(
             ILoginService loginService,
-//            ElasticClient log,      
-            MailSender mailSender,
-            AccountProvider accountProvider
+            IMailSender mailSender,
+            IAccountProvider accountProvider
             )
         {
             _loginService = loginService;
-//            _log = log;
             _mailSender = mailSender;
             _accountProvider = accountProvider;
         }
@@ -47,8 +44,6 @@ namespace UserOperations.Controllers
                         SwaggerParameter("User and company data", Required = true)]
                         UserRegister message)
         {
-//            _log.Info("Account/Register started");
-            
             var statusActiveId = _accountProvider.GetStatusId("Active");
             if (await _accountProvider.CompanyExist(message.CompanyName) || await _accountProvider.EmailExist(message.Email))
                 return BadRequest("Company name or user email not unique");

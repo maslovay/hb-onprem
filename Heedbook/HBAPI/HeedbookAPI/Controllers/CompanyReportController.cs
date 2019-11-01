@@ -44,17 +44,14 @@ namespace UserOperations.Controllers
     {
         private readonly RecordsContext _context;
         private readonly ILoginService _loginService;
-//        private readonly ElasticClient _log;
 
         public CompanyReportController(
             RecordsContext context,
             ILoginService loginService
-//            ElasticClient log
             )
         {
             _context = context;
             _loginService = loginService;
-//            _log = log;
         }
    
 

@@ -42,18 +42,16 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly DBOperations _dbOperation;
-        private readonly RequestFilters _requestFilters;
-//        private readonly ElasticClient _log;
+        private readonly IDBOperations _dbOperation;
+        private readonly IRequestFilters _requestFilters;
 
 
         public AnalyticSpeechController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation,
-            RequestFilters requestFilters
-//            ElasticClient log
+            IDBOperations dbOperation,
+            IRequestFilters requestFilters
             )
         {
             _config = config;
@@ -61,7 +59,6 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-//            _log = log;
         }    
 
         [HttpGet("EmployeeRating")]

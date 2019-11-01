@@ -15,13 +15,13 @@ namespace UserOperations.Controllers
     {
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
-        private readonly DBOperations _dbOperation;
+        private readonly IDBOperations _dbOperation;
         private readonly ElasticClient _log;
 
         public SessionController(
             RecordsContext context,
             IConfiguration config,
-            DBOperations dbOperation,
+            IDBOperations dbOperation,
             ElasticClient log
             )
         {
