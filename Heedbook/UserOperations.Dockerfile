@@ -11,8 +11,8 @@ COPY --from=build-env /app/HBAPI/HeedbookAPI/publish .
 ENTRYPOINT ["dotnet", "UserOperations.dll"]
 EXPOSE 53651
 ENV ASPNETCORE_URLS http://+:53651
-RUN mkdir /opt/
+RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
-RUN mkdir /opt/download
+RUN mkdir -p /opt/download
 RUN chmod -R 777 /opt/download
 ENV TESTCLUSTER testcluster
