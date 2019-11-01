@@ -1,37 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.Extensions.Configuration;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-using UserOperations.AccountModels;
-using HBData;
-
-
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
-using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Annotations;
-using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -39,16 +10,13 @@ namespace UserOperations.Controllers
     [ApiController]
     public class SiteController : Controller
     {
-        private readonly MailSender _mailSender;
-//        private readonly ElasticClient _log;
+        private readonly IMailSender _mailSender;
 
         public SiteController(
-            MailSender mailSender
-//            ElasticClient log
+            IMailSender mailSender
             )
         {
             _mailSender = mailSender;
-//            _log = log;
         }
    
 
@@ -61,7 +29,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-//                _log.Info("Site/Feedback started"); 
                 if (string.IsNullOrEmpty(feedback.name)
                       || string.IsNullOrEmpty(feedback.phone)
                       || string.IsNullOrEmpty(feedback.email)
@@ -76,12 +43,10 @@ namespace UserOperations.Controllers
                     "<tr><td>message:</td><td> {3}</td></tr>" +
                     "</table>", feedback.name, feedback.email, feedback.phone, feedback.body);
                 _mailSender.SendSimpleEmail("info@heedbook.com", "Message from site", text);
-//                _log.Info("Site/Feedback finished"); 
                 return Ok("Sended");
             }
             catch (Exception e)
             {
-//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest($"Could not send email {e}");
             }
         }        

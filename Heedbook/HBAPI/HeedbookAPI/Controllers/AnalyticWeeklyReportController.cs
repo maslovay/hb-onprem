@@ -27,16 +27,14 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly DBOperationsWeeklyReport _dbOperation;
-        private readonly RequestFilters _requestFilters;
-//        private readonly ElasticClient _log;
+        private readonly IRequestFilters _requestFilters;
 
         public AnalyticWeeklyReportController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             DBOperationsWeeklyReport dbOperation,
-            RequestFilters requestFilters
-//            ElasticClient log
+            IRequestFilters requestFilters
             )
         {
             _config = config;
@@ -44,7 +42,6 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-//            _log = log;
         }
 
         [HttpGet("User")]

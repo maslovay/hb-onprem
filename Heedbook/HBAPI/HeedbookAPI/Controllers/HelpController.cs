@@ -34,11 +34,11 @@ namespace UserOperations.Controllers
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-        private readonly MailSender _mailSender;
-        private readonly RequestFilters _requestFilters;
+        private readonly IMailSender _mailSender;
+        private readonly IRequestFilters _requestFilters;
         private readonly SftpSettings _sftpSettings;
         private readonly ElasticClient _log;
-        private readonly DBOperations _dbOperation;
+        private readonly IDBOperations _dbOperation;
         //   private readonly INotificationHandler _handler;
         //    private readonly HbMlHttpClient _client;
 

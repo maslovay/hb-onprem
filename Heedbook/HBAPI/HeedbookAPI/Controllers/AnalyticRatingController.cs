@@ -1,24 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
 using UserOperations.Models.AnalyticModels;
 using System.Globalization;
@@ -41,17 +25,15 @@ namespace UserOperations.Controllers
       private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly DBOperations _dbOperation;
-        private readonly RequestFilters _requestFilters;
-        // private readonly ElasticClient _log;
+        private readonly IDBOperations _dbOperation;
+        private readonly IRequestFilters _requestFilters;
 
         public AnalyticRatingController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            DBOperations dbOperation,
-            RequestFilters requestFilters
-            // ElasticClient log
+            IDBOperations dbOperation,
+            IRequestFilters requestFilters
             )
         {
             _config = config;
@@ -59,7 +41,6 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            // _log = log;
         }
 
         [HttpGet("Progress")]

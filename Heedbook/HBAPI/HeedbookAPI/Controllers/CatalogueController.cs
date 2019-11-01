@@ -20,18 +20,7 @@ using UserOperations.AccountModels;
 using HBData.Models;
 using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
-using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using HBData;
-using HBLib.Utils;
-using HBLib;
-using Microsoft.Extensions.Primitives;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
@@ -43,14 +32,12 @@ namespace UserOperations.Controllers
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        // private readonly ElasticClient _log;
 
 
         public CatalogueController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context
-            // ElasticClient log
             )
         {
             _config = config;
