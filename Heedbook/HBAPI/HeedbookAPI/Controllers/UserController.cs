@@ -1017,12 +1017,10 @@ namespace UserOperations.Controllers
                 dialogueClientSatisfaction.EndMoodByTeacher = message.EndMoodTotal;
 
                 _context.SaveChanges();
-                // _log.Info("Function DialogueSatisfactionPut finished");
                 return Ok(JsonConvert.SerializeObject(dialogueClientSatisfaction));
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred while executing DialogueSatisfactionPut {e}");
                 return BadRequest(e.Message);
             }
         }

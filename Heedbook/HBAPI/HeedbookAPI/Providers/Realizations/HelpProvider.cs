@@ -9,10 +9,11 @@ using HBData;
 using Microsoft.EntityFrameworkCore;
 using HBData.Models;
 using DocumentFormat.OpenXml;
+using UserOperations.Providers.Interfaces;
 
 namespace UserOperations.Providers.Realizations
 {
-    public class HelpProvider
+    public class HelpProvider : IHelpProvider
     {
         private readonly RecordsContext _context;
         public HelpProvider(
@@ -21,6 +22,8 @@ namespace UserOperations.Providers.Realizations
         {
             _context = context;
         }
+
+        //-----READ------
         public void AddComanyPhrases()
         {
             var filePath = "/home/oleg/Downloads/Phrases.xlsx";
@@ -126,6 +129,66 @@ namespace UserOperations.Providers.Realizations
             }
         }
 
+
+
+        //-----CREATE----------
+        public void CreateSpreadsheetDocument()
+        {
+            var fileName = "D:/test.xlsx";
+            SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.
+                Create(fileName, SpreadsheetDocumentType.Workbook);
+
+            // Add a WorkbookPart to the document.  
+            WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
+            workbookpart.Workbook = new Workbook();
+
+            // Add a WorksheetPart to the WorkbookPart.  
+            WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
+            worksheetPart.Worksheet = new Worksheet(new SheetData());
+
+            // Add Sheets to the Workbook.  
+            Sheets sheets =
+                spreadsheetDocument.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
+
+            // Append a new worksheet and associate it with the workbook.  
+            Sheet sheet = new Sheet()
+            {
+                Id = spreadsheetDocument.WorkbookPart.
+                GetIdOfPart(worksheetPart),
+                SheetId = 1,
+                Name = "mySheet"
+            };
+            sheets.Append(sheet);
+
+            Worksheet worksheet = new Worksheet();
+            SheetData sheetData = new SheetData();
+
+            Row row =
+                new Row()
+                {
+                    RowIndex = 2U,
+                    Spans = new ListValue<StringValue>() { InnerText = "2:2" }
+                };
+            Cell cell =
+                new Cell()
+                {
+                    CellReference = "A2",
+                    DataType = CellValues.String,
+                    CellValue = new CellValue("Microsoft")
+                };
+            row.Append(cell);
+            sheetData.Append(row);
+            worksheet.Append(sheetData);
+            worksheetPart.Worksheet = worksheet;
+
+            workbookpart.Workbook.Save();
+
+            // Close the document.  
+            spreadsheetDocument.Close();
+
+            Console.WriteLine("The hyperlink has been inserted.\nPress a key.");
+            Console.ReadKey();
+        }
         private void GenerateSharedStringTablePart1Content(SharedStringTablePart sharedStringTablePart1)
         {
             SharedStringTable sharedStringTable1 = new SharedStringTable() { Count = (UInt32Value)5U, UniqueCount = (UInt32Value)5U };
@@ -170,8 +233,6 @@ namespace UserOperations.Providers.Realizations
         }
         private static void SetCellValue(SharedStringTablePart shareStringTablePart, Cell cell, string value)
         {
-
-
             if (cell == null || cell.CellValue.Text.Equals(string.Empty))
             {
                 return;

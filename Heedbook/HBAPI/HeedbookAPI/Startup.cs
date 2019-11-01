@@ -19,6 +19,8 @@ using UserOperations.Controllers.Test;
 using UserOperations.Services.Scheduler;
 using Quartz;
 using UserOperations.Providers;
+using UserOperations.Providers.Interfaces;
+using UserOperations.Providers.Realizations;
 
 namespace UserOperations
 {
@@ -63,6 +65,7 @@ namespace UserOperations
             services.AddScoped<IAnalyticCommonProvider, AnalyticCommonProvider>();
             services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();
             services.AddScoped<IAccountProvider, AccountProvider>();
+            services.AddScoped<IHelpProvider, HelpProvider>();
 
             services.AddSwaggerGen(c =>
             {
