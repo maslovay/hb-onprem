@@ -1002,19 +1002,16 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
 
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                if (role != "Admin" && role != "Supervisor")
+                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
+                Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
+                var roleInToken = userClaims["role"];
+                if (roleInToken != "Admin" && roleInToken != "Supervisor")
                     return BadRequest("No permission");
-                if (role == "Supervisor")
-                {
-                    var companyForDialogueId = _context.Dialogues
-                        .Include(x => x.ApplicationUser)
-                        .FirstOrDefault(x => x.DialogueId == message.DialogueId)
-                        .ApplicationUser.CompanyId;
-                    if (companyForDialogueId != companyId) return BadRequest("No permission");
-                }
+                if( !_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, companyIdInToken, roleInToken))
+                    return BadRequest("No permission");
+
                 var dialogueClientSatisfaction = _context.DialogueClientSatisfactions.FirstOrDefault(x => x.DialogueId == message.DialogueId);
+                if(dialogueClientSatisfaction == null) return BadRequest("No such dialogue");
                 dialogueClientSatisfaction.MeetingExpectationsByTeacher = message.Satisfaction;
                 dialogueClientSatisfaction.BegMoodByTeacher = message.BegMoodTotal;
                 dialogueClientSatisfaction.EndMoodByTeacher = message.EndMoodTotal;
