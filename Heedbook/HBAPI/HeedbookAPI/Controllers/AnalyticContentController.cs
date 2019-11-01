@@ -245,7 +245,7 @@ namespace UserOperations.Controllers
                     Conversion = conversion,
                     ContentFullInfo = slideShowInfoGroupByContent
                 };
-                _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList());
+            //    _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList());
 
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
                 return Ok(jsonToReturn);

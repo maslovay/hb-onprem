@@ -70,57 +70,48 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("User/User GET started"); 
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 List<ApplicationUser> users = null;
 
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                var corporationId = userClaims["corporationId"];
-                var role = userClaims["role"];
-                var empployeeId = Guid.Parse(userClaims["applicationUserId"]);
+                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
+                Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
+                Guid.TryParse(userClaims["applicationUserId"], out var userIdInToken);
+                var roleInToken = userClaims["role"];
 
-                users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                    .Where(p => p.CompanyId == companyId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();     //2 active, 3 - disabled    
-
-                if (role == "Admin")
-                    users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                        .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled                  
-                if ((role == "Supervisor" || role == "Manager") && corporationId != null)
+                if (roleInToken == "Admin")
                 {
-                    var isManager = role == "Manager";
-                    var isSupervisor = role == "Supervisor";
-
-                    if (isManager)
-                    {
-                        users = _context.ApplicationUsers
-                            .Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                            .Include(p => p.Company)
-                            .Where(p => p.CompanyId == companyId
-                                && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
-                            //&& p.Id != empployeeId)
-                            .ToList();
-                    }
-                    else if (isSupervisor)
-                    {
-                        users = _context.ApplicationUsers
-                            .Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                            .Include(p => p.Company)
-                            .Where(p => p.Company.CorporationId.ToString() == corporationId
-                                && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
-                            // && p.Id != empployeeId)
-                            .ToList();
-                    }
-                    else
-                        return BadRequest($"Not allowed new user role for employee role: {role}");
+                    users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                        .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled     
                 }
+              
+                if (roleInToken == "Supervisor" && corporationIdInToken != Guid.Empty)
+                {
+                    users = _context.ApplicationUsers
+                        .Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                        .Include(p => p.Company)
+                        .Where(p => p.Company.CorporationId == corporationIdInToken
+                            && (p.StatusId == activeStatus || p.StatusId == disabledStatus) 
+                            && p.Id != userIdInToken)
+                        .ToList();
+                }
+
+                if (roleInToken == "Manager")
+                {
+                    users = _context.ApplicationUsers
+                        .Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                        .Include(p => p.Company)
+                        .Where(p => p.CompanyId == companyIdInToken
+                            && (p.StatusId == activeStatus || p.StatusId == disabledStatus)
+                            && p.Id != userIdInToken)
+                        .ToList();
+                }
+
                 var result = users.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)).path : null));
-                // _log.Info("User/User GET finished");
                 return Ok(result);
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -222,13 +213,13 @@ namespace UserOperations.Controllers
                 var roleInToken = userClaims["role"];
                 var employeeId = Guid.Parse(userClaims["applicationUserId"]);
 
-                if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, message.CompanyId, roleInToken) == false)
+                if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user.CompanyId, roleInToken) == false)
                     return BadRequest($"Not allowed user company");
 
-                if (_requestFilters.CheckAbilityToCreateOrChangeUser(roleInToken, message.Role.Id) == false)
+                if (_requestFilters.CheckAbilityToCreateOrChangeUser(roleInToken, message.Role?.Id) == false)
                     return BadRequest("Not allowed user role");
 
-                if (user.Email != message.Email)
+                if (message.Email != null && user.Email != message.Email)
                     return BadRequest("Not allowed change email");
 
                 Type userType = user.GetType();
