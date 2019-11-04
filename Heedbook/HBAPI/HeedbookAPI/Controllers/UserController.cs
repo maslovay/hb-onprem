@@ -246,7 +246,10 @@ namespace UserOperations.Controllers
                     var memoryStream = formData.Files[0].OpenReadStream();
                     await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
                     user.Avatar = fn;
-                    avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default(DateTime)).path;
+                }
+                if (user.Avatar != null)
+                {
+                    avatarUrl = _sftpClient.GetFileLink(_containerName, user.Avatar, default(DateTime)).path;
                 }
                 _context.SaveChanges();
                 return Ok(new UserModel(user, avatarUrl));
