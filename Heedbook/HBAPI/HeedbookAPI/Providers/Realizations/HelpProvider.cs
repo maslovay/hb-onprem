@@ -112,7 +112,7 @@ namespace UserOperations.Providers.Realizations
                 }
             }
         }
-        public MemoryStream CreatePoolAnswersSheet(List<AnswerInfo> answers)
+        public MemoryStream CreatePoolAnswersSheet(List<AnswerInfo> answers, string sheetName)
         {
             var answersModified = answers.SelectMany(x => x.Answers).ToList();
             List<List<string>> answersList = new List<List<string>>();
@@ -122,11 +122,11 @@ namespace UserOperations.Providers.Realizations
             }
 
             var sheetData = FillSheetFromData(answersList, new List<string> { "Time","ContentId", "DialogueId", "Answer"});
-            return CreateSpreadsheetDocument("ann", sheetData);
+            return CreateSpreadsheetDocument(sheetName, sheetData);
         }
 
         //-----READ------
-        ///Method for get Cell Value
+        ///Method for read xlsx table
         private static string GetCellValue(SpreadsheetDocument document, Cell cell)
         {
             SharedStringTablePart stringTablePart = document.WorkbookPart.SharedStringTablePart;
@@ -141,8 +141,9 @@ namespace UserOperations.Providers.Realizations
                 return value;
             }
         }
-        
+
         //-----CREATE----------
+        ///Methods for create xlsx table
         private MemoryStream CreateSpreadsheetDocument(string sheetName, SheetData sheetData)
         {
             MemoryStream memoryStream = new MemoryStream();
