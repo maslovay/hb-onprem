@@ -251,11 +251,10 @@ namespace UserOperations.Controllers
 
                 if (type != "json")
                 {
-                    MemoryStream excelDocStream = _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList());
+                    MemoryStream excelDocStream = _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList(), $"{begTime.Date}-{endTime.Date}");
                     excelDocStream.Seek(0, SeekOrigin.Begin);
                     return new FileStreamResult(excelDocStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-                   // return new FileStreamResult(excelDocStream, "application/ms-excel");
-                    
+                    //return File(excelDocStream, "application/vnd.ms-excel", "answers.xlsx");
                 }
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
                 return Ok(jsonToReturn);

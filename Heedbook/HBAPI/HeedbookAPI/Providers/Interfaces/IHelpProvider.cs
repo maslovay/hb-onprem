@@ -12,6 +12,6 @@ namespace UserOperations.Providers.Interfaces
     public interface IHelpProvider
     {
         void AddComanyPhrases();
-        MemoryStream CreatePoolAnswersSheet(List<AnswerInfo> answers);
+        MemoryStream CreatePoolAnswersSheet(List<AnswerInfo> answers, string sheetName);
     }
 }
