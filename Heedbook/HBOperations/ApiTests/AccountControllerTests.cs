@@ -14,6 +14,8 @@ using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Utils;
 using UserOperations.Providers.Interfaces;
+using UserOperations.Models.AnalyticModels;
+using System.IO;
 
 namespace ApiTests
 {
@@ -93,10 +95,12 @@ namespace ApiTests
             helpProvider = mockProvider.MockIHelpProvider(helpProvider);
 
             //Act
-            var task = accountController.UserChangePasswordAsync(new AccountAuthorization(), $"Bearer Token");
+            var task = accountController.UserChangePasswordAsync(new AccountAuthorization(){Password = "password"}, $"Bearer Token");
             task.Wait();
             var OkResult = task.Result as OkObjectResult;
+            System.Console.WriteLine($"result: {OkResult is null}");
             var result = OkResult.Value.ToString();
+            
 
             //Assert
             Assert.IsTrue(result == "password changed");
@@ -185,9 +189,10 @@ namespace ApiTests
             var dict = new Dictionary<string, string>
             {
                 {"role", "role"},
-                {"companyId", "b1ec1819-5782-4215-86d0-b3ccbeaddaef"}
+                {"companyId", "b1ec1819-5782-4215-86d0-b3ccbeaddaef"},
+                {"applicationUserId", "2d10136f-8341-4758-b218-785409a11e98"}
             };
-            moqILoginService.Setup(p => p.GetDataFromToken("Token", out dict, ""))
+            moqILoginService.Setup(p => p.GetDataFromToken(It.IsAny<string>(), out dict, null))
                 .Returns(true);
             moqILoginService.Setup(p => p.GeneratePasswordHash(It.IsAny<string>()))
                 .Returns("Hash");
@@ -233,10 +238,10 @@ namespace ApiTests
                 .Callback(() => {});
             moqIAccountProvider.Setup(p => p.SaveChanges())
                 .Callback(() => {});
-            var user = new ApplicationUser(){UserName = "TestUser", StatusId = 3};
+            var user = new ApplicationUser(){UserName = "TestUser", StatusId = 3, PasswordHash = ""};
             moqIAccountProvider.Setup(p => p.GetUserIncludeCompany(It.IsAny<string>()))
                 .Returns(user);
-            moqIAccountProvider.Setup(p => p.GetUserIncludeCompany(Guid.NewGuid(), new AccountAuthorization()))
+            moqIAccountProvider.Setup(p => p.GetUserIncludeCompany(It.IsAny<Guid>(), It.IsAny<AccountAuthorization>()))
                 .Returns(user);
             moqIAccountProvider.Setup(p => p.RemoveAccount("email"))
                 .Callback(() => {});          
@@ -245,7 +250,8 @@ namespace ApiTests
         public Mock<IHelpProvider> MockIHelpProvider(Mock<IHelpProvider> moqIHelpProvider)
         {
             moqIHelpProvider.Setup(p => p.AddComanyPhrases());
-            moqIHelpProvider.Setup(p => p.CreateSpreadsheetDocument());
+            moqIHelpProvider.Setup(p => p.CreatePoolAnswersSheet(It.IsAny<List<AnswerInfo>>(), It.IsAny<string>()))
+                .Returns(new MemoryStream());
             return moqIHelpProvider;
         }
         private int GetStatus(string status)
