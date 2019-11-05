@@ -247,7 +247,7 @@ namespace UserOperations.Controllers
                 {
                     Views = slideShowSessionsAll.Count(),
                     Clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count(),
-                    Answers = answers.Count(),
+                    Answers = slideShowInfoGroupByContent.Sum(x => x.AnswersAmount), //answers.Count(),//                    
                     Conversion = conversion,
                     ContentFullInfo = slideShowInfoGroupByContent
                 };
