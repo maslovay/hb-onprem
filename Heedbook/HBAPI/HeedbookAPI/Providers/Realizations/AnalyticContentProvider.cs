@@ -71,7 +71,7 @@ namespace UserOperations.Providers
                                        {
                                            BegTime = p.BegTime,
                                            ContentId = p.CampaignContent != null ? p.CampaignContent.ContentId : null,
-                                           CampaignContent = p.CampaignContent,
+                                           Campaign = p.CampaignContent != null ? p.CampaignContent.Campaign : null,
                                            ContentType = p.ContentType,
                                            ContentName = p.CampaignContent != null ? p.CampaignContent.Content.Name : null,
                                            EndTime = p.EndTime,

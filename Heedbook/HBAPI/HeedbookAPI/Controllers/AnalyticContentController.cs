@@ -143,7 +143,7 @@ namespace UserOperations.Controllers
 
                 var dialogues = await _analyticCommonProvider.GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
                 var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, false);
-
+               
                 foreach ( var session in slideShowSessionsAll )
                 {
                     var dialog =  dialogues.Where(x => x.BegTime <= session.BegTime &&  x.EndTime >= session.BegTime)
@@ -152,23 +152,26 @@ namespace UserOperations.Controllers
                     session.Age = dialog?.Age;
                     session.Gender = dialog?.Gender;
                 }
-                slideShowSessionsAll = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
+                var slideShowSessionsInDialogues = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
 
-                var views = slideShowSessionsAll.Count();
-                var clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count();
+                var views = slideShowSessionsInDialogues.Count();
+                var clients = slideShowSessionsInDialogues.Select(x => x.DialogueId).Distinct().Count();
                
-                var contentsShownGroup = slideShowSessionsAll
+                var contentsShownGroup = slideShowSessionsInDialogues
                     .GroupBy(p => new { p.ContentId, p.Url }, (key, group) => new
                     {
                         Key1 = key.ContentId,
                         Key2 = key.Url,
                         Result = group.ToList()
                     }).ToList();
+               // var splashShows = slideShowSessionsAll.Where(x => x.Campaign != null && x.Campaign.IsSplash).Count();
+                var splashViews = slideShowSessionsInDialogues.Where(x => x.Campaign != null && x.Campaign.IsSplash).Count();
 
                 var contentInfo = new 
                 {
-                    Views = views,
+                    Views = views - splashViews,
                     Clients = clients,
+                    SplashViews = splashViews,
                     ContentFullInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentFullOneInfo
                     {
                         Content = x.Key2.ToString(),
