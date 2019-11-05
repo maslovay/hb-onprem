@@ -144,7 +144,7 @@ namespace UserOperations.Models.AnalyticModels
         public DateTime BegTime { get; set; }
         public Guid? ContentId { get; set; }
         public Guid? CampaignContentId { get; set; }
-        public CampaignContent CampaignContent { get; set; }
+        public Campaign Campaign { get; set; }
         public string ContentType { get; set; }
         public string ContentName { get; set; }
         public DateTime EndTime { get; set; }
