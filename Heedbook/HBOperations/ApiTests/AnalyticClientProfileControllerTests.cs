@@ -13,6 +13,7 @@ using HBData.Models.AccountViewModels;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ApiTests
 {
@@ -49,27 +50,32 @@ namespace ApiTests
                 .AsQueryable();          
             var list = new List<Guid>(){};
 
-            filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, new List<Guid>(){}, "role", Guid.NewGuid()));
-            commonProviderMock.Setup(p => p.GetPersondIdsAsync(new DateTime(), new DateTime(), new List<Guid>(){})).Returns(Task.FromResult(new List<Guid?>(){}));
-                            
+            filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            commonProviderMock.Setup(p => p.GetPersondIdsAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<List<Guid>>()))
+                .Returns(Task.FromResult(new List<Guid?>(){}));
             commonProviderMock.Setup(p => p.GetDialoguesIncludedClientProfile(
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<List<Guid>>(), 
                     It.IsAny<List<Guid>>(), 
                     It.IsAny<List<Guid>>()))
-                .Returns(dialogues);
+                .Returns(dialogues);            
+            loginMock = mockProvider.MockILoginService(loginMock);      
             
             var analyticClientProfileController = new AnalyticClientProfileController(
                 commonProviderMock.Object, 
                 loginMock.Object, 
                 dbOperationMock.Object, 
                 filterMock.Object);
+            filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
+                .Returns(new DateTime(2019, 10, 30));
+            filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
+                .Returns(new DateTime(2019, 11, 01));
 
             //Act
             var task = analyticClientProfileController.EfficiencyDashboard(
-                "begTime", 
-                "endTime", 
+                "20191030", 
+                "20191101", 
                 new List<Guid>(){}, 
                 new List<Guid>(){}, 
                 new List<Guid>(){},
@@ -78,10 +84,11 @@ namespace ApiTests
 
             task.Wait();
             var okResult = task.Result as OkObjectResult;
-            System.Console.WriteLine(okResult is null);
             var result = okResult.Value.ToString();
-            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(result);
-            
+            System.Console.WriteLine(result);
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(result);
+            System.Console.WriteLine(dictionary.Count);
+
             //Assert
             Assert.IsNotNull(dictionary);
             Assert.NotZero(dictionary.Count);
