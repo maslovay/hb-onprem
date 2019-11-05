@@ -196,14 +196,14 @@ namespace UserOperations.Providers
 
         private async Task<IEnumerable<CampaignContentAnswer>> GetAnswersAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
         {
-            //---all answers in period for company/user
-            var result = await _repository.FindByConditionAsync<CampaignContentAnswer>(p =>
-                                   p.CampaignContent != null
-                                   && (p.Time >= begTime && p.Time <= endTime)
-                                   && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                                   && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                                   && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)));
-
+            var result = await _repository.GetAsQueryable<CampaignContentAnswer>()
+                                     .Include(x => x.CampaignContent)
+                                     .Where(p =>
+                                    p.CampaignContent != null
+                                    && (p.Time >= begTime && p.Time <= endTime)
+                                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))).ToListAsync();
             return result;
         }
     }
