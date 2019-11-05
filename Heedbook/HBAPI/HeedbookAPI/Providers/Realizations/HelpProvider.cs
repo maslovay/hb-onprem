@@ -114,14 +114,14 @@ namespace UserOperations.Providers.Realizations
         }
         public MemoryStream CreatePoolAnswersSheet(List<AnswerInfo> answers, string sheetName)
         {
-            var answersModified = answers.SelectMany(x => x.Answers).ToList();
+            var answersModified = answers.SelectMany(x => x.Answers.Select(p => new { p.Answer, p.ContentId, p.DialogueId, p.Time, x.ContentName })).ToList();
             List<List<string>> answersList = new List<List<string>>();
             foreach (var answ in answersModified)
             {
-                answersList.Add(new List<string> { answ.Time.ToString(), answ.ContentId.ToString(), answ.DialogueId.ToString(), answ.Answer});
+                answersList.Add(new List<string> { answ.Time.ToString(), answ.ContentId.ToString(), answ.ContentName, answ.DialogueId.ToString(), answ.Answer});
             }
 
-            var sheetData = FillSheetFromData(answersList, new List<string> { "Time","ContentId", "DialogueId", "Answer"});
+            var sheetData = FillSheetFromData(answersList, new List<string> { "Time","ContentId", "ContentName", "DialogueId", "Answer"});
             return CreateSpreadsheetDocument(sheetName, sheetData);
         }
 

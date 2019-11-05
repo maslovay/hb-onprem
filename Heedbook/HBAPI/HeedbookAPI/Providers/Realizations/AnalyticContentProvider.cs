@@ -1,5 +1,6 @@
 ﻿using HBData;
 using HBData.Models;
+using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,18 +12,16 @@ namespace UserOperations.Providers
 {
     public class AnalyticContentProvider : IAnalyticContentProvider
     {
-        private readonly RecordsContext _context;
-        public AnalyticContentProvider(RecordsContext context)
+        private readonly IGenericRepository _repository;
+        public AnalyticContentProvider(IGenericRepository repository)
         {
-            _context = context;
+            _repository = repository;
         } 
 
 
         public async Task<List<SlideShowInfo>> GetSlideShowsForOneDialogueAsync( Dialogue dialogue )
         {
-            var slideShows = await _context.SlideShowSessions
-                    .Include(p => p.CampaignContent)
-                    .ThenInclude(p => p.Content)
+            var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
                     .Where(p => p.BegTime >= dialogue.BegTime
                              && p.BegTime <= dialogue.EndTime
                              && p.ApplicationUserId == dialogue.ApplicationUserId)
@@ -55,13 +54,13 @@ namespace UserOperations.Providers
            bool isPool
            )
         {
-           var slideShows =  await _context.SlideShowSessions.Where(p => p.IsPoll == isPool)
-                          .Include(p => p.ApplicationUser)
-                          .Include(p => p.CampaignContent)
-                          .ThenInclude(p => p.Content)
-                          .Include(p => p.CampaignContent)
-                          .ThenInclude(p => p.Campaign)
-                          .Where(p => p.BegTime >= begTime
+           var slideShows =  await _repository.GetAsQueryable<SlideShowSession>().Where(p => p.IsPoll == isPool
+                          //.Include(p => p.ApplicationUser)
+                          //.Include(p => p.CampaignContent)
+                          //.ThenInclude(p => p.Content)
+                          //.Include(p => p.CampaignContent)
+                          //.ThenInclude(p => p.Campaign)
+                          && p.BegTime >= begTime
                                    && p.BegTime <= endTime
                                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                                    && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
@@ -87,7 +86,7 @@ namespace UserOperations.Providers
 
         public async Task<List<CampaignContentAnswer>> GetAnswersInOneDialogueAsync(List<SlideShowInfo> slideShowInfos, DateTime begTime, DateTime endTime, Guid applicationUserId)
         {
-            var answers = await _context.CampaignContentAnswers
+            var answers = await _repository.GetAsQueryable<CampaignContentAnswer>()
                       .Where(p => slideShowInfos
                       .Select(x => x.CampaignContentId)
                       .Distinct()
@@ -195,17 +194,15 @@ namespace UserOperations.Providers
             return null;
         }
 
-        private async Task<List<CampaignContentAnswer>> GetAnswersAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
+        private async Task<IEnumerable<CampaignContentAnswer>> GetAnswersAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
         {
             //---all answers in period for company/user
-            var result = await _context.CampaignContentAnswers
-                                  .Where(p =>
+            var result = await _repository.FindByConditionAsync<CampaignContentAnswer>(p =>
                                    p.CampaignContent != null
                                    && (p.Time >= begTime && p.Time <= endTime)
                                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                                   && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                                    ).ToListAsync();
+                                   && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)));
 
             return result;
         }
