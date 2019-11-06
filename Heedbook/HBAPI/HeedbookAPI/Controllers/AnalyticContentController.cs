@@ -247,17 +247,25 @@ namespace UserOperations.Controllers
                 {
                     Views = slideShowSessionsAll.Count(),
                     Clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count(),
-                    Answers = answers.Count(),
+                    Answers = slideShowInfoGroupByContent.Sum(x => x.AnswersAmount), //answers.Count(),//                    
                     Conversion = conversion,
                     ContentFullInfo = slideShowInfoGroupByContent
                 };
 
                 if (type != "json")
                 {
-                    MemoryStream excelDocStream = _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList(), $"{begTime.Date}-{endTime.Date}");
+                    MemoryStream excelDocStream = _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList(), $"{begTime.ToShortDateString()}_{endTime.ToShortDateString()}");
                     excelDocStream.Seek(0, SeekOrigin.Begin);
-                    return new FileStreamResult(excelDocStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-                    //return File(excelDocStream, "application/vnd.ms-excel", "answers.xlsx");
+
+                    FileContentResult result = new FileContentResult(excelDocStream.ToArray(),
+                    "application/vnd.xlsx")
+                    {
+                        FileDownloadName = "answers.xlsx"
+                    };
+                    return result;
+
+                   // return new FileStreamResult(excelDocStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                   // return File(excelDocStream, "application/vnd.ms-excel", "answers.xls");
                 }
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
                 return Ok(jsonToReturn);

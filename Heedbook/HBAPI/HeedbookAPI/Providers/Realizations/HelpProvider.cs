@@ -114,15 +114,13 @@ namespace UserOperations.Providers.Realizations
         }
         public MemoryStream CreatePoolAnswersSheet(List<AnswerInfo> answers, string sheetName)
         {
-            var answersModified = answers.SelectMany(x => x.Answers).ToList();
+            var answersModified = answers.SelectMany(x => x.Answers.Select(p => new { p.Answer, p.ContentId, p.DialogueId, p.Time, x.ContentName })).ToList();
             List<List<string>> answersList = new List<List<string>>();
             foreach (var answ in answersModified)
             {
-                answersList.Add(new List<string> { answ.Time.ToString(), answ.ContentId.ToString(), answ.DialogueId.ToString(), answ.Answer});
+                answersList.Add(new List<string> { answ.Time.ToString(), answ.ContentId.ToString(), answ.ContentName, answ.DialogueId.ToString(), answ.Answer });
             }
-
-            var sheetData = FillSheetFromData(answersList, new List<string> { "Time","ContentId", "DialogueId", "Answer"});
-            return CreateSpreadsheetDocument(sheetName, sheetData);
+            return CreateSpreadsheetDocument(sheetName, answersList, new List<string> { "Time", "ContentId", "ContentName", "DialogueId", "Answer" });
         }
 
         //-----READ------
@@ -144,65 +142,57 @@ namespace UserOperations.Providers.Realizations
 
         //-----CREATE----------
         ///Methods for create xlsx table
-        private MemoryStream CreateSpreadsheetDocument(string sheetName, SheetData sheetData)
+        private MemoryStream CreateSpreadsheetDocument(string sheetName, List<List<string>> answersList, List<string> headers)
         {
             MemoryStream memoryStream = new MemoryStream();
-            SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.
-                Create(memoryStream, SpreadsheetDocumentType.Workbook);
-
-            // Add a WorkbookPart to the document.  
-            WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
-            workbookpart.Workbook = new Workbook();
-
-            // Add a WorksheetPart to the WorkbookPart.  
-            WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
-            worksheetPart.Worksheet = new Worksheet(new SheetData());
-
-            // Add Sheets to the Workbook.  
-            Sheets sheets =
-                spreadsheetDocument.WorkbookPart.Workbook.AppendChild<Sheets>(new Sheets());
-
-            // Append a new worksheet and associate it with the workbook.  
-            Sheet sheet = new Sheet()
+            using (SpreadsheetDocument spreadsheetDocument1 = SpreadsheetDocument.Create(memoryStream, SpreadsheetDocumentType.Workbook))
             {
-                Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart),
-                SheetId = 1,
-                Name = sheetName
-            };
-            sheets.Append(sheet);
+                // Add a WorkbookPart to the document.
+                WorkbookPart workbookpart1 = spreadsheetDocument1.AddWorkbookPart();
+                workbookpart1.Workbook = new Workbook();
 
-            Worksheet worksheet = new Worksheet();
-            //---ADD DATA HERE---
-            worksheet.Append(sheetData);
-            worksheetPart.Worksheet = worksheet;
+                // Add a WorksheetPart to the WorkbookPart.
+                WorksheetPart worksheetPart1 = workbookpart1.AddNewPart<WorksheetPart>();
+                SheetData sheetData1 = new SheetData();
+                worksheetPart1.Worksheet = new Worksheet(sheetData1);
 
-            workbookpart.Workbook.Save();
+                // Add Sheets to the Workbook.
+                Sheets sheets1 = spreadsheetDocument1.WorkbookPart.Workbook.
+                    AppendChild<Sheets>(new Sheets());
 
-            // Close the document.  
-            spreadsheetDocument.Close();
-            return memoryStream;
-        }
+                // Append a new worksheet and associate it with the workbook.
+                Sheet sheet1 = new Sheet()
+                {
+                    Id = spreadsheetDocument1.WorkbookPart.
+                    GetIdOfPart(worksheetPart1),
+                    SheetId = 1,
+                    Name = sheetName
+                };
+                Row headRow = CreateHeaderRow(headers);
+                sheetData1.Append(headRow);
+                List<Row> rows = CreateAllRowsFromData(answersList);
+                foreach (var row in rows)
+                {
+                    sheetData1.Append(row);
+                }
+                sheets1.Append(sheet1);
 
-        private SheetData CreateSheetData(List<Row> rows)
-        {
-            SheetData sheetData = new SheetData();
-            foreach (var row in rows)
-            {
-                sheetData.Append(row);
+                workbookpart1.Workbook.Save();
+                // Close the document.
+                spreadsheetDocument1.Close();
             }
-            return sheetData;
-        }
+            return memoryStream;
+        }      
 
         private Row CreateRow(List<Cell> cells, uint index)
         {
-            Row row =  new Row() { RowIndex = index, Spans = new ListValue<StringValue>() { InnerText = "2:2" } };
+            Row row =  new Row() { RowIndex = index };
             foreach (var cell in cells)
             {
                 row.Append(cell);
             }
             return row;
         }
-
         private Cell CreateCell(string text, string index)
         {
             return new Cell()
@@ -212,8 +202,6 @@ namespace UserOperations.Providers.Realizations
                 CellValue = new CellValue(text)
             };
         }
-
-
         private Row CreateHeaderRow(List<string> headers)
         {
             List<Cell> headerCells = new List<Cell>();
@@ -227,11 +215,10 @@ namespace UserOperations.Providers.Realizations
 
             return CreateRow(headerCells, 1);
         }
-        private SheetData FillSheetFromData(List<List<string>> data, List<string> headers)
+        private List<Row> CreateAllRowsFromData(List<List<string>> data)
         {
             int startRow = 2;
             List<Row> rows = new List<Row>();
-            rows.Add(CreateHeaderRow(headers));
 
             foreach (var row in data)
             {
@@ -247,31 +234,7 @@ namespace UserOperations.Providers.Realizations
                 rows.Add(newRow);
                 startRow++;
             }
-            SheetData sheetData = CreateSheetData(rows);
-            return sheetData;
-        }
-
-        private static void SetCellValue(SharedStringTablePart shareStringTablePart, Cell cell, string value)
-        {
-            if (cell == null || cell.CellValue.Text.Equals(string.Empty))
-            {
-                return;
-            }
-            else
-            {
-                if (cell.DataType.Value == CellValues.SharedString)
-                {
-                    int shareStringId = int.Parse(cell.CellValue.Text);
-                    SharedStringItem item = shareStringTablePart.SharedStringTable.Elements<SharedStringItem>().ElementAt(shareStringId);
-
-                    item.Elements<Text>().First().Text = value;
-
-                }
-                else
-                {
-                    cell.CellValue.Text = value;
-                }
-            }
+            return rows;
         }
 
     }
