@@ -35,21 +35,17 @@ namespace UserService.Controllers
 
         [HttpPost("[action]")]
         [SwaggerOperation(Description = "Analyze frame. Detect face, return gender and age")]
-        public async Task<IActionResult> FrameAnalyze([FromForm] IFormCollection formData)
+        public async Task<IActionResult> FrameAnalyze([FromBody] string imageBase64)
         {
             try
-            {
-                var memoryStream = formData.Files.FirstOrDefault().OpenReadStream();
-                var byteArray = StreamToByteArray(memoryStream);
-                var base64String = Convert.ToBase64String(byteArray);
-                var faceResult = await _client.GetFaceResult(base64String);                
-                //System.Console.WriteLine(faceResult);
-                //_handler.EventRaised(message);
+            {            
+                var faceResult = await _client.GetFaceResult(imageBase64); 
                 var result = faceResult.Select(p => new 
                     {
                         p.Attributes.Age,
-                        p.Attributes.Gender
-                    });
+                        p.Attributes.Gender,
+                        p.Descriptor
+                    }).FirstOrDefault();
                 var jsonResult = JsonConvert.SerializeObject(result);
                 System.Console.WriteLine(jsonResult);
                 return Ok(jsonResult);
@@ -59,19 +55,6 @@ namespace UserService.Controllers
                 System.Console.WriteLine(ex.Message);
                 return BadRequest(ex.Message);
             }            
-        }
-        private byte[] StreamToByteArray(Stream input)
-        {
-            byte[] buffer = new byte[16*1024];
-            using (MemoryStream ms = new MemoryStream())
-            {
-                int read;
-                while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    ms.Write(buffer, 0, read);
-                }
-                return ms.ToArray();
-            }
-        }
+        }        
     }
 }
