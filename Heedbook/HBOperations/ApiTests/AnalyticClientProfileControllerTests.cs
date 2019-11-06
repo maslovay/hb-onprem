@@ -13,7 +13,6 @@ using HBData.Models.AccountViewModels;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ApiTests
 {
@@ -51,6 +50,11 @@ namespace ApiTests
             var list = new List<Guid>(){};
 
             filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
+                .Returns(new DateTime(2019, 10, 30));
+            filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
+                .Returns(new DateTime(2019, 11, 01));
+
             commonProviderMock.Setup(p => p.GetPersondIdsAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<List<Guid>>()))
                 .Returns(Task.FromResult(new List<Guid?>(){}));
             commonProviderMock.Setup(p => p.GetDialoguesIncludedClientProfile(
@@ -66,18 +70,14 @@ namespace ApiTests
                 commonProviderMock.Object, 
                 loginMock.Object, 
                 dbOperationMock.Object, 
-                filterMock.Object);
-            filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
-                .Returns(new DateTime(2019, 10, 30));
-            filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
-                .Returns(new DateTime(2019, 11, 01));
+                filterMock.Object);            
 
             //Act
             var task = analyticClientProfileController.EfficiencyDashboard(
-                "20191030", 
-                "20191101", 
-                new List<Guid>(){}, 
-                new List<Guid>(){}, 
+                "20191030",
+                "20191101",
+                new List<Guid>(){},
+                new List<Guid>(){},
                 new List<Guid>(){},
                 new List<Guid>(){},
                 $"Bearer Token");
@@ -85,9 +85,7 @@ namespace ApiTests
             task.Wait();
             var okResult = task.Result as OkObjectResult;
             var result = okResult.Value.ToString();
-            System.Console.WriteLine(result);
-            var dictionary = JsonConvert.DeserializeObject<Dictionary<string, object>>(result);
-            System.Console.WriteLine(dictionary.Count);
+            var dictionary = JsonConvert.DeserializeObject<Dictionary<object, object>>(result);
 
             //Assert
             Assert.IsNotNull(dictionary);
