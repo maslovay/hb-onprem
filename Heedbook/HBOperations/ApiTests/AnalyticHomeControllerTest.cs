@@ -31,9 +31,14 @@ namespace ApiTests
             tokenclaims = GetClaims();
             companyIds = GetCompanyIds();
         }
+        [SetUp]
+        public void Setup()
+        {
+              base.Setup();         
+        }
 
         [Test]
-        public async Task GetDashboard_OkResult()
+        public async Task GetDashboard()
         {
             //arrange           
 
@@ -60,15 +65,39 @@ namespace ApiTests
             var deserialized = JsonConvert.DeserializeObject<DashboardInfo>(okResult.Value.ToString());
             Assert.That(deserialized != null);
         }
-
-
-        [SetUp]
-        public void Setup()
+        [Test]
+        public async Task GetDashboardFiltered()
         {
-            // base.Setup(() => { }, true);
-              base.Setup();
+            //Arrange
+            loginMock.Setup(log => log.GetDataFromToken(It.IsAny<string>(), out tokenclaims, null)).Returns(true);
+            filterMock.Setup(f => f.GetBegDate(It.IsAny<string>())).Returns(begDate);
+            filterMock.Setup(f => f.GetEndDate(It.IsAny<string>())).Returns(endDate);
+            filterMock.Setup(f => f.CheckRolesAndChangeCompaniesInFilter(ref companyIds, null, It.IsAny<string>(), It.IsAny<Guid>()));
+            commonProviderMock.Setup(c => c.GetSessionInfoAsync(prevDate, endDate, companyIds, null, null)).Returns(GetSessions());
+            commonProviderMock.Setup(c => c.GetCrossPhraseTypeIdAsync()).Returns(GetCrossPhraseId());
+            commonProviderMock.Setup(c => c.GetDialoguesIncludedPhrase(prevDate, endDate, companyIds, null, null)).Returns(GetDialoguesWithUserPhrasesSatisfaction());
+            homeProviderMock.Setup(h => h.GetBenchmarksList(begDate, endDate, companyIds)).Returns(GetBenchmarkList());
+            homeProviderMock.Setup(h => h.GetBenchmarkIndustryAvg(It.IsAny<List<BenchmarkModel>>(), It.IsAny<string>())).Returns(0.6d);
+            homeProviderMock.Setup(h => h.GetBenchmarkIndustryMax(It.IsAny<List<BenchmarkModel>>(), It.IsAny<string>())).Returns(0.6d);
 
-         
-        }
+            var controller = new AnalyticHomeController(commonProviderMock.Object, homeProviderMock.Object, configMock.Object, loginMock.Object, dbOperationMock.Object, filterMock.Object);
+
+            //Act
+            var task = controller.GetDashboardFiltered(
+                beg, 
+                end,
+                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
+                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
+                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
+                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
+                "Bearer Token");
+            task.Wait();
+
+            var okResult = task.Result as OkObjectResult;
+
+            //Assert
+            Assert.NotNull(okResult);
+            Assert.AreEqual(200, okResult.StatusCode);
+        }        
     }
 }
