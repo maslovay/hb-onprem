@@ -258,6 +258,89 @@ namespace ApiTests
         {
             var value = status == "Active" ? 3 : (status == "Inactive" ? 5 : 0);
             return value;
-        }            
+        }   
+        public Mock<IAnalyticContentProvider> MockIAnalyticContentProvider(Mock<IAnalyticContentProvider> moqIAnalyticContentProvider)
+        {
+            moqIAnalyticContentProvider.Setup(p => p.GetSlideShowsForOneDialogueAsync(It.IsAny<Dialogue>()))
+                .Returns(Task.FromResult(new List<SlideShowInfo>()
+                {
+                    new SlideShowInfo()
+                    {
+                        ContentName = "Content1",
+                        IsPoll = false,
+                        ContentType = "content",
+                        ContentId = Guid.Parse("7ad7ceaf-cca5-4b6a-9d0e-59b7407ac2e1"),
+                        Url = "https://test1.com"
+                    }, 
+                    new SlideShowInfo()
+                    {
+                        ContentName = "Content2",
+                        IsPoll = false,
+                        ContentType = "media",
+                        ContentId = Guid.Parse("7ad7ceaf-cca5-4b6a-9d0e-59b7407ac2e2"),
+                        Url = "https://test2.com"
+                    },
+                    new SlideShowInfo()
+                    {
+                        ContentName = "Content3",
+                        IsPoll = true,
+                        ContentType = "url",
+                        ContentId = Guid.Parse("7ad7ceaf-cca5-4b6a-9d0e-59b7407ac2e3"),
+                        Url = "https://test3.com"
+                    }
+                }));
+            moqIAnalyticContentProvider.Setup(p => p.GetSlideShowFilteredByPoolAsync(
+                    It.IsAny<DateTime>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<bool>()))
+                .Returns(Task.FromResult(new List<SlideShowInfo>()
+                {
+                    new SlideShowInfo(){BegTime = new DateTime(), EndTime = new DateTime(), DialogueId = Guid.NewGuid(), Age = 20, Gender = "male"}, 
+                    new SlideShowInfo(){BegTime = new DateTime(), EndTime = new DateTime(), DialogueId = Guid.NewGuid(), Age = 22, Gender = "female"}, 
+                    new SlideShowInfo(){BegTime = new DateTime(), EndTime = new DateTime(), DialogueId = Guid.NewGuid(), Age = 27, Gender = "male"}
+                }));
+            moqIAnalyticContentProvider.Setup(p => p.GetAnswersInOneDialogueAsync(
+                    It.IsAny<List<SlideShowInfo>>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<Guid>()))
+                .Returns(Task.FromResult(new List<CampaignContentAnswer>(){}));
+            moqIAnalyticContentProvider.Setup(p => p.GetAnswersForOneContent(
+                    It.IsAny<List<AnswerInfo.AnswerOne>>(),
+                    It.IsAny<Guid?>()))
+                .Returns(new List<AnswerInfo.AnswerOne>(){});
+            moqIAnalyticContentProvider.Setup(p => p.GetConversion(
+                    It.IsAny<double>(),
+                    It.IsAny<double>()))
+                .Returns(0.5d);
+            moqIAnalyticContentProvider.Setup(p => p.GetAnswersFullAsync(
+                    It.IsAny<List<SlideShowInfo>>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>()))
+                .Returns(Task.FromResult(new List<AnswerInfo.AnswerOne>(){}));
+            moqIAnalyticContentProvider.Setup(p => p.AddDialogueIdToShow(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueInfoWithFrames>>()))
+                .Returns(new List<SlideShowInfo>(){});
+            moqIAnalyticContentProvider.Setup(p => p.EmotionsDuringAdv(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueInfoWithFrames>>()))
+                .Returns(new EmotionAttention(){Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d});
+            moqIAnalyticContentProvider.Setup(p => p.EmotionDuringAdvOneDialogue(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueFrame>>()))
+                .Returns(new EmotionAttention(){Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d});
+            return moqIAnalyticContentProvider;
+        }
+        public Mock<IRequestFilters> MockIRequestFiltersProvider(Mock<IRequestFilters> moqIRequestFiltersProvider)
+        {
+            var list = new List<Guid>(){};
+            moqIRequestFiltersProvider.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            moqIRequestFiltersProvider.Setup(p => p.GetBegDate(It.IsAny<string>()))
+                .Returns(new DateTime(2019, 10, 30));
+            moqIRequestFiltersProvider.Setup(p => p.GetEndDate(It.IsAny<string>()))
+                .Returns(new DateTime(2019, 11, 01));
+            return moqIRequestFiltersProvider;
+        }
     }
 }
