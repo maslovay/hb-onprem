@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using HBData;
 using UserOperations.Utils;
+using UserOperations.Providers;
 
 namespace UserOperations.Controllers
 {
@@ -21,22 +22,25 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IDBOperations _dbOperation;
         private readonly IRequestFilters _requestFilters;
+        private readonly IAnalyticOfficeProvider _analyticOfficeProvider;
         // private readonly ElasticClient _log;
 
         public AnalyticOfficeController(
             IConfiguration config,
             ILoginService loginService,
-            RecordsContext context,
+            //RecordsContext context,
             IDBOperations dbOperation,
-            IRequestFilters requestFilters
+            IRequestFilters requestFilters,
+            IAnalyticOfficeProvider analyticOfficeProvider
             // ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
-            _context = context;
+            //_context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
+            _analyticOfficeProvider = analyticOfficeProvider;
             // _log = log;
         }
 
@@ -61,41 +65,11 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);   
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= prevBeg
-                            && p.EndTime <= endTime
-                            && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new SessionInfo
-                    {
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime
-                    }).ToList();
+                var sessions = _analyticOfficeProvider.GetSessionsInfo(prevBeg, endTime, companyIds, applicationUserIds, workerTypeIds);
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= prevBeg
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        FullName = p.ApplicationUser.FullName,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
-                    }).ToList();
+                var dialogues = _analyticOfficeProvider.GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, workerTypeIds);                
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
