@@ -1,53 +1,36 @@
 using NUnit.Framework;
 using Moq;
 using System.Collections.Generic;
-using UserOperations.Services;
 using UserOperations.Controllers;
 using UserOperations.AccountModels;
-using HBData;
-using System;
-using System.Threading.Tasks;
-using UserOperations.Providers;
-using HBData.Models;
 using HBData.Models.AccountViewModels;
-using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
-using UserOperations.Utils;
-using UserOperations.Providers.Interfaces;
-using UserOperations.Models.AnalyticModels;
-using System.IO;
 
 namespace ApiTests
 {
     public class AccountControllerTests : ApiServiceTest
-    {        
-        protected Mock<IAccountProvider> accountProviderMock;
-        protected Mock<IHelpProvider> helpProvider;
-
+    {                
         [SetUp]
         public void Setup()
-        {
-            accountProviderMock = new Mock<IAccountProvider>();
-            helpProvider = new Mock<IHelpProvider>();
+        {           
             base.Setup();
         }
-       
+        protected override void InitServices()
+        {
+            base.moqILoginService = MockILoginService(base.moqILoginService);
+            base.mailSenderMock = MockIMailSender(base.mailSenderMock);
+            base.accountProviderMock = MockIAccountProvider(base.accountProviderMock);
+            base.helpProvider = MockIHelpProvider(base.helpProvider);
+        }
+
         [Test]
         public void RegisterPostTest()
         {
             //Arrange
-            base.loginMock = MockILoginService(base.loginMock);            
-            
-            base.mailSenderMock = MockIMailSender(base.mailSenderMock);
-
-            accountProviderMock = MockIAccountProvider(accountProviderMock);
-
-            helpProvider = MockIHelpProvider(helpProvider);
-
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
+            var accountController = new AccountController(moqILoginService.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
-            var task = accountController.UserRegister(new UserRegister());            
+            var task = accountController.UserRegister(new UserRegister());
             task.Wait();
             var okResult = task.Result as OkObjectResult;
             var result = okResult.Value.ToString();    
@@ -60,15 +43,7 @@ namespace ApiTests
         public void GenerateTokenPostTest()
         {
             //Arrange
-            loginMock = MockILoginService(loginMock);            
-            
-            mailSenderMock = MockIMailSender(mailSenderMock);
-
-            accountProviderMock = MockIAccountProvider(accountProviderMock);
-
-            helpProvider = MockIHelpProvider(helpProvider);
-
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
+            var accountController = new AccountController(moqILoginService.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
             var okResult = accountController.GenerateToken(new AccountAuthorization()) as OkObjectResult;
@@ -82,18 +57,10 @@ namespace ApiTests
         public void ChangePasswordPostTest()
         {
             //Arrange
-            loginMock = MockILoginService(loginMock);            
-            
-            mailSenderMock = MockIMailSender(mailSenderMock);
-
-            accountProviderMock = MockIAccountProvider(accountProviderMock);
-
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
-
-            helpProvider = MockIHelpProvider(helpProvider);
+            var accountController = new AccountController(moqILoginService.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);           
 
             //Act
-            var task = accountController.UserChangePasswordAsync(new AccountAuthorization(){Password = "password"}, $"Bearer Token");
+            var task = accountController.UserChangePasswordAsync(new AccountAuthorization(){Password = "password"}, TestData.token);
             task.Wait();
             var OkResult = task.Result as OkObjectResult;
             System.Console.WriteLine($"result: {OkResult is null}");
@@ -108,18 +75,10 @@ namespace ApiTests
         public void UserChangePasswordOnDefaultAsyncPostTest()
         {
             //Arrange
-            loginMock = MockILoginService(loginMock);            
-            
-            mailSenderMock = MockIMailSender(mailSenderMock);
-
-            accountProviderMock = MockIAccountProvider(accountProviderMock);
-
-            helpProvider = MockIHelpProvider(helpProvider);
-
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
+            var accountController = new AccountController(moqILoginService.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
-            var task = accountController.UserChangePasswordOnDefaultAsync($"test@heedbook.com");
+            var task = accountController.UserChangePasswordOnDefaultAsync(TestData.email);
             task.Wait();
             var OkResult = task.Result as OkObjectResult;
             var result = OkResult.Value.ToString();
@@ -132,18 +91,10 @@ namespace ApiTests
         public void UnblockPostTest()
         {
             //Arrange
-            loginMock = MockILoginService(loginMock);            
-            
-            mailSenderMock = MockIMailSender(mailSenderMock);
-
-            accountProviderMock = MockIAccountProvider(accountProviderMock);
-
-            helpProvider = MockIHelpProvider(helpProvider);
-
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
+            var accountController = new AccountController(moqILoginService.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
-            var task = accountController.Unblock($"test@heedbook.com", $"Bearer Token");
+            var task = accountController.Unblock(TestData.email, TestData.token);
             task.Wait();
             var OkResult = task.Result as OkObjectResult;
             var result = OkResult.Value.ToString();
@@ -156,18 +107,10 @@ namespace ApiTests
         public void RemoveDeleteTest()
         {
             //Arrange
-            loginMock = MockILoginService(loginMock);            
-            
-            mailSenderMock = MockIMailSender(mailSenderMock);
-
-            accountProviderMock = MockIAccountProvider(accountProviderMock);
-
-            helpProvider = MockIHelpProvider(helpProvider);
-
-            var accountController = new AccountController(loginMock.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
+            var accountController = new AccountController(moqILoginService.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
-            var task = accountController.AccountDelete($"test@heedbook.com");
+            var task = accountController.AccountDelete(TestData.email);
             task.Wait();
             var OkResult = task.Result as OkObjectResult;
             var result = OkResult.Value.ToString();

@@ -107,7 +107,7 @@ namespace UserOperations.Controllers
                         .ToList();
                 }
 
-                var result = users.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default(DateTime)).path : null));
+                var result = users.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default).path : null));
                 return Ok(result);
             }
             catch (Exception e)
@@ -168,7 +168,7 @@ namespace UserOperations.Controllers
                     FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
                     var fn = user.Id + fileInfo.Extension;
                     user.Avatar = fn;
-                    avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default(DateTime)).path;
+                    avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default).path;
                 }
 
                 await _requestFilters.AddOrChangeUserRoles(user.Id, roleInToken, message.RoleId, null);

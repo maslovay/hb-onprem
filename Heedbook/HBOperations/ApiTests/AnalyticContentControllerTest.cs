@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Linq;
-
 using HBData.Models;
 using NUnit.Framework;
 using Moq;
-using UserOperations.Utils;
 using UserOperations.Controllers;
-using Microsoft.Extensions.Configuration;
-using UserOperations.Services;
 using UserOperations.Providers;
 using System.Collections.Generic;
 using UserOperations.Models.AnalyticModels;
-using UserOperations.Providers.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -22,24 +17,23 @@ namespace ApiTests
     public class AnalyticContentControllerTest : ApiServiceTest
     {
         protected Mock<IAnalyticContentProvider> analyticContentProviderMock;
-        protected Mock<IHelpProvider> helpProvider;
         [SetUp]
         public void Setup()
         {
-            analyticContentProviderMock = new Mock<IAnalyticContentProvider>();
-            helpProvider = new Mock<IHelpProvider>();
             base.Setup();
         }
+        protected override void InitServices()
+        {
+            base.moqILoginService = MockILoginService(base.moqILoginService);
+            base.accountProviderMock = MockIAccountProvider(base.accountProviderMock);
+            analyticContentProviderMock = MockIAnalyticContentProvider(new Mock<IAnalyticContentProvider>());
+        }
+    
+
         [Test]
         public async Task ContentShows()
         {
             //Arrange
-            loginMock = MockILoginService(loginMock);
-
-            filterMock = MockIRequestFiltersProvider(filterMock);
-
-            analyticContentProviderMock = MockIAnalyticContentProvider(analyticContentProviderMock);
-
             commonProviderMock.Setup(p => p.GetDialogueIncludedFramesByIdAsync(It.IsAny<Guid>()))
                 .Returns(Task.FromResult(new Dialogue(){DialogueFrame = new List<DialogueFrame>(){new DialogueFrame()}}));
 
@@ -47,7 +41,7 @@ namespace ApiTests
                 analyticContentProviderMock.Object,
                 commonProviderMock.Object,
                 helpProvider.Object,
-                loginMock.Object,
+                moqILoginService.Object,
                 filterMock.Object
             );
 
@@ -68,42 +62,27 @@ namespace ApiTests
         public async Task Efficiency()
         {
             //Arrange
-            loginMock = MockILoginService(loginMock);
-
-            filterMock = MockIRequestFiltersProvider(filterMock);
-
-            analyticContentProviderMock = MockIAnalyticContentProvider(analyticContentProviderMock);
-
             commonProviderMock.Setup(p => p.GetDialoguesInfoWithFramesAsync(
                 It.IsAny<DateTime>(), 
                 It.IsAny<DateTime>(), 
                 It.IsAny<List<Guid>>(),
                 It.IsAny<List<Guid>>(),
                 It.IsAny<List<Guid>>()))
-                .Returns(Task.FromResult(new List<DialogueInfoWithFrames>()
-                {
-                    new DialogueInfoWithFrames(){BegTime = new DateTime(), EndTime = new DateTime()},
-                    new DialogueInfoWithFrames(){BegTime = new DateTime(), EndTime = new DateTime()},
-                    new DialogueInfoWithFrames(){BegTime = new DateTime(), EndTime = new DateTime()}
-                }));
+                .Returns(Task.FromResult( TestData.GetDialogueInfoWithFrames().ToList()));
                 
             var analyticContentController = new AnalyticContentController(
                 analyticContentProviderMock.Object,
                 commonProviderMock.Object,
                 helpProvider.Object,
-                loginMock.Object,
+                moqILoginService.Object,
                 filterMock.Object
             );
 
             //Act
             var task = analyticContentController.Efficiency(
-                "20191105",
-                "20191106",
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                "Bearer Token"
+                TestData.beg, TestData.end,
+                TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(),
+                TestData.token
             );
             task.Wait();
             System.Console.WriteLine($"taskResult: {JsonConvert.SerializeObject(task.Result)}");
@@ -119,12 +98,6 @@ namespace ApiTests
         public async Task Poll()
         {
             //Aaarnge
-            loginMock = MockILoginService(loginMock);
-
-            filterMock = MockIRequestFiltersProvider(filterMock);
-
-            analyticContentProviderMock = MockIAnalyticContentProvider(analyticContentProviderMock);
-
             commonProviderMock.Setup(p => p.GetDialoguesInfoWithFramesAsync(
                 It.IsAny<DateTime>(), 
                 It.IsAny<DateTime>(), 
@@ -142,29 +115,68 @@ namespace ApiTests
                 analyticContentProviderMock.Object,
                 commonProviderMock.Object,
                 helpProvider.Object,
-                loginMock.Object,
+                moqILoginService.Object,
                 filterMock.Object
             );
 
+            //Act
             var task = analyticContentController.Poll(
-                "20191105",
-                "20191106",
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                "Bearer Token",
+                TestData.beg, TestData.end,
+                TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(),
+                TestData.token,
                 "json"
             );
             task.Wait();
-            var okResult = task.Result as OkObjectResult;
-
-            //Act
 
             //Assert
+            var okResult = task.Result as OkObjectResult;
             Assert.IsNotNull(okResult);
         }
-        
+
+        private Mock<IAnalyticContentProvider> MockIAnalyticContentProvider(Mock<IAnalyticContentProvider> moqIAnalyticContentProvider)
+        {
+            moqIAnalyticContentProvider.Setup(p => p.GetSlideShowsForOneDialogueAsync(It.IsAny<Dialogue>()))
+                .Returns(Task.FromResult( TestData.GetSlideShowInfosSimple() ));
+
+            moqIAnalyticContentProvider.Setup(p => p.GetSlideShowFilteredByPoolAsync(
+                    It.IsAny<DateTime>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<bool>()))
+                .Returns(Task.FromResult(TestData.GetSlideShowInfosSimple()));
+
+            moqIAnalyticContentProvider.Setup(p => p.GetAnswersInOneDialogueAsync(
+                    It.IsAny<List<SlideShowInfo>>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<Guid>()))
+                .Returns(Task.FromResult(new List<CampaignContentAnswer>() { }));
+            moqIAnalyticContentProvider.Setup(p => p.GetAnswersForOneContent(
+                    It.IsAny<List<AnswerInfo.AnswerOne>>(),
+                    It.IsAny<Guid?>()))
+                .Returns(new List<AnswerInfo.AnswerOne>() { });
+            moqIAnalyticContentProvider.Setup(p => p.GetConversion(
+                    It.IsAny<double>(),
+                    It.IsAny<double>()))
+                .Returns(0.5d);
+            moqIAnalyticContentProvider.Setup(p => p.GetAnswersFullAsync(
+                    It.IsAny<List<SlideShowInfo>>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>()))
+                .Returns(Task.FromResult(new List<AnswerInfo.AnswerOne>() { }));
+            moqIAnalyticContentProvider.Setup(p => p.AddDialogueIdToShow(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueInfoWithFrames>>()))
+                .Returns(new List<SlideShowInfo>() { });
+            moqIAnalyticContentProvider.Setup(p => p.EmotionsDuringAdv(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueInfoWithFrames>>()))
+                .Returns(new EmotionAttention() { Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d });
+            moqIAnalyticContentProvider.Setup(p => p.EmotionDuringAdvOneDialogue(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueFrame>>()))
+                .Returns(new EmotionAttention() { Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d });
+            return moqIAnalyticContentProvider;
+        }
 
     }
 }

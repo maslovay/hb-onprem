@@ -48,7 +48,7 @@ namespace HBData.Repository
         }
         public IQueryable<T> GetAsQueryable<T>() where T : class
         {
-            return _context.Set<T>();
+            return _context.Set<T>().AsQueryable();
         }
 
         public IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate,

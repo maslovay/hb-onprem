@@ -1,57 +1,39 @@
 using NUnit.Framework;
 using Moq;
 using System.Collections.Generic;
-using UserOperations.Services;
 using UserOperations.Controllers;
-using UserOperations.AccountModels;
-using HBData;
 using System;
 using System.Threading.Tasks;
-using UserOperations.Providers;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 
 namespace ApiTests
 {
     public class AnalyticClientProfileControllerTests : ApiServiceTest
     {   
-        protected Mock<IAccountProvider> accountProviderMock;
         [SetUp]
         public void Setup()
         {
-            accountProviderMock = new Mock<IAccountProvider>();
             base.Setup();
         }
+        protected override void InitServices()
+        {
+            base.moqILoginService = MockILoginService(base.moqILoginService);
+            base.accountProviderMock = MockIAccountProvider(base.accountProviderMock);
+        }
+
         [Test]
         public void EfficiencyDashboard()
         {
             //Arrange
-            var dialogues = new List<Dialogue>()
-                {
-                    new Dialogue
-                    {
-                        DialogueId = Guid.NewGuid(),
-                        PersonId = Guid.NewGuid(),
-                        DialogueClientProfile = new List<DialogueClientProfile>(){new DialogueClientProfile{Age = 20, Gender = "male"}}
-                    },
-                    new Dialogue
-                    {
-                        DialogueId = Guid.NewGuid(),
-                        PersonId = Guid.NewGuid(),
-                        DialogueClientProfile = new List<DialogueClientProfile>(){new DialogueClientProfile{Age = 25, Gender = "female"}}
-                    },
-                }
-                .AsQueryable();          
+            var dialogues = TestData.GetDialoguesSimple();
             var list = new List<Guid>(){};
 
             filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
             filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
-                .Returns(new DateTime(2019, 10, 30));
+                .Returns(TestData.begDate);
             filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
-                .Returns(new DateTime(2019, 11, 01));
+                .Returns(TestData.endDate);
 
             commonProviderMock.Setup(p => p.GetPersondIdsAsync(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<List<Guid>>()))
                 .Returns(Task.FromResult(new List<Guid?>(){}));
@@ -61,24 +43,19 @@ namespace ApiTests
                     It.IsAny<List<Guid>>(), 
                     It.IsAny<List<Guid>>(), 
                     It.IsAny<List<Guid>>()))
-                .Returns(dialogues);            
-            loginMock = MockILoginService(loginMock);      
+                .Returns(dialogues);
             
             var analyticClientProfileController = new AnalyticClientProfileController(
-                commonProviderMock.Object, 
-                loginMock.Object, 
+                commonProviderMock.Object,
+                moqILoginService.Object, 
                 dbOperationMock.Object, 
                 filterMock.Object);            
 
             //Act
             var task = analyticClientProfileController.EfficiencyDashboard(
-                "20191030",
-                "20191101",
-                new List<Guid>(){},
-                new List<Guid>(){},
-                new List<Guid>(){},
-                new List<Guid>(){},
-                $"Bearer Token");
+                TestData.beg, TestData.end,
+                TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(),
+                TestData.token);
 
             task.Wait();
             var okResult = task.Result as OkObjectResult;
