@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HBData.Models;
+using HBData.Repository;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using UserOperations.Models.AnalyticModels;
@@ -14,6 +15,8 @@ namespace ApiTests
 {
     public abstract class ApiServiceTest : IDisposable
     {
+        protected Mock<IGenericRepository> repositoryMock;
+
         protected Mock<IRequestFilters> filterMock;
         protected Mock<IConfiguration> configMock;
         protected Mock<ILoginService> loginMock;
@@ -36,6 +39,8 @@ namespace ApiTests
         protected virtual void InitServices() { }
         public void Setup()
         {
+            repositoryMock = new Mock<IGenericRepository>();
+
             filterMock = new Mock<IRequestFilters>(MockBehavior.Loose);
             configMock = new Mock<IConfiguration>();
             loginMock = new Mock<ILoginService>(MockBehavior.Loose);
@@ -109,6 +114,163 @@ namespace ApiTests
             };
         }
 
+        protected IQueryable<SlideShowSession> GetSlideShowSessions()
+        {
+            return new List<SlideShowSession>
+            {
+                new SlideShowSession
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 12, 19,00),
+                    EndTime = new DateTime(2019,10,04,12,19,05),
+                    CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
+                    IsPoll = false,
+                    SlideShowSessionId = Guid.Parse("6d5cd11c-5ea5-406e-6ec1-a544d048a9d6")
+                },
+                  new SlideShowSession
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 18, 19,00),
+                    EndTime = new DateTime(2019,10,04,18,25,30),
+                    CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
+                    IsPoll = false,
+                    SlideShowSessionId = Guid.Parse("5d5cd11c-5ea5-406e-5ec1-a544d048a9d3")
+                }
+            }.AsQueryable();
+        }
+
+
+        protected List<SlideShowInfo> GetSlideShowInfos()
+        {
+            return new List<SlideShowInfo>
+            {
+                new SlideShowInfo
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 12, 19,00),
+                    EndTime = new DateTime(2019,10,04,12,19,05),
+                    CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
+                    ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
+                    DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                    Age = 30,
+                    IsPoll = false,
+                    ContentName = "test content",
+                    EmotionAttention = new EmotionAttention()
+                    {
+                        Attention = 0.5,
+                        Negative = 0.3,
+                        Neutral = 0.5,
+                        Positive = 0.2
+                    },
+                     ContentType = "media",
+                     Gender = "1",
+                     Campaign = GetCampaigns().FirstOrDefault()
+                },
+                  new SlideShowInfo
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 12, 19,05),
+                    EndTime = new DateTime(2019,10,04,12,19,10),
+                    CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
+                    ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
+                    DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                    Age = 30,
+                    IsPoll = false,
+                    ContentName = "test content",
+                    EmotionAttention = new EmotionAttention()
+                    {
+                        Attention = 0.7,
+                        Negative = 0.3,
+                        Neutral = 0.2,
+                        Positive = 0.5
+                    },
+                     ContentType = "media",
+                     Gender = "1",
+                     Campaign = GetCampaigns().FirstOrDefault()
+                }
+            }.ToList();
+        }
+
+        protected IQueryable<CampaignContent> GetCampaignContents()
+        {
+            return new List<CampaignContent>
+            {
+                new CampaignContent
+                {
+                    CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
+                    CampaignId = Guid.Parse("1d1cd11c-2ea0-406e-8ec1-a544d048a9d0"),
+                    ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
+                    StatusId = 3
+                },
+                  new CampaignContent
+                {
+                    CampaignContentId = Guid.Parse("4d3cd11c-2ea0-406e-8ec1-a544d048a9d4"),
+                    CampaignId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d048a9d0"),
+                    ContentId = Guid.Parse("2d2cd23c-2ea2-406e-8ec1-a544d048a9d0"),
+                    StatusId = 5
+                }
+            }.AsQueryable();
+        }
+
+        protected IQueryable<Campaign> GetCampaigns()
+        {
+            return new List<Campaign>
+            {
+                new Campaign
+                {
+                     BegAge = 5,
+                     BegDate = new DateTime(),
+                     CampaignId = Guid.Parse("1d1cd11c-2ea0-406e-8ec1-a544d048a9d0"),
+                     CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                     EndAge = 55,
+                     EndDate = new DateTime(),
+                     IsSplash = true,
+                     Name = "test campaign",
+                     StatusId = 3
+                },
+                  new Campaign
+                {
+                     BegAge = 5,
+                     BegDate = new DateTime(),
+                     CampaignId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d048a9d0"),
+                     CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                     EndAge = 55,
+                     EndDate = new DateTime(),
+                     IsSplash = true,
+                     Name = "test campaign 2",
+                     StatusId = 3
+                }
+            }.AsQueryable();
+        }
+
+        protected IQueryable<Content> GetContents()
+        {
+            return new List<Content>
+            {
+                new Content
+                {
+                    Duration = 5,
+                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                    ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
+                    StatusId = 3,
+                    Name = "test content",
+                    IsTemplate = false,
+                    JSONData = "{ggg:jjj}",
+                    RawHTML = "kkk/ggg"
+                },
+                  new Content
+                {
+                    Duration = 5,
+                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                    ContentId = Guid.Parse("2d2cd23c-2ea2-406e-8ec1-a544d048a9d0"),
+                    StatusId = 3,
+                    Name = "test content",
+                    IsTemplate = false,
+                    JSONData = "{ggg:jjj}",
+                    RawHTML = "kkk/ggg"
+                }
+            }.AsQueryable();
+        }
 
         protected async Task<IEnumerable<SessionInfo>> GetEmptySessions()
         {
@@ -195,6 +357,73 @@ namespace ApiTests
                            EndMoodByNN = 0.6
                        }
                    }
+                }
+            };
+            return dialogues.AsQueryable();
+        }
+
+        protected IQueryable<Dialogue> GetDialoguesWithFrames()
+        {
+            var dialogues = new List<Dialogue>
+            {
+                new Dialogue
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 12, 19,00),
+                    EndTime = new DateTime(2019,10,04,12,20,25),
+                    CreationTime = new DateTime(2019,10,04, 12, 19,00),
+                    InStatistic = true,
+                    StatusId = 3,
+                    PersonId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
+                    DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                    LanguageId = 2                    ,
+                    DialogueFrame = new List<DialogueFrame>
+                    {
+                        new DialogueFrame
+                        {
+                            DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                            DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d2"),
+                            IsClient = true,
+                            Time = new DateTime(2019,10,04, 12, 19,03),
+                            AngerShare =  0.5
+        }
+                    },
+                   ApplicationUser = new ApplicationUser
+                   {
+                       FullName = "tuisv@heedbook.com"
+                   },
+                   DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
+                   {
+                       new DialogueClientSatisfaction
+                       {
+                           MeetingExpectationsTotal = 0.45,
+                           BegMoodByNN = 0.4,
+                           EndMoodByNN = 0.7
+                       }
+                   }
+                },
+                  new Dialogue
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 18, 19,00),
+                    EndTime = new DateTime(2019,10,04,18,25,30),
+                    CreationTime = new DateTime(2019,10,04, 19, 19,00),
+                    InStatistic = true,
+                    StatusId = 3,
+                    PersonId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
+                    DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
+                    LanguageId = 2,
+                    DialogueFrame = new List<DialogueFrame>
+                    {
+                        new DialogueFrame
+                        {
+                            DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
+                            DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d3"),
+                            IsClient = true,
+                            Time = new DateTime(2019,10,04, 18, 19,03),
+                            AngerShare =  0.2
+        }
+                    }                 
                 }
             };
             return dialogues.AsQueryable();
