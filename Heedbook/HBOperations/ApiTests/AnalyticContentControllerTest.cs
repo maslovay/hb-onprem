@@ -21,13 +21,11 @@ namespace ApiTests
     [TestFixture]
     public class AnalyticContentControllerTest : ApiServiceTest
     {
-        protected MockInterfaceProviders mockProvider;
         protected Mock<IAnalyticContentProvider> analyticContentProviderMock;
         protected Mock<IHelpProvider> helpProvider;
         [SetUp]
         public void Setup()
         {
-            mockProvider = new MockInterfaceProviders();
             analyticContentProviderMock = new Mock<IAnalyticContentProvider>();
             helpProvider = new Mock<IHelpProvider>();
             base.Setup();
@@ -36,11 +34,11 @@ namespace ApiTests
         public async Task ContentShows()
         {
             //Arrange
-            loginMock = mockProvider.MockILoginService(loginMock);
+            loginMock = MockILoginService(loginMock);
 
-            filterMock = mockProvider.MockIRequestFiltersProvider(filterMock);
+            filterMock = MockIRequestFiltersProvider(filterMock);
 
-            analyticContentProviderMock = mockProvider.MockIAnalyticContentProvider(analyticContentProviderMock);
+            analyticContentProviderMock = MockIAnalyticContentProvider(analyticContentProviderMock);
 
             commonProviderMock.Setup(p => p.GetDialogueIncludedFramesByIdAsync(It.IsAny<Guid>()))
                 .Returns(Task.FromResult(new Dialogue(){DialogueFrame = new List<DialogueFrame>(){new DialogueFrame()}}));
@@ -70,11 +68,11 @@ namespace ApiTests
         public async Task Efficiency()
         {
             //Arrange
-            loginMock = mockProvider.MockILoginService(loginMock);
+            loginMock = MockILoginService(loginMock);
 
-            filterMock = mockProvider.MockIRequestFiltersProvider(filterMock);
+            filterMock = MockIRequestFiltersProvider(filterMock);
 
-            analyticContentProviderMock = mockProvider.MockIAnalyticContentProvider(analyticContentProviderMock);
+            analyticContentProviderMock = MockIAnalyticContentProvider(analyticContentProviderMock);
 
             commonProviderMock.Setup(p => p.GetDialoguesInfoWithFramesAsync(
                 It.IsAny<DateTime>(), 
@@ -121,11 +119,11 @@ namespace ApiTests
         public async Task Poll()
         {
             //Aaarnge
-            loginMock = mockProvider.MockILoginService(loginMock);
+            loginMock = MockILoginService(loginMock);
 
-            filterMock = mockProvider.MockIRequestFiltersProvider(filterMock);
+            filterMock = MockIRequestFiltersProvider(filterMock);
 
-            analyticContentProviderMock = mockProvider.MockIAnalyticContentProvider(analyticContentProviderMock);
+            analyticContentProviderMock = MockIAnalyticContentProvider(analyticContentProviderMock);
 
             commonProviderMock.Setup(p => p.GetDialoguesInfoWithFramesAsync(
                 It.IsAny<DateTime>(), 

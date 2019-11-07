@@ -22,11 +22,9 @@ namespace ApiTests
     {   
         protected Mock<IAnalyticOfficeProvider> analyticOfficeProviderMock;
         protected Mock<IHelpProvider> helpProviderMock;
-        protected MockInterfaceProviders mockProvider;
         [SetUp]
         public void Setup()
         {
-            mockProvider = new MockInterfaceProviders();
             analyticOfficeProviderMock = new Mock<IAnalyticOfficeProvider>();
             helpProviderMock = new Mock<IHelpProvider>();
             base.Setup();
@@ -35,13 +33,13 @@ namespace ApiTests
         public async Task UserRegister()
         {
             //Arrange
-            loginMock = mockProvider.MockILoginService(loginMock);
+            loginMock = MockILoginService(loginMock);
 
-            filterMock = mockProvider.MockIRequestFiltersProvider(filterMock);            
+            filterMock = MockIRequestFiltersProvider(filterMock);            
 
-            analyticOfficeProviderMock = mockProvider.MockIAnalyticOfficeProvider(analyticOfficeProviderMock);
+            analyticOfficeProviderMock = MockIAnalyticOfficeProvider(analyticOfficeProviderMock);
 
-            dbOperationMock = mockProvider.MockIDBOperations(dbOperationMock);
+            dbOperationMock = MockIDBOperations(dbOperationMock);
 
             var accountController = new AnalyticOfficeController(
                 configMock.Object, 
