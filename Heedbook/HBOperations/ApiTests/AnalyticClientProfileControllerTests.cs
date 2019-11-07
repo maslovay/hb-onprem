@@ -19,11 +19,9 @@ namespace ApiTests
     public class AnalyticClientProfileControllerTests : ApiServiceTest
     {   
         protected Mock<IAccountProvider> accountProviderMock;
-        protected MockInterfaceProviders mockProvider;
         [SetUp]
         public void Setup()
         {
-            mockProvider = new MockInterfaceProviders();
             accountProviderMock = new Mock<IAccountProvider>();
             base.Setup();
         }
@@ -64,7 +62,7 @@ namespace ApiTests
                     It.IsAny<List<Guid>>(), 
                     It.IsAny<List<Guid>>()))
                 .Returns(dialogues);            
-            loginMock = mockProvider.MockILoginService(loginMock);      
+            loginMock = MockILoginService(loginMock);      
             
             var analyticClientProfileController = new AnalyticClientProfileController(
                 commonProviderMock.Object, 
