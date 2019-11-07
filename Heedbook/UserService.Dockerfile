@@ -11,8 +11,8 @@ COPY --from=build-env /app/HBOperations/UserService/publish .
 ENTRYPOINT ["dotnet", "UserService.dll"]
 EXPOSE 53650
 ENV ASPNETCORE_URLS http://+:53650
-RUN mkdir /opt/
+RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
-RUN mkdir /opt/download
+RUN mkdir -p /opt/download
 RUN chmod -R 777 /opt/download
 ENV TESTCLUSTER testcluster
