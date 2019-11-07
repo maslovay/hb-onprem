@@ -50,11 +50,11 @@ namespace UserOperations.Controllers
             ILoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
-            MailSender mailSender,
-            RequestFilters requestFilters,
+            IMailSender mailSender,
+            IRequestFilters requestFilters,
             SftpSettings sftpSettings,
             ElasticClient log,
-            DBOperations dBOperations
+            IDBOperations dBOperations
             //     INotificationHandler handler,
             //     HbMlHttpClient client
             )
@@ -70,58 +70,6 @@ namespace UserOperations.Controllers
             _dbOperation = dBOperations;
             //   _handler = handler;
             //   _client = client ?? throw new ArgumentNullException(nameof(client));
-        }
-
-
-
-        [HttpGet("TestSftp")]
-        public async Task<IActionResult> TestSftp(
-              [FromQuery(Name = "start")] int start,
-              [FromQuery(Name = "userId")] Guid userId
-                         )
-        {
-            int noFrames = 0;
-            DateTime dateEnd = new DateTime(2019, 09, 21);
-            DateTime dateBeg = new DateTime(2019, 09, 01);
-            var dialogue = _context.Dialogues.Where(x => x.ApplicationUserId == userId && x.BegTime <= dateEnd && x.BegTime >= dateBeg).Skip(start).FirstOrDefault();
-
-                var frames =
-                        _context.FileFrames
-                            .Include(p => p.FrameAttribute)
-                            .Where(item =>
-                                item.ApplicationUserId == userId
-                                && item.Time >= dialogue.BegTime
-                                && item.Time <= dialogue.EndTime)
-                            .ToList();
-
-                var attributes = frames.Where(p => p.FrameAttribute.Any())
-                    .Select(p => p.FrameAttribute.First())
-                    .ToList();
-
-                FrameAttribute attribute = attributes.First();
-                if (!await _sftpClient.IsFileExistsAsync($"{_sftpSettings.DestinationPath}" + "frames/" + attribute.FileFrame.FileName))
-                {
-                }
-              
-                    var localPath =
-                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
-                   
-                    var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
-                    var rectangle = new Rectangle()
-                    {
-                        Height = faceRectangle.Height,
-                        Width = faceRectangle.Width,
-                        X = faceRectangle.Top,
-                        Y = faceRectangle.Left
-                    };
-
-                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
-                    stream.Seek(0, SeekOrigin.Begin);
-                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "test/", $"{dialogue.DialogueId}.jpg");
-                    stream.Dispose();
-                    stream.Close();
-                  //  await _sftpClient.DisconnectAsync();
-            return Ok();
         }
 
 
@@ -181,8 +129,6 @@ namespace UserOperations.Controllers
             }
             return Ok(counterInDialogue);
         }
-
-
         //----PART 1---
         [HttpGet("FindTheSessionInSession")]
         public async Task<IActionResult> FindTheSessionInSession()
@@ -215,8 +161,6 @@ namespace UserOperations.Controllers
             _context.SaveChanges();
             return Ok(counterInSes);
         }
-
-
         //---STEP 2---
         [HttpGet("FindTheSessionsOneOnAnother")]
         public async Task<IActionResult> FindTheSessionsOneOnAnother()
@@ -248,8 +192,6 @@ namespace UserOperations.Controllers
             _context.SaveChanges();
             return Ok(counterInSes);
         }
-
-
         [HttpGet("FindDialoguesWithoutSessions")]
         public async Task<IActionResult> FindDialoguesWithoutSessions()
         {
@@ -306,7 +248,6 @@ namespace UserOperations.Controllers
             _context.SaveChanges();
             return Ok(counter);
         }
-
         [HttpGet("ClientAvatarMaker")]
         public async Task<IActionResult> ClientAvatarMaker(
                  //[ FromQuery(Name = "take")] int take,
@@ -407,15 +348,8 @@ namespace UserOperations.Controllers
 
             return Ok(result);
         }
-
-
-
-
-
-
         [HttpGet("SendDialogueMake")]
-        public async Task<IActionResult> SendDialogueMake(
-                                                     [FromQuery(Name = "companyId")] Guid? companyId)
+        public async Task<IActionResult> SendDialogueMake( [FromQuery(Name = "companyId")] Guid? companyId)
         {
 
             var begTime = new DateTime(2019, 09, 21);
@@ -445,189 +379,6 @@ namespace UserOperations.Controllers
             }
             return Ok(html);
         }
-
-
-        //[HttpGet("DialogueFrames")]
-        //public async Task<IActionResult> DialogueFrames(
-        //                                                [FromQuery(Name = "path")] string videoBlobRelativePath)
-        //{
-        //    try
-        //    {
-        //        var fileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
-        //        var applicationUserId = fileName.Split(("_"))[0];
-        //        var videoTimeStamp =
-        //            DateTime.ParseExact(fileName.Split(("_"))[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-
-        //        var pathClient = new PathClient();
-        //        var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
-
-        //        var ffmpeg = new FFMpegWrapper(
-        //            new FFMpegSettings
-        //            {
-        //                FFMpegPath = Path.Combine(pathClient.BinPath(), "ffmpeg.exe")
-        //            });
-
-        //        await _sftpClient.DownloadFromFtpToLocalDiskAsync(
-        //                $"{_sftpSettings.DestinationPath}{videoBlobRelativePath}", sessionDir);
-        //        var localFilePath = Path.Combine(sessionDir, Path.GetFileName(videoBlobRelativePath));
-
-        //        var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
-        //        var frames = Directory.GetFiles(sessionDir, "*.jpg")
-        //             .OrderBy(p => Convert.ToInt32((Path.GetFileNameWithoutExtension(p))))
-        //             .Select(p => new FrameInfo
-        //             {
-        //                 FramePath = p,
-        //             })
-        //             .ToList();
-        //                for (int i = 0; i < frames.Count(); i++)
-        //                {
-        //                    frames[i].FrameTime = videoTimeStamp.AddSeconds(i * 3).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-        //                    frames[i].FrameName = $"{applicationUserId}_{frames[i].FrameTime}.jpg";
-        //                }
-
-        //        //var tasks = frames.Select(p => {
-        //        //    return Task.Run(async () =>
-        //        //    {
-        //        //        await _sftpClient.UploadAsync(p.FramePath, "frames", p.FrameName);
-        //        //    });
-        //        //});
-        //        //await Task.WhenAll(tasks);
-        //        foreach (var p in frames)
-        //        {
-        //            await _sftpClient.UploadAsync(p.FramePath, "frames", p.FrameName);
-        //        }
-
-        //        _log.Info($"TEST FRAME "+ videoBlobRelativePath);
-        //        foreach (var frame in frames)
-        //        {
-        //            var fileFrame = new FileFrame
-        //            {
-        //                FileFrameId = Guid.NewGuid(),
-        //                ApplicationUserId = Guid.Parse(applicationUserId),
-        //                FaceLength = 0,
-        //                FileContainer = "frames",
-        //                FileExist = true,
-        //                FileName = frame.FrameName,
-        //                IsFacePresent = false,
-        //                StatusId = 6,
-        //                StatusNNId = 6,
-        //                Time = DateTime.ParseExact(frame.FrameTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
-        //            };
-        //            _context.FileFrames.Add(fileFrame);
-        //            _context.SaveChanges();
-        //            _log.Info($"Creating frame - {frame.FrameName}");
-        //            string FrameContainerName = "frames";
-        //            //var message = new FaceAnalyzeRun
-        //            //{
-        //            //    Path = $"{FrameContainerName}/{frame.FrameName}"
-        //            //};
-        //            var remotePath = $"{_sftpSettings.DestinationPath}{FrameContainerName}/{frame.FrameName}";
-
-        //            try
-        //            {
-        //                _log.Info($"Function started");
-        //                if (await _sftpClient.IsFileExistsAsync(remotePath))
-        //                {
-        //                    string localPath = default;
-        //                    lock (_syncRoot)
-        //                    {
-        //                        localPath = _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath, "D://1/").GetAwaiter().GetResult();
-        //                    }
-        //                    _log.Info($"Download to path - {localPath}");
-        //                    if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
-        //                    {
-        //                        _log.Info($"{localPath}: Face detected!");
-
-        //                        var byteArray = await System.IO.File.ReadAllBytesAsync(localPath);
-        //                        var base64String = Convert.ToBase64String(byteArray);
-
-        //                        var faceResult = await _client.GetFaceResult(base64String);
-        //                        _log.Info($"Face result is {JsonConvert.SerializeObject(faceResult)}");
-        //                        var fileName1 = localPath.Split('/').Last();
-        //                        FileFrame fileFrame1;
-        //                        lock (_context)
-        //                        {
-        //                            fileFrame = _context.FileFrames.Where(entity => entity.FileName == fileName1).FirstOrDefault();
-        //                        }
-        //                        if (fileFrame != null && faceResult.Any())
-        //                        {
-        //                            var frameEmotion = new FrameEmotion
-        //                            {
-        //                                FileFrameId = fileFrame.FileFrameId,
-        //                                AngerShare = faceResult.Average(item => item.Emotions.Anger),
-        //                                ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
-        //                                DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
-        //                                FearShare = faceResult.Average(item => item.Emotions.Fear),
-        //                                HappinessShare = faceResult.Average(item => item.Emotions.Happiness),
-        //                                NeutralShare = faceResult.Average(item => item.Emotions.Neutral),
-        //                                SadnessShare = faceResult.Average(item => item.Emotions.Sadness),
-        //                                SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
-        //                                YawShare = faceResult.Average(item => item.Headpose.Yaw)
-        //                            };
-
-        //                            var frameAttribute = faceResult.Select(item => new FrameAttribute
-        //                            {
-        //                                Age = item.Attributes.Age,
-        //                                Gender = item.Attributes.Gender,
-        //                                Descriptor = JsonConvert.SerializeObject(item.Descriptor),
-        //                                FileFrameId = fileFrame.FileFrameId,
-        //                                Value = JsonConvert.SerializeObject(item.Rectangle)
-        //                            }).FirstOrDefault();
-
-        //                            fileFrame.FaceLength = faceLength;
-        //                            fileFrame.IsFacePresent = true;
-
-        //                            if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
-        //                            _context.FrameEmotions.Add(frameEmotion);
-        //                            lock (_context)
-        //                            {
-        //                                _context.SaveChanges();
-        //                            }
-        //                        }
-        //                    }
-        //                    else
-        //                    {
-        //                        _log.Info($"{localPath}: No face detected!");
-        //                    }
-        //                    _log.Info("Function finished");
-
-        //                    System.IO.File.Delete(localPath);
-        //                }
-        //                else
-        //                {
-        //                    _log.Info($"No such file {remotePath}");
-        //                }
-
-        //                _log.Info("Function face analyze finished");
-
-        //            }
-        //            catch (SftpPathNotFoundException e)
-        //            {
-        //                _log.Fatal($"{e}");
-        //            }
-        //            catch (Exception e)
-        //            {
-        //                _log.Fatal($"Exception occured {e}");
-        //              //  throw new FaceAnalyzeServiceException(e.Message, e);
-        //            }
-        //        }
-        //      //  _log.Info("Deleting local files");
-        //        Directory.Delete(sessionDir, true);
-
-        //        System.Console.WriteLine("Function finished");
-        //        _log.Info($"TEST FRAME " + videoBlobRelativePath+ "  FINISHED");
-        //        return Ok();
-        //    }
-        //    catch (Exception e)
-        //    {
-        //     //   _log.Fatal($"Exception occured {e}");
-        //        System.Console.WriteLine($"{e}");
-        //        return BadRequest(e.Message);
-        //    }
-        //}   
-
-
-
         [HttpGet("CheckSessions")]
         public async Task<IActionResult> CheckSessions()
         {
@@ -687,8 +438,6 @@ namespace UserOperations.Controllers
             }
             return Ok(counter);
         }
-
-
         [HttpGet("CheckDialogues")]
         public async Task<IActionResult> CheckDialogues()
         {

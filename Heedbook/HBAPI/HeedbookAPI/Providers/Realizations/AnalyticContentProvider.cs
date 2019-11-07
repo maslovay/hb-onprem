@@ -21,7 +21,7 @@ namespace UserOperations.Providers
 
         public async Task<List<SlideShowInfo>> GetSlideShowsForOneDialogueAsync( Dialogue dialogue )
         {
-            var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
+            var slideShows = await (_repository.GetAsQueryable<SlideShowSession>())
                     .Where(p => p.BegTime >= dialogue.BegTime
                              && p.BegTime <= dialogue.EndTime
                              && p.ApplicationUserId == dialogue.ApplicationUserId)
