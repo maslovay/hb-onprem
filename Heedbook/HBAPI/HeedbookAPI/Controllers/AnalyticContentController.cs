@@ -215,7 +215,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("AnalyticContent/Poll started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];

@@ -654,34 +654,32 @@ namespace UserOperations.Controllers
         }
 
         [HttpDelete("PhraseLib")]
-        [SwaggerOperation(Summary = "Delete company phrases", Description = "Delete phrases (if this phrases are Templates they can't be deleted, it only delete connection to company")]
+        [SwaggerOperation(Summary = "Delete company phrase", Description = "Delete phrase (if this phrase are Template it can't be deleted, it only delete connection to company")]
         public async Task<IActionResult> PhraseDelete(
-                    [FromQuery(Name = "phraseId"), SwaggerParameter("array ids to delete: id&id", Required = true)] List<Guid> phraseIds,
+                    [FromQuery(Name = "phraseId"), SwaggerParameter("phraseId Guid", Required = true)] Guid phraseId,
                     [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
-                // _log.Info("User/PhraseLib DELETE started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
+                string answer = "Template! Deleted from PhraseCompany";
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var phrasesCompany = _context.PhraseCompanys
-                    .Include(p => p.Phrase)
-                    .Where(p => phraseIds.Contains(p.Phrase.PhraseId) && p.CompanyId == companyId && p.Phrase.IsTemplate == false);
-                var phrases = phrasesCompany.Select(p => p.Phrase);
-                var phrasesCompanyTemplate = _context.PhraseCompanys
-                    .Include(p => p.Phrase)
-                    .Where(p => phraseIds.Contains(p.Phrase.PhraseId) && p.CompanyId == companyId && p.Phrase.IsTemplate == true);
-                _context.RemoveRange(phrasesCompanyTemplate);//--remove connections to template phrases in library
-                _context.RemoveRange(phrasesCompany);//--remove connections to own phrases in library
-                _context.RemoveRange(phrases);//--remove own phrases
+                var phrase = _context.Phrases.Include(x=> x.PhraseCompany).FirstOrDefault(x => x.PhraseId == phraseId);
+                var phrasesCompany = phrase.PhraseCompany.Where(x => x.CompanyId == companyId).ToList();
+                _context.RemoveRange(phrasesCompany);//--remove connections to phrase in library
                 await _context.SaveChangesAsync();
-                // _log.Info("User/PhraseLib DELETE finished");
-                return Ok();
+                if ( !phrase.IsTemplate )
+                {
+                    _context.Remove(phrase);//--remove own phrase
+                    await _context.SaveChangesAsync();
+                    answer = "Deleted from PhraseCompany and Phrases";
+                }              
+                return Ok(answer);
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                return BadRequest("Deleted from PhraseCompany. Phrase has relations");
             }
         }
 

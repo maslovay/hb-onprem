@@ -19,6 +19,7 @@ using RabbitMqEventBus.Base;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
 using UnitTestExtensions;
+using HBMLHttpClient;
 
 namespace UserService
 {
@@ -90,6 +91,12 @@ namespace UserService
 //                StartupExtensions.MockNotificationHandler(services);
 //                StartupExtensions.MockTransmissionEnvironment<IntegrationEvent>(services);                
 //            }
+            services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
+            services.AddScoped(provider =>
+            {
+                var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
+                return new HbMlHttpClient(settings);
+            });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
