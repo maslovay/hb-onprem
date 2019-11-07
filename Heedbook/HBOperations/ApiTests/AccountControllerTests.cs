@@ -342,5 +342,112 @@ namespace ApiTests
                 .Returns(new DateTime(2019, 11, 01));
             return moqIRequestFiltersProvider;
         }
+        public Mock<IAnalyticOfficeProvider> MockIAnalyticOfficeProvider(Mock<IAnalyticOfficeProvider> moqIAnalyticOfficeProvider)
+        {
+            var sessionsInfo = new List<SessionInfo>
+            {
+                new SessionInfo
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 12, 19,00),
+                    EndTime = new DateTime(2019,10,04,12,20,25),
+                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                    FullName = "tuisv@heedbook.com",
+                    IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
+                },
+                  new SessionInfo
+                {
+                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    BegTime = new DateTime(2019,10,04, 18, 19,00),
+                    EndTime = new DateTime(2019,10,04,18,25,30),
+                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                    FullName = "tuisv@heedbook.com",
+                    IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
+                }
+            };
+            moqIAnalyticOfficeProvider.Setup(p => p.GetSessionsInfo(
+                It.IsAny<DateTime>(), 
+                It.IsAny<DateTime>(), 
+                It.IsAny<List<Guid>>(),
+                It.IsAny<List<Guid>>(),
+                It.IsAny<List<Guid>>()))
+                .Returns(sessionsInfo);
+            var dialogues = new List<DialogueInfo>()
+            {
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 29, 18, 30, 00), EndTime = new DateTime(2019, 10, 29, 19, 00, 00)},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 18, 30, 00), EndTime = new DateTime(2019, 10, 30, 19, 00, 00)},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 50, 00), EndTime = new DateTime(2019, 10, 30, 20, 20, 00)},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 20, 30, 00), EndTime = new DateTime(2019, 10, 30, 21, 00, 00)},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 21, 10, 00), EndTime = new DateTime(2019, 10, 30, 21, 40, 00)},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 31, 18, 30, 00), EndTime = new DateTime(2019, 10, 31, 19, 00, 00)},
+                new DialogueInfo(){BegTime = new DateTime(2019, 11, 01, 18, 30, 00), EndTime = new DateTime(2019, 11, 01, 19, 00, 00)}
+            };
+            moqIAnalyticOfficeProvider.Setup(p => p.GetDialoguesInfo(
+                It.IsAny<DateTime>(), 
+                It.IsAny<DateTime>(), 
+                It.IsAny<List<Guid>>(),
+                It.IsAny<List<Guid>>(),
+                It.IsAny<List<Guid>>()))
+                .Returns(dialogues);
+            return moqIAnalyticOfficeProvider;
+        }
+        public Mock<IDBOperations> MockIDBOperations(Mock<IDBOperations> moqIDBOperationsProvider)
+        {
+            moqIDBOperationsProvider.Setup(p => p.LoadIndex(
+                    It.IsAny<List<SessionInfo>>(),
+                    It.IsAny<List<DialogueInfo>>(), 
+                    It.IsAny<DateTime>(), 
+                    It.IsAny<DateTime>()))
+                .Returns(0.5d);
+            moqIDBOperationsProvider.Setup(p => p.DialoguesCount(
+                    It.IsAny<List<DialogueInfo>>(),
+                    It.IsAny<Guid>(),
+                    It.IsAny<DateTime>()))
+                .Returns(3);
+            moqIDBOperationsProvider.Setup(p => p.SessionAverageHours(
+                    It.IsAny<List<SessionInfo>>(),                    
+                    It.IsAny<DateTime>(),
+                    It.IsAny<DateTime>()))
+                .Returns(5d);
+            moqIDBOperationsProvider.Setup(p => p.DialogueAverageDuration(
+                    It.IsAny<List<DialogueInfo>>(),                    
+                    It.IsAny<DateTime>(),
+                    It.IsAny<DateTime>()))
+                .Returns(5d);
+            moqIDBOperationsProvider.Setup(p => p.BestEmployeeLoad(
+                    It.IsAny<List<DialogueInfo>>(),
+                    It.IsAny<List<SessionInfo>>(), 
+                    It.IsAny<DateTime>(), 
+                    It.IsAny<DateTime>()))
+                .Returns(new Employee());
+            moqIDBOperationsProvider.Setup(p => p.SatisfactionIndex(
+                    It.IsAny<List<DialogueInfo>>()))
+                .Returns(60d);
+            moqIDBOperationsProvider.Setup(p => p.EmployeeCount(
+                    It.IsAny<List<DialogueInfo>>()))
+                .Returns(3);
+            moqIDBOperationsProvider.Setup(p => p.DialogueAveragePause(
+                    It.IsAny<List<SessionInfo>>(),
+                    It.IsAny<List<DialogueInfo>>(), 
+                    It.IsAny<DateTime>(), 
+                    It.IsAny<DateTime>()))
+                .Returns(20d);
+            moqIDBOperationsProvider.Setup(p => p.DialogueAvgPauseListInMinutes(
+                    It.IsAny<List<SessionInfo>>(),
+                    It.IsAny<List<DialogueInfo>>(), 
+                    It.IsAny<DateTime>(), 
+                    It.IsAny<DateTime>()))
+                .Returns(new List<double>(){});
+            moqIDBOperationsProvider.Setup(p => p.SessionTotalHours(
+                    It.IsAny<List<SessionInfo>>(),
+                    It.IsAny<DateTime>(), 
+                    It.IsAny<DateTime>()))
+                .Returns(9d);
+            
+            return moqIDBOperationsProvider;
+        }
+
     }
 }
