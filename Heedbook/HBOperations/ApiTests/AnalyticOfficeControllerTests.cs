@@ -1,63 +1,45 @@
 using NUnit.Framework;
 using Moq;
 using System.Collections.Generic;
-using UserOperations.Services;
 using UserOperations.Controllers;
-using UserOperations.AccountModels;
-using HBData;
 using System;
 using System.Threading.Tasks;
 using UserOperations.Providers;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using UserOperations.Providers.Interfaces;
-using UserOperations.Models.AnalyticModels;
 
 namespace ApiTests
 {
     public class AnalyticOfficeControllerTests : ApiServiceTest
     {   
-        protected Mock<IAnalyticOfficeProvider> analyticOfficeProviderMock;
-        protected Mock<IHelpProvider> helpProviderMock;
+        private Mock<IAnalyticOfficeProvider> analyticOfficeProviderMock;
         [SetUp]
         public void Setup()
         {
-            analyticOfficeProviderMock = new Mock<IAnalyticOfficeProvider>();
-            helpProviderMock = new Mock<IHelpProvider>();
             base.Setup();
+        }
+        protected override void InitServices()
+        {
+            analyticOfficeProviderMock = MockIAnalyticOfficeProvider(new Mock<IAnalyticOfficeProvider>());
+            base.moqILoginService = MockILoginService(base.moqILoginService);
         }
         [Test]
         public async Task UserRegister()
         {
             //Arrange
-            loginMock = MockILoginService(loginMock);
-
-            filterMock = MockIRequestFiltersProvider(filterMock);            
-
-            analyticOfficeProviderMock = MockIAnalyticOfficeProvider(analyticOfficeProviderMock);
-
-            dbOperationMock = MockIDBOperations(dbOperationMock);
-
-            var accountController = new AnalyticOfficeController(
-                configMock.Object, 
-                loginMock.Object, 
+            var controller = new AnalyticOfficeController(
+                configMock.Object,
+                moqILoginService.Object, 
                 dbOperationMock.Object, 
                 filterMock.Object, 
                 analyticOfficeProviderMock.Object);
-            var sessions = await GetSessions();
+            var sessions = await TestData.GetSessions();
             
             //Act
-            var result = accountController.Efficiency(
-                "20191105",
-                "20191106",
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                new List<Guid>(){Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()},
-                "Bearer Token"
+            var result = controller.Efficiency(
+                TestData.beg, TestData.end,
+                TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(),
+                TestData.token
             );
 
             //Assert
