@@ -184,7 +184,7 @@ namespace UserOperations.Providers
         {
             var user = _context.ApplicationUsers
                 .Include(p => p.Company)
-                .First(p => p.NormalizedEmail == email.ToUpper());
+                .FirstOrDefault(p => p.NormalizedEmail == email.ToUpper());
             return user;
         }
         public ApplicationUser GetUserIncludeCompany(Guid userId, AccountAuthorization message)
