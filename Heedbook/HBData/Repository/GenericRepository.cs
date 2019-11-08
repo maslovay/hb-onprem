@@ -63,8 +63,8 @@ namespace HBData.Repository
             params Expression<Func<T, Object>>[] children) where T : class
         {
             var dbSet = _context.Set<T>();
-            children.ToList().ForEach(x => dbSet.Where(predicate).Include(x).Load());
-            return dbSet.First();
+            children.ToList().ForEach(x => dbSet.Include(x).Load());
+            return dbSet.Where(predicate).First();            
         }
 
         public void BulkInsert<T>(IEnumerable<T> entities) where T : class
