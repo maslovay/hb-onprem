@@ -20,10 +20,12 @@ namespace HBData.Repository
 
         IEnumerable<T> Get<T>() where T : class;
         IQueryable<T> GetAsQueryable<T>() where T : class;
+        IAsyncEnumerable<T> GetAsAsyncEnumerable<T>() where T : class;
 
-        IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate,
-            params Expression<Func<T, Object>>[] children)
-            where T : class;
+
+         IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate,
+                params Expression<Func<T, Object>>[] children)
+                where T : class;
 
         T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, Object>>[] children)
             where T : class;
