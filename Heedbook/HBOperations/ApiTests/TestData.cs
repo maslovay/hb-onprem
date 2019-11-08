@@ -87,7 +87,7 @@ namespace ApiTests
                     {
                        GetRandomDialoguePhraseIncluded(Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"))
                     },
-                   ApplicationUser = GetUserIncluded(),
+                   ApplicationUser = User1(),
                    DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
                    {
                        new DialogueClientSatisfaction
@@ -113,7 +113,7 @@ namespace ApiTests
                     {
                        GetRandomDialoguePhraseIncluded(Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"))
                     },
-                   ApplicationUser = GetUsers().First(),
+                   ApplicationUser = GetUsersCompany1().First(),
                    DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
                    {
                        new DialogueClientSatisfaction
@@ -127,6 +127,53 @@ namespace ApiTests
             };
             return dialogues.AsQueryable();
         }
+
+        internal static IQueryable<CampaignContentAnswer> GetCampaignContentsAnswers()
+        {
+            return new List<CampaignContentAnswer>{
+                new CampaignContentAnswer
+                {
+                    Answer = "5",
+                    ApplicationUser = User1(),
+                    ApplicationUserId = User1().Id,
+                    CampaignContent = GetCampaignContents().First(),
+                    CampaignContentAnswerId = Guid.NewGuid(),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
+                    Time = begDate.AddMinutes(1)
+                },
+                 new CampaignContentAnswer
+                {
+                    Answer = "9",
+                    ApplicationUser = User1(),
+                    ApplicationUserId = User1().Id,
+                    CampaignContent = GetCampaignContents().First(),
+                    CampaignContentAnswerId = Guid.NewGuid(),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
+                    Time = begDate.AddDays(5)//!!!
+                },
+                  new CampaignContentAnswer
+                {
+                    Answer = "2",
+                    ApplicationUser = User2(),//!!!
+                    ApplicationUserId = User2().Id,
+                    CampaignContent = GetCampaignContents().First(),
+                    CampaignContentAnswerId = Guid.NewGuid(),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
+                    Time = begDate.AddMinutes(1)
+                },
+                   new CampaignContentAnswer
+                {
+                    Answer = "5",
+                    ApplicationUser = User3(),//!!!
+                    ApplicationUserId = User3().Id,
+                    CampaignContent = GetCampaignContents().First(),
+                    CampaignContentAnswerId = Guid.NewGuid(),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
+                    Time = begDate.AddMinutes(1)
+                }
+            }.AsQueryable();
+        }
+
         internal static IQueryable<Dialogue> GetDialoguesWithFrames()
         {
             var dialogues = new List<Dialogue>
@@ -161,7 +208,7 @@ namespace ApiTests
                             YawShare = 20
         }
                     },
-                   ApplicationUser = GetUserIncluded(),
+                   ApplicationUser = User1(),
                    DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
                    {
                        new DialogueClientSatisfaction
@@ -202,7 +249,7 @@ namespace ApiTests
                             YawShare = 20
         }                   
                     },
-                    ApplicationUser = GetUsers().First(),
+                    ApplicationUser = GetUsersCompany1().First(),
                 }
             };
             return dialogues.AsQueryable();
@@ -252,8 +299,8 @@ namespace ApiTests
                 new DialogueInfoWithFrames
                 {
                     ApplicationUserId = userId,
-                    BegTime = new DateTime(2019,10,04, 12, 19,00),
-                    EndTime = new DateTime(2019,10,04,12,20,25),
+                    BegTime = begDate,
+                    EndTime = begDate.AddMinutes(3),
                     DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     DialogueFrame = new List<DialogueFrame>
                     {
@@ -262,16 +309,30 @@ namespace ApiTests
                             DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                             DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d2"),
                             IsClient = true,
-                            Time = new DateTime(2019,10,04, 12, 19,03),
-                            AngerShare =  0.5
-        }
+                            Time = begDate.AddMinutes(1),
+                            AngerShare =  0.2,
+                            HappinessShare = 0.3,
+                            NeutralShare = 0.5,
+                            YawShare = 18
+                    },
+                         new DialogueFrame
+                        {
+                            DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                            DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d2"),
+                            IsClient = true,
+                            Time = begDate.AddMinutes(1.5),
+                            AngerShare =  0.4,
+                            HappinessShare = 0.5,
+                            NeutralShare = 0.3,
+                            YawShare = 80
+                    }
                     },
                 },
                   new DialogueInfoWithFrames
                 {
                     ApplicationUserId = userId,
-                    BegTime = new DateTime(2019,10,04, 18, 19,00),
-                    EndTime = new DateTime(2019,10,04,18,25,30),
+                   BegTime = begDate.AddMinutes(3),
+                    EndTime = begDate.AddMinutes(5),
                     DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                     DialogueFrame = new List<DialogueFrame>
                     {
@@ -280,9 +341,10 @@ namespace ApiTests
                             DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                             DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d3"),
                             IsClient = true,
-                            Time = new DateTime(2019,10,04, 18, 19,03),
-                            AngerShare =  0.2
-        }
+                            Time = begDate.AddMinutes(5),
+                            AngerShare =  0.2,
+                            ContemptShare = 0.8,
+                            YawShare = 90        }
                     }
                 }
             };
@@ -307,7 +369,7 @@ namespace ApiTests
                     {
                        GetRandomDialoguePhraseIncluded(Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"))
                     },
-                   ApplicationUser = GetUserIncluded(),
+                   ApplicationUser = User1(),
                    DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
                    {
                        new DialogueClientSatisfaction
@@ -333,7 +395,7 @@ namespace ApiTests
                     {
                        GetRandomDialoguePhraseIncluded(Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"))
                     },
-                   ApplicationUser = GetUserIncluded(),
+                   ApplicationUser = User1(),
                    DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
                    {
                        new DialogueClientSatisfaction
@@ -383,7 +445,7 @@ namespace ApiTests
                     IsPoll = false,
                     SlideShowSessionId = Guid.Parse("6d5cd11c-5ea5-406e-6ec1-a544d048a9d6"),
                     CampaignContent = GetCampaignContents().First(),
-                    ApplicationUser = GetUserIncluded()
+                    ApplicationUser = User1()
                 },
                   new SlideShowSession
                 {
@@ -394,7 +456,7 @@ namespace ApiTests
                     IsPoll = false,
                     SlideShowSessionId = Guid.Parse("5d5cd11c-5ea5-406e-5ec1-a544d048a9d3"),
                     CampaignContent = GetCampaignContents().Skip(1).First(),
-                    ApplicationUser = GetUserIncluded()
+                    ApplicationUser = User1()
                 },
                     new SlideShowSession
                 {
@@ -405,7 +467,40 @@ namespace ApiTests
                     IsPoll = true,
                     SlideShowSessionId = Guid.NewGuid(),
                     CampaignContent = GetCampaignContents().Skip(1).First(),
-                    ApplicationUser = GetUserIncluded()
+                    ApplicationUser = User1()
+                },
+                      new SlideShowSession
+                {
+                    ApplicationUserId = User1().Id,
+                    BegTime = begDate.AddDays(5),
+                    EndTime = begDate.AddDays(5),
+                    CampaignContentId = Guid.NewGuid(),
+                    IsPoll = false,
+                    SlideShowSessionId = Guid.NewGuid(),
+                    CampaignContent = GetCampaignContents().Skip(1).First(),
+                    ApplicationUser = User1()
+                },
+                 new SlideShowSession
+                {
+                    ApplicationUserId = User2().Id,
+                    BegTime = begDate.AddDays(5),
+                    EndTime = begDate.AddDays(5),
+                    CampaignContentId = Guid.NewGuid(),
+                    IsPoll = true,
+                    SlideShowSessionId = Guid.NewGuid(),
+                    CampaignContent = GetCampaignContents().Skip(1).First(),
+                    ApplicationUser = User2()
+                },
+                  new SlideShowSession
+                {
+                    ApplicationUserId = User3().Id,
+                    BegTime = begDate.AddMinutes(3),
+                    EndTime = begDate.AddMinutes(5),
+                    CampaignContentId = Guid.NewGuid(),
+                    IsPoll = false,
+                    SlideShowSessionId = Guid.NewGuid(),
+                    CampaignContent = GetCampaignContents().Skip(1).First(),
+                    ApplicationUser = User3()
                 }
             }.AsQueryable();
         }
@@ -416,20 +511,20 @@ namespace ApiTests
                 new SlideShowInfo
                 {
                     ApplicationUserId = userId,
-                    BegTime = new DateTime(2019,10,04, 12, 19,00),
-                    EndTime = new DateTime(2019,10,04,12,19,05),
+                    BegTime = begDate,
+                    EndTime = begDate.AddMinutes(2),
                     CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
                     ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
-                    DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                    DialogueId = null,// Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     Age = 30,
                     IsPoll = false,
                     ContentName = "test content",
                     EmotionAttention = new EmotionAttention()
                     {
-                        Attention = 0.5,
-                        Negative = 0.3,
-                        Neutral = 0.5,
-                        Positive = 0.2
+                        //Attention = 0.5,
+                        //Negative = 0.3,
+                        //Neutral = 0.5,
+                        //Positive = 0.2
                     },
                      ContentType = "media",
                      Gender = "1",
@@ -438,20 +533,20 @@ namespace ApiTests
                   new SlideShowInfo
                 {
                     ApplicationUserId = userId,
-                    BegTime = new DateTime(2019,10,04, 12, 19,05),
-                    EndTime = new DateTime(2019,10,04,12,19,10),
+                    BegTime = begDate.AddMinutes(2),
+                    EndTime = begDate.AddMinutes(4),
                     CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
                     ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
-                    DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                    DialogueId = null,// Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     Age = 30,
                     IsPoll = false,
                     ContentName = "test content",
                     EmotionAttention = new EmotionAttention()
                     {
-                        Attention = 0.7,
-                        Negative = 0.3,
-                        Neutral = 0.2,
-                        Positive = 0.5
+                        //Attention = 0.7,
+                        //Negative = 0.3,
+                        //Neutral = 0.2,
+                        //Positive = 0.5
                     },
                      ContentType = "media",
                      Gender = "1",
@@ -514,7 +609,7 @@ namespace ApiTests
                 }
             }.AsQueryable();
         }
-
+     
         internal static IQueryable<Campaign> GetCampaigns()
         {
             return new List<Campaign>
@@ -559,7 +654,7 @@ namespace ApiTests
                     Name = "test content",
                     IsTemplate = false,
                     JSONData = "{ggg:jjj}",
-                    RawHTML = "kkk/ggg"
+                    RawHTML = "kkk/ggg"                    
                 },
                   new Content
                 {
@@ -579,12 +674,19 @@ namespace ApiTests
         /// OTHER
         /// </summary>
         /// <returns></returns>
-        internal static List<Guid> GetCompanyIds()
+        internal static List<Guid> GetCompanyIdsAll()
         {
             return new List<Guid>
             {
                 Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
-                Guid.Parse("33333395-2cc3-46e8-bcef-c844f1048182")
+                Guid.Parse("77777395-2cc3-46e8-bcef-c844f1048182")
+            };
+        }
+        internal static List<Guid> GetCompanyIds()
+        {
+            return new List<Guid>
+            {
+                Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182")
             };
         }
 
@@ -592,14 +694,11 @@ namespace ApiTests
         {
             return new List<Company>
             {
-                Company(),
-                new Company
-                {
-                    CompanyId = Guid.Parse("33333395-2cc3-46e8-bcef-c844f1048182")
-                }
+                Company1(),
+                Company2()
         };
         }
-        internal static Company Company()
+        internal static Company Company1()
         {
             return
                 new Company
@@ -613,22 +712,33 @@ namespace ApiTests
                     StatusId = 3,
                 };
         }
-        internal static List<ApplicationUser> GetUsers()
+        internal static Company Company2()
+        {
+            return
+                new Company
+                {
+                    CompanyId = Guid.Parse("77777395-2cc3-46e8-bcef-c844f1048182"),
+                    CompanyIndustryId = Guid.Parse("44440395-2cc3-46e8-bcef-c844f1048182"),
+                    CompanyName = "TEST Co2",
+                    CorporationId = null,
+                    CountryId = Guid.Parse("66660395-2cc3-46e8-bcef-c844f1048182"),
+                    LanguageId = 2,
+                    StatusId = 3,
+                };
+        }
+        internal static List<ApplicationUser> GetUsersCompany1()
         {
             return new List<ApplicationUser>
             {
-              GetUserIncluded(),
-              new ApplicationUser
-              {
-                  Id = Guid.NewGuid()
-              }
+              User1(),
+              User2()
             };
         }
-        internal static ApplicationUser GetUserIncluded()
+        internal static ApplicationUser User1()
         {
             return new ApplicationUser
             {
-                CompanyId = GetCompanyIds().First(),
+                CompanyId = Company1().CompanyId,
                 Avatar = null,
                 StatusId = 3,
                 Email = "test1@heedbook.com",
@@ -645,7 +755,48 @@ namespace ApiTests
                 //Company = Company()
             };
         }
-   
+        internal static ApplicationUser User2()
+        {
+            return new ApplicationUser
+            {
+                CompanyId = Company1().CompanyId,
+                Avatar = null,
+                StatusId = 3,
+                Email = "test2@heedbook.com",
+                FullName = "USER TEST NAME 2",
+                Id = Guid.Parse("1d5cd61c-1ea1-406e-8ec1-a544d048a9d0"),
+                NormalizedEmail = "test2@heedbook.com".ToUpper(),
+                UserName = "test2@heedbook.com",
+                NormalizedUserName = "test2@heedbook.com".ToUpper(),
+                EmpoyeeId = "123",
+                PasswordHash = "hhh",
+                WorkerTypeId = Guid.Parse("1d5cd11c-2ea0-111e-8ec1-a544d048a9d0"),
+                Dialogue = null,//GetDialoguesIncluded().ToList(),
+                UserRoles = null,// new List<ApplicationUserRole> { UserRoleIncluded() },
+                Company = Company1()
+            };
+        }
+        internal static ApplicationUser User3()
+        {
+            return new ApplicationUser
+            {
+                CompanyId = Company2().CompanyId,
+                Avatar = null,
+                StatusId = 3,
+                Email = "test3@heedbook.com",
+                FullName = "USER TEST NAME 3",
+                Id = Guid.Parse("2d5cd22c-2ea2-226e-8ec1-a544d048a9d0"),
+                NormalizedEmail = "test3@heedbook.com".ToUpper(),
+                UserName = "test3@heedbook.com",
+                NormalizedUserName = "test3@heedbook.com".ToUpper(),
+                EmpoyeeId = "123",
+                PasswordHash = "hhh",
+                WorkerTypeId = Guid.Parse("1d5cd11c-2ea0-111e-8ec1-a544d048a9d0"),
+                Dialogue = null,//GetDialoguesIncluded().ToList(),
+                UserRoles = null,// new List<ApplicationUserRole> { UserRoleIncluded() },
+                Company = Company2()
+            };
+        }
         internal static ApplicationRole EmployeeRoleIncluded()
         {
             return new ApplicationRole
@@ -661,7 +812,7 @@ namespace ApiTests
             return new ApplicationUserRole
                {
                    RoleId = EmployeeRoleIncluded().Id,
-                   UserId = GetUserIncluded().Id,
+                   UserId = User1().Id,
                    Role = EmployeeRoleIncluded(),
                    User = null
                };

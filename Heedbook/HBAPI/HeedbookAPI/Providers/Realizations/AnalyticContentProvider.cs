@@ -95,7 +95,7 @@ namespace UserOperations.Providers
                       .Contains(p.CampaignContentId)
                           && p.Time >= begTime
                           && p.Time <= endTime
-                          && p.ApplicationUserId == applicationUserId).ToListAsync();
+                          && p.ApplicationUserId == applicationUserId).ToListAsyncSafe();
             return answers;
         }
 
@@ -190,7 +190,7 @@ namespace UserOperations.Providers
                     {
                         Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20),
                         Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare),
-                        Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare),
+                        Negative = frames.Average(x => x.AngerShare) + frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare),
                         Neutral = frames.Average(x => x.NeutralShare)
                     };
                 }
@@ -206,7 +206,7 @@ namespace UserOperations.Providers
                                     && (p.Time >= begTime && p.Time <= endTime)
                                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                                     && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))).ToListAsync();
+                                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))).ToListAsyncSafe();
             return result;
         }
 

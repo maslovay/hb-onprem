@@ -1,22 +1,8 @@
 using NUnit.Framework;
-using Moq;
-using System.Collections.Generic;
-using UserOperations.Services;
-using UserOperations.Controllers;
-using UserOperations.AccountModels;
-using HBData;
 using System;
 using System.Threading.Tasks;
 using UserOperations.Providers;
 using HBData.Models;
-using HBData.Models.AccountViewModels;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Mvc;
-using UserOperations.Utils;
-using UserOperations.Providers.Interfaces;
-using UserOperations.Models.AnalyticModels;
-using System.IO;
-using HBData.Repository;
 using System.Linq;
 
 namespace ApiTests
@@ -44,7 +30,7 @@ namespace ApiTests
 
             // Assert
             Assert.IsNotNull(result);
-            Assert.AreEqual(TestData.GetSlideShowSessions().Count(), result.Count());
+            Assert.AreEqual(3, result.Count());
         }
         [Test]
         public async Task GetSlideShowsForNullSlideShowSessionTest()
@@ -114,6 +100,73 @@ namespace ApiTests
             // Assert
             Assert.IsNotNull(result);
             Assert.AreEqual(0, result.Count());
+        }
+
+        [Test]
+        public async Task GetAnswersInOneDialogueTest()
+        {
+            //arrange           
+            repositoryMock.Setup(r => r.GetAsQueryable<CampaignContentAnswer>()).Returns(TestData.GetCampaignContentsAnswers());
+            var provider = new AnalyticContentProvider(repositoryMock.Object);
+
+            // Act
+            var result = await provider.GetAnswersInOneDialogueAsync(TestData.GetSlideShowInfos(), TestData.begDate, TestData.endDate, TestData.User1().Id);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count());
+        }
+
+        [Test]
+        public async Task GetAnswersFullTest()
+        {
+            //arrange           
+            repositoryMock.Setup(r => r.GetAsQueryable<CampaignContentAnswer>()).Returns(TestData.GetCampaignContentsAnswers());
+            var provider = new AnalyticContentProvider(repositoryMock.Object);
+
+            // Act
+            var result = await provider.GetAnswersFullAsync(TestData.GetSlideShowInfos(),
+                    TestData.begDate,
+                    TestData.endDate,
+                    TestData.GetCompanyIdsAll(),
+                    TestData.GetEmptyList<Guid>().ToList(),
+                    TestData.GetEmptyList<Guid>().ToList());
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(3, result.Count());
+        }
+
+        [Test]
+        public async Task AddDialogueIdToShowTest()
+        {
+            //arrange           
+            var provider = new AnalyticContentProvider(repositoryMock.Object);
+
+            // Act
+            var result = provider.AddDialogueIdToShow(TestData.GetSlideShowInfos(), TestData.GetDialogueInfoWithFrames().ToList());
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(TestData.GetSlideShowInfos().Count(), result.Count());
+        }
+
+        [Test]
+        public async Task EmotionDuringAdvOneDialogueTest()
+        {
+            //arrange           
+            var provider = new AnalyticContentProvider(repositoryMock.Object);
+
+            // Act
+            var result = provider.EmotionDuringAdvOneDialogue(
+                TestData.GetSlideShowInfos(),
+                TestData.GetDialogueInfoWithFrames().SelectMany(x => x.DialogueFrame).ToList());
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(60, result.Attention);
+            Assert.That(Math.Abs((double)result.Negative - 0.3) < 0.01);
+            Assert.That(Math.Abs((double)result.Positive - 0.4) < 0.01);
+            Assert.That(Math.Abs((double)result.Neutral - 0.4) < 0.01);
         }
     }
 }
