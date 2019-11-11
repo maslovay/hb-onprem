@@ -45,8 +45,8 @@ namespace UserService.Controllers
             {  
 //                _log.Info("Function Video save info started");
                 duration = duration == null ? 15 : duration;
-                var memoryStream = formData.Files.FirstOrDefault().OpenReadStream();
-                if (memoryStream == null)   return BadRequest("No video file or file is empty");
+                var file = formData.Files.FirstOrDefault();
+                //if (memoryStream == null)   return BadRequest("No video file or file is empty");
                 var languageId = _context.ApplicationUsers
                                          .Include(p => p.Company)
                                          .Include(p => p.Company.Language)
@@ -56,7 +56,11 @@ namespace UserService.Controllers
                 var stringFormat = "yyyyMMddHHmmss";
                 var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var fileName = $"{applicationUserId}_{time.ToString(stringFormat)}_{languageId}.mkv";
-                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, "videos/", fileName);
+                if(file != null)
+                {   
+                    var memoryStream = file.OpenReadStream();
+                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, "videos/", fileName);
+                }
 
                 var videoFile = new FileVideo();
                 videoFile.ApplicationUserId = applicationUserId;
