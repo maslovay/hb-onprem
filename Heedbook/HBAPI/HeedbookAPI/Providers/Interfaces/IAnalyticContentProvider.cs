@@ -32,7 +32,6 @@ namespace UserOperations.Providers
 
         //------------------FOR CONTENT ANALYTIC------------------------
         EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows);
-    //    EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues);
 
         EmotionAttention EmotionDuringAdvOneDialogue(List<SlideShowInfo> shows, List<DialogueFrame> frames);
     }
