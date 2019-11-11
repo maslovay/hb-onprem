@@ -53,14 +53,7 @@ namespace UserOperations.Providers
            List<Guid> workerTypeIds,
            bool isPool
            )
-        {
-            var slideShows1 = await _repository.GetAsQueryable<SlideShowSession>().Where(
-                p => p.IsPoll == isPool && p.BegTime >= begTime
-                                   && p.BegTime <= endTime
-                                 //   && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                                   && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
-                                 //  && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                                   ).ToListAsyncSafe();
+        {         
            var slideShows =  await _repository.GetAsQueryable<SlideShowSession>().Where(p => p.IsPoll == isPool
                                    && p.BegTime >= begTime
                                    && p.BegTime <= endTime
@@ -149,11 +142,22 @@ namespace UserOperations.Providers
         
         
         //------------------FOR CONTENT ANALYTIC------------------------
-
-        public EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues)
+        public EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows)
         {
-            var frames = dialogues != null ? dialogues.SelectMany(x => x.DialogueFrame).ToList() : null;
-            return EmotionDuringAdvOneDialogue(shows, frames);
+            List<EmotionAttention> emotionAttentionList = new List<EmotionAttention>();         
+                foreach (var show in shows)
+                {
+                    var emotionAttention = EmotionAttentionCalculate(show.BegTime, show.EndTime, show.DialogueFrames);
+                    if (emotionAttention != null)
+                        emotionAttentionList.Add(emotionAttention);
+                }
+                return new EmotionAttention
+                {
+                    Attention = emotionAttentionList.Average(x => x.Attention),
+                    Negative = emotionAttentionList.Average(x => x.Negative),
+                    Neutral = emotionAttentionList.Average(x => x.Neutral),
+                    Positive = emotionAttentionList.Average(x => x.Positive)
+                };
         }
 
         public EmotionAttention EmotionDuringAdvOneDialogue(List<SlideShowInfo> shows, List<DialogueFrame> frames)
@@ -181,6 +185,7 @@ namespace UserOperations.Providers
         //---PRIVATE---
         private EmotionAttention EmotionAttentionCalculate(DateTime begTime, DateTime endTime, List<DialogueFrame> frames)
         {
+            if (frames == null || frames.Count() == 0) return null;
             //---time - advertaisment begin and end
             ReplaseFramesNullOnZero(frames);
             frames = frames.Where(x => x.Time >= begTime && x.Time <= endTime).ToList();
