@@ -21,7 +21,7 @@ namespace UserOperations.Providers
 
         public async Task<List<SlideShowInfo>> GetSlideShowsForOneDialogueAsync( Dialogue dialogue )
         {
-            var slideShows = await (_repository.GetAsQueryable<SlideShowSession>())
+            var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
                     .Where(p => p.BegTime >= dialogue.BegTime
                              && p.BegTime <= dialogue.EndTime
                              && p.ApplicationUserId == dialogue.ApplicationUserId)
@@ -30,9 +30,9 @@ namespace UserOperations.Providers
                                  {
                                      BegTime = p.BegTime,
                                      ContentId = p.CampaignContent != null ? p.CampaignContent.ContentId : null,
+                                     ContentName = p.CampaignContent != null ? p.CampaignContent.Content.Name : null,
                                      CampaignContentId = p.CampaignContentId,
                                      ContentType = p.ContentType,
-                                     ContentName = p.CampaignContent.Content.Name,
                                      EndTime = p.EndTime,
                                      IsPoll = p.IsPoll,
                                      Url = p.Url,
@@ -40,7 +40,7 @@ namespace UserOperations.Providers
                                      EmotionAttention = EmotionAttentionCalculate(p.BegTime, p.EndTime, dialogue.DialogueFrame.ToList())
                                  }
                              )
-                            .ToListAsync();
+                            .ToListAsyncSafe();
             return slideShows;
         }
 
@@ -54,13 +54,15 @@ namespace UserOperations.Providers
            bool isPool
            )
         {
+            var slideShows1 = await _repository.GetAsQueryable<SlideShowSession>().Where(
+                p => p.IsPoll == isPool && p.BegTime >= begTime
+                                   && p.BegTime <= endTime
+                                 //   && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                                   && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
+                                 //  && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                                   ).ToListAsyncSafe();
            var slideShows =  await _repository.GetAsQueryable<SlideShowSession>().Where(p => p.IsPoll == isPool
-                          //.Include(p => p.ApplicationUser)
-                          //.Include(p => p.CampaignContent)
-                          //.ThenInclude(p => p.Content)
-                          //.Include(p => p.CampaignContent)
-                          //.ThenInclude(p => p.Campaign)
-                          && p.BegTime >= begTime
+                                   && p.BegTime >= begTime
                                    && p.BegTime <= endTime
                                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                                    && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
@@ -70,17 +72,17 @@ namespace UserOperations.Providers
                                        new SlideShowInfo
                                        {
                                            BegTime = p.BegTime,
-                                           ContentId = p.CampaignContent != null ? p.CampaignContent.ContentId : null,
-                                           Campaign = p.CampaignContent != null ? p.CampaignContent.Campaign : null,
+                                           ContentId = p.CampaignContent.ContentId,
+                                           Campaign = p.CampaignContent.Campaign,
                                            ContentType = p.ContentType,
-                                           ContentName = p.CampaignContent != null ? p.CampaignContent.Content.Name : null,
+                                           ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
                                            EndTime = p.EndTime,
                                            IsPoll = p.IsPoll,
                                            Url = p.Url,
                                            ApplicationUserId = (Guid)p.ApplicationUserId
                                        }
                                    )
-                                  .ToListAsync();
+                                  .ToListAsyncSafe();
             return slideShows;
         }
 
@@ -93,7 +95,7 @@ namespace UserOperations.Providers
                       .Contains(p.CampaignContentId)
                           && p.Time >= begTime
                           && p.Time <= endTime
-                          && p.ApplicationUserId == applicationUserId).ToListAsync();
+                          && p.ApplicationUserId == applicationUserId).ToListAsyncSafe();
             return answers;
         }
 
@@ -180,6 +182,7 @@ namespace UserOperations.Providers
         private EmotionAttention EmotionAttentionCalculate(DateTime begTime, DateTime endTime, List<DialogueFrame> frames)
         {
             //---time - advertaisment begin and end
+            ReplaseFramesNullOnZero(frames);
             frames = frames.Where(x => x.Time >= begTime && x.Time <= endTime).ToList();
                 if (frames?.Count() != 0)
                 {
@@ -187,7 +190,7 @@ namespace UserOperations.Providers
                     {
                         Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20),
                         Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare),
-                        Negative = frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare),
+                        Negative = frames.Average(x => x.AngerShare) + frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare),
                         Neutral = frames.Average(x => x.NeutralShare)
                     };
                 }
@@ -203,8 +206,24 @@ namespace UserOperations.Providers
                                     && (p.Time >= begTime && p.Time <= endTime)
                                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                                     && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))).ToListAsync();
+                                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))).ToListAsyncSafe();
             return result;
+        }
+
+        private void ReplaseFramesNullOnZero(List<DialogueFrame> frames)
+        {
+            foreach (var item in frames)
+            {
+                item.YawShare = item.YawShare ?? 0;
+                item.AngerShare = item.AngerShare ?? 0;
+                item.ContemptShare = item.ContemptShare ?? 0;
+                item.DisgustShare = item.DisgustShare ?? 0;
+                item.FearShare = item.FearShare ?? 0;
+                item.HappinessShare = item.HappinessShare ?? 0;
+                item.NeutralShare = item.NeutralShare ?? 0;
+                item.SadnessShare = item.SadnessShare ?? 0;
+                item.SurpriseShare = item.SurpriseShare ?? 0;
+            }
         }
     }
 }

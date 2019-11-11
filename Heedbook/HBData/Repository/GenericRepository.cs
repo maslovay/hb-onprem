@@ -11,6 +11,7 @@ using System.Reflection.Emit;
 using System.Threading.Tasks;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Extensions.Internal;
 using Newtonsoft.Json;
 
 namespace HBData.Repository
@@ -49,6 +50,10 @@ namespace HBData.Repository
         public IQueryable<T> GetAsQueryable<T>() where T : class
         {
             return _context.Set<T>().AsQueryable();
+        }
+        public IAsyncEnumerable<T> GetAsAsyncEnumerable<T>() where T : class
+        {
+            return _context.Set<T>().AsAsyncEnumerable();
         }
 
         public IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate,
