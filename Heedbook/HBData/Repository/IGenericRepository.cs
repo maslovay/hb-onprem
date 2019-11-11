@@ -53,6 +53,8 @@ namespace HBData.Repository
         void Delete<T>(Expression<Func<T, bool>> expr)
             where T : class;
 
+        void Delete<T>(IEnumerable<T> list)
+            where T : class;
 
         void Delete<T>(T entity)
             where T : class;
