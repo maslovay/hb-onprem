@@ -177,6 +177,8 @@ namespace HBData.Repository
             var dbSet = _context.Set<T>();
             _context.Set<T>().RemoveRange(dbSet.Where(expr));
         }
+        public void Delete<T>(IEnumerable<T> list) where T : class
+            => _context.Set<T>().RemoveRange(list);
 
 
         public IEnumerable<Object> ExecuteDbCommand(List<String> properties, String sql,
