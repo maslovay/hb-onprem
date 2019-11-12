@@ -31,8 +31,8 @@ namespace UserOperations.Providers
         List<SlideShowInfo> AddDialogueIdToShow(List<SlideShowInfo> slideShowSessionsAll, List<DialogueInfoWithFrames> dialogues);
 
         //------------------FOR CONTENT ANALYTIC------------------------
-
-        EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues);
+        EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows);
+    //    EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows, List<DialogueInfoWithFrames> dialogues);
 
         EmotionAttention EmotionDuringAdvOneDialogue(List<SlideShowInfo> shows, List<DialogueFrame> frames);
     }

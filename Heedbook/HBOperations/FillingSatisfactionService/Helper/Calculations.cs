@@ -238,16 +238,8 @@ namespace FillingSatisfactionService.Helper
 
         public void RewriteSatisfactionScore(String dialogueId)
         {
-            var satisfactionScore = new DialogueClientSatisfaction();
-            try
-            {
-                satisfactionScore =
-                    _context.DialogueClientSatisfactions.First(p => p.DialogueId.ToString() == dialogueId);
-            }
-            catch
-            {
-                satisfactionScore = null;
-            }
+            var satisfactionScore = 
+                    _context.DialogueClientSatisfactions.FirstOrDefault(p => p.DialogueId.ToString() == dialogueId);
 
             if (satisfactionScore != null)
             {

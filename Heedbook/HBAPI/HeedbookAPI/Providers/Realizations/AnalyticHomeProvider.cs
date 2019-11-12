@@ -1,5 +1,4 @@
-﻿using HBData;
-using HBData.Models;
+﻿using HBData.Models;
 using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
 using System;
