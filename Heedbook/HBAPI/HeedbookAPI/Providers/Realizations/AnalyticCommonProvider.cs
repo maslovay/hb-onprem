@@ -85,6 +85,15 @@ namespace UserOperations.Providers
 
         public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId)
         {
+            //var dialogue1 = await _repository.GetAsQueryable<Dialogue>()
+            //          .Include(p => p.DialogueFrame)
+            //          .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
+            var dialogue = _repository.GetWithIncludeOne<Dialogue>(p => p.DialogueId == dialogueId, p => p.DialogueFrame);
+            return dialogue;
+        }
+
+        public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync2(Guid dialogueId)
+        {
             var dialogue = await _repository.GetAsQueryable<Dialogue>()
                       .Include(p => p.DialogueFrame)
                       .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
