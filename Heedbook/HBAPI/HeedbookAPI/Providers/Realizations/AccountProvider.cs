@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using UserOperations.AccountModels;
 using UserOperations.Services;
 using Newtonsoft.Json;
+using HBData.Repository;
 
 namespace UserOperations.Providers
 {
@@ -15,29 +16,34 @@ namespace UserOperations.Providers
     {
         private readonly RecordsContext _context;
         private readonly ILoginService _loginService;
+        private readonly IGenericRepository _repository;
         public AccountProvider(
             RecordsContext context,
-            ILoginService loginService
+            ILoginService loginService,
+            IGenericRepository repository
         )
         {
             _context = context;
             _loginService = loginService;
+            _repository = repository;
         }
 
         public int GetStatusId(string statusName)
         {
-            var statusId = _context.Statuss.FirstOrDefault(p => p.StatusName == statusName).StatusId;//---active
+            var task = _repository.FindOneByConditionAsync<Status>(p => p.StatusName == statusName);
+            task.Wait();
+            var statusId = task.Result.StatusId;
             return statusId;
         }
         public async Task<bool> CompanyExist(string companyName)
         {
-            var companys = await _context.Companys.Where(x => x.CompanyName == companyName).ToListAsync();
+            var companys = await _repository.GetAsQueryable<Company>().Where(x => x.CompanyName == companyName).ToListAsync();            
             return companys.Any();
         }  
         
         public async Task<bool> EmailExist(string email)
         {
-            var emails = await _context.ApplicationUsers.Where(x => x.NormalizedEmail == email.ToUpper()).ToListAsync();
+            var emails = await _repository.GetAsQueryable<ApplicationUser>().Where(x => x.NormalizedEmail == email.ToUpper()).ToListAsync();            
             return emails.Any();
         }  
         
@@ -54,7 +60,7 @@ namespace UserOperations.Providers
                 CorporationId = message.CorporationId,
                 StatusId = GetStatusId("Inactive")//---inactive
             };
-            await _context.Companys.AddAsync(company);
+            _repository.Create<Company>(company);            
             return company;
         }
         public async Task<ApplicationUser> AddNewUserInBase(UserRegister message, Guid companyId)
@@ -72,27 +78,30 @@ namespace UserOperations.Providers
                 PasswordHash = _loginService.GeneratePasswordHash(message.Password),
                 StatusId = GetStatusId("Active")
             };
-            await _context.AddAsync(user);
+            _repository.Create<ApplicationUser>(user);  
             _loginService.SavePasswordHistory(user.Id, user.PasswordHash);
             return user;
         }      
         public async Task AddUserRoleInBase(UserRegister message, ApplicationUser user)
         {
             message.Role = message.Role ?? "Manager";
+            var roleId = _repository.GetAsQueryable<ApplicationRole>().FirstOrDefault(p => p.Name == message.Role).Id;
             var userRole = new ApplicationUserRole()
             {
                 UserId = user.Id,
-                RoleId = _context.Roles.First(p => p.Name == message.Role).Id //Manager or Supervisor role
+                RoleId = roleId
             };
-            await _context.ApplicationUserRoles.AddAsync(userRole);
+            _repository.Create<ApplicationUserRole>(userRole);
         }  
         public int GetTariffs(Guid companyId)
         {
-            var tariffsCount =_context.Tariffs.Where(item => item.CompanyId == companyId).ToList().Count;
+            var task = _repository.GetAsQueryable<Tariff>().Where(item => item.CompanyId == companyId).ToListAsync();
+            task.Wait();
+            var tariffsCount = task.Result.Count;
             return tariffsCount;
         }
         public async Task CreateCompanyTariffAndtransaction(Company company)
-        {
+        {            
             var tariff = new Tariff
             {
                 TariffId = Guid.NewGuid(),
@@ -104,8 +113,8 @@ namespace UserOperations.Providers
                 ExpirationDate = DateTime.UtcNow.AddDays(5),
                 isMonthly = false,
                 Rebillid = "",
-                StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Trial").StatusId//---Trial
-            };
+                StatusId = (await _repository.FindOneByConditionAsync<Status>(p => p.StatusName == "Trial")).StatusId//---Trial
+            };            
             //---5---transaction---
             var transaction = new HBData.Models.Transaction
             {
@@ -114,14 +123,15 @@ namespace UserOperations.Providers
                 OrderId = "",
                 PaymentId = "",
                 TariffId = tariff.TariffId,
-                StatusId = _context.Statuss.FirstOrDefault(p => p.StatusName == "Finished").StatusId,//---finished
+                StatusId = (await _repository.FindOneByConditionAsync<Status>(p => p.StatusName == "Finished")).StatusId,//---finished
                 PaymentDate = DateTime.UtcNow,
                 TransactionComment = "TRIAL TARIFF;FAKE TRANSACTION"
             };
+            
             company.StatusId = GetStatusId("Active");
 //                        _log.Info("Transaction created");
-            await _context.Tariffs.AddAsync(tariff);
-            await _context.Transactions.AddAsync(transaction);
+            _repository.Create<Tariff>(tariff);
+            _repository.Create<Transaction>(transaction);
         }
         public async Task AddWorkerType(Company company)
         {
@@ -132,18 +142,18 @@ namespace UserOperations.Providers
                 WorkerTypeName = "Employee"
             };
 //                        _log.Info("WorkerTypes created");
-            await _context.WorkerTypes.AddAsync(workerType);
+            _repository.Create<WorkerType>(workerType);
         }
         public async Task AddContentAndCampaign(Company company)
         {
             Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
-            var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
+            var content = await _repository.FindOneByConditionAsync<Content>(p => p.ContentId == contentPrototypeId);
             if (content != null)
             {
                 content.ContentId = Guid.NewGuid();
                 content.CompanyId = company.CompanyId;
                 content.StatusId = GetStatusId("Active");
-                await _context.Contents.AddAsync(content);
+                _repository.Create<Content>(content);
 
                 Campaign campaign = new Campaign
                 {
@@ -159,7 +169,7 @@ namespace UserOperations.Providers
                     Name = "PROTOTYPE",
                     StatusId = GetStatusId("Active")
                 };
-                await _context.Campaigns.AddAsync(campaign);
+                _repository.Create<Campaign>(campaign);
                 CampaignContent campaignContent = new CampaignContent
                 {
                     CampaignContentId = Guid.NewGuid(),
@@ -168,64 +178,75 @@ namespace UserOperations.Providers
                     SequenceNumber = 1,
                     StatusId = GetStatusId("Active")
                 };
-                await _context.CampaignContents.AddAsync(campaignContent);
+                _repository.Create<CampaignContent>(campaignContent);
             }
         }
         public async void SaveChangesAsync()
         {
-            await _context.SaveChangesAsync();           
+            await _repository.SaveAsync();          
         }        
         public void SaveChanges()
         {
-            _context.SaveChanges();
+            _repository.Save();
         }
 
         public ApplicationUser GetUserIncludeCompany(string email)
         {
-            var user = _context.ApplicationUsers
-                .Include(p => p.Company)
-                .First(p => p.NormalizedEmail == email.ToUpper());
+            var user = _repository.GetWithIncludeOne<ApplicationUser>(p => p.NormalizedEmail == email.ToUpper(), o => o.Company);
+            System.Console.WriteLine($"user is null: {user is null}");
             return user;
         }
         public ApplicationUser GetUserIncludeCompany(Guid userId, AccountAuthorization message)
         {
-            var user = _context.ApplicationUsers
-                .Include(p => p.Company)
-                .FirstOrDefault(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper());
+            var user = _repository.GetWithIncludeOne<ApplicationUser>(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper(), o => o.Company);
             return user;
         }
         public void RemoveAccount(string email)
-        {
-            var user = _context.ApplicationUsers.FirstOrDefault(p => p.Email == email);
-            Company company = _context.Companys.FirstOrDefault(x => x.CompanyId == user.CompanyId);
-            var users = _context.ApplicationUsers.Include(x=>x.UserRoles).Where(x => x.CompanyId == company.CompanyId).ToList();
-            var tariff = _context.Tariffs.FirstOrDefault(x => x.CompanyId == company.CompanyId);
-            var transactions = _context.Transactions.Where(x => x.TariffId == tariff.TariffId).ToList();
-            var userRoles = users.SelectMany(x => x.UserRoles).ToList();
-            var workerTypes = _context.WorkerTypes.Where(x => x.CompanyId == company.CompanyId).ToList();
-            var contents = _context.Contents.Where(x => x.CompanyId == company.CompanyId).ToList();
-            var campaigns = _context.Campaigns.Include(x => x.CampaignContents).Where(x => x.CompanyId == company.CompanyId).ToList();
-            var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
-            var phrases = _context.PhraseCompanys.Where(x => x.CompanyId == company.CompanyId).ToList();
-            var pswdHist = _context.PasswordHistorys.Where(x => users.Select(p=>p.Id).Contains( x.UserId)).ToList();
+        {            
+            var user = _repository.GetAsQueryable<ApplicationUser>().FirstOrDefault(p => p.Email == email);
+            var company = _repository.GetAsQueryable<Company>().FirstOrDefault(x => x.CompanyId == user.CompanyId);
+            var users = _repository.GetWithInclude<ApplicationUser>(x => x.CompanyId == company.CompanyId, o => o.UserRoles).ToList();            
+            var tariff = _repository.GetAsQueryable<Tariff>().FirstOrDefault(x => x.CompanyId == company.CompanyId);
+            
+            var taskTransactions = _repository.GetAsQueryable<Transaction>().Where(x => x.TariffId == tariff.TariffId).ToListAsync();
+            taskTransactions.Wait();
+            var transactions = taskTransactions.Result;            
+            
+            var userRoles = users.SelectMany(x => x.UserRoles).ToList();    
 
+            var workerTypeTask = _repository.GetAsQueryable<WorkerType>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
+            workerTypeTask.Wait();
+            var workerTypes = workerTypeTask.Result;
+            
+            var taskContents = _repository.GetAsQueryable<Content>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();            
+            taskContents.Wait();
+            var contents = taskContents.Result;
+
+            var campaigns = _repository.GetWithInclude<Campaign>(x => x.CompanyId == company.CompanyId, p => p.CampaignContents).ToList();
+            var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
+            var taskPraseCompany = _repository.GetAsQueryable<PhraseCompany>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
+            var phrases = taskPraseCompany.Result;
+            
+            var taskPasswordHistory = _repository.GetAsQueryable<PasswordHistory>().Where(x => users.Select(p=>p.Id).Contains( x.UserId)).ToListAsync();
+            taskPasswordHistory.Wait();
+            var pswdHist = taskPasswordHistory.Result;
             if (pswdHist.Count() != 0)
-                _context.RemoveRange(pswdHist);
+                _repository.Delete<PasswordHistory>(pswdHist);            
             if (phrases != null && phrases.Count() != 0)
-            _context.RemoveRange(phrases);
+                _repository.Delete<PhraseCompany>(phrases);                
             if (campaignContents.Count() != 0)
-                _context.RemoveRange(campaignContents);
+                _repository.Delete<CampaignContent>(campaignContents); 
             if (campaigns.Count() != 0)
-                _context.RemoveRange(campaigns);
+                _repository.Delete<Campaign>(campaigns);
             if (contents.Count() != 0)
-                _context.RemoveRange(contents);
-            _context.RemoveRange(workerTypes);
-            _context.RemoveRange(userRoles);
-            _context.RemoveRange(transactions);
-            _context.RemoveRange(users);
-            _context.Remove(tariff);
-            _context.Remove(company);
-            _context.SaveChanges();
+                _repository.Delete<Content>(contents);
+            _repository.Delete<WorkerType>(workerTypes);
+            _repository.Delete<ApplicationUserRole>(userRoles);
+            _repository.Delete<Transaction>(transactions);
+            _repository.Delete<ApplicationUser>(users);
+            _repository.Delete<Tariff>(tariff);
+            _repository.Delete<Company>(company);
+            _repository.Save();
         }
     }
 }
