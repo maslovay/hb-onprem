@@ -18,7 +18,7 @@ namespace ApiTests
     {
         protected Mock<IAnalyticContentProvider> analyticContentProviderMock;
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {
             base.Setup();
         }
@@ -46,9 +46,7 @@ namespace ApiTests
             );
 
             //Act
-            var task = analyticContentController.ContentShows(Guid.Parse("5c35b338-6695-4fc0-8145-c655c365f969"), "Token");
-            task.Wait();
-            var okResult = task.Result as OkObjectResult;
+            var okResult = await analyticContentController.ContentShows(Guid.Parse("5c35b338-6695-4fc0-8145-c655c365f969"), "Token") as OkObjectResult;
             System.Console.WriteLine(JsonConvert.SerializeObject(okResult));
             var dictionary = okResult.Value as Dictionary<string, object>;
             var result = okResult.Value;
@@ -79,14 +77,13 @@ namespace ApiTests
             );
 
             //Act
-            var task = analyticContentController.Efficiency(
+            var okResult = await analyticContentController.Efficiency(
                 TestData.beg, TestData.end,
                 TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(),
                 TestData.token
-            );
-            task.Wait();
-            System.Console.WriteLine($"taskResult: {JsonConvert.SerializeObject(task.Result)}");
-            var okResult = task.Result as OkObjectResult;
+            ) as OkObjectResult; 
+
+            System.Console.WriteLine($"taskResult: {JsonConvert.SerializeObject(okResult)}");
             var dictionary = okResult.Value as Dictionary<string, object>;
             var result = okResult.Value;     
 
@@ -120,16 +117,14 @@ namespace ApiTests
             );
 
             //Act
-            var task = analyticContentController.Poll(
+            var okResult = await analyticContentController.Poll(
                 TestData.beg, TestData.end,
                 TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(),
                 TestData.token,
                 "json"
-            );
-            task.Wait();
+            ) as OkObjectResult;
 
             //Assert
-            var okResult = task.Result as OkObjectResult;
             Assert.IsNotNull(okResult);
         }
 

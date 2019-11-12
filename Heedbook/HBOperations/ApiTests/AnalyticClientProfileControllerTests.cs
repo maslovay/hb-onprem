@@ -12,7 +12,7 @@ namespace ApiTests
     public class AnalyticClientProfileControllerTests : ApiServiceTest
     {   
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {
             base.Setup();
         }

@@ -14,10 +14,8 @@ namespace UserOperations.Providers
     public class AnalyticCommonProvider : IAnalyticCommonProvider
     {
         private readonly IGenericRepository _repository;
-        private readonly RecordsContext _context;
-        public AnalyticCommonProvider(RecordsContext context, IGenericRepository repository)
+        public AnalyticCommonProvider(IGenericRepository repository)
         {
-            _context = context;
             _repository = repository;
         }
         public async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
@@ -37,19 +35,6 @@ namespace UserOperations.Providers
                          })
                          .ToListAsync();
             return sessions;
-        }
-
-        private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
-        {
-            var data = _repository.GetAsQueryable<Dialogue>()
-                    .Where(p => p.BegTime >= begTime &&
-                        p.EndTime <= endTime &&
-                        p.StatusId == 3 &&
-                        p.InStatistic == true &&
-                        (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))) &&
-                        (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
-                        (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))).AsQueryable();
-            return data;
         }
 
         public IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> applicationUserIds = null)
@@ -85,15 +70,6 @@ namespace UserOperations.Providers
 
         public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId)
         {
-            //var dialogue1 = await _repository.GetAsQueryable<Dialogue>()
-            //          .Include(p => p.DialogueFrame)
-            //          .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
-            var dialogue = _repository.GetWithIncludeOne<Dialogue>(p => p.DialogueId == dialogueId, p => p.DialogueFrame);
-            return dialogue;
-        }
-
-        public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync2(Guid dialogueId)
-        {
             var dialogue = await _repository.GetAsQueryable<Dialogue>()
                       .Include(p => p.DialogueFrame)
                       .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
@@ -108,7 +84,7 @@ namespace UserOperations.Providers
             List<Guid> workerTypeIds
             )
         {
-            var dialogues = await _context.Dialogues
+            var dialogues = await _repository.GetAsQueryable<Dialogue>()
                    .Include(p => p.ApplicationUser)
                    .Include(p => p.DialogueClientSatisfaction)
                    .Include(p => p.DialogueFrame)
@@ -129,7 +105,7 @@ namespace UserOperations.Providers
                        Gender = p.DialogueClientProfile.Max(x => x.Gender),
                        Age = p.DialogueClientProfile.Average(x => x.Age)
                    })
-                   .ToListAsync();
+                   .ToListAsyncSafe();
             return dialogues;
         }
 
@@ -138,19 +114,20 @@ namespace UserOperations.Providers
             var persondIds = await GetDialogues(begTime, endTime, companyIds)
                     .Where ( p => p.PersonId != null )
                     .Select(p => p.PersonId).Distinct()
-                    .ToListAsync();
+                    .ToListAsyncSafe();
             return persondIds;
         }
 
         public async Task<Guid> GetCrossPhraseTypeIdAsync()
         {
-            var typeIdCross = await _context.PhraseTypes
+            var typeIdCross = await _repository.GetAsQueryable<PhraseType>()
                     .Where(p => p.PhraseTypeText == "Cross")
                     .Select(p => p.PhraseTypeId)
                     .FirstOrDefaultAsync();
             return typeIdCross;
         }
-        public List<ComponentsDialogueInfo> GetComponentsDialogueInfo(
+
+        public async Task<List<ComponentsDialogueInfo>> GetComponentsDialogueInfo(
             DateTime begTime, 
             DateTime endTime, 
             List<Guid> companyIds, 
@@ -158,7 +135,7 @@ namespace UserOperations.Providers
             List<Guid> workerTypeIds,
             Guid loyaltyTypeId)
         {
-            var dialogues = _context.Dialogues
+            var dialogues = await _repository.GetAsQueryable<Dialogue>()
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.DialoguePhraseCount)
                 .Include(p => p.DialogueAudio)
@@ -192,24 +169,25 @@ namespace UserOperations.Providers
                     AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
                     Loyalty = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Sum(q => q.PhraseCount),
                 })
-                .ToList();
+                .ToListAsyncSafe();
             return dialogues;
         }
-        public List<PhraseType> GetPhraseTypes()
+        public async Task<IEnumerable<PhraseType>> GetPhraseTypes()
         {
-            return _context.PhraseTypes.ToList();
+            return await _repository.FindAllAsync<PhraseType>();
         }
-        public List<ComponentsPhraseInfo> GetComponentsPhraseInfo()
+
+        public async Task<List<ComponentsPhraseInfo>> GetComponentsPhraseInfo()
         {
-            return _context.PhraseTypes
+            return await _repository.GetAsQueryable<PhraseType>()
                 .Select(p => new ComponentsPhraseInfo {
                     PhraseTypeId = p.PhraseTypeId,
                     PhraseTypeText = p.PhraseTypeText,
                     Colour = p.Colour
-                }).ToList();
+                }).ToListAsyncSafe();
         }
 
-        public List<RatingDialogueInfo> GetRatingDialogueInfos(
+        public async Task<List<RatingDialogueInfo>> GetRatingDialogueInfos(
             DateTime begTime, 
             DateTime endTime, 
             List<Guid> companyIds, 
@@ -217,7 +195,7 @@ namespace UserOperations.Providers
             List<Guid> workerTypeIds,
             Guid typeIdLoyalty)
         {
-            return _context.Dialogues
+            return await _repository.GetAsQueryable<Dialogue>()
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.DialogueClientSatisfaction)
                 .Include(p => p.DialoguePhrase)
@@ -248,17 +226,17 @@ namespace UserOperations.Providers
                     PositiveEmotion = p.DialogueVisual.FirstOrDefault().SurpriseShare + p.DialogueVisual.FirstOrDefault().HappinessShare,
                     TextShare = p.DialogueSpeech.FirstOrDefault().PositiveShare,
                 })
-                .ToList(); 
+                .ToListAsyncSafe(); 
         }
 
-        public List<DialogueInfo> GetDialogueInfos(
+        public async Task<List<DialogueInfo>> GetDialogueInfos(
             DateTime begTime, 
             DateTime endTime, 
             List<Guid> companyIds, 
             List<Guid> applicationUserIds, 
             List<Guid> workerTypeIds)
         {
-            return _context.Dialogues
+            return await _repository.GetAsQueryable<Dialogue>()
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.DialogueClientSatisfaction)
                 .Where(p => p.BegTime >= begTime
@@ -274,7 +252,21 @@ namespace UserOperations.Providers
                     BegTime = p.BegTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 })
-                .ToList();
+                .ToListAsyncSafe();
         }
+
+        private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        {
+            var data = _repository.GetAsQueryable<Dialogue>()
+                    .Where(p => p.BegTime >= begTime &&
+                        p.EndTime <= endTime &&
+                        p.StatusId == 3 &&
+                        p.InStatistic == true &&
+                        (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))) &&
+                        (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
+                        (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))).AsQueryable();
+            return data;
+        }
+
     }
 }

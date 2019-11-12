@@ -13,7 +13,7 @@ namespace ApiTests
         {
         }
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {
             base.Setup();
         }
@@ -138,7 +138,7 @@ namespace ApiTests
         }
 
         [Test]
-        public async Task AddDialogueIdToShowTest()
+        public void AddDialogueIdToShowTest()
         {
             //arrange           
             var provider = new AnalyticContentProvider(repositoryMock.Object);
@@ -152,7 +152,7 @@ namespace ApiTests
         }
 
         [Test]
-        public async Task EmotionDuringAdvOneDialogueTest()
+        public void EmotionDuringAdvOneDialogueTest()
         {
             //arrange           
             var provider = new AnalyticContentProvider(repositoryMock.Object);

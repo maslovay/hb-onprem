@@ -39,7 +39,7 @@ namespace AudioAnalyzeService.Tests
         }
 
         [TearDown]
-        public async Task TearDown()
+        public new async Task TearDown()
         {
             await base.TearDown();
         }
