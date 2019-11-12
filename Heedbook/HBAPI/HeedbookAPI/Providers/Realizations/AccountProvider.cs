@@ -14,16 +14,13 @@ namespace UserOperations.Providers
 {
     public class AccountProvider : IAccountProvider
     {
-        private readonly RecordsContext _context;
         private readonly ILoginService _loginService;
         private readonly IGenericRepository _repository;
         public AccountProvider(
-            RecordsContext context,
             ILoginService loginService,
             IGenericRepository repository
         )
         {
-            _context = context;
             _loginService = loginService;
             _repository = repository;
         }
