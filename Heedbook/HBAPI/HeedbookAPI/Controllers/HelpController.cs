@@ -24,6 +24,7 @@ using HBMLHttpClient.Model;
 using System.Drawing;
 using System.Transactions;
 using FillingSatisfactionService.Helper;
+using HBData.Repository;
 
 namespace UserOperations.Controllers
 {
@@ -40,7 +41,7 @@ namespace UserOperations.Controllers
         private readonly SftpSettings _sftpSettings;
         private readonly ElasticClient _log;
         private readonly IDBOperations _dbOperation;
-        private readonly Calculations _calculations;
+        private readonly IGenericRepository _repository;
         //   private readonly INotificationHandler _handler;
         //    private readonly HbMlHttpClient _client;
 
@@ -56,7 +57,8 @@ namespace UserOperations.Controllers
             IRequestFilters requestFilters,
             SftpSettings sftpSettings,
             ElasticClient log,
-            IDBOperations dBOperations
+            IDBOperations dBOperations,
+            IGenericRepository repository
             //     INotificationHandler handler,
             //     HbMlHttpClient client
             )
@@ -70,6 +72,7 @@ namespace UserOperations.Controllers
             _sftpSettings = sftpSettings;
             _log = log;
             _dbOperation = dBOperations;
+            _repository = repository;
             //   _handler = handler;
             //   _client = client ?? throw new ArgumentNullException(nameof(client));
         }
@@ -651,6 +654,14 @@ namespace UserOperations.Controllers
             // dialogue.StatusId = 8;
             // _context.SaveChanges();
             return Ok();
+        }
+        [HttpGet("Test5")]
+        public ActionResult Test5()
+        {
+            var dialogs = _repository.GetWithInclude<Dialogue>(
+                d => d.StatusId == 3 && d.LanguageId==2);
+
+            return Ok(dialogs.Count());
         }
 
         [HttpGet("phrase")]
