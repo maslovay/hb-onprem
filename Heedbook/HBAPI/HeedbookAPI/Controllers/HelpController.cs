@@ -23,6 +23,8 @@ using UserOperations.Models.AnalyticModels;
 using HBMLHttpClient.Model;
 using System.Drawing;
 using System.Transactions;
+using FillingSatisfactionService.Helper;
+using HBData.Repository;
 
 namespace UserOperations.Controllers
 {
@@ -39,6 +41,7 @@ namespace UserOperations.Controllers
         private readonly SftpSettings _sftpSettings;
         private readonly ElasticClient _log;
         private readonly IDBOperations _dbOperation;
+        private readonly IGenericRepository _repository;
         //   private readonly INotificationHandler _handler;
         //    private readonly HbMlHttpClient _client;
 
@@ -54,7 +57,8 @@ namespace UserOperations.Controllers
             IRequestFilters requestFilters,
             SftpSettings sftpSettings,
             ElasticClient log,
-            IDBOperations dBOperations
+            IDBOperations dBOperations,
+            IGenericRepository repository
             //     INotificationHandler handler,
             //     HbMlHttpClient client
             )
@@ -68,6 +72,7 @@ namespace UserOperations.Controllers
             _sftpSettings = sftpSettings;
             _log = log;
             _dbOperation = dBOperations;
+            _repository = repository;
             //   _handler = handler;
             //   _client = client ?? throw new ArgumentNullException(nameof(client));
         }
@@ -348,37 +353,154 @@ namespace UserOperations.Controllers
 
             return Ok(result);
         }
-        [HttpGet("SendDialogueMake")]
-        public async Task<IActionResult> SendDialogueMake( [FromQuery(Name = "companyId")] Guid? companyId)
-        {
+      //  [HttpGet("FillingSatisfaction")]
+        //public async Task<IActionResult> FillingSatisfaction( [FromQuery(Name = "dialogueId")] Guid? dialogueId)
+        //{
+        //    FillingSatisfactionService.CalculationConfig _config = new FillingSatisfactionService.CalculationConfig();
+        //    Calculations _calculations = new Calculations(_context, _config);
+        //    var begTime = new DateTime(2019, 09, 21);
+        //    var endTime = new DateTime(2019, 09, 24);
 
-            var begTime = new DateTime(2019, 09, 21);
-            var endTime = new DateTime(2019, 09, 24);
+        //    try
+        //    {
+        //        _log.Info("Function started");
+        //        var dialogue = _context.Dialogues
+        //            .Include(p => p.DialogueFrame)
+        //            .Include(p => p.DialogueAudio)
+        //            .Include(p => p.DialogueSpeech)
+        //            .Include(p => p.DialogueInterval)
+        //            .Include(p => p.DialogueClientProfile)
+        //            .FirstOrDefault(p => p.DialogueId == dialogueId);
+        //        var dialogueFrame = dialogue.DialogueFrame;
+        //        var dialogueAudio = dialogue.DialogueAudio.FirstOrDefault();
+        //        var positiveTextTone = dialogue.DialogueSpeech.FirstOrDefault() == null ? null : dialogue.DialogueSpeech.FirstOrDefault().PositiveShare;
+        //        var dialogueInterval = dialogue.DialogueInterval;
+        //        var dialogueClientProfile = dialogue.DialogueClientProfile;
 
-            var companyIds = _context.Companys.Where(x => x.CorporationId.ToString() == "72402355-ef7c-41bd-b28e-4234a889c3ba").Select(x => x.CompanyId).ToList();
-            var userIds = _context.Users.Where(x => companyIds.Contains((Guid)x.CompanyId)).Select(x => x.Id).ToList();
+        //        // var meetingExpectationsByNN =
+        //        // _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio,
+        //        // positiveTextTone);
+        //        var meetingExpectationsByNN = _calculations.TotalScoreCalculate(dialogue);
 
-            // var userIds = _context.Users.Where(x => companyId == (Guid)x.CompanyId).Select(x => x.Id).ToList();
-            var dialoguesVideos = _context.FileVideos.Where(x => userIds.Contains(x.ApplicationUserId) && x.BegTime >= begTime && x.EndTime <= endTime)
-                .Select(x => x.FileName).ToList();
 
-            string html = string.Empty;
-            foreach (var item in dialoguesVideos)
-            {
-                string url = @"https://heedbookslave.northeurope.cloudapp.azure.com/user/Test/ResendVideoForFraming?fileName=videos%" + item;
+        //        Double? begMoodByNN = 0;
+        //        Double? endMoodByNN = 0;
+        //        Double nNWeight = 0;
 
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.AutomaticDecompression = DecompressionMethods.GZip;
+        //        if (dialogueFrame.Any())
+        //        {
+        //            var framesCountPeriod = Math.Min(10, dialogueFrame.Count() / 3);
+        //            var intervalCountPeriod = Math.Min(10, dialogueInterval.Count() / 3);
 
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
-                using (Stream stream = response.GetResponseStream())
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    html = reader.ReadToEnd();
-                }
-            }
-            return Ok(html);
-        }
+        //            //BorderMoodCalculateList
+        //            begMoodByNN = _calculations
+        //               .BorderMoodCalculateList(dialogueFrame.Take(framesCountPeriod).ToList(),
+        //                    dialogueInterval.Take(intervalCountPeriod).ToList(),
+        //                    meetingExpectationsByNN);
+        //            endMoodByNN = _calculations
+        //               .BorderMoodCalculateList(
+        //                    dialogueFrame
+        //                       .Skip(Math.Max(0, dialogueFrame.Count() - framesCountPeriod)).ToList(),
+        //                    dialogueInterval
+        //                       .Skip(Math.Max(0, dialogueInterval.Count() - intervalCountPeriod))
+        //                       .ToList(),
+        //                    meetingExpectationsByNN);
+
+        //            nNWeight = 0.2;
+        //        }
+        //        else
+        //        {
+        //            begMoodByNN = null;
+        //            endMoodByNN = null;
+        //            nNWeight = 0;
+        //        }
+
+        //        DialogueClientSatisfaction satisfactionScore = _context.DialogueClientSatisfactions
+        //                    .FirstOrDefault(p => p.DialogueId == dialogueId);
+
+        //        double clientWeight = 0, employeeWeight = 0, teacherWeight = 0;
+        //        double clientTotalScore = 0, employeeTotalScore = 0, teacherTotalScore = 0;
+        //        double employeeBegScore = 0, teacherBegScore = 0;
+        //        double employeeEndScore = 0, teacherEndScore = 0;
+        //        if (satisfactionScore != null)
+        //        {
+        //            satisfactionScore.MeetingExpectationsByClient = _calculations.MeetingExpectationsByClientCalculate(dialogue);
+        //            clientTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByClient);
+        //            clientWeight = Convert.ToDouble(0.2);
+        //            if (satisfactionScore.MeetingExpectationsByEmpoyee != null)
+        //            {
+        //                employeeTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByEmpoyee);
+        //                employeeBegScore = Convert.ToDouble(satisfactionScore.BegMoodByEmpoyee);
+        //                employeeEndScore = Convert.ToDouble(satisfactionScore.EndMoodByEmpoyee);
+        //                employeeWeight = Convert.ToDouble(0.2);
+        //            }
+
+        //            if (satisfactionScore.MeetingExpectationsByTeacher != null)
+        //            {
+        //                teacherTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByTeacher);
+        //                teacherBegScore = Convert.ToDouble(satisfactionScore.BegMoodByTeacher);
+        //                teacherEndScore = Convert.ToDouble(satisfactionScore.EndMoodByTeacher);
+        //                teacherWeight = Convert.ToDouble(0.2);
+        //            }
+        //        }
+
+        //        var sumWeight = nNWeight + clientWeight + employeeWeight + teacherWeight;
+        //        var sumWeightExceptClient = nNWeight + employeeWeight + teacherWeight;
+
+        //        Double? meetingExpectationsTotal = null;
+        //        if (sumWeight != 0)
+        //        {
+        //            meetingExpectationsTotal =
+        //                (clientWeight * clientTotalScore + nNWeight * meetingExpectationsByNN +
+        //                 employeeWeight * employeeTotalScore + teacherWeight * teacherTotalScore) / sumWeight;
+        //        }
+
+        //        Double? begMoodTotal = null, endMoodTotal = null;
+        //        if (sumWeightExceptClient != 0)
+        //        {
+        //            begMoodTotal =
+        //                (nNWeight * begMoodByNN + employeeBegScore * employeeWeight + teacherBegScore * teacherWeight) /
+        //                sumWeightExceptClient;
+        //            endMoodTotal =
+        //                (nNWeight * endMoodByNN + employeeEndScore * employeeWeight + teacherEndScore * teacherWeight) /
+        //                sumWeightExceptClient;
+        //        }
+
+        //        var random = new Random();
+        //        if (satisfactionScore == null)
+        //        {
+        //            satisfactionScore = new DialogueClientSatisfaction
+        //            {
+        //                DialogueClientSatisfactionId = Guid.NewGuid(),
+        //                DialogueId = dialogueId
+        //            };
+        //            _context.DialogueClientSatisfactions.Add(satisfactionScore);
+        //        }
+        //        satisfactionScore.MeetingExpectationsTotal = Math.Max((double)meetingExpectationsTotal, 35);
+        //        satisfactionScore.MeetingExpectationsByNN = Math.Max((double)meetingExpectationsByNN, 35);
+        //        satisfactionScore.BegMoodTotal = Math.Max((double)begMoodTotal, 35);
+        //        satisfactionScore.BegMoodByNN = Math.Max((double)begMoodByNN, 35);
+        //        satisfactionScore.EndMoodTotal = Math.Max((double)endMoodTotal, 35);
+        //        satisfactionScore.EndMoodByNN = Math.Max((double)endMoodByNN, 35);
+        //        satisfactionScore.MeetingExpectationsByClient = _calculations.MeetingExpectationsByClientCalculate(dialogue);
+        //        satisfactionScore.Age = dialogueClientProfile != null ? dialogueClientProfile.Average(x => x.Age) : null;
+        //        satisfactionScore.Gender = dialogueClientProfile != null ?
+        //            dialogueClientProfile.Count(x => x.Gender == "male") > dialogueClientProfile.Count(x => x.Gender == "female") ?
+        //            "male" : "female" : null;
+        //        _log.Info($"Total mood is --- {satisfactionScore.MeetingExpectationsTotal}");
+
+
+        //        _context.SaveChanges();             
+        //        _log.Info("Function filling satisfaction ended.");
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        _log.Fatal($"exception occured {e}");
+        //        throw;
+        //    }
+
+        //    return Ok();
+        //}
         [HttpGet("CheckSessions")]
         public async Task<IActionResult> CheckSessions()
         {
@@ -532,6 +654,14 @@ namespace UserOperations.Controllers
             // dialogue.StatusId = 8;
             // _context.SaveChanges();
             return Ok();
+        }
+        [HttpGet("Test5")]
+        public ActionResult Test5()
+        {
+            var dialogs = _repository.GetWithInclude<Dialogue>(
+                d => d.StatusId == 3 && d.LanguageId==2);
+
+            return Ok(dialogs.Count());
         }
 
         [HttpGet("phrase")]

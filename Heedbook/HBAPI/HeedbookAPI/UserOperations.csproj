@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
     <ProjectReference Include="..\..\HBML\HBMLHttpClient\HBMLHttpClient.csproj" />
     <ProjectReference Include="..\..\HBOperations\Common\Common.csproj" />
+    <ProjectReference Include="..\..\HBOperations\FillingSatisfactionService\FillingSatisfactionService.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="appsettings.json">

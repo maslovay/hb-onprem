@@ -108,26 +108,13 @@ namespace UserOperations.Controllers
                 if (user.StatusId != _accountProvider.GetStatusId("Active")) return BadRequest("User not activated");
                 //---success?
                 if (_loginService.CheckUserLogin(message.UserName, message.Password))
-                {
-                    _loginService.SaveErrorLoginHistory(user.Id, "success");
                     return Ok(_loginService.CreateTokenForUser(user, message.Remember));
-                }
                 //---failed?
                 else
-                {
-                    if (_loginService.SaveErrorLoginHistory(user.Id, "error"))//---save failed attempt to log in and check amount of attempts (<3)
-                        return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Error in username or password");
-                    else//---block user if this is the 3-rd failed attempt to log in
-                    {
-                        user.StatusId = _accountProvider.GetStatusId("Inactive");
-                        _accountProvider.SaveChangesAsync();
-                        return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Blocked");
-                    }
-                }
+                    return StatusCode((int)System.Net.HttpStatusCode.Unauthorized, "Error in username or password");
             }
             catch (Exception e)
             {
-//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest($"Could not create token {e}");
             }
         }

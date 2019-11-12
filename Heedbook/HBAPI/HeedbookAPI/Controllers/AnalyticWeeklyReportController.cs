@@ -327,8 +327,7 @@ namespace UserOperations.Controllers
                 RiskPhrase.CorporationRatingChanges = RiskPhrase.CorporationRating - CorporationRatingOld;
                 jsonToReturn["RiskPhrase"] = RiskPhrase;
 
-
-//                _log.Info("AnalyticRating/Progress finished");
+                jsonToReturn["corporationId"] = corporationId;
                 return Ok(jsonToReturn);
             }
             catch (Exception e)
