@@ -64,7 +64,7 @@ namespace HBData.Repository
         {
             var dbSet = _context.Set<T>();
             children.ToList().ForEach(x => dbSet.Include(x).Load());
-            return dbSet.Where(predicate).FirstOrDefault();
+            return dbSet.FirstOrDefault(predicate);
         }
 
         public void BulkInsert<T>(IEnumerable<T> entities) where T : class
