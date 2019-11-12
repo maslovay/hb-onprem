@@ -15,12 +15,12 @@ using HBLib.Utils;
 using HBLib;
 using UserOperations.Utils;
 using BenchmarkDotNet.Running;
-using UserOperations.Controllers.Test;
 using UserOperations.Services.Scheduler;
 using Quartz;
 using UserOperations.Providers;
 using UserOperations.Providers.Interfaces;
 using UserOperations.Providers.Realizations;
+using UserOperations.Controllers;
 
 namespace UserOperations
 {
@@ -176,7 +176,7 @@ namespace UserOperations
              app.ApplicationServices.GetService<ITrigger>());
 
             // add seed
-            //BenchmarkRunner.Run<TestAnalyticClientProfile>();
+          //  BenchmarkRunner.Run<TestRepository>();
         }
 
     }

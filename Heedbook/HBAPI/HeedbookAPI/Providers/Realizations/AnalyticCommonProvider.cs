@@ -1,5 +1,6 @@
 ﻿using HBData;
 using HBData.Models;
+using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,15 +13,16 @@ namespace UserOperations.Providers
 {
     public class AnalyticCommonProvider : IAnalyticCommonProvider
     {
+        private readonly IGenericRepository _repository;
         private readonly RecordsContext _context;
-        public AnalyticCommonProvider(RecordsContext context)
+        public AnalyticCommonProvider(RecordsContext context, IGenericRepository repository)
         {
             _context = context;
+            _repository = repository;
         }
         public async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
         {
-            var sessions = await _context.Sessions
-                         .Include(p => p.ApplicationUser)
+            var sessions = await _repository.GetAsQueryable<Session>()
                          .Where(p => p.BegTime >= begTime
                                  && p.EndTime <= endTime
                                  && p.StatusId == 7
@@ -39,7 +41,7 @@ namespace UserOperations.Providers
 
         private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
         {
-            var data = _context.Dialogues
+            var data = _repository.GetAsQueryable<Dialogue>()
                     .Where(p => p.BegTime >= begTime &&
                         p.EndTime <= endTime &&
                         p.StatusId == 3 &&
@@ -52,7 +54,7 @@ namespace UserOperations.Providers
 
         public IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> applicationUserIds = null)
         {
-            var dialogues = _context.Dialogues
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
                        .Include(p => p.ApplicationUser)
                        .Include(p => p.DialogueClientSatisfaction)
                        .Include(p => p.DialoguePhrase)
@@ -68,7 +70,7 @@ namespace UserOperations.Providers
 
         public IQueryable<Dialogue> GetDialoguesIncludedClientProfile(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
         {
-            var data = _context.Dialogues
+            var data = _repository.GetAsQueryable<Dialogue>()
                      .Include(p => p.DialogueClientProfile)
                      .Include(p => p.ApplicationUser)
                      .Where(p => p.BegTime >= begTime &&
@@ -83,7 +85,16 @@ namespace UserOperations.Providers
 
         public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId)
         {
-            var dialogue = await _context.Dialogues
+            //var dialogue1 = await _repository.GetAsQueryable<Dialogue>()
+            //          .Include(p => p.DialogueFrame)
+            //          .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
+            var dialogue = _repository.GetWithIncludeOne<Dialogue>(p => p.DialogueId == dialogueId, p => p.DialogueFrame);
+            return dialogue;
+        }
+
+        public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync2(Guid dialogueId)
+        {
+            var dialogue = await _repository.GetAsQueryable<Dialogue>()
                       .Include(p => p.DialogueFrame)
                       .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
             return dialogue;

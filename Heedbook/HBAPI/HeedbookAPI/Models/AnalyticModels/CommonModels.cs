@@ -152,6 +152,7 @@ namespace UserOperations.Models.AnalyticModels
         public string Url { get; set; }
         public Guid ApplicationUserId { get; set; }
         public Guid? DialogueId { get; set; }
+        public List<DialogueFrame> DialogueFrames { get; set; }
         public double? Age { get; set; }
         public string Gender { get; set; }
         public EmotionAttention EmotionAttention { get; set; }
