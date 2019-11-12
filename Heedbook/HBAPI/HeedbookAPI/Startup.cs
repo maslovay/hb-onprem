@@ -84,7 +84,10 @@ namespace UserOperations
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
                             {"applicationUserId", new Schema{Type = "string", Format = "uuid"}},
                             {"begTime", new Schema{Type = "string", Format = "date-time"}},
-                            {"endTime", new Schema{Type = "string", Format = "date-time"}}
+                            {"endTime", new Schema{Type = "string", Format = "date-time"}},
+                            {"contentType", new Schema{Type = "string"}},
+                            {"isPoll", new Schema{Type = "boolean"}}
+
                         }
                 });
                 c.MapType<CampaignContentAnswer>(() => new Schema
