@@ -7,9 +7,11 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
+using UserOperations.Models;
 
 namespace UserOperations.Utils
 {
+    //---its specially for swagger---
     public class FileOperationFilter : IOperationFilter
     {
         public void Apply(Operation operation, OperationFilterContext context)

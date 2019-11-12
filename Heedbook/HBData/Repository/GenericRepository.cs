@@ -11,7 +11,6 @@ using System.Reflection.Emit;
 using System.Threading.Tasks;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Extensions.Internal;
 using Newtonsoft.Json;
 
 namespace HBData.Repository
@@ -51,11 +50,6 @@ namespace HBData.Repository
         {
             return _context.Set<T>().AsQueryable();
         }
-        public IAsyncEnumerable<T> GetAsAsyncEnumerable<T>() where T : class
-        {
-            return _context.Set<T>().AsAsyncEnumerable();
-        }
-
 
         public IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate,
             params Expression<Func<T, Object>>[] children) where T : class
@@ -64,12 +58,13 @@ namespace HBData.Repository
             children.ToList().ForEach(x => dbSet.Include(x).Load());
             return dbSet.Where(predicate);
         }
-      
-        public IEnumerable<T> GetWithInclude<T>( params Expression<Func<T, Object>>[] children) where T : class
+
+        public T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate,
+            params Expression<Func<T, Object>>[] children) where T : class
         {
             var dbSet = _context.Set<T>();
             children.ToList().ForEach(x => dbSet.Include(x).Load());
-            return dbSet.ToList();
+            return dbSet.FirstOrDefault(predicate);
         }
 
         public void BulkInsert<T>(IEnumerable<T> entities) where T : class
@@ -140,6 +135,8 @@ namespace HBData.Repository
             var dbSet = _context.Set<T>();
             _context.Set<T>().RemoveRange(dbSet.Where(expr));
         }
+        public void Delete<T>(IEnumerable<T> list) where T : class
+            => _context.Set<T>().RemoveRange(list);
 
 
         public IEnumerable<Object> ExecuteDbCommand(List<String> properties, String sql,
@@ -246,6 +243,6 @@ namespace HBData.Repository
 
             type = typeBuilder.CreateType();
             return Activator.CreateInstance(type);
-        }   
+        }
     }
 }

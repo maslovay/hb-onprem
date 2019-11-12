@@ -16,6 +16,7 @@ using HBLib.Utils;
 using UserOperations.Services;
 using UserOperations.Utils;
 using System.Reflection;
+using UserOperations.Models;
 
 namespace UserOperations.Controllers
 {
@@ -1007,7 +1008,8 @@ namespace UserOperations.Controllers
                 dialogueClientSatisfaction.MeetingExpectationsByTeacher = message.Satisfaction;
                 dialogueClientSatisfaction.BegMoodByTeacher = message.BegMoodTotal;
                 dialogueClientSatisfaction.EndMoodByTeacher = message.EndMoodTotal;
-
+                dialogueClientSatisfaction.Age = message.Age;
+                dialogueClientSatisfaction.Gender = message.Gender;
                 _context.SaveChanges();
                 return Ok(JsonConvert.SerializeObject(dialogueClientSatisfaction));
             }
@@ -1087,7 +1089,7 @@ namespace UserOperations.Controllers
                 return BadRequest("Token wrong");
 
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-                Message message = JsonConvert.DeserializeObject<Message>(userDataJson);  
+                VideoMessage message = JsonConvert.DeserializeObject<VideoMessage>(userDataJson);  
 
                 var companyIdFromToken = Guid.Parse(userClaims["companyId"]);
                 Guid corporationIdFromToken;
@@ -1160,88 +1162,5 @@ namespace UserOperations.Controllers
                 return BadRequest($"{ex.Message}");
             }
         }
-    }
-
-    public class PostUser
-    {
-        public string FullName;
-        public string Email;
-        public string EmployeeId;
-        public Guid? RoleId;
-        public string Password;
-        public Guid? WorkerTypeId;
-        public Guid? CompanyId;
-    }
-    public class CompanyModel
-    {
-        public Guid CompanyIndustryId;
-        public string CompanyName;
-        public int LanguageId;
-        public Guid CountryId;
-        public int StatusId;
-        public Guid? CorporationId;
-    }
-    public class UserModel
-    {
-        public Guid Id { get; set; }
-        public string Email { get; set; }
-        public string FullName { get; set; }
-        public string Avatar { get; set; }
-        public string EmployeeId { get; set; }
-        public DateTime CreationDate { get; set; }
-        public Guid? CompanyId { get; set; }
-        public Int32? StatusId { get; set; }
-        public string OneSignalId { get; set; }
-        public Guid? WorkerTypeId { get; set; }
-        public ApplicationRole Role { get; set; }
-        public UserModel()
-        {
-
-        }
-        public UserModel(ApplicationUser user, string avatar = null)
-        {
-            Id = user.Id;
-            FullName = user.FullName;
-            Email = user.Email;
-            Avatar = avatar;
-            EmployeeId = user.EmpoyeeId;
-            CreationDate = user.CreationDate;
-            CompanyId = user.CompanyId;
-            StatusId = user.StatusId;
-            OneSignalId = user.OneSignalId;
-            WorkerTypeId = user.WorkerTypeId;
-            Role = user.UserRoles.FirstOrDefault()?.Role;
-        }
-    }
-
-    public class PhrasePost
-    {
-        public string PhraseText;
-        public Guid PhraseTypeId;
-        public Int32? LanguageId;
-        public bool IsClient;
-        public Int32? WordsSpace;
-        public double? Accurancy;
-        public Boolean IsTemplate;
-    }
-
-    public class DialoguePut
-    {
-        public Guid DialogueId;
-        public List<Guid> DialogueIds;//--this done for versions
-        public bool InStatistic;
-    }
-
-    public class DialogueSatisfactionPut
-    {
-        public Guid DialogueId;
-        public double Satisfaction;
-        public double BegMoodTotal;
-        public double EndMoodTotal;
-    }
-    public class Message
-    {
-        public string Subject;
-        public string Body;
     }
 }

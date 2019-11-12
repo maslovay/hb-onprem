@@ -169,11 +169,11 @@ namespace UserOperations.Migrations
 
                     b.Property<DateTime>("Day");
 
-                    b.Property<Guid>("IndustryId");
+                    b.Property<Guid?>("IndustryId");
 
                     b.Property<double>("Value");
 
-                    b.Property<double>("Veight");
+                    b.Property<double>("Weight");
 
                     b.HasKey("Id");
 
@@ -241,11 +241,15 @@ namespace UserOperations.Migrations
 
                     b.Property<int>("SequenceNumber");
 
+                    b.Property<int?>("StatusId");
+
                     b.HasKey("CampaignContentId");
 
                     b.HasIndex("CampaignId");
 
                     b.HasIndex("ContentId");
+
+                    b.HasIndex("StatusId");
 
                     b.ToTable("CampaignContents");
                 });
@@ -359,11 +363,15 @@ namespace UserOperations.Migrations
                     b.Property<string>("RawHTML")
                         .IsRequired();
 
+                    b.Property<int?>("StatusId");
+
                     b.Property<DateTime?>("UpdateDate");
 
                     b.HasKey("ContentId");
 
                     b.HasIndex("CompanyId");
+
+                    b.HasIndex("StatusId");
 
                     b.ToTable("Contents");
                 });
@@ -479,6 +487,8 @@ namespace UserOperations.Migrations
                     b.Property<Guid>("DialogueClientSatisfactionId")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<double?>("Age");
+
                     b.Property<double?>("BegMoodByEmpoyee");
 
                     b.Property<double?>("BegMoodByNN");
@@ -496,6 +506,8 @@ namespace UserOperations.Migrations
                     b.Property<double?>("EndMoodByTeacher");
 
                     b.Property<double?>("EndMoodTotal");
+
+                    b.Property<string>("Gender");
 
                     b.Property<double?>("MeetingExpectationsByClient");
 
@@ -1459,8 +1471,7 @@ namespace UserOperations.Migrations
 
                     b.HasOne("HBData.Models.CompanyIndustry", "Industry")
                         .WithMany()
-                        .HasForeignKey("IndustryId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("IndustryId");
                 });
 
             modelBuilder.Entity("HBData.Models.Campaign", b =>
@@ -1485,6 +1496,10 @@ namespace UserOperations.Migrations
                     b.HasOne("HBData.Models.Content", "Content")
                         .WithMany("CampaignContents")
                         .HasForeignKey("ContentId");
+
+                    b.HasOne("HBData.Models.Status", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId");
                 });
 
             modelBuilder.Entity("HBData.Models.CampaignContentAnswer", b =>
@@ -1528,6 +1543,10 @@ namespace UserOperations.Migrations
                     b.HasOne("HBData.Models.Company", "Company")
                         .WithMany()
                         .HasForeignKey("CompanyId");
+
+                    b.HasOne("HBData.Models.Status", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId");
                 });
 
             modelBuilder.Entity("HBData.Models.Dialogue", b =>
