@@ -189,7 +189,6 @@ namespace UserOperations.Providers
 
         public ApplicationUser GetUserIncludeCompany(string email)
         {
-
             var user = _repository.GetWithIncludeOne<ApplicationUser>(p => p.NormalizedEmail == email.ToUpper(), o => o.Company);
             return user;
         }
