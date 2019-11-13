@@ -25,7 +25,12 @@ namespace ApiTests
         internal static Dictionary<string, string> tokenclaims;
         internal static List<Guid> companyIds;
         internal static string email;
-    
+
+        private static Guid industryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999");
+        private static Guid userId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0");
+        private static string companyName = "TEST Co";
+        private static string fullName = "test1@heedbook.com";
+
         /// <summary>
         /// SESSIONS
         /// </summary>
@@ -36,21 +41,21 @@ namespace ApiTests
             {
                 new SessionInfo
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    ApplicationUserId = userId,
                     BegTime = new DateTime(2019,10,04, 12, 19,00),
                     EndTime = new DateTime(2019,10,04,12,20,25),
-                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
-                    FullName = "tuisv@heedbook.com",
-                    IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
+                    CompanyId = GetCompanyIds().First(),
+                    FullName = fullName,
+                    IndustryId = industryId
                 },
                   new SessionInfo
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    ApplicationUserId = userId,
                     BegTime = new DateTime(2019,10,04, 18, 19,00),
                     EndTime = new DateTime(2019,10,04,18,25,30),
-                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
-                    FullName = "tuisv@heedbook.com",
-                    IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
+                    CompanyId = GetCompanyIds().First(),
+                    FullName = fullName,
+                    IndustryId = industryId
                 }
             };
         }
@@ -69,7 +74,7 @@ namespace ApiTests
             {
                 new Dialogue
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    ApplicationUserId = userId,
                     BegTime = new DateTime(2019,10,04, 12, 19,00),
                     EndTime = new DateTime(2019,10,04,12,20,25),
                     CreationTime = new DateTime(2019,10,04, 12, 19,00),
@@ -80,19 +85,9 @@ namespace ApiTests
                     LanguageId = 2                    ,
                     DialoguePhrase = new List<DialoguePhrase>
                     {
-                        new DialoguePhrase
-                        {
-                            DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
-                            DialoguePhraseId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d2"),
-                            IsClient = true,
-                            PhraseId = Guid.Parse("6d6cd66c-6ea0-606e-8ec1-a544d012a2d2"),
-                            PhraseTypeId =  Guid.Parse("55560395-2cc3-46e8-bcef-c844f1048555")//cross
-        }
+                       GetRandomDialoguePhraseIncluded(Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"))
                     },
-                   ApplicationUser = new ApplicationUser
-                   {
-                       FullName = "tuisv@heedbook.com"
-                   },
+                   ApplicationUser = User1(),
                    DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
                    {
                        new DialogueClientSatisfaction
@@ -105,7 +100,7 @@ namespace ApiTests
                 },
                   new Dialogue
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                    ApplicationUserId = userId,
                     BegTime = new DateTime(2019,10,04, 18, 19,00),
                     EndTime = new DateTime(2019,10,04,18,25,30),
                     CreationTime = new DateTime(2019,10,04, 19, 19,00),
@@ -116,19 +111,9 @@ namespace ApiTests
                     LanguageId = 2,
                     DialoguePhrase = new List<DialoguePhrase>
                     {
-                        new DialoguePhrase
-                        {
-                            DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
-                            DialoguePhraseId = Guid.Parse("7d5cd55c-5ea0-406e-8ec1-a544d012a2d7"),
-                            IsClient = true,
-                            PhraseId = Guid.Parse("6d6cd66c-6ea0-606e-8ec1-a544d012a2d2"),
-                            PhraseTypeId = Guid.Parse("7d7cd77c-7ea0-406e-7ec1-a544d012a2d2")
-                        }
+                       GetRandomDialoguePhraseIncluded(Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"))
                     },
-                   ApplicationUser = new ApplicationUser
-                   {
-                       FullName = "tuisv@heedbook.com"
-                   },
+                   ApplicationUser = GetUsersCompany1().First(),
                    DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
                    {
                        new DialogueClientSatisfaction
@@ -142,15 +127,62 @@ namespace ApiTests
             };
             return dialogues.AsQueryable();
         }
+
+        internal static IQueryable<CampaignContentAnswer> GetCampaignContentsAnswers()
+        {
+            return new List<CampaignContentAnswer>{
+                new CampaignContentAnswer
+                {
+                    Answer = "5",
+                    ApplicationUser = User1(),
+                    ApplicationUserId = User1().Id,
+                    CampaignContent = GetCampaignContents().First(),
+                    CampaignContentAnswerId = Guid.NewGuid(),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
+                    Time = begDate.AddMinutes(1)
+                },
+                 new CampaignContentAnswer
+                {
+                    Answer = "9",
+                    ApplicationUser = User1(),
+                    ApplicationUserId = User1().Id,
+                    CampaignContent = GetCampaignContents().First(),
+                    CampaignContentAnswerId = Guid.NewGuid(),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
+                    Time = begDate.AddDays(5)//!!!
+                },
+                  new CampaignContentAnswer
+                {
+                    Answer = "2",
+                    ApplicationUser = User2(),//!!!
+                    ApplicationUserId = User2().Id,
+                    CampaignContent = GetCampaignContents().First(),
+                    CampaignContentAnswerId = Guid.NewGuid(),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
+                    Time = begDate.AddMinutes(1)
+                },
+                   new CampaignContentAnswer
+                {
+                    Answer = "5",
+                    ApplicationUser = User3(),//!!!
+                    ApplicationUserId = User3().Id,
+                    CampaignContent = GetCampaignContents().First(),
+                    CampaignContentAnswerId = Guid.NewGuid(),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
+                    Time = begDate.AddMinutes(1)
+                }
+            }.AsQueryable();
+        }
+
         internal static IQueryable<Dialogue> GetDialoguesWithFrames()
         {
             var dialogues = new List<Dialogue>
             {
                 new Dialogue
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 12, 19,00),
-                    EndTime = new DateTime(2019,10,04,12,20,25),
+                    ApplicationUserId = userId,
+                    BegTime = begDate.AddMinutes(1),
+                    EndTime = begDate.AddMinutes(3),
                     CreationTime = new DateTime(2019,10,04, 12, 19,00),
                     InStatistic = true,
                     StatusId = 3,
@@ -164,14 +196,19 @@ namespace ApiTests
                             DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                             DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d2"),
                             IsClient = true,
-                            Time = new DateTime(2019,10,04, 12, 19,03),
-                            AngerShare =  0.5
+                            Time = begDate.AddMinutes(2),
+                            AngerShare =  0.3,
+                            ContemptShare = 0,
+                            DisgustShare = 0.3,
+                            FearShare = 0,
+                            HappinessShare = 0.1,
+                            NeutralShare = 0.1,
+                            SadnessShare = 0.1,
+                            SurpriseShare = 0.2,
+                            YawShare = 20
         }
                     },
-                   ApplicationUser = new ApplicationUser
-                   {
-                       FullName = "tuisv@heedbook.com"
-                   },
+                   ApplicationUser = User1(),
                    DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
                    {
                        new DialogueClientSatisfaction
@@ -184,9 +221,9 @@ namespace ApiTests
                 },
                   new Dialogue
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 18, 19,00),
-                    EndTime = new DateTime(2019,10,04,18,25,30),
+                    ApplicationUserId = userId,
+                    BegTime = begDate.AddMinutes(3),
+                    EndTime = begDate.AddMinutes(5),
                     CreationTime = new DateTime(2019,10,04, 19, 19,00),
                     InStatistic = true,
                     StatusId = 3,
@@ -200,10 +237,19 @@ namespace ApiTests
                             DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                             DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d3"),
                             IsClient = true,
-                            Time = new DateTime(2019,10,04, 18, 19,03),
-                            AngerShare =  0.2
-        }
-                    }                 
+                            Time = begDate.AddMinutes(4),
+                            AngerShare =  0.2,
+                            ContemptShare = 0.1,
+                            DisgustShare = 0.3,
+                            FearShare = 0,
+                            HappinessShare = 0.1,
+                            NeutralShare = 0.1,
+                            SadnessShare = 0.1,
+                            SurpriseShare = 0.2,
+                            YawShare = 20
+        }                   
+                    },
+                    ApplicationUser = GetUsersCompany1().First(),
                 }
             };
             return dialogues.AsQueryable();
@@ -252,9 +298,9 @@ namespace ApiTests
             {
                 new DialogueInfoWithFrames
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 12, 19,00),
-                    EndTime = new DateTime(2019,10,04,12,20,25),
+                    ApplicationUserId = userId,
+                    BegTime = begDate,
+                    EndTime = begDate.AddMinutes(3),
                     DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     DialogueFrame = new List<DialogueFrame>
                     {
@@ -263,16 +309,30 @@ namespace ApiTests
                             DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                             DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d2"),
                             IsClient = true,
-                            Time = new DateTime(2019,10,04, 12, 19,03),
-                            AngerShare =  0.5
-        }
+                            Time = begDate.AddMinutes(1),
+                            AngerShare =  0.2,
+                            HappinessShare = 0.3,
+                            NeutralShare = 0.5,
+                            YawShare = 18
+                    },
+                         new DialogueFrame
+                        {
+                            DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                            DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d2"),
+                            IsClient = true,
+                            Time = begDate.AddMinutes(1.5),
+                            AngerShare =  0.4,
+                            HappinessShare = 0.5,
+                            NeutralShare = 0.3,
+                            YawShare = 80
+                    }
                     },
                 },
                   new DialogueInfoWithFrames
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 18, 19,00),
-                    EndTime = new DateTime(2019,10,04,18,25,30),
+                    ApplicationUserId = userId,
+                   BegTime = begDate.AddMinutes(3),
+                    EndTime = begDate.AddMinutes(5),
                     DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                     DialogueFrame = new List<DialogueFrame>
                     {
@@ -281,13 +341,85 @@ namespace ApiTests
                             DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                             DialogueFrameId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d3"),
                             IsClient = true,
-                            Time = new DateTime(2019,10,04, 18, 19,03),
-                            AngerShare =  0.2
-        }
+                            Time = begDate.AddMinutes(5),
+                            AngerShare =  0.2,
+                            ContemptShare = 0.8,
+                            YawShare = 90        }
                     }
                 }
             };
             return dialogues.AsQueryable();
+        }
+        private static IQueryable<Dialogue> GetDialoguesIncluded()
+        {
+            var dialogues = new List<Dialogue>
+            {
+                new Dialogue
+                {
+                    ApplicationUserId = userId,
+                    BegTime = new DateTime(2019,10,04, 12, 19,00),
+                    EndTime = new DateTime(2019,10,04,12,20,25),
+                    CreationTime = new DateTime(2019,10,04, 12, 19,00),
+                    InStatistic = true,
+                    StatusId = 3,
+                    PersonId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
+                    DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                    LanguageId = 2                    ,
+                    DialoguePhrase = new List<DialoguePhrase>
+                    {
+                       GetRandomDialoguePhraseIncluded(Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"))
+                    },
+                   ApplicationUser = User1(),
+                   DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
+                   {
+                       new DialogueClientSatisfaction
+                       {
+                           MeetingExpectationsTotal = 0.45,
+                           BegMoodByNN = 0.4,
+                           EndMoodByNN = 0.7
+                       }
+                   }
+                },
+                  new Dialogue
+                {
+                    ApplicationUserId = userId,
+                    BegTime = new DateTime(2019,10,04, 18, 19,00),
+                    EndTime = new DateTime(2019,10,04,18,25,30),
+                    CreationTime = new DateTime(2019,10,04, 19, 19,00),
+                    InStatistic = true,
+                    StatusId = 3,
+                    PersonId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
+                    DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
+                    LanguageId = 2,
+                    DialoguePhrase = new List<DialoguePhrase>
+                    {
+                       GetRandomDialoguePhraseIncluded(Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"))
+                    },
+                   ApplicationUser = User1(),
+                   DialogueClientSatisfaction = new List<DialogueClientSatisfaction>
+                   {
+                       new DialogueClientSatisfaction
+                       {
+                           MeetingExpectationsTotal = 0.5,
+                           BegMoodByNN = 0.5,
+                           EndMoodByNN = 0.6
+                       }
+                   }
+                }
+            };
+            return dialogues.AsQueryable();
+        }
+
+        private static DialoguePhrase GetRandomDialoguePhraseIncluded(Guid dialogueId)
+        {
+            return new DialoguePhrase
+            {
+                DialogueId = dialogueId,
+                DialoguePhraseId = Guid.Parse("5d5cd55c-5ea0-406e-8ec1-a544d012a2d2"),
+                IsClient = true,
+                PhraseId = Guid.Parse("6d6cd66c-6ea0-606e-8ec1-a544d012a2d2"),
+                PhraseTypeId = Guid.Parse("55560395-2cc3-46e8-bcef-c844f1048555")//cross
+            };
         }
         internal static async Task<Guid> GetCrossPhraseId()
         {
@@ -306,21 +438,69 @@ namespace ApiTests
             {
                 new SlideShowSession
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 12, 19,00),
-                    EndTime = new DateTime(2019,10,04,12,19,05),
-                    CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
+                    ApplicationUserId = userId,
+                    BegTime = begDate.AddMinutes(1),
+                    EndTime = begDate.AddMinutes(2),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
                     IsPoll = false,
-                    SlideShowSessionId = Guid.Parse("6d5cd11c-5ea5-406e-6ec1-a544d048a9d6")
+                    SlideShowSessionId = Guid.Parse("6d5cd11c-5ea5-406e-6ec1-a544d048a9d6"),
+                    CampaignContent = GetCampaignContents().First(),
+                    ApplicationUser = User1()
                 },
                   new SlideShowSession
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 18, 19,00),
-                    EndTime = new DateTime(2019,10,04,18,25,30),
-                    CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
+                    ApplicationUserId = userId,
+                    BegTime = begDate.AddMinutes(2),
+                    EndTime = begDate.AddMinutes(3),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
                     IsPoll = false,
-                    SlideShowSessionId = Guid.Parse("5d5cd11c-5ea5-406e-5ec1-a544d048a9d3")
+                    SlideShowSessionId = Guid.Parse("5d5cd11c-5ea5-406e-5ec1-a544d048a9d3"),
+                    CampaignContent = GetCampaignContents().Skip(1).First(),
+                    ApplicationUser = User1()
+                },
+                    new SlideShowSession
+                {
+                    ApplicationUserId = userId,
+                    BegTime = begDate.AddMinutes(2),
+                    EndTime = begDate.AddMinutes(3),
+                    CampaignContentId = GetCampaignContents().First().CampaignContentId,
+                    IsPoll = true,
+                    SlideShowSessionId = Guid.NewGuid(),
+                    CampaignContent = GetCampaignContents().Skip(1).First(),
+                    ApplicationUser = User1()
+                },
+                      new SlideShowSession
+                {
+                    ApplicationUserId = User1().Id,
+                    BegTime = begDate.AddDays(5),
+                    EndTime = begDate.AddDays(5),
+                    CampaignContentId = Guid.NewGuid(),
+                    IsPoll = false,
+                    SlideShowSessionId = Guid.NewGuid(),
+                    CampaignContent = GetCampaignContents().Skip(1).First(),
+                    ApplicationUser = User1()
+                },
+                 new SlideShowSession
+                {
+                    ApplicationUserId = User2().Id,
+                    BegTime = begDate.AddDays(5),
+                    EndTime = begDate.AddDays(5),
+                    CampaignContentId = Guid.NewGuid(),
+                    IsPoll = true,
+                    SlideShowSessionId = Guid.NewGuid(),
+                    CampaignContent = GetCampaignContents().Skip(1).First(),
+                    ApplicationUser = User2()
+                },
+                  new SlideShowSession
+                {
+                    ApplicationUserId = User3().Id,
+                    BegTime = begDate.AddMinutes(3),
+                    EndTime = begDate.AddMinutes(5),
+                    CampaignContentId = Guid.NewGuid(),
+                    IsPoll = false,
+                    SlideShowSessionId = Guid.NewGuid(),
+                    CampaignContent = GetCampaignContents().Skip(1).First(),
+                    ApplicationUser = User3()
                 }
             }.AsQueryable();
         }
@@ -330,21 +510,21 @@ namespace ApiTests
             {
                 new SlideShowInfo
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 12, 19,00),
-                    EndTime = new DateTime(2019,10,04,12,19,05),
+                    ApplicationUserId = userId,
+                    BegTime = begDate,
+                    EndTime = begDate.AddMinutes(2),
                     CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
                     ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
-                    DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                    DialogueId = null,// Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     Age = 30,
                     IsPoll = false,
                     ContentName = "test content",
                     EmotionAttention = new EmotionAttention()
                     {
-                        Attention = 0.5,
-                        Negative = 0.3,
-                        Neutral = 0.5,
-                        Positive = 0.2
+                        //Attention = 0.5,
+                        //Negative = 0.3,
+                        //Neutral = 0.5,
+                        //Positive = 0.2
                     },
                      ContentType = "media",
                      Gender = "1",
@@ -352,21 +532,21 @@ namespace ApiTests
                 },
                   new SlideShowInfo
                 {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 12, 19,05),
-                    EndTime = new DateTime(2019,10,04,12,19,10),
+                    ApplicationUserId = userId,
+                    BegTime = begDate.AddMinutes(2),
+                    EndTime = begDate.AddMinutes(4),
                     CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
                     ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
-                    DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+                    DialogueId = null,// Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     Age = 30,
                     IsPoll = false,
                     ContentName = "test content",
                     EmotionAttention = new EmotionAttention()
                     {
-                        Attention = 0.7,
-                        Negative = 0.3,
-                        Neutral = 0.2,
-                        Positive = 0.5
+                        //Attention = 0.7,
+                        //Negative = 0.3,
+                        //Neutral = 0.2,
+                        //Positive = 0.5
                     },
                      ContentType = "media",
                      Gender = "1",
@@ -412,20 +592,24 @@ namespace ApiTests
                 new CampaignContent
                 {
                     CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
-                    CampaignId = Guid.Parse("1d1cd11c-2ea0-406e-8ec1-a544d048a9d0"),
-                    ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
+                    Campaign = GetCampaigns().ToArray()[0],
+                    CampaignId =  GetCampaigns().ToArray()[0].CampaignId,
+                    Content = GetContents().ToArray()[0],
+                    ContentId = GetContents().ToArray()[0].ContentId,
                     StatusId = 3
                 },
                   new CampaignContent
                 {
                     CampaignContentId = Guid.Parse("4d3cd11c-2ea0-406e-8ec1-a544d048a9d4"),
-                    CampaignId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d048a9d0"),
-                    ContentId = Guid.Parse("2d2cd23c-2ea2-406e-8ec1-a544d048a9d0"),
+                    Campaign = GetCampaigns().ToArray()[0],
+                    CampaignId =  GetCampaigns().ToArray()[0].CampaignId,
+                    Content = GetContents().ToArray()[1],
+                    ContentId = GetContents().ToArray()[1].ContentId,
                     StatusId = 5
                 }
             }.AsQueryable();
         }
-
+     
         internal static IQueryable<Campaign> GetCampaigns()
         {
             return new List<Campaign>
@@ -435,7 +619,7 @@ namespace ApiTests
                      BegAge = 5,
                      BegDate = new DateTime(),
                      CampaignId = Guid.Parse("1d1cd11c-2ea0-406e-8ec1-a544d048a9d0"),
-                     CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                     CompanyId = GetCompanyIds().First(),
                      EndAge = 55,
                      EndDate = new DateTime(),
                      IsSplash = true,
@@ -447,7 +631,7 @@ namespace ApiTests
                      BegAge = 5,
                      BegDate = new DateTime(),
                      CampaignId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d048a9d0"),
-                     CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                     CompanyId = GetCompanyIds().First(),
                      EndAge = 55,
                      EndDate = new DateTime(),
                      IsSplash = true,
@@ -464,18 +648,18 @@ namespace ApiTests
                 new Content
                 {
                     Duration = 5,
-                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                    CompanyId = GetCompanyIds().First(),
                     ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
                     StatusId = 3,
                     Name = "test content",
                     IsTemplate = false,
                     JSONData = "{ggg:jjj}",
-                    RawHTML = "kkk/ggg"
+                    RawHTML = "kkk/ggg"                    
                 },
                   new Content
                 {
                     Duration = 5,
-                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                    CompanyId = GetCompanyIds().First(),
                     ContentId = Guid.Parse("2d2cd23c-2ea2-406e-8ec1-a544d048a9d0"),
                     StatusId = 3,
                     Name = "test content",
@@ -490,6 +674,149 @@ namespace ApiTests
         /// OTHER
         /// </summary>
         /// <returns></returns>
+        internal static List<Guid> GetCompanyIdsAll()
+        {
+            return new List<Guid>
+            {
+                Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                Guid.Parse("77777395-2cc3-46e8-bcef-c844f1048182")
+            };
+        }
+        internal static List<Guid> GetCompanyIds()
+        {
+            return new List<Guid>
+            {
+                Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182")
+            };
+        }
+
+        internal static List<Company> GetCompanies()
+        {
+            return new List<Company>
+            {
+                Company1(),
+                Company2()
+        };
+        }
+        internal static Company Company1()
+        {
+            return
+                new Company
+                {
+                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                    CompanyIndustryId = Guid.Parse("44440395-2cc3-46e8-bcef-c844f1048182"),
+                    CompanyName = "TEST Co",
+                    CorporationId = Guid.Parse("71aa39f1-649d-48d6-b1ae-10c518ed5979"),
+                    CountryId = Guid.Parse("66660395-2cc3-46e8-bcef-c844f1048182"),
+                    LanguageId = 2,
+                    StatusId = 3,
+                };
+        }
+        internal static Company Company2()
+        {
+            return
+                new Company
+                {
+                    CompanyId = Guid.Parse("77777395-2cc3-46e8-bcef-c844f1048182"),
+                    CompanyIndustryId = Guid.Parse("44440395-2cc3-46e8-bcef-c844f1048182"),
+                    CompanyName = "TEST Co2",
+                    CorporationId = null,
+                    CountryId = Guid.Parse("66660395-2cc3-46e8-bcef-c844f1048182"),
+                    LanguageId = 2,
+                    StatusId = 3,
+                };
+        }
+        internal static List<ApplicationUser> GetUsersCompany1()
+        {
+            return new List<ApplicationUser>
+            {
+              User1(),
+              User2()
+            };
+        }
+        internal static ApplicationUser User1()
+        {
+            return new ApplicationUser
+            {
+                CompanyId = Company1().CompanyId,
+                Avatar = null,
+                StatusId = 3,
+                Email = "test1@heedbook.com",
+                FullName = "USER TEST NAME",
+                Id = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
+                NormalizedEmail = "test1@heedbook.com".ToUpper(),
+                UserName = "test1@heedbook.com",
+                NormalizedUserName = "test1@heedbook.com".ToUpper(),
+                EmpoyeeId = "123",
+                PasswordHash = "hhh",
+                WorkerTypeId = Guid.Parse("1d5cd11c-2ea0-111e-8ec1-a544d048a9d0"),
+                Dialogue = null,//GetDialoguesIncluded().ToList(),
+                UserRoles = null,// new List<ApplicationUserRole> { UserRoleIncluded() },
+                //Company = Company()
+            };
+        }
+        internal static ApplicationUser User2()
+        {
+            return new ApplicationUser
+            {
+                CompanyId = Company1().CompanyId,
+                Avatar = null,
+                StatusId = 3,
+                Email = "test2@heedbook.com",
+                FullName = "USER TEST NAME 2",
+                Id = Guid.Parse("1d5cd61c-1ea1-406e-8ec1-a544d048a9d0"),
+                NormalizedEmail = "test2@heedbook.com".ToUpper(),
+                UserName = "test2@heedbook.com",
+                NormalizedUserName = "test2@heedbook.com".ToUpper(),
+                EmpoyeeId = "123",
+                PasswordHash = "hhh",
+                WorkerTypeId = Guid.Parse("1d5cd11c-2ea0-111e-8ec1-a544d048a9d0"),
+                Dialogue = null,//GetDialoguesIncluded().ToList(),
+                UserRoles = null,// new List<ApplicationUserRole> { UserRoleIncluded() },
+                Company = Company1()
+            };
+        }
+        internal static ApplicationUser User3()
+        {
+            return new ApplicationUser
+            {
+                CompanyId = Company2().CompanyId,
+                Avatar = null,
+                StatusId = 3,
+                Email = "test3@heedbook.com",
+                FullName = "USER TEST NAME 3",
+                Id = Guid.Parse("2d5cd22c-2ea2-226e-8ec1-a544d048a9d0"),
+                NormalizedEmail = "test3@heedbook.com".ToUpper(),
+                UserName = "test3@heedbook.com",
+                NormalizedUserName = "test3@heedbook.com".ToUpper(),
+                EmpoyeeId = "123",
+                PasswordHash = "hhh",
+                WorkerTypeId = Guid.Parse("1d5cd11c-2ea0-111e-8ec1-a544d048a9d0"),
+                Dialogue = null,//GetDialoguesIncluded().ToList(),
+                UserRoles = null,// new List<ApplicationUserRole> { UserRoleIncluded() },
+                Company = Company2()
+            };
+        }
+        internal static ApplicationRole EmployeeRoleIncluded()
+        {
+            return new ApplicationRole
+            {
+                Id = Guid.Parse("2d5cd62c-2ea0-406e-8ec1-a222d048a9d0"),
+                Name = "Employee",
+                UserRoles = new List<ApplicationUserRole> { UserRoleIncluded() }
+            };
+        }
+    
+        internal static ApplicationUserRole UserRoleIncluded()
+        {
+            return new ApplicationUserRole
+               {
+                   RoleId = EmployeeRoleIncluded().Id,
+                   UserId = User1().Id,
+                   Role = EmployeeRoleIncluded(),
+                   User = null
+               };
+        }
         internal static async Task<IEnumerable<BenchmarkModel>> GetBenchmarkList()
         {
             return new List<BenchmarkModel>{
@@ -509,10 +836,10 @@ namespace ApiTests
         {
             return new Dictionary<string, string>
             {
-                {"sub", "tuisv@heedbook.com"} ,{"jti", "afd7fc64 - 802e-486b - a9b2 - 4ef824cb3b89"},
+                {"sub", fullName} ,{"jti", "afd7fc64 - 802e-486b - a9b2 - 4ef824cb3b89"},
                 {"applicationUserId", "8d5cd62c-2ea0-406e-8ec1-a544d048a9d0" },
                 {"applicationUserName", "tuisv@heedbook.com"},
-                {"companyName", "TUI Supervisor"},
+                {"companyName", companyName},
                 {"companyId", "82560395-2cc3-46e8-bcef-c844f1048182"},
                 {"corporationId", "71aa39f1-649d-48d6-b1ae-10c518ed5979"},
                 {"languageCode", "2"},
@@ -524,18 +851,14 @@ namespace ApiTests
                 {"aud", "https://heedbook.com"}
          };
         }
-        internal static List<Guid> GetCompanyIds()
-        {
-            return new List<Guid>
-            {
-                Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182")//,
-              //  Guid.Parse("ddaa6e0b-3439-4c78-915e-2e0245332db3"),
-              //  Guid.Parse("ddaa7e0b-3439-4c78-915e-2e0245332db4")
-            };
-        }
         internal static List<Guid> GetGuids()
         {
             return new List<Guid>() { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
         }
+        internal static IQueryable<T> GetEmptyList<T>()
+        {
+            return new List<T>().AsQueryable();
+        }
+
     }
 }

@@ -171,7 +171,7 @@ namespace ApiTests
                 .Returns(Task.FromResult(new List<AnswerInfo.AnswerOne>() { }));
             moqIAnalyticContentProvider.Setup(p => p.AddDialogueIdToShow(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueInfoWithFrames>>()))
                 .Returns(new List<SlideShowInfo>() { });
-            moqIAnalyticContentProvider.Setup(p => p.EmotionsDuringAdv(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueInfoWithFrames>>()))
+            moqIAnalyticContentProvider.Setup(p => p.EmotionsDuringAdv(It.IsAny<List<SlideShowInfo>>()))
                 .Returns(new EmotionAttention() { Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d });
             moqIAnalyticContentProvider.Setup(p => p.EmotionDuringAdvOneDialogue(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueFrame>>()))
                 .Returns(new EmotionAttention() { Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d });

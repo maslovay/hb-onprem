@@ -15,12 +15,12 @@ using HBLib.Utils;
 using HBLib;
 using UserOperations.Utils;
 using BenchmarkDotNet.Running;
-using UserOperations.Controllers.Test;
 using UserOperations.Services.Scheduler;
 using Quartz;
 using UserOperations.Providers;
 using UserOperations.Providers.Interfaces;
 using UserOperations.Providers.Realizations;
+using UserOperations.Controllers;
 
 namespace UserOperations
 {
@@ -85,8 +85,7 @@ namespace UserOperations
                             {"applicationUserId", new Schema{Type = "string", Format = "uuid"}},
                             {"begTime", new Schema{Type = "string", Format = "date-time"}},
                             {"endTime", new Schema{Type = "string", Format = "date-time"}},
-                            {"contentType", new Schema{Type = "string"}},
-                            {"isPoll", new Schema{Type = "boolean"}}
+                            {"contentType", new Schema{Type = "string"}}
 
                         }
                 });
@@ -176,7 +175,7 @@ namespace UserOperations
              app.ApplicationServices.GetService<ITrigger>());
 
             // add seed
-            //BenchmarkRunner.Run<TestAnalyticClientProfile>();
+          //  BenchmarkRunner.Run<TestRepository>();
         }
 
     }
