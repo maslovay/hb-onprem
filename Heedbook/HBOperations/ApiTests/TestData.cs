@@ -14,6 +14,9 @@ using UserOperations.Providers;
 using UserOperations.Providers.Interfaces;
 using UserOperations.Services;
 using UserOperations.Utils;
+using Microsoft.EntityFrameworkCore.Query.Internal;
+using System.Linq.Expressions;
+using System.Threading;
 
 namespace ApiTests
 {
@@ -806,6 +809,19 @@ namespace ApiTests
                 UserRoles = new List<ApplicationUserRole> { UserRoleIncluded() }
             };
         }
+        internal static List<ApplicationRole> GetApplicationRoles()
+        {
+            var roles = new List<ApplicationRole>()
+            {
+                new ApplicationRole{Id = Guid.NewGuid(), Name = "Manager"},
+                new ApplicationRole{Id = Guid.NewGuid(), Name = "User"},
+                new ApplicationRole{Id = Guid.NewGuid(), Name = "Employee"},
+                new ApplicationRole{Id = Guid.NewGuid(), Name = "Supervisor"},
+                new ApplicationRole{Id = Guid.NewGuid(), Name = "Admin"},
+                new ApplicationRole{Id = Guid.NewGuid(), Name = "Teacher"}
+            };
+            return roles;
+        }
     
         internal static ApplicationUserRole UserRoleIncluded()
         {
@@ -851,6 +867,95 @@ namespace ApiTests
                 {"aud", "https://heedbook.com"}
          };
         }
+        internal static IQueryable<ApplicationUser> GetUsers()
+        {
+            var users = new List<ApplicationUser>()
+            {
+                new ApplicationUser
+                {
+                    Id = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae1"),
+                    Email = "IvanovIvan@heedbook.com",
+                    CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2"),
+                    Company = new Company
+                    {
+                        CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")
+                    },
+                    UserRoles = new List<ApplicationUserRole>
+                    {
+                        new ApplicationUserRole{}
+                    }
+                }
+            }.AsQueryable();
+            return users;
+        }
+        internal static IQueryable<Company> GetCompanys()
+        {
+            var companys = new List<Company>
+            {
+                new Company
+                {
+                    CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")
+                }
+            }.AsQueryable();
+            return companys;
+        }
+        internal static IQueryable<Tariff> GetTariffs()
+        {
+            var tariffs = new List<Tariff>
+            {
+                new Tariff
+                {
+                    TariffId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2"),
+                    CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")
+                }
+            }.AsQueryable();
+            return tariffs;
+        }
+        internal static IQueryable<Transaction> GetTransactions()
+        {
+            var transactions = new TestAsyncEnumerable<Transaction>(
+                new List<Transaction>
+                {
+                    new Transaction
+                    {
+                        TariffId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")
+                    }
+                }).AsQueryable();
+            return transactions;
+        }
+        internal static IQueryable<WorkerType> GetWorkerTypes()
+        {
+            var workerTypes = new TestAsyncEnumerable<WorkerType>(
+                new List<WorkerType>
+                {
+                    new WorkerType
+                    {
+                        CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")
+                    }
+                }).AsQueryable();
+            return workerTypes;
+        }
+        internal static IQueryable<PhraseCompany> GetPhraseCompanies()
+        {
+            var phraseCompanys = new TestAsyncEnumerable<PhraseCompany>(
+                new List<PhraseCompany>
+                {
+                    new PhraseCompany{CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")},
+                    new PhraseCompany{CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")},
+                    new PhraseCompany{CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")},
+                    new PhraseCompany{CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")}
+                }).AsQueryable();
+            return phraseCompanys;
+        }
+        internal static IQueryable<PasswordHistory> GetPasswordHistorys()
+        {
+            var passwordHistory = new TestAsyncEnumerable<PasswordHistory>(
+                new List<PasswordHistory>
+                {
+                    new PasswordHistory{UserId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae1")}
+                }) .AsQueryable();
+            return passwordHistory;
+        }
         internal static List<Guid> GetGuids()
         {
             return new List<Guid>() { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
@@ -860,5 +965,91 @@ namespace ApiTests
             return new List<T>().AsQueryable();
         }
 
+    }
+    internal class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
+    {
+        private readonly IQueryProvider _inner;
+
+        internal TestAsyncQueryProvider(IQueryProvider inner)
+        {
+            _inner = inner;
+        }
+
+        public IQueryable CreateQuery(Expression expression)
+        {
+            return new TestAsyncEnumerable<TEntity>(expression);
+        }
+
+        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
+        {
+            return new TestAsyncEnumerable<TElement>(expression);
+        }
+
+        public object Execute(Expression expression)
+        {
+            return _inner.Execute(expression);
+        }
+
+        public TResult Execute<TResult>(Expression expression)
+        {
+            return _inner.Execute<TResult>(expression);
+        }
+
+        public IAsyncEnumerable<TResult> ExecuteAsync<TResult>(Expression expression)
+        {
+            return new TestAsyncEnumerable<TResult>(expression);
+        }
+
+        public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Execute<TResult>(expression));
+        }
+    }
+    internal class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, IQueryable<T>
+    {
+        public TestAsyncEnumerable(IEnumerable<T> enumerable)
+            : base(enumerable)
+        { }
+
+        public TestAsyncEnumerable(Expression expression)
+            : base(expression)
+        { }
+
+        public IAsyncEnumerator<T> GetEnumerator()
+        {
+            return new TestAsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
+        }
+
+        IQueryProvider IQueryable.Provider
+        {
+            get { return new TestAsyncQueryProvider<T>(this); }
+        }
+    }
+    internal class TestAsyncEnumerator<T> : IAsyncEnumerator<T>
+    {
+        private readonly IEnumerator<T> _inner;
+
+        public TestAsyncEnumerator(IEnumerator<T> inner)
+        {
+            _inner = inner;
+        }
+
+        public void Dispose()
+        {
+            _inner.Dispose();
+        }
+
+        public T Current
+        {
+            get
+            {
+                return _inner.Current;
+            }
+        }
+
+        public Task<bool> MoveNext(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_inner.MoveNext());
+        }
     }
 }

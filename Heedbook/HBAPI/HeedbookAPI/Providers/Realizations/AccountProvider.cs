@@ -220,8 +220,9 @@ namespace UserOperations.Providers
 
             var campaigns = _repository.GetWithInclude<Campaign>(x => x.CompanyId == company.CompanyId, p => p.CampaignContents).ToList();
             var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
-            var taskPraseCompany = _repository.GetAsQueryable<PhraseCompany>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
-            var phrases = taskPraseCompany.Result;
+            var taskPhraseCompany = _repository.GetAsQueryable<PhraseCompany>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
+            taskPhraseCompany.Wait();
+            var phrases = taskPhraseCompany.Result;
             
             var taskPasswordHistory = _repository.GetAsQueryable<PasswordHistory>().Where(x => users.Select(p=>p.Id).Contains( x.UserId)).ToListAsync();
             taskPasswordHistory.Wait();
