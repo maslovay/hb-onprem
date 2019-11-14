@@ -843,6 +843,16 @@ namespace ApiTests
                 }};
 
         }
+        internal static List<BenchmarkModel> GetBenchmarkModels(string benchmarkName)
+        {
+            var benchmarkModels = new List<BenchmarkModel>()
+            {
+                new BenchmarkModel{Name = benchmarkName, Value = 80},
+                new BenchmarkModel{Name = benchmarkName, Value = 70},
+                new BenchmarkModel{Name = benchmarkName, Value = 60},
+            };
+            return benchmarkModels;
+        }
         internal static int GetStatus(string status)
         {
             var value = status == "Active" ? 3 : (status == "Inactive" ? 5 : 0);
@@ -963,6 +973,53 @@ namespace ApiTests
         internal static IQueryable<T> GetEmptyList<T>()
         {
             return new List<T>().AsQueryable();
+        }
+        internal static List<Benchmark> GetBenchmarks()
+        {
+            var benchmarks = new List<Benchmark>
+            {
+                new Benchmark
+                {
+                    Day = new DateTime(2019, 11, 11, 12, 00, 00), 
+                    Id = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a120"), 
+                    BenchmarkNameId = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a120"),
+                    IndustryId = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a12b")
+                },
+                new Benchmark
+                {
+                    Day = new DateTime(2019, 11, 11, 13, 00, 00), 
+                    Id = new Guid("25b74216-7871-4f5b-b21f-9bcf5177a120"),
+                    BenchmarkNameId = new Guid("25b74216-7871-4f5b-b21f-9bcf5177a120"),
+                    IndustryId = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a12b")
+                },
+                new Benchmark
+                {
+                    Day = new DateTime(2019, 11, 11, 14, 00, 00), 
+                    Id = new Guid("35b74216-7871-4f5b-b21f-9bcf5177a120"),
+                    BenchmarkNameId = new Guid("35b74216-7871-4f5b-b21f-9bcf5177a120"),
+                    IndustryId = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a12b")
+                }
+            };
+            return benchmarks;
+        }
+        internal static List<BenchmarkName> GetBenchmarkName()
+        {
+            var benchmarkName = new List<BenchmarkName>
+            {
+                new BenchmarkName
+                {
+                    Id = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a120")
+                },
+                new BenchmarkName
+                {
+                    Id = new Guid("25b74216-7871-4f5b-b21f-9bcf5177a120")
+                },
+                new BenchmarkName
+                {
+                    Id = new Guid("35b74216-7871-4f5b-b21f-9bcf5177a120")
+                },
+            };
+            return benchmarkName;
         }
 
     }
