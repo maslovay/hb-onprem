@@ -86,5 +86,13 @@ namespace HBData.Models
         ///     Dialogue later satisfaction estimation by nn
         /// </summary>
         public Double? EndMoodByNN { get; set; }
+        /// <summary>
+        ///    Client age in dialogue
+        /// </summary>
+        public Double? Age { get; set; }
+        /// <summary>
+        ///     Client gender in dialogue -"male" : "female"
+        /// </summary>
+        public string Gender { get; set; }
     }
 }

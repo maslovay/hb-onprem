@@ -63,6 +63,7 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Report about dialogues", Description = "For not loggined users")]        
         [SwaggerResponse(200, "Report constructed")]
         public FileResult GetReport([FromQuery(Name = "begTime")] string beg,
+            [FromQuery(Name = "isTeacherReport")] bool isTeacherReport,
             [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds)
         {
             try
@@ -73,7 +74,7 @@ namespace UserOperations.Controllers
 
                 companyIds = companyIds.Any() ? companyIds : _context.Companys.Select(p=>p.CompanyId).ToList();
 
-                DialogueReport(begTime, companyIds);
+                DialogueReport(begTime, companyIds, isTeacherReport);
 
                 var dataBytes = System.IO.File.ReadAllBytes("DialogueReport.xlsx");
                 System.IO.File.Delete("DialogueReport.xlsx");
@@ -90,7 +91,7 @@ namespace UserOperations.Controllers
         }  
 
 
-        private void DialogueReport(DateTime beginTime, List<Guid> companyIds)
+        private void DialogueReport(DateTime beginTime, List<Guid> companyIds, bool isTeacherReport = false)
         {      
             var managerRoleId = _context.Roles.Where(p => p.NormalizedName == "MANAGER").FirstOrDefault().Id;
             var users = _context.ApplicationUsers
@@ -112,7 +113,7 @@ namespace UserOperations.Controllers
                 .Include(p => p.DialogueVisual)
                 .Include(p => p.DialoguePhrase).ThenInclude(p => p.Phrase).ThenInclude(p => p.PhraseType)
                 .Include(p => p.DialogueWord)
-
+                .Where(p => (!isTeacherReport) || (p.DialogueClientSatisfaction.Average(q => q.MeetingExpectationsByTeacher) != 0))
                 .Where(p => p.BegTime > beginTime
                     && p.StatusId == 3
                     && companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
@@ -134,6 +135,9 @@ namespace UserOperations.Controllers
                         SatisfactionEndMoodTotal = p.DialogueClientSatisfaction.Average(s => s.EndMoodTotal).ToString(),
                         SatisfactionMeetingExpectationsByClient = p.DialogueClientSatisfaction.Average(s => s.MeetingExpectationsByClient).ToString(),
                         SatisfactionMeetingExpectationsByEmpoyee = p.DialogueClientSatisfaction.Average(s => s.MeetingExpectationsByEmpoyee).ToString(),
+                        BegMoodByTeacher = p.DialogueClientSatisfaction.Average(s => s.BegMoodByTeacher).ToString(),
+                        EndMoodByTeacher = p.DialogueClientSatisfaction.Average(s => s.EndMoodByTeacher).ToString(),
+                        TotalMoodByTeacher = p.DialogueClientSatisfaction.Average(s => s.MeetingExpectationsByTeacher).ToString(),
                         SatisfactionDiff = p.DialogueClientSatisfaction.Average(s => s.EndMoodTotal - s.BegMoodTotal).ToString(),
                         Language = "Russian",
                         Hints = JsonConvert.SerializeObject(p.DialogueHint.Select(s => s.HintText)),
@@ -229,6 +233,11 @@ namespace UserOperations.Controllers
                     ConstructCell("Satisfaction EndMoodTotal", CellValues.String),
                     ConstructCell("Satisfaction MeetingExpectationsByClient", CellValues.String),
                     ConstructCell("Satisfaction MeetingExpectationsByEmpoyee", CellValues.String),
+
+                    ConstructCell("Satisfaction BegMoodByTeacher", CellValues.String),
+                    ConstructCell("Satisfaction EndMoodByTeacher", CellValues.String),
+                    ConstructCell("Satisfaction TotalMoodByTeacher", CellValues.String),
+
                     ConstructCell("Satisfaction Diff", CellValues.String),
 
                     ConstructCell("Language", CellValues.String),
@@ -284,6 +293,11 @@ namespace UserOperations.Controllers
                         ConstructCell(dr.SatisfactionEndMoodTotal, CellValues.String),
                         ConstructCell(dr.SatisfactionMeetingExpectationsByClient, CellValues.String),
                         ConstructCell(dr.SatisfactionMeetingExpectationsByEmpoyee, CellValues.String),
+
+                        ConstructCell(dr.BegMoodByTeacher, CellValues.String),
+                        ConstructCell(dr.EndMoodByTeacher, CellValues.String),
+                        ConstructCell(dr.TotalMoodByTeacher, CellValues.String),
+
                         ConstructCell(dr.SatisfactionDiff, CellValues.String),
 
                         ConstructCell(dr.Language, CellValues.String),
@@ -357,6 +371,13 @@ namespace UserOperations.Controllers
         public string SatisfactionEndMoodTotal { get; set; }
         public string SatisfactionMeetingExpectationsByClient { get; set; }
         public string SatisfactionMeetingExpectationsByEmpoyee { get; set; }
+
+
+        public string BegMoodByTeacher {get;set;}
+        public string EndMoodByTeacher {get;set;}
+        public string TotalMoodByTeacher {get;set;}
+
+
         public string SatisfactionDiff{get;set;}
         public string Language { get; set; }
         public string Hints { get; set; }

@@ -125,6 +125,8 @@ namespace UserOperations.Controllers
                     dialogueClientSatisfaction.MeetingExpectationsByTeacher = message.Satisfaction;
                     dialogueClientSatisfaction.BegMoodByTeacher = message.BegMoodTotal;
                     dialogueClientSatisfaction.EndMoodByTeacher = message.EndMoodTotal;
+                    dialogueClientSatisfaction.Age = message.Age;
+                    dialogueClientSatisfaction.Gender = message.Gender;
 
                     _context.SaveChanges();
                     // _log.Info("Function DialogueSatisfactionPut finished");
@@ -863,5 +865,8 @@ namespace UserOperations.Controllers
         public double Satisfaction;
         public double BegMoodTotal;
         public double EndMoodTotal;
+
+        public double? Age;
+        public string Gender;
     }
 }
