@@ -48,7 +48,7 @@ namespace UserOperations.Controllers
         [SwaggerResponse(400, "Invalid parametrs or error in DB connection", typeof(string))]
         [SwaggerResponse(200, "all sessions were saved")]
         public IActionResult FlushStats([FromBody, 
-            SwaggerParameter("campaignContentId, begTime, applicationUserId", Required = true)] 
+            SwaggerParameter("campaignContentId, applicationUserId, begTime, endTime, contentType", Required = true)] 
             List<SlideShowSession> stats)
         {
             try
