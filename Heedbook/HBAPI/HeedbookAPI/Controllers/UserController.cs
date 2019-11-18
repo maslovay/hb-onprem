@@ -606,6 +606,7 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                 [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                [FromQuery(Name = "inStatistic")] bool? inStatistic,
                                                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -618,6 +619,8 @@ namespace UserOperations.Controllers
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                inStatistic = inStatistic ?? true;
+
 
                 var dialogues = _context.Dialogues
                 .Include(p => p.DialoguePhrase)
@@ -628,6 +631,7 @@ namespace UserOperations.Controllers
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
                     p.StatusId == activeStatus &&
+                    p.InStatistic == inStatistic &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
                     (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
@@ -691,6 +695,7 @@ namespace UserOperations.Controllers
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
 
                 var begTime = DateTime.UtcNow.AddDays(-30);
+                begTime = begTime < dialogue.BegTime ? begTime : dialogue.BegTime.AddDays(-30);
                 var companyId = dialogue.ApplicationUser.CompanyId;
                 var avgDialogueTime = 0.0;
 
