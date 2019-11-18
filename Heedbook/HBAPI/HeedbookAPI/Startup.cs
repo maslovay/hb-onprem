@@ -66,6 +66,7 @@ namespace UserOperations
             services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();
             services.AddScoped<IAccountProvider, AccountProvider>();
             services.AddScoped<IHelpProvider, HelpProvider>();
+            services.AddScoped<IUserProvider, UserProvider>();
             services.AddScoped<IAnalyticOfficeProvider, AnalyticOfficeProvider>();
 
             services.AddSwaggerGen(c =>

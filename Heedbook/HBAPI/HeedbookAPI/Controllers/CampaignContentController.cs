@@ -380,7 +380,7 @@ namespace UserOperations.Controllers
             }
             catch
             {
-                return Ok("Set inactive");
+                return BadRequest("Set inactive");
             }
             return Ok("Removed");
         }
