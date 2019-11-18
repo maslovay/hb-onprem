@@ -17,6 +17,8 @@ using UserOperations.Services;
 using UserOperations.Utils;
 using System.Reflection;
 using UserOperations.Models;
+using System.Transactions;
+using UserOperations.Providers;
 
 namespace UserOperations.Controllers
 {
@@ -32,6 +34,7 @@ namespace UserOperations.Controllers
         private readonly SmtpSettings _smtpSetting;
         private readonly SmtpClient _smtpClient;
         private readonly IMailSender _mailSender;
+        private readonly IUserProvider _userProvider;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
         private readonly int activeStatus;
@@ -41,11 +44,12 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            SftpClient sftpClient,
             IRequestFilters requestFilters,
-            IMailSender mailSender,
+            SftpClient sftpClient,
             SmtpSettings smtpSetting,
-            SmtpClient smtpClient
+            SmtpClient smtpClient,
+            IMailSender mailSender,
+            IUserProvider userProvider
             // ElasticClient log
             )
         {
@@ -61,6 +65,7 @@ namespace UserOperations.Controllers
             disabledStatus = 4;
             _smtpSetting = smtpSetting;
             _smtpClient = smtpClient;
+            _userProvider = userProvider;
         }
 
         [HttpGet("User")]
@@ -81,34 +86,15 @@ namespace UserOperations.Controllers
                 var roleInToken = userClaims["role"];
 
                 if (roleInToken == "Admin")
-                {
-                    users = _context.ApplicationUsers.Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                        .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();     //2 active, 3 - disabled     
-                }
+                    users = await _userProvider.GetUsersForAdmin();
               
-                if (roleInToken == "Supervisor" && corporationIdInToken != Guid.Empty)
-                {
-                    users = _context.ApplicationUsers
-                        .Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                        .Include(p => p.Company)
-                        .Where(p => p.Company.CorporationId == corporationIdInToken
-                            && (p.StatusId == activeStatus || p.StatusId == disabledStatus) 
-                            && p.Id != userIdInToken)
-                        .ToList();
-                }
+                if (roleInToken == "Supervisor" )
+                    users = await _userProvider.GetUsersForSupervisor(corporationIdInToken, userIdInToken);
 
                 if (roleInToken == "Manager")
-                {
-                    users = _context.ApplicationUsers
-                        .Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                        .Include(p => p.Company)
-                        .Where(p => p.CompanyId == companyIdInToken
-                            && (p.StatusId == activeStatus || p.StatusId == disabledStatus)
-                            && p.Id != userIdInToken)
-                        .ToList();
-                }
+                    users = await _userProvider.GetUsersForManager(companyIdInToken, userIdInToken);
 
-                var result = users.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default).path : null));
+                var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default).path : null));
                 return Ok(result);
             }
             catch (Exception e)
@@ -282,37 +268,28 @@ namespace UserOperations.Controllers
                     .First(p => p.Id == applicationUserId);
                 if (user == null) return BadRequest("No such user");
 
-                var isAdmin = roleInToken == "Admin";
-                var isSupervisor = roleInToken == "Supervisor";
-
                 if (!_requestFilters.CheckAbilityToDeleteUser(roleInToken, user.UserRoles.FirstOrDefault().RoleId))
                     return BadRequest("Not allowed user role");
                 if (!_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user.CompanyId, roleInToken))
                     return BadRequest($"Not allowed user company");
 
-                    //using (var transactionScope = new
-                    //     TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
-                    //                                { IsolationLevel = IsolationLevel.Serializable }))
-                    //{
-                    try
-                    {
-                        await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
-                        if (user.UserRoles != null && user.UserRoles.Count() != 0)
-                            _context.RemoveRange(user.UserRoles);
-                        if (user.PasswordHistorys != null && user.PasswordHistorys.Count() != 0)
-                            _context.RemoveRange(user.PasswordHistorys);
-                        _context.Remove(user);
-                        await _context.SaveChangesAsync();
-                        // transactionScope.Complete();
-                    }
-                    catch
-                    {
-                        user.StatusId = disabledStatus;
-                        await _context.SaveChangesAsync();
-                        return Ok("Disabled Status");
-                    }
-                    //}
+                user.StatusId = disabledStatus;
+                await _context.SaveChangesAsync();
+                try
+                {
+                    if (user.UserRoles != null && user.UserRoles.Count() != 0)
+                        _context.RemoveRange(user.UserRoles);
+                    //if (user.PasswordHistorys != null && user.PasswordHistorys.Count() != 0)
+                    //    _context.RemoveRange(user.PasswordHistorys);
+                    _context.Remove(user);
+                    await _context.SaveChangesAsync();
+                    await _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}");
                     return Ok("Deleted");
+                }
+                catch
+                {                       
+                    return Ok("Disabled Status");
+                }
             }
             catch (Exception e)
             {
