@@ -23,7 +23,7 @@ namespace ApiTests
 
         private Mock<IAnalyticHomeProvider> homeProviderMock;
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {
               base.Setup();
         }

@@ -11,7 +11,7 @@ namespace ApiTests
     public class AccountControllerTests : ApiServiceTest
     {                
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {           
             base.Setup();
         }

@@ -298,16 +298,13 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
                 _log.Info("RunPython out string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
 
-                var result = 0.0;
-
-
-                if (!double.TryParse(posShareStrg.Item1.Trim(), out result))
+                if (!double.TryParse(posShareStrg.Item1.Trim(), out double result))
                 {
                     _log.Fatal($"GetPositiveShareInText can't parse string: {posShareStrg.Item1.Trim()} dialogueId: {dialogueId}");
                     // TODO: delete after bug fixing
-                    result = 0; 
+                    result = 0;
                 }
-                
+
                 return result;
             }
             catch (Exception ex)

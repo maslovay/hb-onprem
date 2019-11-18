@@ -345,10 +345,12 @@ namespace UserOperations.Controllers
                 }
             }
             //    }
-            Dictionary<string, string> result = new Dictionary<string, string>();
-            result["success"] = counter200.ToString();
-            result["error"] = counter500.ToString();
-            result["users"] = userCounter.ToString();
+            Dictionary<string, string> result = new Dictionary<string, string>
+            {
+                ["success"] = counter200.ToString(),
+                ["error"] = counter500.ToString(),
+                ["users"] = userCounter.ToString()
+            };
 
 
             return Ok(result);
@@ -641,7 +643,7 @@ namespace UserOperations.Controllers
         //}
 
         [HttpGet("newtest")]
-        public IActionResult newtest()
+        public IActionResult Newtest()
         {
             var dialogues = _context.DialogueClientSatisfactions.Where(p => p.MeetingExpectationsTotal < 35).ToList();
             var random = new Random();
@@ -665,7 +667,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("phrase")]
-        public IActionResult phrase()
+        public IActionResult Phrase()
         {
             var pathPhrase = "/home/nikolay/Desktop/phrase.json";
             var pathCompanyPhrase = "/home/nikolay/Desktop/phrasecompanys.json";

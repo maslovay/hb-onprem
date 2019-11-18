@@ -31,17 +31,20 @@ namespace UserOperations.Providers
          Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds);
 
          Task<Guid> GetCrossPhraseTypeIdAsync();
-         List<ComponentsDialogueInfo> GetComponentsDialogueInfo(
+
+         Task<List<ComponentsDialogueInfo>> GetComponentsDialogueInfo(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds, Guid loyaltyTypeId);
-         List<PhraseType> GetPhraseTypes();
-         List<ComponentsPhraseInfo> GetComponentsPhraseInfo();
 
-         List<RatingDialogueInfo> GetRatingDialogueInfos(
+         Task<IEnumerable<PhraseType>> GetPhraseTypes();
+
+         Task<List<ComponentsPhraseInfo>> GetComponentsPhraseInfo();
+
+         Task<List<RatingDialogueInfo>> GetRatingDialogueInfos(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds, Guid typeIdLoyalty);
 
-         List<DialogueInfo> GetDialogueInfos(
+         Task<List<DialogueInfo>> GetDialogueInfos(
             DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds);
     }
 }

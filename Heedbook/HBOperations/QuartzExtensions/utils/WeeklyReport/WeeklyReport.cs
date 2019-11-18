@@ -195,12 +195,13 @@ namespace QuartzExtensions.Utils.WeeklyReport
             var beginWeek = DateTime.Now.AddDays(-7).ToString("dd/MM/yyyy");
             var endWeek = DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy");
 
-            var mail = new System.Net.Mail.MailMessage();
-            mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);            
-            
+            var mail = new System.Net.Mail.MailMessage
+            {
+                From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail),
+                Subject = _model.LanguageDataReport.ReportName + " " + beginWeek + " - " + endWeek,
+                IsBodyHtml = true
+            };
             mail.To.Add(email);
-            mail.Subject = _model.LanguageDataReport.ReportName + " " + beginWeek + " - " + endWeek;
-            mail.IsBodyHtml = true;
             
             System.Net.Mail.AlternateView alternateView = System.Net.Mail.AlternateView.CreateAlternateViewFromString(_htmlTemplate, Encoding.UTF8, MediaTypeNames.Text.Html);   
                         

@@ -8,6 +8,7 @@ using UserOperations.Models.AnalyticModels;
 using Newtonsoft.Json;
 using UserOperations.Utils;
 using UserOperations.Providers;
+using System.Threading.Tasks;
 //---OLD---
 namespace UserOperations.Controllers
 {
@@ -37,7 +38,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Components")]
-        public IActionResult ServiceQualityComponents([FromQuery(Name = "begTime")] string beg,
+        public async Task<IActionResult> ServiceQualityComponents([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -55,11 +56,11 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
-                var phraseTypes = _analyticProvider.GetComponentsPhraseInfo();
+                var phraseTypes = await _analyticProvider.GetComponentsPhraseInfo();
                 var loyaltyTypeId = phraseTypes.First(p => p.PhraseTypeText == "Loyalty").PhraseTypeId;
 
                 //Dialogues info
-                var dialogues = _analyticProvider.GetComponentsDialogueInfo(begTime, endTime, companyIds, applicationUserIds, workerTypeIds,loyaltyTypeId);
+                var dialogues = await _analyticProvider.GetComponentsDialogueInfo(begTime, endTime, companyIds, applicationUserIds, workerTypeIds,loyaltyTypeId);
                 //Result
                 var result = new ComponentsSatisfactionInfo
                 {
@@ -166,7 +167,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Rating")]
-        public IActionResult ServiceQualityRating([FromQuery(Name = "begTime")] string beg,
+        public async Task<IActionResult> ServiceQualityRating([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -185,13 +186,13 @@ namespace UserOperations.Controllers
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
-                var phrasesTypes = _analyticProvider.GetPhraseTypes();
+                var phrasesTypes = await _analyticProvider.GetPhraseTypes();
                 //var typeIdCross = phrasesTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
                 //var typeIdAlert = phrasesTypes.Where(p => p.PhraseTypeText == "Alert").Select(p => p.PhraseTypeId).First();
                 //var typeIdNecessary = phrasesTypes.Where(p => p.PhraseTypeText == "Necessary").Select(p => p.PhraseTypeId).First();
                 var typeIdLoyalty = phrasesTypes.Where(p => p.PhraseTypeText == "Loyalty").Select(p => p.PhraseTypeId).First();
 
-                var dialogues = _analyticProvider.GetRatingDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, typeIdLoyalty);
+                var dialogues = await _analyticProvider.GetRatingDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, typeIdLoyalty);
 
                // return Ok(dialogues.Select(p => p.DialogueId).Distinct().Count());
 
@@ -225,7 +226,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("SatisfactionStats")]
-        public IActionResult ServiceQualitySatisfactionStats([FromQuery(Name = "begTime")] string beg,
+        public async Task<IActionResult> ServiceQualitySatisfactionStats([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -244,7 +245,7 @@ namespace UserOperations.Controllers
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = _analyticProvider.GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await _analyticProvider.GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
 
                 var result = new SatisfactionStatsInfo
                 {

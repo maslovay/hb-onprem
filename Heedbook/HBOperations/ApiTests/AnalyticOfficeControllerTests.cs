@@ -14,7 +14,7 @@ namespace ApiTests
     {   
         private Mock<IAnalyticOfficeProvider> analyticOfficeProviderMock;
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {
             base.Setup();
         }
