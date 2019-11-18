@@ -9,7 +9,7 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/CloneFtpOnAzure/publish .
 ENTRYPOINT ["dotnet", "CloneFtpOnAzure.dll"]
-RUN mkdir /opt/
+RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
-RUN mkdir /opt/download
+RUN mkdir -p /opt/download
 RUN chmod -R 777 /opt/download
