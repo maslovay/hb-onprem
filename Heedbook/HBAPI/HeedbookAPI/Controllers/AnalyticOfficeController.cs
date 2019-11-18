@@ -202,6 +202,7 @@ namespace UserOperations.Controllers
             catch (Exception e)
             {
                 // _log.Fatal($"Exception occurred {e}");
+                System.Console.WriteLine(e.Message);
                 return BadRequest(e);
             }
         }     

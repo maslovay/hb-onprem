@@ -57,13 +57,21 @@ namespace UserOperations.Controllers
                 {
                     //---1---company---
                     var companyId = Guid.NewGuid();                
-                    var company = await _accountProvider.AddNewCompanysInBase(message, companyId);
-                    var user = await _accountProvider.AddNewUserInBase(message, companyId);
+                    // var company = await _accountProvider.AddNewCompanysInBase(message, companyId);
+                    var taskCompany = _accountProvider.AddNewCompanysInBase(message, companyId);
+                    taskCompany.Wait();
+                    var company = taskCompany.Result;
+                    
+                    var taskUser = _accountProvider.AddNewUserInBase(message, companyId);
+                    taskUser.Wait();
+                    var user = taskUser.Result;
+                    
+                    
                     await _accountProvider.AddUserRoleInBase(message, user);
-
                     if (_accountProvider.GetTariffs(companyId) == 0)
                     {
                         await _accountProvider.CreateCompanyTariffAndtransaction(company);
+
                         await _accountProvider.AddWorkerType(company);
                         await _accountProvider.AddContentAndCampaign(company);
                         _accountProvider.SaveChangesAsync();
@@ -77,6 +85,7 @@ namespace UserOperations.Controllers
                 }
                 catch (Exception e)
                 {
+                    System.Console.WriteLine($"exception: {e.Message}");
                     return BadRequest(e.Message);
                 }
             }
@@ -93,7 +102,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var user = _accountProvider.GetUserIncludeCompany(message.UserName);
+                var user = _accountProvider.GetUserIncludeCompany(message.UserName);                
                 if (user is null) return BadRequest("No such user");
                 //---blocked?
                 if (user.StatusId != _accountProvider.GetStatusId("Active")) return BadRequest("User not activated");

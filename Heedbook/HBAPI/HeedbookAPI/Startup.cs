@@ -84,7 +84,9 @@ namespace UserOperations
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
                             {"applicationUserId", new Schema{Type = "string", Format = "uuid"}},
                             {"begTime", new Schema{Type = "string", Format = "date-time"}},
-                            {"endTime", new Schema{Type = "string", Format = "date-time"}}
+                            {"endTime", new Schema{Type = "string", Format = "date-time"}},
+                            {"contentType", new Schema{Type = "string"}}
+
                         }
                 });
                 c.MapType<CampaignContentAnswer>(() => new Schema
@@ -96,18 +98,6 @@ namespace UserOperations
                             {"time", new Schema{Type = "string", Format = "date-time"}}
                         }
                 });
-            });
-            services.AddCors(options =>
-            {
-                options.AddPolicy(MyAllowSpecificOrigins,
-                    builder =>
-                    {
-                        builder.WithOrigins("http://localhost:3000",
-                                    "https://hbreactapp.azurewebsites.net",
-                                    "http://hbserviceplan-onprem.azurewebsites.net")
-                               .AllowAnyMethod()
-                               .AllowAnyHeader();
-                    });
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
@@ -141,18 +131,6 @@ namespace UserOperations
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-
-
             app.UseSwagger(c =>
             {
                 c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
@@ -165,8 +143,8 @@ namespace UserOperations
                 // c.DisplayOperationId();
             });
             app.UseAuthentication();
-            app.UseCors(MyAllowSpecificOrigins);
-            app.UseHttpsRedirection();
+            // app.UseCors(MyAllowSpecificOrigins);
+            // app.UseHttpsRedirection();
             app.UseMvc();
 
             scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
