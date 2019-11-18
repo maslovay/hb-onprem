@@ -10,20 +10,21 @@ using UserOperations.Services;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using UserOperations.Models.AnalyticModels;
+using HBData.Repository;
 
 namespace UserOperations.Providers
 {
     public class AnalyticOfficeProvider : IAnalyticOfficeProvider
     {
-        private readonly RecordsContext _context;
+        private readonly IGenericRepository _repository;
         private readonly ILoginService _loginService;
         public AnalyticOfficeProvider(
-            RecordsContext context,
-            ILoginService loginService
+            ILoginService loginService,
+            IGenericRepository repository
         )
         {
-            _context = context;
             _loginService = loginService;
+            _repository = repository;
         }
         public List<SessionInfo> GetSessionsInfo(
             DateTime prevBeg,
@@ -32,21 +33,22 @@ namespace UserOperations.Providers
             List<Guid> applicationUserIds,
             List<Guid> workerTypeIds)
         {
-            var sessions = _context.Sessions
-                .Include(p => p.ApplicationUser)
-                .Where(p => p.BegTime >= prevBeg
+            var sessions = _repository.GetWithInclude<Session>(
+                    p => p.BegTime >= prevBeg
                     && p.EndTime <= endTime
                     && p.StatusId == 7
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    , o => o.ApplicationUser)                    
+                .AsQueryable()
                 .Select(p => new SessionInfo
                 {
                     ApplicationUserId = p.ApplicationUserId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime
                 })
-                .ToList();
+                .ToList();              
             return sessions;
         }
         public List<DialogueInfo> GetDialoguesInfo(
@@ -55,16 +57,17 @@ namespace UserOperations.Providers
             List<Guid> companyIds,
             List<Guid> applicationUserIds,
             List<Guid> workerTypeIds)
-        {
-            var dialogues = _context.Dialogues
-                .Include(p => p.ApplicationUser)
-                .Where(p => p.BegTime >= prevBeg
+        {    
+            var dialogues = _repository.GetWithInclude<Dialogue>(
+                    p => p.BegTime >= prevBeg
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    , p => p.ApplicationUser)
+                .AsQueryable()
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
@@ -74,7 +77,7 @@ namespace UserOperations.Providers
                     FullName = p.ApplicationUser.FullName,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 })
-                .ToList();
+                .ToList();            
             return dialogues;
         }
     }
