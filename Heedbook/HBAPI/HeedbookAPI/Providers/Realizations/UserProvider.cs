@@ -6,19 +6,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UserOperations.Models;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Services;
 
 namespace UserOperations.Providers
 {
     public class UserProvider : IUserProvider
     {
         private readonly IGenericRepository _repository;
+        private readonly ILoginService _loginService;
         private readonly int activeStatus;
         private readonly int disabledStatus;
 
-        public UserProvider(IGenericRepository repository)
+        public UserProvider(IGenericRepository repository, ILoginService loginService)
         {
             _repository = repository;
+            _loginService = loginService;
             activeStatus = 3;
             disabledStatus = 4;
         }
@@ -61,7 +65,12 @@ namespace UserOperations.Providers
                           && p.Id != userIdInToken)
                       .ToListAsync();
         }
-        
+
+        public async Task<bool> CheckUniqueEmail(string email)
+        {
+            return await _repository.FindOneByConditionAsync<ApplicationUser>(x => x.NormalizedEmail == email.ToUpper()) == null;
+        }
+
         public async Task<bool> CheckAbilityToCreateOrChangeUser(string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId)
         {
             if (newUserRoleId == null || newUserRoleId == oldUserRoleId)//---create Employee or role do not changed
@@ -106,7 +115,27 @@ namespace UserOperations.Providers
             await _repository.SaveAsync();
             return await _repository.FindOneByConditionAsync<ApplicationRole>(x => x.Id == (Guid)settedRoleId);
         }
-        
+
+        public async Task<ApplicationUser> AddNewUser(PostUser message)
+        {
+            var user = new ApplicationUser
+            {
+                UserName = message.Email,
+                NormalizedUserName = message.Email.ToUpper(),
+                Email = message.Email,
+                NormalizedEmail = message.Email.ToUpper(),
+                CompanyId = (Guid)message.CompanyId,
+                CreationDate = DateTime.UtcNow,
+                FullName = message.FullName,
+                PasswordHash = _loginService.GeneratePasswordHash(message.Password),
+                StatusId = activeStatus,//3
+                EmpoyeeId = message.EmployeeId,
+                WorkerTypeId = message.WorkerTypeId ??(await _repository.FindOneByConditionAsync<WorkerType>(x => x.WorkerTypeName == "Employee")).WorkerTypeId
+            };
+            _repository.Create<ApplicationUser>(user);
+            await _repository.SaveAsync();
+            return user;
+        }
         private async Task<List<Guid>> GetAllowedRoles(string roleInToken)
         {
             List<ApplicationRole> allRoles = (await _repository.FindAllAsync<ApplicationRole>()).ToList();

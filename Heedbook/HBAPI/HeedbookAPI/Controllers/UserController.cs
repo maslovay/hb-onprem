@@ -44,13 +44,12 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            IRequestFilters requestFilters,
             SftpClient sftpClient,
+            IRequestFilters requestFilters,
             SmtpSettings smtpSetting,
             SmtpClient smtpClient,
             IMailSender mailSender,
             IUserProvider userProvider
-            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +58,6 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
             _requestFilters = requestFilters;
             _mailSender = mailSender;
-            // _log = log;
             _containerName = "useravatars";
             activeStatus = 3;
             disabledStatus = 4;
@@ -122,7 +120,7 @@ namespace UserOperations.Controllers
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
 
                 PostUser message = JsonConvert.DeserializeObject<PostUser>(userDataJson);
-                if (_context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
+                if (!await _userProvider.CheckUniqueEmail(message.Email))
                     return BadRequest("User email not unique");
                
                 message.CompanyId = message.CompanyId ?? companyIdInToken;
@@ -132,21 +130,8 @@ namespace UserOperations.Controllers
                 if (await _userProvider.CheckAbilityToCreateOrChangeUser(roleInToken, message.RoleId, null) == false)
                     return BadRequest("Not allowed user role");
 
-                var user = new ApplicationUser
-                {
-                    UserName = message.Email,
-                    NormalizedUserName = message.Email.ToUpper(),
-                    Email = message.Email,
-                    NormalizedEmail = message.Email.ToUpper(),
-                    CompanyId = (Guid)message.CompanyId,
-                    CreationDate = DateTime.UtcNow,
-                    FullName = message.FullName,
-                    PasswordHash = _loginService.GeneratePasswordHash(message.Password),
-                    StatusId = activeStatus,//3
-                    EmpoyeeId = message.EmployeeId,
-                    WorkerTypeId = message.WorkerTypeId ?? _context.WorkerTypes.FirstOrDefault(x => x.WorkerTypeName == "Employee")?.WorkerTypeId
-                };
-                await _context.AddAsync(user);
+                ApplicationUser user =  await _userProvider.AddNewUser(message);
+                ApplicationRole role =  await _userProvider.AddOrChangeUserRoles (user.Id, message.RoleId, null);
 
                 //---save avatar---
                 string avatarUrl = null;
@@ -157,17 +142,13 @@ namespace UserOperations.Controllers
                     user.Avatar = fn;
                     avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default).path;
                 }
-
-                await _userProvider.AddOrChangeUserRoles (user.Id, message.RoleId, null);
-                await _context.SaveChangesAsync();
-
-                var userForEmail = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == user.Id);
+                var userForEmail = await _userProvider.GetUserWithRoleAndCompany(user.Id);
                 try
                 {
                     await _mailSender.SendUserRegisterEmail(userForEmail, message.Password);
                 }
                 catch { }
-                return Ok(new UserModel(user, avatarUrl));
+                return Ok(new UserModel(user, avatarUrl, role));
             }
             catch (Exception e)
             {
