@@ -22,5 +22,8 @@ namespace UserOperations.Providers
         Task<bool> CheckAbilityToDeleteUserAsync(string roleInToken, Guid deletedUserRoleId);
         Task SetUserInactiveAsync(ApplicationUser user);
         Task DeleteUserWithRolesAsync(ApplicationUser user);
+        //---COMPANY----
+        Task<IEnumerable<Company>> GetCompaniesForAdminAsync();
+        Task<IEnumerable<Company>> GetCompaniesForSupervisorAsync(string corporationIdInToken);
     }
 }

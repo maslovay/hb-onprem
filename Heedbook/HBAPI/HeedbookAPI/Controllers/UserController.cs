@@ -275,26 +275,21 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("User/Companies GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                if (userClaims["role"] == "Admin") // very cool!
-                {
-                    var companies = _context.Companys.Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();  // 2 active, 3 - disabled
-                    return Ok(companies);
-                }
-                if (userClaims["role"] == "Supervisor" && userClaims["corporationId"] != null) // only for own corporation
-                {
-                    var corporationId = Guid.Parse(userClaims["corporationId"]);
-                    var companies = _context.Companys // 2 active, 3 - disabled
-                        .Where(p => p.CorporationId == corporationId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();
-                    return Ok(companies);
-                }
-                return BadRequest("Not allowed access(role)");
+                if (userClaims["role"] != "Admin" && userClaims["role"] != "Supervisor")
+                    return BadRequest("Not allowed access(role)");
+
+                IEnumerable<Company> companies = null;
+                if (userClaims["role"] == "Admin")
+                    companies = await _userProvider.GetCompaniesForAdminAsync();
+                if (userClaims["role"] == "Supervisor") // only for corporations
+                    companies = await _userProvider.GetCompaniesForSupervisorAsync(userClaims["corporationId"]);
+
+                return Ok(companies.ToList());
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }

@@ -27,7 +27,7 @@ namespace UserOperations.Providers
             disabledStatus = 4;
         }
 
-
+        //---USER---
         public async Task<ApplicationUser> GetUserWithRoleAndCompanyAsync(Guid userId)
         {
            return await _repository.GetAsQueryable<ApplicationUser>()
@@ -157,6 +157,22 @@ namespace UserOperations.Providers
             if (roleInToken == "Supervisor") return allRoles.Where(p => p.Name != "Manager" && p.Name != "Teacher" && p.Name != "Supervisor").Select(x => x.Id).ToList();
             if (roleInToken == "Manager") return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher" && p.Name != "Supervisor" && p.Name != "Manager").Select(x => x.Id).ToList();
             return null;
+        }
+
+
+        //---COMPANY----
+        public async Task<IEnumerable<Company>> GetCompaniesForAdminAsync()
+        {
+            return await _repository.FindByConditionAsync<Company>(p => p.StatusId == activeStatus || p.StatusId == disabledStatus);
+        }
+
+        public async Task<IEnumerable<Company>> GetCompaniesForSupervisorAsync(string corporationIdInToken)
+        {
+            if (corporationIdInToken == null) return null;
+            var corporationId = Guid.Parse(corporationIdInToken);
+            return await _repository.FindByConditionAsync<Company>(p => 
+                        p.CorporationId == corporationId 
+                        && (p.StatusId == activeStatus || p.StatusId == disabledStatus));
         }
 
     }
