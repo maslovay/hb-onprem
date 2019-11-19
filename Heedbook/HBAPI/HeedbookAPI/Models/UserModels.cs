@@ -38,11 +38,12 @@ namespace UserOperations.Models
         public string OneSignalId { get; set; }
         public Guid? WorkerTypeId { get; set; }
         public ApplicationRole Role { get; set; }
+        public Guid? RoleId { get; set; }
         public UserModel()
         {
 
         }
-        public UserModel(ApplicationUser user, string avatar = null)
+        public UserModel(ApplicationUser user, string avatar = null, ApplicationRole role = null)
         {
             Id = user.Id;
             FullName = user.FullName;
@@ -54,7 +55,8 @@ namespace UserOperations.Models
             StatusId = user.StatusId;
             OneSignalId = user.OneSignalId;
             WorkerTypeId = user.WorkerTypeId;
-            Role = user.UserRoles.FirstOrDefault()?.Role;
+            Role = user.UserRoles.FirstOrDefault()?.Role ?? role;
+            RoleId = user.UserRoles.FirstOrDefault()?.RoleId;
         }
     }
 

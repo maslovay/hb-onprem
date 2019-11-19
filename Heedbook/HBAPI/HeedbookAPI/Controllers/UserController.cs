@@ -129,7 +129,7 @@ namespace UserOperations.Controllers
                 if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, message.CompanyId, roleInToken) == false)
                     return BadRequest($"Not allowed user company");
 
-                if (_requestFilters.CheckAbilityToCreateOrChangeUser(roleInToken, message.RoleId) == false)
+                if (await _userProvider.CheckAbilityToCreateOrChangeUser(roleInToken, message.RoleId, null) == false)
                     return BadRequest("Not allowed user role");
 
                 var user = new ApplicationUser
@@ -158,7 +158,7 @@ namespace UserOperations.Controllers
                     avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default).path;
                 }
 
-                await _requestFilters.AddOrChangeUserRoles(user.Id, roleInToken, message.RoleId, null);
+                await _userProvider.AddOrChangeUserRoles (user.Id, message.RoleId, null);
                 await _context.SaveChangesAsync();
 
                 var userForEmail = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == user.Id);
@@ -189,10 +189,7 @@ namespace UserOperations.Controllers
 
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
                 UserModel message = JsonConvert.DeserializeObject<UserModel>(userDataJson);
-                var user = _context.ApplicationUsers
-                    .Include(p => p.UserRoles).Include(p => p.Company)
-                    .Where(p => p.Id == message.Id && (p.StatusId == activeStatus || p.StatusId == disabledStatus))// 2 - active, 3 - disabled
-                    .FirstOrDefault();
+                var user = await _userProvider.GetUserWithRoleAndCompany(message.Id);
                 if (user == null) return BadRequest("No such user");
 
                 Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
@@ -203,22 +200,23 @@ namespace UserOperations.Controllers
                 if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user.CompanyId, roleInToken) == false)
                     return BadRequest($"Not allowed user company");
 
-                if (_requestFilters.CheckAbilityToCreateOrChangeUser(roleInToken, message.Role?.Id) == false)
+                if (await _userProvider.CheckAbilityToCreateOrChangeUser(roleInToken, message.RoleId, user.UserRoles.FirstOrDefault().RoleId) == false)
                     return BadRequest("Not allowed user role");
 
                 if (message.Email != null && user.Email != message.Email)
                     return BadRequest("Not allowed change email");
 
+                ApplicationRole newRole = null;
                 Type userType = user.GetType();
                 foreach (var p in typeof(UserModel).GetProperties())
                 {
                     var val = p.GetValue(message, null);
-                    if (val != null && val.ToString() != Guid.Empty.ToString())
+                    if (val != null && val.ToString() != Guid.Empty.ToString() && p.Name != "Role")
                     {
                         if (p.Name == "EmployeeId")//---its a mistake in DB
                             userType.GetProperty("EmpoyeeId").SetValue(user, val);
-                        else if(p.Name == "Role")
-                            await _requestFilters.AddOrChangeUserRoles(user.Id, roleInToken, message.Role.Id, user.UserRoles.FirstOrDefault().RoleId);
+                        else if (p.Name == "RoleId")
+                            newRole =  await _userProvider.AddOrChangeUserRoles(user.Id, message.RoleId, user.UserRoles.FirstOrDefault().RoleId);
                         else
                             userType.GetProperty(p.Name).SetValue(user, val);
                     }
@@ -239,7 +237,7 @@ namespace UserOperations.Controllers
                     avatarUrl = _sftpClient.GetFileLink(_containerName, user.Avatar, default(DateTime)).path;
                 }
                 _context.SaveChanges();
-                return Ok(new UserModel(user, avatarUrl));
+                return Ok(new UserModel(user, avatarUrl, newRole));
             }
             catch (Exception e)
             {
@@ -268,7 +266,7 @@ namespace UserOperations.Controllers
                     .First(p => p.Id == applicationUserId);
                 if (user == null) return BadRequest("No such user");
 
-                if (!_requestFilters.CheckAbilityToDeleteUser(roleInToken, user.UserRoles.FirstOrDefault().RoleId))
+                if (! await _userProvider.CheckAbilityToDeleteUser(roleInToken, user.UserRoles.FirstOrDefault().RoleId))
                     return BadRequest("Not allowed user role");
                 if (!_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user.CompanyId, roleInToken))
                     return BadRequest($"Not allowed user company");
