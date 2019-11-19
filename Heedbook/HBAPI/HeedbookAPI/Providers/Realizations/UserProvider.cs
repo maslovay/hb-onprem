@@ -28,7 +28,7 @@ namespace UserOperations.Providers
         }
 
 
-        public async Task<ApplicationUser> GetUserWithRoleAndCompany(Guid userId)
+        public async Task<ApplicationUser> GetUserWithRoleAndCompanyAsync(Guid userId)
         {
            return await _repository.GetAsQueryable<ApplicationUser>()
                 .Where(p => p.Id == userId && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
@@ -38,13 +38,13 @@ namespace UserOperations.Providers
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<List<ApplicationUser>> GetUsersForAdmin()
+        public async Task<List<ApplicationUser>> GetUsersForAdminAsync()
         {
             return await _repository.GetAsQueryable<ApplicationUser>().Include(p => p.UserRoles).ThenInclude(x => x.Role)
                         .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToListAsync();     //2 active, 3 - disabled     
         }
 
-        public async Task<List<ApplicationUser>> GetUsersForSupervisor(Guid corporationIdInToken, Guid userIdInToken)
+        public async Task<List<ApplicationUser>> GetUsersForSupervisorAsync(Guid corporationIdInToken, Guid userIdInToken)
         {
                 return await _repository.GetAsQueryable<ApplicationUser>()
                             .Include(p => p.UserRoles).ThenInclude(x => x.Role)
@@ -55,7 +55,7 @@ namespace UserOperations.Providers
                             .ToListAsync();
         }
 
-        public async Task<List<ApplicationUser>> GetUsersForManager(Guid companyIdInToken, Guid userIdInToken)
+        public async Task<List<ApplicationUser>> GetUsersForManagerAsync(Guid companyIdInToken, Guid userIdInToken)
         {
             return await _repository.GetAsQueryable<ApplicationUser>()
                       .Include(p => p.UserRoles).ThenInclude(x => x.Role)
@@ -66,23 +66,23 @@ namespace UserOperations.Providers
                       .ToListAsync();
         }
 
-        public async Task<bool> CheckUniqueEmail(string email)
+        public async Task<bool> CheckUniqueEmailAsync(string email)
         {
             return await _repository.FindOneByConditionAsync<ApplicationUser>(x => x.NormalizedEmail == email.ToUpper()) == null;
         }
 
-        public async Task<bool> CheckAbilityToCreateOrChangeUser(string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId)
+        public async Task<bool> CheckAbilityToCreateOrChangeUserAsync(string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId)
         {
             if (newUserRoleId == null || newUserRoleId == oldUserRoleId)//---create Employee or role do not changed
                 return true;
 
-            List<Guid> allowedEmployeeRoles = await GetAllowedRoles(roleInToken);
+            List<Guid> allowedEmployeeRoles = await GetAllowedRolesAsync(roleInToken);
             if (allowedEmployeeRoles.Count() == 0 || !allowedEmployeeRoles.Any(p => p == newUserRoleId))
                 return false;
             return true;
         }
 
-        public async Task<bool> CheckAbilityToDeleteUser(string roleInToken, Guid deletedUserRoleId)
+        public async Task<bool> CheckAbilityToDeleteUserAsync(string roleInToken, Guid deletedUserRoleId)
         {
             var deletedUserRoleName = (await _repository.FindOneByConditionAsync<ApplicationRole>(x => x.Id == deletedUserRoleId)).Name;
 
@@ -92,7 +92,7 @@ namespace UserOperations.Providers
             return false;
         }
 
-        public async Task<ApplicationRole> AddOrChangeUserRoles(Guid userId, Guid? newUserRoleId, Guid? oldUserRoleId = null)
+        public async Task<ApplicationRole> AddOrChangeUserRolesAsync(Guid userId, Guid? newUserRoleId, Guid? oldUserRoleId = null)
         {
             Guid? settedRoleId = newUserRoleId;
             if (newUserRoleId == null && oldUserRoleId == null)//---for create user
@@ -116,7 +116,7 @@ namespace UserOperations.Providers
             return await _repository.FindOneByConditionAsync<ApplicationRole>(x => x.Id == (Guid)settedRoleId);
         }
 
-        public async Task<ApplicationUser> AddNewUser(PostUser message)
+        public async Task<ApplicationUser> AddNewUserAsync(PostUser message)
         {
             var user = new ApplicationUser
             {
@@ -136,7 +136,20 @@ namespace UserOperations.Providers
             await _repository.SaveAsync();
             return user;
         }
-        private async Task<List<Guid>> GetAllowedRoles(string roleInToken)
+
+        public async Task SetUserInactiveAsync(ApplicationUser user)
+        {
+            user.StatusId = disabledStatus;
+            await _repository.SaveAsync();
+        }
+        public async Task DeleteUserWithRolesAsync(ApplicationUser user)
+        {
+            if (user.UserRoles != null && user.UserRoles.Count() != 0)
+                _repository.Delete<ApplicationUserRole>(user.UserRoles);
+            _repository.Delete<ApplicationUser>(user);
+            await _repository.SaveAsync();
+        }
+        private async Task<List<Guid>> GetAllowedRolesAsync(string roleInToken)
         {
             List<ApplicationRole> allRoles = (await _repository.FindAllAsync<ApplicationRole>()).ToList();
 
