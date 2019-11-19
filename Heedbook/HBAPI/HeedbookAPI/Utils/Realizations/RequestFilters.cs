@@ -72,48 +72,8 @@ namespace UserOperations.Utils
             }
 }
 
-        public async Task<bool> AddOrChangeUserRoles(Guid userId, string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId = null)
-        {
-            var newCorrectedRole = GetRoleToCreateChangeUser(roleInToken, newUserRoleId, oldUserRoleId);
-            if (newCorrectedRole == oldUserRoleId)//---post user
-                return true;//---no changes in user
-
-            if (oldUserRoleId != null)//---edit user
-            {
-                var oldUserRole = _context.ApplicationUserRoles.FirstOrDefault(x => x.UserId == userId);
-                _context.ApplicationUserRoles.Remove(oldUserRole);
-            }          
-            var userRole = new ApplicationUserRole()
-            {
-                UserId = userId,
-                RoleId = GetRoleToCreateChangeUser(roleInToken, newUserRoleId, oldUserRoleId)
-            };
-            await _context.ApplicationUserRoles.AddAsync(userRole);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-        public bool CheckAbilityToCreateOrChangeUser(string roleInToken, Guid? newUserRoleId)
-        {
-            List<Guid> allowedEmployeeRoles = GetAllowedRoles(roleInToken);
-            if (allowedEmployeeRoles == null) return false;
-            if (newUserRoleId == null) return true;
-            if ( !allowedEmployeeRoles.Any(p => p == newUserRoleId))
-                return false;
-            return true;
-        }
-
-        public bool CheckAbilityToDeleteUser(string roleInToken, Guid deletedUserRoleId)
-        {
-            var deletedUserRoleName = _context.Roles.FirstOrDefault(x => x.Id == deletedUserRoleId).Name;
-            var isAdmin = roleInToken == "Admin";
-            var isManager = roleInToken == "Manager";
-            var isSupervisor = roleInToken == "Supervisor";
-
-            if (isAdmin) return true;
-            if (isSupervisor) return deletedUserRoleName != "Admin" ? true : false;
-            if (isManager) return deletedUserRoleName != "Admin" && deletedUserRoleName != "Supervisor" ? true : false;
-            return false;
-        }
+    
+    
         public bool IsCompanyBelongToUser(Guid? corporationIdInToken, Guid? companyIdInToken, Guid? companyIdInParams, string roleInToken)
         {
             var isAdmin = roleInToken == "Admin";
@@ -168,26 +128,6 @@ namespace UserOperations.Utils
         }
 
         //---PRIVATE---
-        private List<Guid> GetAllowedRoles(string roleInToken)
-        {
-            var allRoles = _context.Roles.ToList();
-            var isAdmin = roleInToken == "Admin";
-            var isManager = roleInToken == "Manager";
-            var isSupervisor = roleInToken == "Supervisor";
-
-            if (isAdmin) return allRoles.Where(p => p.Name != "Admin").Select(x => x.Id).ToList();
-            if (isSupervisor) return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher").Select(x => x.Id).ToList();
-            if (isManager) return allRoles.Where(p => p.Name != "Admin" && p.Name != "Teacher" && p.Name != "Supervisor").Select(x => x.Id).ToList();
-            return null;
-        }
-
-        private Guid GetRoleToCreateChangeUser(string roleInToken, Guid? newUserRole, Guid? oldUserRole)
-        {
-            if ( newUserRole == null )
-                return oldUserRole != null ? (Guid)oldUserRole : _context.Roles.FirstOrDefault(x => x.Name == "Employee").Id;
-            return (Guid)newUserRole;
-        }
-
         private bool IsCompanyBelongToCorporation(Guid? corporationIdInToken, Guid? companyId)
         {
            if (corporationIdInToken == null || corporationIdInToken == Guid.Empty) return true;
