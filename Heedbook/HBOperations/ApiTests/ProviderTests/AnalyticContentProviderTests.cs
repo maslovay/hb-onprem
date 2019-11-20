@@ -9,9 +9,6 @@ namespace ApiTests
 {
     public class AnalyticContentProviderTests : ApiServiceTest
     {
-        protected override void InitData()
-        {
-        }
         [SetUp]
         public new void Setup()
         {

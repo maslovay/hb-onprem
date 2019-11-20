@@ -9,7 +9,7 @@ namespace UserOperations.Providers
 {
     public interface IUserProvider
     {
-        Task<ApplicationUser> GetUserWithRoleAndCompanyAsync(Guid userId);
+        Task<ApplicationUser> GetUserWithRoleAndCompanyByIdAsync(Guid userId);
         Task<List<ApplicationUser>> GetUsersForAdminAsync();
         Task<List<ApplicationUser>> GetUsersForSupervisorAsync(Guid corporationIdInToken, Guid userIdInToken);
         Task<List<ApplicationUser>> GetUsersForManagerAsync(Guid companyIdInToken, Guid userIdInToken);
@@ -23,7 +23,11 @@ namespace UserOperations.Providers
         Task SetUserInactiveAsync(ApplicationUser user);
         Task DeleteUserWithRolesAsync(ApplicationUser user);
         //---COMPANY----
+        Task<Company> GetCompanyByIdAsync(Guid companyId);
         Task<IEnumerable<Company>> GetCompaniesForAdminAsync();
         Task<IEnumerable<Company>> GetCompaniesForSupervisorAsync(string corporationIdInToken);
+        Task<IEnumerable<Corporation>> GetCorporationsForAdminAsync();
+        Task<Company> UpdateCompanAsync(Company entity, Company companyInParams);
+        Task<Company> AddNewCompanyAsync(Company message, string companyName);
     }
 }
