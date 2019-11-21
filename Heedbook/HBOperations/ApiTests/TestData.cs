@@ -250,7 +250,7 @@ namespace ApiTests
                             SadnessShare = 0.1,
                             SurpriseShare = 0.2,
                             YawShare = 20
-        }                   
+        }
                     },
                     ApplicationUser = GetUsersCompany1().First(),
                 }
@@ -612,7 +612,7 @@ namespace ApiTests
                 }
             }.AsQueryable();
         }
-     
+
         internal static IQueryable<Campaign> GetCampaigns()
         {
             return new List<Campaign>
@@ -657,7 +657,7 @@ namespace ApiTests
                     Name = "test content",
                     IsTemplate = false,
                     JSONData = "{ggg:jjj}",
-                    RawHTML = "kkk/ggg"                    
+                    RawHTML = "kkk/ggg"
                 },
                   new Content
                 {
@@ -703,17 +703,16 @@ namespace ApiTests
         }
         internal static Company Company1()
         {
-            return
-                new Company
-                {
-                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
-                    CompanyIndustryId = Guid.Parse("44440395-2cc3-46e8-bcef-c844f1048182"),
-                    CompanyName = "TEST Co",
-                    CorporationId = Guid.Parse("71aa39f1-649d-48d6-b1ae-10c518ed5979"),
-                    CountryId = Guid.Parse("66660395-2cc3-46e8-bcef-c844f1048182"),
-                    LanguageId = 2,
-                    StatusId = 3,
-                };
+            return new Company
+            {
+                CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
+                CompanyIndustryId = Guid.Parse("44440395-2cc3-46e8-bcef-c844f1048182"),
+                CompanyName = "TEST Co",
+                CorporationId = Guid.Parse("71aa39f1-649d-48d6-b1ae-10c518ed5979"),
+                CountryId = Guid.Parse("66660395-2cc3-46e8-bcef-c844f1048182"),
+                LanguageId = 2,
+                StatusId = 3,
+            };
         }
         internal static Company Company2()
         {
@@ -822,16 +821,16 @@ namespace ApiTests
             };
             return roles;
         }
-    
+
         internal static ApplicationUserRole UserRoleIncluded()
         {
             return new ApplicationUserRole
-               {
-                   RoleId = EmployeeRoleIncluded().Id,
-                   UserId = User1().Id,
-                   Role = EmployeeRoleIncluded(),
-                   User = null
-               };
+            {
+                RoleId = EmployeeRoleIncluded().Id,
+                UserId = User1().Id,
+                Role = EmployeeRoleIncluded(),
+                User = null
+            };
         }
         internal static async Task<IEnumerable<BenchmarkModel>> GetBenchmarkList()
         {
@@ -963,7 +962,7 @@ namespace ApiTests
                 new List<PasswordHistory>
                 {
                     new PasswordHistory{UserId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae1")}
-                }) .AsQueryable();
+                }).AsQueryable();
             return passwordHistory;
         }
         internal static List<Guid> GetGuids()
@@ -980,21 +979,21 @@ namespace ApiTests
             {
                 new Benchmark
                 {
-                    Day = new DateTime(2019, 11, 11, 12, 00, 00), 
-                    Id = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a120"), 
+                    Day = new DateTime(2019, 11, 11, 12, 00, 00),
+                    Id = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a120"),
                     BenchmarkNameId = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a120"),
                     IndustryId = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a12b")
                 },
                 new Benchmark
                 {
-                    Day = new DateTime(2019, 11, 11, 13, 00, 00), 
+                    Day = new DateTime(2019, 11, 11, 13, 00, 00),
                     Id = new Guid("25b74216-7871-4f5b-b21f-9bcf5177a120"),
                     BenchmarkNameId = new Guid("25b74216-7871-4f5b-b21f-9bcf5177a120"),
                     IndustryId = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a12b")
                 },
                 new Benchmark
                 {
-                    Day = new DateTime(2019, 11, 11, 14, 00, 00), 
+                    Day = new DateTime(2019, 11, 11, 14, 00, 00),
                     Id = new Guid("35b74216-7871-4f5b-b21f-9bcf5177a120"),
                     BenchmarkNameId = new Guid("35b74216-7871-4f5b-b21f-9bcf5177a120"),
                     IndustryId = new Guid("15b74216-7871-4f5b-b21f-9bcf5177a12b")
@@ -1021,7 +1020,20 @@ namespace ApiTests
             };
             return benchmarkName;
         }
-
+        internal static UserRegister GetUserRegister()
+        {
+            return new UserRegister()
+            {
+                CompanyIndustryId = Guid.NewGuid(),                
+                CompanyName = "HornAndHoves",
+                LanguageId = 2,
+                CountryId = Guid.NewGuid(),
+                CorporationId = Guid.NewGuid(),
+                Email = "HornAndHoves@heedbook.com",
+                FullName = "HornAndHoves",
+                Password = "123456"
+            };
+        }
     }
     internal class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
     {

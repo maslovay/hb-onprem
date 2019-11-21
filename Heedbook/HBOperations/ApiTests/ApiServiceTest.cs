@@ -48,12 +48,17 @@ namespace ApiTests
             filterMock = new Mock<IRequestFilters>(MockBehavior.Loose);
             helpProvider = new Mock<IHelpProvider>();
             mailSenderMock = new Mock<IMailSender>();
-            moqILoginService = new Mock<ILoginService>(MockBehavior.Loose);
+            moqILoginService = new Mock<ILoginService>();
             repositoryMock = new Mock<IGenericRepository>();
         }
-        protected virtual void InitData()
+        protected void InitData()
         {
-          
+            InitMockILoginService();
+            InitMockIMailSender();
+            InitMockIAccountProvider();
+            InitMockIHelpProvider();
+            InitMockIRequestFiltersProvider();
+            InitMockIDBOperations();
         }
 
         protected virtual void InitServices()
@@ -67,7 +72,7 @@ namespace ApiTests
             InitServices();
         }
 
-        public Mock<ILoginService> MockILoginService(Mock<ILoginService> moqILoginService)
+        public void InitMockILoginService()
         {
             moqILoginService.Setup(p => p.CheckUserLogin(It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(true);
@@ -84,173 +89,110 @@ namespace ApiTests
                 .Returns("123456");
             moqILoginService.Setup(p => p.CreateTokenForUser(It.IsAny<ApplicationUser>(), It.IsAny<bool>()))
                 .Returns("Token");
-            return moqILoginService;
         }
-        public Mock<IMailSender> MockIMailSender(Mock<IMailSender> moqIMailSender)
+        public void InitMockIMailSender()
         {
-            moqIMailSender.Setup(p => p.SendRegisterEmail(new HBData.Models.ApplicationUser()))
+            mailSenderMock.Setup(p => p.SendRegisterEmail(new HBData.Models.ApplicationUser()))
                 .Returns(Task.FromResult(0));
-            moqIMailSender.Setup(p => p.SendPasswordChangeEmail(new HBData.Models.ApplicationUser(), "password"))
+            mailSenderMock.Setup(p => p.SendPasswordChangeEmail(new HBData.Models.ApplicationUser(), "password"))
                 .Returns(Task.FromResult(0));
-            return moqIMailSender;
         }
-        public Mock<IAccountProvider> MockIAccountProvider(Mock<IAccountProvider> moqIAccountProvider)
-        {            
-            moqIAccountProvider.Setup(p => p.GetStatusId(It.IsAny<string>()))
+        public void InitMockIAccountProvider()
+        {
+            accountProviderMock.Setup(p => p.GetStatusId(It.IsAny<string>()))
                 .Returns((string p) => p == "Active" ? 3 : (p == "Inactive" ? 5 : 0));
-            moqIAccountProvider.Setup(p => p.CompanyExist(It.IsAny<string>()))
+            accountProviderMock.Setup(p => p.CompanyExist(It.IsAny<string>()))
                 .Returns(Task.FromResult(false));
-            moqIAccountProvider.Setup(p => p.EmailExist(It.IsAny<string>()))
+            accountProviderMock.Setup(p => p.EmailExist(It.IsAny<string>()))
                 .Returns(Task.FromResult(false));
-            moqIAccountProvider.Setup(p => p.AddNewCompanysInBase(new UserRegister(), Guid.NewGuid()))
-                .Returns(Task.FromResult(new Company()));
-            moqIAccountProvider.Setup(p => p.AddNewUserInBase(new UserRegister(), Guid.NewGuid()))
-                .Returns(Task.FromResult(new ApplicationUser()));
-            moqIAccountProvider.Setup(p => p.AddUserRoleInBase(new UserRegister(), new ApplicationUser()))
+            accountProviderMock.Setup(p => p.AddNewCompanysInBase(It.IsAny<UserRegister>()))
+                .Returns(TestData.Company1());
+            accountProviderMock.Setup(p => p.AddNewUserInBase(It.IsAny<UserRegister>(), It.IsAny<Guid?>()))
+                .Returns(Task.FromResult(TestData.User1()));
+            accountProviderMock.Setup(p => p.AddUserRoleInBase(TestData.GetUserRegister(), new ApplicationUser()))
                 .Returns(Task.FromResult(0));
-            moqIAccountProvider.Setup(p => p.GetTariffs(Guid.NewGuid()))
-                .Returns(0);
-            moqIAccountProvider.Setup(p => p.CreateCompanyTariffAndtransaction(new Company()))
+            accountProviderMock.Setup(p => p.GetTariffsAsync(TestData.Company1().CompanyId))
                 .Returns(Task.FromResult(0));
-            moqIAccountProvider.Setup(p => p.AddWorkerType(new Company()))
+            accountProviderMock.Setup(p => p.CreateCompanyTariffAndTransaction(TestData.Company1()))
                 .Returns(Task.FromResult(0));
-            moqIAccountProvider.Setup(p => p.AddContentAndCampaign(new Company()))
+            accountProviderMock.Setup(p => p.AddWorkerType(TestData.Company1()))
                 .Returns(Task.FromResult(0));
-            moqIAccountProvider.Setup(p => p.SaveChangesAsync())
+            accountProviderMock.Setup(p => p.AddContentAndCampaign(TestData.Company1()))
+                .Returns(Task.FromResult(0));
+            accountProviderMock.Setup(p => p.GetUserIncludeCompany(It.IsAny<string>()))
+                .Returns(TestData.User1());
+            accountProviderMock.Setup(p => p.GetUserIncludeCompany(It.IsAny<Guid>(), It.IsAny<AccountAuthorization>()))
+                .Returns(TestData.User1());
+            accountProviderMock.Setup(p => p.RemoveAccount("email"))
                 .Callback(() => {});
-            moqIAccountProvider.Setup(p => p.SaveChanges())
-                .Callback(() => {});
-            var user = new ApplicationUser(){UserName = "TestUser", StatusId = 3, PasswordHash = ""};
-            moqIAccountProvider.Setup(p => p.GetUserIncludeCompany(It.IsAny<string>()))
-                .Returns(user);
-            moqIAccountProvider.Setup(p => p.GetUserIncludeCompany(It.IsAny<Guid>(), It.IsAny<AccountAuthorization>()))
-                .Returns(user);
-            moqIAccountProvider.Setup(p => p.RemoveAccount("email"))
-                .Callback(() => {});          
-            return moqIAccountProvider;
         }
-        public Mock<IHelpProvider> MockIHelpProvider(Mock<IHelpProvider> moqIHelpProvider)
+        public void InitMockIHelpProvider()
         {
-            moqIHelpProvider.Setup(p => p.AddComanyPhrases());
-            moqIHelpProvider.Setup(p => p.CreatePoolAnswersSheet(It.IsAny<List<AnswerInfo>>(), It.IsAny<string>()))
+            helpProvider.Setup(p => p.AddComanyPhrases());
+            helpProvider.Setup(p => p.CreatePoolAnswersSheet(It.IsAny<List<AnswerInfo>>(), It.IsAny<string>()))
                 .Returns(new MemoryStream());
-            return moqIHelpProvider;
         }
-        public Mock<IRequestFilters> MockIRequestFiltersProvider(Mock<IRequestFilters> moqIRequestFiltersProvider)
+        public void InitMockIRequestFiltersProvider()
         {
             var list = new List<Guid>(){};
-            moqIRequestFiltersProvider.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
-            moqIRequestFiltersProvider.Setup(p => p.GetBegDate(It.IsAny<string>()))
+            filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
                 .Returns(new DateTime(2019, 10, 30));
-            moqIRequestFiltersProvider.Setup(p => p.GetEndDate(It.IsAny<string>()))
+            filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
                 .Returns(new DateTime(2019, 11, 01));
-            return moqIRequestFiltersProvider;
         }
-        public Mock<IAnalyticOfficeProvider> MockIAnalyticOfficeProvider(Mock<IAnalyticOfficeProvider> moqIAnalyticOfficeProvider)
+        public void InitMockIDBOperations()
         {
-            var sessionsInfo = new List<SessionInfo>
-            {
-                new SessionInfo
-                {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 12, 19,00),
-                    EndTime = new DateTime(2019,10,04,12,20,25),
-                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
-                    FullName = "tuisv@heedbook.com",
-                    IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
-                },
-                  new SessionInfo
-                {
-                    ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
-                    BegTime = new DateTime(2019,10,04, 18, 19,00),
-                    EndTime = new DateTime(2019,10,04,18,25,30),
-                    CompanyId = Guid.Parse("82560395-2cc3-46e8-bcef-c844f1048182"),
-                    FullName = "tuisv@heedbook.com",
-                    IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
-                }
-            };
-            moqIAnalyticOfficeProvider.Setup(p => p.GetSessionsInfo(
-                It.IsAny<DateTime>(), 
-                It.IsAny<DateTime>(), 
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>()))
-                .Returns(sessionsInfo);
-            var dialogues = new List<DialogueInfo>()
-            {
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 29, 18, 30, 00), EndTime = new DateTime(2019, 10, 29, 19, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 18, 30, 00), EndTime = new DateTime(2019, 10, 30, 19, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 50, 00), EndTime = new DateTime(2019, 10, 30, 20, 20, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 20, 30, 00), EndTime = new DateTime(2019, 10, 30, 21, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 21, 10, 00), EndTime = new DateTime(2019, 10, 30, 21, 40, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 31, 18, 30, 00), EndTime = new DateTime(2019, 10, 31, 19, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 11, 01, 18, 30, 00), EndTime = new DateTime(2019, 11, 01, 19, 00, 00)}
-            };
-            moqIAnalyticOfficeProvider.Setup(p => p.GetDialoguesInfo(
-                It.IsAny<DateTime>(), 
-                It.IsAny<DateTime>(), 
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>()))
-                .Returns(dialogues);
-            return moqIAnalyticOfficeProvider;
-        }
-        public Mock<IDBOperations> MockIDBOperations(Mock<IDBOperations> moqIDBOperationsProvider)
-        {
-            moqIDBOperationsProvider.Setup(p => p.LoadIndex(
+            dbOperationMock.Setup(p => p.LoadIndex(
                     It.IsAny<List<SessionInfo>>(),
                     It.IsAny<List<DialogueInfo>>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(0.5d);
-            moqIDBOperationsProvider.Setup(p => p.DialoguesCount(
+            dbOperationMock.Setup(p => p.DialoguesCount(
                     It.IsAny<List<DialogueInfo>>(),
                     It.IsAny<Guid>(),
                     It.IsAny<DateTime>()))
                 .Returns(3);
-            moqIDBOperationsProvider.Setup(p => p.SessionAverageHours(
+            dbOperationMock.Setup(p => p.SessionAverageHours(
                     It.IsAny<List<SessionInfo>>(),                    
                     It.IsAny<DateTime>(),
                     It.IsAny<DateTime>()))
                 .Returns(5d);
-            moqIDBOperationsProvider.Setup(p => p.DialogueAverageDuration(
+            dbOperationMock.Setup(p => p.DialogueAverageDuration(
                     It.IsAny<List<DialogueInfo>>(),                    
                     It.IsAny<DateTime>(),
                     It.IsAny<DateTime>()))
                 .Returns(5d);
-            moqIDBOperationsProvider.Setup(p => p.BestEmployeeLoad(
+            dbOperationMock.Setup(p => p.BestEmployeeLoad(
                     It.IsAny<List<DialogueInfo>>(),
                     It.IsAny<List<SessionInfo>>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(new Employee());
-            moqIDBOperationsProvider.Setup(p => p.SatisfactionIndex(
+            dbOperationMock.Setup(p => p.SatisfactionIndex(
                     It.IsAny<List<DialogueInfo>>()))
                 .Returns(60d);
-            moqIDBOperationsProvider.Setup(p => p.EmployeeCount(
+            dbOperationMock.Setup(p => p.EmployeeCount(
                     It.IsAny<List<DialogueInfo>>()))
                 .Returns(3);
-            moqIDBOperationsProvider.Setup(p => p.DialogueAveragePause(
+            dbOperationMock.Setup(p => p.DialogueAveragePause(
                     It.IsAny<List<SessionInfo>>(),
                     It.IsAny<List<DialogueInfo>>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(20d);
-            moqIDBOperationsProvider.Setup(p => p.DialogueAvgPauseListInMinutes(
+            dbOperationMock.Setup(p => p.DialogueAvgPauseListInMinutes(
                     It.IsAny<List<SessionInfo>>(),
                     It.IsAny<List<DialogueInfo>>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(new List<double>(){});
-            moqIDBOperationsProvider.Setup(p => p.SessionTotalHours(
+            dbOperationMock.Setup(p => p.SessionTotalHours(
                     It.IsAny<List<SessionInfo>>(),
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(9d);
-            
-            return moqIDBOperationsProvider;
         }
         public void Dispose()
         {

@@ -16,6 +16,7 @@ namespace LogSave.Controllers
     public class LogSaveController : Controller
     {
         private readonly RecordsContext _context;
+
         private readonly SftpClient _sftpClient;
         public LogSaveController(RecordsContext context, SftpClient sftpClient)
         {
@@ -37,6 +38,7 @@ namespace LogSave.Controllers
                     {
                         var path = $"/var/log/{file.FileName}";
                         System.Console.WriteLine(path);
+
                         using(FileStream newFile = new FileStream(path, FileMode.Create, FileAccess.Write))
                         {
                             byte[] bytes = new byte[fileStream.Length];

@@ -44,13 +44,12 @@ namespace UserOperations.Controllers
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            IRequestFilters requestFilters,
             SftpClient sftpClient,
+            IRequestFilters requestFilters,
             SmtpSettings smtpSetting,
             SmtpClient smtpClient,
             IMailSender mailSender,
             IUserProvider userProvider
-            // ElasticClient log
             )
         {
             _config = config;
@@ -59,7 +58,6 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
             _requestFilters = requestFilters;
             _mailSender = mailSender;
-            // _log = log;
             _containerName = "useravatars";
             activeStatus = 3;
             disabledStatus = 4;
@@ -86,13 +84,13 @@ namespace UserOperations.Controllers
                 var roleInToken = userClaims["role"];
 
                 if (roleInToken == "Admin")
-                    users = await _userProvider.GetUsersForAdmin();
+                    users = await _userProvider.GetUsersForAdminAsync();
               
                 if (roleInToken == "Supervisor" )
-                    users = await _userProvider.GetUsersForSupervisor(corporationIdInToken, userIdInToken);
+                    users = await _userProvider.GetUsersForSupervisorAsync(corporationIdInToken, userIdInToken);
 
                 if (roleInToken == "Manager")
-                    users = await _userProvider.GetUsersForManager(companyIdInToken, userIdInToken);
+                    users = await _userProvider.GetUsersForManagerAsync(companyIdInToken, userIdInToken);
 
                 var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default).path : null));
                 return Ok(result);
@@ -122,31 +120,18 @@ namespace UserOperations.Controllers
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
 
                 PostUser message = JsonConvert.DeserializeObject<PostUser>(userDataJson);
-                if (_context.ApplicationUsers.Where(x => x.NormalizedEmail == message.Email.ToUpper()).Any())
+                if (!await _userProvider.CheckUniqueEmailAsync(message.Email))
                     return BadRequest("User email not unique");
                
                 message.CompanyId = message.CompanyId ?? companyIdInToken;
                 if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, message.CompanyId, roleInToken) == false)
                     return BadRequest($"Not allowed user company");
 
-                if (await _userProvider.CheckAbilityToCreateOrChangeUser(roleInToken, message.RoleId, null) == false)
+                if (await _userProvider.CheckAbilityToCreateOrChangeUserAsync(roleInToken, message.RoleId, null) == false)
                     return BadRequest("Not allowed user role");
 
-                var user = new ApplicationUser
-                {
-                    UserName = message.Email,
-                    NormalizedUserName = message.Email.ToUpper(),
-                    Email = message.Email,
-                    NormalizedEmail = message.Email.ToUpper(),
-                    CompanyId = (Guid)message.CompanyId,
-                    CreationDate = DateTime.UtcNow,
-                    FullName = message.FullName,
-                    PasswordHash = _loginService.GeneratePasswordHash(message.Password),
-                    StatusId = activeStatus,//3
-                    EmpoyeeId = message.EmployeeId,
-                    WorkerTypeId = message.WorkerTypeId ?? _context.WorkerTypes.FirstOrDefault(x => x.WorkerTypeName == "Employee")?.WorkerTypeId
-                };
-                await _context.AddAsync(user);
+                ApplicationUser user =  await _userProvider.AddNewUserAsync(message);
+                ApplicationRole role =  await _userProvider.AddOrChangeUserRolesAsync (user.Id, message.RoleId, null);
 
                 //---save avatar---
                 string avatarUrl = null;
@@ -157,17 +142,13 @@ namespace UserOperations.Controllers
                     user.Avatar = fn;
                     avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default).path;
                 }
-
-                await _userProvider.AddOrChangeUserRoles (user.Id, message.RoleId, null);
-                await _context.SaveChangesAsync();
-
-                var userForEmail = _context.ApplicationUsers.Include(x => x.Company).FirstOrDefault(x => x.Id == user.Id);
+                var userForEmail = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(user.Id);
                 try
                 {
                     await _mailSender.SendUserRegisterEmail(userForEmail, message.Password);
                 }
                 catch { }
-                return Ok(new UserModel(user, avatarUrl));
+                return Ok(new UserModel(user, avatarUrl, role));
             }
             catch (Exception e)
             {
@@ -189,7 +170,7 @@ namespace UserOperations.Controllers
 
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
                 UserModel message = JsonConvert.DeserializeObject<UserModel>(userDataJson);
-                var user = await _userProvider.GetUserWithRoleAndCompany(message.Id);
+                var user = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(message.Id);
                 if (user == null) return BadRequest("No such user");
 
                 Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
@@ -200,7 +181,7 @@ namespace UserOperations.Controllers
                 if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user.CompanyId, roleInToken) == false)
                     return BadRequest($"Not allowed user company");
 
-                if (await _userProvider.CheckAbilityToCreateOrChangeUser(roleInToken, message.RoleId, user.UserRoles.FirstOrDefault().RoleId) == false)
+                if (await _userProvider.CheckAbilityToCreateOrChangeUserAsync(roleInToken, message.RoleId, user.UserRoles.FirstOrDefault().RoleId) == false)
                     return BadRequest("Not allowed user role");
 
                 if (message.Email != null && user.Email != message.Email)
@@ -216,7 +197,7 @@ namespace UserOperations.Controllers
                         if (p.Name == "EmployeeId")//---its a mistake in DB
                             userType.GetProperty("EmpoyeeId").SetValue(user, val);
                         else if (p.Name == "RoleId")
-                            newRole =  await _userProvider.AddOrChangeUserRoles(user.Id, message.RoleId, user.UserRoles.FirstOrDefault().RoleId);
+                            newRole =  await _userProvider.AddOrChangeUserRolesAsync(user.Id, message.RoleId, user.UserRoles.FirstOrDefault().RoleId);
                         else
                             userType.GetProperty(p.Name).SetValue(user, val);
                     }
@@ -259,28 +240,19 @@ namespace UserOperations.Controllers
                 Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
                 Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
                 var roleInToken = userClaims["role"];
-                var user = _context.ApplicationUsers
-                    .Include(x => x.UserRoles)
-                    .Include(x => x.Company)
-                    .Include(x => x.PasswordHistorys)
-                    .First(p => p.Id == applicationUserId);
+
+                ApplicationUser user = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(applicationUserId);
                 if (user == null) return BadRequest("No such user");
 
-                if (! await _userProvider.CheckAbilityToDeleteUser(roleInToken, user.UserRoles.FirstOrDefault().RoleId))
+                if (! await _userProvider.CheckAbilityToDeleteUserAsync(roleInToken, user.UserRoles.FirstOrDefault().RoleId))
                     return BadRequest("Not allowed user role");
                 if (!_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user.CompanyId, roleInToken))
                     return BadRequest($"Not allowed user company");
 
-                user.StatusId = disabledStatus;
-                await _context.SaveChangesAsync();
+                await _userProvider.SetUserInactiveAsync(user);
                 try
                 {
-                    if (user.UserRoles != null && user.UserRoles.Count() != 0)
-                        _context.RemoveRange(user.UserRoles);
-                    //if (user.PasswordHistorys != null && user.PasswordHistorys.Count() != 0)
-                    //    _context.RemoveRange(user.PasswordHistorys);
-                    _context.Remove(user);
-                    await _context.SaveChangesAsync();
+                    await _userProvider.DeleteUserWithRolesAsync(user);
                     await _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}");
                     return Ok("Deleted");
                 }
@@ -303,26 +275,21 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("User/Companies GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                if (userClaims["role"] == "Admin") // very cool!
-                {
-                    var companies = _context.Companys.Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToList();  // 2 active, 3 - disabled
-                    return Ok(companies);
-                }
-                if (userClaims["role"] == "Supervisor" && userClaims["corporationId"] != null) // only for own corporation
-                {
-                    var corporationId = Guid.Parse(userClaims["corporationId"]);
-                    var companies = _context.Companys // 2 active, 3 - disabled
-                        .Where(p => p.CorporationId == corporationId && (p.StatusId == activeStatus || p.StatusId == disabledStatus)).ToList();
-                    return Ok(companies);
-                }
-                return BadRequest("Not allowed access(role)");
+                if (userClaims["role"] != "Admin" && userClaims["role"] != "Supervisor")
+                    return BadRequest("Not allowed access(role)");
+
+                IEnumerable<Company> companies = null;
+                if (userClaims["role"] == "Admin")
+                    companies = await _userProvider.GetCompaniesForAdminAsync();
+                if (userClaims["role"] == "Supervisor") // only for corporations
+                    companies = await _userProvider.GetCompaniesForSupervisorAsync(userClaims["corporationId"]);
+
+                return Ok(companies);
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -331,94 +298,29 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Create new company for corporation")]
         [SwaggerResponse(200, "Company", typeof(Company))]
         public async Task<IActionResult> CompanysPostAsync(
-                    [FromForm, SwaggerParameter("Company name")] IFormCollection formData,
+                    [FromBody] Company model,
                     [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-                var companyModel = JsonConvert.DeserializeObject<CompanyModel>(userDataJson);
-                if (companyModel is null)
-                    BadRequest("Company Model not deserialized");
+                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
+                Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
+                var roleInToken = userClaims["role"];
 
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                var role = userClaims["role"];
+                if (roleInToken != "Admin" && roleInToken != "Supervisor")
+                    return BadRequest("Not allowed access(role)");
+
                 Company newCompany = null;
-              //  Guid newCompanyGuid = Guid.NewGuid();
-
-                if (role == "Supervisor" || role == "Admin")
+                if (roleInToken == "Admin")
+                    newCompany = await _userProvider.AddNewCompanyAsync(model, model.CompanyName);
+                if (roleInToken == "Supervisor")
                 {
-                    if (role == "Admin")
-                    {
-                        if (companyModel.CompanyName is null)
-                            return BadRequest("Company name is null");
-
-                        CompanyIndustry companyIndustry = _context.CompanyIndustrys.FirstOrDefault(p => p.CompanyIndustryId == companyModel.CompanyIndustryId);
-                        if (companyIndustry is null)
-                            return BadRequest("Company industry is null");
-
-                        Language language = _context.Languages.FirstOrDefault(p => p.LanguageId == companyModel.LanguageId);
-                        if (language is null)
-                            return BadRequest("Company language is null");
-
-                        Country country = _context.Countrys.FirstOrDefault(p => p.CountryId == companyModel.CountryId);
-                        if (country is null)
-                            return BadRequest("Company country is null");
-
-                        Status status = _context.Statuss.FirstOrDefault(p => p.StatusId == companyModel.StatusId);
-                        if (status is null)
-                            return BadRequest("Company status is null");
-
-                        Corporation corporation = _context.Corporations.FirstOrDefault(p => p.Id == companyModel.CorporationId);
-                        if ( corporation == null)
-                            BadRequest("Company corporation is null");
-
-                        newCompany = new Company()
-                        {
-                          //  CompanyId = newCompanyGuid,
-                            CompanyName = companyModel.CompanyName,
-                            CompanyIndustryId = companyModel.CompanyIndustryId,
-                            CreationDate = DateTime.Now,
-                            LanguageId = companyModel.LanguageId,
-                            CountryId = companyModel.CountryId,
-                            StatusId = companyModel.StatusId,
-                            Payment = null,
-                            CorporationId = companyModel.CorporationId,
-                        };
-                        _context.Companys.Add(newCompany);
-                    }
-                    else if (role == "Supervisor")
-                    {
-                        if (companyModel.CompanyName is null)
-                            return BadRequest("Company name is null");
-
-                        var employeeCompany = _context.Companys
-                            .Include(p => p.CompanyIndustry)
-                            .Include(p => p.Language)
-                            .FirstOrDefault(p => p.CompanyId == companyId);
-
-                        newCompany = new Company()
-                        {
-                           // CompanyId = newCompanyGuid,
-                            CompanyName = companyModel.CompanyName,
-                            CompanyIndustryId = employeeCompany.CompanyIndustryId,
-                            CompanyIndustry = employeeCompany.CompanyIndustry,
-                            CreationDate = DateTime.Now,
-                            LanguageId = employeeCompany.LanguageId,
-                            CountryId = employeeCompany.CountryId,
-                            StatusId = employeeCompany.StatusId,
-                            Payment = employeeCompany.Payment,
-                            CorporationId = employeeCompany.CorporationId != null ? employeeCompany.CorporationId : null
-                        };
-                        _context.Companys.Add(newCompany);
-                    }
-                    _context.SaveChanges();
-                    var company = _context.Companys.FirstOrDefault(p => p.CompanyId == newCompany.CompanyId);
-                    return Ok(company);
+                    var supervisorCompany = await _userProvider.GetCompanyByIdAsync(companyIdInToken);
+                    newCompany = await _userProvider.AddNewCompanyAsync(supervisorCompany, model.CompanyName);
                 }
-                return BadRequest("employee role is not accessible for create company");
+                return Ok(newCompany);
             }
             catch (Exception e)
             {
@@ -427,46 +329,29 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("Company")]
-        [SwaggerOperation(Summary = "Edit company",
-                Description = "Edit company")]
-        [SwaggerResponse(200, "Edited user", typeof(Company))]
+        [SwaggerOperation(Summary = "Edit company", Description = "Edit company")]
+        [SwaggerResponse(200, "Edited company", typeof(Company))]
         public async Task<IActionResult> CompanyPut(
-                    [FromForm, SwaggerParameter("json Company with key 'data' in FormData")] IFormCollection formData,
+                    [FromBody] Company model,
                     [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
-            var companyId = Guid.Parse(userClaims["companyId"]);
-            var corporationId = Guid.Parse(userClaims["corporationId"]);
-            var role = userClaims["role"];
+            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
+            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
+            var roleInToken = userClaims["role"];
 
-            var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-            Company message = JsonConvert.DeserializeObject<Company>(userDataJson);
+            if (roleInToken != "Admin" && roleInToken != "Supervisor")
+                return BadRequest("Not allowed access(role)");
 
-            if (role == "Admin" || role == "Supervisor")
-            {
-                var company = _context.Companys.FirstOrDefault(p => p.CompanyId == message.CompanyId);
-                if (company is null)
-                    return BadRequest($"company with such companyId: {message.CompanyId} not exist");
+            var company = await _userProvider.GetCompanyByIdAsync(model.CompanyId);
+            if (company is null)
+                return BadRequest($"company with such companyId: {model.CompanyId} not exist");
+            if( ! _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, model.CompanyId, roleInToken))
+                return BadRequest($"Not allowed user company");
 
-                if (role == "Supervisor")
-                {
-                    var supervisorCompany = _context.Companys.FirstOrDefault(p => p.CompanyId == companyId);
-                    if (message.CorporationId!= null && supervisorCompany.CorporationId != message.CorporationId)
-                        return BadRequest($"changable company corporationId and supervisor corporationId not equal");
-                }
-
-                foreach (var p in typeof(Company).GetProperties())
-                {
-                    if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
-                        p.SetValue(company, p.GetValue(message, null), null);
-                }
-                await _context.SaveChangesAsync();
-
-                return Ok(company);
-            }
-            else
-                return BadRequest($"employee with role: {role} cant change companys");
+            company = await _userProvider.UpdateCompanAsync(company, model);
+            return Ok(company);
         }
 
         [HttpGet("Corporations")]
@@ -477,17 +362,15 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("User/Corporations GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                if (userClaims["role"] != "Admin") return BadRequest("Not allowed access(role)"); ;
-                var corporations = _context.Corporations.ToList();
-                //  _log.Info("User/Corporations GET finished");
+                if (userClaims["role"] != "Admin") return BadRequest("Not allowed access(role)");
+
+                var corporations = await _userProvider.GetCorporationsForAdminAsync();
                 return Ok(corporations);
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -976,7 +859,7 @@ namespace UserOperations.Controllers
                 if (roleInToken != "Admin" && roleInToken != "Supervisor")
                     return BadRequest("No permission");
                 if( !_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, companyIdInToken, roleInToken))
-                    return BadRequest("No permission");
+                    return BadRequest($"Not allowed user company");
 
                 var dialogueClientSatisfaction = _context.DialogueClientSatisfactions.FirstOrDefault(x => x.DialogueId == message.DialogueId);
                 if(dialogueClientSatisfaction == null) return BadRequest("No such dialogue");

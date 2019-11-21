@@ -44,23 +44,22 @@ namespace UserOperations.Providers
             return emails.Any();
         }  
         
-        public async Task<Company> AddNewCompanysInBase(UserRegister message, Guid companyId)
-        {            
+        public Company AddNewCompanysInBase(UserRegister message)
+        {
             var company = new Company
             {
-                CompanyId = companyId,
                 CompanyIndustryId = message.CompanyIndustryId,
                 CompanyName = message.CompanyName,
                 LanguageId = message.LanguageId,
                 CreationDate = DateTime.UtcNow,
                 CountryId = message.CountryId,
                 CorporationId = message.CorporationId,
-                StatusId = GetStatusId("Inactive")//---inactive
+                StatusId = GetStatusId("Inactive")
             };
-            _repository.Create<Company>(company);            
+            _repository.Create<Company>(company);
             return company;
         }
-        public async Task<ApplicationUser> AddNewUserInBase(UserRegister message, Guid companyId)
+        public async Task<ApplicationUser> AddNewUserInBase(UserRegister message, Guid? companyId)
         {            
             var user = new ApplicationUser
             {
@@ -90,14 +89,12 @@ namespace UserOperations.Providers
             };
             _repository.Create<ApplicationUserRole>(userRole);
         }  
-        public int GetTariffs(Guid companyId)
+        public async Task<int> GetTariffsAsync(Guid? companyId)
         {
-            var task = _repository.GetAsQueryable<Tariff>().Where(item => item.CompanyId == companyId).ToListAsync();
-            task.Wait();
-            var tariffsCount = task.Result.Count;
-            return tariffsCount;
+            var tariffs = await _repository.FindByConditionAsync<Tariff>(item => item.CompanyId == companyId);
+            return tariffs.Count();
         }
-        public async Task CreateCompanyTariffAndtransaction(Company company)
+        public async Task CreateCompanyTariffAndTransaction(Company company)
         {            
             var tariff = new Tariff
             {
@@ -178,9 +175,9 @@ namespace UserOperations.Providers
                 _repository.Create<CampaignContent>(campaignContent);
             }
         }
-        public async void SaveChangesAsync()
+        public async Task SaveChangesAsync()
         {
-            await _repository.SaveAsync();          
+            await _repository.SaveAsync();
         }        
         public void SaveChanges()
         {
