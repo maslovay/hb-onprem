@@ -1,5 +1,4 @@
-
-using System;
+﻿
 using System.Threading;
 using Configurations;
 using HBData;
@@ -83,7 +82,6 @@ namespace LogSave
                 var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
-
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
@@ -98,12 +96,12 @@ namespace LogSave
             else
                 app.UseHsts();
 
-            app.UseSwagger(c => { c.RouteTemplate = "user/swagger/{documentName}/swagger.json"; });
+            app.UseSwagger(c => { c.RouteTemplate = "logs/swagger/{documentName}/swagger.json"; });
             
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/user/swagger/v1/swagger.json", "Sample API");
-                c.RoutePrefix = "user/swagger";
+                c.SwaggerEndpoint("/logs/swagger/v1/swagger.json", "Sample API");
+                c.RoutePrefix = "logs/swagger";
             });
             app.UseCors(MyAllowSpecificOrigins);
             //app.UseHttpsRedirection();
