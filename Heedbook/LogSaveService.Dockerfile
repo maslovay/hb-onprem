@@ -8,7 +8,7 @@ RUN dotnet publish ./HBOperations/LogSaveService -c Release -o publish
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/LogSaveService/publish .
-ENTRYPOINT ["dotnet", "UserService.dll"]
+ENTRYPOINT ["dotnet", "LogSave.dll"]
 EXPOSE 53690
 ENV ASPNETCORE_URLS http://+:53690
 RUN mkdir -p /opt/
