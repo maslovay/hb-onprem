@@ -5,7 +5,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using ServiceExtensions;
 
-namespace UserService
+namespace LogSave
 {
     public class Program
     {

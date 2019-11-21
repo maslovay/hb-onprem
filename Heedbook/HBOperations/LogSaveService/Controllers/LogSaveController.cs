@@ -9,38 +9,36 @@ using Microsoft.AspNetCore.Mvc;
 using Notifications.Base;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace UserService.Controllers
+namespace LogSave.Controllers
 {
     [Route("user/[controller]")]
     [ApiController]
     public class LogSaveController : Controller
     {
         private readonly RecordsContext _context;
-        private readonly INotificationHandler _handler;
+
         private readonly SftpClient _sftpClient;
-//        private readonly ElasticClient _log;
-
-
-        public LogSaveController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient/*, ElasticClient log*/)
+        public LogSaveController(RecordsContext context, SftpClient sftpClient)
         {
-            _handler = handler;
             _context = context;
             _sftpClient = sftpClient;
-//            _log = log;
         }
         [HttpPost]
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
-        public async Task<IActionResult> LogSave([FromForm] IFormCollection formData)
+        public async Task<IActionResult> LogSave([FromForm] IFormFile file)
         {
             try
             {  
-                var file = formData.Files.FirstOrDefault();
+                System.Console.WriteLine($"{file.FileName}");
+                //var file = formData.Files.FirstOrDefault();
                 if(file != null)
                 {                       
                     var fileStream = file.OpenReadStream();
                     if(fileStream.Length != 0)
-                    {                   
+                    {
                         var path = $"/var/log/{file.FileName}";
+                        System.Console.WriteLine(path);
+
                         using(FileStream newFile = new FileStream(path, FileMode.Create, FileAccess.Write))
                         {
                             byte[] bytes = new byte[fileStream.Length];

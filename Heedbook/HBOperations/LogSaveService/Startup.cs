@@ -1,4 +1,5 @@
-﻿using System;
+
+using System;
 using System.Threading;
 using Configurations;
 using HBData;
@@ -16,12 +17,12 @@ using Microsoft.Extensions.Options;
 using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Base;
-using Serilog;
+using Serilog;using System;
 using Swashbuckle.AspNetCore.Swagger;
 using UnitTestExtensions;
-using HBMLHttpClient;
+using Notifications.Services;
 
-namespace UserService
+namespace LogSave
 {
     public class Startup
     {
@@ -73,6 +74,7 @@ namespace UserService
                     Title = "User Service Api",
                     Version = "v1"
                 });
+                c.OperationFilter<FormFileSwaggerFilter>();
             });
 
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
@@ -82,21 +84,6 @@ namespace UserService
                 return new ElasticClient(settings);
             });
 
-            // (!isCalledFromUnitTest)
-                services.AddRabbitMqEventBus(Configuration);
-//            else
-//            {
-//                StartupExtensions.MockRabbitPublisher(services);
-//                StartupExtensions.MockNotificationService(services);
-//                StartupExtensions.MockNotificationHandler(services);
-//                StartupExtensions.MockTransmissionEnvironment<IntegrationEvent>(services);                
-//            }
-            services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
-            services.AddScoped(provider =>
-            {
-                var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
-                return new HbMlHttpClient(settings);
-            });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
@@ -106,14 +93,12 @@ namespace UserService
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            var service = app.ApplicationServices.GetRequiredService<INotificationService>();
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
 
             app.UseSwagger(c => { c.RouteTemplate = "user/swagger/{documentName}/swagger.json"; });
-            var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             
             app.UseSwaggerUI(c =>
             {
