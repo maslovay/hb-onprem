@@ -5,6 +5,7 @@ using UserOperations.Controllers;
 using UserOperations.AccountModels;
 using HBData.Models.AccountViewModels;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace ApiTests
 {
@@ -14,26 +15,18 @@ namespace ApiTests
         public new void Setup()
         {           
             base.Setup();
-        }
-        protected override void InitServices()
-        {
-            base.moqILoginService = MockILoginService(base.moqILoginService);
-            base.mailSenderMock = MockIMailSender(base.mailSenderMock);
-            base.accountProviderMock = MockIAccountProvider(base.accountProviderMock);
-            base.helpProvider = MockIHelpProvider(base.helpProvider);
-        }
+        }   
 
         [Test]
-        public void RegisterPostTest()
+        public async Task RegisterPostTest()
         {
             //Arrange
             var accountController = new AccountController(moqILoginService.Object, mailSenderMock.Object, accountProviderMock.Object, helpProvider.Object);
 
             //Act
-            var task = accountController.UserRegister(new UserRegister());
-            task.Wait();
-            var okResult = task.Result as OkObjectResult;
-            var result = okResult.Value.ToString();    
+            var taskResult = await accountController.UserRegister(TestData.GetUserRegister());
+            var okResult = taskResult as OkObjectResult;
+            var result = okResult.Value.ToString();
 
             //Assert
             Assert.IsTrue(result == "Registred");

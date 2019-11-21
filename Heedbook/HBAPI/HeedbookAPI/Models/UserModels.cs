@@ -1,6 +1,7 @@
 ﻿using HBData.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,9 +10,11 @@ namespace UserOperations.Models
     public class PostUser
     {
         public string FullName;
+        [Required]
         public string Email;
         public string EmployeeId;
         public Guid? RoleId;
+        [Required]
         public string Password;
         public Guid? WorkerTypeId;
         public Guid? CompanyId;

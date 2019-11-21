@@ -24,10 +24,7 @@ namespace ApiTests
         {
             base.Setup();
         }
-        protected override void InitServices()
-        {
-            base.moqILoginService = MockILoginService(base.moqILoginService);
-        }
+      
         [Test]
         public void GetStatusIdTest()
         {
@@ -85,25 +82,17 @@ namespace ApiTests
             Assert.IsTrue(companyExist);
         }
         [Test]
-        public async Task AddNewCompanysInBaseTest()
+        public void AddNewCompanysInBaseTest()
         {
             //Arrange
             repositoryMock.Setup(p => p.Create<Company>(It.IsAny<Company>())).Verifiable();  
             var status = new Status(){StatusId = 5};   
             repositoryMock.Setup(p => p.FindOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
                 .Returns(Task.FromResult<Status>(status));     
-            var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);         
-            var message = new UserRegister()
-            {
-                CompanyIndustryId = Guid.NewGuid(),
-                CompanyName = "HornAndHoves",
-                LanguageId = 2,
-                CountryId = Guid.NewGuid(),
-                CorporationId = Guid.NewGuid()
-            };
+            var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);
 
             //Act
-            var company = await accountProvider.AddNewCompanysInBase(message, Guid.NewGuid());
+            var company = accountProvider.AddNewCompanysInBase(TestData.GetUserRegister());
 
             //Assert
             Assert.AreEqual(5, company.StatusId);
@@ -114,23 +103,17 @@ namespace ApiTests
         {
             //Arrange
             repositoryMock.Setup(p => p.Create<ApplicationUser>(It.IsAny<ApplicationUser>())).Verifiable();  
-            var status = new Status(){StatusId = 3};   
+            var status = new Status(){StatusId = 3};
             repositoryMock.Setup(p => p.FindOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
-                .Returns(Task.FromResult<Status>(status));     
+                .Returns(Task.FromResult<Status>(status));
 
-            var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);         
-            var message = new UserRegister()
-            {
-                Email = "HornAndHoves@heedbook.com",
-                FullName = "HornAndHoves",
-                Password = "123456"
-            };
+            var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);
 
             //Act
-            var user = await accountProvider.AddNewUserInBase(message, Guid.NewGuid());
+            var user = await accountProvider.AddNewUserInBase(TestData.GetUserRegister(), Guid.NewGuid());
 
             //Assert
-            Assert.AreEqual(message.Email, user.Email);
+            Assert.AreEqual(TestData.GetUserRegister().Email, user.Email);
             Assert.AreEqual("Hash", user.PasswordHash);
         }
         [Test]
@@ -156,29 +139,23 @@ namespace ApiTests
             Assert.IsTrue(userRoles.Any());
         }
         [Test]
-        public void GetTariffsTest()
+        public async Task GetTariffsTest()
         {
             //Arrange
-            var tariffs = new TestAsyncEnumerable<Tariff>(
-                new List<Tariff>()
-                {
-                    new Tariff{CompanyId = new Guid("55b74216-7871-4f5b-b21f-9bcf5177a120")},
-                    new Tariff{CompanyId = new Guid("55b74216-7871-4f5b-b21f-9bcf5177a120")},
-                    new Tariff{CompanyId = new Guid("9f728d72-55c2-4a3c-abbf-ebb422f54ddf")},
-                    new Tariff{CompanyId = new Guid("9f728d72-55c2-4a3c-abbf-ebb422f54ddf")},
-                    new Tariff{CompanyId = new Guid("9f728d72-55c2-4a3c-abbf-ebb422f54ddf")}
-                }
-            ).AsQueryable();
-
-            repositoryMock.Setup(p => p.GetAsQueryable<Tariff>()).Returns(tariffs);
-
-            var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);
+            var tariffs = new List<Tariff>()
+            {
+                new Tariff{CompanyId = new Guid("55b74216-7871-4f5b-b21f-9bcf5177a120")},
+                new Tariff{CompanyId = new Guid("55b74216-7871-4f5b-b21f-9bcf5177a120")}
+            }.AsEnumerable();
+            repositoryMock.Setup(p => p.FindByConditionAsync<Tariff>(It.IsAny<Expression<Func<Tariff, bool>>>()))
+               .Returns(Task.FromResult<IEnumerable<Tariff>>(tariffs));
+            var accountProvider = new AccountProvider(moqILoginService.Object, base.repositoryMock.Object);
 
             //Act
-            var count = accountProvider.GetTariffs(new Guid("55b74216-7871-4f5b-b21f-9bcf5177a120"));
+            var count = await accountProvider.GetTariffsAsync(Guid.Parse("55b74216-7871-4f5b-b21f-9bcf5177a120"));
 
             //Assert
-            Assert.AreEqual(count, tariffs.Where(p => p.CompanyId == new Guid("55b74216-7871-4f5b-b21f-9bcf5177a120")).Count());
+            Assert.AreEqual(2, count);
         }
         [Test]
         public async Task CreateCompanyTariffAndtransaction()
@@ -195,7 +172,7 @@ namespace ApiTests
             var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);
 
             //Act
-            await accountProvider.CreateCompanyTariffAndtransaction(new Company(){CompanyId = Guid.NewGuid()});
+            await accountProvider.CreateCompanyTariffAndTransaction(new Company(){CompanyId = Guid.NewGuid()});
 
             //Assert
             Assert.IsTrue(tariffs.Any());

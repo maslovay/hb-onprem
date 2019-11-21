@@ -24,8 +24,6 @@ namespace ApiTests
         }
         protected override void InitServices()
         {
-            base.moqILoginService = MockILoginService(base.moqILoginService);
-            base.accountProviderMock = MockIAccountProvider(base.accountProviderMock);
             analyticContentProviderMock = MockIAnalyticContentProvider(new Mock<IAnalyticContentProvider>());
         }
     

@@ -15,12 +15,7 @@ namespace ApiTests
         public new void Setup()
         {
             base.Setup();
-        }
-        protected override void InitServices()
-        {
-            base.moqILoginService = MockILoginService(base.moqILoginService);
-            base.accountProviderMock = MockIAccountProvider(base.accountProviderMock);
-        }
+        }      
 
         [Test]
         public void EfficiencyDashboard()
