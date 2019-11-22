@@ -24,7 +24,9 @@ namespace HBData.Repository
         IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate,
             params Expression<Func<T, Object>>[] children)
             where T : class;
-
+        IQueryable<T> GetWithIncludeAsQueryable<T>(Expression<Func<T, Boolean>> predicate,
+            params Expression<Func<T, Object>>[] children) where T : class;
+        
         T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate, params Expression<Func<T, Object>>[] children)
             where T : class;
      
