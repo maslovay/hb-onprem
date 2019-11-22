@@ -11,7 +11,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace LogSave.Controllers
 {
-    [Route("user/[controller]")]
+    [Route("logs/[controller]")]
     [ApiController]
     public class LogSaveController : Controller
     {
