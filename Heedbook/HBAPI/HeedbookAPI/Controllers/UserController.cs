@@ -289,7 +289,7 @@ namespace UserOperations.Controllers
                 if (userClaims["role"] == "Supervisor") // only for corporations
                     companies = await _userProvider.GetCompaniesForSupervisorAsync(userClaims["corporationId"]);
 
-                return Ok(companies);
+                return Ok(companies?? new List<Company>());
             }
             catch (Exception e)
             {
