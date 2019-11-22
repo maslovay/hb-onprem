@@ -35,6 +35,7 @@ namespace UserOperations.Controllers
         private readonly SmtpClient _smtpClient;
         private readonly IMailSender _mailSender;
         private readonly IUserProvider _userProvider;
+        private readonly IPhraseProvider _phraseProvider;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
         private readonly int activeStatus;
@@ -49,7 +50,8 @@ namespace UserOperations.Controllers
             SmtpSettings smtpSetting,
             SmtpClient smtpClient,
             IMailSender mailSender,
-            IUserProvider userProvider
+            IUserProvider userProvider,
+            IPhraseProvider phraseProvider
             )
         {
             _config = config;
@@ -64,6 +66,7 @@ namespace UserOperations.Controllers
             _smtpSetting = smtpSetting;
             _smtpClient = smtpClient;
             _userProvider = userProvider;
+            _phraseProvider = phraseProvider;
         }
 
         [HttpGet("User")]
@@ -286,7 +289,7 @@ namespace UserOperations.Controllers
                 if (userClaims["role"] == "Supervisor") // only for corporations
                     companies = await _userProvider.GetCompaniesForSupervisorAsync(userClaims["corporationId"]);
 
-                return Ok(companies);
+                return Ok(companies?? new List<Company>());
             }
             catch (Exception e)
             {
@@ -376,43 +379,27 @@ namespace UserOperations.Controllers
         }
 
 
+
         [HttpGet("PhraseLib")]
         [SwaggerOperation(Summary = "Library",
                 Description = "Return collections phrases from library (only templates and only with language code = loggined company language code) which company has not yet used")]
         [SwaggerResponse(200, "Library phrase collection", typeof(List<Phrase>))]
-        public IActionResult PhraseGet(
+        public async Task<IActionResult> PhraseGet(
                     [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
-                // _log.Info("User/PhraseLib GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                var companyIdUser = Guid.Parse(userClaims["companyId"]);
+                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
                 var languageId = userClaims["languageCode"];
 
-                var phrasesIncluded = _context.PhraseCompanys
-                    .Include(x => x.Phrase)
-                    .Where(x =>
-                        x.CompanyId == companyIdUser &&
-                        x.Phrase.IsTemplate == true &&
-                        x.Phrase.PhraseText != null &&
-                        x.Phrase.LanguageId.ToString() == languageId)
-                    .Select(x => x.Phrase.PhraseId).ToList();
-
-                var phrases = _context.Phrases
-                   .Where(x =>
-                       x.IsTemplate == true &&
-                       x.PhraseText != null &&
-                       !phrasesIncluded.Contains(x.PhraseId) &&
-                       x.LanguageId.ToString() == languageId).ToList();
-
-                // _log.Info("User/PhraseLib GET finished");
+                var phraseIds = await _phraseProvider.GetPhraseIdsByCompanyIdAsync(companyIdInToken, languageId, true);
+                var phrases = await _phraseProvider.GetPhrasesNotBelongToCompanyByIdsAsync(phraseIds, languageId, true);
                 return Ok(phrases);
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -427,44 +414,20 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("User/PhraseLib POST started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var languageId = Int32.Parse(userClaims["languageCode"]);
-                //---search phrase that is in library or that is not belong to any company
-                var phrase = _context.Phrases
-                        .Include(x => x.PhraseCompany)
-                        .Where(x => x.PhraseText.ToLower() == message.PhraseText.ToLower()
-                         && (x.IsTemplate == true || x.PhraseCompany.Count() == 0)).FirstOrDefault();
+                var phrase = await _phraseProvider.GetLibraryPhraseByTextAsync(message.PhraseText, true);
 
                 if (phrase == null)
-                {
-                    phrase = new Phrase
-                    {
-                        PhraseId = Guid.NewGuid(),
-                        PhraseText = message.PhraseText,
-                        PhraseTypeId = message.PhraseTypeId,
-                        LanguageId = languageId,
-                        IsClient = message.IsClient,
-                        WordsSpace = message.WordsSpace,
-                        Accurancy = message.Accurancy,
-                        IsTemplate = false
-                    };
-                    await _context.Phrases.AddAsync(phrase);
-                }
-                var phraseCompany = new PhraseCompany();
-                phraseCompany.CompanyId = companyId;
-                phraseCompany.PhraseCompanyId = Guid.NewGuid();
-                phraseCompany.PhraseId = phrase.PhraseId;
-                await _context.PhraseCompanys.AddAsync(phraseCompany);
-                await _context.SaveChangesAsync();
-                // _log.Info("User/PhraseLib POST finished");
+                    phrase = await _phraseProvider.CreateNewPhraseAsync(message, languageId);
+
+                await _phraseProvider.CreateNewPhraseCompanyAsync(companyId, phrase.PhraseId);
                 return Ok(phrase);
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -477,26 +440,14 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("User/PhraseLib PUT started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
 
-                var phrase = _context.PhraseCompanys
-                    .Include(p => p.Phrase)
-                    .Where(p => p.Phrase.PhraseId == message.PhraseId && p.CompanyId == companyId && p.Phrase.IsTemplate == false)
-                    .Select(p => p.Phrase)
-                    .FirstOrDefault();
-
+                var phrase = await _phraseProvider.GetPhraseInCompanyByIdAsync(message.PhraseId, companyId, false);
                 if (phrase != null)
                 {
-                    foreach (var p in typeof(Phrase).GetProperties())
-                    {
-                        if (p.GetValue(message, null) != null && p.GetValue(message, null).ToString() != Guid.Empty.ToString())
-                            p.SetValue(phrase, p.GetValue(message, null), null);
-                    }
-                    await _context.SaveChangesAsync();
-                    // _log.Info("User/PhraseLib PUT finished");
+                    await _phraseProvider.EditPhraseAsync(phrase, message);
                     return Ok(phrase);
                 }
                 else
@@ -506,7 +457,6 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
 
@@ -522,18 +472,10 @@ namespace UserOperations.Controllers
             {
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
-                string answer = "Template! Deleted from PhraseCompany";
                 var companyId = Guid.Parse(userClaims["companyId"]);
-                var phrase = _context.Phrases.Include(x=> x.PhraseCompany).FirstOrDefault(x => x.PhraseId == phraseId);
-                var phrasesCompany = phrase.PhraseCompany.Where(x => x.CompanyId == companyId).ToList();
-                _context.RemoveRange(phrasesCompany);//--remove connections to phrase in library
-                await _context.SaveChangesAsync();
-                if ( !phrase.IsTemplate )
-                {
-                    _context.Remove(phrase);//--remove own phrase
-                    await _context.SaveChangesAsync();
-                    answer = "Deleted from PhraseCompany and Phrases";
-                }              
+                var phrase = await _phraseProvider.GetPhraseByIdAsync(phraseId);
+                if (phrase == null) return BadRequest("No such phrase");
+                var answer = await _phraseProvider.DeletePhraseWithPhraseCompanyAsync(phrase, companyId);
                 return Ok(answer);
             }
             catch (Exception e)
