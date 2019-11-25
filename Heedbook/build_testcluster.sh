@@ -24,7 +24,9 @@ docker build -t hbtestregistry.azurecr.io/dialoguesrecalculatescheduler:latestte
 docker build -t hbtestregistry.azurecr.io/senduseranalyticreportscheduler:latesttest -f tmp/SendUserAnalyticReportScheduler.Dockerfile .&&
 docker build -t hbtestregistry.azurecr.io/referencecontroller:latesttest -f tmp/ReferenceController.Dockerfile .&&
 docker build -t hbtestregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest -f DialogueAndSessionsNestedScheduler.Dockerfile . &&
-docker build -t hbtestregistry.azurecr.io/oldvideotoframecutsheduler:latest -f OldVideoToFrameCutSheduler.Dockerfile .
+docker build -t hbtestregistry.azurecr.io/oldvideotoframecutsheduler:latest -f OldVideoToFrameCutSheduler.Dockerfile . &&
+docker build -t hbtestregistry.azurecr.io/logsaveservice:latest -f LogSaveService.Dockerfile .
+
 
 docker push hbtestregistry.azurecr.io/faceanalyzeservice:latesttest &&
 docker push hbtestregistry.azurecr.io/userservice:latesttest && 
@@ -48,6 +50,7 @@ docker push hbtestregistry.azurecr.io/dialoguesrecalculatescheduler:latesttest &
 docker push hbtestregistry.azurecr.io/senduseranalyticreportscheduler:latesttest &&
 docker push hbtestregistry.azurecr.io/referencecontroller:latesttest &&
 docker push hbtestregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest &&
-docker push hbtestregistry.azurecr.io/oldvideotoframecutsheduler:latest
+docker push hbtestregistry.azurecr.io/oldvideotoframecutsheduler:latest &&
+docker push hbtestregistry.azurecr.io/logsaveservice:latest
 
 rm -rf tmp

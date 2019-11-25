@@ -58,6 +58,13 @@ namespace HBData.Repository
             children.ToList().ForEach(x => dbSet.Include(x).Load());
             return dbSet.Where(predicate);
         }
+        public IQueryable<T> GetWithIncludeAsQueryable<T>(Expression<Func<T, Boolean>> predicate,
+            params Expression<Func<T, Object>>[] children) where T : class
+        {
+            var dbSet = _context.Set<T>();
+            children.ToList().ForEach(x => dbSet.Include(x).Load());
+            return dbSet.Where(predicate).AsQueryable();
+        }
 
         public T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate,
             params Expression<Func<T, Object>>[] children) where T : class

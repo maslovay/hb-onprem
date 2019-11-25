@@ -20,7 +20,8 @@ docker build -t heedbookcontainerregistry.azurecr.io/heedbookdevelopmentstatisti
 docker build -t heedbookcontainerregistry.azurecr.io/dialoguesrecalculatescheduler:latest -f DialoguesRecalculateScheduler.Dockerfile . &&
 docker build -t heedbookcontainerregistry.azurecr.io/senduseranalyticreportscheduler:latest -f SendUserAnalyticReportScheduler.Dockerfile . &&
 docker build -t heedbookcontainerregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest -f DialogueAndSessionsNestedScheduler.Dockerfile . &&
-docker build -t heedbookcontainerregistry.azurecr.io/oldvideotoframecutsheduler:latest -f OldVideoToFrameCutSheduler.Dockerfile .
+docker build -t heedbookcontainerregistry.azurecr.io/oldvideotoframecutsheduler:latest -f OldVideoToFrameCutSheduler.Dockerfile . &&
+docker build -t heedbookcontainerregistry.azurecr.io/logsaveservice:latest -f LogSaveService.Dockerfile .
 
 docker push heedbookcontainerregistry.azurecr.io/faceanalyzeservice:latest &&
 docker push heedbookcontainerregistry.azurecr.io/userservice:latest && 
@@ -43,4 +44,5 @@ docker push heedbookcontainerregistry.azurecr.io/heedbookdevelopmentstatisticssc
 docker push heedbookcontainerregistry.azurecr.io/dialoguesrecalculatescheduler:latest &&
 docker push heedbookcontainerregistry.azurecr.io/senduseranalyticreportscheduler:latest &&
 docker push heedbookcontainerregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest &&
-docker push heedbookcontainerregistry.azurecr.io/oldvideotoframecutsheduler:latest
+docker push heedbookcontainerregistry.azurecr.io/oldvideotoframecutsheduler:latest &&
+docker push heedbookcontainerregistry.azurecr.io/logsaveservice:latest
