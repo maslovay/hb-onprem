@@ -11,5 +11,6 @@ namespace UserOperations.Providers
         double? GetBenchmarkIndustryAvg(List<BenchmarkModel> benchmarksList, string banchmarkName);
         double? GetBenchmarkIndustryMax(List<BenchmarkModel> benchmarksList, string banchmarkName);
         Task<IEnumerable<Guid?>> GetIndustryIdsAsync(List<Guid> companyIds);
+        Task<int> GetSessionOnline(List<Guid> companyIds, List<Guid> workerTypeIds);
     }
 }

@@ -424,6 +424,7 @@ namespace UserOperations.Controllers
                     phrase = await _phraseProvider.CreateNewPhraseAsync(message, languageId);
 
                 await _phraseProvider.CreateNewPhraseCompanyAsync(companyId, phrase.PhraseId);
+                await _phraseProvider.SaveChangesAsync();
                 return Ok(phrase);
             }
             catch (Exception e)
@@ -447,7 +448,7 @@ namespace UserOperations.Controllers
                 var phrase = await _phraseProvider.GetPhraseInCompanyByIdAsync(message.PhraseId, companyId, false);
                 if (phrase != null)
                 {
-                    await _phraseProvider.EditPhraseAsync(phrase, message);
+                    await _phraseProvider.EditAndSavePhraseAsync(phrase, message);
                     return Ok(phrase);
                 }
                 else
@@ -475,7 +476,7 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 var phrase = await _phraseProvider.GetPhraseByIdAsync(phraseId);
                 if (phrase == null) return BadRequest("No such phrase");
-                var answer = await _phraseProvider.DeletePhraseWithPhraseCompanyAsync(phrase, companyId);
+                var answer = await _phraseProvider.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase, companyId);
                 return Ok(answer);
             }
             catch (Exception e)
@@ -486,24 +487,20 @@ namespace UserOperations.Controllers
 
         [HttpGet("CompanyPhrase")]
         [SwaggerOperation(Summary = "Return attached to company(-ies) phrases", Description = "Return own and template phrases collection for companies sended in params or for loggined company")]
-        public IActionResult CompanyPhraseGet(
+        public async Task<IActionResult> CompanyPhraseGet(
                 [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds,
                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
             {
-                // _log.Info("User/CompanyPhrase GET started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 companyIds = !companyIds.Any() ? new List<Guid> { Guid.Parse(userClaims["companyId"]) } : companyIds;
-
-                var companyPhrase = _context.PhraseCompanys.Include(p => p.Phrase).Where(p => companyIds.Contains((Guid)p.CompanyId));
-                // _log.Info("User/CompanyPhrase GET finished");
-                return Ok(companyPhrase.Select(p => p.Phrase).ToList());
+                var companyPhrase = await _phraseProvider.GetPhrasesInCompanyByIdsAsync(companyIds);
+                return Ok(companyPhrase);
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
@@ -516,27 +513,18 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("User/CompanyPhrase POST started");
                 if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                     return BadRequest("Token wrong");
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 foreach (var phraseId in phraseIds)
                 {
-                    var phraseCompany = new PhraseCompany
-                    {
-                        PhraseCompanyId = Guid.NewGuid(),
-                        CompanyId = companyId,
-                        PhraseId = phraseId
-                    };
-                    await _context.AddAsync(phraseCompany);
+                    await _phraseProvider.CreateNewPhraseCompanyAsync(companyId, phraseId);
                 }
-                await _context.SaveChangesAsync();
-                // _log.Info("User/CompanyPhrase POST finished");
+                await _phraseProvider.SaveChangesAsync();
                 return Ok("OK");
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }

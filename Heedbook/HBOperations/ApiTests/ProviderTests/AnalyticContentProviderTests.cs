@@ -52,7 +52,7 @@ namespace ApiTests
             var provider = new AnalyticContentProvider(repositoryMock.Object);
 
             // Act
-            var result = await provider.GetSlideShowFilteredByPoolAsync(
+            var result = await provider.GetSlideShowWithDialogueIdFilteredByPoolAsync(
                         TestData.begDate, 
                         TestData.endDate, 
                         TestData.GetCompanyIds(), 
@@ -72,7 +72,7 @@ namespace ApiTests
             var provider = new AnalyticContentProvider(repositoryMock.Object);
 
             // Act
-            var result = await provider.GetSlideShowFilteredByPoolAsync(
+            var result = await provider.GetSlideShowWithDialogueIdFilteredByPoolAsync(
                       TestData.begDate,
                       TestData.endDate,
                       TestData.GetCompanyIds(),

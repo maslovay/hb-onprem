@@ -146,7 +146,8 @@ namespace UserOperations.Controllers
                     .ToList();
                     //---USER WITHOUT SESSIONS---
                 var userIds = sessions.Select(x => x.ApplicationUserId).Distinct().ToList();
-                
+
+                //TODO: change on GetEmployees in CommonProvider
                 var usersToAdd = _context.ApplicationUsers
                     .Include(x =>x.UserRoles)
                     .Where(p => 

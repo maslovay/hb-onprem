@@ -249,7 +249,9 @@ namespace UserOperations.Providers
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
                     BegTime = p.BegTime,
+                    EndTime = p.EndTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 })
                 .ToListAsyncSafe();
@@ -268,5 +270,19 @@ namespace UserOperations.Providers
             return data;
         }
 
+        public async Task<List<ApplicationUser>> GetEmployees(DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        {
+            var employeeRole = (await _repository.FindOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
+            var users =  _repository.GetAsQueryable<ApplicationUser>()
+                   .Where(p =>
+                       p.CreationDate <= endTime
+                       && p.StatusId == 3
+                       && (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.CompanyId)))
+                       && (applicationUserIds == null || ( !applicationUserIds.Any() || applicationUserIds.Contains(p.Id)))
+                       && (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId)))
+                       && (p.UserRoles.Any(x => x.RoleId == employeeRole))
+                   ).ToList();
+            return users;
+        }
     }
 }
