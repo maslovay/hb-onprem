@@ -19,6 +19,7 @@ namespace UserOperations.Controllers
     {
         private readonly IAnalyticCommonProvider _analyticCommonProvider;
         private readonly IAnalyticHomeProvider _analyticHomeProvider;
+        private readonly IAnalyticContentProvider _analyticContentProvider;
         private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
         private readonly IDBOperations _dbOperation;
@@ -26,6 +27,7 @@ namespace UserOperations.Controllers
         public AnalyticHomeController(
             IAnalyticCommonProvider analyticProvider,
             IAnalyticHomeProvider homeProvider,
+            IAnalyticContentProvider analyticContentProvider,
             IConfiguration config,
             ILoginService loginService,
             IDBOperations dbOperation,
@@ -38,6 +40,7 @@ namespace UserOperations.Controllers
             _requestFilters = requestFilters;
             _analyticCommonProvider = analyticProvider;
             _analyticHomeProvider = homeProvider;
+            _analyticContentProvider = analyticContentProvider;
         }
 
         [HttpGet("Dashboard")]
@@ -151,6 +154,118 @@ namespace UserOperations.Controllers
             }
         }
 
+        [HttpGet("NewDashboard")]
+        public async Task<IActionResult> GetNewDashboard([FromQuery(Name = "begTime")] string beg,
+                                                   [FromQuery(Name = "endTime")] string end,
+                                                   [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                   [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                   [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                   [FromHeader] string Authorization)
+        {
+            try
+            {
+                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                    return BadRequest("Token wrong");
+                var role = userClaims["role"];
+                var companyId = Guid.Parse(userClaims["companyId"]);
+
+                var begTime = _requestFilters.GetBegDate(beg);
+                var endTime = _requestFilters.GetEndDate(end);
+                var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+
+                var sessions = await _analyticCommonProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
+                var sessionCur = sessions != null ? sessions.Where(p => p.BegTime.Date >= begTime).ToList() : null;
+                var sessionOld = sessions != null ? sessions.Where(p => p.BegTime.Date < begTime).ToList() : null;
+                var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
+
+                var dialogues = _analyticCommonProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
+                       .Select(p => new DialogueInfo
+                       {
+                           DialogueId = p.DialogueId,
+                           ApplicationUserId = p.ApplicationUserId,
+                           FullName = p.ApplicationUser.FullName,
+                           BegTime = p.BegTime,
+                           EndTime = p.EndTime,
+                           CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                           SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                           SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
+                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
+                       }).ToList();
+
+
+              
+
+                ////-----------------FOR BRANCH---------------------------------------------------------------
+                List<BenchmarkModel> benchmarksList = (await _analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds)).ToList();
+
+                var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
+                var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
+
+                var slideShowSessionsInDialoguesOld = await _analyticContentProvider
+                    .GetSlideShowWithDialogueIdFilteredByPoolAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds, false, dialoguesOld);
+                var viewsOld = slideShowSessionsInDialoguesOld.Where(x => x.Campaign == null || !x.Campaign.IsSplash).Count();
+
+                var slideShowSessionsInDialoguesCur = await _analyticContentProvider
+                    .GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds, false, dialoguesCur);
+                var viewsCur = slideShowSessionsInDialoguesCur.Where(x => x.Campaign == null || !x.Campaign.IsSplash).Count();
+
+                var result = new NewDashboardInfo()
+                {
+                    ClientsCount = _dbOperation.DialoguesCount(dialoguesCur),
+                    ClientsCountDelta = -_dbOperation.DialoguesCount(dialoguesOld),
+
+                    EmployeeCount = (await _analyticCommonProvider.GetEmployees(endTime, companyIds, null, workerTypeIds)).Count(),
+                    BestEmployee = _dbOperation.BestThreeEmployees(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
+
+                    SatisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur),
+                    SatisfactionIndexDelta = -_dbOperation.SatisfactionIndex(dialoguesOld),
+
+                    LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
+                    LoadIndexDelta = -_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+
+                    CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
+                    CrossIndexDelta = -_dbOperation.CrossIndex(dialoguesOld),
+
+                    AdvCount = viewsCur,
+                    AdvCountDelta = viewsCur - viewsOld,
+                    AnswerCount = (await _analyticContentProvider.GetAnswersAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds)).Count(),
+                    AnswerCountDelta = - (await _analyticContentProvider.GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds)).Count()//,
+                    //EmployeeOnlineCount = await _analyticHomeProvider.GetSessionOnline(companyIds, workerTypeIds),
+                    //EmployeeServingClientCount = 0,
+                    //EmployeeTabletActiveCount = 0
+                };
+
+
+                //---benchmarks
+                if (benchmarksList != null && benchmarksList.Count() != 0)
+                {
+                    result.SatisfactionIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "SatisfactionIndexIndustryAvg");
+                    result.SatisfactionIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "SatisfactionIndexIndustryBenchmark");
+
+                    result.LoadIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
+                    result.LoadIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark");
+
+                    result.CrossIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg");
+                    result.CrossIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
+                }
+
+                result.CrossIndexDelta += result.CrossIndex;
+                result.LoadIndexDelta += result.LoadIndex;
+                result.SatisfactionIndexDelta += result.SatisfactionIndex;
+                result.AnswerCountDelta += result.AnswerCount;
+                result.AdvCountDelta += result.AdvCount;
+                result.ClientsCountDelta += result.ClientsCount;
+
+                var jsonToReturn = JsonConvert.SerializeObject(result);
+                return Ok(jsonToReturn);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
 
         [HttpGet("DashboardFiltered")]
         public async Task<IActionResult> GetDashboardFiltered([FromQuery(Name = "begTime")] string beg,

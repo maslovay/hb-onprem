@@ -15,8 +15,10 @@ namespace UserOperations.Providers
         Task<Phrase> CreateNewPhraseAsync(PhrasePost message, int languageId);
         Task CreateNewPhraseCompanyAsync(Guid companyId, Guid phraseId);
         Task<Phrase> GetPhraseInCompanyByIdAsync(Guid phraseId, Guid companyId, bool isTemplate);
-        Task<Phrase> EditPhraseAsync(Phrase entity, Phrase newPhrase);
+        Task<List<Phrase>> GetPhrasesInCompanyByIdsAsync(List<Guid> companyIds);
+        Task<Phrase> EditAndSavePhraseAsync(Phrase entity, Phrase newPhrase);
         Task<Phrase> GetPhraseByIdAsync(Guid phraseId);
-        Task<string> DeletePhraseWithPhraseCompanyAsync(Phrase phraseIncluded, Guid companyId);
+        Task<string> DeleteAndSavePhraseWithPhraseCompanyAsync(Phrase phraseIncluded, Guid companyId);
+        Task SaveChangesAsync();
     }
 }

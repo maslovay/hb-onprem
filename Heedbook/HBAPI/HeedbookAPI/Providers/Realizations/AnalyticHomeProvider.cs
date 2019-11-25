@@ -70,5 +70,13 @@ namespace UserOperations.Providers
                      .Select(x => x.CompanyIndustryId).Distinct();
             return industryIds;
         }
+
+        public async Task<int> GetSessionOnline( List<Guid> companyIds, List<Guid> workerTypeIds)
+        {
+            return await _repository.GetAsQueryable<Session>().Where(p =>
+                     p.StatusId == 6
+                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                     && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).CountAsync();
+        }
     }
 }

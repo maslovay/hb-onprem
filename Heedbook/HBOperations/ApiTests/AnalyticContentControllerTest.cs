@@ -131,7 +131,7 @@ namespace ApiTests
             moqIAnalyticContentProvider.Setup(p => p.GetSlideShowsForOneDialogueAsync(It.IsAny<Dialogue>()))
                 .Returns(Task.FromResult( TestData.GetSlideShowInfosSimple() ));
 
-            moqIAnalyticContentProvider.Setup(p => p.GetSlideShowFilteredByPoolAsync(
+            moqIAnalyticContentProvider.Setup(p => p.GetSlideShowWithDialogueIdFilteredByPoolAsync(
                     It.IsAny<DateTime>(),
                     It.IsAny<DateTime>(),
                     It.IsAny<List<Guid>>(),

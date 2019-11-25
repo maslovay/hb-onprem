@@ -46,5 +46,7 @@ namespace UserOperations.Providers
 
          Task<List<DialogueInfo>> GetDialogueInfos(
             DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds);
+
+        Task<List<ApplicationUser>> GetEmployees(DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null);
     }
 }

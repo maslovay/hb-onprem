@@ -347,6 +347,20 @@ namespace UserOperations.Utils
                 .FullName : "";
         }
 
+        public List<string> BestThreeEmployees(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
+        {
+            return dialogues.Any() ? dialogues
+                .GroupBy(p => p.ApplicationUserId)
+                .Select(p => new
+                {
+                    FullName = p.First().FullName,
+                    EfficiencyIndex = EfficiencyIndex(sessions, p, beg, end)
+                })
+                .OrderByDescending(p => p.EfficiencyIndex)
+                .Select(p => p.FullName)
+                .Take(3).ToList() : new List<string>();
+        }
+
         public string BestEmployee(List<DialogueInfo> dialogues)
         {
             return dialogues.Count() != 0 ? dialogues

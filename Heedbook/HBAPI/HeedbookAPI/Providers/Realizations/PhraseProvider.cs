@@ -70,6 +70,13 @@ namespace UserOperations.Providers
                     .Select(p => p.Phrase)
                     .FirstOrDefaultAsync();
         }
+        public async Task<List<Phrase>> GetPhrasesInCompanyByIdsAsync (List<Guid> companyIds)
+        {
+            return await _repository.GetAsQueryable<PhraseCompany>()
+                    .Where(p =>
+                        companyIds.Contains((Guid)p.CompanyId))
+                    .Select(p => p.Phrase).ToListAsync();
+        }
         public async Task<Phrase> CreateNewPhraseAsync(PhrasePost message, int languageId)
         {
             var phrase = new Phrase
@@ -89,14 +96,15 @@ namespace UserOperations.Providers
         }
         public async Task CreateNewPhraseCompanyAsync(Guid companyId, Guid phraseId)
         {
-            var phraseCompany = new PhraseCompany();
-            phraseCompany.CompanyId = companyId;
-            phraseCompany.PhraseCompanyId = Guid.NewGuid();
-            phraseCompany.PhraseId = phraseId;
-            await _repository.CreateAsync<PhraseCompany>(phraseCompany);
-            await _repository.SaveAsync();
+            var phraseCompany = new PhraseCompany
+            {
+                CompanyId = companyId,
+                PhraseCompanyId = Guid.NewGuid(),
+                PhraseId = phraseId
+             };
+            await _repository.CreateAsync<PhraseCompany>(phraseCompany);           
         }
-        public async Task<Phrase> EditPhraseAsync(Phrase entity, Phrase newPhrase)
+        public async Task<Phrase> EditAndSavePhraseAsync(Phrase entity, Phrase newPhrase)
         {
             foreach (var p in typeof(Phrase).GetProperties())
             {
@@ -107,8 +115,7 @@ namespace UserOperations.Providers
             await _repository.SaveAsync();
             return entity;
         }
-
-        public async Task<string> DeletePhraseWithPhraseCompanyAsync(Phrase phraseIncluded, Guid companyId)
+        public async Task<string> DeleteAndSavePhraseWithPhraseCompanyAsync(Phrase phraseIncluded, Guid companyId)
         {
             var phrasesCompany = phraseIncluded.PhraseCompany.Where(x => x.CompanyId == companyId).ToList();
             _repository.Delete<PhraseCompany>(phrasesCompany);//--remove connections to phrase in library           
@@ -120,6 +127,10 @@ namespace UserOperations.Providers
             }
             await _repository.SaveAsync();
             return "Template! Deleted from PhraseCompany";
+        }
+        public async Task SaveChangesAsync()
+        {
+            await _repository.SaveAsync();
         }
     }
 }
