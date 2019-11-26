@@ -134,7 +134,7 @@ namespace UserOperations.Controllers
                         ApplicationUserId = p.Id,
                         LoadIndexAverage = (double?)0,
                         PeriodInfo =  new List<ReportPartDayEmployeeInfo>()
-                        }).ToList();                   
+                        }).ToList();
                    
                 result.AddRange(emptyUsers);
                 // _log.Info("AnalyticReport/UserPartial finished");

@@ -13,6 +13,7 @@ using UserOperations.CommonModels;
 using UserOperations.Utils;
 using Newtonsoft.Json;
 using System.Reflection;
+using System.Net;
 
 namespace UserOperations.Controllers
 {
@@ -383,6 +384,26 @@ namespace UserOperations.Controllers
                 return BadRequest("Set inactive");
             }
             return Ok("Removed");
+        }
+
+        [HttpGet("GetResponseHeaders")]
+        public async Task<IActionResult> GetResponseHeaders([FromQuery] string url)
+        {
+            try
+            {
+                var MyClient = WebRequest.Create(url) as HttpWebRequest;
+                MyClient.Method = WebRequestMethods.Http.Get;
+                MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
+                var response = (await MyClient.GetResponseAsync()) as HttpWebResponse;
+                var answer = new Dictionary<string, string>();
+                for (int i = 0; i < response.Headers.Count; i++)
+                    answer[response.Headers.GetKey(i)] = response.Headers.Get(i).ToString();
+                return Ok(answer);
+            }
+            catch
+            {
+                return BadRequest("Error");
+            }
         }
     }
 }

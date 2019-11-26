@@ -657,9 +657,11 @@ namespace UserOperations.Controllers
             // _context.SaveChanges();
             return Ok();
         }
-        [HttpGet("Test5")]
-        public ActionResult Test5()
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult> Test5()
         {
+            string id = (string)RouteData.Values["id"];
             var dialogs = _repository.GetWithInclude<Dialogue>(
                 d => d.StatusId == 3 && d.LanguageId==2);
 
