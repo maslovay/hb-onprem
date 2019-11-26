@@ -353,7 +353,7 @@ namespace ApiTests
             };
             return dialogues.AsQueryable();
         }
-        private static IQueryable<Dialogue> GetDialoguesIncluded()
+        public static IQueryable<Dialogue> GetDialoguesIncluded()
         {
             var dialogues = new List<Dialogue>
             {
@@ -753,7 +753,10 @@ namespace ApiTests
                 PasswordHash = "hhh",
                 WorkerTypeId = Guid.Parse("1d5cd11c-2ea0-111e-8ec1-a544d048a9d0"),
                 Dialogue = null,//GetDialoguesIncluded().ToList(),
-                UserRoles = null,// new List<ApplicationUserRole> { UserRoleIncluded() },
+                UserRoles = new List<ApplicationUserRole>()
+                {new ApplicationUserRole{RoleId = Guid.Parse("8f8947da-5f76-4c6e-2222-170290c87194")}},
+                WorkerType = new WorkerType{WorkerTypeName = "Teacher"}
+                // new List<ApplicationUserRole> { UserRoleIncluded() },
                 //Company = Company()
             };
         }
@@ -1033,6 +1036,63 @@ namespace ApiTests
                 FullName = "HornAndHoves",
                 Password = "123456"
             };
+        }
+        internal static IQueryable<Session> GetQueryableSessions()
+        {
+            //Arrange
+            var user1 = new ApplicationUser
+            {
+                Id = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f171f"),
+                WorkerTypeId = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f1710"),
+                FullName = "MakarovMakar",
+                CompanyId = Guid.Parse("154d371a-acbc-48a0-9731-ab1d9a1f1710"),
+                UserRoles = new List<ApplicationUserRole>{new ApplicationUserRole{RoleId = Guid.Parse("b54d371a-1111-48a0-9731-ab1d9a1f171a")}}
+            };
+            var user2 = new ApplicationUser
+            {
+                Id = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f171a"),
+                WorkerTypeId = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f1711"),
+                FullName = "MakarovIvan",
+                CompanyId = Guid.Parse("154d371a-acbc-48a0-9731-ab1d9a1f1710"),
+                UserRoles = new List<ApplicationUserRole>{new ApplicationUserRole{RoleId = Guid.Parse("b54d371a-2222-48a0-9731-ab1d9a1f171a")}}
+            };
+            var user3 = new ApplicationUser
+            {
+                Id = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f171b"),
+                WorkerTypeId = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f1712"),
+                FullName = "MakarovRoman",
+                CompanyId = Guid.Parse("154d371a-acbc-48a0-9731-ab1d9a1f1710"),
+                UserRoles = new List<ApplicationUserRole>{new ApplicationUserRole{RoleId = Guid.Parse("b54d371a-3333-48a0-9731-ab1d9a1f171a")}}
+            
+            };
+            var sessions = new List<Session>
+            {
+                new Session
+                {
+                    BegTime = new DateTime(2019, 11, 26, 12, 00, 00),
+                    EndTime = new DateTime(2019, 11, 26, 12, 30, 00),
+                    StatusId = 7,
+                    ApplicationUserId = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f171f"),
+                    ApplicationUser = user1
+                },
+                new Session
+                {
+                    BegTime = new DateTime(2019, 11, 26, 13, 00, 00),
+                    EndTime = new DateTime(2019, 11, 26, 13, 30, 00),
+                    StatusId = 7,
+                    ApplicationUserId = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f171a"),
+                    ApplicationUser = user2
+                },
+                new Session
+                {
+                    BegTime = new DateTime(2019, 11, 26, 14, 00, 00),
+                    EndTime = new DateTime(2019, 11, 26, 14, 30, 00),
+                    StatusId = 6,
+                    ApplicationUserId = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f171b"),
+                    ApplicationUser = user3
+                },
+            }.AsQueryable();
+            return sessions;
         }
     }
     internal class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
