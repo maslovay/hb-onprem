@@ -193,6 +193,11 @@ namespace ApiTests
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(9d);
+            dbOperationMock.Setup(p => p.DialogueSumDuration(
+                    It.IsAny<List<DialogueInfo>>(),
+                    It.IsAny<DateTime>(), 
+                    It.IsAny<DateTime>()))
+                .Returns(100d);
         }
         public void Dispose()
         {
