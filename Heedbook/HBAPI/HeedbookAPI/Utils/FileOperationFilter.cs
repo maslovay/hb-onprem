@@ -16,7 +16,7 @@ namespace UserOperations.Utils
     {
         public void Apply(Operation operation, OperationFilterContext context)
         {
-            if (context.ApiDescription.ParameterDescriptions.Any(x => x.ModelMetadata.ModelType == typeof(Microsoft.AspNetCore.Http.IFormCollection)))
+            if (context.ApiDescription.ParameterDescriptions.Any(x => x.ModelMetadata?.ModelType == typeof(Microsoft.AspNetCore.Http.IFormCollection)))
             {
                 var apiParametrDescription = context.ApiDescription.ParameterDescriptions.FirstOrDefault(x => x.ModelMetadata.ModelType == typeof(Microsoft.AspNetCore.Http.IFormCollection));
                 var paramForRemove = operation.Parameters.FirstOrDefault(x => x.Name == apiParametrDescription.Name);
