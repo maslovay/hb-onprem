@@ -27,6 +27,7 @@ namespace DialogueMarkUp.Utils
                     BegTime = begTime,
                     EndTime = endTime,
                     CreationTime = DateTime.UtcNow,
+                    PersonFaceDescriptor = personFaceDescriptor,
                     LanguageId = 1,
                     StatusId = 6,
                     InStatistic = true
