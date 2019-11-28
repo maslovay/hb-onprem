@@ -217,7 +217,7 @@ namespace UserOperations.Controllers
                     ClientsCountDelta = -_dbOperation.DialoguesCount(dialoguesOld),
 
                     EmployeeCount = (await _analyticCommonProvider.GetEmployees(endTime, companyIds, null, workerTypeIds)).Count(),
-                    BestEmployee = _dbOperation.BestThreeEmployees(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
+                    BestEmployees = _dbOperation.BestThreeEmployees(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
 
                     SatisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur),
                     SatisfactionIndexDelta = -_dbOperation.SatisfactionIndex(dialoguesOld),
