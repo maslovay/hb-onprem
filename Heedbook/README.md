@@ -47,9 +47,9 @@ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
 ```sh
 sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
 ```
-Устанавливаем kubeadm:
+Устанавливаем kubeadm нужной версии:
 ```sh
-sudo apt install kubeadm
+sudo apt install kubeadm=1.14.2-00 kubelet=1.14.2-00 kubectl=1.14.2-00
 ```
 #### 4. Развертывание kubernetes. 
 - Отключаем свап:
