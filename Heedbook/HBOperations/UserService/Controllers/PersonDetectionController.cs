@@ -23,14 +23,14 @@ namespace UserService.Controllers
             _context = context;
         }
 
-        [HttpPost]
+        [HttpPost("PersonDetectionRun")]
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
         public async Task PersonDetectionRun([FromBody] PersonDetectionRun message)
         {
             _handler.EventRaised(message);
         }
 
-        [HttpPost]
+        [HttpPost("PersonDetectionAllUsersRun")]
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
         public async Task PersonDetectionAllUsersRun()
         {
