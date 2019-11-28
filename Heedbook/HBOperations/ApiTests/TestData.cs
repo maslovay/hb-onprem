@@ -284,15 +284,15 @@ namespace ApiTests
         {
             return new List<DialogueInfo>()
             {
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 29, 18, 30, 00), EndTime = new DateTime(2019, 10, 29, 19, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 18, 30, 00), EndTime = new DateTime(2019, 10, 30, 19, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 50, 00), EndTime = new DateTime(2019, 10, 30, 20, 20, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 20, 30, 00), EndTime = new DateTime(2019, 10, 30, 21, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 21, 10, 00), EndTime = new DateTime(2019, 10, 30, 21, 40, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 31, 18, 30, 00), EndTime = new DateTime(2019, 10, 31, 19, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 11, 01, 18, 30, 00), EndTime = new DateTime(2019, 11, 01, 19, 00, 00)}
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 29, 18, 30, 00), EndTime = new DateTime(2019, 10, 29, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607361")},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 18, 30, 00), EndTime = new DateTime(2019, 10, 30, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607362")},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607363")},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 50, 00), EndTime = new DateTime(2019, 10, 30, 20, 20, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607364")},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607365")},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 20, 30, 00), EndTime = new DateTime(2019, 10, 30, 21, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607366")},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 21, 10, 00), EndTime = new DateTime(2019, 10, 30, 21, 40, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607367")},
+                new DialogueInfo(){BegTime = new DateTime(2019, 10, 31, 18, 30, 00), EndTime = new DateTime(2019, 10, 31, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607368")},
+                new DialogueInfo(){BegTime = new DateTime(2019, 11, 01, 18, 30, 00), EndTime = new DateTime(2019, 11, 01, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607369")}
             };
         }
         internal static IQueryable<DialogueInfoWithFrames> GetDialogueInfoWithFrames()
@@ -895,7 +895,8 @@ namespace ApiTests
                     UserRoles = new List<ApplicationUserRole>
                     {
                         new ApplicationUserRole{}
-                    }
+                    },
+                    FullName = "Ivanov Ivan"
                 }
             }.AsQueryable();
             return users;
