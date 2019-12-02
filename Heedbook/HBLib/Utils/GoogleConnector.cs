@@ -38,13 +38,16 @@ namespace HBLib.Utils
         private readonly SftpClient _sftpClient;
 
         private readonly DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        private ElasticClient _log;
 
         public GoogleConnector(SftpClient sftpClient,
-            IServiceScopeFactory scopeFactory)
+            IServiceScopeFactory scopeFactory,
+            ElasticClient log)
         {
             _sftpClient = sftpClient;
             var scope = scopeFactory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
+            _log = log;
         }
 
         public async Task<bool> CheckApiKey()
@@ -163,6 +166,7 @@ namespace HBLib.Utils
             var result = JsonConvert.DeserializeObject<GoogleSttLongrunningResult>(results);
             if (result.Error != null && result.Error.Status == "PERMISSION_DENIED")
             {
+                _log.Error($"{results}");
                 var googleAccount =
                     await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
                         item.GoogleAccountId == googleApiKey.GoogleAccountId);
@@ -207,6 +211,7 @@ namespace HBLib.Utils
                 TimeSpan.FromSeconds(1), 5);
             if (jsStr.Error != null && jsStr.Error.Status == "PERMISSION_DENIED")
             {
+                _log.Error($"{JsonConvert.SerializeObject(jsStr)}");
                 Console.WriteLine("api key expired");
                 var googleAccount =
                     await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
