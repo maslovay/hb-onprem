@@ -56,23 +56,23 @@ namespace UserOperations.Providers
         public IQueryable<Dialogue> GetDialoguesIncludedClientProfile(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
         {
             var data = _repository.GetAsQueryable<Dialogue>()
-                     .Include(p => p.DialogueClientProfile)
-                     .Include(p => p.ApplicationUser)
-                     .Where(p => p.BegTime >= begTime &&
-                         p.EndTime <= endTime &&
-                         p.StatusId == 3 &&
-                         p.InStatistic == true &&
-                         (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
-                         (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
-                         (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
+                .Include(p => p.DialogueClientProfile)
+                .Include(p => p.ApplicationUser)
+                .Where(p => p.BegTime >= begTime &&
+                    p.EndTime <= endTime &&
+                    p.StatusId == 3 &&
+                    p.InStatistic == true &&
+                    (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
+                    (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
+                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
             return data;
         }
 
         public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId)
         {
             var dialogue = await _repository.GetAsQueryable<Dialogue>()
-                      .Include(p => p.DialogueFrame)
-                      .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
+                .Include(p => p.DialogueFrame)
+                .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
             return dialogue;
         }
 

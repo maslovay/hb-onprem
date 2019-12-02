@@ -72,6 +72,7 @@ namespace UserOperations
             services.AddScoped(typeof(IAnalyticReportProvider), typeof(AnalyticReportProvider));
 
             services.AddScoped<AnalyticClientProfileService>();
+            services.AddScoped<AnalyticContentService>();
 
             services.AddSwaggerGen(c =>
             {
