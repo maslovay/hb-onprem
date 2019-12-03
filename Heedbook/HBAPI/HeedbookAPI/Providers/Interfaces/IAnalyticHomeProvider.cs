@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UserOperations.Models.AnalyticModels;
+using UserOperations.Models.Get;
 
 namespace UserOperations.Providers
 {

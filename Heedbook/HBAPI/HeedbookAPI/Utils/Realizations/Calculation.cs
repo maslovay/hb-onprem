@@ -8,6 +8,7 @@ using UserOperations.Models.AnalyticModels;
 using HBData.Models;
 using UserOperations.Controllers;
 using System.Reflection;
+using UserOperations.Models.Get;
 
 namespace UserOperations.Utils
 {
@@ -347,18 +348,20 @@ namespace UserOperations.Utils
                 .FullName : "";
         }
 
-        public List<string> BestThreeEmployees(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
+        public List<BestEmployee> BestThreeEmployees(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return dialogues.Any() ? dialogues
                 .GroupBy(p => p.ApplicationUserId)
-                .Select(p => new
+                .Select(p => new BestEmployee
                 {
-                    FullName = p.First().FullName,
-                    EfficiencyIndex = EfficiencyIndex(sessions, p, beg, end)
+                    Name = p.First().FullName,
+                    EfficiencyIndex = EfficiencyIndex(sessions, p, beg, end),
+                    SatisfactionIndex = SatisfactionIndex(p),
+                    LoadIndex = LoadIndex(sessions, p, beg, end),
+                    CrossIndex = CrossIndex(p)
                 })
                 .OrderByDescending(p => p.EfficiencyIndex)
-                .Select(p => p.FullName)
-                .Take(3).ToList() : new List<string>();
+                .Take(3).ToList() : new List<BestEmployee>();
         }
 
         public string BestEmployee(List<DialogueInfo> dialogues)

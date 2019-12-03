@@ -17,6 +17,7 @@ using UserOperations.Utils;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Linq.Expressions;
 using System.Threading;
+using UserOperations.Models.Get;
 
 namespace ApiTests
 {

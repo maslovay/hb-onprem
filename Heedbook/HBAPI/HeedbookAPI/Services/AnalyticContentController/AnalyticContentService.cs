@@ -14,8 +14,6 @@ using System.IO;
 
 namespace UserOperations.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
     public class AnalyticContentService : Controller
     {
         private readonly IAnalyticContentProvider _analyticContentProvider;

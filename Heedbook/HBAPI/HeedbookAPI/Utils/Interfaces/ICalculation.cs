@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Controllers;
+using UserOperations.Models.Get;
 
 namespace UserOperations.Utils
 {
@@ -73,7 +74,7 @@ namespace UserOperations.Utils
         int DialoguesCount(List<DialogueInfo> dialogues, Guid? applicationUserId = null, DateTime? date = null);
         Employee BestEmployeeLoad(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end);
         string BestEmployee(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end);
-        List<string> BestThreeEmployees(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end);
+        List<BestEmployee> BestThreeEmployees(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end);
 
         string BestEmployee(List<DialogueInfo> dialogues);
 

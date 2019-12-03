@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using UserOperations.Models.AnalyticModels;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using UserOperations.Models.Get;
 
 namespace ApiTests
 {
@@ -22,6 +23,7 @@ namespace ApiTests
     {
 
         private Mock<IAnalyticHomeProvider> homeProviderMock;
+        private Mock<IAnalyticContentProvider> analyticContentProviderMock;
         [SetUp]
         public new void Setup()
         {
@@ -30,6 +32,7 @@ namespace ApiTests
         protected override void InitServices()
         {
             homeProviderMock = new Mock<IAnalyticHomeProvider>();
+            analyticContentProviderMock = new Mock<IAnalyticContentProvider>();
         }
 
         [Test]
@@ -45,7 +48,14 @@ namespace ApiTests
             base.commonProviderMock.Setup(c => c.GetDialoguesIncludedPhrase(TestData.prevDate, TestData.endDate, TestData.companyIds, null, null)).Returns(TestData.GetDialoguesWithUserPhrasesSatisfaction());
             homeProviderMock.Setup(h => h.GetBenchmarksList(TestData.begDate, TestData.endDate, TestData.companyIds)).Returns(TestData.GetBenchmarkList());
 
-            var controller = new AnalyticHomeController(commonProviderMock.Object, homeProviderMock.Object, configMock.Object, moqILoginService.Object, dbOperationMock.Object, filterMock.Object);
+            var controller = new AnalyticHomeService(
+                commonProviderMock.Object, 
+                homeProviderMock.Object,
+                analyticContentProviderMock.Object,
+                configMock.Object, 
+                moqILoginService.Object, 
+                dbOperationMock.Object, 
+                filterMock.Object);
 
             // Act
 
@@ -74,7 +84,14 @@ namespace ApiTests
             homeProviderMock.Setup(h => h.GetBenchmarkIndustryAvg(It.IsAny<List<BenchmarkModel>>(), It.IsAny<string>())).Returns(0.6d);
             homeProviderMock.Setup(h => h.GetBenchmarkIndustryMax(It.IsAny<List<BenchmarkModel>>(), It.IsAny<string>())).Returns(0.6d);
 
-            var controller = new AnalyticHomeController(commonProviderMock.Object, homeProviderMock.Object, configMock.Object, moqILoginService.Object, dbOperationMock.Object, filterMock.Object);
+            var controller = new AnalyticHomeService(
+                commonProviderMock.Object, 
+                homeProviderMock.Object,
+                analyticContentProviderMock.Object,
+                configMock.Object, 
+                moqILoginService.Object, 
+                dbOperationMock.Object, 
+                filterMock.Object);
 
             //Act
             var task = controller.GetDashboardFiltered(

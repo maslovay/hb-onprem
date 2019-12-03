@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using UserOperations.Providers;
 using HBData.Models;
 using System.Linq;
+using UserOperations.Models.AnalyticModels;
+using System.Collections.Generic;
 
 namespace ApiTests
 {
@@ -58,7 +60,8 @@ namespace ApiTests
                         TestData.GetCompanyIds(), 
                         TestData.GetEmptyList<Guid>().ToList(),
                         TestData.GetEmptyList<Guid>().ToList(),
-                        true);
+                        true,
+                        TestData.GetDialogueInfoWithFrames().ToList());
 
             // Assert
             Assert.IsNotNull(result);
@@ -78,7 +81,8 @@ namespace ApiTests
                       TestData.GetCompanyIds(),
                       TestData.GetEmptyList<Guid>().ToList(),
                       TestData.GetEmptyList<Guid>().ToList(),
-                      false);
+                      false,
+                      TestData.GetDialogueInfoWithFrames().ToList());
 
             // Assert
             Assert.IsNotNull(result);

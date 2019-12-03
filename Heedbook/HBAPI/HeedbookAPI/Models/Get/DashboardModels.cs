@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace UserOperations.Models.AnalyticModels
+namespace UserOperations.Models.Get
 {
     public class DashboardInfo
     {
@@ -71,7 +71,7 @@ namespace UserOperations.Models.AnalyticModels
         public int? AnswerCount;
         public int? AnswerCountDelta;
 
-        public List<string> BestEmployee;
+        public List<BestEmployee> BestEmployees;
     }
 
     //-----------BENCHMARKS------------
@@ -80,4 +80,13 @@ namespace UserOperations.Models.AnalyticModels
         public string Name { get; set; }
         public double Value { get; set; }
     }
+    public class BestEmployee
+    {
+        public string Name { get; set; }
+        public double? SatisfactionIndex { get; set; }
+        public double? EfficiencyIndex { get; set; }
+        public double? LoadIndex { get; set; }
+        public double? CrossIndex { get; set; }
+    }
+    
 }
