@@ -4,42 +4,37 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using UserOperations.Services;
-using UserOperations.Models.Get;
 using Newtonsoft.Json;
-using HBData;
 using UserOperations.Utils;
 using UserOperations.Providers;
 using System.Threading.Tasks;
-using UserOperations.Models.AnalyticModels;
+using UserOperations.Models.Get.HomeController;
+using UserOperations.Utils.AnalyticHomeUtils;
 
 namespace UserOperations.Controllers
 {
     public class AnalyticHomeService : Controller
     {
-        private readonly IAnalyticCommonProvider _analyticCommonProvider;
         private readonly IAnalyticHomeProvider _analyticHomeProvider;
-        private readonly IAnalyticContentProvider _analyticContentProvider;
         private readonly IConfiguration _config;        
         private readonly ILoginService _loginService;
-        private readonly IDBOperations _dbOperation;
         private readonly IRequestFilters _requestFilters;
+        private readonly AnalyticHomeUtils _utils;
+
         public AnalyticHomeService(
-            IAnalyticCommonProvider analyticProvider,
             IAnalyticHomeProvider homeProvider,
             IAnalyticContentProvider analyticContentProvider,
             IConfiguration config,
             ILoginService loginService,
-            IDBOperations dbOperation,
-            IRequestFilters requestFilters
+            IRequestFilters requestFilters,
+            AnalyticHomeUtils utils
             )
         {
-            _analyticCommonProvider = analyticProvider;
             _analyticHomeProvider = homeProvider;
-            _analyticContentProvider = analyticContentProvider;
             _config = config;
             _loginService = loginService;
-            _dbOperation = dbOperation;
             _requestFilters = requestFilters;
+            _utils = utils;
         }
 
         [HttpGet("Dashboard")]
@@ -63,12 +58,12 @@ namespace UserOperations.Controllers
 
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);               
 
-                var sessions = await _analyticCommonProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
+                var sessions = await _analyticHomeProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
                 var sessionCur = sessions != null? sessions.Where(p => p.BegTime.Date >= begTime).ToList() : null;
                 var sessionOld = sessions != null ? sessions.Where(p => p.BegTime.Date < begTime).ToList() : null;
-                var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
+                var typeIdCross = await _analyticHomeProvider.GetCrossPhraseTypeIdAsync();
 
-                var dialogues = _analyticCommonProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
+                var dialogues = _analyticHomeProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
@@ -85,40 +80,41 @@ namespace UserOperations.Controllers
                 ////-----------------FOR BRANCH---------------------------------------------------------------
                 List<BenchmarkModel> benchmarksList = (await _analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
-                var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
-                var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
+                var dialoguesCur = (dialogues.Where(p => p.BegTime >= begTime).ToList());
+                var dialoguesOld = (dialogues.Where(p => p.BegTime < begTime).ToList());
 
-                var result = new DashboardInfo()
+                var result = new UserOperations.Models.Get.HomeController.DashboardInfo()
                 {
-                    DialoguesCount = _dbOperation.DialoguesCount(dialoguesCur),
-                    DialoguesCountDelta = -_dbOperation.DialoguesCount(dialoguesOld),
+                    // DialoguesCount = _dbOperation.DialoguesCount(dialoguesCur),
+                    DialoguesCount = _utils.DialoguesCount(dialoguesCur),
+                    DialoguesCountDelta = -_utils.DialoguesCount(dialoguesOld),
 
-                    EmployeeCount = _dbOperation.EmployeeCount(dialoguesCur),
-                    EmployeeCountDelta = -_dbOperation.EmployeeCount(dialoguesOld),
+                    EmployeeCount = _utils.EmployeeCount(dialoguesCur),
+                    EmployeeCountDelta = -_utils.EmployeeCount(dialoguesOld),
 
-                    BestEmployee = _dbOperation.BestEmployee(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
-                    BestEmployeeEfficiency = _dbOperation.BestEmployeeEfficiency(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
-                    BestProgressiveEmployee = _dbOperation.BestProgressiveEmployee(dialogues, begTime),
-                    BestProgressiveEmployeeDelta = _dbOperation.BestProgressiveEmployeeDelta(dialogues, begTime),
+                    BestEmployee = _utils.BestEmployee(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
+                    BestEmployeeEfficiency = _utils.BestEmployeeEfficiency(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
+                    BestProgressiveEmployee = _utils.BestProgressiveEmployee(dialogues, begTime),
+                    BestProgressiveEmployeeDelta = _utils.BestProgressiveEmployeeDelta(dialogues, begTime),
 
-                    SatisfactionDialogueDelta = _dbOperation.SatisfactionDialogueDelta(dialogues),
-                    SatisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur),
-                    SatisfactionIndexDelta = -_dbOperation.SatisfactionIndex(dialoguesOld),
+                    SatisfactionDialogueDelta = _utils.SatisfactionDialogueDelta(dialogues),
+                    SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
+                    SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
 
-                    LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
-                    LoadIndexDelta = -_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                    LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
+                    LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
 
-                    CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
-                    CrossIndexDelta = -_dbOperation.CrossIndex(dialoguesOld),
+                    CrossIndex = _utils.CrossIndex(dialoguesCur),
+                    CrossIndexDelta = -_utils.CrossIndex(dialoguesOld),
 
-                    AvgWorkingTimeEmployees = _dbOperation.SessionAverageHours(sessionCur, begTime, endTime),
-                    AvgWorkingTimeEmployeesDelta = -_dbOperation.SessionAverageHours(sessionOld, prevBeg, begTime),
+                    AvgWorkingTimeEmployees = _utils.SessionAverageHours(sessionCur, begTime, endTime),
+                    AvgWorkingTimeEmployeesDelta = -_utils.SessionAverageHours(sessionOld, prevBeg, begTime),
 
-                    NumberOfDialoguesPerEmployees = Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesCur)),
-                    NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_dbOperation.DialoguesPerUser(dialoguesOld)),
+                    NumberOfDialoguesPerEmployees = Convert.ToInt32(_utils.DialoguesPerUser(dialoguesCur)),
+                    NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_utils.DialoguesPerUser(dialoguesOld)),
 
-                    DialogueDuration = _dbOperation.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                    DialogueDurationDelta = -_dbOperation.DialogueAverageDuration(dialoguesOld, prevBeg, begTime)                 
+                    DialogueDuration = _utils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
+                    DialogueDurationDelta = -_utils.DialogueAverageDuration(dialoguesOld, prevBeg, begTime)                 
                 };
 
 
@@ -174,12 +170,12 @@ namespace UserOperations.Controllers
 
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var sessions = await _analyticCommonProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
+                var sessions = await _analyticHomeProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
                 var sessionCur = sessions != null ? sessions.Where(p => p.BegTime.Date >= begTime).ToList() : null;
                 var sessionOld = sessions != null ? sessions.Where(p => p.BegTime.Date < begTime).ToList() : null;
-                var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
+                var typeIdCross = await _analyticHomeProvider.GetCrossPhraseTypeIdAsync();
 
-                var dialogues = _analyticCommonProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
+                var dialogues = _analyticHomeProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
@@ -202,35 +198,35 @@ namespace UserOperations.Controllers
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
-                var slideShowSessionsInDialoguesOld = await _analyticContentProvider
+                var slideShowSessionsInDialoguesOld = await _analyticHomeProvider
                     .GetSlideShowWithDialogueIdFilteredByPoolAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds, false, dialoguesOld);
                 var viewsOld = slideShowSessionsInDialoguesOld.Where(x => x.Campaign == null || !x.Campaign.IsSplash).Count();
 
-                var slideShowSessionsInDialoguesCur = await _analyticContentProvider
+                var slideShowSessionsInDialoguesCur = await _analyticHomeProvider
                     .GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds, false, dialoguesCur);
                 var viewsCur = slideShowSessionsInDialoguesCur.Where(x => x.Campaign == null || !x.Campaign.IsSplash).Count();
 
                 var result = new NewDashboardInfo()
                 {
-                    ClientsCount = _dbOperation.DialoguesCount(dialoguesCur),
-                    ClientsCountDelta = -_dbOperation.DialoguesCount(dialoguesOld),
+                    ClientsCount = _utils.DialoguesCount(dialoguesCur),
+                    ClientsCountDelta = -_utils.DialoguesCount(dialoguesOld),
 
-                    EmployeeCount = (await _analyticCommonProvider.GetEmployees(endTime, companyIds, null, workerTypeIds)).Count(),
-                    BestEmployees = _dbOperation.BestThreeEmployees(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
+                    EmployeeCount = (await _analyticHomeProvider.GetEmployees(endTime, companyIds, null, workerTypeIds)).Count(),
+                    BestEmployees = _utils.BestThreeEmployees(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
 
-                    SatisfactionIndex = _dbOperation.SatisfactionIndex(dialoguesCur),
-                    SatisfactionIndexDelta = -_dbOperation.SatisfactionIndex(dialoguesOld),
+                    SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
+                    SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
 
-                    LoadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
-                    LoadIndexDelta = -_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                    LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
+                    LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
 
-                    CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
-                    CrossIndexDelta = -_dbOperation.CrossIndex(dialoguesOld),
+                    CrossIndex = _utils.CrossIndex(dialoguesCur),
+                    CrossIndexDelta = -_utils.CrossIndex(dialoguesOld),
 
                     AdvCount = viewsCur,
                     AdvCountDelta = viewsCur - viewsOld,
-                    AnswerCount = (await _analyticContentProvider.GetAnswersAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds)).Count(),
-                    AnswerCountDelta = - (await _analyticContentProvider.GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds)).Count()//,
+                    AnswerCount = (await _analyticHomeProvider.GetAnswersAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds)).Count(),
+                    AnswerCountDelta = - (await _analyticHomeProvider.GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds)).Count()//,
                     //EmployeeOnlineCount = await _analyticHomeProvider.GetSessionOnline(companyIds, workerTypeIds),
                     //EmployeeServingClientCount = 0,
                     //EmployeeTabletActiveCount = 0
@@ -287,8 +283,8 @@ namespace UserOperations.Controllers
 
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var typeIdCross = await _analyticCommonProvider.GetCrossPhraseTypeIdAsync();
-                var dialogues = _analyticCommonProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                var typeIdCross = await _analyticHomeProvider.GetCrossPhraseTypeIdAsync();
+                var dialogues = _analyticHomeProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
                         .Select(p => new DialogueInfo
                          {
                              DialogueId = p.DialogueId,
@@ -299,7 +295,7 @@ namespace UserOperations.Controllers
                          })
                          .ToList();
 
-                var sessions = await _analyticCommonProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds);
+                var sessions = await _analyticHomeProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds);
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
@@ -313,9 +309,9 @@ namespace UserOperations.Controllers
                 double? crossIndexIndustryAverage = null, crossIndexIndustryBenchmark = null;
                 double? loadIndexIndustryAverage = null, loadIndexIndustryBenchmark = null;
 
-                var crossIndex = _dbOperation.CrossIndex(dialoguesCur);
-                var loadIndex = _dbOperation.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1));
-                var dialoguesCount = _dbOperation.DialoguesCount(dialoguesCur);
+                var crossIndex = _utils.CrossIndex(dialoguesCur);
+                var loadIndex = _utils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1));
+                var dialoguesCount = _utils.DialoguesCount(dialoguesCur);
 
                 //---benchmarks
                 if (benchmarksList != null && benchmarksList.Count() != 0)
@@ -330,16 +326,16 @@ namespace UserOperations.Controllers
                 var result = new
                 {
                     DialoguesCount = dialoguesCount,
-                    DialoguesCountDelta = dialoguesCount - _dbOperation.DialoguesCount(dialoguesOld),
+                    DialoguesCountDelta = dialoguesCount - _utils.DialoguesCount(dialoguesOld),
 
-                    CrossIndex = _dbOperation.CrossIndex(dialoguesCur),
-                    CrossIndexDelta = crossIndex - _dbOperation.CrossIndex(dialoguesOld),
+                    CrossIndex = _utils.CrossIndex(dialoguesCur),
+                    CrossIndexDelta = crossIndex - _utils.CrossIndex(dialoguesOld),
 
                     CrossIndexIndustryAverage = crossIndexIndustryAverage,
                     CrossIndexIndustryBenchmark = crossIndexIndustryBenchmark,
 
                     LoadIndex = loadIndex,
-                    LoadIndexDelta = loadIndex -_dbOperation.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                    LoadIndexDelta = loadIndex -_utils.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
 
                     LoadIndexIndustryAverage = loadIndexIndustryAverage,
                     LoadIndexIndustryBenchmark = loadIndexIndustryBenchmark

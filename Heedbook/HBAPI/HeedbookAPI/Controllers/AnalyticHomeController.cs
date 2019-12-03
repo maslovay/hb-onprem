@@ -4,7 +4,6 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using UserOperations.Services;
-using UserOperations.Models.AnalyticModels;
 using Newtonsoft.Json;
 using HBData;
 using UserOperations.Utils;
