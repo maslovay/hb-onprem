@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
-using UserOperations.Models.AnalyticModels;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using UserOperations.Utils;

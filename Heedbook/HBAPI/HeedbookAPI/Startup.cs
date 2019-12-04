@@ -63,6 +63,7 @@ namespace UserOperations
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
             services.AddScoped<IMailSender, MailSender>();
+            services.AddScoped<IAnalyticClientProfileProvider, AnalyticClientProfileProvider>();
             services.AddScoped<IAnalyticContentProvider, AnalyticContentProvider>();
             services.AddScoped<IAnalyticCommonProvider, AnalyticCommonProvider>();
             services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();

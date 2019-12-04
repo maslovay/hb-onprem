@@ -10,29 +10,29 @@ using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Providers;
 using System.Threading.Tasks;
-using static UserOperations.Models.AnalyticModels.ClientProfileModels;
+using UserOperations.Models.Get.AnalyticClientProfileController;
 
 namespace UserOperations.Services
 {
     public class AnalyticClientProfileService : Controller
     {
-        private readonly IAnalyticCommonProvider _analyticProvider;
+        private readonly IAnalyticClientProfileProvider _analyticClientProfileProvider;
         private readonly ILoginService _loginService;
         private readonly IDBOperations _dbOperation;
         private readonly IRequestFilters _requestFilters;
         private readonly List<AgeBoarder> _ageBoarders;
 
         public AnalyticClientProfileService(
-            IAnalyticCommonProvider analyticProvider,
             ILoginService loginService,
             IDBOperations dbOperation,
-            IRequestFilters requestFilters
+            IRequestFilters requestFilters,
+            IAnalyticClientProfileProvider analyticClientProfileProvider
             )
         {
-            _analyticProvider = analyticProvider;
             _loginService = loginService;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
+            _analyticClientProfileProvider = analyticClientProfileProvider;
             _ageBoarders = new List<AgeBoarder>{
                 new AgeBoarder{
                     BegAge = 0,
@@ -70,8 +70,8 @@ namespace UserOperations.Services
                 var begYearTime = endTime.AddYears(-1);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var persondIdsPerYear = await _analyticProvider.GetPersondIdsAsync(begYearTime, begTime, companyIds);
-                var data = _analyticProvider.GetDialoguesIncludedClientProfile(begTime, endTime, companyIds, applicationUserIds, workerTypeIds)
+                var persondIdsPerYear = await _analyticClientProfileProvider.GetPersondIdsAsync(begYearTime, begTime, companyIds);
+                var data = _analyticClientProfileProvider.GetDialoguesIncludedClientProfile(begTime, endTime, companyIds, applicationUserIds, workerTypeIds)
                     .Select(p => new
                     {
                         p.DialogueClientProfile.FirstOrDefault().Age,

@@ -8,9 +8,8 @@ using UserOperations.Services;
 using Newtonsoft.Json;
 using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
-using UserOperations.Providers;
 using System.Threading.Tasks;
-using static UserOperations.Models.AnalyticModels.ClientProfileModels;
+using UserOperations.Models.Get.AnalyticClientProfileController;
 
 namespace UserOperations.Controllers
 {
