@@ -1,6 +1,8 @@
 ﻿using Configurations;
 using FillingSatisfactionService.Handler;
-using FillingSatisfactionService.Helper;
+using FillingSatisfactionService.Models;
+using FillingSatisfactionService.Utils.ScoreCalculations;
+using FillingSatisfactionService.Utils;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -14,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using FillingSatisfactionService.Services;
 
 namespace FillingSatisfactionService
 {
@@ -37,16 +40,24 @@ namespace FillingSatisfactionService
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
-            services.Configure<CalculationConfig>(Configuration.GetSection(nameof(CalculationConfig)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<CalculationConfig>>().Value);
+            services.Configure<WeightCalculationModel>(Configuration.GetSection(nameof(WeightCalculationModel)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<WeightCalculationModel>>().Value);
+            services.Configure<LinearRegressionWeightModel>(Configuration.GetSection(nameof(LinearRegressionWeightModel)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<LinearRegressionWeightModel>>().Value);
+
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddScoped<ElasticClientFactory>();
-            services.AddTransient<Calculations>();
+            services.AddTransient<AudioCalculations>();
+            services.AddTransient<VisualCalculations>();
+            services.AddTransient<SpeechCalculations>();
+            services.AddTransient<ClientCalculations>();
+            services.AddTransient<TotalScoreCalculations>();
+            services.AddTransient<TotalScoreRecalculations>();
+            services.AddTransient<FillingSatisfactionServiceCalculation>();
             services.AddTransient<FillingSatisfaction>();
             services.AddTransient<FillingSatisfactionRunHandler>();
             services.AddRabbitMqEventBus(Configuration);
-            services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

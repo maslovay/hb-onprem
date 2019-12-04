@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace FillingSatisfactionService
+namespace FillingSatisfactionService.Models
 {
-    public class CalculationConfig
+    public class WeightCalculationModel
     {
         public Double FaceYawMax { get; set; }
         public Double FaceYawMin { get; set; }
