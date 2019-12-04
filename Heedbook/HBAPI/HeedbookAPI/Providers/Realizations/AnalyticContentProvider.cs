@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UserOperations.Models.AnalyticModels;
+using UserOperations.Models.Get.AnalyticContentController;
 
 namespace UserOperations.Providers
 {
@@ -287,6 +287,72 @@ namespace UserOperations.Providers
                 item.SadnessShare = item.SadnessShare ?? 0;
                 item.SurpriseShare = item.SurpriseShare ?? 0;
             }
+        }
+        public async Task<List<DialogueInfoWithFrames>> GetDialoguesInfoWithFramesAsync(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds
+            )
+        {
+            var dialogues = await _repository.GetAsQueryable<Dialogue>()
+                   .Include(p => p.ApplicationUser)
+                   .Include(p => p.DialogueClientSatisfaction)
+                   .Include(p => p.DialogueFrame)
+                   .Where(p => p.BegTime >= begTime
+                           && p.EndTime <= endTime
+                           && p.StatusId == 3
+                           && p.InStatistic == true
+                           && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                           && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                           && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                   .Select(p => new DialogueInfoWithFrames
+                   {
+                       DialogueId = p.DialogueId,
+                       ApplicationUserId = p.ApplicationUserId,
+                       BegTime = p.BegTime,
+                       EndTime = p.EndTime,
+                       DialogueFrame = p.DialogueFrame.ToList(),
+                       Gender = p.DialogueClientProfile.Max(x => x.Gender),
+                       Age = p.DialogueClientProfile.Average(x => x.Age)
+                   })
+                   .ToListAsyncSafe();
+            return dialogues;
+        }
+        public async Task<List<DialogueInfo>> GetDialogueInfos(
+            DateTime begTime, 
+            DateTime endTime, 
+            List<Guid> companyIds, 
+            List<Guid> applicationUserIds, 
+            List<Guid> workerTypeIds)
+        {
+            return await _repository.GetAsQueryable<Dialogue>()
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.DialogueClientSatisfaction)
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new DialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                })
+                .ToListAsyncSafe();
+        }
+        public async Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId)
+        {
+            var dialogue = await _repository.GetAsQueryable<Dialogue>()
+                .Include(p => p.DialogueFrame)
+                .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
+            return dialogue;
         }
     }
 }

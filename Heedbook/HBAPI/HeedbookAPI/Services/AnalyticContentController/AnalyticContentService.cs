@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
-using UserOperations.Models.AnalyticModels;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using UserOperations.Utils;
@@ -11,30 +10,36 @@ using UserOperations.Providers;
 using System.Threading.Tasks;
 using UserOperations.Providers.Interfaces;
 using System.IO;
+using UserOperations.Models.Get.AnalyticContentController;
+using HBData.Repository;
+using UserOperations.Utils.AnalyticContentUtils;
 
 namespace UserOperations.Controllers
 {
     public class AnalyticContentService : Controller
     {
         private readonly IAnalyticContentProvider _analyticContentProvider;
-        private readonly IAnalyticCommonProvider _analyticCommonProvider;
         private readonly IHelpProvider _helpProvider;
         private readonly ILoginService _loginService;
         private readonly IRequestFilters _requestFilters;
+        private readonly IGenericRepository _repository;
+        private readonly AnalyticContentUtils _utils;
 
         public AnalyticContentService(
             IAnalyticContentProvider analyticContentProvider,
-            IAnalyticCommonProvider analyticCommonProvider,
             IHelpProvider helpProvider,
             ILoginService loginService,
-            IRequestFilters requestFilters
+            IRequestFilters requestFilters,
+            IGenericRepository repository,
+            AnalyticContentUtils utils
             )
         {
             _analyticContentProvider = analyticContentProvider;
-            _analyticCommonProvider = analyticCommonProvider;
             _helpProvider = helpProvider;
             _loginService = loginService;
             _requestFilters = requestFilters;
+            _repository = repository;
+            _utils = utils;
         }
 
 //---FOR ONE DIALOGUE---
@@ -48,7 +53,7 @@ namespace UserOperations.Controllers
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
 
-                var dialogue = await _analyticCommonProvider.GetDialogueIncludedFramesByIdAsync(dialogueId);
+                var dialogue = await _analyticContentProvider.GetDialogueIncludedFramesByIdAsync(dialogueId);
                 if (dialogue == null) return BadRequest("No such dialogue");
 
                 var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowsForOneDialogueAsync(dialogue);
@@ -138,7 +143,7 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await _analyticCommonProvider.GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await _analyticContentProvider.GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
                 //var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, false);
                
                 //foreach ( var session in slideShowSessionsAll )
@@ -220,7 +225,7 @@ namespace UserOperations.Controllers
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await _analyticCommonProvider.GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await _analyticContentProvider.GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
                 var slideShowSessionsAll = await _analyticContentProvider
                     .GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, true, dialogues);
                 var answers = await _analyticContentProvider
@@ -251,7 +256,7 @@ namespace UserOperations.Controllers
 
                 if (type != "json")
                 {
-                    MemoryStream excelDocStream = _helpProvider.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList(), $"{begTime.ToShortDateString()}_{endTime.ToShortDateString()}");
+                    MemoryStream excelDocStream = _utils.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList(), $"{begTime.ToShortDateString()}_{endTime.ToShortDateString()}");
                     excelDocStream.Seek(0, SeekOrigin.Begin);
                     return File(excelDocStream, "application/octet-stream", "answers.xls");
                 }
@@ -263,7 +268,6 @@ namespace UserOperations.Controllers
                 return BadRequest(e);
             }
         }
-
     }
 }
 

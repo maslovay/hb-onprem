@@ -22,6 +22,7 @@ using UserOperations.Providers.Interfaces;
 using UserOperations.Providers.Realizations;
 using UserOperations.Controllers;
 using UserOperations.Utils.AnalyticHomeUtils;
+using UserOperations.Utils.AnalyticContentUtils;
 
 namespace UserOperations
 {
@@ -77,6 +78,7 @@ namespace UserOperations
             services.AddScoped<AnalyticHomeService>();
 
             services.AddScoped<AnalyticHomeUtils>();
+            services.AddScoped<AnalyticContentUtils>();
 
             services.AddSwaggerGen(c =>
             {
