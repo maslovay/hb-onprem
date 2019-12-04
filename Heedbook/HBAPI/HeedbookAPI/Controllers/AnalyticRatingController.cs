@@ -27,13 +27,15 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IDBOperations _dbOperation;
         private readonly IRequestFilters _requestFilters;
+        private readonly AnalyticRatingService _analyticRatingService;
 
         public AnalyticRatingController(
             IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
             IDBOperations dbOperation,
-            IRequestFilters requestFilters
+            IRequestFilters requestFilters,
+            AnalyticRatingService analyticRatingService
             )
         {
             _config = config;
@@ -41,6 +43,7 @@ namespace UserOperations.Controllers
             _context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
+            _analyticRatingService = analyticRatingService;
         }
 
         [HttpGet("Progress")]
@@ -50,89 +53,17 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
-        {
-            try
-            {
-                // _log.Info("AnalyticRating/Progress started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
-              //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
-                var typeIdCross = _context.PhraseTypes
-                    .Where(p => p.PhraseTypeText == "Cross")
-                    .Select(p => p.PhraseTypeId).First();
-
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new SessionInfo
-                    {
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime
-                    })
-                    .ToList();
-
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialoguePhrase)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        FullName = p.ApplicationUser.FullName,
-                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                    })
-                    .ToList();
-
-                var results = dialogues
-                    .GroupBy(p => p.ApplicationUserId)
-                    .Select(p => new RatingProgressInfo
-                    {
-                        FullName = p.First().FullName,
-                        UserResults = p.GroupBy(q => q.BegTime.Date)
-                            .Select(q => new RatingProgressUserInfo
-                            {
-                                Date = q.Key,
-                                DialogueCount = q.Count() != 0 ? q.Select(r => r.DialogueId).Distinct().Count() : 0,
-                                TotalScore = q.Count() != 0 ? q.Average(r => r.SatisfactionScore) : null,
-                                Load = _dbOperation.LoadIndex(sessions, q, p.Key, q.Key),
-                                LoadHours = _dbOperation.SessionAverageHours(sessions, p.Key, q.Key),
-                                WorkingHours = _dbOperation.DialogueSumDuration(q),
-                                DialogueDuration = _dbOperation.DialogueAverageDuration(q),
-                                CrossInProcents = _dbOperation.CrossIndex(p)
-                            }).ToList()
-                    }).ToList();
-
-                // _log.Info("AnalyticRating/Progress finished");
-                return Ok(JsonConvert.SerializeObject(results));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
-        }
+                                                        [FromHeader] string Authorization) =>
+            _analyticRatingService.RatingProgress(
+                beg,
+                end,
+                applicationUserIds,
+                companyIds,
+                corporationIds,
+                workerTypeIds,
+                Authorization
+            );
+        
 
 
         [HttpGet("RatingUsers")]
@@ -142,99 +73,17 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
-        {
-            try
-            {
-                // _log.Info("AnalyticRating/RatingUsers started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
-               // var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
-
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new SessionInfo
-                    {
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        FullName = p.ApplicationUser.FullName,
-                        CompanyId = p.ApplicationUser.CompanyId
-                    })
-                    .ToList();
-
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).FirstOrDefault();
-
-
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhrase)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        CompanyId = p.ApplicationUser.CompanyId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        FullName = p.ApplicationUser.FullName,
-                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
-                    })
-                    .ToList();
-
-                var result = dialogues
-                    .GroupBy(p => p.ApplicationUserId)
-                    .Select(p => new RatingUserInfo
-                    {
-                        FullName = p.First().FullName,
-                        SatisfactionIndex = _dbOperation.SatisfactionIndex(p),
-                        LoadIndex = _dbOperation.LoadIndex(sessions, p, begTime, endTime),
-                        CrossIndex = _dbOperation.CrossIndex(p),
-                        DialoguesCount = p.Select(q => q.DialogueId).Distinct().Count(),
-                        CompanyId = p.First().CompanyId.ToString()
-                    }).ToList();
-
-                var emptyUsers = sessions.GroupBy(p => p.ApplicationUserId)
-                    .Where(p => !result.Select(x=>x.FullName).Contains(p.First().FullName))
-                    .Select(p => new RatingUserInfo
-                    {
-                        FullName = p.First().FullName,
-                        SatisfactionIndex = 0,
-                        LoadIndex = 0,
-                        CrossIndex = 0,
-                        DialoguesCount = 0,
-                        CompanyId = p.First().CompanyId.ToString()
-                    }).ToList();
-
-                result = result.Union(emptyUsers).OrderByDescending(p => p.SatisfactionIndex).ToList();
-                // _log.Info("AnalyticRating/RatingUsers finished");
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
-        }  
+                                                        [FromHeader] string Authorization) =>
+            _analyticRatingService.RatingUsers(
+                beg,
+                end,
+                applicationUserIds,
+                companyIds,
+                corporationIds,
+                workerTypeIds,
+                Authorization
+            );
+        
 
 
         [HttpGet("RatingOffices")]
@@ -243,130 +92,15 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                         [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
-        {
-            try
-            {
-                // _log.Info("AnalyticRating/RatingOffices started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
-                //var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
-
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new SessionInfoCompany
-                    {
-                        CompanyId = (Guid)p.ApplicationUser.CompanyId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime
-                    })
-                    .ToList();
-
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).FirstOrDefault();
-
-
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .ThenInclude(p => p.Company)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhrase)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfoCompany
-                    {
-                        DialogueId = p.DialogueId,
-                        CompanyId = (Guid)p.ApplicationUser.CompanyId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        FullName = p.ApplicationUser.Company.CompanyName,
-                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
-                    })
-                    .ToList();
-
-                var result = dialogues
-                    .GroupBy(p => p.CompanyId)
-                    .Select(p => new RatingOfficeInfo
-                    {
-                        CompanyId = p.Key.ToString(),
-                        FullName = p.First().FullName,
-                        SatisfactionIndex = _dbOperation.SatisfactionIndex(p),
-                        LoadIndex = _dbOperation.LoadIndex(sessions, p, begTime, endTime),
-                        CrossIndex = _dbOperation.CrossIndex(p),
-                        Recommendation = "",
-                        DialoguesCount = p.Select(q => q.DialogueId).Distinct().Count(),
-                        DaysCount = p.Select(q => q.BegTime.Date).Distinct().Count(),
-                        WorkingHoursDaily = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
-                        DialogueAverageDuration = _dbOperation.DialogueAverageDuration(p, begTime, endTime),
-                        DialogueAveragePause = _dbOperation.DialogueAveragePause(sessions, p, begTime, endTime)
-                    }).ToList();
-                result = result.OrderBy(p => p.EfficiencyIndex).ToList();
-                // _log.Info("AnalyticRating/RatingOffices finished");
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
-        }            
-    }
-     public class RatingProgressInfo
-    {
-        public string FullName;
-        public List<RatingProgressUserInfo> UserResults;
-    }
-
-    public class RatingProgressUserInfo
-    {
-        public DateTime? Date;
-        public int DialogueCount;
-        public double? TotalScore;
-        public double? Load;
-        public double? LoadHours;
-        public double? WorkingHours;
-        public double? DialogueDuration;
-        public double? CrossInProcents;
-    }
-
-    public class RatingUserInfo
-    {
-        public string CompanyId;
-        public string FullName;
-        public double? SatisfactionIndex;
-        public double? LoadIndex;
-        public double? CrossIndex;
-        public int DialoguesCount;
-    }
-
-    public class RatingOfficeInfo
-    {
-        public string CompanyId;
-        public string FullName;
-        public double? EfficiencyIndex;
-        public double? SatisfactionIndex;
-        public double? LoadIndex;
-        public double? CrossIndex;
-        public string Recommendation;
-        public int DialoguesCount;
-        public int DaysCount;
-        public double? WorkingHoursDaily;
-        public double? DialogueAverageDuration;
-        public double? DialogueAveragePause;
-        public double? ClientsWorkingHoursDaily;
+                                                        [FromHeader] string Authorization) =>
+            _analyticRatingService.RatingOffices(
+                beg,
+                end,
+                companyIds,
+                corporationIds,
+                workerTypeIds,
+                Authorization
+            );
+                 
     }
 }

@@ -24,6 +24,7 @@ using UserOperations.Controllers;
 using UserOperations.Utils.AnalyticHomeUtils;
 using UserOperations.Utils.AnalyticContentUtils;
 using UserOperations.Utils.AnalyticOfficeUtils;
+using UserOperations.Utils.AnalyticRatingUtils;
 
 namespace UserOperations
 {
@@ -79,10 +80,12 @@ namespace UserOperations
             services.AddScoped<AnalyticContentService>();
             services.AddScoped<AnalyticHomeService>();
             services.AddScoped<AnalyticOfficeService>();
+            services.AddScoped<AnalyticRatingService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
             services.AddScoped<AnalyticOfficeUtils>();
+            services.AddScoped<AnalyticRatingUtils>();
 
             services.AddSwaggerGen(c =>
             {
