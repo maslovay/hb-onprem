@@ -16,22 +16,8 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticHomeController : Controller
     {
-        private readonly IAnalyticCommonProvider _analyticCommonProvider;
-        private readonly IAnalyticHomeProvider _analyticHomeProvider;
-        private readonly IAnalyticContentProvider _analyticContentProvider;
-        private readonly IConfiguration _config;        
-        private readonly ILoginService _loginService;
-        private readonly IDBOperations _dbOperation;
-        private readonly IRequestFilters _requestFilters;
         private readonly AnalyticHomeService _analyticHomeService;
         public AnalyticHomeController(
-            IAnalyticCommonProvider analyticProvider,
-            IAnalyticHomeProvider homeProvider,
-            IAnalyticContentProvider analyticContentProvider,
-            IConfiguration config,
-            ILoginService loginService,
-            IDBOperations dbOperation,
-            IRequestFilters requestFilters,
             AnalyticHomeService analyticHomeService
             )
         {            

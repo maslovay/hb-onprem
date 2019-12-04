@@ -14,7 +14,7 @@ using UserOperations.Models.Get.AnalyticContentController;
 using HBData.Repository;
 using UserOperations.Utils.AnalyticContentUtils;
 
-namespace UserOperations.Controllers
+namespace UserOperations.Services
 {
     public class AnalyticContentService : Controller
     {
@@ -66,7 +66,6 @@ namespace UserOperations.Controllers
                         Key3 = key.Url,
                         Result = group.ToList()
                     });
-                System.Console.WriteLine($"{JsonConvert.SerializeObject(contentsShownGroup)}");//------
                 var contentInfo = new //ContentTotalInfo
                 {
                     ContentsAmount = slideShowSessionsAll.Where(p => !p.IsPoll).Count(),

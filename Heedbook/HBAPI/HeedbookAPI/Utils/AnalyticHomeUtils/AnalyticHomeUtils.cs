@@ -14,12 +14,10 @@ namespace UserOperations.Utils.AnalyticHomeUtils
 {
     public class AnalyticHomeUtils
     {
-        private readonly RecordsContext _context;
         private readonly IConfiguration _config;
 
-        public AnalyticHomeUtils(RecordsContext context, IConfiguration config)
+        public AnalyticHomeUtils(IConfiguration config)
         {
-            _context = context;
             _config = config;
         }
         public int DialoguesCount(List<DialogueInfo> dialogues, Guid? applicationUserId = null, DateTime? date = null)

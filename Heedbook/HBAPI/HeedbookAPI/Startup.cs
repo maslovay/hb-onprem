@@ -23,6 +23,7 @@ using UserOperations.Providers.Realizations;
 using UserOperations.Controllers;
 using UserOperations.Utils.AnalyticHomeUtils;
 using UserOperations.Utils.AnalyticContentUtils;
+using UserOperations.Utils.AnalyticOfficeUtils;
 
 namespace UserOperations
 {
@@ -67,19 +68,21 @@ namespace UserOperations
             services.AddScoped<IAnalyticContentProvider, AnalyticContentProvider>();
             services.AddScoped<IAnalyticCommonProvider, AnalyticCommonProvider>();
             services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();
+            services.AddScoped<IAnalyticOfficeProvider, AnalyticOfficeProvider>();
             services.AddScoped<IAccountProvider, AccountProvider>();
             services.AddScoped<IHelpProvider, HelpProvider>();
             services.AddScoped<IUserProvider, UserProvider>();
-            services.AddScoped<IPhraseProvider, PhraseProvider>();
-            services.AddScoped<IAnalyticOfficeProvider, AnalyticOfficeProvider>();
+            services.AddScoped<IPhraseProvider, PhraseProvider>();            
             services.AddScoped(typeof(IAnalyticReportProvider), typeof(AnalyticReportProvider));
 
             services.AddScoped<AnalyticClientProfileService>();
             services.AddScoped<AnalyticContentService>();
             services.AddScoped<AnalyticHomeService>();
+            services.AddScoped<AnalyticOfficeService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
+            services.AddScoped<AnalyticOfficeUtils>();
 
             services.AddSwaggerGen(c =>
             {

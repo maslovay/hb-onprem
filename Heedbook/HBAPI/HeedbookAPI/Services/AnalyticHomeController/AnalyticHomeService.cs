@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using UserOperations.Models.Get.HomeController;
 using UserOperations.Utils.AnalyticHomeUtils;
 
-namespace UserOperations.Controllers
+namespace UserOperations.Services
 {
     public class AnalyticHomeService : Controller
     {
