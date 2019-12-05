@@ -9,35 +9,33 @@ using Newtonsoft.Json;
 using UserOperations.Utils;
 using UserOperations.Models.Get.AnalyticRatingController;
 using UserOperations.Utils.AnalyticRatingUtils;
+using UserOperations.Providers;
 
 namespace UserOperations.Services
 {
     [Route("api/[controller]")]
     [ApiController]
     public class AnalyticRatingService : Controller
-    {
-      private readonly IConfiguration _config;        
+    {    
         private readonly ILoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly IDBOperations _dbOperation;
         private readonly IRequestFilters _requestFilters;
         private readonly AnalyticRatingUtils _analyticRatingUtils;
+        private readonly IAnalyticRatingProvider _analyticRatingProvider;
 
         public AnalyticRatingService(
-            IConfiguration config,
             ILoginService loginService,
             RecordsContext context,
-            IDBOperations dbOperation,
             IRequestFilters requestFilters,
-            AnalyticRatingUtils analyticRatingUtils
+            AnalyticRatingUtils analyticRatingUtils,
+            IAnalyticRatingProvider analyticRatingProvider
             )
         {
-            _config = config;
             _loginService = loginService;
             _context = context;
-            _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _analyticRatingUtils = analyticRatingUtils;
+            _analyticRatingProvider = analyticRatingProvider;
         }
 
         [HttpGet("Progress")]
@@ -60,47 +58,22 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
-                var typeIdCross = _context.PhraseTypes
-                    .Where(p => p.PhraseTypeText == "Cross")
-                    .Select(p => p.PhraseTypeId).First();
+                var typeIdCross = _analyticRatingProvider.GetCrossPhraseTypeId();
 
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new SessionInfo
-                    {
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime
-                    })
-                    .ToList();
+                var sessions = _analyticRatingProvider.GetSessions(
+                    begTime,
+                    endTime,
+                    companyIds,
+                    applicationUserIds,
+                    workerTypeIds);
 
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialoguePhrase)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        FullName = p.ApplicationUser.FullName,
-                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                    })
-                    .ToList();
+                var dialogues = _analyticRatingProvider.GetDialogues(
+                    begTime,
+                    endTime,
+                    companyIds,
+                    applicationUserIds,
+                    workerTypeIds,
+                    typeIdCross);
 
                 var results = dialogues
                     .GroupBy(p => p.ApplicationUserId)
@@ -153,50 +126,23 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                // var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new SessionInfo
-                    {
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        FullName = p.ApplicationUser.FullName,
-                        CompanyId = p.ApplicationUser.CompanyId
-                    })
-                    .ToList();
+                var sessions = _analyticRatingProvider.GetSessions(
+                    begTime,
+                    endTime,
+                    companyIds,
+                    applicationUserIds,
+                    workerTypeIds);
 
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).FirstOrDefault();
+                var typeIdCross = _analyticRatingProvider.GetCrossPhraseTypeId();
 
-
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhrase)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        CompanyId = p.ApplicationUser.CompanyId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        FullName = p.ApplicationUser.FullName,
-                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
-                    })
-                    .ToList();
+                var dialogues = _analyticRatingProvider.GetDialogues(
+                    begTime,
+                    endTime,
+                    companyIds,
+                    applicationUserIds,
+                    workerTypeIds,
+                    typeIdCross
+                );
 
                 var result = dialogues
                     .GroupBy(p => p.ApplicationUserId)
@@ -254,46 +200,22 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                 //var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new SessionInfoCompany
-                    {
-                        CompanyId = (Guid)p.ApplicationUser.CompanyId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime
-                    })
-                    .ToList();
+                var sessions = _analyticRatingProvider.GetSessionInfoCompanys(
+                    begTime,
+                    endTime,
+                    companyIds,
+                    workerTypeIds
+                );
 
-                var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).FirstOrDefault();
+                var typeIdCross = _analyticRatingProvider.GetCrossPhraseTypeId();
 
-
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .ThenInclude(p => p.Company)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhrase)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfoCompany
-                    {
-                        DialogueId = p.DialogueId,
-                        CompanyId = (Guid)p.ApplicationUser.CompanyId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        FullName = p.ApplicationUser.Company.CompanyName,
-                        CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
-                    })
-                    .ToList();
+                var dialogues = _analyticRatingProvider.GetDialogueInfoCompanys(
+                    begTime,
+                    endTime,
+                    companyIds,
+                    workerTypeIds,
+                    typeIdCross
+                );
 
                 var result = dialogues
                     .GroupBy(p => p.CompanyId)

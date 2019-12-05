@@ -70,6 +70,7 @@ namespace UserOperations
             services.AddScoped<IAnalyticCommonProvider, AnalyticCommonProvider>();
             services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();
             services.AddScoped<IAnalyticOfficeProvider, AnalyticOfficeProvider>();
+            services.AddScoped<IAnalyticRatingProvider, AnalyticRatingProvider>();
             services.AddScoped<IAccountProvider, AccountProvider>();
             services.AddScoped<IHelpProvider, HelpProvider>();
             services.AddScoped<IUserProvider, UserProvider>();
