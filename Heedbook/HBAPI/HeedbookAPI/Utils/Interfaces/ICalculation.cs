@@ -50,14 +50,14 @@ namespace UserOperations.Utils
         double? CrossIndex(IGrouping<Guid, DialogueInfo> dialogues);
 
         double? CrossIndex(IGrouping<Guid, DialogueInfoCompany> dialogues);
-        double? CrossIndex(IGrouping<string, RatingDialogueInfo> dialogues);
-        double? AlertIndex(IGrouping<string, RatingDialogueInfo> dialogues);
+        double? CrossIndex(IGrouping<string, UserOperations.Models.Get.AnalyticServiceQualityController.RatingDialogueInfo> dialogues);
+        double? AlertIndex(IGrouping<string, UserOperations.Models.Get.AnalyticServiceQualityController.RatingDialogueInfo> dialogues);
         double? AlertIndex(IGrouping<Guid, DialogueInfo> dialogues);
-        double? NecessaryIndex(IGrouping<string, RatingDialogueInfo> dialogues);
+        double? NecessaryIndex(IGrouping<string, UserOperations.Models.Get.AnalyticServiceQualityController.RatingDialogueInfo> dialogues);
 
-        double? LoyaltyIndex(IGrouping<string, RatingDialogueInfo> dialogues);
+        double? LoyaltyIndex(IGrouping<string, UserOperations.Models.Get.AnalyticServiceQualityController.RatingDialogueInfo> dialogues);
 
-        double? LoyaltyIndex(List<ComponentsDialogueInfo> dialogues);
+        double? LoyaltyIndex(List<UserOperations.Models.Get.AnalyticServiceQualityController.ComponentsDialogueInfo> dialogues);
 
 
         // Efficiency index calculation

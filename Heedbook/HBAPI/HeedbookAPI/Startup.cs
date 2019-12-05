@@ -14,17 +14,17 @@ using UserOperations.Services;
 using HBLib.Utils;
 using HBLib;
 using UserOperations.Utils;
-using BenchmarkDotNet.Running;
 using UserOperations.Services.Scheduler;
 using Quartz;
 using UserOperations.Providers;
 using UserOperations.Providers.Interfaces;
 using UserOperations.Providers.Realizations;
-using UserOperations.Controllers;
 using UserOperations.Utils.AnalyticHomeUtils;
 using UserOperations.Utils.AnalyticContentUtils;
 using UserOperations.Utils.AnalyticOfficeUtils;
 using UserOperations.Utils.AnalyticRatingUtils;
+using UserOperations.Utils.AnalyticReportUtils;
+using UserOperations.Utils.AnalyticServiceQualityUtils;
 
 namespace UserOperations
 {
@@ -71,6 +71,7 @@ namespace UserOperations
             services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();
             services.AddScoped<IAnalyticOfficeProvider, AnalyticOfficeProvider>();
             services.AddScoped<IAnalyticRatingProvider, AnalyticRatingProvider>();
+            services.AddScoped<IAnalyticServiceQualityProvider, AnalyticServiceQualityProvider>();
             services.AddScoped<IAccountProvider, AccountProvider>();
             services.AddScoped<IHelpProvider, HelpProvider>();
             services.AddScoped<IUserProvider, UserProvider>();
@@ -82,11 +83,15 @@ namespace UserOperations
             services.AddScoped<AnalyticHomeService>();
             services.AddScoped<AnalyticOfficeService>();
             services.AddScoped<AnalyticRatingService>();
+            services.AddScoped<AnalyticReportService>();
+            services.AddScoped<AnalyticServiceQualityService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
             services.AddScoped<AnalyticOfficeUtils>();
             services.AddScoped<AnalyticRatingUtils>();
+            services.AddScoped<AnalyticReportUtils>();
+            services.AddScoped<AnalyticServiceQualityUtils>();
 
             services.AddSwaggerGen(c =>
             {

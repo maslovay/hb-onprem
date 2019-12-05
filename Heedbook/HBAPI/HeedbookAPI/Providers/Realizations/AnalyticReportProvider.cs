@@ -9,7 +9,7 @@ using UserOperations.AccountModels;
 using UserOperations.Services;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using UserOperations.Models.AnalyticModels;
+using UserOperations.Models.Get.AnalyticReportController;
 using HBData.Repository;
 
 namespace UserOperations.Providers

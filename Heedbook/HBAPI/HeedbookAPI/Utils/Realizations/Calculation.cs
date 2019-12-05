@@ -181,13 +181,13 @@ namespace UserOperations.Utils
             var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
-        public double? CrossIndex(IGrouping<string, RatingDialogueInfo> dialogues)
+        public double? CrossIndex(IGrouping<string, UserOperations.Models.Get.AnalyticServiceQualityController.RatingDialogueInfo> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
-        public double? AlertIndex(IGrouping<string, RatingDialogueInfo> dialogues)
+        public double? AlertIndex(IGrouping<string, UserOperations.Models.Get.AnalyticServiceQualityController.RatingDialogueInfo> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var alertDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.AlertCount, 1)) : 0;
@@ -199,21 +199,21 @@ namespace UserOperations.Utils
             var alertDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.AlertCount, 1)) : 0;
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(alertDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
-           public double? NecessaryIndex(IGrouping<string, RatingDialogueInfo> dialogues)
+           public double? NecessaryIndex(IGrouping<string, UserOperations.Models.Get.AnalyticServiceQualityController.RatingDialogueInfo> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var necessaryDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.NecessaryCount, 1)) : 0;
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(necessaryDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
 
-        public double? LoyaltyIndex(IGrouping<string, RatingDialogueInfo> dialogues)
+        public double? LoyaltyIndex(IGrouping<string, UserOperations.Models.Get.AnalyticServiceQualityController.RatingDialogueInfo> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var loyaltyDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.LoyaltyCount, 1)) : 0;
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(loyaltyDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
 
-        public double? LoyaltyIndex(List<ComponentsDialogueInfo> dialogues)
+        public double? LoyaltyIndex(List<UserOperations.Models.Get.AnalyticServiceQualityController.ComponentsDialogueInfo> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.Loyalty, 1)) : 0;

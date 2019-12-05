@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Models.Get.AnalyticServiceQualityController;
 
 namespace UserOperations.Providers
 {
@@ -18,7 +19,7 @@ namespace UserOperations.Providers
         {
             _repository = repository;
         }
-        public async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
+        public async Task<IEnumerable<Models.AnalyticModels.SessionInfo>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
         {
             var sessions = await _repository.GetAsQueryable<Session>()
                          .Where(p => p.BegTime >= begTime
@@ -27,7 +28,7 @@ namespace UserOperations.Providers
                                  && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                                  && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
                                  && (userIds == null || (!userIds.Any() || userIds.Contains(p.ApplicationUserId))))
-                         .Select(p => new SessionInfo
+                         .Select(p => new Models.AnalyticModels.SessionInfo
                          {
                              ApplicationUserId = p.ApplicationUserId,
                              BegTime = p.BegTime,
@@ -229,7 +230,7 @@ namespace UserOperations.Providers
                 .ToListAsyncSafe(); 
         }
 
-        public async Task<List<DialogueInfo>> GetDialogueInfos(
+        public async Task<List<Models.AnalyticModels.DialogueInfo>> GetDialogueInfos(
             DateTime begTime, 
             DateTime endTime, 
             List<Guid> companyIds, 
@@ -246,7 +247,7 @@ namespace UserOperations.Providers
                     && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
-                .Select(p => new DialogueInfo
+                .Select(p => new Models.AnalyticModels.DialogueInfo
                 {
                     DialogueId = p.DialogueId,
                     ApplicationUserId = p.ApplicationUserId,
