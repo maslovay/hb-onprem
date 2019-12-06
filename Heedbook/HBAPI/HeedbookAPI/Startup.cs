@@ -75,6 +75,7 @@ namespace UserOperations
             services.AddScoped<IAnalyticRatingProvider, AnalyticRatingProvider>();
             services.AddScoped<IAnalyticServiceQualityProvider, AnalyticServiceQualityProvider>();
             services.AddScoped<IAnalyticSpeechProvider, AnalyticSpeechProvider>();
+            services.AddScoped<IAnalyticWeeklyReportProvider, AnalyticWeeklyReportProvider>();
             services.AddScoped<IAccountProvider, AccountProvider>();
             services.AddScoped<IHelpProvider, HelpProvider>();
             services.AddScoped<IUserProvider, UserProvider>();
@@ -90,6 +91,7 @@ namespace UserOperations
             services.AddScoped<AnalyticServiceQualityService>();
             services.AddScoped<AnalyticSpeechService>();
             services.AddScoped<AnalyticWeeklyReportService>();
+            services.AddScoped<CampaignContentService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();

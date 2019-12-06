@@ -28,14 +28,14 @@ namespace UserOperations.Services
         private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly IRequestFilters _requestFilters;
-        private readonly AnalyticWeeklyReportProvider _analyticWeeklyReportProvider;
+        private readonly IAnalyticWeeklyReportProvider _analyticWeeklyReportProvider;
         private readonly AnalyticWeeklyReportUtils _analyticWeeklyReportUtils;
 
         public AnalyticWeeklyReportService(
             IConfiguration config,
             ILoginService loginService,
             IRequestFilters requestFilters,
-            AnalyticWeeklyReportProvider analyticWeeklyReportProvider,
+            IAnalyticWeeklyReportProvider analyticWeeklyReportProvider,
             AnalyticWeeklyReportUtils analyticWeeklyReportUtils
             )
         {
