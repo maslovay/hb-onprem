@@ -14,6 +14,6 @@ namespace UserOperations.Models.Get.AnalyticRatingController
         public double? WorkingHoursDaily;
         public double? DialogueAverageDuration;
         public double? DialogueAveragePause;
-        public double? ClientsWorkingHoursDaily;
+        // public double? ClientsWorkingHoursDaily;
     }
 }

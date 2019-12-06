@@ -6,7 +6,7 @@ using HBData.Models;
 using HBData.Repository;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
 
-namespace UserOperations.Services
+namespace UserOperations.Providers
 {
     public class AnalyticServiceQualityProvider : IAnalyticServiceQualityProvider
     {

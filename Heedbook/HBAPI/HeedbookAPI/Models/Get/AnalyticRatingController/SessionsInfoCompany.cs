@@ -7,6 +7,6 @@ namespace UserOperations.Models.Get.AnalyticRatingController
         public Guid CompanyId;
         public DateTime BegTime;
         public DateTime EndTime;
-        public string FullName;
+        // public string FullName;
     }
 }

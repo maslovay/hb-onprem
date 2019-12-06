@@ -1,15 +1,18 @@
 using System;
 
-namespace UserOperations.Models.Get.AnalyticRatingController
+namespace UserOperations.Models.Get.AnalyticSpeechController
 {
-    public class DialogueInfoCompany
+    public class DialogueInfo
     {
+        // public Guid? IndustryId;//---!!!for benchmarks only
+        // public Guid? CompanyId;//---!!!for benchmarks only
         public Guid DialogueId;
-        public Guid CompanyId;
+        public Guid ApplicationUserId;
         public DateTime BegTime;
         public DateTime EndTime;
         public string FullName;
         public int CrossCount;
+        public int AlertCount;
         public double? SatisfactionScore;
         // public double? SatisfactionScoreBeg;
         // public double? SatisfactionScoreEnd;

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using HBData.Models;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
 
-namespace UserOperations.Services
+namespace UserOperations.Providers
 {
     public interface IAnalyticServiceQualityProvider
     {

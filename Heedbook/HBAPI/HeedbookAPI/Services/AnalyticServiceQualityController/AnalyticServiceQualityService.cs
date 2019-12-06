@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using UserOperations.Utils;
 using System.Threading.Tasks;
 using UserOperations.Utils.AnalyticServiceQualityUtils;
+using UserOperations.Providers;
 //---OLD---
 namespace UserOperations.Services
 {
