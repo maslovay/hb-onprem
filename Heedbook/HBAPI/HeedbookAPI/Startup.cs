@@ -26,6 +26,7 @@ using UserOperations.Utils.AnalyticRatingUtils;
 using UserOperations.Utils.AnalyticReportUtils;
 using UserOperations.Utils.AnalyticServiceQualityUtils;
 using UserOperations.Utils.AnalyticSpeechController;
+using UserOperations.Utils.AnalyticWeeklyReportController;
 
 namespace UserOperations
 {
@@ -88,6 +89,7 @@ namespace UserOperations
             services.AddScoped<AnalyticReportService>();
             services.AddScoped<AnalyticServiceQualityService>();
             services.AddScoped<AnalyticSpeechService>();
+            services.AddScoped<AnalyticWeeklyReportService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
@@ -96,6 +98,7 @@ namespace UserOperations
             services.AddScoped<AnalyticReportUtils>();
             services.AddScoped<AnalyticServiceQualityUtils>();
             services.AddScoped<AnalyticSpeechUtils>();
+            services.AddScoped<AnalyticWeeklyReportUtils>();
 
             services.AddSwaggerGen(c =>
             {
