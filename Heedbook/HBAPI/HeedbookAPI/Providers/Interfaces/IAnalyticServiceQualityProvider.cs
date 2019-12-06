@@ -23,8 +23,9 @@ namespace UserOperations.Providers
             List<Guid> companyIds, 
             List<Guid> workerTypeIds, 
             List<Guid> applicationUserIds);
-        Task<IEnumerable<PhraseType>> GetPhraseTypes();
-        Task<List<RatingDialogueInfo>> GetRatingDialogueInfos(
+        IQueryable<PhraseType> GetPhraseTypes();
+        // Task<List<RatingDialogueInfo>> GetRatingDialogueInfos(
+        IQueryable<RatingDialogueInfo> GetRatingDialogueInfos(
             DateTime begTime, 
             DateTime endTime, 
             List<Guid> companyIds, 

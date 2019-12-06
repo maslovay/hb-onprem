@@ -81,14 +81,16 @@ namespace UserOperations.Providers
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                    && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))).AsQueryable();
+                    && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))))
+                .AsQueryable();
             return dialogues;
         }
-        public async Task<IEnumerable<PhraseType>> GetPhraseTypes()
+        public IQueryable<PhraseType> GetPhraseTypes()
         {
-            return await _repository.FindAllAsync<PhraseType>();
+            return _repository.GetAsQueryable<PhraseType>().AsQueryable();
         }
-        public async Task<List<RatingDialogueInfo>> GetRatingDialogueInfos(
+        // public async Task<List<RatingDialogueInfo>> GetRatingDialogueInfos(
+            public IQueryable<RatingDialogueInfo> GetRatingDialogueInfos(
             DateTime begTime, 
             DateTime endTime, 
             List<Guid> companyIds, 
@@ -96,7 +98,7 @@ namespace UserOperations.Providers
             List<Guid> workerTypeIds,
             Guid typeIdLoyalty)
         {
-            return await _repository.GetAsQueryable<Dialogue>()
+            return _repository.GetAsQueryable<Dialogue>()
                 .Where(p => p.BegTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 3
@@ -121,7 +123,8 @@ namespace UserOperations.Providers
                     PositiveEmotion = p.DialogueVisual.FirstOrDefault().SurpriseShare + p.DialogueVisual.FirstOrDefault().HappinessShare,
                     TextShare = p.DialogueSpeech.FirstOrDefault().PositiveShare,
                 })
-                .ToListAsyncSafe(); 
+                .AsQueryable();
+                // .ToListAsyncSafe(); 
         }
         public async Task<List<DialogueInfo>> GetDialogueInfos(
             DateTime begTime, 

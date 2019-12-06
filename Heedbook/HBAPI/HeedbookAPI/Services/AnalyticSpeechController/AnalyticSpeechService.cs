@@ -135,7 +135,7 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);                  
 
-                var companysPhrases = _analyticSpeechProvider.GetCompanyPhrases(companyIds);
+                // var companysPhrases = _analyticSpeechProvider.GetCompanyPhrases(companyIds);
                 
                 var dialogueIds = _analyticSpeechProvider.GetDialogueIds(
                     begTime,
@@ -313,7 +313,7 @@ namespace UserOperations.Services
                     applicationUserIds,
                     workerTypeIds);
 
-                var phrases = _analyticSpeechProvider.DialoguePhrasesInfo2(
+                var phrases = _analyticSpeechProvider.DialoguePhrasesInfoAsQueryable(
                     dialogueIds,
                     phraseIds,
                     phraseTypeIds);

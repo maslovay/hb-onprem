@@ -182,13 +182,13 @@ namespace UserOperations.Services
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
-                var phrasesTypes = await _analyticServiceQualityProvider.GetPhraseTypes();
+                var phrasesTypes = _analyticServiceQualityProvider.GetPhraseTypes();
                 //var typeIdCross = phrasesTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
                 //var typeIdAlert = phrasesTypes.Where(p => p.PhraseTypeText == "Alert").Select(p => p.PhraseTypeId).First();
                 //var typeIdNecessary = phrasesTypes.Where(p => p.PhraseTypeText == "Necessary").Select(p => p.PhraseTypeId).First();
                 var typeIdLoyalty = phrasesTypes.Where(p => p.PhraseTypeText == "Loyalty").Select(p => p.PhraseTypeId).First();
 
-                var dialogues = await _analyticServiceQualityProvider.GetRatingDialogueInfos(
+                var dialogues = _analyticServiceQualityProvider.GetRatingDialogueInfos(
                     begTime, 
                     endTime, 
                     companyIds, 

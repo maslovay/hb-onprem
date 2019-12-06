@@ -30,7 +30,7 @@ namespace UserOperations.Providers
                 .Select(p => p.PhraseTypeId).First();
             return typeIdAlert;
         }
-        public List<DialogueInfo> GetDialogueInfos(
+        public IQueryable<DialogueInfo> GetDialogueInfos(
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
@@ -58,7 +58,7 @@ namespace UserOperations.Providers
                     CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
                     AlertCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
                 })
-                .ToList();
+                .AsQueryable();
             return dialogues;
         }
         public List<Guid?> GetCompanyPhrases(List<Guid> companyIds)
@@ -88,7 +88,7 @@ namespace UserOperations.Providers
             return dialogueIds;
         }
         
-        public List<PhrasesInfo> GetPhraseInfo(
+        public IQueryable<PhrasesInfo> GetPhraseInfo(
             List<Guid> dialogueIds,
             List<Guid> phraseIds,
             List<Guid> phraseTypeIds)
@@ -109,7 +109,7 @@ namespace UserOperations.Providers
                     PhraseText = p.Phrase.PhraseText,
                     PhraseTypeText = p.Phrase.PhraseType.PhraseTypeText
                 })
-                .ToList();
+                .AsQueryable();
             return phrasesInfo;
         }
         
@@ -135,7 +135,7 @@ namespace UserOperations.Providers
         {
             return _repository.GetAsQueryable<PhraseType>().ToList();
         }
-        public List<DialoguePhrasesInfo> DialoguePhrasesInfo2(
+        public IQueryable<DialoguePhrasesInfo> DialoguePhrasesInfoAsQueryable(
             List<Guid> dialogueIds,
             List<Guid> phraseIds,
             List<Guid> phraseTypeIds
@@ -149,7 +149,8 @@ namespace UserOperations.Providers
                 .Select(p =>new DialoguePhrasesInfo{
                     PhraseText = p.Phrase.PhraseText,
                     PhraseColor = p.Phrase.PhraseType.Colour
-                }).ToList();
+                    })
+                .AsQueryable();
             return phrases;
         }
     }        
