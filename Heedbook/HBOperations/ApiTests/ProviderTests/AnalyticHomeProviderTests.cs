@@ -21,7 +21,7 @@ namespace ApiTests
     public class AnalyticHomeProviderTests : ApiServiceTest
     {
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {
             base.Setup();
         }
@@ -52,9 +52,8 @@ namespace ApiTests
             var analyticHomeProvider = new AnalyticHomeProvider(repositoryMock.Object);
 
             //Act
-            var task = analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds);
-            task.Wait();
-            var result = task.Result.ToList();
+            var res = await analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds);
+            var result = res.ToList();
 
             //Assert
             Assert.AreEqual(result.Count, 3);
@@ -121,9 +120,8 @@ namespace ApiTests
 
             //Act
             var analyticHomeProvider = new AnalyticHomeProvider(repositoryMock.Object);
-            var task = analyticHomeProvider.GetIndustryIdsAsync(companyIds);
-            task.Wait();
-            var result = task.Result.ToList();
+            var res = await analyticHomeProvider.GetIndustryIdsAsync(companyIds);
+            var result = res.ToList();
 
             //Assert
             Assert.AreEqual(result.Count, 2);

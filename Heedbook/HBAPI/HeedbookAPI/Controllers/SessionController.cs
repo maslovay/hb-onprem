@@ -65,9 +65,11 @@ namespace UserOperations.Controllers
                         .OrderByDescending(p => p.BegTime)
                         .FirstOrDefault();
 
-                var alertOpenCloseSession = new Alert();
-                alertOpenCloseSession.ApplicationUserId = data.ApplicationUserId;
-                alertOpenCloseSession.CreationDate = DateTime.UtcNow;
+                var alertOpenCloseSession = new Alert
+                {
+                    ApplicationUserId = data.ApplicationUserId,
+                    CreationDate = DateTime.UtcNow
+                };
 
                 //---START CLOSE OLD SESSIONS IF NOT CLOSED and DEVIDE TIME FOR LONG SESSIONS---
                 var lastSessionId = lastSession != null ? lastSession.SessionId : Guid.Empty;
@@ -87,12 +89,14 @@ namespace UserOperations.Controllers
 
                     for (var begTime = longSesBeg.AddHours(24); begTime < longSesEnd; begTime = begTime.AddHours(24))
                     {
-                        Session session = new Session();
-                        session.ApplicationUserId = longSes.ApplicationUserId;
-                        session.BegTime = begTime;
-                        session.EndTime = begTime.AddHours(24) < longSesEnd ? begTime.AddHours(24) : longSesEnd;
-                        session.IsDesktop = longSes.IsDesktop;
-                        session.StatusId = CLOSE;
+                        Session session = new Session
+                        {
+                            ApplicationUserId = longSes.ApplicationUserId,
+                            BegTime = begTime,
+                            EndTime = begTime.AddHours(24) < longSesEnd ? begTime.AddHours(24) : longSesEnd,
+                            IsDesktop = longSes.IsDesktop,
+                            StatusId = CLOSE
+                        };
                         _context.Sessions.Add(session);
                     }
                     longSes.EndTime = longSesBeg.AddHours(24);
@@ -164,10 +168,12 @@ namespace UserOperations.Controllers
                         && x.ApplicationUserId == lastSession.ApplicationUserId && x.StatusId == 3 && x.InStatistic == true).Count();
                     if (dialoquesAmount == 0)
                     {
-                        var alertNoDialogues = new Alert();
-                        alertNoDialogues.ApplicationUserId = data.ApplicationUserId;
-                        alertNoDialogues.CreationDate = DateTime.UtcNow;
-                        alertNoDialogues.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "no conversations").AlertTypeId;
+                        var alertNoDialogues = new Alert
+                        {
+                            ApplicationUserId = data.ApplicationUserId,
+                            CreationDate = DateTime.UtcNow,
+                            AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "no conversations").AlertTypeId
+                        };
                         _context.Alerts.Add(alertNoDialogues);
                     }
                     //---
@@ -178,14 +184,14 @@ namespace UserOperations.Controllers
                 }
 
                 response.Message = "Wrong action";
-//              _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                 return BadRequest(response);
             }
             catch (Exception e)
             {
-                var response = new Response();
-                response.Message = $"Exception occured {e}";
-//              _log.Fatal($"Exception occurred {e}");
+                var response = new Response
+                {
+                    Message = $"Exception occured {e}"
+                };
                 return BadRequest(response);
             }
         }
@@ -205,9 +211,11 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                var response = new Response();
-                response.Message = $"Exception occured {e}";
-//                _log.Fatal($"Exception occurred {e}");
+                var response = new Response
+                {
+                    Message = $"Exception occured {e}"
+                };
+                //                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(response);
             }
         }      
@@ -225,10 +233,12 @@ namespace UserOperations.Controllers
                     return BadRequest(response);
                 }
 
-                var newAlert = new Alert();
-                newAlert.CreationDate = DateTime.UtcNow;
-                newAlert.ApplicationUserId = applicationUserId;
-                newAlert.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "client does not smile").AlertTypeId;
+                var newAlert = new Alert
+                {
+                    CreationDate = DateTime.UtcNow,
+                    ApplicationUserId = applicationUserId,
+                    AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "client does not smile").AlertTypeId
+                };
                 _context.Alerts.Add(newAlert);
                 _context.SaveChanges();
                 response.Message = "Alert saved";
@@ -236,8 +246,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-//                 _log.Fatal($"Exception occurred {e}");
-                return BadRequest();
+                return BadRequest(e.Message);
             }
         }
     }

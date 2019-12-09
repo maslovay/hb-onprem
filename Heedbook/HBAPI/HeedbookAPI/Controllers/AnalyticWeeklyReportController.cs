@@ -45,14 +45,12 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("User")]
-        public IActionResult User(
-         [FromHeader] string Authorization,
-         [FromQuery(Name = "applicationUserId")] Guid userId
-     )
+        public new IActionResult User(
+            [FromHeader] string Authorization,
+            [FromQuery(Name = "applicationUserId")] Guid userId )
         {
             try
             {
-//                _log.Info("AnalyticWeeklyReport/User started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
 

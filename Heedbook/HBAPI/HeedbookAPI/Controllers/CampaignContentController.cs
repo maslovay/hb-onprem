@@ -42,9 +42,7 @@ namespace UserOperations.Controllers
                 _loginService = loginService;
                 _requestFilters = requestFilters;
             }
-            catch (Exception e)
-            {
-            }
+            catch { }
         }
 
         [HttpGet("Campaign")]
@@ -80,7 +78,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest("Error");
+                return BadRequest("Error "+e.Message);
             }
         }
 
@@ -232,17 +230,17 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var activeStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
+                var activeStatusId = (await _context.Statuss.FirstOrDefaultAsync(x => x.StatusName == "Active")).StatusId;
                 List<Content> contents;
                 if (inActive == true)
-                    contents = _context.Contents.Where(x => x.StatusId == activeStatusId && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))).ToList();
+                    contents = await _context.Contents.Where(x => x.StatusId == activeStatusId && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))).ToListAsync();
                 else
-                    contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToList();
+                    contents = await _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToListAsync();
                 return Ok(contents);
             }
             catch (Exception e)
             {
-                return BadRequest("Error");
+                return BadRequest("Error "+ e.Message);
             }
         }
         [HttpGet("ContentPaginated")]
@@ -266,12 +264,12 @@ namespace UserOperations.Controllers
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var activeStatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
+                var activeStatusId = (await _context.Statuss.FirstOrDefaultAsync(x => x.StatusName == "Active")).StatusId;
                 List<Content> contents;
                 if(inActive == true)
-                    contents = _context.Contents.Where(x => x.StatusId == activeStatusId && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))).ToList();
+                    contents = await _context.Contents.Where(x => x.StatusId == activeStatusId && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))).ToListAsync();
                 else
-                    contents = _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToList();
+                    contents = await _context.Contents.Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)).ToListAsync();
 
                 if(contents.Count == 0) return Ok(contents);
 
@@ -294,7 +292,7 @@ namespace UserOperations.Controllers
             }
             catch (Exception e)
             {
-                return BadRequest("Error");
+                return BadRequest($"Error {e.Message}");
             }
         }
 
@@ -313,7 +311,7 @@ namespace UserOperations.Controllers
             content.UpdateDate = DateTime.UtcNow;
             content.StatusId = _context.Statuss.FirstOrDefault(x => x.StatusName == "Active").StatusId;
             _context.Add(content);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return Ok(content);
         }
 
@@ -372,7 +370,7 @@ namespace UserOperations.Controllers
                 }
             }
             content.StatusId = inactiveStatusId;
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             try
             {
                 _context.RemoveRange(links);

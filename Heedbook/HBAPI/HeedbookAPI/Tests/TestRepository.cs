@@ -32,7 +32,7 @@ namespace UserOperations.Controllers
         private AnalyticCommonProvider analyticCommonProvider;
 
         [GlobalSetup]
-        public void GlobalSetup()
+        public async Task GlobalSetup()
         {
             //    InitServiceProvider();
                 InitServices();
@@ -40,7 +40,7 @@ namespace UserOperations.Controllers
             //_startup = new Startup(_config);
             //_startup.ConfigureServices(_services);
             // 
-            base.Setup(null);
+            await base.Setup(null);
         }
 
         [Params("ca2c3ed7-4b70-46f6-9054-91c49944e5ab")]//, "c9c2648c-58cf-41b3-9ed8-50a66deb8d61", "3a0f9ddb-7385-4c1d-95a3-c94e5b51cc20", "83d47a97-ef60-4b42-8459-40038a71a34f", "7fab0005-63d0-44b5-bbf5-4eda9bcfe4f9")]
@@ -50,7 +50,8 @@ namespace UserOperations.Controllers
         {
             if (_context == null || _repository == null) return;
             analyticCommonProvider = new AnalyticCommonProvider(_repository );
-            analyticCommonProvider.GetDialogueIncludedFramesByIdAsync(new Guid(N));
+            Task t = analyticCommonProvider.GetDialogueIncludedFramesByIdAsync(new Guid(N));
+            t.Wait();
         }
 
         [Benchmark(Description = "GetDialogueIncludedFramesByIdAsync 2")]

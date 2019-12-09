@@ -54,7 +54,7 @@ namespace AudioAnalyseScheduler.Tests
 
 
         [TearDown]
-        public async Task TearDown()
+        public async override Task TearDown()
         {
             await base.TearDown();
             _schedulerProcess.Kill();
@@ -129,7 +129,7 @@ namespace AudioAnalyseScheduler.Tests
             };
             
             _repository.AddOrUpdate(_fileAudioDialogue);
-            _repository.Save();
+            await _repository.SaveAsync();
         }
 
         protected override async Task CleanTestData()

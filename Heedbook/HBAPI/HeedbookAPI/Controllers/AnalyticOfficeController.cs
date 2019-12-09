@@ -17,27 +17,22 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AnalyticOfficeController : Controller
     {
-        private readonly IConfiguration _config;        
+        private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
-        private readonly RecordsContext _context;
         private readonly IDBOperations _dbOperation;
         private readonly IRequestFilters _requestFilters;
         private readonly IAnalyticOfficeProvider _analyticOfficeProvider;
-        // private readonly ElasticClient _log;
 
         public AnalyticOfficeController(
             IConfiguration config,
             ILoginService loginService,
-            //RecordsContext context,
             IDBOperations dbOperation,
             IRequestFilters requestFilters,
             IAnalyticOfficeProvider analyticOfficeProvider
-            // ElasticClient log
             )
         {
             _config = config;
             _loginService = loginService;
-            //_context = context;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _analyticOfficeProvider = analyticOfficeProvider;
@@ -55,7 +50,6 @@ namespace UserOperations.Controllers
         {
             try
             {
-                // _log.Info("AnalyticOffice/Efficiency started");
                 if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
                     return BadRequest("Token wrong");
                 var role = userClaims["role"];
@@ -186,23 +180,22 @@ namespace UserOperations.Controllers
                     More_60 = pauseInMin?.Where(p => p > 60).Sum(),
                     Load = sessTimeMinutes - pauseInMin?.Sum()
                 };
-  
-                var jsonToReturn = new Dictionary<string, object>();
-                jsonToReturn["Workload"] = result;
-                jsonToReturn["DiagramDialogDurationPause"] = diagramDialogDurationPause;
-                jsonToReturn["DiagramEmployeeWorked"] = diagramEmployeeWorked;
-                jsonToReturn["ClientTime"] = clientTime;
-                jsonToReturn["ClientDay"] = clientDay;
-                jsonToReturn["PausesAmount"] = pausesAmount;
-                jsonToReturn["PausesShare"] = pausesShareInSession;
-                jsonToReturn["PausesInMinutes"] = pausesInMinutes;
-                // _log.Info("AnalyticOffice/Efficiency finished");
+
+                var jsonToReturn = new Dictionary<string, object>
+                {
+                    ["Workload"] = result,
+                    ["DiagramDialogDurationPause"] = diagramDialogDurationPause,
+                    ["DiagramEmployeeWorked"] = diagramEmployeeWorked,
+                    ["ClientTime"] = clientTime,
+                    ["ClientDay"] = clientDay,
+                    ["PausesAmount"] = pausesAmount,
+                    ["PausesShare"] = pausesShareInSession,
+                    ["PausesInMinutes"] = pausesInMinutes
+                };
                 return Ok(JsonConvert.SerializeObject(jsonToReturn));
             }
             catch (Exception e)
             {
-                // _log.Fatal($"Exception occurred {e}");
-                System.Console.WriteLine(e.Message);
                 return BadRequest(e);
             }
         }     

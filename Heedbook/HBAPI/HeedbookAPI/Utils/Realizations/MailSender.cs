@@ -27,20 +27,20 @@ namespace UserOperations.Services
             System.Net.Mail.MailAddress from = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail, "Heedbook");
             System.Net.Mail.MailAddress to = new System.Net.Mail.MailAddress(email);
             // create mail object 
-            System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage(from, to);
-            mail.BodyEncoding = System.Text.Encoding.UTF8;
-            mail.IsBodyHtml = true;
-            mail.Subject = messageTitle;
-            mail.Body = text;
+            System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage(from, to)
+            {
+                BodyEncoding = System.Text.Encoding.UTF8,
+                IsBodyHtml = true,
+                Subject = messageTitle,
+                Body = text
+            };
             try
             {
                 _smtpClient.Send(mail);
-                //  _log.Info($"email Sended to {email}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                //  _log.Fatal($"Failed email to {email}{ex.Message}");
             }
         }
 
@@ -76,11 +76,13 @@ namespace UserOperations.Services
             System.Net.Mail.MailAddress from = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail, "Heedbook");
             System.Net.Mail.MailAddress to = new System.Net.Mail.MailAddress(user.Email);
             // create mail object 
-            System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage(from, to);
-            mail.BodyEncoding = System.Text.Encoding.UTF8;
-            mail.IsBodyHtml = true;           
-            mail.Subject = subject;
-            mail.Body = htmlBody;
+            System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage(from, to)
+            {
+                BodyEncoding = System.Text.Encoding.UTF8,
+                IsBodyHtml = true,
+                Subject = subject,
+                Body = htmlBody
+            };
             try
             {
                 _smtpClient.Send(mail);

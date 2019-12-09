@@ -28,7 +28,7 @@ namespace ApiTests
     {
         protected Mock<IGenericRepository> genericRepository;
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {
             base.Setup();
             genericRepository = new Mock<IGenericRepository>();

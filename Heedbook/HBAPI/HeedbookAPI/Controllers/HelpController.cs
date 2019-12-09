@@ -136,7 +136,7 @@ namespace UserOperations.Controllers
         }
         //----PART 1---
         [HttpGet("FindTheSessionInSession")]
-        public async Task<IActionResult> FindTheSessionInSession()
+        public IActionResult FindTheSessionInSession()
         {
             var dateEnd = new DateTime(2019, 11, 01);
             var date = new DateTime(2019, 01, 01);
@@ -168,7 +168,7 @@ namespace UserOperations.Controllers
         }
         //---STEP 2---
         [HttpGet("FindTheSessionsOneOnAnother")]
-        public async Task<IActionResult> FindTheSessionsOneOnAnother()
+        public IActionResult FindTheSessionsOneOnAnother()
         {
             var dateEnd = new DateTime(2019, 11, 01);
             var date = new DateTime(2019, 01, 01);
@@ -198,12 +198,12 @@ namespace UserOperations.Controllers
             return Ok(counterInSes);
         }
         [HttpGet("FindDialoguesWithoutSessions")]
-        public async Task<IActionResult> FindDialoguesWithoutSessions()
+        public IActionResult FindDialoguesWithoutSessions()
         {
             var date = new DateTime(2019, 01, 01);
             var users = _context.ApplicationUsers.Include(x => x.Dialogue).Include(x => x.Session).OrderBy(x => x.CreationDate).ToList();
             int counter = 0;
-            var userC = 0;
+            //var userC = 0;
             foreach (var user in users)
             {
                     var dialogues = user.Dialogue.Where(x => x.StatusId == 3 && x.InStatistic == true).OrderBy(x => x.BegTime).ToList();
@@ -253,6 +253,7 @@ namespace UserOperations.Controllers
             _context.SaveChanges();
             return Ok(counter);
         }
+
         [HttpGet("ClientAvatarMaker")]
         public async Task<IActionResult> ClientAvatarMaker(
                  //[ FromQuery(Name = "take")] int take,
@@ -267,7 +268,7 @@ namespace UserOperations.Controllers
             //var users = _context.ApplicationUsers.Skip(start).Take(take).Select(x => x.Id).ToList();
             //foreach (var ApplicationUserId in users)
             //{
-            int existCounter = 0;
+            //int existCounter = 0;
             int noFrames = 0;
             DateTime dateEnd = new DateTime(2019, 09, 21);
             DateTime dateBeg = new DateTime(2019, 08, 01);
@@ -339,7 +340,7 @@ namespace UserOperations.Controllers
                     Directory.Delete(sessionDir, true);
                     counter200++;
                 }
-                catch (Exception ex)
+                catch
                 {
                     counter500++;
                 }
@@ -504,7 +505,7 @@ namespace UserOperations.Controllers
         //    return Ok();
         //}
         [HttpGet("CheckSessions")]
-        public async Task<IActionResult> CheckSessions()
+        public IActionResult CheckSessions()
         {
             var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
             var grouping = sessions.GroupBy(x => x.ApplicationUserId);
@@ -535,7 +536,7 @@ namespace UserOperations.Controllers
             return Ok();
         }
         [HttpGet("CheckDialogues2")]
-        public async Task<IActionResult> CheckDialogues2()
+        public IActionResult CheckDialogues2()
         {
             var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
             var dialogues = _context.Dialogues.Where(x => x.StatusId == 3 && x.InStatistic == true).ToList();
@@ -563,7 +564,7 @@ namespace UserOperations.Controllers
             return Ok(counter);
         }
         [HttpGet("CheckDialogues")]
-        public async Task<IActionResult> CheckDialogues()
+        public IActionResult CheckDialogues()
         {
             var sessions = _context.Sessions.Where(x => x.StatusId == 7).ToList();
             var dialogues = _context.Dialogues.Where(x => x.StatusId == 3).ToList();
@@ -658,15 +659,6 @@ namespace UserOperations.Controllers
             return Ok();
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult> Test5()
-        {
-            string id = (string)RouteData.Values["id"];
-            var dialogs = _repository.GetWithInclude<Dialogue>(
-                d => d.StatusId == 3 && d.LanguageId==2);
-
-            return Ok(dialogs.Count());
-        }
 
         [HttpGet("phrase")]
         public IActionResult Phrase()

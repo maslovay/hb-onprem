@@ -170,10 +170,12 @@ namespace UserOperations.Controllers
                 }
 
 
-                var responseContent = new List<object>();
-                responseContent.Add(new { campaigns = campaignsList });
-                responseContent.Add(new { htmlRaws = htmlList2 });
-                responseContent.Add(new { blobMedia = media });
+                var responseContent = new List<object>
+                {
+                    new { campaigns = campaignsList },
+                    new { htmlRaws = htmlList2 },
+                    new { blobMedia = media }
+                };
                 return Ok(responseContent);
             }
             catch (Exception e)
@@ -194,11 +196,11 @@ namespace UserOperations.Controllers
                 answer.Time = DateTime.UtcNow;
                 await _context.AddAsync(answer);
                 await _context.SaveChangesAsync();
-                return Ok("Saved");       
+                return Ok("Saved");
             }
             catch( Exception e)
             {
-                return BadRequest("Error");
+                return BadRequest("Error "+ e.Message );
             }
         }
     }   

@@ -21,7 +21,7 @@ namespace FillingFrameService
 {
     public class DialogueCreation
     {
-        private readonly ElasticClient _log;
+        //private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly ElasticClientFactory _elasticClientFactory;

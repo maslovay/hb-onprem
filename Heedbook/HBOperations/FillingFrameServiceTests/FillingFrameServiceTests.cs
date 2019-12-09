@@ -24,7 +24,6 @@ namespace FillingFrameService.Tests
         private Startup startup;
         private ResourceManager resourceManager;
         private DialogueCreationRun dialogCreationRunMustExist;
-        private DialogueCreationRun dialogCreationRunIncorrectFilePath;
         private List<FileFrame> fileFrames = new List<FileFrame>(5);
         private Guid TestDialogueId { get; set; }
 
@@ -39,7 +38,7 @@ namespace FillingFrameService.Tests
             }, true);
         }
 
-        public async void TearDown()
+        public async new void TearDown()
         {
             await base.TearDown();
         }

@@ -18,7 +18,7 @@ namespace PersonDetectionService
 {
     public class PersonDetection
     {
-        private readonly ElasticClient _log;
+       //private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly DescriptorCalculations _calc;

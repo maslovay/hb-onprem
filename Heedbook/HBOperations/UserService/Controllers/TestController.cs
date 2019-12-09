@@ -208,9 +208,11 @@ namespace UserService.Controllers
        [HttpGet("[action]")]
        public async Task ResendVideoForFraming(string fileName)
        {
-           var message = new FramesFromVideoRun();
-           message.Path = $"videos/{fileName}";
-           Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
+            var message = new FramesFromVideoRun
+            {
+                Path = $"videos/{fileName}"
+            };
+            Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
            _handler.EventRaised(message);
        }
        [HttpGet("[action]")]

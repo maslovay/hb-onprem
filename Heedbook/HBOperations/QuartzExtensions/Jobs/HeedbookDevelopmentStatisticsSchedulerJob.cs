@@ -16,7 +16,7 @@ namespace QuartzExtensions.Jobs
     {
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
-        private readonly ElasticClient _log;
+        //private readonly ElasticClient _log;
         private readonly SmtpSettings _smtpSettings;
         private readonly SmtpClient _smtpClient;
     

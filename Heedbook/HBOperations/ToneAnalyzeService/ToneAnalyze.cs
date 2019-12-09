@@ -20,7 +20,7 @@ namespace ToneAnalyzeService
     {
         private static String output = "";
         private readonly IConfiguration _configuration;
-        private readonly ElasticClient _log;
+        //private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
         private readonly FFMpegWrapper _wrapper;
