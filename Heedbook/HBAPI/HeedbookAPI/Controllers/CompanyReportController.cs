@@ -136,11 +136,11 @@ namespace UserOperations.Controllers
                         PhrasesPhraseText = JsonConvert.SerializeObject(p.DialoguePhrase.Select(s => new 
                                 {
                                     phraseText = s.Phrase.PhraseText,
-                                    IsClient = s.Phrase.IsClient
+                                    s.Phrase.IsClient
                                 })),
                         WordsWord = JsonConvert.SerializeObject(p.DialogueWord.Select(s => new
                                 {
-                                    Words = s.Words
+                                    s.Words
                                 })),
                         Video = $"{p.DialogueId}.mkv",
                         Avatar = p.DialogueClientProfile.FirstOrDefault(s => s.Avatar != null).Avatar

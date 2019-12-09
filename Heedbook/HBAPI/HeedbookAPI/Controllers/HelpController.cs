@@ -690,7 +690,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("test")]
-        public IActionResult test()
+        public IActionResult Test()
         {
 
             var begTime = DateTime.Now.AddDays(-10);
