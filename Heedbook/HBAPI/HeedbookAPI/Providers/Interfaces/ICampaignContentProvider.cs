@@ -17,5 +17,7 @@ namespace UserOperations.Providers
         List<Content> GetContentsWithActiveStatusId(int activeStatusId, List<Guid> companyIds);
         List<Content> GetContentsWithTemplateIsTrue(List<Guid> companyIds);
         Task SaveChangesAsync();
+        Content GetContent(Guid contentId);
+        Content GetContentWithIncludeCampaignContent(Guid contentId);
     }
 }

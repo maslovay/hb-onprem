@@ -22,22 +22,19 @@ namespace UserOperations.Services
     [ApiController]
     public class CampaignContentService : Controller
     {
-        private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private Dictionary<string, string> userClaims;
         private readonly IRequestFilters _requestFilters;
-        private readonly CampaignContentProvider _campaignContentProvider;
+        private readonly ICampaignContentProvider _campaignContentProvider;
 
         public CampaignContentService(
-            IConfiguration config,
             ILoginService loginService,
             IRequestFilters requestFilters,
-            CampaignContentProvider campaignContentProvider
+            ICampaignContentProvider campaignContentProvider
             )
         {
             try
             {
-                _config = config;
                 _loginService = loginService;
                 _requestFilters = requestFilters;
                 _campaignContentProvider = campaignContentProvider;
@@ -65,16 +62,17 @@ namespace UserOperations.Services
 
                 var statusInactiveId =  _campaignContentProvider.GetStatusId("Inactive");
                 var campaigns = _campaignContentProvider.GetCampaignForCompanys(companyIds, statusInactiveId);
-
-                List<Campaign> result = new List<Campaign>();
-                foreach (var camp in campaigns)
-                {
-                    var campContent = camp.CampaignContents.AsEnumerable();
-                    if (campContent != null && campContent.Count() != 0)
-                        campContent = campContent.Where(x => x.StatusId != statusInactiveId);
-                    camp.CampaignContents = campContent.ToList();
-                    result.Add(camp);
-                }
+                
+                var result = campaigns
+                    .Select(p => 
+                        {
+                            p.CampaignContents = p.CampaignContents.Where(x => p.CampaignContents != null
+                                    && p.CampaignContents.Count != 0
+                                    && x.StatusId != statusInactiveId)
+                                .ToList();
+                            return p;
+                        })
+                    .ToList();
                 return Ok(result);
             }
             catch (Exception e)
@@ -86,9 +84,9 @@ namespace UserOperations.Services
         [HttpPost("Campaign")]
         [SwaggerOperation(Summary = "Create campaign with content", Description = "Create new campaign with content relations and return created one")]
         [SwaggerResponse(200, "New campaign", typeof(CampaignGetModel))]
-        public IActionResult CampaignPost([FromBody,
-                 SwaggerParameter("Send content separately from the campaign", Required = true)] CampaignPutPostModel model,
-                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public IActionResult CampaignPost(
+                [FromBody, SwaggerParameter("Send content separately from the campaign", Required = true)] CampaignPutPostModel model,
+                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             // _log.Info("Campaign POST started");
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
@@ -117,9 +115,10 @@ namespace UserOperations.Services
         [SwaggerOperation(Summary = "Edit campaign with content", Description = "Edit existing campaign. Remove all content relations and create new")]
         [SwaggerResponse(200, "Edited campaign", typeof(CampaignGetModel))]
 
-        public IActionResult CampaignPut([FromBody,
-                SwaggerParameter("Send content separately from the campaign or send CampaignContents:[] if you dont need to change content relations", Required = true)]
-                CampaignPutPostModel model, [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public IActionResult CampaignPut(
+                [FromBody, SwaggerParameter("Send content separately from the campaign or send CampaignContents:[] if you dont need to change content relations", Required = true)]
+                    CampaignPutPostModel model, 
+                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out userClaims)) return BadRequest("Token wrong");
             Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
