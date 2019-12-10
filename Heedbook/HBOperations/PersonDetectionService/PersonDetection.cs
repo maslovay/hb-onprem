@@ -56,11 +56,13 @@ namespace PersonDetectionService
                     curDialogue.PersonId = FindId(curDialogue, dialoguesProceeded);
                     try
                     {
-                        CreateNewClient((Guid)curDialogue.PersonId, curDialogue);
+                        _log.Info($"client { curDialogue.PersonId  } try to create");
+                        CreateNewClient(curDialogue);
+                        _log.Info($"client { curDialogue.PersonId  } created");
                     }
                     catch( Exception ex )
                     {
-                        _log.Info($"client {curDialogue.PersonId} creation error: " + ex.Message);
+                        _log.Error($"client {curDialogue.PersonId} creation error: " + ex.Message);
                     }
                 }
                 _context.SaveChanges();
@@ -86,7 +88,7 @@ namespace PersonDetectionService
 
         }
 
-        public void CreateNewClient(Guid personId, Dialogue curDialogue)
+        public void CreateNewClient(Dialogue curDialogue)
         {
             var company = _context.ApplicationUsers
                             .FirstOrDefault(x => x.Id == curDialogue.ApplicationUserId)
@@ -98,15 +100,15 @@ namespace PersonDetectionService
                             .Where(x => x.StatusName == "Active")
                             .Select(x => x.StatusId)
                             .FirstOrDefault();
-            double[] faceDescr = null;
+            double[] faceDescr = new double[0];
             try
             {
-                faceDescr = Array.ConvertAll(curDialogue.PersonFaceDescriptor.Split(','), s => double.Parse(s));
+                faceDescr = JsonConvert.DeserializeObject<double[]>(curDialogue.PersonFaceDescriptor);
             }
             catch { }
             Client client = new Client
             {
-                ClientId = personId,
+                ClientId = (Guid)curDialogue.PersonId,
                 CompanyId = (Guid)company?.CompanyId,
                 CorporationId = company?.CorporationId,
                 FaceDescriptor = faceDescr,
