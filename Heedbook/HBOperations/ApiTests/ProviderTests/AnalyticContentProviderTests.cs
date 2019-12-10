@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using UserOperations.Providers;
 using HBData.Models;
 using System.Linq;
+using UserOperations.Models.AnalyticModels;
+using System.Collections.Generic;
 
 namespace ApiTests
 {
@@ -44,46 +46,48 @@ namespace ApiTests
             Assert.AreEqual(0, result.Count());
         }
 
-        //[Test]
-        //public async Task GetSlideShowFilteredByPoolTest()
-        //{
-        //    //arrange           
-        //    repositoryMock.Setup(r => r.GetAsQueryable<SlideShowSession>()).Returns(TestData.GetSlideShowSessions());
-        //    var provider = new AnalyticContentProvider(repositoryMock.Object);
+        [Test]
+        public async Task GetSlideShowFilteredByPoolTest()
+        {
+            //arrange           
+            repositoryMock.Setup(r => r.GetAsQueryable<SlideShowSession>()).Returns(TestData.GetSlideShowSessions());
+            var provider = new AnalyticContentProvider(repositoryMock.Object);
 
-        //    // Act
-        //    var result = await provider.GetSlideShowWithDialogueIdFilteredByPoolAsync(
-        //                TestData.begDate, 
-        //                TestData.endDate, 
-        //                TestData.GetCompanyIds(), 
-        //                TestData.GetEmptyList<Guid>().ToList(),
-        //                TestData.GetEmptyList<Guid>().ToList(),
-        //                true);
+            // Act
+            var result = await provider.GetSlideShowWithDialogueIdFilteredByPoolAsync(
+                        TestData.begDate, 
+                        TestData.endDate, 
+                        TestData.GetCompanyIds(), 
+                        TestData.GetEmptyList<Guid>().ToList(),
+                        TestData.GetEmptyList<Guid>().ToList(),
+                        true,
+                        TestData.GetDialogueInfoWithFrames().ToList());
 
-        //    // Assert
-        //    Assert.IsNotNull(result);
-        //    Assert.AreEqual(1, result.Count());
-        //}
-        //[Test]
-        //public async Task GetSlideShowFilteredIsNotPoolTest()
-        //{
-        //    //arrange           
-        //    repositoryMock.Setup(r => r.GetAsQueryable<SlideShowSession>()).Returns(TestData.GetSlideShowSessions());
-        //    var provider = new AnalyticContentProvider(repositoryMock.Object);
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count());
+        }
+        [Test]
+        public async Task GetSlideShowFilteredIsNotPoolTest()
+        {
+            //arrange           
+            repositoryMock.Setup(r => r.GetAsQueryable<SlideShowSession>()).Returns(TestData.GetSlideShowSessions());
+            var provider = new AnalyticContentProvider(repositoryMock.Object);
 
-        //    // Act
-        //    var result = await provider.GetSlideShowWithDialogueIdFilteredByPoolAsync(
-        //              TestData.begDate,
-        //              TestData.endDate,
-        //              TestData.GetCompanyIds(),
-        //              TestData.GetEmptyList<Guid>().ToList(),
-        //              TestData.GetEmptyList<Guid>().ToList(),
-        //              false);
+            // Act
+            var result = await provider.GetSlideShowWithDialogueIdFilteredByPoolAsync(
+                      TestData.begDate,
+                      TestData.endDate,
+                      TestData.GetCompanyIds(),
+                      TestData.GetEmptyList<Guid>().ToList(),
+                      TestData.GetEmptyList<Guid>().ToList(),
+                      false,
+                      TestData.GetDialogueInfoWithFrames().ToList());
 
-        //    // Assert
-        //    Assert.IsNotNull(result);
-        //    Assert.AreEqual(2, result.Count());
-        //}
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(2, result.Count());
+        }
         [Test]
         public async Task GetSlideShowFilteredByPoolIfNullTest()
         {

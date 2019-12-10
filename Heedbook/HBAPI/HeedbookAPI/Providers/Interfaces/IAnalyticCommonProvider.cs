@@ -7,12 +7,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Models.Get.AnalyticServiceQualityController;
 
 namespace UserOperations.Providers
 {
     public interface IAnalyticCommonProvider
     {
-         Task<IEnumerable<SessionInfo>> GetSessionInfoAsync(DateTime begTime, DateTime endTime, 
+         Task<IEnumerable<Models.AnalyticModels.SessionInfo>> GetSessionInfoAsync(DateTime begTime, DateTime endTime, 
              List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null);
 
          IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime, 
@@ -44,7 +45,7 @@ namespace UserOperations.Providers
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds, Guid typeIdLoyalty);
 
-         Task<List<DialogueInfo>> GetDialogueInfos(
+         Task<List<Models.AnalyticModels.DialogueInfo>> GetDialogueInfos(
             DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds);
 
         Task<List<ApplicationUser>> GetEmployees(DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null);

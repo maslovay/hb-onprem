@@ -35,7 +35,7 @@ namespace ApiTests
             commonProviderMock.Setup(p => p.GetDialogueIncludedFramesByIdAsync(It.IsAny<Guid>()))
                 .Returns(Task.FromResult(new Dialogue(){DialogueFrame = new List<DialogueFrame>(){new DialogueFrame()}}));
 
-            var analyticContentController = new AnalyticContentController(
+            var analyticContentController = new AnalyticContentService(
                 analyticContentProviderMock.Object,
                 commonProviderMock.Object,
                 helpProvider.Object,
@@ -66,7 +66,7 @@ namespace ApiTests
                 It.IsAny<List<Guid>>()))
                 .Returns(Task.FromResult( TestData.GetDialogueInfoWithFrames().ToList()));
                 
-            var analyticContentController = new AnalyticContentController(
+            var analyticContentController = new AnalyticContentService(
                 analyticContentProviderMock.Object,
                 commonProviderMock.Object,
                 helpProvider.Object,
@@ -106,7 +106,7 @@ namespace ApiTests
                     new DialogueInfoWithFrames(){BegTime = new DateTime(), EndTime = new DateTime()}
                 }));
                 
-            var analyticContentController = new AnalyticContentController(
+            var analyticContentController = new AnalyticContentService(
                 analyticContentProviderMock.Object,
                 commonProviderMock.Object,
                 helpProvider.Object,
@@ -131,14 +131,15 @@ namespace ApiTests
             moqIAnalyticContentProvider.Setup(p => p.GetSlideShowsForOneDialogueAsync(It.IsAny<Dialogue>()))
                 .Returns(Task.FromResult( TestData.GetSlideShowInfosSimple() ));
 
-            //moqIAnalyticContentProvider.Setup(p => p.GetSlideShowWithDialogueIdFilteredByPoolAsync(
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<List<Guid>>(),
-            //        It.IsAny<List<Guid>>(),
-            //        It.IsAny<List<Guid>>(),
-            //        It.IsAny<bool>()))
-            //    .Returns(Task.FromResult(TestData.GetSlideShowInfosSimple()));
+            moqIAnalyticContentProvider.Setup(p => p.GetSlideShowWithDialogueIdFilteredByPoolAsync(
+                    It.IsAny<DateTime>(),
+                    It.IsAny<DateTime>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<List<Guid>>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<List<DialogueInfoWithFrames>>()))
+                .Returns(Task.FromResult(TestData.GetSlideShowInfosSimple()));
 
             moqIAnalyticContentProvider.Setup(p => p.GetAnswersInOneDialogueAsync(
                     It.IsAny<List<SlideShowInfo>>(),

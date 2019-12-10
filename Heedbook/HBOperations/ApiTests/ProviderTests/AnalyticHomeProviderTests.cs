@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 using System.Threading;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Models.Get;
 
 namespace ApiTests
 {

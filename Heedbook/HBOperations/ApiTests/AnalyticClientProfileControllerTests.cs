@@ -6,10 +6,11 @@ using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
+using UserOperations.Services;
 
 namespace ApiTests
 {
-    public class AnalyticClientProfileControllerTests : ApiServiceTest
+    public class AnalyticClientProfileServiceTests : ApiServiceTest
     {   
         [SetUp]
         public new void Setup()
@@ -40,7 +41,7 @@ namespace ApiTests
                     It.IsAny<List<Guid>>()))
                 .Returns(dialogues);
             
-            var analyticClientProfileController = new AnalyticClientProfileController(
+            var analyticClientProfileController = new AnalyticClientProfileService(
                 commonProviderMock.Object,
                 moqILoginService.Object, 
                 dbOperationMock.Object, 
