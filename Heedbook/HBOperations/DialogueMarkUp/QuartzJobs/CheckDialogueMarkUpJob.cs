@@ -23,7 +23,7 @@ namespace DialogueMarkUp.QuartzJobs
 {
     public class CheckDialogueMarkUpJob : IJob
     {
-        private readonly ElasticClient _log;
+        //private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly INotificationPublisher _publisher;
         private readonly ElasticClientFactory _elasticClientFactory;
@@ -263,15 +263,17 @@ namespace DialogueMarkUp.QuartzJobs
                             takeVideos = j - i + 1;
                         }
                     }
-                    var markUpTmp = new MarkUp();
-                    markUpTmp.ApplicationUserId = markUp.ApplicationUserId;
-                    markUpTmp.FaceId = markUp.FaceId;
-                    markUpTmp.BegTime = videos[i].BegTime;
-                    markUpTmp.EndTime = videos[i + takeVideos - 1].EndTime;
-                    markUpTmp.FileNames = markUp.FileNames.Where(p => p.Time >= videos[i].BegTime && p.Time <= videos[i + takeVideos -1].EndTime).ToList();
-                    markUpTmp.Descriptor = markUp.Descriptor;
-                    markUpTmp.Gender = markUp.Gender;
-                    markUpTmp.Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList();
+                    var markUpTmp = new MarkUp
+                    {
+                        ApplicationUserId = markUp.ApplicationUserId,
+                        FaceId = markUp.FaceId,
+                        BegTime = videos[i].BegTime,
+                        EndTime = videos[i + takeVideos - 1].EndTime,
+                        FileNames = markUp.FileNames.Where(p => p.Time >= videos[i].BegTime && p.Time <= videos[i + takeVideos - 1].EndTime).ToList(),
+                        Descriptor = markUp.Descriptor,
+                        Gender = markUp.Gender,
+                        Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList()
+                    };
                     updatedMarkUp.Add(markUpTmp);
                     log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)}, Index value - {i},  ");
                     i += takeVideos;

@@ -123,7 +123,7 @@ namespace ApiTests
                 .Returns(TestData.User1());
             accountProviderMock.Setup(p => p.GetUserIncludeCompany(It.IsAny<Guid>(), It.IsAny<AccountAuthorization>()))
                 .Returns(TestData.User1());
-            accountProviderMock.Setup(p => p.RemoveAccount("email"))
+            accountProviderMock.Setup(p => p.RemoveAccountWithSave("email"))
                 .Callback(() => {});
         }
         public void InitMockIHelpProvider()

@@ -290,6 +290,66 @@ namespace UserOperations.Migrations
                     b.ToTable("CatalogueHints");
                 });
 
+            modelBuilder.Entity("HBData.Models.Client", b =>
+                {
+                    b.Property<Guid>("ClientId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("Age");
+
+                    b.Property<string>("Avatar");
+
+                    b.Property<Guid>("CompanyId");
+
+                    b.Property<Guid?>("CorporationId");
+
+                    b.Property<string>("Email");
+
+                    b.Property<double[]>("FaceDescriptor");
+
+                    b.Property<int>("GenderId");
+
+                    b.Property<string>("Name");
+
+                    b.Property<string>("Phone");
+
+                    b.Property<int?>("StatusId");
+
+                    b.HasKey("ClientId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("CorporationId");
+
+                    b.HasIndex("StatusId");
+
+                    b.ToTable("Clients");
+                });
+
+            modelBuilder.Entity("HBData.Models.ClientNote", b =>
+                {
+                    b.Property<Guid>("ClientNoteId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid?>("ApplicationUserId");
+
+                    b.Property<Guid>("ClientId");
+
+                    b.Property<DateTime>("CreationDate");
+
+                    b.Property<string[]>("Tags");
+
+                    b.Property<string>("Text");
+
+                    b.HasKey("ClientNoteId");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("ClientId");
+
+                    b.ToTable("ClientNotes");
+                });
+
             modelBuilder.Entity("HBData.Models.Company", b =>
                 {
                     b.Property<Guid>("CompanyId")
@@ -1512,6 +1572,34 @@ namespace UserOperations.Migrations
                     b.HasOne("HBData.Models.CampaignContent", "CampaignContent")
                         .WithMany()
                         .HasForeignKey("CampaignContentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("HBData.Models.Client", b =>
+                {
+                    b.HasOne("HBData.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("HBData.Models.Corporation", "Corporation")
+                        .WithMany()
+                        .HasForeignKey("CorporationId");
+
+                    b.HasOne("HBData.Models.Status", "Status")
+                        .WithMany()
+                        .HasForeignKey("StatusId");
+                });
+
+            modelBuilder.Entity("HBData.Models.ClientNote", b =>
+                {
+                    b.HasOne("HBData.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.HasOne("HBData.Models.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

@@ -18,7 +18,6 @@ namespace FillingSatisfactionService.Tests
 {
     public class FillingSatisfactionServiceTests : ServiceTest
     {
-        private IGenericRepository _repository;
         private FillingSatisfaction _fillingSatisfactionService;
         private Startup startup;
         private Dialogue dialog;

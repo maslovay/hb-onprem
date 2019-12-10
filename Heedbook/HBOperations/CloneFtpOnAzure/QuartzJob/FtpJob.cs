@@ -18,10 +18,9 @@ namespace CloneFtpOnAzure
     public class FtpJob : IJob
     {
         private SftpClient _sftpClient;
-        private BlobController _blobController;
+        private readonly BlobController _blobController;
         private readonly ElasticClientFactory _elasticClientFactory;
-        private StorageAccInfo _storageAccInfo;
-        private RecordsContext _context;
+        private readonly StorageAccInfo _storageAccInfo;
         private readonly IServiceScopeFactory _scopeFactory;
         private IConfiguration _configuration;
 

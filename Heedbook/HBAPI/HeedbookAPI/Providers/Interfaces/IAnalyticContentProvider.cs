@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UserOperations.Models.AnalyticModels;
+using UserOperations.Models.Get.AnalyticContentController;
 
 namespace UserOperations.Providers
 {
@@ -36,5 +36,18 @@ namespace UserOperations.Providers
         EmotionAttention EmotionsDuringAdv(List<SlideShowInfo> shows);
 
         EmotionAttention EmotionDuringAdvOneDialogue(List<SlideShowInfo> shows, List<DialogueFrame> frames);
+        Task<List<DialogueInfoWithFrames>> GetDialoguesInfoWithFramesAsync(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds);
+        Task<List<DialogueInfo>> GetDialogueInfos(
+            DateTime begTime, 
+            DateTime endTime, 
+            List<Guid> companyIds, 
+            List<Guid> applicationUserIds, 
+            List<Guid> workerTypeIds);
+        Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId);
     }
 }

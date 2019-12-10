@@ -19,7 +19,7 @@ namespace DialogueStatusCheckerScheduler.Tests
         private Process _schedulerProcess;
         private StubService _stubService;
         private Dialogue _testDialog;
-        private FileAudioDialogue _fileAudioDialogue;
+        private readonly FileAudioDialogue _fileAudioDialogue;
         private INotificationPublisher _publisher;
         
         [SetUp]
@@ -50,7 +50,7 @@ namespace DialogueStatusCheckerScheduler.Tests
         }
 
         [TearDown]
-        public async Task TearDown()
+        public async new Task TearDown()
         {
             await base.TearDown();
             StopServices();

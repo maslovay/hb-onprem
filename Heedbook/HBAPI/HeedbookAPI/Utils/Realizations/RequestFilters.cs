@@ -88,20 +88,19 @@ namespace UserOperations.Utils
 
         public void CheckRolesAndChangeCompaniesInFilter(ref List<Guid> companyIdsInFilter, List<Guid> corporationIdsInFilter, string role, Guid companyIdInToken)
         {
-            List<Guid> companyIdsForResult = companyIdsInFilter;
             //--- admin can view any companies in any corporation
             if (role == "Admin")
             {
                 //---take all companyIds in filter or all company ids in corporations
-                if (!companyIdsForResult.Any() && !corporationIdsInFilter.Any())
+                if (!companyIdsInFilter.Any() && !corporationIdsInFilter.Any())
                 {
-                    companyIdsForResult = _context.Companys
+                    companyIdsInFilter = _context.Companys
                         //.Where(x => x.StatusId == 3)
                         .Select(x => x.CompanyId).ToList();
                 }
-                else if (!companyIdsForResult.Any())
+                else if (!companyIdsInFilter.Any())
                 {
-                    companyIdsForResult = _context.Companys
+                    companyIdsInFilter = _context.Companys
                         .Where(x => corporationIdsInFilter.Contains((Guid)x.CorporationId))
                         .Select(x => x.CompanyId).ToList();
                 }
@@ -109,22 +108,25 @@ namespace UserOperations.Utils
             //--- supervisor can view companies from filter or companies from own corporation -------
             else if (role == "Supervisor")
             {
-                if (!companyIdsForResult.Any())//--- if filter by companies not set ---
+                if (!companyIdsInFilter.Any())//--- if filter by companies not set ---
                 {//--- select own corporation
-                    var corporation = _context.Companys.Include(x => x.Corporation).Where(x => x.CompanyId == companyIdInToken).FirstOrDefault()?.Corporation;
-                    //--- return all companies from own corporation
-                    if (corporation != null)
-                        companyIdsForResult = _context.Companys.Where(x => x.CorporationId == corporation.Id).Select(x => x.CompanyId).ToList();
-                    else
-                        companyIdsForResult = new List<Guid> { companyIdInToken };
+                    companyIdsInFilter = _context.Companys
+                        .Include(p => p.Corporation)
+                        .Where(p => p.CompanyId == companyIdInToken)
+                        .SelectMany(p => _context.Companys.Where(x => p.Corporation != null
+                            && x.CorporationId == p.Corporation.Id)
+                        .Select(x => x.CompanyId))
+                        .ToList();
+                    
+                    if(companyIdsInFilter.Count == 0)
+                        companyIdsInFilter = new List<Guid> { companyIdInToken };
                 }
             }
             //--- for simple user return only for own company
             else
             {
-                companyIdsForResult = new List<Guid> { companyIdInToken };
+                companyIdsInFilter = new List<Guid> { companyIdInToken };
             }
-            companyIdsInFilter = companyIdsForResult;
         }
 
         //---PRIVATE---

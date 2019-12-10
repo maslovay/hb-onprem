@@ -74,7 +74,7 @@ namespace UserOperations.Providers
                 PasswordHash = _loginService.GeneratePasswordHash(message.Password),
                 StatusId = GetStatusId("Active")
             };
-            _repository.Create<ApplicationUser>(user);  
+            await _repository.CreateAsync<ApplicationUser>(user);
             _loginService.SavePasswordHistory(user.Id, user.PasswordHash);
             return user;
         }      
@@ -87,7 +87,7 @@ namespace UserOperations.Providers
                 UserId = user.Id,
                 RoleId = roleId
             };
-            _repository.Create<ApplicationUserRole>(userRole);
+            await _repository.CreateAsync<ApplicationUserRole>(userRole);
         }  
         public async Task<int> GetTariffsAsync(Guid? companyId)
         {
@@ -135,8 +135,7 @@ namespace UserOperations.Providers
                 CompanyId = company.CompanyId,
                 WorkerTypeName = "Employee"
             };
-//                        _log.Info("WorkerTypes created");
-            _repository.Create<WorkerType>(workerType);
+            await _repository.CreateAsync<WorkerType>(workerType);
         }
         public async Task AddContentAndCampaign(Company company)
         {
@@ -194,7 +193,7 @@ namespace UserOperations.Providers
             var user = _repository.GetWithIncludeOne<ApplicationUser>(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper(), o => o.Company);
             return user;
         }
-        public void RemoveAccount(string email)
+        public async Task RemoveAccountWithSave(string email)
         {            
             var user = _repository.GetAsQueryable<ApplicationUser>().FirstOrDefault(p => p.Email == email);
             var company = _repository.GetAsQueryable<Company>().FirstOrDefault(x => x.CompanyId == user.CompanyId);
@@ -240,7 +239,7 @@ namespace UserOperations.Providers
             _repository.Delete<ApplicationUser>(users);
             _repository.Delete<Tariff>(tariff);
             _repository.Delete<Company>(company);
-            _repository.Save();
+            await _repository.SaveAsync();
         }
     }
 }

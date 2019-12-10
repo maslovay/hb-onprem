@@ -88,5 +88,5 @@ namespace UserOperations.Models.AnalyticModels
         public double? LoadIndex { get; set; }
         public double? CrossIndex { get; set; }
     }
-
+    
 }

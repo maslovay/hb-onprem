@@ -126,6 +126,8 @@ namespace HBData
         public DbSet<Alert> Alerts { get; set; }
         public DbSet<TabletAppInfo> TabletAppInfos { get; set; }
         public DbSet<VideoFace> VideoFaces { get; set; }
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<ClientNote> ClientNotes { get; set; }
 
         public DbSet<Benchmark> Benchmarks { get; set; }
         public DbSet<BenchmarkName> BenchmarkNames { get; set; }

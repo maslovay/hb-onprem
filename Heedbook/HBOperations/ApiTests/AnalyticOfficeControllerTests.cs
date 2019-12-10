@@ -43,60 +43,60 @@ namespace ApiTests
                     IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
                 }
             };
-            analyticOfficeProviderMock.Setup(p => p.GetSessionsInfo(
-                It.IsAny<DateTime>(),
-                It.IsAny<DateTime>(),
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>()))
-                .Returns(sessionsInfo);
-            var dialogues = new List<DialogueInfo>()
-            {
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 29, 18, 30, 00), EndTime = new DateTime(2019, 10, 29, 19, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 18, 30, 00), EndTime = new DateTime(2019, 10, 30, 19, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 50, 00), EndTime = new DateTime(2019, 10, 30, 20, 20, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 20, 30, 00), EndTime = new DateTime(2019, 10, 30, 21, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 21, 10, 00), EndTime = new DateTime(2019, 10, 30, 21, 40, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 31, 18, 30, 00), EndTime = new DateTime(2019, 10, 31, 19, 00, 00)},
-                new DialogueInfo(){BegTime = new DateTime(2019, 11, 01, 18, 30, 00), EndTime = new DateTime(2019, 11, 01, 19, 00, 00)}
-            };
-            analyticOfficeProviderMock.Setup(p => p.GetDialoguesInfo(
-                It.IsAny<DateTime>(),
-                It.IsAny<DateTime>(),
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>()))
-                .Returns(dialogues);
-            InitMockILoginService();
-        }
-        [Test]
-        public async Task UserRegister()
-        {
-            //Arrange
-            var controller = new AnalyticOfficeController(
-                configMock.Object,
-                moqILoginService.Object, 
-                dbOperationMock.Object, 
-                filterMock.Object, 
-                analyticOfficeProviderMock.Object);
-            var sessions = await TestData.GetSessions();
+        //    analyticOfficeProviderMock.Setup(p => p.GetSessionsInfo(
+        //        It.IsAny<DateTime>(),
+        //        It.IsAny<DateTime>(),
+        //        It.IsAny<List<Guid>>(),
+        //        It.IsAny<List<Guid>>(),
+        //        It.IsAny<List<Guid>>()))
+        //        .Returns(sessionsInfo);
+        //    var dialogues = new List<DialogueInfo>()
+        //    {
+        //        new DialogueInfo(){BegTime = new DateTime(2019, 10, 29, 18, 30, 00), EndTime = new DateTime(2019, 10, 29, 19, 00, 00)},
+        //        new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 18, 30, 00), EndTime = new DateTime(2019, 10, 30, 19, 00, 00)},
+        //        new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
+        //        new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 50, 00), EndTime = new DateTime(2019, 10, 30, 20, 20, 00)},
+        //        new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00)},
+        //        new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 20, 30, 00), EndTime = new DateTime(2019, 10, 30, 21, 00, 00)},
+        //        new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 21, 10, 00), EndTime = new DateTime(2019, 10, 30, 21, 40, 00)},
+        //        new DialogueInfo(){BegTime = new DateTime(2019, 10, 31, 18, 30, 00), EndTime = new DateTime(2019, 10, 31, 19, 00, 00)},
+        //        new DialogueInfo(){BegTime = new DateTime(2019, 11, 01, 18, 30, 00), EndTime = new DateTime(2019, 11, 01, 19, 00, 00)}
+        //    };
+        //    analyticOfficeProviderMock.Setup(p => p.GetDialoguesInfo(
+        //        It.IsAny<DateTime>(),
+        //        It.IsAny<DateTime>(),
+        //        It.IsAny<List<Guid>>(),
+        //        It.IsAny<List<Guid>>(),
+        //        It.IsAny<List<Guid>>()))
+        //        .Returns(dialogues);
+        //    InitMockILoginService();
+        //}
+        //[Test]
+        //public async Task UserRegister()
+        //{
+        //    //Arrange
+        //    var controller = new AnalyticOfficeController(
+        //        configMock.Object,
+        //        moqILoginService.Object, 
+        //        dbOperationMock.Object, 
+        //        filterMock.Object, 
+        //        analyticOfficeProviderMock.Object);
+        //    var sessions = await TestData.GetSessions();
             
-            //Act
-            var result = controller.Efficiency(
-                TestData.beg, TestData.end,
-                TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(),
-                TestData.token
-            );
+        //    //Act
+        //    var result = controller.Efficiency(
+        //        TestData.beg, TestData.end,
+        //        TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(), TestData.GetGuids(),
+        //        TestData.token
+        //    );
 
-            //Assert
-            var okResult = result as OkObjectResult;
-            Assert.IsNotNull(okResult);
-            Assert.AreEqual(200, okResult.StatusCode);
-            Assert.That(okResult.Value != null);
-            var deserialized = JsonConvert.DeserializeObject<Dictionary<string, object>>(okResult.Value.ToString());
-            Assert.That(deserialized != null);
+        //    //Assert
+        //    var okResult = result as OkObjectResult;
+        //    Assert.IsNotNull(okResult);
+        //    Assert.AreEqual(200, okResult.StatusCode);
+        //    Assert.That(okResult.Value != null);
+        //    var deserialized = JsonConvert.DeserializeObject<Dictionary<string, object>>(okResult.Value.ToString());
+        //    Assert.That(deserialized != null);
         }
     }
 }

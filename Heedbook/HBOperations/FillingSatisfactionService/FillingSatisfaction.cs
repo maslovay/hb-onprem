@@ -20,7 +20,7 @@ namespace FillingSatisfactionService
         private readonly Calculations _calculations;
         private readonly CalculationConfig _config;
         private readonly INotificationPublisher _notificationPublisher;
-        private readonly ElasticClient _log;
+       // private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
 
@@ -56,7 +56,7 @@ namespace FillingSatisfactionService
                     .FirstOrDefault(p => p.DialogueId == dialogueId);
                 var dialogueFrame = dialogue.DialogueFrame;
                 var dialogueAudio = dialogue.DialogueAudio.FirstOrDefault();
-                var positiveTextTone = dialogue.DialogueSpeech.FirstOrDefault() == null ? null : dialogue.DialogueSpeech.FirstOrDefault().PositiveShare;
+                var positiveTextTone = dialogue.DialogueSpeech.FirstOrDefault()?.PositiveShare;
                 var dialogueInterval = dialogue.DialogueInterval;
 
                 // var meetingExpectationsByNN =

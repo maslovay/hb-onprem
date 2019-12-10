@@ -39,8 +39,10 @@ namespace UserService.Controllers
             var users = _context.Dialogues.Where(p => p.BegTime > begTime)
                 .Select(p => p.ApplicationUserId)
                 .ToList();
-            var message = new PersonDetectionRun();
-            message.ApplicationUserIds = users;
+            var message = new PersonDetectionRun
+            {
+                ApplicationUserIds = users
+            };
             _handler.EventRaised(message);
         }
     }

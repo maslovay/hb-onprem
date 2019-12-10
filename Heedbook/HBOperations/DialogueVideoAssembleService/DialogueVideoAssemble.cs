@@ -22,7 +22,7 @@ namespace DialogueVideoAssembleService
     public class DialogueVideoAssemble
     {
         private readonly string _sessionId = new PathClient().GenSessionId();
-        private readonly ElasticClient _log;
+       // private readonly ElasticClient _log;
         private readonly INotificationPublisher _notificationPublisher;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;

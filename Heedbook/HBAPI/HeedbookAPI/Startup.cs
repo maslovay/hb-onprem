@@ -14,13 +14,19 @@ using UserOperations.Services;
 using HBLib.Utils;
 using HBLib;
 using UserOperations.Utils;
-using BenchmarkDotNet.Running;
 using UserOperations.Services.Scheduler;
 using Quartz;
 using UserOperations.Providers;
 using UserOperations.Providers.Interfaces;
 using UserOperations.Providers.Realizations;
-using UserOperations.Controllers;
+using UserOperations.Utils.AnalyticHomeUtils;
+using UserOperations.Utils.AnalyticContentUtils;
+using UserOperations.Utils.AnalyticOfficeUtils;
+using UserOperations.Utils.AnalyticRatingUtils;
+using UserOperations.Utils.AnalyticReportUtils;
+using UserOperations.Utils.AnalyticServiceQualityUtils;
+using UserOperations.Utils.AnalyticSpeechController;
+using UserOperations.Utils.AnalyticWeeklyReportController;
 
 namespace UserOperations
 {
@@ -61,15 +67,40 @@ namespace UserOperations
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped(typeof(ILoginService), typeof(LoginService));
             services.AddScoped<IMailSender, MailSender>();
+            services.AddScoped<IAnalyticClientProfileProvider, AnalyticClientProfileProvider>();
             services.AddScoped<IAnalyticContentProvider, AnalyticContentProvider>();
             services.AddScoped<IAnalyticCommonProvider, AnalyticCommonProvider>();
             services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();
+            services.AddScoped<IAnalyticOfficeProvider, AnalyticOfficeProvider>();
+            services.AddScoped<IAnalyticRatingProvider, AnalyticRatingProvider>();
+            services.AddScoped<IAnalyticServiceQualityProvider, AnalyticServiceQualityProvider>();
+            services.AddScoped<IAnalyticSpeechProvider, AnalyticSpeechProvider>();
+            services.AddScoped<IAnalyticWeeklyReportProvider, AnalyticWeeklyReportProvider>();
             services.AddScoped<IAccountProvider, AccountProvider>();
             services.AddScoped<IHelpProvider, HelpProvider>();
             services.AddScoped<IUserProvider, UserProvider>();
-            services.AddScoped<IPhraseProvider, PhraseProvider>();
-            services.AddScoped<IAnalyticOfficeProvider, AnalyticOfficeProvider>();
+            services.AddScoped<IPhraseProvider, PhraseProvider>();            
             services.AddScoped(typeof(IAnalyticReportProvider), typeof(AnalyticReportProvider));
+
+            services.AddScoped<AnalyticClientProfileService>();
+            services.AddScoped<AnalyticContentService>();
+            services.AddScoped<AnalyticHomeService>();
+            services.AddScoped<AnalyticOfficeService>();
+            services.AddScoped<AnalyticRatingService>();
+            services.AddScoped<AnalyticReportService>();
+            services.AddScoped<AnalyticServiceQualityService>();
+            services.AddScoped<AnalyticSpeechService>();
+            services.AddScoped<AnalyticWeeklyReportService>();
+            services.AddScoped<CampaignContentService>();
+
+            services.AddScoped<AnalyticHomeUtils>();
+            services.AddScoped<AnalyticContentUtils>();
+            services.AddScoped<AnalyticOfficeUtils>();
+            services.AddScoped<AnalyticRatingUtils>();
+            services.AddScoped<AnalyticReportUtils>();
+            services.AddScoped<AnalyticServiceQualityUtils>();
+            services.AddScoped<AnalyticSpeechUtils>();
+            services.AddScoped<AnalyticWeeklyReportUtils>();
 
             services.AddSwaggerGen(c =>
             {

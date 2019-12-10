@@ -20,7 +20,7 @@ namespace ApiTests
     public class AccountProviderTests : ApiServiceTest
     {
         [SetUp]
-        public void Setup()
+        public new void Setup()
         {
             base.Setup();
         }
@@ -334,7 +334,9 @@ namespace ApiTests
 
             //Act
             var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);
-            accountProvider.RemoveAccount(users.FirstOrDefault().Email);
+            Task t = accountProvider.RemoveAccountWithSave(users.FirstOrDefault().Email);
+            t.Start();
+            t.Wait();
 
             //Assert
             Assert.AreEqual(basePasswordHistory.Count, 0);

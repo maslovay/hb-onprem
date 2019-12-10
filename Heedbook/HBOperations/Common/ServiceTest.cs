@@ -71,7 +71,7 @@ namespace Common
                 await PrepareTestData();
         }
 
-        public async Task TearDown()
+        public async virtual Task TearDown()
         {
             PublishResults();
             await CleanTestData();

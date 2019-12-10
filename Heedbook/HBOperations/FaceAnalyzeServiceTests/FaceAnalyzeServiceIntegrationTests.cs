@@ -33,7 +33,7 @@ namespace FaceAnalyzeService.Tests
         }
 
         [TearDown]
-        public async Task TearDown() => await base.TearDown();
+        public async new Task TearDown() => await base.TearDown();
 
         protected override async Task PrepareTestData()
         {

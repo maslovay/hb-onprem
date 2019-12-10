@@ -16,15 +16,15 @@ namespace UserOperations.Providers
     {
         private readonly IGenericRepository _repository;
         private readonly ILoginService _loginService;
-        private readonly int activeStatus;
-        private readonly int disabledStatus;
+        //private readonly int activeStatus;
+        //private readonly int disabledStatus;
 
         public PhraseProvider(IGenericRepository repository, ILoginService loginService)
         {
             _repository = repository;
             _loginService = loginService;
-            activeStatus = 3;
-            disabledStatus = 4;
+            //activeStatus = 3;
+            //disabledStatus = 4;
         }
 
         public async Task<List<Guid>> GetPhraseIdsByCompanyIdAsync(Guid companyIdInToken, string languageId, bool isTemplate)

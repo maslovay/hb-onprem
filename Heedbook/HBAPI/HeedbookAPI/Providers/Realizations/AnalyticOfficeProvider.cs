@@ -2,15 +2,13 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using HBData;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using Microsoft.EntityFrameworkCore;
-using UserOperations.AccountModels;
 using UserOperations.Services;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using UserOperations.Models.AnalyticModels;
+using UserOperations.Models.Get.AnalyticOfficeController;
 using HBData.Repository;
+using HBData.Models;
 
 namespace UserOperations.Providers
 {
@@ -20,8 +18,7 @@ namespace UserOperations.Providers
         private readonly ILoginService _loginService;
         public AnalyticOfficeProvider(
             ILoginService loginService,
-            IGenericRepository repository
-        )
+            IGenericRepository repository)
         {
             _loginService = loginService;
             _repository = repository;

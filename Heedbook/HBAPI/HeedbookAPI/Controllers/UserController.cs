@@ -17,7 +17,6 @@ using UserOperations.Services;
 using UserOperations.Utils;
 using System.Reflection;
 using UserOperations.Models;
-using System.Transactions;
 using UserOperations.Providers;
 
 namespace UserOperations.Controllers
@@ -39,7 +38,7 @@ namespace UserOperations.Controllers
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
         private readonly int activeStatus;
-        private readonly int disabledStatus;
+        //private readonly int disabledStatus;
 
         public UserController(
             IConfiguration config,
@@ -62,7 +61,7 @@ namespace UserOperations.Controllers
             _mailSender = mailSender;
             _containerName = "useravatars";
             activeStatus = 3;
-            disabledStatus = 4;
+            //disabledStatus = 4;
             _smtpSetting = smtpSetting;
             _smtpClient = smtpClient;
             _userProvider = userProvider;
@@ -218,7 +217,7 @@ namespace UserOperations.Controllers
                 }
                 if (user.Avatar != null)
                 {
-                    avatarUrl = _sftpClient.GetFileLink(_containerName, user.Avatar, default(DateTime)).path;
+                    avatarUrl = _sftpClient.GetFileLink(_containerName, user.Avatar, default).path;
                 }
                 _context.SaveChanges();
                 return Ok(new UserModel(user, avatarUrl, newRole));
@@ -479,7 +478,7 @@ namespace UserOperations.Controllers
                 var answer = await _phraseProvider.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase, companyId);
                 return Ok(answer);
             }
-            catch (Exception e)
+            catch
             {
                 return BadRequest("Deleted from PhraseCompany. Phrase has relations");
             }
@@ -835,10 +834,10 @@ namespace UserOperations.Controllers
                             )
                     .Select(p => new
                     {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
+                        p.DialogueId,
+                        p.ApplicationUserId,
+                        p.BegTime,
+                        p.EndTime,
                     }).ToList();
 
             var alerts = _context.Alerts
@@ -867,7 +866,7 @@ namespace UserOperations.Controllers
         [HttpPost("VideoMessage")]
         [SwaggerOperation(Summary = "SendVideoMessageToManager",
                 Description = "Send video messgae to office manager")]
-        public async Task<IActionResult> SendVideo(
+        public IActionResult SendVideo(
                     [FromForm, SwaggerParameter("json message with key 'data' in FormData")] IFormCollection formData,
                     [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
@@ -880,8 +879,7 @@ namespace UserOperations.Controllers
                 VideoMessage message = JsonConvert.DeserializeObject<VideoMessage>(userDataJson);  
 
                 var companyIdFromToken = Guid.Parse(userClaims["companyId"]);
-                Guid corporationIdFromToken;
-                var corporationIdExist = Guid.TryParse(userClaims["corporationId"], out corporationIdFromToken);
+                var corporationIdExist = Guid.TryParse(userClaims["corporationId"], out Guid corporationIdFromToken);
                 var roleFromToken = userClaims["role"];
                 var empployeeIdFromToken = Guid.Parse(userClaims["applicationUserId"]);
                 var user = _context.ApplicationUsers.First(p => p.Id == empployeeIdFromToken);
@@ -910,13 +908,15 @@ namespace UserOperations.Controllers
 
                 if (formData.Files.Count != 0 && recepients != null && recepients.Count != 0)
                 {
-                    var mail = new System.Net.Mail.MailMessage();
-                    mail.From = new System.Net.Mail.MailAddress(_smtpSetting.FromEmail);     
-                    mail.Subject =user.FullName + " - " + message.Subject;
-                    mail.Body = message.Body;
-                    mail.IsBodyHtml = false;
+                    var mail = new System.Net.Mail.MailMessage
+                    {
+                        From = new System.Net.Mail.MailAddress(_smtpSetting.FromEmail),
+                        Subject = user.FullName + " - " + message.Subject,
+                        Body = message.Body,
+                        IsBodyHtml = false
+                    };
 
-                    foreach(var r in recepients)
+                    foreach (var r in recepients)
                     {
                         mail.To.Add(r.Email);
                     }

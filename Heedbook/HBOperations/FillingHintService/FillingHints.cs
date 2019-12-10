@@ -18,7 +18,7 @@ namespace FillingHintService
 {
     public class FillingHints
     {
-        private readonly ElasticClient _log;
+        //private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly ElasticClientFactory _elasticClientFactory;
         private RecordsContext _context;

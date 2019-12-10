@@ -160,7 +160,7 @@ namespace UserOperations.Controllers
                 var user = _accountProvider.GetUserIncludeCompany(email);
                 if (user == null) return BadRequest("No such user");
                 user.PasswordHash = _loginService.GeneratePasswordHash("Test_User12345");                  
-                _accountProvider.SaveChanges();
+                await _accountProvider.SaveChangesAsync();
                 return Ok("password changed");
             }
             catch (Exception e)
@@ -187,7 +187,7 @@ namespace UserOperations.Controllers
                      "<tr><td>login:</td><td> {0}</td></tr>" +
                      "<tr><td>password:</td><td> {1}</td></tr>" +
                      "</table>", user.Email, password);
-                    _mailSender.SendPasswordChangeEmail(user, text);
+                    await _mailSender.SendPasswordChangeEmail(user, text);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
                     user.StatusId = _accountProvider.GetStatusId("Active");
                     _loginService.SaveErrorLoginHistory(user.Id, "success");
@@ -217,15 +217,12 @@ namespace UserOperations.Controllers
             {
                 try
                 {
-                    _accountProvider.RemoveAccount(email);
+                    await _accountProvider.RemoveAccountWithSave(email);
                     transactionScope.Complete();
-
-//                    _log.Info("Account/remove finished");
                     return Ok("Removed");
                 }
                 catch (Exception e)
                 {
-//                    _log.Fatal($"Exception occurred {e}");
                     return BadRequest(e.Message);
                 }
             }
@@ -233,7 +230,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("[action]")]
-        public async Task AddCompanyDictionary(string fileName)
+        public void AddCompanyDictionary(string fileName)
         {
             _helpProvider.AddComanyPhrases();
         }

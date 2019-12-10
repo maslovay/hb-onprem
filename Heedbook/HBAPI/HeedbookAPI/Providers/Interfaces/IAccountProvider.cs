@@ -27,6 +27,6 @@ namespace UserOperations.Providers
         void SaveChanges();
         ApplicationUser GetUserIncludeCompany(string email);
         ApplicationUser GetUserIncludeCompany(Guid userId, AccountAuthorization message);
-        void RemoveAccount(string email);
+        Task RemoveAccountWithSave(string email);
     }
 }
