@@ -54,8 +54,15 @@ namespace PersonDetectionService
                 {
                     var dialoguesProceeded = dialogues.Where(p => p.ApplicationUserId == curDialogue.ApplicationUserId && p.PersonId != null).ToList();
                     curDialogue.PersonId = FindId(curDialogue, dialoguesProceeded);
+                    try
+                    {
+                        CreateNewClient((Guid)curDialogue.PersonId, curDialogue);
+                    }
+                    catch( Exception ex )
+                    {
+                        _log.Info($"client {curDialogue.PersonId} creation error: " + ex.Message);
+                    }
                 }
-                
                 _context.SaveChanges();
                 _log.Info("Function finished");
             }
@@ -77,6 +84,38 @@ namespace PersonDetectionService
             }
             return Guid.NewGuid();
 
+        }
+
+        public void CreateNewClient(Guid personId, Dialogue curDialogue)
+        {
+            var company = _context.ApplicationUsers
+                            .FirstOrDefault(x => x.Id == curDialogue.ApplicationUserId)
+                            .Company;
+
+            var dialogueClientProfile = _context.DialogueClientProfiles
+                            .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
+            var activeStatusId = _context.Statuss
+                            .Where(x => x.StatusName == "Active")
+                            .Select(x => x.StatusId)
+                            .FirstOrDefault();
+            double[] faceDescr = null;
+            try
+            {
+                faceDescr = Array.ConvertAll(curDialogue.PersonFaceDescriptor.Split(','), s => double.Parse(s));
+            }
+            catch { }
+            Client client = new Client
+            {
+                ClientId = personId,
+                CompanyId = (Guid)company?.CompanyId,
+                CorporationId = company?.CorporationId,
+                FaceDescriptor = faceDescr,
+                Age = (int)dialogueClientProfile?.Age,
+                Avatar = dialogueClientProfile?.Avatar,
+                GenderId = dialogueClientProfile == null? 3 : dialogueClientProfile?.Gender == "male"? 1 : 2,
+                StatusId = activeStatusId
+            };
+            _context.Clients.Add(client);
         }
     }
 }
