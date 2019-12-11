@@ -13,10 +13,11 @@ using System.IO;
 using UserOperations.Models.Get.AnalyticContentController;
 using HBData.Repository;
 using UserOperations.Utils.AnalyticContentUtils;
+using UserOperations.Controllers;
 
 namespace UserOperations.Services
 {
-    public class AnalyticContentService : Controller
+    public class AnalyticContentService
     {
         private readonly IAnalyticContentProvider _analyticContentProvider;
         private readonly IHelpProvider _helpProvider;
@@ -43,18 +44,16 @@ namespace UserOperations.Services
         }
 
 //---FOR ONE DIALOGUE---
-        [HttpGet("ContentShows")]
-        public async Task<IActionResult> ContentShows([FromQuery(Name = "dialogueId")] Guid dialogueId,
-                                                        [FromHeader] string Authorization)
+        public async Task<Dictionary<string, object>> ContentShows([FromQuery(Name = "dialogueId")] Guid dialogueId)
         {
             try
             {
                 // _log.Info("ContentShows/ContentShows started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
+                //if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
+                //    return BadRequest("Token wrong");
 
                 var dialogue = await _analyticContentProvider.GetDialogueIncludedFramesByIdAsync(dialogueId);
-                if (dialogue == null) return BadRequest("No such dialogue");
+                if (dialogue == null) throw new NoFoundException("No such dialogue");
 
                 var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowsForOneDialogueAsync(dialogue);
 
@@ -115,29 +114,23 @@ namespace UserOperations.Services
 
                 jsonToReturn["AnswersInfo"] = answersByContent;
                 jsonToReturn["AnswersAmount"] = slideShowSessionsAll.Where(p => p.IsPoll).Count();
-                return Ok(jsonToReturn);
+                return jsonToReturn;
             }
             catch (Exception e)
             {
-                return BadRequest(e);
+                throw e;
             }
         }
 
-        [HttpGet("Efficiency")]
-        public async Task<IActionResult> Efficiency([FromQuery(Name = "begTime")] string beg,
+        public async Task<object> Efficiency([FromQuery(Name = "begTime")] string beg,
                                                            [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
@@ -193,33 +186,21 @@ namespace UserOperations.Services
                         Female = x.Result.Where(p => p.Gender == "female").Count()
                     }
                     )).ToList()
-                };              
+                };
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
-                return Ok(jsonToReturn);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
+                return jsonToReturn;
         }
 
-        [HttpGet("Poll")]
-        public async Task<IActionResult> Poll([FromQuery(Name = "begTime")] string beg,
+        public async Task<Dictionary<string, object>> Poll([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                      [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                      [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                      [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                     [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                     [FromHeader] string Authorization,
-                                                     [FromQuery(Name = "type")] string type = "json"
+                                                     [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds
                                                      )
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
@@ -252,20 +233,56 @@ namespace UserOperations.Services
                     Conversion = conversion,
                     ContentFullInfo = slideShowInfoGroupByContent
                 };
-
-                if (type != "json")
-                {
-                    MemoryStream excelDocStream = _utils.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList(), $"{begTime.ToShortDateString()}_{endTime.ToShortDateString()}");
-                    excelDocStream.Seek(0, SeekOrigin.Begin);
-                    return File(excelDocStream, "application/octet-stream", "answers.xls");
-                }
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
-                return Ok(jsonToReturn);
-            }
-            catch (Exception e)
+                return jsonToReturn;
+        }
+
+
+        public async Task<MemoryStream> PollFile([FromQuery(Name = "begTime")] string beg,
+                                                    [FromQuery(Name = "endTime")] string end,
+                                                 [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                 [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds
+                                                 )
+        {
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
+            var begTime = _requestFilters.GetBegDate(beg);
+            var endTime = _requestFilters.GetEndDate(end);
+            _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+
+            var dialogues = await _analyticContentProvider.GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+            var slideShowSessionsAll = await _analyticContentProvider
+                .GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, true, dialogues);
+            var answers = await _analyticContentProvider
+                .GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+
+            double conversion = _analyticContentProvider.GetConversion(slideShowSessionsAll.Count(), answers.Count());
+
+            var slideShowInfoGroupByContent = slideShowSessionsAll
+                .GroupBy(p => p.ContentId)
+                .Select(ssh => new AnswerInfo
+                {
+                    Content = ssh.Key.ToString(),
+                    AmountViews = ssh.Count(),
+                    ContentName = ssh.FirstOrDefault().ContentName,
+                    Answers = _analyticContentProvider.GetAnswersForOneContent(answers, ssh.Key),
+                    AnswersAmount = _analyticContentProvider.GetAnswersForOneContent(answers, ssh.Key).Count(),
+                    Conversion = (double)_analyticContentProvider.GetAnswersForOneContent(answers, ssh.Key).Count() / (double)ssh.Count()
+                }).ToList();
+
+            var contentInfo = new
             {
-                return BadRequest(e);
-            }
+                Views = slideShowSessionsAll.Count(),
+                Clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count(),
+                Answers = slideShowInfoGroupByContent.Sum(x => x.AnswersAmount), //answers.Count(),//                    
+                Conversion = conversion,
+                ContentFullInfo = slideShowInfoGroupByContent
+            };
+                MemoryStream excelDocStream = _utils.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList(), $"{begTime.ToShortDateString()}_{endTime.ToShortDateString()}");
+                excelDocStream.Seek(0, SeekOrigin.Begin);
+            return excelDocStream;
         }
     }
 }
