@@ -93,6 +93,7 @@ namespace UserOperations
             services.AddScoped<AnalyticSpeechService>();
             services.AddScoped<AnalyticWeeklyReportService>();
             services.AddScoped<CampaignContentService>();
+            services.AddScoped<CatalogueService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();

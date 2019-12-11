@@ -145,23 +145,40 @@ namespace UserOperations.Services
 
                 if (model.CampaignContents != null && model.CampaignContents.Count != 0)
                 {
-                    foreach (var item in activeCampaignContents)
-                    {
-                        if (!model.CampaignContents.Select(x => x.CampaignContentId).Contains(item.CampaignContentId))
-                        {
-                            item.StatusId = inactiveStatusId;
-                        }
-                    }
-
-                    foreach (var campCont in model.CampaignContents)
-                    {
-                        if (!activeCampaignContents.Select(x => x.CampaignContentId).Contains(campCont.CampaignContentId))
-                        {
-                            campCont.CampaignId = campaignEntity.CampaignId;
-                            campCont.StatusId = activeStatusId;
-                            _campaignContentProvider.AddInBase<CampaignContent>(campCont);
-                        }
-                    }
+                    // foreach (var item in activeCampaignContents)
+                    // {
+                    //     if (!model.CampaignContents.Select(x => x.CampaignContentId).Contains(item.CampaignContentId))
+                    //     {
+                    //         item.StatusId = inactiveStatusId;
+                    //     }
+                    // }
+                    var modelCampaignComtentIds = model.CampaignContents.Select(x => x.CampaignContentId);
+                    activeCampaignContents.Where(p => !modelCampaignComtentIds.Contains(p.CampaignContentId))
+                        .Select(p => 
+                            {
+                                p.StatusId = inactiveStatusId;
+                                return p;
+                            })
+                        .ToList();
+                    // foreach (var campCont in model.CampaignContents)
+                    // {
+                    //     if (!activeCampaignContents.Select(x => x.CampaignContentId).Contains(campCont.CampaignContentId))
+                    //     {
+                    //         campCont.CampaignId = campaignEntity.CampaignId;
+                    //         campCont.StatusId = activeStatusId;
+                    //         _campaignContentProvider.AddInBase<CampaignContent>(campCont);
+                    //     }
+                    // }
+                    var activeCampaignContentsIds = activeCampaignContents.Select(x => x.CampaignContentId);
+                    model.CampaignContents.Where(p => !activeCampaignContentsIds.Contains(p.CampaignContentId))
+                        .Select(p =>
+                            {
+                                p.CampaignId = campaignEntity.CampaignId;
+                                p.StatusId = activeStatusId;
+                                _campaignContentProvider.AddInBase<CampaignContent>(p);
+                                return p;
+                            })
+                        .ToList();
                 }
                 _campaignContentProvider.SaveChanges();
                 campaignEntity.CampaignContents = campaignEntity.CampaignContents.Where(x => x.StatusId != inactiveStatusId).ToList();
