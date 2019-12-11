@@ -58,7 +58,7 @@ namespace UserOperations.Controllers
                                                      [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                      [FromQuery(Name = "type")] string type = "json")
         {
-            if (type != "json")
+            if (type == "json")
             {
                 return Ok(await _analyticContentService.Poll(
                   beg,
