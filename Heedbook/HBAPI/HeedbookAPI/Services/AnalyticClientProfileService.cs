@@ -11,28 +11,30 @@ using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Providers;
 using System.Threading.Tasks;
 using UserOperations.Models.Get.AnalyticClientProfileController;
+using HBData.Repository;
+using HBData.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Services
 {
     public class AnalyticClientProfileService : Controller
     {
-        private readonly IAnalyticClientProfileProvider _analyticClientProfileProvider;
         private readonly ILoginService _loginService;
         private readonly IDBOperations _dbOperation;
         private readonly IRequestFilters _requestFilters;
         private readonly List<AgeBoarder> _ageBoarders;
+        private readonly IGenericRepository _repository;
 
         public AnalyticClientProfileService(
             ILoginService loginService,
             IDBOperations dbOperation,
             IRequestFilters requestFilters,
-            IAnalyticClientProfileProvider analyticClientProfileProvider
+            IGenericRepository repository
             )
         {
             _loginService = loginService;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
-            _analyticClientProfileProvider = analyticClientProfileProvider;
             _ageBoarders = new List<AgeBoarder>{
                 new AgeBoarder{
                     BegAge = 0,
@@ -50,6 +52,7 @@ namespace UserOperations.Services
                     BegAge = 55,
                     EndAge = 100
                 }};
+            _repository = repository;
         }
         public async Task<IActionResult> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
@@ -69,9 +72,9 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 var begYearTime = endTime.AddYears(-1);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
-
-                var persondIdsPerYear = await _analyticClientProfileProvider.GetPersondIdsAsync(begYearTime, begTime, companyIds);
-                var data = _analyticClientProfileProvider.GetDialoguesIncludedClientProfile(begTime, endTime, companyIds, applicationUserIds, workerTypeIds)
+    
+                var persondIdsPerYear = await GetPersondIdsAsync(begYearTime, begTime, companyIds);
+                var data = GetDialoguesIncludedClientProfile(begTime, endTime, companyIds, applicationUserIds, workerTypeIds)
                     .Select(p => new
                     {
                         p.DialogueClientProfile.FirstOrDefault().Age,
@@ -116,6 +119,40 @@ namespace UserOperations.Services
             {
                 return BadRequest(e);
             }
+        }
+        private async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
+        {
+            var persondIds = await GetDialogues(begTime, endTime, companyIds)
+                    .Where ( p => p.PersonId != null )
+                    .Select(p => p.PersonId).Distinct()
+                    .ToListAsyncSafe();
+            return persondIds;
+        }
+        private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        {
+            var data = _repository.GetAsQueryable<Dialogue>()
+                    .Where(p => p.BegTime >= begTime &&
+                        p.EndTime <= endTime &&
+                        p.StatusId == 3 &&
+                        p.InStatistic == true &&
+                        (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))) &&
+                        (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
+                        (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))).AsQueryable();
+            return data;
+        }
+        private IQueryable<Dialogue> GetDialoguesIncludedClientProfile(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
+        {
+            var data = _repository.GetAsQueryable<Dialogue>()
+                .Include(p => p.DialogueClientProfile)
+                .Include(p => p.ApplicationUser)
+                .Where(p => p.BegTime >= begTime &&
+                    p.EndTime <= endTime &&
+                    p.StatusId == 3 &&
+                    p.InStatistic == true &&
+                    (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
+                    (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
+                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
+            return data;
         }
     }
 }
