@@ -27,6 +27,10 @@ using UserOperations.Utils.AnalyticReportUtils;
 using UserOperations.Utils.AnalyticServiceQualityUtils;
 using UserOperations.Utils.AnalyticSpeechController;
 using UserOperations.Utils.AnalyticWeeklyReportController;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Http;
 
 namespace UserOperations
 {
@@ -104,6 +108,8 @@ namespace UserOperations
             services.AddScoped<AnalyticSpeechUtils>();
             services.AddScoped<AnalyticWeeklyReportUtils>();
 
+            services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddSwaggerGen(c =>
             {
                 c.EnableAnnotations();
@@ -160,6 +166,18 @@ namespace UserOperations
             //    var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
             //    return new HbMlHttpClient(settings);
             //});
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidIssuer = Configuration["Tokens:Issuer"],
+                    ValidAudience = Configuration["Tokens:Issuer"],
+                    RequireSignedTokens = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
+                };
+            });
 
             services.AddBenchmarkFillQuartzJob(); //-----------
         }
@@ -176,11 +194,8 @@ namespace UserOperations
             {
                 c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
                 c.RoutePrefix = "api/swagger";
-                // c.DisplayOperationId();
             });
             app.UseAuthentication();
-            // app.UseCors(MyAllowSpecificOrigins);
-            // app.UseHttpsRedirection();
             app.UseMvc();
 
             scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),

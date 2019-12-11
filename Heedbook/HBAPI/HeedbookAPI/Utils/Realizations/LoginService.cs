@@ -20,6 +20,7 @@ using System.Net.Mail;
 using System.Net;
 using HBLib.Utils;
 using HBLib;
+using Microsoft.AspNetCore.Http;
 
 namespace UserOperations.Services
 {
@@ -30,16 +31,20 @@ namespace UserOperations.Services
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private const int PASSWORDS_TO_SAVE = 5;
         private const int ATTEMPT_TO_FAIL_LOG_IN = 5;
 
-        public LoginService(IGenericRepository repository, IConfiguration config, RecordsContext context, SftpClient sftpClient, SftpSettings sftpSettings)
+        public LoginService(IGenericRepository repository, 
+            IConfiguration config, RecordsContext context, SftpClient sftpClient, 
+            SftpSettings sftpSettings, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _config = config;
             _context = context;
             _sftpClient = sftpClient;
             _sftpSettings = sftpSettings;
+            _httpContextAccessor = httpContextAccessor;
         }
         public string GeneratePasswordHash(string password)
         {
@@ -269,8 +274,17 @@ namespace UserOperations.Services
                     pass += c;
             }
             return pass;
-        }   
+        }
+        public Guid GetCurrentCompanyId()
+           => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "companyId")?.Value);
 
+        public Guid GetCurrentUserId()
+            => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "applicationUserId")?.Value);
+
+        public string GetCurrentRoleName()
+        {
+           return _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value;
+        }
         public bool _disposed;
 
         protected virtual void Dispose(bool disposing)

@@ -44,6 +44,8 @@ namespace UserOperations.Controllers
         [HttpPost("Register")]
         [SwaggerOperation(Summary = "Create user, company, trial tariff",
             Description = "Create new active company, new active user, add manager role, create new trial Tariff on 5 days/2 employee and new finished Transaction if no exist")]
+        [SwaggerResponse(400, "Exception message")]
+        [SwaggerResponse(200, "Registred")]
         public async Task<IActionResult> UserRegister([FromBody,
                         SwaggerParameter("User and company data", Required = true)]
                         UserRegister message)
@@ -76,7 +78,6 @@ namespace UserOperations.Controllers
                 }
                 catch (Exception e)
                 {
-                    System.Console.WriteLine($"exception: {e.Message}");
                     return BadRequest(e.Message);
                 }
             }
@@ -93,7 +94,7 @@ namespace UserOperations.Controllers
         {
             try
             {
-                var user = _accountProvider.GetUserIncludeCompany(message.UserName);                
+                var user = _accountProvider.GetUserIncludeCompany(message.UserName);
                 if (user is null) return BadRequest("No such user");
                 //---blocked?
                 if (user.StatusId != _accountProvider.GetStatusId("Active")) return BadRequest("User not activated");
@@ -112,13 +113,14 @@ namespace UserOperations.Controllers
 
         [HttpPost("ChangePassword")]
         [SwaggerOperation(Summary = "two cases", Description = "Change password for user. Receive email. Receive new password for loggined user(with token) or send new password on email")]
+        [SwaggerResponse(400, "No such user / Exception message", typeof(string))]
+        [SwaggerResponse(200, "Password changed")]
         public async Task<IActionResult> UserChangePasswordAsync(
                     [FromBody, SwaggerParameter("email required, password only with token")] AccountAuthorization message,
                     [FromHeader, SwaggerParameter("JWT token not required, if exist receive new password, if not - generate new password", Required = false)] string Authorization)
         {
             try
             {
-//                _log.Info("Account/Change password started");
                 ApplicationUser user = null;
                 //---FOR LOGGINED USER CHANGE PASSWORD WITH INPUT (receive new password in body message.Password)
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
@@ -126,8 +128,6 @@ namespace UserOperations.Controllers
                     var userId = Guid.Parse(userClaims["applicationUserId"]);
                     user = _accountProvider.GetUserIncludeCompany(userId, message);
                     user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
-                    if (!_loginService.SavePasswordHistory(user.Id, user.PasswordHash))//---check 5 last passwords
-                        return BadRequest("password was used");
                 }
                 //---IF USER NOT LOGGINED HE RECEIVE GENERATED PASSWORD ON EMAIL
                 else
@@ -138,67 +138,60 @@ namespace UserOperations.Controllers
                     string password = _loginService.GeneratePass(6);
                     await _mailSender.SendPasswordChangeEmail(user, password);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
-                }
-                
+                }                
                 _accountProvider.SaveChanges();
-
-                return Ok("password changed");
+                return Ok("Password changed");
             }
             catch (Exception e)
             {
-//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
 
         [HttpPost("ChangePasswordOnDefault")]
         [SwaggerOperation(Summary = "For own use", Description = "Change password for user on Test_User12345")]
+        [SwaggerResponse(400, "No such user / Exception message", typeof(string))]
+        [SwaggerResponse(200, "Password changed")]
         public async Task<IActionResult> UserChangePasswordOnDefaultAsync( [FromBody] string email )
         {
             try
             {             
                 var user = _accountProvider.GetUserIncludeCompany(email);
                 if (user == null) return BadRequest("No such user");
-                user.PasswordHash = _loginService.GeneratePasswordHash("Test_User12345");                  
+                user.PasswordHash = _loginService.GeneratePasswordHash("Test_User12345");
                 await _accountProvider.SaveChangesAsync();
-                return Ok("password changed");
+                return Ok("Password changed");
             }
             catch (Exception e)
             {
-//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }
 
         [HttpPost("Unblock")]
         [SwaggerOperation(Summary = "Unblock in case failed attempts to log in", Description = "Unblock, zero counter of failed log in, hange password for user. Send email with new password")]
+        [SwaggerResponse(400, "No such user / Token wrong", typeof(string))]
+        [SwaggerResponse(200, "Password changed")]
         public async Task<IActionResult> Unblock(
                     [FromBody, SwaggerParameter("email required")] string email,
                     [FromHeader, SwaggerParameter("JWT token required ( token of admin or manager )", Required = true)] string Authorization)
         {
             try
             {
-//                _log.Info("Account/unblock started");
                 ApplicationUser user = _accountProvider.GetUserIncludeCompany(email);
                 if (_loginService.GetDataFromToken(Authorization, out userClaims))
                 {
                     string password = _loginService.GeneratePass(6);
-                    string text = string.Format("<table>" +
-                     "<tr><td>login:</td><td> {0}</td></tr>" +
-                     "<tr><td>password:</td><td> {1}</td></tr>" +
-                     "</table>", user.Email, password);
-                    await _mailSender.SendPasswordChangeEmail(user, text);
                     user.PasswordHash = _loginService.GeneratePasswordHash(password);
                     user.StatusId = _accountProvider.GetStatusId("Active");
-                    _loginService.SaveErrorLoginHistory(user.Id, "success");
+                    await _mailSender.SendPasswordChangeEmail(user, password);
+                    _accountProvider.SaveChanges();
+                    return Ok("Password changed");
                 }
-                _accountProvider.SaveChanges();
-//                _log.Info("Account/unblock finished");
-                return Ok("password changed");
+                return BadRequest("Token wrong");
             }
             catch (Exception e)
             {
-//                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e.Message);
             }
         }

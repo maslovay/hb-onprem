@@ -10,11 +10,15 @@ using UserOperations.Providers;
 using System.Threading.Tasks;
 using UserOperations.Providers.Interfaces;
 using System.IO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [ControllerExceptionFilter]
+
     public class AnalyticContentController : Controller
     {
         private readonly AnalyticContentService _analyticContentService;
@@ -27,28 +31,23 @@ namespace UserOperations.Controllers
 
 //---FOR ONE DIALOGUE---
         [HttpGet("ContentShows")]
-        public async Task<IActionResult> ContentShows([FromQuery(Name = "dialogueId")] Guid dialogueId,
-                                                        [FromHeader] string Authorization) => 
-            await _analyticContentService.ContentShows(
-                dialogueId, 
-                Authorization);
+        public async Task<object> ContentShows([FromQuery(Name = "dialogueId")] Guid dialogueId)
+            => await _analyticContentService.ContentShows( dialogueId);
         
         [HttpGet("Efficiency")]
-        public async Task<IActionResult> Efficiency([FromQuery(Name = "begTime")] string beg,
+        public async Task<object> Efficiency([FromQuery(Name = "begTime")] string beg,
                                                            [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization) => 
-            await _analyticContentService.Efficiency(
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds) 
+            => await _analyticContentService.Efficiency(
                 beg, 
                 end,
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds,
-                Authorization);
+                workerTypeIds);
 
         [HttpGet("Poll")]
         public async Task<IActionResult> Poll([FromQuery(Name = "begTime")] string beg,
@@ -57,18 +56,27 @@ namespace UserOperations.Controllers
                                                      [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                      [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                      [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                     [FromHeader] string Authorization,
-                                                     [FromQuery(Name = "type")] string type = "json"
-                                                     ) => 
-            await _analyticContentService.Poll(
-                beg,
-                end,
-                applicationUserIds,
-                companyIds,
-                corporationIds,
-                workerTypeIds,
-                Authorization,
-                type);
+                                                     [FromQuery(Name = "type")] string type = "json")
+        {
+            if (type != "json")
+            {
+                return Ok(await _analyticContentService.Poll(
+                  beg,
+                  end,
+                  applicationUserIds,
+                  companyIds,
+                  corporationIds,
+                  workerTypeIds));
+            }
+            var excelDocStream = await _analyticContentService.PollFile(
+                 beg,
+                 end,
+                 applicationUserIds,
+                 companyIds,
+                 corporationIds,
+                 workerTypeIds);
+            return  File(excelDocStream, "application/octet-stream", "answers.xls");          
+        }
     }
 }
 
