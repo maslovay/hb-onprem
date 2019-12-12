@@ -16,7 +16,7 @@ namespace UserOperations.Services
     public class AnalyticHomeService : Controller
     {
         private readonly IAnalyticHomeProvider _analyticHomeProvider;
-        private readonly IConfiguration _config;        
+        private readonly IConfiguration _config;
         private readonly ILoginService _loginService;
         private readonly IRequestFilters _requestFilters;
         private readonly AnalyticHomeUtils _utils;

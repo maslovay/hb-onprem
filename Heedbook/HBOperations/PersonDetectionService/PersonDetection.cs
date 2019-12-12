@@ -114,7 +114,7 @@ namespace PersonDetectionService
                 FaceDescriptor = faceDescr,
                 Age = (int)dialogueClientProfile?.Age,
                 Avatar = dialogueClientProfile?.Avatar,
-                GenderId = dialogueClientProfile == null? 3 : dialogueClientProfile?.Gender == "male"? 1 : 2,
+                Gender = dialogueClientProfile?.Gender,
                 StatusId = activeStatusId
             };
             _context.Clients.Add(client);

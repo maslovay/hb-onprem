@@ -106,7 +106,7 @@ namespace UserOperations.Services
                 return jsonToReturn;
         }
 
-        public async Task<object> Efficiency(
+        public async Task<Dictionary<string, object>> Efficiency(
                                 string beg, string end,
                                 List<Guid> applicationUserIds,
                                 List<Guid> companyIds,
