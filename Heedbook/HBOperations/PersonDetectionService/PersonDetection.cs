@@ -90,16 +90,20 @@ namespace PersonDetectionService
 
         public void CreateNewClient(Dialogue curDialogue)
         {
+            if (_context.Clients.Any(x => x.ClientId == curDialogue.PersonId))
+                return;
             var company = _context.ApplicationUsers
                             .FirstOrDefault(x => x.Id == curDialogue.ApplicationUserId)
                             .Company;
 
             var dialogueClientProfile = _context.DialogueClientProfiles
                             .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
+
             var activeStatusId = _context.Statuss
                             .Where(x => x.StatusName == "Active")
                             .Select(x => x.StatusId)
                             .FirstOrDefault();
+
             double[] faceDescr = new double[0];
             try
             {
