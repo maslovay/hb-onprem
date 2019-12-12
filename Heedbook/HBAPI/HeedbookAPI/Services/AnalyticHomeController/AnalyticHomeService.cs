@@ -23,7 +23,6 @@ namespace UserOperations.Services
 
         public AnalyticHomeService(
             IAnalyticHomeProvider homeProvider,
-            IAnalyticContentProvider analyticContentProvider,
             IConfiguration config,
             ILoginService loginService,
             IRequestFilters requestFilters,
