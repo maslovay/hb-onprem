@@ -138,6 +138,17 @@ namespace UserOperations
                             {"time", new Schema{Type = "string", Format = "date-time"}}
                         }
                 });
+                c.AddSecurityDefinition("Bearer", new ApiKeyScheme()
+                {
+                    Description = "JWT Authorization header {token}",
+                    Name = "Authorization",
+                    In = "header",
+                    Type = "apiKey"
+                });
+                c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                {
+                    { "Bearer", new string[] { } }
+                });
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
