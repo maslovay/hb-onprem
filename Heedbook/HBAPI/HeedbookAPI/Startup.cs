@@ -96,6 +96,7 @@ namespace UserOperations
             services.AddScoped<AnalyticWeeklyReportService>();
             services.AddScoped<CampaignContentService>();
             services.AddScoped<CatalogueService>();
+            services.AddScoped<DemonstrationService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
@@ -135,7 +136,8 @@ namespace UserOperations
                     Properties = new Dictionary<string, Schema> {
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
                             {"answer", new Schema{Type = "string"}},
-                            {"time", new Schema{Type = "string", Format = "date-time"}}
+                            {"time", new Schema{Type = "string", Format = "date-time"}},
+                            {"applicationUserId", new Schema{Type = "string", Format = "uuid"}},
                         }
                 });
                 c.AddSecurityDefinition("Bearer", new ApiKeyScheme()
