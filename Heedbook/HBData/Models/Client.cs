@@ -37,7 +37,7 @@ namespace HBData.Models
         /// <summary>
         /// client’s gender
         /// </summary>
-        public int GenderId { get; set; }//1,2,3
+        public string Gender { get; set; }//male-female
 
         public int Age { get; set; }
 

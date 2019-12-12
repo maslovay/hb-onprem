@@ -25,14 +25,14 @@ namespace UserOperations.Controllers
         [HttpGet("ContentShows")]
         [SwaggerOperation(Summary = "Data for one dialogue", Description = "Analytic about content and pool shown during dialogue")]
         [SwaggerResponse(200, "ContentInfo, AnswersInfo, AnswersAmount", typeof(Dictionary<string, object>))]
-        public async Task<object> ContentShows([FromQuery(Name = "dialogueId")] Guid dialogueId)
+        public async Task<Dictionary<string, object>> ContentShows([FromQuery(Name = "dialogueId")] Guid dialogueId)
             => await _analyticContentService.ContentShows( dialogueId);
         
 
         [HttpGet("Efficiency")]
         [SwaggerOperation(Summary = "Content analytic for all dialogues", Description = "Analytic about contents shown with filters")]
         [SwaggerResponse(200, "Views, Clients, SplashViews, EmotionAttention, Age, Gender statistic for content", typeof(Dictionary<string, object>))]
-        public async Task<object> Efficiency([FromQuery(Name = "begTime")] string beg,
+        public async Task<Dictionary<string, object>> Efficiency([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
