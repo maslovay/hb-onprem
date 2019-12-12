@@ -21,8 +21,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+    [ApiController]    
     [ControllerExceptionFilter]
     [AllowAnonymous]
     public class DemonstrationController : Controller
