@@ -16,7 +16,7 @@ namespace ApiTests
     [TestFixture]
     public class AnalyticContentControllerTest : ApiServiceTest
     {
-        protected Mock<IAnalyticContentProvider> analyticContentProviderMock;
+     //   protected Mock<IAnalyticContentProvider> analyticContentProviderMock;
         [SetUp]
         public new void Setup()
         {
@@ -24,7 +24,7 @@ namespace ApiTests
         }
         protected override void InitServices()
         {
-            analyticContentProviderMock = MockIAnalyticContentProvider(new Mock<IAnalyticContentProvider>());
+           // analyticContentProviderMock = MockIAnalyticContentProvider(new Mock<IAnalyticContentProvider>());
         }
     
 
@@ -126,51 +126,51 @@ namespace ApiTests
             //Assert.IsNotNull(okResult);
         }
 
-        private Mock<IAnalyticContentProvider> MockIAnalyticContentProvider(Mock<IAnalyticContentProvider> moqIAnalyticContentProvider)
-        {
-            //moqIAnalyticContentProvider.Setup(p => p.GetSlideShowsForOneDialogueAsync(It.IsAny<Dialogue>()))
-            //    .Returns(Task.FromResult( TestData.GetSlideShowInfosSimple() ));
+        //private Mock<IAnalyticContentProvider> MockIAnalyticContentProvider(Mock<IAnalyticContentProvider> moqIAnalyticContentProvider)
+        //{
+        //    //moqIAnalyticContentProvider.Setup(p => p.GetSlideShowsForOneDialogueAsync(It.IsAny<Dialogue>()))
+        //    //    .Returns(Task.FromResult( TestData.GetSlideShowInfosSimple() ));
 
-            //moqIAnalyticContentProvider.Setup(p => p.GetSlideShowWithDialogueIdFilteredByPoolAsync(
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<List<Guid>>(),
-            //        It.IsAny<List<Guid>>(),
-            //        It.IsAny<List<Guid>>(),
-            //        It.IsAny<bool>(),
-            //        It.IsAny<List<DialogueInfoWithFrames>>()))
-            //    .Returns(Task.FromResult(TestData.GetSlideShowInfosSimple()));
+        //    //moqIAnalyticContentProvider.Setup(p => p.GetSlideShowWithDialogueIdFilteredByPoolAsync(
+        //    //        It.IsAny<DateTime>(),
+        //    //        It.IsAny<DateTime>(),
+        //    //        It.IsAny<List<Guid>>(),
+        //    //        It.IsAny<List<Guid>>(),
+        //    //        It.IsAny<List<Guid>>(),
+        //    //        It.IsAny<bool>(),
+        //    //        It.IsAny<List<DialogueInfoWithFrames>>()))
+        //    //    .Returns(Task.FromResult(TestData.GetSlideShowInfosSimple()));
 
-            //moqIAnalyticContentProvider.Setup(p => p.GetAnswersInOneDialogueAsync(
-            //        It.IsAny<List<SlideShowInfo>>(),
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<Guid>()))
-            //    .Returns(Task.FromResult(new List<CampaignContentAnswer>() { }));
-            //moqIAnalyticContentProvider.Setup(p => p.GetAnswersForOneContent(
-            //        It.IsAny<List<AnswerInfo.AnswerOne>>(),
-            //        It.IsAny<Guid?>()))
-            //    .Returns(new List<AnswerInfo.AnswerOne>() { });
-            //moqIAnalyticContentProvider.Setup(p => p.GetConversion(
-            //        It.IsAny<double>(),
-            //        It.IsAny<double>()))
-            //    .Returns(0.5d);
-            //moqIAnalyticContentProvider.Setup(p => p.GetAnswersFullAsync(
-            //        It.IsAny<List<SlideShowInfo>>(),
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<List<Guid>>(),
-            //        It.IsAny<List<Guid>>(),
-            //        It.IsAny<List<Guid>>()))
-            //    .Returns(Task.FromResult(new List<AnswerInfo.AnswerOne>() { }));
-            //moqIAnalyticContentProvider.Setup(p => p.AddDialogueIdToShow(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueInfoWithFrames>>()))
-            //    .Returns(new List<SlideShowInfo>() { });
-            //moqIAnalyticContentProvider.Setup(p => p.EmotionsDuringAdv(It.IsAny<List<SlideShowInfo>>()))
-            //    .Returns(new EmotionAttention() { Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d });
-            //moqIAnalyticContentProvider.Setup(p => p.EmotionDuringAdvOneDialogue(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueFrame>>()))
-            //    .Returns(new EmotionAttention() { Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d });
-            return moqIAnalyticContentProvider;
-        }
+        //    //moqIAnalyticContentProvider.Setup(p => p.GetAnswersInOneDialogueAsync(
+        //    //        It.IsAny<List<SlideShowInfo>>(),
+        //    //        It.IsAny<DateTime>(),
+        //    //        It.IsAny<DateTime>(),
+        //    //        It.IsAny<Guid>()))
+        //    //    .Returns(Task.FromResult(new List<CampaignContentAnswer>() { }));
+        //    //moqIAnalyticContentProvider.Setup(p => p.GetAnswersForOneContent(
+        //    //        It.IsAny<List<AnswerInfo.AnswerOne>>(),
+        //    //        It.IsAny<Guid?>()))
+        //    //    .Returns(new List<AnswerInfo.AnswerOne>() { });
+        //    //moqIAnalyticContentProvider.Setup(p => p.GetConversion(
+        //    //        It.IsAny<double>(),
+        //    //        It.IsAny<double>()))
+        //    //    .Returns(0.5d);
+        //    //moqIAnalyticContentProvider.Setup(p => p.GetAnswersFullAsync(
+        //    //        It.IsAny<List<SlideShowInfo>>(),
+        //    //        It.IsAny<DateTime>(),
+        //    //        It.IsAny<DateTime>(),
+        //    //        It.IsAny<List<Guid>>(),
+        //    //        It.IsAny<List<Guid>>(),
+        //    //        It.IsAny<List<Guid>>()))
+        //    //    .Returns(Task.FromResult(new List<AnswerInfo.AnswerOne>() { }));
+        //    //moqIAnalyticContentProvider.Setup(p => p.AddDialogueIdToShow(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueInfoWithFrames>>()))
+        //    //    .Returns(new List<SlideShowInfo>() { });
+        //    //moqIAnalyticContentProvider.Setup(p => p.EmotionsDuringAdv(It.IsAny<List<SlideShowInfo>>()))
+        //    //    .Returns(new EmotionAttention() { Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d });
+        //    //moqIAnalyticContentProvider.Setup(p => p.EmotionDuringAdvOneDialogue(It.IsAny<List<SlideShowInfo>>(), It.IsAny<List<DialogueFrame>>()))
+        //    //    .Returns(new EmotionAttention() { Positive = 0.3d, Negative = 0.3d, Neutral = 0.3d, Attention = 0.3d });
+        //    return moqIAnalyticContentProvider;
+        //}
 
     }
 }
