@@ -92,13 +92,13 @@ namespace UserOperations.Utils
             if (role == "Admin")
             {
                 //---take all companyIds in filter or all company ids in corporations
-                if (!companyIdsInFilter.Any() && !corporationIdsInFilter.Any())
+                if (!companyIdsInFilter.Any() && (corporationIdsInFilter ==null || !corporationIdsInFilter.Any()))
                 {
                     companyIdsInFilter = _context.Companys
                         //.Where(x => x.StatusId == 3)
                         .Select(x => x.CompanyId).ToList();
                 }
-                else if (!companyIdsInFilter.Any())
+                else if (!companyIdsInFilter.Any())// means corporationIdsInFilter not null
                 {
                     companyIdsInFilter = _context.Companys
                         .Where(x => corporationIdsInFilter.Contains((Guid)x.CorporationId))

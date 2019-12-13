@@ -20,20 +20,17 @@ namespace UserOperations.Services
     public class AnalyticClientProfileService : Controller
     {
         private readonly ILoginService _loginService;
-        private readonly IDBOperations _dbOperation;
         private readonly IRequestFilters _requestFilters;
         private readonly List<AgeBoarder> _ageBoarders;
         private readonly IGenericRepository _repository;
 
         public AnalyticClientProfileService(
             ILoginService loginService,
-            IDBOperations dbOperation,
             IRequestFilters requestFilters,
             IGenericRepository repository
             )
         {
             _loginService = loginService;
-            _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _ageBoarders = new List<AgeBoarder>{
                 new AgeBoarder{
@@ -54,20 +51,15 @@ namespace UserOperations.Services
                 }};
             _repository = repository;
         }
-        public async Task<IActionResult> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 var begYearTime = endTime.AddYears(-1);
@@ -83,12 +75,12 @@ namespace UserOperations.Services
                         p.DialogueId
                     }).ToList();
 
-                var result = new List<GenderAgeStructureResult>();                
+                var result = new List<GenderAgeStructureResult>();
                 result = _ageBoarders.Select(p => 
                         {
                             var dataBoarders = data.Where(b => b.Age > p.BegAge && b.Age <= p.EndAge);
                             return new GenderAgeStructureResult
-                            {                            
+                            {
                                 Age = $"{p.BegAge}-{p.EndAge}",
                                 MaleCount = dataBoarders
                                     .Where(d => d.Gender == "male")
@@ -113,13 +105,9 @@ namespace UserOperations.Services
                     .Where(p => p.PersonId != null && !persondIdsPerYear.Contains(p.PersonId))
                     .Select(p => p.PersonId).Distinct().Count() + data.Where(p => p.PersonId == null).Select(p => p.DialogueId).Distinct().Count();
                 jsonToReturn["genderAge"] = result;
-                return Ok(JsonConvert.SerializeObject(jsonToReturn));
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(jsonToReturn);
         }
+
         private async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
             var persondIds = await GetDialogues(begTime, endTime, companyIds)

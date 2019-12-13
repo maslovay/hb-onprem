@@ -16,7 +16,7 @@ namespace HBData.Models
         /// Id
         /// </summary>
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+       // [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid ClientId { get; set; }
 
         /// <summary>
@@ -68,5 +68,14 @@ namespace HBData.Models
         /// </summary>
         public Guid? CorporationId { get; set; }
         [JsonIgnore] public Corporation Corporation { get; set; }
+
+        /// <summary>
+        /// collection of dialogues where client appeared
+        /// </summary>
+        [JsonIgnore] public ICollection<Dialogue> Dialogues { get; set; }
+        /// <summary>
+        /// collection of notes wich user make about client
+        /// </summary>
+        [JsonIgnore] public ICollection<ClientNote> ClientNotes { get; set; }
     }
 }

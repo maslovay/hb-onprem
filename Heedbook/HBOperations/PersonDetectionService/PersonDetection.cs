@@ -57,7 +57,7 @@ namespace PersonDetectionService
                     try
                     {
                         _log.Info($"client { curDialogue.PersonId  } try to create");
-                        CreateNewClient(curDialogue);
+                        curDialogue.ClientId = CreateNewClient(curDialogue);
                         _log.Info($"client { curDialogue.PersonId  } created");
                     }
                     catch( Exception ex )
@@ -85,43 +85,56 @@ namespace PersonDetectionService
                 if (cosResult > threshold) return dialogue.PersonId;
             }
             return Guid.NewGuid();
-
         }
 
-        public void CreateNewClient(Dialogue curDialogue)
+        public Guid? CreateNewClient(Dialogue curDialogue)
         {
-            if (_context.Clients.Any(x => x.ClientId == curDialogue.PersonId))
-                return;
-            var company = _context.ApplicationUsers
-                            .FirstOrDefault(x => x.Id == curDialogue.ApplicationUserId)
-                            .Company;
-
-            var dialogueClientProfile = _context.DialogueClientProfiles
-                            .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
-
-            var activeStatusId = _context.Statuss
-                            .Where(x => x.StatusName == "Active")
-                            .Select(x => x.StatusId)
-                            .FirstOrDefault();
-
-            double[] faceDescr = new double[0];
             try
             {
-                faceDescr = JsonConvert.DeserializeObject<double[]>(curDialogue.PersonFaceDescriptor);
+                var company = _context.ApplicationUsers
+                              .Where(x => x.Id == curDialogue.ApplicationUserId)
+                              .Select(x => x.Company)
+                              .FirstOrDefault();
+
+                var clientId = _context.Clients
+                        .Where(x => x.ClientId == curDialogue.PersonId)
+                        .Select(x => x.ClientId).FirstOrDefault();
+                if (clientId != null && clientId != Guid.Empty) return clientId;
+
+                var dialogueClientProfile = _context.DialogueClientProfiles
+                                .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
+                if (dialogueClientProfile == null) return null;
+
+                var activeStatusId = _context.Statuss
+                                .Where(x => x.StatusName == "Active")
+                                .Select(x => x.StatusId)
+                                .FirstOrDefault();
+
+                double[] faceDescr = new double[0];
+                try
+                {
+                    faceDescr = JsonConvert.DeserializeObject<double[]>(curDialogue.PersonFaceDescriptor);
+                }
+                catch { }
+                Client client = new Client
+                {
+                    ClientId = clientId,
+                    CompanyId = (Guid)company?.CompanyId,
+                    CorporationId = company?.CorporationId,
+                    FaceDescriptor = faceDescr,
+                    Age = (int)dialogueClientProfile?.Age,
+                    Avatar = dialogueClientProfile?.Avatar,
+                    Gender = dialogueClientProfile?.Gender,
+                    StatusId = activeStatusId
+                };
+                _context.Clients.Add(client);
+                _context.SaveChanges();
+                return client.ClientId;
             }
-            catch { }
-            Client client = new Client
-            {
-                ClientId = (Guid)curDialogue.PersonId,
-                CompanyId = (Guid)company?.CompanyId,
-                CorporationId = company?.CorporationId,
-                FaceDescriptor = faceDescr,
-                Age = (int)dialogueClientProfile?.Age,
-                Avatar = dialogueClientProfile?.Avatar,
-                Gender = dialogueClientProfile?.Gender,
-                StatusId = activeStatusId
-            };
-            _context.Clients.Add(client);
+            catch
+                {
+                return null;
+            }
         }
     }
 }
