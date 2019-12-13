@@ -118,6 +118,7 @@ namespace PersonDetectionService
                 catch { }
                 Client client = new Client
                 {
+                    ClientId = clientId,
                     CompanyId = (Guid)company?.CompanyId,
                     CorporationId = company?.CorporationId,
                     FaceDescriptor = faceDescr,
