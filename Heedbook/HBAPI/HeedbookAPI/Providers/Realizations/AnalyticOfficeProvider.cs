@@ -15,9 +15,9 @@ namespace UserOperations.Providers
     public class AnalyticOfficeProvider : IAnalyticOfficeProvider
     {
         private readonly IGenericRepository _repository;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         public AnalyticOfficeProvider(
-            ILoginService loginService,
+            LoginService loginService,
             IGenericRepository repository)
         {
             _loginService = loginService;

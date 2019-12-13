@@ -30,7 +30,7 @@ namespace QuartzExtensions.Utils.WeeklyReport
 {
     public class WeeklyReport
     {
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private ElasticClient _log;
@@ -41,7 +41,7 @@ namespace QuartzExtensions.Utils.WeeklyReport
         private ApplicationUser _applicationUser;
         private ViewLanguageDataReport _model;
         public string HtmlTemplate { get{return _htmlTemplate;}}
-        public WeeklyReport(ILoginService loginService,
+        public WeeklyReport(LoginService loginService,
             IServiceScopeFactory factory, 
             ElasticClientFactory elasticClientFactory,
             SmtpSettings smtpSettings,

@@ -15,9 +15,9 @@ namespace UserOperations.Controllers
     public class TabletAppInfoController : Controller
     {
         private readonly RecordsContext _context;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         
-        public TabletAppInfoController( RecordsContext context, ILoginService loginService )
+        public TabletAppInfoController( RecordsContext context, LoginService loginService )
         {
             _context = context;
             _loginService = loginService;

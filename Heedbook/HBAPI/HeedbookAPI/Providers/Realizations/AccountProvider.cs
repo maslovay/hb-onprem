@@ -14,10 +14,10 @@ namespace UserOperations.Providers
 {
     public class AccountProvider : IAccountProvider
     {
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly IGenericRepository _repository;
         public AccountProvider(
-            ILoginService loginService,
+            LoginService loginService,
             IGenericRepository repository
         )
         {

@@ -17,16 +17,16 @@ namespace UserOperations.Services
     [ApiController]
     public class AnalyticRatingService : Controller
     {    
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly IRequestFilters _requestFilters;
+        private readonly RequestFilters _requestFilters;
         private readonly AnalyticRatingUtils _analyticRatingUtils;
         private readonly IAnalyticRatingProvider _analyticRatingProvider;
 
         public AnalyticRatingService(
-            ILoginService loginService,
+            LoginService loginService,
             RecordsContext context,
-            IRequestFilters requestFilters,
+            RequestFilters requestFilters,
             AnalyticRatingUtils analyticRatingUtils,
             IAnalyticRatingProvider analyticRatingProvider
             )

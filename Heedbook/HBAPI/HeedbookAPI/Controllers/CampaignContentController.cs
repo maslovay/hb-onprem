@@ -23,17 +23,17 @@ namespace UserOperations.Controllers
     {
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private Dictionary<string, string> userClaims;
-        private readonly IRequestFilters _requestFilters;
+        private readonly RequestFilters _requestFilters;
         private readonly CampaignContentService _campaignContentService;
 
 
         public CampaignContentController(
             RecordsContext context,
             IConfiguration config,
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             CampaignContentService campaignContentService
             )
         {

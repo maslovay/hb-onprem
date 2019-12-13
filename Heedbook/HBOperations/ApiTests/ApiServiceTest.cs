@@ -22,11 +22,11 @@ namespace ApiTests
         protected Mock<IAccountProvider> accountProviderMock;
         protected Mock<IAnalyticCommonProvider> commonProviderMock;
         protected Mock<IConfiguration> configMock;
-        protected Mock<IDBOperations> dbOperationMock;
-        protected Mock<IRequestFilters> filterMock;
+        protected Mock<DBOperations> dbOperationMock;
+        protected Mock<RequestFilters> filterMock;
         protected Mock<IHelpProvider> helpProvider;
-        protected Mock<IMailSender> mailSenderMock;
-        protected Mock<ILoginService> moqILoginService;
+        protected Mock<MailSender> mailSenderMock;
+        protected Mock<LoginService> moqILoginService;
         protected Mock<IGenericRepository> repositoryMock;
 
         protected void BaseInit()
@@ -44,11 +44,11 @@ namespace ApiTests
             accountProviderMock = new Mock<IAccountProvider>();
             commonProviderMock = new Mock<IAnalyticCommonProvider>();
             configMock = new Mock<IConfiguration>();
-            dbOperationMock = new Mock<IDBOperations>();
-            filterMock = new Mock<IRequestFilters>(MockBehavior.Loose);
+            dbOperationMock = new Mock<DBOperations>();
+            filterMock = new Mock<RequestFilters>(MockBehavior.Loose);
             helpProvider = new Mock<IHelpProvider>();
-            mailSenderMock = new Mock<IMailSender>();
-            moqILoginService = new Mock<ILoginService>();
+            mailSenderMock = new Mock<MailSender>();
+            moqILoginService = new Mock<LoginService>();
             repositoryMock = new Mock<IGenericRepository>();
         }
         protected void InitData()

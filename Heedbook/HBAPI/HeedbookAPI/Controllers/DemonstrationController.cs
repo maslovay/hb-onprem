@@ -24,16 +24,16 @@ namespace UserOperations.Controllers
     {
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
-        private readonly IDBOperations _dbOperation;
+        private readonly DBOperations _dbOperation;
         private readonly SftpClient _sftpClient;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
 
         public DemonstrationController(
             RecordsContext context,
             IConfiguration config,
-            IDBOperations dbOperation,
+            DBOperations dbOperation,
             SftpClient sftpClient,
-            ILoginService loginService
+            LoginService loginService
             )
         {
             _context = context;

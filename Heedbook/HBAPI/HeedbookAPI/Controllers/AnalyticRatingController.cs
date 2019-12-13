@@ -23,18 +23,18 @@ namespace UserOperations.Controllers
     public class AnalyticRatingController : Controller
     {
       private readonly IConfiguration _config;        
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly IDBOperations _dbOperation;
-        private readonly IRequestFilters _requestFilters;
+        private readonly DBOperations _dbOperation;
+        private readonly RequestFilters _requestFilters;
         private readonly AnalyticRatingService _analyticRatingService;
 
         public AnalyticRatingController(
             IConfiguration config,
-            ILoginService loginService,
+            LoginService loginService,
             RecordsContext context,
-            IDBOperations dbOperation,
-            IRequestFilters requestFilters,
+            DBOperations dbOperation,
+            RequestFilters requestFilters,
             AnalyticRatingService analyticRatingService
             )
         {

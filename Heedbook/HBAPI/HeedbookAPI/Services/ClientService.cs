@@ -11,15 +11,15 @@ namespace UserOperations.Services
 {
     public class ClientService 
     {
-        private readonly ILoginService _loginService;
-        private readonly IDBOperations _dbOperation;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly DBOperations _dbOperation;
+        private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
 
         public ClientService(
-            ILoginService loginService,
-            IDBOperations dbOperation,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            DBOperations dbOperation,
+            RequestFilters requestFilters,
             IGenericRepository repository
             )
         {

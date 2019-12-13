@@ -57,9 +57,9 @@ namespace UserOperations
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddScoped<IDBOperations, Utils.DBOperations>();
-            services.AddScoped<Utils.DBOperationsWeeklyReport>();
-            services.AddScoped<IRequestFilters, RequestFilters>();
+            services.AddScoped<DBOperations>();
+            services.AddScoped<DBOperationsWeeklyReport>();
+            services.AddScoped<RequestFilters>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
             {
                 p.Password.RequireDigit = true;
@@ -69,8 +69,8 @@ namespace UserOperations
                 p.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<RecordsContext>();
-            services.AddScoped(typeof(ILoginService), typeof(LoginService));
-            services.AddScoped<IMailSender, MailSender>();
+            services.AddScoped<LoginService>();
+            services.AddScoped<MailSender>();
             services.AddScoped<IAnalyticCommonProvider, AnalyticCommonProvider>();
             services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();
             services.AddScoped<IAnalyticOfficeProvider, AnalyticOfficeProvider>();

@@ -34,7 +34,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Utils
 {
-    public class RequestFilters : IRequestFilters
+    public class RequestFilters
     {
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;

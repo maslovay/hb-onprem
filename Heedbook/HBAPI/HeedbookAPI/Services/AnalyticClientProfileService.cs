@@ -19,14 +19,14 @@ namespace UserOperations.Services
 {
     public class AnalyticClientProfileService : Controller
     {
-        private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly RequestFilters _requestFilters;
         private readonly List<AgeBoarder> _ageBoarders;
         private readonly IGenericRepository _repository;
 
         public AnalyticClientProfileService(
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             IGenericRepository repository
             )
         {
