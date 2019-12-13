@@ -82,10 +82,11 @@ namespace UserOperations
             services.AddScoped<IAccountProvider, AccountProvider>();
             services.AddScoped<IHelpProvider, HelpProvider>();
             services.AddScoped<IUserProvider, UserProvider>();
-            services.AddScoped<IPhraseProvider, PhraseProvider>();            
+            services.AddScoped<IPhraseProvider, PhraseProvider>();
             services.AddScoped(typeof(IAnalyticReportProvider), typeof(AnalyticReportProvider));
 
             services.AddScoped<AnalyticClientProfileService>();
+            services.AddScoped<ClientService>();
             services.AddScoped<AnalyticContentService>();
             services.AddScoped<AnalyticHomeService>();
             services.AddScoped<AnalyticOfficeService>();

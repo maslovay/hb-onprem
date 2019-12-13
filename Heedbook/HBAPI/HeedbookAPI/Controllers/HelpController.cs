@@ -42,8 +42,6 @@ namespace UserOperations.Controllers
         private readonly ElasticClient _log;
         private readonly IDBOperations _dbOperation;
         private readonly IGenericRepository _repository;
-        //   private readonly INotificationHandler _handler;
-        //    private readonly HbMlHttpClient _client;
 
         private readonly Object _syncRoot = new Object();
 
@@ -192,7 +190,7 @@ namespace UserOperations.Controllers
                         s2.StatusId = 8;
                         counterInSes++;
                     }
-            }
+                }
             }
             _context.SaveChanges();
             return Ok(counterInSes);
@@ -206,49 +204,49 @@ namespace UserOperations.Controllers
             //var userC = 0;
             foreach (var user in users)
             {
-                    var dialogues = user.Dialogue.Where(x => x.StatusId == 3 && x.InStatistic == true).OrderBy(x => x.BegTime).ToList();
-                    var sessions = user.Session.OrderBy(x => x.BegTime).ToList();
+                var dialogues = user.Dialogue.Where(x => x.StatusId == 3 && x.InStatistic == true).OrderBy(x => x.BegTime).ToList();
+                var sessions = user.Session.OrderBy(x => x.BegTime).ToList();
 
-                    foreach (var dial in dialogues)
-                    {
+                foreach (var dial in dialogues)
+                {
                     //---NO ANY SESSION INCLUDED DIALOGUE
                     if (!sessions.Any(ses =>
                            (ses.BegTime <= dial.BegTime && ses.EndTime >= dial.EndTime)
                         || (ses.BegTime >= dial.BegTime && ses.BegTime <= dial.EndTime)
                         || (ses.EndTime >= dial.BegTime && ses.EndTime <= dial.EndTime)))
+                    {
+                        Session newSession = new Session()
                         {
-                            Session newSession = new Session()
-                            {
-                                ApplicationUserId = dial.ApplicationUserId,
-                                BegTime = dial.BegTime,
-                                EndTime = dial.EndTime,
-                                IsDesktop = true,
-                                StatusId = 7
-                            };
+                            ApplicationUserId = dial.ApplicationUserId,
+                            BegTime = dial.BegTime,
+                            EndTime = dial.EndTime,
+                            IsDesktop = true,
+                            StatusId = 7
+                        };
                         _context.Sessions.Add(newSession);
                         counter++;
-                        }
-
                     }
-                        //if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---діалог в середині сессії відсутній
-                        //{
-                        //if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.BegTime <= ses.EndTime))//---є діалог що почався в сессії
-                        //{
 
-                        //}
-                        //else if (!sessions.Any(ses => dial.EndTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---є діалог що закінчився в сессії
-                        //{ 
+                }
+                //if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---діалог в середині сессії відсутній
+                //{
+                //if (!sessions.Any(ses => dial.BegTime >= ses.BegTime && dial.BegTime <= ses.EndTime))//---є діалог що почався в сессії
+                //{
 
-                        //    var nextSession = sessions.Where(x => x.BegTime >= dial.BegTime).FirstOrDefault();
-                        //    if ((nextSession.BegTime - dial.BegTime).TotalHours < 6)
-                        //    {
-                        //        counter++;
-                        //        nextSession.BegTime = dial.BegTime;
-                        //        _context.SaveChanges();
-                        //    }
-                        //}
-                        //}
-                  //  }
+                //}
+                //else if (!sessions.Any(ses => dial.EndTime >= ses.BegTime && dial.EndTime <= ses.EndTime))//---є діалог що закінчився в сессії
+                //{ 
+
+                //    var nextSession = sessions.Where(x => x.BegTime >= dial.BegTime).FirstOrDefault();
+                //    if ((nextSession.BegTime - dial.BegTime).TotalHours < 6)
+                //    {
+                //        counter++;
+                //        nextSession.BegTime = dial.BegTime;
+                //        _context.SaveChanges();
+                //    }
+                //}
+                //}
+                //  }
             }
             _context.SaveChanges();
             return Ok(counter);
@@ -356,7 +354,7 @@ namespace UserOperations.Controllers
 
             return Ok(result);
         }
-   
+
         [HttpGet("CheckSessions")]
         public IActionResult CheckSessions()
         {
@@ -474,203 +472,6 @@ namespace UserOperations.Controllers
 
             _context.SaveChanges();
             return Ok();
-        }
-
-
-        //[HttpGet("Help3")]
-        //public async Task<IActionResult> Help3()
-        //{
-        //    var connectionString = "User ID = postgres; Password = annushka123; Host = 127.0.0.1; Port = 5432; Database = onprem_backup; Pooling = true; Timeout = 120; CommandTimeout = 0";
-        //    DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
-        //    dbContextOptionsBuilder.UseNpgsql(connectionString,
-        //           dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
-        //    var localContext = new RecordsContext(dbContextOptionsBuilder.Options);
-        //    var contentInBackup = localContext.Contents.FirstOrDefault();
-        //    Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
-        //    var content = _context.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
-        //    contentInBackup.CreationDate = content.CreationDate;
-        //    contentInBackup.JSONData = content.JSONData;
-        //    contentInBackup.RawHTML = content.RawHTML;
-        //    contentInBackup.UpdateDate = content.UpdateDate;
-        //    localContext.SaveChanges();
-        //    return Ok();
-        //}
-
-        [HttpGet("newtest")]
-        public IActionResult Newtest()
-        {
-            var dialogues = _context.DialogueClientSatisfactions.Where(p => p.MeetingExpectationsTotal < 35).ToList();
-            var random = new Random();
-            foreach (var dialogue in dialogues)
-            {
-                dialogue.MeetingExpectationsTotal = Math.Max((double)dialogue.MeetingExpectationsTotal, 35 + random.Next(10));
-            }
-            _context.SaveChanges();
-            // var dialogue = _context.Dialogues.Where(p => p.DialogueId.ToString() == "5d90051a-15a9-4126-8988-6e7f6ab256e1").FirstOrDefault();
-            // dialogue.StatusId = 8;
-            // _context.SaveChanges();
-            return Ok();
-        }
-
-
-      
-
-        [HttpGet("test")]
-        public IActionResult Test()
-        {
-
-            var begTime = DateTime.Now.AddDays(-10);
-            // var frameLast = _context.FileFrames.Where(p => p.FileName == "f62f320f-e448-40a1-90d3-9af1c745303d_20190709150711.jpg").FirstOrDefault();
-            // var begTime = frameLast.Time;
-            // var EndTime = DateTime.UtcNow.AddHours(-13);
-            // var frames = _context.FileFrames.Where(p => p.Time >= begTime && p.Time <= EndTime && p.FaceLength == 0).ToList().OrderBy(p => p.Time).ToList();
-            // System.Console.WriteLine($"{frames.Count()}");
-            // var i = 0;
-            // foreach (var frame in frames.Select(p => p.FileName).ToList().Distinct().ToList())
-            // {
-            //     System.Console.WriteLine($"Index - {i}, frame - {frame}");
-            //     i++;
-            //     var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://slavehb.northeurope.cloudapp.azure.com/user/Face");
-            //     httpWebRequest.ContentType = "application/json";
-            //     httpWebRequest.Method = "POST";
-
-            //     using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-            //     {
-            //        var dict = new Dictionary<string, string>();
-            //        dict["Path"] = $"frames/{frame}";
-
-            //         streamWriter.Write(JsonConvert.SerializeObject(dict));
-            //     }
-
-            //     var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-            //     using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-            //     {
-            //         var result = streamReader.ReadToEnd();
-            //         System.Console.WriteLine("Result" + result);
-            //     }
-
-            //     Thread.Sleep(300);
-            // }
-
-
-
-
-            //var dialogues = _context.Dialogues.Where(p => p.StatusId == 8 && p.BegTime >= begTime).ToList();
-            //System.Console.WriteLine(dialogues.Count());
-            //dialogues = dialogues.Where(p => p.Comment == null || !p.Comment.StartsWith("Too many holes in dialogue")).ToList();
-            //System.Console.WriteLine(dialogues.Count());
-            //var i = 0;
-            //foreach (var dialogue in dialogues)
-            //{
-            //    try
-            //    {
-            //        var url = $"https://slavehb.northeurope.cloudapp.azure.com/user/DialogueRecalculate/CheckRelatedDialogueData?DialogueId={dialogue.DialogueId}";
-            //        System.Console.WriteLine($"Processing {dialogue.DialogueId}, Index {i}");
-
-            //        var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-            //        httpWebRequest.ContentType = "application/json";
-            //        httpWebRequest.Method = "POST";
-
-            //        var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-            //        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-            //        {
-            //            var result = streamReader.ReadToEnd();
-            //            System.Console.WriteLine("Result ---- " + result);
-            //        }
-            //        Thread.Sleep(1000);
-            //        i++;
-            //    }
-            //    catch (Exception e)
-            //    {
-
-            //    }
-
-            //}
-
-
-            // System.Console.WriteLine(audios.Select(p => p.DialogueId).Distinct().ToList().Count());
-
-            // foreach (var audio in audios.Select(p => p.DialogueId).Distinct().ToList())
-            // {
-            //     System.Console.WriteLine($"Processing {audio}");
-            //     var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://slavehb.northeurope.cloudapp.azure.com/user/AudioAnalyze/audio-analyze");
-            //     httpWebRequest.ContentType = "application/json";
-            //     httpWebRequest.Method = "POST";
-
-            //     using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
-            //     {
-            //        var dict = new Dictionary<string, string>();
-            //        dict["Path"] = $"dialogueaudios/{audio}.wav";
-
-            //         streamWriter.Write(JsonConvert.SerializeObject(dict));
-            //     }
-
-            //     var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-            //     using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
-            //     {
-            //         var result = streamReader.ReadToEnd();
-            //         System.Console.WriteLine("Result" + result);
-            //     }
-
-            //     Thread.Sleep(1500);    
-            // }
-
-
-
-
-
-            // var res = frames.GroupBy(p => p.Time).Select(p => new {
-            //     Time = p.Key,
-            //     Count = p.Count()
-            // });
-
-            // var dialogueHint = new DialogueHint{
-            //     DialogueHintId = Guid.NewGuid(),
-            //     DialogueId = dialogueId,
-            //     HintText = "Следите за настроением клиента. Если возникла негативная обстановка, постарайтесь ее разрядить.",
-            //     IsAutomatic = true,
-            //     Type = "Text",
-            //     IsPositive = false
-            // };
-
-            // var dialogueHint2 = new DialogueHint{
-            //     DialogueHintId = Guid.NewGuid(),
-            //     DialogueId = dialogueId,
-            //     HintText = "Делайте дополнительные предложения. Ищите подход к клиенту. Попробуйте расположить к себе клиента.",
-            //     IsAutomatic = true,
-            //     Type = "Text",
-            //     IsPositive = false
-            // };
-
-            // _context.DialogueHints.Add(dialogueHint);
-            // _context.DialogueHints.Add(dialogueHint2);
-            // _context.SaveChanges();
-
-
-
-            // var frames = _context.FileFrames.Where(p => p.Time >= dialogue.BegTime && p.Time <= dialogue.EndTime).ToList();
-            // var framesIds = frames.Select(p => p.FileFrameId).ToList();
-            // var framesAtr = _context.FrameAttributes.Where(p => framesIds.Contains(p.FileFrameId)).ToList();
-            // var framesEm = _context.FrameEmotions.Where(p => framesIds.Contains(p.FileFrameId)).ToList();
-
-            // _context.FrameAttributes.RemoveRange(framesAtr);
-            // _context.SaveChanges();
-
-            // _context.FrameEmotions.RemoveRange(framesEm);
-            // _context.SaveChanges();
-
-            //  _context.FileFrames.RemoveRange(frames);
-            // var words = _context.DialogueWords.Where(p => p.DialogueWordId.ToString() == "176b5d3a-2804-4cf5-91fd-3a609651e0f6").ToList();
-            // _context.RemoveRange(words);
-
-
-            // var mood = _context.DialogueClientSatisfactions.Where(p => p.DialogueId == dialogueId).First();
-            // mood.MeetingExpectationsTotal = 46;
-
-
-
-            return Ok();
-
         }
     }
 
