@@ -17,12 +17,10 @@ namespace UserOperations.Controllers
             {
                 case UnauthorizedAccessException unauthorizedAccess:
                     code = 401; break;//Unauthorized 
-                //case AccessException access:
-                ////    code = 403; break;//Forbidden
+                case AccessException access:
+                    code = 403; break;//Forbidden
                 case NoFoundException notFound:
                     code = 400; break;
-                //case DeletedException deleted:
-                //    code = 410; break;//Gone
                 default:
                     code = 400; break;
             }
@@ -38,9 +36,11 @@ namespace UserOperations.Controllers
 
     public class NoFoundException : Exception
     {
-        public NoFoundException(string message, Exception innerException = null) : base(message, innerException)
-        {
+        public NoFoundException(string message, Exception innerException = null) : base(message, innerException) {   }
+    }
 
-        }
+    public class AccessException : Exception
+    {
+        public AccessException(string message, Exception innerException = null) : base(message, innerException) { }
     }
 }

@@ -211,7 +211,7 @@ namespace UserOperations.Providers
         }
         public async Task<List<ApplicationUser>> GetEmployees(DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
         {
-            var employeeRole = (await _repository.FindOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
+            var employeeRole = (await _repository.FindOrNullOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
             var users =  _repository.GetAsQueryable<ApplicationUser>()
                    .Where(p =>
                        p.CreationDate <= endTime

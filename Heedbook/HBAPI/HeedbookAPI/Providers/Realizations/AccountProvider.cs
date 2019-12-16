@@ -27,7 +27,7 @@ namespace UserOperations.Providers
 
         public int GetStatusId(string statusName)
         {
-            var task = _repository.FindOneByConditionAsync<Status>(p => p.StatusName == statusName);
+            var task = _repository.FindOrNullOneByConditionAsync<Status>(p => p.StatusName == statusName);
             task.Wait();
             var statusId = task.Result.StatusId;
             return statusId;
@@ -107,7 +107,7 @@ namespace UserOperations.Providers
                 ExpirationDate = DateTime.UtcNow.AddDays(5),
                 isMonthly = false,
                 Rebillid = "",
-                StatusId = (await _repository.FindOneByConditionAsync<Status>(p => p.StatusName == "Trial")).StatusId//---Trial
+                StatusId = (await _repository.FindOrNullOneByConditionAsync<Status>(p => p.StatusName == "Trial")).StatusId//---Trial
             };            
             //---5---transaction---
             var transaction = new HBData.Models.Transaction
@@ -117,7 +117,7 @@ namespace UserOperations.Providers
                 OrderId = "",
                 PaymentId = "",
                 TariffId = tariff.TariffId,
-                StatusId = (await _repository.FindOneByConditionAsync<Status>(p => p.StatusName == "Finished")).StatusId,//---finished
+                StatusId = (await _repository.FindOrNullOneByConditionAsync<Status>(p => p.StatusName == "Finished")).StatusId,//---finished
                 PaymentDate = DateTime.UtcNow,
                 TransactionComment = "TRIAL TARIFF;FAKE TRANSACTION"
             };
@@ -140,7 +140,7 @@ namespace UserOperations.Providers
         public async Task AddContentAndCampaign(Company company)
         {
             Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
-            var content = await _repository.FindOneByConditionAsync<Content>(p => p.ContentId == contentPrototypeId);
+            var content = await _repository.FindOrNullOneByConditionAsync<Content>(p => p.ContentId == contentPrototypeId);
             if (content != null)
             {
                 content.ContentId = Guid.NewGuid();

@@ -66,7 +66,67 @@ namespace UserOperations.Controllers
             _repository = repository;
         }
         [HttpGet("Test")]
-        public async Task<ActionResult> Test()
-        => Ok();
+        public async Task<ActionResult> Test([FromQuery]string id)
+        {
+            var curDialogue = _context.Dialogues.Include(x => x.DialogueClientProfile).FirstOrDefault(x => x.DialogueId.ToString() == id);
+                try
+                {
+                    var company = _context.ApplicationUsers
+                                  .Where(x => x.Id == curDialogue.ApplicationUserId)
+                                  .Select(x => x.Company)
+                                  .FirstOrDefault();
+
+                    Guid? clientId = _context.Clients
+                            .Where(x => x.ClientId == curDialogue.PersonId)
+                            .Select(x => x.ClientId).FirstOrDefault();
+
+                
+                if (clientId != null && clientId != Guid.Empty) return BadRequest();
+                if (curDialogue.PersonId == null) clientId = Guid.NewGuid();
+                else
+                    clientId = curDialogue.PersonId;
+
+                var d = _context.DialogueClientProfiles
+                                    .Where(x => x.DialogueId == curDialogue.DialogueId).ToList();
+
+
+                var dialogueClientProfile = _context.DialogueClientProfiles
+                                    .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
+                    if (dialogueClientProfile == null) return null;
+
+                    var activeStatusId = _context.Statuss
+                                    .Where(x => x.StatusName == "Active")
+                                    .Select(x => x.StatusId)
+                                    .FirstOrDefault();
+
+                    double[] faceDescr = new double[0];
+                    try
+                    {
+                        faceDescr = JsonConvert.DeserializeObject<double[]>(curDialogue.PersonFaceDescriptor);
+                    }
+                    catch { }
+                    Client client = new Client
+                    {
+                        ClientId = (Guid)clientId,
+                        CompanyId = (Guid)company?.CompanyId,
+                        CorporationId = company?.CorporationId,
+                        FaceDescriptor = faceDescr,
+                        Age = (int)dialogueClientProfile?.Age,
+                        Avatar = dialogueClientProfile?.Avatar,
+                        Gender = dialogueClientProfile?.Gender,
+                        StatusId = activeStatusId
+                    };
+                    _context.Clients.Add(client);
+                    _context.SaveChanges();
+
+                    curDialogue.ClientId = clientId;
+                    _context.SaveChanges();
+                    return Ok(client.ClientId);
+                }
+                catch
+                {
+                    return null;
+                }
+        }
     }
 }

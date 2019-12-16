@@ -30,7 +30,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
-
+using UserOperations.Controllers;
 
 namespace UserOperations.Utils
 {
@@ -79,12 +79,12 @@ namespace UserOperations.Utils
             var isAdmin = roleInToken == "Admin";
             var isSupervisor = roleInToken == "Supervisor";
             if (isSupervisor && IsCompanyBelongToCorporation(corporationIdInToken, companyIdInParams) == false)
-                    return false;
+                throw new AccessException("No access");
             if (isAdmin) return true;
             if (!isSupervisor &&  (companyIdInParams == null || companyIdInToken != companyIdInParams))
-                return false;
+                throw new AccessException("No access");
             return true;
-        }   
+        }
 
         public void CheckRolesAndChangeCompaniesInFilter(ref List<Guid> companyIdsInFilter, List<Guid> corporationIdsInFilter, string role, Guid companyIdInToken)
         {

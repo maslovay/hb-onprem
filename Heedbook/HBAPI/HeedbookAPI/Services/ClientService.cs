@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models;
+using UserOperations.Controllers;
 
 namespace UserOperations.Services
 {
@@ -50,6 +51,7 @@ namespace UserOperations.Services
                     CompanyId = c.CompanyId,
                     CorporationId = c.CorporationId,
                     Email = c.Email,
+                    Name = c.Name,
                     Gender = c.Gender,
                     Phone = c.Phone,
                     StatusId = c.StatusId,
@@ -58,39 +60,43 @@ namespace UserOperations.Services
                 });
             return data.ToList();
             }
+        
+
+        public async Task<string> Update(PutClient client)
+        {
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
+            var corporationId = _loginService.GetCurrentCorporationId();
+            Client clientEntity = await _repository.FindOrExceptionOneByConditionAsync<Client>(c => c.ClientId == client.ClientId);
+            _requestFilters.IsCompanyBelongToUser(corporationId, companyId, clientEntity.CompanyId, role);
+
+            Type clientType = clientEntity.GetType();
+            foreach (var p in typeof(PutClient).GetProperties())
+            {
+                var val = p.GetValue(client, null);
+                if (val != null && val.ToString() != Guid.Empty.ToString() && p.Name != "ClientId")
+                {
+                    clientType.GetProperty(p.Name).SetValue(clientEntity, val);
+                }
+            }
+            _repository.Update<Client>(clientEntity);
+            await _repository.SaveAsync();
+            return "Saved";
         }
-        //private async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
-        //{
-        //    var persondIds = await GetDialogues(begTime, endTime, companyIds)
-        //            .Where ( p => p.PersonId != null )
-        //            .Select(p => p.PersonId).Distinct()
-        //            .ToListAsyncSafe();
-        //    return persondIds;
-        //}
-        //private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
-        //{
-        //    var data = _repository.GetAsQueryable<Dialogue>()
-        //            .Where(p => p.BegTime >= begTime &&
-        //                p.EndTime <= endTime &&
-        //                p.StatusId == 3 &&
-        //                p.InStatistic == true &&
-        //                (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))) &&
-        //                (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
-        //                (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))).AsQueryable();
-        //    return data;
-        //}
-        //private IQueryable<Dialogue> GetDialoguesIncludedClientProfile(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
-        //{
-        //    var data = _repository.GetAsQueryable<Dialogue>()
-        //        .Include(p => p.DialogueClientProfile)
-        //        .Include(p => p.ApplicationUser)
-        //        .Where(p => p.BegTime >= begTime &&
-        //            p.EndTime <= endTime &&
-        //            p.StatusId == 3 &&
-        //            p.InStatistic == true &&
-        //            (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
-        //            (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
-        //            (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
-        //    return data;
-        //}
+
+        public async Task<string> Delete(Guid clientId)
+        {
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
+            var corporationId = _loginService.GetCurrentCorporationId();
+            Client clientEntity = await _repository.FindOrExceptionOneByConditionAsync<Client>(c => c.ClientId == clientId);
+            _requestFilters.IsCompanyBelongToUser(corporationId, companyId, clientEntity.CompanyId, role);
+            var dialogues = await _repository.FindByConditionAsync<Dialogue>(c => c.ClientId == clientId);
+
+            dialogues.Select(d => { d.ClientId = null; return d; }).ToList();
+            _repository.Delete<Client>(clientEntity);
+            await _repository.SaveAsync();
+            return "Deleted";
+        }
     }
+}

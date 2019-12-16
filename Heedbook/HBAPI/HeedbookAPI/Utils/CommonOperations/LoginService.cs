@@ -277,6 +277,13 @@ namespace UserOperations.Services
         }
         public Guid GetCurrentCompanyId()
            => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "companyId")?.Value);
+        public Guid? GetCurrentCorporationId()
+        { 
+           Guid.TryParse(_httpContextAccessor.HttpContext.User.Claims
+               .FirstOrDefault(c => c.Type == "corporationId")?.Value, out var corporationId);
+           return corporationId;
+        }
+
 
         public Guid GetCurrentUserId()
             => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "applicationUserId")?.Value);

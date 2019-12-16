@@ -68,7 +68,7 @@ namespace UserOperations.Providers
 
         public async Task<bool> CheckUniqueEmailAsync(string email)
         {
-            return await _repository.FindOneByConditionAsync<ApplicationUser>(x => x.NormalizedEmail == email.ToUpper()) == null;
+            return await _repository.FindOrNullOneByConditionAsync<ApplicationUser>(x => x.NormalizedEmail == email.ToUpper()) == null;
         }
 
         public async Task<bool> CheckAbilityToCreateOrChangeUserAsync(string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId)
@@ -84,7 +84,7 @@ namespace UserOperations.Providers
 
         public async Task<bool> CheckAbilityToDeleteUserAsync(string roleInToken, Guid deletedUserRoleId)
         {
-            var deletedUserRoleName = (await _repository.FindOneByConditionAsync<ApplicationRole>(x => x.Id == deletedUserRoleId)).Name;
+            var deletedUserRoleName = (await _repository.FindOrNullOneByConditionAsync<ApplicationRole>(x => x.Id == deletedUserRoleId)).Name;
 
             if (roleInToken == "Admin") return true;
             if (roleInToken == "Supervisor") return deletedUserRoleName != "Admin" ? true : false;
@@ -96,7 +96,7 @@ namespace UserOperations.Providers
         {
             Guid? settedRoleId = newUserRoleId;
             if (newUserRoleId == null && oldUserRoleId == null)//---for create user
-                settedRoleId = (await _repository.FindOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
+                settedRoleId = (await _repository.FindOrNullOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
             else if (newUserRoleId == oldUserRoleId)//---for create user
                 return null;//---no changes in user
 
@@ -113,7 +113,7 @@ namespace UserOperations.Providers
             };
             await _repository.CreateAsync<ApplicationUserRole>(userRole);
             await _repository.SaveAsync();
-            return await _repository.FindOneByConditionAsync<ApplicationRole>(x => x.Id == (Guid)settedRoleId);
+            return await _repository.FindOrNullOneByConditionAsync<ApplicationRole>(x => x.Id == (Guid)settedRoleId);
         }
 
         public async Task<ApplicationUser> AddNewUserAsync(PostUser message)
@@ -130,7 +130,7 @@ namespace UserOperations.Providers
                 PasswordHash = _loginService.GeneratePasswordHash(message.Password),
                 StatusId = activeStatus,//3
                 EmpoyeeId = message.EmployeeId,
-                WorkerTypeId = message.WorkerTypeId ??(await _repository.FindOneByConditionAsync<WorkerType>(x => x.WorkerTypeName == "Employee")).WorkerTypeId
+                WorkerTypeId = message.WorkerTypeId ??(await _repository.FindOrNullOneByConditionAsync<WorkerType>(x => x.WorkerTypeName == "Employee")).WorkerTypeId
             };
             _repository.Create<ApplicationUser>(user);
             await _repository.SaveAsync();
@@ -163,7 +163,7 @@ namespace UserOperations.Providers
         //---COMPANY----
         public async Task<Company> GetCompanyByIdAsync(Guid companyId)
         {
-            return await _repository.FindOneByConditionAsync<Company>(p => p.CompanyId == companyId);
+            return await _repository.FindOrNullOneByConditionAsync<Company>(p => p.CompanyId == companyId);
         }
 
         public async Task<IEnumerable<Company>> GetCompaniesForAdminAsync()

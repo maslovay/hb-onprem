@@ -15,7 +15,10 @@ namespace HBData.Repository
         Task<IEnumerable<T>> FindByConditionAsync<T>(Expression<Func<T, Boolean>> predicate)
             where T : class;
 
-        Task<T> FindOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate)
+        Task<T> FindOrNullOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate)
+            where T : class;
+
+        Task<T> FindOrExceptionOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate) 
             where T : class;
 
         IEnumerable<T> Get<T>() where T : class;
