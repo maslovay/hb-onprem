@@ -33,25 +33,25 @@ namespace UserOperations.Controllers
     public class HelpController : Controller
     {
         private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-        private readonly IMailSender _mailSender;
-        private readonly IRequestFilters _requestFilters;
+        private readonly MailSender _mailSender;
+        private readonly RequestFilters _requestFilters;
         private readonly SftpSettings _sftpSettings;
-        private readonly IDBOperations _dbOperation;
+        private readonly DBOperations _dbOperation;
         private readonly IGenericRepository _repository;
 
 
         public HelpController(
             IConfiguration config,
-            ILoginService loginService,
+            LoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
-            IMailSender mailSender,
-            IRequestFilters requestFilters,
+            MailSender mailSender,
+            RequestFilters requestFilters,
             SftpSettings sftpSettings,
-            IDBOperations dBOperations,
+            DBOperations dBOperations,
             IGenericRepository repository
             )
         {

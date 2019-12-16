@@ -17,15 +17,15 @@ namespace UserOperations.Services
     {
         private readonly IAnalyticHomeProvider _analyticHomeProvider;
         private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly RequestFilters _requestFilters;
         private readonly AnalyticHomeUtils _utils;
 
         public AnalyticHomeService(
             IAnalyticHomeProvider homeProvider,
             IConfiguration config,
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             AnalyticHomeUtils utils
             )
         {

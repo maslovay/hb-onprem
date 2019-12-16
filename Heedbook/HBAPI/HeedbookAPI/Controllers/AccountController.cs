@@ -22,15 +22,15 @@ namespace UserOperations.Controllers
     [ApiController]
     public class AccountController : Controller
     {
-        private readonly ILoginService _loginService;
-        private readonly IMailSender _mailSender;
+        private readonly LoginService _loginService;
+        private readonly MailSender _mailSender;
         private readonly IAccountProvider _accountProvider;
         private readonly IHelpProvider _helpProvider;
         private Dictionary<string, string> userClaims;
 
         public AccountController(
-            ILoginService loginService,
-            IMailSender mailSender,
+            LoginService loginService,
+            MailSender mailSender,
             IAccountProvider accountProvider,
             IHelpProvider helpProvider
             )

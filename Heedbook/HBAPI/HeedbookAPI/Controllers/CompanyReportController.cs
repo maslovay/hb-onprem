@@ -43,11 +43,11 @@ namespace UserOperations.Controllers
     public class CompanyReportController : Controller
     {
         private readonly RecordsContext _context;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
 
         public CompanyReportController(
             RecordsContext context,
-            ILoginService loginService
+            LoginService loginService
             )
         {
             _context = context;

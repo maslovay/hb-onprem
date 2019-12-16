@@ -22,14 +22,14 @@ namespace UserOperations.Services
     [ApiController]
     public class CampaignContentService : Controller
     {
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private Dictionary<string, string> userClaims;
-        private readonly IRequestFilters _requestFilters;
+        private readonly RequestFilters _requestFilters;
         private readonly ICampaignContentProvider _campaignContentProvider;
 
         public CampaignContentService(
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             ICampaignContentProvider campaignContentProvider
             )
         {

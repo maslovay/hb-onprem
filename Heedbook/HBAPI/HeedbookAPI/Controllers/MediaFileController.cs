@@ -19,7 +19,7 @@ namespace UserOperations.Controllers
     public class MediaFileController : Controller
     {
         private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly string _containerName;
@@ -28,7 +28,7 @@ namespace UserOperations.Controllers
 
         public MediaFileController(
             IConfiguration config,
-            ILoginService loginService,
+            LoginService loginService,
             RecordsContext context,
             SftpClient sftpClient
             )

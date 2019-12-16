@@ -26,15 +26,15 @@ namespace UserOperations.Services
     public class AnalyticWeeklyReportService : Controller
     {
         private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly RequestFilters _requestFilters;
         private readonly IAnalyticWeeklyReportProvider _analyticWeeklyReportProvider;
         private readonly AnalyticWeeklyReportUtils _analyticWeeklyReportUtils;
 
         public AnalyticWeeklyReportService(
             IConfiguration config,
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             IAnalyticWeeklyReportProvider analyticWeeklyReportProvider,
             AnalyticWeeklyReportUtils analyticWeeklyReportUtils
             )

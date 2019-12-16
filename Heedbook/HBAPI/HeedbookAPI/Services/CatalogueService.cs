@@ -9,12 +9,12 @@ namespace UserOperations.Services
 {
     public class CatalogueService
     {
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly IGenericRepository _repository;
 
 
         public CatalogueService(
-            ILoginService loginService,
+            LoginService loginService,
             IGenericRepository repository
             )
         {

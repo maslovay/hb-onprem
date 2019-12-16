@@ -23,17 +23,14 @@ namespace UserOperations.Controllers
     {
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
-        private Dictionary<string, string> userClaims;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
         private readonly CampaignContentService _campaignContentService;
 
 
         public CampaignContentController(
             RecordsContext context,
             IConfiguration config,
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
             CampaignContentService campaignContentService
             )
         {
@@ -42,7 +39,6 @@ namespace UserOperations.Controllers
                 _context = context;
                 _config = config;
                 _loginService = loginService;
-                _requestFilters = requestFilters;
                 _campaignContentService = campaignContentService;
             }
             catch (Exception e)

@@ -26,13 +26,13 @@ namespace UserOperations.Controllers
     public class UserController : Controller
     {
         private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly RecordsContext _context;
-        private readonly IRequestFilters _requestFilters;
+        private readonly RequestFilters _requestFilters;
         private readonly SftpClient _sftpClient;
         private readonly SmtpSettings _smtpSetting;
         private readonly SmtpClient _smtpClient;
-        private readonly IMailSender _mailSender;
+        private readonly MailSender _mailSender;
         private readonly IUserProvider _userProvider;
         private readonly IPhraseProvider _phraseProvider;
         private Dictionary<string, string> userClaims;
@@ -42,13 +42,13 @@ namespace UserOperations.Controllers
 
         public UserController(
             IConfiguration config,
-            ILoginService loginService,
+            LoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
-            IRequestFilters requestFilters,
+            RequestFilters requestFilters,
             SmtpSettings smtpSetting,
             SmtpClient smtpClient,
-            IMailSender mailSender,
+            MailSender mailSender,
             IUserProvider userProvider,
             IPhraseProvider phraseProvider
             )

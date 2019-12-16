@@ -15,11 +15,11 @@ namespace UserOperations.Providers
     public class UserProvider : IUserProvider
     {
         private readonly IGenericRepository _repository;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly int activeStatus;
         private readonly int disabledStatus;
 
-        public UserProvider(IGenericRepository repository, ILoginService loginService)
+        public UserProvider(IGenericRepository repository, LoginService loginService)
         {
             _repository = repository;
             _loginService = loginService;

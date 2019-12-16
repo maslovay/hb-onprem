@@ -15,11 +15,11 @@ namespace UserOperations.Providers
     public class PhraseProvider : IPhraseProvider
     {
         private readonly IGenericRepository _repository;
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         //private readonly int activeStatus;
         //private readonly int disabledStatus;
 
-        public PhraseProvider(IGenericRepository repository, ILoginService loginService)
+        public PhraseProvider(IGenericRepository repository, LoginService loginService)
         {
             _repository = repository;
             _loginService = loginService;

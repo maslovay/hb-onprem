@@ -15,14 +15,14 @@ namespace UserOperations.Services
     [ApiController]
     public class AnalyticServiceQualityService : Controller
     {   
-        private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly RequestFilters _requestFilters;
         private readonly IAnalyticServiceQualityProvider _analyticServiceQualityProvider;
         private readonly AnalyticServiceQualityUtils _analyticServiceQualityUtils;
 
         public AnalyticServiceQualityService(
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             IAnalyticServiceQualityProvider analyticServiceQualityProvider,
             AnalyticServiceQualityUtils analyticServiceQualityUtils
             )

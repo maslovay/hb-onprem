@@ -24,7 +24,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace UserOperations.Services
 {
-    public class LoginService : ILoginService
+    public class LoginService
     {
         private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;

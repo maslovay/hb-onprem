@@ -10,10 +10,10 @@ namespace UserOperations.Controllers
     [ApiController]
     public class SiteController : Controller
     {
-        private readonly IMailSender _mailSender;
+        private readonly MailSender _mailSender;
 
         public SiteController(
-            IMailSender mailSender
+            MailSender mailSender
             )
         {
             _mailSender = mailSender;

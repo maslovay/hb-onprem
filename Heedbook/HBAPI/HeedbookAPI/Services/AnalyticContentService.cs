@@ -19,15 +19,15 @@ namespace UserOperations.Services
     public class AnalyticContentService
     {
         private readonly IHelpProvider _helpProvider;
-        private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticContentUtils _utils;
 
         public AnalyticContentService(
             IHelpProvider helpProvider,
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             IGenericRepository repository,
             AnalyticContentUtils utils
             )

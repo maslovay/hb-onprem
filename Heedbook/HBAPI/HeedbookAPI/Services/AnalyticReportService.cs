@@ -19,16 +19,16 @@ namespace UserOperations.Services
     public class AnalyticReportService : Controller
     {
         private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly RequestFilters _requestFilters;
         private readonly IAnalyticReportProvider _analyticReportProvider;
         private readonly AnalyticReportUtils _analyticReportUtils;
         // private readonly ElasticClient _log;
 
         public AnalyticReportService(
             IConfiguration config,
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             IAnalyticReportProvider analyticReportProvider,
             AnalyticReportUtils analyticReportUtils
             // ElasticClient log

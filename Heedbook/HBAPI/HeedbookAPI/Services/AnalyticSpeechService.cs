@@ -42,15 +42,15 @@ namespace UserOperations.Services
     [ApiController]
     public class AnalyticSpeechService : Controller
     {  
-        private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly RequestFilters _requestFilters;
         private readonly IAnalyticSpeechProvider _analyticSpeechProvider;
         private readonly AnalyticSpeechUtils _analyticSpeechUtils;
 
 
         public AnalyticSpeechService(
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             IAnalyticSpeechProvider analyticSpeechProvider,
             AnalyticSpeechUtils analyticSpeechUtils
             )

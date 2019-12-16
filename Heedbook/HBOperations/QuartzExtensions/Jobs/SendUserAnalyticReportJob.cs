@@ -34,7 +34,7 @@ namespace QuartzExtensions.Jobs
 {
     public class SendUserAnalyticReportJob : IJob
     {
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private ElasticClient _log;
@@ -44,7 +44,7 @@ namespace QuartzExtensions.Jobs
         private WeeklyReport _weeklyReport;
 
         public SendUserAnalyticReportJob(
-            ILoginService loginService,
+            LoginService loginService,
             IServiceScopeFactory factory, 
             ElasticClientFactory elasticClientFactory,
             SmtpSettings smtpSettings,

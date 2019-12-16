@@ -14,16 +14,16 @@ namespace UserOperations.Services
 {
     public class AnalyticOfficeService : Controller
     {  
-        private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly RequestFilters _requestFilters;
         private readonly IAnalyticOfficeProvider _analyticOfficeProvider;
         private readonly AnalyticOfficeUtils _analyticOfficeUtils;
         private readonly IConfiguration _config;
         // private readonly ElasticClient _log;
 
         public AnalyticOfficeService(
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             IAnalyticOfficeProvider analyticOfficeProvider,
             AnalyticOfficeUtils analyticOfficeUtils,
             IConfiguration config
