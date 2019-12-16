@@ -24,8 +24,6 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly LoginService _loginService;
-        private Dictionary<string, string> userClaims;
-        private readonly RequestFilters _requestFilters;
         private readonly CampaignContentService _campaignContentService;
 
 
@@ -33,7 +31,6 @@ namespace UserOperations.Controllers
             RecordsContext context,
             IConfiguration config,
             LoginService loginService,
-            RequestFilters requestFilters,
             CampaignContentService campaignContentService
             )
         {
@@ -42,7 +39,6 @@ namespace UserOperations.Controllers
                 _context = context;
                 _config = config;
                 _loginService = loginService;
-                _requestFilters = requestFilters;
                 _campaignContentService = campaignContentService;
             }
             catch (Exception e)
