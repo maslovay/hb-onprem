@@ -16,9 +16,9 @@ namespace UserOperations.Controllers
     public class ClientController : Controller
     {
         private readonly ClientService _clientService;
-        public ClientController( ClientService ñlientService )
+        public ClientController( ClientService clientService)
         {
-            _clientService = ñlientService;
+            _clientService = clientService;
         }
 
 
