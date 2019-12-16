@@ -31,4 +31,18 @@ namespace UserOperations.Models
         public string Avatar { get; set; }
         public Int32? StatusId { get; set; }
     }
+
+    public class PutClientNote
+    {
+        public Guid ClientNoteId { get; set; }
+        public string Text { get; set; }
+        public string[] Tags { get; set; }
+    }
+
+    public class PostClientNote
+    {
+        public Guid ClientId { get; set; }
+        public string Text { get; set; }
+        public string[] Tags { get; set; }
+    }
 }
