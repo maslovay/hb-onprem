@@ -30,7 +30,7 @@ namespace ApiTests
         {
             //Arrange
             var status = new Status(){StatusId = 3};
-            repositoryMock.Setup(p => p.FindOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
+            repositoryMock.Setup(p => p.FindOrNullOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
                 .Returns(Task.FromResult<Status>(status));
 
             var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);            
@@ -87,7 +87,7 @@ namespace ApiTests
             //Arrange
             repositoryMock.Setup(p => p.Create<Company>(It.IsAny<Company>())).Verifiable();  
             var status = new Status(){StatusId = 5};   
-            repositoryMock.Setup(p => p.FindOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
+            repositoryMock.Setup(p => p.FindOrNullOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
                 .Returns(Task.FromResult<Status>(status));     
             var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);
 
@@ -104,7 +104,7 @@ namespace ApiTests
             //Arrange
             repositoryMock.Setup(p => p.Create<ApplicationUser>(It.IsAny<ApplicationUser>())).Verifiable();  
             var status = new Status(){StatusId = 3};
-            repositoryMock.Setup(p => p.FindOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
+            repositoryMock.Setup(p => p.FindOrNullOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
                 .Returns(Task.FromResult<Status>(status));
 
             var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);
@@ -162,7 +162,7 @@ namespace ApiTests
         {
             //Arrange
             var status = new Status(){};
-            repositoryMock.Setup(p => p.FindOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>())).Returns(Task.FromResult<Status>(status));
+            repositoryMock.Setup(p => p.FindOrNullOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>())).Returns(Task.FromResult<Status>(status));
             var tariffs = new List<Tariff>();
             repositoryMock.Setup(p => p.Create<Tariff>(It.IsAny<Tariff>()))
                 .Callback((Tariff t) => tariffs.Add(t));
@@ -201,10 +201,10 @@ namespace ApiTests
             var campaignContents = new List<CampaignContent>();
             repositoryMock.Setup(p => p.Create<Content>(It.IsAny<Content>())).Verifiable();
             var content = new Content(){};
-            repositoryMock.Setup(p => p.FindOneByConditionAsync<Content>(It.IsAny<Expression<Func<Content, bool>>>()))
+            repositoryMock.Setup(p => p.FindOrNullOneByConditionAsync<Content>(It.IsAny<Expression<Func<Content, bool>>>()))
                 .Returns(Task.FromResult<Content>(content));
             var status = new Status(){StatusId = 3};   
-            repositoryMock.Setup(p => p.FindOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
+            repositoryMock.Setup(p => p.FindOrNullOneByConditionAsync<Status>(It.IsAny<Expression<Func<Status, bool>>>()))
                 .Returns(Task.FromResult<Status>(status));   
             repositoryMock.Setup(p => p.Create<CampaignContent>(It.IsAny<CampaignContent>()))
                 .Callback((CampaignContent cc) => campaignContents.Add(cc));

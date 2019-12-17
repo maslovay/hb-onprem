@@ -152,8 +152,8 @@ namespace UserOperations.Services
                     //         item.StatusId = inactiveStatusId;
                     //     }
                     // }
-                    var modelCampaignComtentIds = model.CampaignContents.Select(x => x.CampaignContentId);
-                    activeCampaignContents.Where(p => !modelCampaignComtentIds.Contains(p.CampaignContentId))
+                    var modelCampaignContentIds = model.CampaignContents.Select(x => x.CampaignContentId);
+                    activeCampaignContents.Where(p => !modelCampaignContentIds.Contains(p.CampaignContentId))
                         .Select(p => 
                             {
                                 p.StatusId = inactiveStatusId;

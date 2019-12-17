@@ -31,10 +31,17 @@ namespace HBData.Repository
             return await _context.Set<T>().ToListAsync();
         }
 
-        public async Task<T> FindOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate) where T : class
+        public async Task<T> FindOrNullOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate) where T : class
         {
             return await _context.Set<T>().Where(predicate).FirstOrDefaultAsync();
-        }      
+        }
+
+        public async Task<T> FindOrExceptionOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate) where T : class
+        {
+            var entity = await _context.Set<T>().Where(predicate).FirstOrDefaultAsync();
+            if (entity == default(T)) throw new Exception("No such entity");
+            return entity;
+        }
 
         public async Task<IEnumerable<T>> FindByConditionAsync<T>(Expression<Func<T, Boolean>> predicate)
             where T : class

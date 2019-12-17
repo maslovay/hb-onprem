@@ -168,7 +168,7 @@ namespace HBLib.Utils
             {
                 _log.Error($"{results}");
                 var googleAccount =
-                    await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
+                    await _repository.FindOrNullOneByConditionAsync<GoogleAccount>(item =>
                         item.GoogleAccountId == googleApiKey.GoogleAccountId);
                 googleAccount.StatusId = 8;
                 _repository.Save();
@@ -214,7 +214,7 @@ namespace HBLib.Utils
                 _log.Error($"{JsonConvert.SerializeObject(jsStr)}");
                 Console.WriteLine("api key expired");
                 var googleAccount =
-                    await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
+                    await _repository.FindOrNullOneByConditionAsync<GoogleAccount>(item =>
                         item.GoogleAccountId == apiKey.GoogleAccountId);
                 googleAccount.StatusId = 8;
                 _repository.Save();
@@ -226,7 +226,7 @@ namespace HBLib.Utils
         private async Task<GoogleAccount> GetApiKey()
         {
             //3 - is active. 
-            var googleAccount = await _repository.FindOneByConditionAsync<GoogleAccount>(item => item.StatusId == 3);
+            var googleAccount = await _repository.FindOrNullOneByConditionAsync<GoogleAccount>(item => item.StatusId == 3);
             return googleAccount;
         }
 

@@ -78,20 +78,20 @@ namespace QuartzExtensions.Jobs
             var sessions = _context.Sessions.Where(p => p.BegTime.Date >=sesBegTime
                     && p.EndTime.Date <=sesEndTime
                     && p.StatusId == 7)
-                .ToList();            
+                .ToList();
             var counter =0;
             foreach(var user in applicationUsers)
             {
                 var userSessions = sessions.Where(p => p.ApplicationUserId == user.Id).ToList();
                 if(userSessions == null || userSessions.Count == 0)
                 {
-                    _log.Error($"Sessions for user: {user.Id} is null");                
+                    _log.Error($"Sessions for user: {user.Id} is null");
                 }
                 else
                 {
                     if(!user.Email.Contains("@heedbook.com"))
                     {
-                        _log.Info($"Prepare report for applicationUser {user.Id} - {user.FullName}");        
+                        _log.Info($"Prepare report for applicationUser {user.Id} - {user.FullName}");
                         //await CreateHtmlWeeklyReport(user);
                         await _weeklyReport.CreateHtmlWeeklyReport(user);
                         await _weeklyReport.SendHttpReport();
@@ -109,7 +109,7 @@ namespace QuartzExtensions.Jobs
                 mail.To.Add("pinarin@heedbook.com");
                 mail.Subject = "Users Weekly Analytic Reports Status";
                 mail.Body = $"Weekly report sent to {counter} users";
-                mail.IsBodyHtml = false;                        
+                mail.IsBodyHtml = false;
                 _smtpClient.Send(mail); 
                 System.Console.WriteLine($"Weekly report sent to {counter} users");
             }   

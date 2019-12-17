@@ -57,7 +57,7 @@ namespace PersonDetectionService
                     try
                     {
                         _log.Info($"client { curDialogue.PersonId  } try to create");
-                        curDialogue.ClientId = CreateNewClient(curDialogue);
+                        curDialogue.ClientId = CreateNewClient(curDialogue);//clientId = personId (the same)
                         _log.Info($"client { curDialogue.PersonId  } created");
                     }
                     catch( Exception ex )
@@ -118,7 +118,7 @@ namespace PersonDetectionService
                 catch { }
                 Client client = new Client
                 {
-                    ClientId = clientId,
+                    ClientId = (Guid)curDialogue.PersonId,
                     CompanyId = (Guid)company?.CompanyId,
                     CorporationId = company?.CorporationId,
                     FaceDescriptor = faceDescr,

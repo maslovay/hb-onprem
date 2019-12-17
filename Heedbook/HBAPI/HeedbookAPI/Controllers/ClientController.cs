@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UserOperations.Models;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Services;
+using HBData.Models;
 
 namespace UserOperations.Controllers
 {
@@ -32,5 +33,17 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "begAge")] int begAge = 0,
                                                         [FromQuery(Name = "endAge")] int endAge = 100 ) 
             => await _clientService.GetAll( beg, end, genders, companyIds, begAge, endAge);
+
+        [HttpPut]
+        [SwaggerOperation(Summary = "set client email, name, phone", Description = "")]
+        [SwaggerResponse(200, "Saved", typeof(string))]
+        public async Task<string> ClientUpdate([FromBody] PutClient client)
+         => await _clientService.Update(client);
+
+        [HttpDelete]
+        [SwaggerOperation(Summary = "delete client and set null client's id in dialodues", Description = "")]
+        [SwaggerResponse(200, "Deleted", typeof(string))]
+        public async Task<string> ClientDelete([FromQuery] Guid clientId)
+        => await _clientService.Delete(clientId);
     }
 }
