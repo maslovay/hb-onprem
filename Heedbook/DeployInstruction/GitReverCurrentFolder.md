@@ -9,7 +9,8 @@
   ```sh
     Heedbook/HBOperations/AudioAnalyzeService
   ```
-  Скопировали sha предыдущего коммита 886a88592e626010d46c80f7a166507e75baad26.
+  Скопировали sha предыдущего коммита 886a88592e626010d46c80f7a166507e75baad26
+
 2. Необходимо выполнить команду для отката изменений всей папки:
   ```sh
     git checkout 886a88592e626010d46c80f7a166507e75baad26 Heedbook/HBOperations/AudioAnalyzeService
