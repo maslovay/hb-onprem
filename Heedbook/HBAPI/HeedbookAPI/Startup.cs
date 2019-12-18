@@ -87,6 +87,7 @@ namespace UserOperations
 
             services.AddScoped<AnalyticClientProfileService>();
             services.AddScoped<ClientService>();
+            services.AddScoped<ClientNoteService>();
             services.AddScoped<AnalyticContentService>();
             services.AddScoped<AnalyticHomeService>();
             services.AddScoped<AnalyticOfficeService>();

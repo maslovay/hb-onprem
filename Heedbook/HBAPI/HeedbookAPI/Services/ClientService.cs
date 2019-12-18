@@ -7,6 +7,7 @@ using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models;
 using UserOperations.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Services
 {
@@ -89,12 +90,17 @@ namespace UserOperations.Services
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
             var corporationId = _loginService.GetCurrentCorporationId();
-            Client clientEntity = await _repository.FindOrExceptionOneByConditionAsync<Client>(c => c.ClientId == clientId);
-            _requestFilters.IsCompanyBelongToUser(corporationId, companyId, clientEntity.CompanyId, role);
-            var dialogues = await _repository.FindByConditionAsync<Dialogue>(c => c.ClientId == clientId);
+            Client clientEntity = _repository.GetAsQueryable<Client>()
+                .Include(c => c.Dialogues)
+                .Include(c => c.ClientNotes)
+                .Where(c => c.ClientId == clientId)
+                .FirstOrDefault();
+            if (clientEntity == null) throw new NoFoundException("No such entity");
+            _requestFilters.IsCompanyBelongToUser(corporationId, companyId, clientEntity?.CompanyId, role);
 
-            dialogues.Select(d => { d.ClientId = null; return d; }).ToList();
-            _repository.Delete<Client>(clientEntity);
+            clientEntity.Dialogues.Select(d => { d.ClientId = null; return d; }).ToList();
+            _repository.Delete<ClientNote>(clientEntity.ClientNotes);
+            _repository.Delete(clientEntity);
             await _repository.SaveAsync();
             return "Deleted";
         }
