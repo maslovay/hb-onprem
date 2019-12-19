@@ -29,21 +29,21 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "This method can open or close session for applicationuser")]
         [SwaggerResponse(400, "Wrong action / Exception occured", typeof(string))]
         [SwaggerResponse(200, "Session succesfuly opened or closed")]
-        public IActionResult SessionStatus([FromBody] SessionParams data) =>
+        public Response SessionStatus([FromBody] SessionParams data) =>
             _sessionService.SessionStatus(data);
         
         [HttpGet("SessionStatus")]
         [SwaggerOperation(Description = "Returns begin time and StatusId for last Session")]
         [SwaggerResponse(400, "Exception occured", typeof(string))]
         [SwaggerResponse(200, "Last session exist")]
-        public IActionResult SessionStatus([FromQuery] Guid applicationUserId) =>
+        public object SessionStatus([FromQuery] Guid applicationUserId) =>
             _sessionService.SessionStatus(applicationUserId);
         
         [HttpPost("AlertNotSmile")]
         [SwaggerOperation(Description = "Save \"Client Does not smile\" alert in base")]
         [SwaggerResponse(400, "Exception occured", typeof(string))]
         [SwaggerResponse(200, "Alert saved")]
-        public IActionResult AlertNotSmile([FromBody] Guid applicationUserId) =>
+        public string AlertNotSmile([FromBody] Guid applicationUserId) =>
             _sessionService.AlertNotSmile(applicationUserId);
     }
 }

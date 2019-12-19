@@ -8,6 +8,7 @@ using UserOperations.Utils;
 using HBLib.Utils;
 using UserOperations.Models.Session;
 using HBData.Repository;
+using Newtonsoft.Json;
 
 namespace UserOperations.Services
 {
@@ -34,7 +35,7 @@ namespace UserOperations.Services
             _repository = repository;
         }
 
-        public IActionResult SessionStatus([FromBody] SessionParams data)
+        public Response SessionStatus([FromBody] SessionParams data)
         {
             const int OPEN = 6;
             const int CLOSE = 7;
@@ -48,13 +49,13 @@ namespace UserOperations.Services
                 {
 //                    _log.Info($"Session/SessionStatus ApplicationUser is empty");
                     response.Message = "ApplicationUser is empty";
-                    return BadRequest(response);
+                    return response;
                 }
                 if (data.Action != "open" && data.Action != "close") 
                 {
 //                    _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                     response.Message = "Wrong action";
-                    return BadRequest(response);
+                    return response;
                 }
 
                 var actionId = data.Action == "open" ? OPEN : CLOSE;
@@ -126,14 +127,14 @@ namespace UserOperations.Services
                 if (lastSession != null && actionId == lastSession.StatusId)
                 {
                     response.Message = $"Can't {data.Action} session";
-                    return Ok(response);
+                    return response;
                     // _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't {data.Action} session");
                 }
 
                 if (lastSession == null && actionId == CLOSE)
                 {
                     response.Message = "Can't close not opened session";
-                    return Ok(response);
+                    return response;
                     // _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                 }
 
@@ -152,7 +153,7 @@ namespace UserOperations.Services
                     _context.SaveChanges();
                     response.Message = "Session successfully opened";
                     _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
-                    return Ok(response);
+                    return response;
                 }
 
                 if (lastSession != null && actionId == CLOSE)
@@ -182,11 +183,11 @@ namespace UserOperations.Services
                     _context.SaveChanges();
                     response.Message = "session successfully closed";
                     _log.Info($"session successfully closed {data.ApplicationUserId}"); 
-                    return Ok(response);
+                    return response;
                 }
 
                 response.Message = "Wrong action";
-                return BadRequest(response);
+                return response;
             }
             catch (Exception e)
             {
@@ -194,59 +195,43 @@ namespace UserOperations.Services
                 {
                     Message = $"Exception occured {e}"
                 };
-                return BadRequest(response);
+                return response;
             }
         }
 
-        public IActionResult SessionStatus([FromQuery] Guid applicationUserId)
+        public object SessionStatus([FromQuery] Guid applicationUserId)
         {
-            try
-            {
-                var session = _context.Sessions
-                        .Where(p => p.ApplicationUserId == applicationUserId)
-                         ?.OrderByDescending(p => p.BegTime)
-                         ?.FirstOrDefault();
-                var result = new { session?.BegTime, session?.StatusId };
+            var session = _context.Sessions
+                    .Where(p => p.ApplicationUserId == applicationUserId)
+                        ?.OrderByDescending(p => p.BegTime)
+                        ?.FirstOrDefault();
+            var result = new { session?.BegTime, session?.StatusId };
 //                _log.Info($"Get Session/SessionStatus {applicationUserId}");
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                var response = new Response
-                {
-                    Message = $"Exception occured {e}"
-                };
-                //                _log.Fatal($"Exception occurred {e}");
-                return BadRequest(response);
-            }
+            return result;            
         }      
 
-        public IActionResult AlertNotSmile([FromBody] Guid applicationUserId)
+        public string AlertNotSmile([FromBody] Guid applicationUserId)
         {
-            try
+            System.Console.WriteLine(applicationUserId);
+            //var response = new Response();
+            if (String.IsNullOrEmpty(applicationUserId.ToString())) 
             {
-                var response = new Response();
-                if (String.IsNullOrEmpty(applicationUserId.ToString())) 
-                {
-                    response.Message = "ApplicationUser is empty";
-                    return BadRequest(response);
-                }
+                // response.Message  "ApplicationUser is empty";
+                // return response.Message;
+                return "ApplicationUser is empty";
+            }
 
-                var newAlert = new Alert
-                {
-                    CreationDate = DateTime.UtcNow,
-                    ApplicationUserId = applicationUserId,
-                    AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "client does not smile").AlertTypeId
-                };
-                _context.Alerts.Add(newAlert);
-                _context.SaveChanges();
-                response.Message = "Alert saved";
-                return Ok(response);
-            }
-            catch (Exception e)
+            var newAlert = new Alert
             {
-                return BadRequest(e.Message);
-            }
+                CreationDate = DateTime.UtcNow,
+                ApplicationUserId = applicationUserId,
+                AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "client does not smile").AlertTypeId
+            };
+            _context.Alerts.Add(newAlert);
+            _context.SaveChanges();
+            // response.Message = "Alert saved";
+            // return response.Message;
+            return "Alert saved";            
         }
     }    
 }
