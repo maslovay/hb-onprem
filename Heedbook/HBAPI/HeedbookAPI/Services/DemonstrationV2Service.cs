@@ -14,42 +14,47 @@ using HBData.Repository;
 
 namespace UserOperations.Services
 {
-    public class DemonstrationService
+    public class DemonstrationV2Service
     {
         private readonly SftpClient _sftpClient;
         private readonly IGenericRepository _repository;
+        private readonly LoginService _loginService;
 
-        public DemonstrationService(
+        public DemonstrationV2Service(
             SftpClient sftpClient,
-            IGenericRepository repository
+            IGenericRepository repository,
+            LoginService loginService
             )
         {
             _sftpClient = sftpClient;
             _repository = repository;
-        }      
+            _loginService = loginService;
+        }
+
         public async Task FlushStats( List<SlideShowSession> stats)
         {
+            var userId = _loginService.GetCurrentUserId();
             foreach (SlideShowSession stat in stats)
-            {                
+            {
                 if(stat.ContentType == "url")
-                {
                     stat.IsPoll = false;
-                }
                 else
                 {
                     var html = _repository.GetAsQueryable<CampaignContent>()
-                        .Include(p => p.Content)
-                        .Where(x=>x.CampaignContentId == stat.CampaignContentId).Select(x=>x.Content).FirstOrDefault().RawHTML;
+                        .Where(x => x.CampaignContentId == stat.CampaignContentId)
+                        .Select(x => x.Content.RawHTML).FirstOrDefault();
+
                     stat.IsPoll = html.Contains("PollAnswer") ? true : false;
                 }
                 stat.SlideShowSessionId = Guid.NewGuid();
-                _repository.Create<SlideShowSession>(stat);
-                _repository.Save();
+                stat.ApplicationUserId = userId;
+                await _repository.CreateAsync<SlideShowSession>(stat);
+                await _repository.SaveAsync();
             }
         }
-        public async Task<List<object>> GetContents(string userId)
-        {                      
-            var companyId = _repository.GetAsQueryable<ApplicationUser>().Where(x => x.Id.ToString() == userId).FirstOrDefault().CompanyId;
+        public async Task<List<object>> GetContents()
+        {
+            var companyId = _loginService.GetCurrentUserId();
             var curDate = DateTime.Now;
             var containerName = "media";
             var active = _repository.GetAsQueryable<Status>().Where(p => p.StatusName == "Active").FirstOrDefault().StatusId;
@@ -66,7 +71,7 @@ namespace UserOperations.Services
                     campaign = p,
                     contents = p.CampaignContents.Where(x=> x.StatusId == active)
                             .Select(c => new ContentWithId() { contentWithId = c.Content, campaignContentId = c.CampaignContentId, htmlId = c.ContentId.ToString() }).ToList()                        
-                }                
+                }
             ).ToList();
 
             var campaignsList = campaigns.Select(p => new CampaignModel
@@ -142,9 +147,10 @@ namespace UserOperations.Services
             return responseContent;
         }
         public async Task<string> PollAnswer( CampaignContentAnswer answer)
-        {              
+        {
             answer.CampaignContentAnswerId = Guid.NewGuid();
-            answer.Time = DateTime.UtcNow;
+            answer.ApplicationUserId = _loginService.GetCurrentUserId();
+            //answer.Time = DateTime.UtcNow;
             await _repository.CreateAsync<CampaignContentAnswer>(answer);
             await _repository.SaveAsync();
             return "Saved";
