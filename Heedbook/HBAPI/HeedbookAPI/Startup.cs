@@ -126,7 +126,8 @@ namespace UserOperations
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
                             {"begTime", new Schema{Type = "string", Format = "date-time"}},
                             {"endTime", new Schema{Type = "string", Format = "date-time"}},
-                            {"contentType", new Schema{Type = "string"}}
+                            {"contentType", new Schema{Type = "string"}},
+                            {"url", new Schema{Type = "string"}}
 
                         }
                 });

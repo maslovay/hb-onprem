@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +8,6 @@ using HBData;
 using HBLib.Utils;
 using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
-using UserOperations.CommonModels;
 using Microsoft.AspNetCore.Authorization;
 
 namespace UserOperations.Controllers
@@ -28,7 +25,7 @@ namespace UserOperations.Controllers
         private readonly LoginService _loginService;
         private readonly DemonstrationService _demonstrationService;
 
-        public DemonstrationController(
+        public DemonstrationController (
             RecordsContext context,
             IConfiguration config,
             DBOperations dbOperation,
@@ -43,7 +40,7 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
             _loginService = loginService;
             _demonstrationService = demonstrationService;
-        }      
+        }
 
         [HttpPost("FlushStats")]
         [SwaggerOperation(Summary = "Save contents display", Description = "Saves data about content display on device (content, user, content type, start and end date) for statistic")]
@@ -54,16 +51,6 @@ namespace UserOperations.Controllers
             SwaggerParameter("campaignContentId, applicationUserId, begTime, endTime, contentType", Required = true)] 
             List<SlideShowSession> stats) =>
             _demonstrationService.FlushStats(stats);
-        
-
-
-        [HttpGet("GetContents")]
-        [SwaggerOperation(Summary = "Return content on device", Description = "Get all content for loggined company with RowHtml data and url on media. Specially  for device")]
-        [SwaggerResponse(400, "Invalid userId or error in DB connection", typeof(string))]
-        [SwaggerResponse(200, "Content", typeof(ContentReturnOnDeviceModel))]
-        [AllowAnonymous]
-        public async Task<List<object>> GetContents([FromQuery] string userId) =>
-            await _demonstrationService.GetContents(userId);
         
     
         [HttpPost("PollAnswer")]
