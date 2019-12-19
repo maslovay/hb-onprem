@@ -1,50 +1,142 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using HBData;
 using HBData.Models;
 using HBData.Models.AccountViewModels;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.AccountModels;
 using UserOperations.Services;
-using Newtonsoft.Json;
 using HBData.Repository;
+using System.Collections.Generic;
+using System.Transactions;
+using UserOperations.Utils;
 
 namespace UserOperations.Providers
 {
-    public class AccountProvider : IAccountProvider
+    public class AccountService
     {
         private readonly LoginService _loginService;
         private readonly IGenericRepository _repository;
-        public AccountProvider(
+        private readonly MailSender _mailSender;
+        private readonly HelpProvider _helpProvider;
+        private Dictionary<string, string> userClaims;
+
+
+        public AccountService(
             LoginService loginService,
-            IGenericRepository repository
+            IGenericRepository repository,
+            MailSender mailSender,
+            HelpProvider helpProvider
         )
         {
             _loginService = loginService;
             _repository = repository;
+            _mailSender = mailSender;
+            _helpProvider = helpProvider;
         }
 
-        public int GetStatusId(string statusName)
+        public async Task RegisterNewCompanyAndUser(UserRegister message)
+        {
+            var statusActiveId = GetStatusId("Active");
+            if (await CompanyExist(message.CompanyName) || await EmailExist(message.Email))
+                throw new Exception("Company name or user email not unique");
+
+            var company = AddNewCompanysInBase(message);
+            var user = await AddNewUserInBase(message, company?.CompanyId);
+            await AddUserRoleInBase(message, user);
+
+            if (await GetTariffsAsync(company?.CompanyId) == 0)
+            {
+                await CreateCompanyTariffAndTransaction(company);
+                await AddWorkerType(company);
+                await AddContentAndCampaign(company);
+            }
+            await _repository.SaveAsync();
+            try
+            {
+                await _mailSender.SendRegisterEmail(user);
+            }
+            catch { }
+        }
+
+        public string GenerateToken(AccountAuthorization message)
+        {
+                var user = GetUserIncludeCompany(message.UserName);
+               
+                if (user.StatusId != GetStatusId("Active")) throw new Exception("User not activated");
+
+                if (_loginService.CheckUserLogin(message.UserName, message.Password))
+                    return _loginService.CreateTokenForUser(user, message.Remember);
+                else
+                    throw new UnauthorizedAccessException("Error in username or password");
+        }
+
+        public async Task<string> ChangePassword(AccountAuthorization message, string token = null)
+        {
+                ApplicationUser user = null;
+                //---FOR LOGGINED USER CHANGE PASSWORD WITH INPUT (receive new password in body message.Password)
+                if (_loginService.GetDataFromToken(token, out var userClaims))
+                {
+                    var userId = Guid.Parse(userClaims["applicationUserId"]);
+                    user = GetUserIncludeCompany(userId, message);
+                    user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
+                }
+                //---IF USER NOT LOGGINED HE RECEIVE GENERATED PASSWORD ON EMAIL
+                else
+                {
+                    user = GetUserIncludeCompany(message.UserName);
+                    string password = _loginService.GeneratePass(6);
+                    await _mailSender.SendPasswordChangeEmail(user, password);
+                    user.PasswordHash = _loginService.GeneratePasswordHash(password);
+                }
+                await _repository.SaveAsync();
+                return "Password changed";
+        }
+
+        public async Task<string> ChangePasswordOnDefault(string email)
+        {
+            var user = GetUserIncludeCompany(email);
+            user.PasswordHash = _loginService.GeneratePasswordHash("Test_User12345");
+            await _repository.SaveAsync();
+            return "Password changed";
+        }
+
+        public async Task<string> DeleteCompany(string email)//for own use
+        {
+            using (var transactionScope = new TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
+                       { IsolationLevel = IsolationLevel.Serializable }))
+            {
+                    await RemoveAccountWithSave(email);
+                    transactionScope.Complete();
+                    return "Removed";
+            }
+        }
+
+        public void AddPhrasesFromExcel(string fileName)//for own use
+        {
+            _helpProvider.AddComanyPhrases(fileName);
+        }
+
+
+        //---PRIVATE---
+        private int GetStatusId(string statusName)
         {
             var task = _repository.FindOrNullOneByConditionAsync<Status>(p => p.StatusName == statusName);
             task.Wait();
             var statusId = task.Result.StatusId;
             return statusId;
         }
-        public async Task<bool> CompanyExist(string companyName)
+        private async Task<bool> CompanyExist(string companyName)
         {
             var companys = await _repository.GetAsQueryable<Company>().Where(x => x.CompanyName == companyName).ToListAsync();            
             return companys.Any();
-        }  
-        
-        public async Task<bool> EmailExist(string email)
+        }
+        private async Task<bool> EmailExist(string email)
         {
             var emails = await _repository.GetAsQueryable<ApplicationUser>().Where(x => x.NormalizedEmail == email.ToUpper()).ToListAsync();            
             return emails.Any();
-        }  
-        
-        public Company AddNewCompanysInBase(UserRegister message)
+        }
+        private Company AddNewCompanysInBase(UserRegister message)
         {
             var company = new Company
             {
@@ -59,7 +151,7 @@ namespace UserOperations.Providers
             _repository.Create<Company>(company);
             return company;
         }
-        public async Task<ApplicationUser> AddNewUserInBase(UserRegister message, Guid? companyId)
+        private async Task<ApplicationUser> AddNewUserInBase(UserRegister message, Guid? companyId)
         {            
             var user = new ApplicationUser
             {
@@ -77,8 +169,8 @@ namespace UserOperations.Providers
             await _repository.CreateAsync<ApplicationUser>(user);
             _loginService.SavePasswordHistory(user.Id, user.PasswordHash);
             return user;
-        }      
-        public async Task AddUserRoleInBase(UserRegister message, ApplicationUser user)
+        }
+        private async Task AddUserRoleInBase(UserRegister message, ApplicationUser user)
         {
             message.Role = message.Role ?? "Manager";
             var roleId = _repository.GetAsQueryable<ApplicationRole>().FirstOrDefault(p => p.Name == message.Role).Id;
@@ -88,13 +180,13 @@ namespace UserOperations.Providers
                 RoleId = roleId
             };
             await _repository.CreateAsync<ApplicationUserRole>(userRole);
-        }  
-        public async Task<int> GetTariffsAsync(Guid? companyId)
+        }
+        private async Task<int> GetTariffsAsync(Guid? companyId)
         {
             var tariffs = await _repository.FindByConditionAsync<Tariff>(item => item.CompanyId == companyId);
             return tariffs.Count();
         }
-        public async Task CreateCompanyTariffAndTransaction(Company company)
+        private async Task CreateCompanyTariffAndTransaction(Company company)
         {            
             var tariff = new Tariff
             {
@@ -125,9 +217,9 @@ namespace UserOperations.Providers
             company.StatusId = GetStatusId("Active");
 //                        _log.Info("Transaction created");
             _repository.Create<Tariff>(tariff);
-            _repository.Create<Transaction>(transaction);
+            _repository.Create<HBData.Models.Transaction>(transaction);
         }
-        public async Task AddWorkerType(Company company)
+        private async Task AddWorkerType(Company company)
         {
             var workerType = new WorkerType
             {
@@ -137,7 +229,7 @@ namespace UserOperations.Providers
             };
             await _repository.CreateAsync<WorkerType>(workerType);
         }
-        public async Task AddContentAndCampaign(Company company)
+        private async Task AddContentAndCampaign(Company company)
         {
             Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
             var content = await _repository.FindOrNullOneByConditionAsync<Content>(p => p.ContentId == contentPrototypeId);
@@ -174,33 +266,26 @@ namespace UserOperations.Providers
                 _repository.Create<CampaignContent>(campaignContent);
             }
         }
-        public async Task SaveChangesAsync()
-        {
-            await _repository.SaveAsync();
-        }        
-        public void SaveChanges()
-        {
-            _repository.Save();
-        }
-
-        public ApplicationUser GetUserIncludeCompany(string email)
+        private ApplicationUser GetUserIncludeCompany(string email)
         {
             var user = _repository.GetWithIncludeOne<ApplicationUser>(p => p.NormalizedEmail == email.ToUpper(), o => o.Company);
+            if (user is null) throw new Exception("No such user");
             return user;
         }
-        public ApplicationUser GetUserIncludeCompany(Guid userId, AccountAuthorization message)
+        private ApplicationUser GetUserIncludeCompany(Guid userId, AccountAuthorization message)
         {
             var user = _repository.GetWithIncludeOne<ApplicationUser>(x => x.Id == userId && x.NormalizedEmail == message.UserName.ToUpper(), o => o.Company);
+            if (user is null) throw new Exception("No such user");
             return user;
         }
-        public async Task RemoveAccountWithSave(string email)
+        private async Task RemoveAccountWithSave(string email)
         {            
             var user = _repository.GetAsQueryable<ApplicationUser>().FirstOrDefault(p => p.Email == email);
             var company = _repository.GetAsQueryable<Company>().FirstOrDefault(x => x.CompanyId == user.CompanyId);
             var users = _repository.GetWithInclude<ApplicationUser>(x => x.CompanyId == company.CompanyId, o => o.UserRoles).ToList();            
             var tariff = _repository.GetAsQueryable<Tariff>().FirstOrDefault(x => x.CompanyId == company.CompanyId);
             
-            var taskTransactions = _repository.GetAsQueryable<Transaction>().Where(x => x.TariffId == tariff.TariffId).ToListAsync();
+            var taskTransactions = _repository.GetAsQueryable<HBData.Models.Transaction>().Where(x => x.TariffId == tariff.TariffId).ToListAsync();
             taskTransactions.Wait();
             var transactions = taskTransactions.Result;            
             
@@ -235,7 +320,7 @@ namespace UserOperations.Providers
                 _repository.Delete<Content>(contents);
             _repository.Delete<WorkerType>(workerTypes);
             _repository.Delete<ApplicationUserRole>(userRoles);
-            _repository.Delete<Transaction>(transactions);
+            _repository.Delete<HBData.Models.Transaction>(transactions);
             _repository.Delete<ApplicationUser>(users);
             _repository.Delete<Tariff>(tariff);
             _repository.Delete<Company>(company);

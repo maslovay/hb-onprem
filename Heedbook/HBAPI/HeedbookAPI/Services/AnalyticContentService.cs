@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using UserOperations.Utils;
 using System.Threading.Tasks;
-using UserOperations.Providers.Interfaces;
 using System.IO;
 using UserOperations.Models.Get.AnalyticContentController;
 using HBData.Repository;
@@ -18,14 +17,14 @@ namespace UserOperations.Services
 {
     public class AnalyticContentService
     {
-        private readonly IHelpProvider _helpProvider;
+        private readonly HelpProvider _helpProvider;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticContentUtils _utils;
 
         public AnalyticContentService(
-            IHelpProvider helpProvider,
+            HelpProvider helpProvider,
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,

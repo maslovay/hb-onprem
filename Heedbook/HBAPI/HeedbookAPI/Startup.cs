@@ -17,8 +17,6 @@ using UserOperations.Utils;
 using UserOperations.Services.Scheduler;
 using Quartz;
 using UserOperations.Providers;
-using UserOperations.Providers.Interfaces;
-using UserOperations.Providers.Realizations;
 using UserOperations.Utils.AnalyticHomeUtils;
 using UserOperations.Utils.AnalyticContentUtils;
 using UserOperations.Utils.AnalyticOfficeUtils;
@@ -79,12 +77,12 @@ namespace UserOperations
             services.AddScoped<IAnalyticSpeechProvider, AnalyticSpeechProvider>();
             services.AddScoped<IAnalyticWeeklyReportProvider, AnalyticWeeklyReportProvider>();
             services.AddScoped<ICampaignContentProvider, CampaignContentProvider>();
-            services.AddScoped<IAccountProvider, AccountProvider>();
-            services.AddScoped<IHelpProvider, HelpProvider>();
+            services.AddScoped<HelpProvider>();
             services.AddScoped<IUserProvider, UserProvider>();
             services.AddScoped<IPhraseProvider, PhraseProvider>();
             services.AddScoped(typeof(IAnalyticReportProvider), typeof(AnalyticReportProvider));
 
+            services.AddScoped<AccountService>();
             services.AddScoped<AnalyticClientProfileService>();
             services.AddScoped<ClientService>();
             services.AddScoped<ClientNoteService>();

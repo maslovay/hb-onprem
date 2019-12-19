@@ -76,9 +76,9 @@ namespace HBData.Repository
         public T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate,
             params Expression<Func<T, Object>>[] children) where T : class
         {
-            var dbSet = _context.Set<T>();
-            children.ToList().ForEach(x => dbSet.Include(x).Load());
-            return dbSet.FirstOrDefault(predicate);
+            var dbSet = _context.Set<T>().Where(predicate).AsQueryable();
+            dbSet = children.Aggregate(dbSet, (current, child) => current.Include(child));
+            return dbSet.FirstOrDefault();
         }
 
         public void BulkInsert<T>(IEnumerable<T> entities) where T : class
