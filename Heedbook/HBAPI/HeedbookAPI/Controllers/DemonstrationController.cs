@@ -6,22 +6,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using HBData.Models;
 using UserOperations.Services;
-using Microsoft.EntityFrameworkCore;
 using HBData;
 using HBLib.Utils;
 using UserOperations.Utils;
-using System.Collections;
-using System.Text.RegularExpressions;
-using static HBLib.Utils.SftpClient;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.CommonModels;
-using UserOperations.Services;
 using Microsoft.AspNetCore.Authorization;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]    
+    [ApiController]
     [ControllerExceptionFilter]
     [AllowAnonymous]
     public class DemonstrationController : Controller
