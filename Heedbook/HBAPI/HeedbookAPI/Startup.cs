@@ -98,6 +98,8 @@ namespace UserOperations
             services.AddScoped<CampaignContentService>();
             services.AddScoped<CatalogueService>();
             services.AddScoped<DemonstrationService>();
+            services.AddScoped<MediaFileService>();
+            services.AddScoped<SessionService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
