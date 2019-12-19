@@ -11,7 +11,6 @@ using Moq;
 using UserOperations.AccountModels;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Providers;
-using UserOperations.Providers.Interfaces;
 using UserOperations.Services;
 using UserOperations.Utils;
 
@@ -19,12 +18,12 @@ namespace ApiTests
 {
     public abstract class ApiServiceTest : IDisposable
     {
-        protected Mock<IAccountProvider> accountProviderMock;
+        protected Mock<AccountService> accountProviderMock;
         protected Mock<IAnalyticCommonProvider> commonProviderMock;
         protected Mock<IConfiguration> configMock;
         protected Mock<DBOperations> dbOperationMock;
         protected Mock<RequestFilters> filterMock;
-        protected Mock<IHelpProvider> helpProvider;
+        protected Mock<HelpProvider> helpProvider;
         protected Mock<MailSender> mailSenderMock;
         protected Mock<LoginService> moqILoginService;
         protected Mock<IGenericRepository> repositoryMock;
@@ -41,12 +40,12 @@ namespace ApiTests
             TestData.companyIds = TestData.GetCompanyIds();
             TestData.email = $"test1@heedbook.com";
 
-            accountProviderMock = new Mock<IAccountProvider>();
+            accountProviderMock = new Mock<AccountService>();
             commonProviderMock = new Mock<IAnalyticCommonProvider>();
             configMock = new Mock<IConfiguration>();
             dbOperationMock = new Mock<DBOperations>();
             filterMock = new Mock<RequestFilters>(MockBehavior.Loose);
-            helpProvider = new Mock<IHelpProvider>();
+            helpProvider = new Mock<HelpProvider>();
             mailSenderMock = new Mock<MailSender>();
             moqILoginService = new Mock<LoginService>();
             repositoryMock = new Mock<IGenericRepository>();
@@ -55,7 +54,7 @@ namespace ApiTests
         {
             InitMockILoginService();
             InitMockIMailSender();
-            InitMockIAccountProvider();
+            InitMockAccountService();
             InitMockIHelpProvider();
             InitMockIRequestFiltersProvider();
             InitMockIDBOperations();
@@ -97,38 +96,12 @@ namespace ApiTests
             mailSenderMock.Setup(p => p.SendPasswordChangeEmail(new HBData.Models.ApplicationUser(), "password"))
                 .Returns(Task.FromResult(0));
         }
-        public void InitMockIAccountProvider()
+        public void InitMockAccountService()
         {
-            accountProviderMock.Setup(p => p.GetStatusId(It.IsAny<string>()))
-                .Returns((string p) => p == "Active" ? 3 : (p == "Inactive" ? 5 : 0));
-            accountProviderMock.Setup(p => p.CompanyExist(It.IsAny<string>()))
-                .Returns(Task.FromResult(false));
-            accountProviderMock.Setup(p => p.EmailExist(It.IsAny<string>()))
-                .Returns(Task.FromResult(false));
-            accountProviderMock.Setup(p => p.AddNewCompanysInBase(It.IsAny<UserRegister>()))
-                .Returns(TestData.Company1());
-            accountProviderMock.Setup(p => p.AddNewUserInBase(It.IsAny<UserRegister>(), It.IsAny<Guid?>()))
-                .Returns(Task.FromResult(TestData.User1()));
-            accountProviderMock.Setup(p => p.AddUserRoleInBase(TestData.GetUserRegister(), new ApplicationUser()))
-                .Returns(Task.FromResult(0));
-            accountProviderMock.Setup(p => p.GetTariffsAsync(TestData.Company1().CompanyId))
-                .Returns(Task.FromResult(0));
-            accountProviderMock.Setup(p => p.CreateCompanyTariffAndTransaction(TestData.Company1()))
-                .Returns(Task.FromResult(0));
-            accountProviderMock.Setup(p => p.AddWorkerType(TestData.Company1()))
-                .Returns(Task.FromResult(0));
-            accountProviderMock.Setup(p => p.AddContentAndCampaign(TestData.Company1()))
-                .Returns(Task.FromResult(0));
-            accountProviderMock.Setup(p => p.GetUserIncludeCompany(It.IsAny<string>()))
-                .Returns(TestData.User1());
-            accountProviderMock.Setup(p => p.GetUserIncludeCompany(It.IsAny<Guid>(), It.IsAny<AccountAuthorization>()))
-                .Returns(TestData.User1());
-            accountProviderMock.Setup(p => p.RemoveAccountWithSave("email"))
-                .Callback(() => {});
         }
         public void InitMockIHelpProvider()
         {
-            helpProvider.Setup(p => p.AddComanyPhrases());
+           // helpProvider.Setup(p => p.AddComanyPhrases());
             helpProvider.Setup(p => p.CreatePoolAnswersSheet(It.IsAny<List<AnswerInfo>>(), It.IsAny<string>()))
                 .Returns(new MemoryStream());
         }

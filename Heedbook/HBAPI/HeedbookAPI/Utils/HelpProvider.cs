@@ -2,19 +2,17 @@
 using DocumentFormat.OpenXml.Packaging;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.IO;
 using DocumentFormat.OpenXml.Spreadsheet;
 using HBData;
 using Microsoft.EntityFrameworkCore;
 using HBData.Models;
 using DocumentFormat.OpenXml;
-using UserOperations.Providers.Interfaces;
 using UserOperations.Models.AnalyticModels;
 
-namespace UserOperations.Providers.Realizations
+namespace UserOperations.Utils
 {
-    public class HelpProvider : IHelpProvider
+    public class HelpProvider
     {
         private readonly RecordsContext _context;
         public HelpProvider( RecordsContext context )
@@ -23,9 +21,8 @@ namespace UserOperations.Providers.Realizations
             //xlsx
         }
 
-        public void AddComanyPhrases()
+        public void AddComanyPhrases(string filePath)
         {
-            var filePath = "/home/oleg/Downloads/Phrases.xlsx";
             using (FileStream FS = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 using (SpreadsheetDocument doc = SpreadsheetDocument.Open(filePath, false))

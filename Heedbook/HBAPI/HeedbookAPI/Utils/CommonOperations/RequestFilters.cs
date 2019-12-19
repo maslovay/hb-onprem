@@ -78,9 +78,10 @@ namespace UserOperations.Utils
         {
             var isAdmin = roleInToken == "Admin";
             var isSupervisor = roleInToken == "Supervisor";
+            if (isAdmin) return true;
+
             if (isSupervisor && IsCompanyBelongToCorporation(corporationIdInToken, companyIdInParams) == false)
                 throw new AccessException("No access");
-            if (isAdmin) return true;
             if (!isSupervisor &&  (companyIdInParams == null || companyIdInParams == Guid.Empty || companyIdInToken != companyIdInParams))
                 throw new AccessException("No access");
             return true;

@@ -183,13 +183,12 @@ namespace UserOperations.Services
             try
             {
                 var handler = new JwtSecurityTokenHandler();
-                SecurityToken tk;
                 var principial = handler.ValidateToken(token, new TokenValidationParameters()
                 {
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(sign)),
                     ValidIssuer = _config["Tokens:Issuer"],
                     ValidateAudience = false
-                }, out tk);
+                }, out SecurityToken tk);
             }
             catch (Exception e)
             {
