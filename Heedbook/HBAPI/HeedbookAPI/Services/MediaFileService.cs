@@ -10,7 +10,7 @@ using HBLib.Utils;
 
 namespace UserOperations.Services
 {
-    public class MediaFileService : Controller
+    public class MediaFileService
     {
         private readonly LoginService _loginService;
         private readonly SftpClient _sftpClient;

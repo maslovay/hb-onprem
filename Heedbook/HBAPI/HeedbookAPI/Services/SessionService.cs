@@ -12,25 +12,19 @@ using Newtonsoft.Json;
 
 namespace UserOperations.Services
 {
-    public class SessionService : Controller
+    public class SessionService
     {
         private readonly RecordsContext _context;
-        private readonly IConfiguration _config;
-        private readonly DBOperations _dbOperation;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
 
         public SessionService(
             RecordsContext context,
-            IConfiguration config,
-            DBOperations dbOperation,
             ElasticClient log,
             IGenericRepository repository
             )
         {
             _context = context;
-            _config = config;
-            _dbOperation = dbOperation;
             _log = log;
             _repository = repository;
         }
