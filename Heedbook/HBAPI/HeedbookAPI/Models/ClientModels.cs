@@ -27,7 +27,7 @@ namespace UserOperations.Models
         public string Phone { get; set; }
         public string Email { get; set; }
         public string Gender { get; set; }//male-female
-        public int Age { get; set; }
+        public int? Age { get; set; }
         public string Avatar { get; set; }
         public Int32? StatusId { get; set; }
     }

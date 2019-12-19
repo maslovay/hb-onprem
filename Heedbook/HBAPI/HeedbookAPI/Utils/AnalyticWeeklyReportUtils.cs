@@ -153,7 +153,7 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
                     Workload = (sessions != null && sessions.Count() != 0) ?
                         (double)(100 * (double?)dialogues.Where(d => s.Day.Date == d.Day.Date).FirstOrDefault()?.DialogueHours ?? 0 / (double)s.SessionsHours)
                         : 0,
-                    Day = s.Day
+                    s.Day
                 });
 
             Dictionary<DateTime, double> result = new Dictionary<DateTime, double>();

@@ -49,6 +49,12 @@ namespace UserOperations.Services
             var corporationId = _loginService.GetCurrentCorporationId();
             var userId = _loginService.GetCurrentUserId();
 
+            Guid clientCompanyId = _repository.GetAsQueryable<Client>()
+                        .Where(x => x.ClientId == clientNote.ClientId)
+                        .Select(x => x.CompanyId)
+                        .FirstOrDefault();
+            _requestFilters.IsCompanyBelongToUser(corporationId, companyId, clientCompanyId, role);
+
             ClientNote newNote = new ClientNote
             {
                 ApplicationUserId = userId,
@@ -64,7 +70,7 @@ namespace UserOperations.Services
         }
 
 
-        public async Task<string> Update(PutClientNote clientNote)
+        public async Task<ClientNote> Update(PutClientNote clientNote)
         {
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
@@ -90,7 +96,7 @@ namespace UserOperations.Services
             }
             _repository.Update<ClientNote>(clientNoteEntity);
             await _repository.SaveAsync();
-            return "Saved";
+            return clientNoteEntity;
         }
 
         public async Task<string> Delete(Guid clientNoteId)
@@ -107,6 +113,7 @@ namespace UserOperations.Services
                         .Select(x => x.CompanyId)
                         .FirstOrDefault();
             _requestFilters.IsCompanyBelongToUser(corporationId, companyId, clientCompanyId, role);
+
             _repository.Delete<ClientNote>(clientNoteEntity);
             await _repository.SaveAsync();
             return "Deleted";

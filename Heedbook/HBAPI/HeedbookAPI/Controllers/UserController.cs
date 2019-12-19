@@ -180,7 +180,7 @@ namespace UserOperations.Controllers
                 var roleInToken = userClaims["role"];
                 var employeeId = Guid.Parse(userClaims["applicationUserId"]);
 
-                if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user.CompanyId, roleInToken) == false)
+                if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user?.CompanyId, roleInToken) == false)
                     return BadRequest($"Not allowed user company");
 
                 if (await _userProvider.CheckAbilityToCreateOrChangeUserAsync(roleInToken, message.RoleId, user.UserRoles.FirstOrDefault().RoleId) == false)

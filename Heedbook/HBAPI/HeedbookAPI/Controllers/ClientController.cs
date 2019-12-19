@@ -17,16 +17,18 @@ namespace UserOperations.Controllers
     public class ClientController : Controller
     {
         private readonly ClientService _clientService;
-        public ClientController( ClientService clientService)
+        private readonly ClientNoteService _clientNoteService;
+        public ClientController( ClientService clientService, ClientNoteService clientNoteService)
         {
             _clientService = clientService;
+            _clientNoteService = clientNoteService;
         }
 
 
         [HttpGet("List")]
         [SwaggerOperation(Summary = "list of cliets", Description = "with dialogue ids and client notes")]
         [SwaggerResponse(200, "Clients[]", typeof(List<GetClient>))]
-        public async Task<List<GetClient>> ClientsGet([FromQuery(Name = "begTime")] string beg,
+        public async Task<ICollection<GetClient>> ClientsGet([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "genders[]")] List<string> genders,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -45,5 +47,30 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Deleted", typeof(string))]
         public async Task<string> ClientDelete([FromQuery] Guid clientId)
         => await _clientService.Delete(clientId);
+
+
+        [HttpGet("Clientnote")]
+        [SwaggerOperation(Summary = "list of client's notes", Description = "for one client")]
+        [SwaggerResponse(200, "ClientNotes[]", typeof(List<ClientNote>))]
+        public async Task<ICollection<ClientNote>> ClientNotesGet([FromQuery(Name = "clientId")] Guid clientId)
+           => await _clientNoteService.GetAll(clientId);
+
+        [HttpPost("Clientnote")]
+        [SwaggerOperation(Summary = "add new note for client", Description = "")]
+        [SwaggerResponse(200, "Saved", typeof(string))]
+        public async Task<ClientNote> ClientNotesCreate([FromBody] PostClientNote clientNote)
+        => await _clientNoteService.Create(clientNote);
+
+        [HttpPut("Clientnote")]
+        [SwaggerOperation(Summary = "change text of note or tags", Description = "")]
+        [SwaggerResponse(200, "ClientNote", typeof(ClientNote))]
+        public async Task<ClientNote> ClientNotesUpdate([FromBody] PutClientNote clientNote)
+         => await _clientNoteService.Update(clientNote);
+
+        [HttpDelete("Clientnote")]
+        [SwaggerOperation(Summary = "delete client's note", Description = "")]
+        [SwaggerResponse(200, "Deleted", typeof(string))]
+        public async Task<string> ClientNotesDelete([FromQuery] Guid clientNoteId)
+        => await _clientNoteService.Delete(clientNoteId);
     }
 }

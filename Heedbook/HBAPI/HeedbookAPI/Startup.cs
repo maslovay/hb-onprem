@@ -17,8 +17,6 @@ using UserOperations.Utils;
 using UserOperations.Services.Scheduler;
 using Quartz;
 using UserOperations.Providers;
-using UserOperations.Providers.Interfaces;
-using UserOperations.Providers.Realizations;
 using UserOperations.Utils.AnalyticHomeUtils;
 using UserOperations.Utils.AnalyticContentUtils;
 using UserOperations.Utils.AnalyticOfficeUtils;
@@ -79,14 +77,15 @@ namespace UserOperations
             services.AddScoped<IAnalyticSpeechProvider, AnalyticSpeechProvider>();
             services.AddScoped<IAnalyticWeeklyReportProvider, AnalyticWeeklyReportProvider>();
             services.AddScoped<ICampaignContentProvider, CampaignContentProvider>();
-            services.AddScoped<IAccountProvider, AccountProvider>();
-            services.AddScoped<IHelpProvider, HelpProvider>();
+            services.AddScoped<HelpProvider>();
             services.AddScoped<IUserProvider, UserProvider>();
             services.AddScoped<IPhraseProvider, PhraseProvider>();
             services.AddScoped(typeof(IAnalyticReportProvider), typeof(AnalyticReportProvider));
 
+            services.AddScoped<AccountService>();
             services.AddScoped<AnalyticClientProfileService>();
             services.AddScoped<ClientService>();
+            services.AddScoped<ClientNoteService>();
             services.AddScoped<AnalyticContentService>();
             services.AddScoped<AnalyticHomeService>();
             services.AddScoped<AnalyticOfficeService>();
@@ -100,7 +99,7 @@ namespace UserOperations
             services.AddScoped<DemonstrationService>();
             services.AddScoped<MediaFileService>();
             services.AddScoped<SessionService>();
-
+            services.AddScoped<DemonstrationV2Service>();
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
             services.AddScoped<AnalyticOfficeUtils>();
@@ -121,12 +120,12 @@ namespace UserOperations
                     Title = "User Service Api",
                     Version = "v1"
                 });
+
                 c.MapType<SlideShowSession>(() => new Schema
                 {
                     Type = "object",
                     Properties = new Dictionary<string, Schema> {
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
-                            {"applicationUserId", new Schema{Type = "string", Format = "uuid"}},
                             {"begTime", new Schema{Type = "string", Format = "date-time"}},
                             {"endTime", new Schema{Type = "string", Format = "date-time"}},
                             {"contentType", new Schema{Type = "string"}}
@@ -139,10 +138,10 @@ namespace UserOperations
                     Properties = new Dictionary<string, Schema> {
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
                             {"answer", new Schema{Type = "string"}},
-                            {"time", new Schema{Type = "string", Format = "date-time"}},
-                            {"applicationUserId", new Schema{Type = "string", Format = "uuid"}},
+                            {"time", new Schema{Type = "string", Format = "date-time"}}
                         }
                 });
+
                 c.AddSecurityDefinition("Bearer", new ApiKeyScheme()
                 {
                     Description = "JWT Authorization header {token}",

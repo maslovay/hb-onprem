@@ -9,12 +9,12 @@ namespace UserOperations.CommonModels
     [SwaggerTag("Get content")]
     public class ContentReturnOnDeviceModel// --for swagger
     {
-        public List<object> Campaigns;  
+        public List<object> Campaigns;
         public Hashtable htmlRaws;
         public List<string> blobMedia;
     }
 
-     public class ContentWithId
+    public class ContentWithId
     {
         public Content contentWithId;
         public string htmlId;
@@ -23,11 +23,11 @@ namespace UserOperations.CommonModels
 
     public class ContentModel
     {
-        public Guid Id {get; set;}
-        public Guid CampaignContentId {get; set;}
-        public string HTML {get; set;}
-        public int Duration {get; set;}
-        public string Type {get; set;}
+        public Guid Id { get; set; }
+        public Guid CampaignContentId { get; set; }
+        public string HTML { get; set; }
+        public int Duration { get; set; }
+        public string Type { get; set; }
     }
 
     public class CampaignModel
@@ -39,5 +39,4 @@ namespace UserOperations.CommonModels
         public List<ContentModel> Content;
         public bool IsSplashScreen;
     }
-
 }
