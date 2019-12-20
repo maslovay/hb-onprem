@@ -10,8 +10,8 @@ WORKDIR /app
 COPY --from=build-env /app/HBOperations/PersonDetectionService/publish .
 ENTRYPOINT ["dotnet", "PersonDetectionService.dll"]
 RUN apk add libgdiplus --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ --allow-untrusted
-RUN mkdir /opt/
+RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
-RUN mkdir /opt/download
+RUN mkdir -p /opt/download
 RUN chmod -R 777 /opt/download
 ENV TESTCLUSTER testcluster
