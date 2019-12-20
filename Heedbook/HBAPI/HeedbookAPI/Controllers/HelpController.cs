@@ -66,38 +66,31 @@ namespace UserOperations.Controllers
             _repository = repository;
         }
         [HttpGet("Test")]
-        public async Task<ActionResult> Test([FromQuery]string id)
+        public async Task<ActionResult> Test([FromQuery]int skip, int take)
         {
-            var curDialogue = _context.Dialogues.Include(x => x.DialogueClientProfile).FirstOrDefault(x => x.DialogueId.ToString() == id);
+            int counter = 0;
+            var dialogues = _context.Dialogues.Include(x => x.DialogueClientProfile).Skip(skip).Take(take).ToList();
+                    var activeStatusId = _context.Statuss
+                                    .Where(x => x.StatusName == "Active")
+                                    .Select(x => x.StatusId)
+                                    .FirstOrDefault();
+            foreach (var curDialogue in dialogues)
+            {
+                //   var curDialogue = _context.Dialogues.Include(x => x.DialogueClientProfile).FirstOrDefault(x => x.DialogueId.ToString() == id);
                 try
                 {
+                    if (curDialogue.ClientId != null) continue;
+
                     var company = _context.ApplicationUsers
                                   .Where(x => x.Id == curDialogue.ApplicationUserId)
                                   .Select(x => x.Company)
                                   .FirstOrDefault();
 
-                    Guid? clientId = _context.Clients
-                            .Where(x => x.ClientId == curDialogue.PersonId)
-                            .Select(x => x.ClientId).FirstOrDefault();
+                    Guid? personId = curDialogue.PersonId ?? Guid.NewGuid();
 
-                
-                if (clientId != null && clientId != Guid.Empty) return BadRequest();
-                if (curDialogue.PersonId == null) clientId = Guid.NewGuid();
-                else
-                    clientId = curDialogue.PersonId;
+                    var dialogueClientProfile = curDialogue.DialogueClientProfile.FirstOrDefault();
+                    if (dialogueClientProfile == null) continue;
 
-                var d = _context.DialogueClientProfiles
-                                    .Where(x => x.DialogueId == curDialogue.DialogueId).ToList();
-
-
-                var dialogueClientProfile = _context.DialogueClientProfiles
-                                    .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
-                    if (dialogueClientProfile == null) return null;
-
-                    var activeStatusId = _context.Statuss
-                                    .Where(x => x.StatusName == "Active")
-                                    .Select(x => x.StatusId)
-                                    .FirstOrDefault();
 
                     double[] faceDescr = new double[0];
                     try
@@ -105,9 +98,11 @@ namespace UserOperations.Controllers
                         faceDescr = JsonConvert.DeserializeObject<double[]>(curDialogue.PersonFaceDescriptor);
                     }
                     catch { }
+                    if (dialogueClientProfile.Age == null || dialogueClientProfile.Gender == null) continue;
+
                     Client client = new Client
                     {
-                        ClientId = (Guid)clientId,
+                        ClientId = (Guid)personId,
                         CompanyId = (Guid)company?.CompanyId,
                         CorporationId = company?.CorporationId,
                         FaceDescriptor = faceDescr,
@@ -117,16 +112,18 @@ namespace UserOperations.Controllers
                         StatusId = activeStatusId
                     };
                     _context.Clients.Add(client);
-                    _context.SaveChanges();
+                    //  _context.SaveChanges();
 
-                    curDialogue.ClientId = clientId;
+                    curDialogue.ClientId = personId;
                     _context.SaveChanges();
-                    return Ok(client.ClientId);
+                    counter++;
                 }
                 catch
                 {
                     return null;
                 }
+            }
+                    return Ok(counter);
         }
     }
 }
