@@ -100,6 +100,8 @@ namespace UserOperations
             services.AddScoped<MediaFileService>();
             services.AddScoped<SessionService>();
             services.AddScoped<DemonstrationV2Service>();
+            services.AddScoped<SiteService>();
+
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
             services.AddScoped<AnalyticOfficeUtils>();
