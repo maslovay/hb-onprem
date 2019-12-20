@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace UserOperations.Services
 {
-    public class TabletAppInfoService : Controller
+    public class TabletAppInfoService
     {
         private readonly LoginService _loginService;
         private readonly IGenericRepository _repository;
@@ -22,8 +22,11 @@ namespace UserOperations.Services
         }
         public object AddCurrentTabletAppVersion([FromRoute]string version)
         {
-            if(_loginService.GetCurrentRoleName().ToUpper() != "ADMIN")
-                return "Requires ADMIN role!";
+            if(!_loginService.IsAdmin())
+            {
+                var ex = new Exception("Requires ADMIN role!");
+                throw ex;
+            }
             
             if ( _repository.GetAsQueryable<TabletAppInfo>().Any( t => string.Equals(t.TabletAppVersion, version, StringComparison.CurrentCultureIgnoreCase) ) )
                 return new BadRequestObjectResult("This version already exists!");
@@ -34,17 +37,16 @@ namespace UserOperations.Services
                 TabletAppVersion = version
             };
 
-            _repository.Create<TabletAppInfo>(newVersion);
+            _repository.CreateAsync<TabletAppInfo>(newVersion);
             _repository.Save();
 
-            return Ok(newVersion);
+            return newVersion;
         }
         public object GetCurrentTabletAppVersion()
         {
             var currentRelease = _repository.GetAsQueryable<TabletAppInfo>().OrderByDescending(t => t.ReleaseDate).FirstOrDefault();
-            System.Console.WriteLine($"currentRelease is null: {currentRelease is null}");
             if (currentRelease == null)
-                return NotFound("No version info!");
+                return "No version info!";
             return currentRelease;
         }
     }
