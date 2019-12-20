@@ -319,5 +319,9 @@ namespace UserOperations.Services
             bool exist = task.Result;      
             return exist;
         }
+        public bool IsAdmin()
+        {
+            return GetCurrentRoleName().ToUpper() == "ADMIN" ? true : false;
+        }
     }
 }
