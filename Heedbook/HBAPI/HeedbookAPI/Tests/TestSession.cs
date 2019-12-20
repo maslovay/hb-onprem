@@ -13,6 +13,8 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using HBLib;
 using Microsoft.Extensions.Options;
+using UserOperations.Services;
+using HBData.Repository;
 
 namespace UserOperations.Controllers
 {
@@ -22,6 +24,7 @@ namespace UserOperations.Controllers
     {
         private Startup _startup { get; set; }
         private RecordsContext _context { get; set; }
+        private IGenericRepository _repository {get; set;}
         private DBOperations _dbOperation { get; set; }
         private ElasticClient _log { get; set; }
         public IConfiguration _config { get; private set; }
@@ -45,18 +48,18 @@ namespace UserOperations.Controllers
             "0d1127c8-750e-40fa-a84e-f7647ab8af97", "35feb4f3-c68a-49a5-a7a9-54631e5ffc9f")]
         public string N;
         [Benchmark(Description = "SessionStatus 1")]
-        public void TestSessionStatusMethod_1()
-        {
-            _sessionController = new SessionController(_context, _config, _dbOperation, _log );
-            _sessionController.SessionStatus(new Guid(N));
-        }
+        // public void TestSessionStatusMethod_1()
+        // {
+        //     _sessionController = new SessionController(_context, _config, _dbOperation, _log );
+        //     _sessionController.SessionStatus(new Guid(N));
+        // }
 
-        [Benchmark(Description = "SessionStatus 2")]
-        public void TestSessionStatusMethod_2()
-        {
-            _sessionController = new SessionController(_context, _config, _dbOperation, _log);
-          //  _sessionController.SessionStatus2(new Guid(N));
-        }
+        // [Benchmark(Description = "SessionStatus 2")]
+        // public void TestSessionStatusMethod_2()
+        // {
+        //     _sessionController = new SessionController(_context, _config, _dbOperation, _log);
+        //   //  _sessionController.SessionStatus2(new Guid(N));
+        // }
 
         protected override Task PrepareTestData()
         {
