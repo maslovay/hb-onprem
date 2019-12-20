@@ -31,14 +31,6 @@ namespace UserOperations.ControllersV2
             SwaggerParameter("campaignContentId, begTime, endTime, contentType", Required = true)] 
             List<SlideShowSession> stats) =>
             _demonstrationService.FlushStats(stats);
-
-
-        [HttpGet("GetContents")]
-        [SwaggerOperation(Summary = "Return content on device", Description = "Get all content for loggined company with RawHtml data and url on media. Specially  for device")]
-        [SwaggerResponse(400, "Invalid userId or error in DB connection", typeof(string))]
-        [SwaggerResponse(200, "Content", typeof(ContentReturnOnDeviceModel))]
-        public async Task<List<object>> GetContents() =>
-            await _demonstrationService.GetContents();
         
     
         [HttpPost("PollAnswer")]
