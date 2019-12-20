@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using HBData;
-using HBData.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Services;
 
 
@@ -12,49 +9,30 @@ namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [ControllerExceptionFilter]
     public class TabletAppInfoController : Controller
     {
-        private readonly RecordsContext _context;
-        private readonly LoginService _loginService;
+        private readonly TabletAppInfoService _tabletAppInfoService;
         
-        public TabletAppInfoController( RecordsContext context, LoginService loginService )
+        public TabletAppInfoController( 
+            TabletAppInfoService tabletAppInfoService)
         {
-            _context = context;
-            _loginService = loginService;
+            _tabletAppInfoService = tabletAppInfoService;
         }
 
         [HttpGet("[action]/{version}")]
-        public IActionResult AddCurrentTabletAppVersion([FromRoute]string version, [FromHeader] string Authorization)
-        {
-            if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                return BadRequest("Token wrong");
-            if (userClaims["role"].ToUpper() != "ADMIN")
-                return BadRequest("Requires ADMIN role!");
-            
-            if ( _context.TabletAppInfos.Any( t => string.Equals(t.TabletAppVersion, version, StringComparison.CurrentCultureIgnoreCase) ) )
-                return new BadRequestObjectResult("This version already exists!");
-            
-            var newVersion = new TabletAppInfo()
-            {
-                ReleaseDate = DateTime.Now,
-                TabletAppVersion = version
-            };
-
-            _context.Add(newVersion);
-            _context.SaveChanges();
-
-            return Ok(newVersion);
-        }
+        [SwaggerOperation(Summary = "Added version in DB TabletAppInfo")]
+        [SwaggerResponse(400, "This version already exist in DB/ Exception occured", typeof(string))]
+        [SwaggerResponse(200, "Succesfully added in DB", typeof(string))]
+        public object AddCurrentTabletAppVersion([FromRoute]string version) =>
+            _tabletAppInfoService.AddCurrentTabletAppVersion(version);    
         
         [HttpGet("[action]")]
-        public IActionResult GetCurrentTabletAppVersion()
-        {
-            var currentRelease = _context.TabletAppInfos.OrderByDescending(t => t.ReleaseDate).FirstOrDefault();
-
-            if (currentRelease == null)
-                return NotFound("No version info!");
-
-            return Ok(currentRelease);
-        }
+        [SwaggerOperation(Summary = "Get Latest version of TabletApp")]
+        [SwaggerResponse(400, "No version info/ Exception occured", typeof(string))]
+        [SwaggerResponse(200, "Return latest version of TabletApp", typeof(string))]
+        public object GetCurrentTabletAppVersion() =>
+            _tabletAppInfoService.GetCurrentTabletAppVersion();
     }
 }
