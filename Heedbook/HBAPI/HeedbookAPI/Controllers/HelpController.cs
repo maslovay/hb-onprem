@@ -80,6 +80,12 @@ namespace UserOperations.Controllers
                 try
                 {
                     if (curDialogue.ClientId != null) continue;
+                    if(_context.Clients.Where(x => x.ClientId == curDialogue.PersonId).Any())
+                    {
+                        curDialogue.ClientId = curDialogue.PersonId;
+                        _context.SaveChanges();
+                        continue;
+                    }
 
                     var company = _context.ApplicationUsers
                                   .Where(x => x.Id == curDialogue.ApplicationUserId)
@@ -118,9 +124,10 @@ namespace UserOperations.Controllers
                     _context.SaveChanges();
                     counter++;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return null;
+                    var m = ex.Message;
+                    //return null;
                 }
             }
                     return Ok(counter);
