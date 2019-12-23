@@ -1,20 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using UserOperations.Services;
-using UserOperations.Models.AnalyticModels;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using HBData;
-using UserOperations.Utils;
-using UserOperations.Providers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [ControllerExceptionFilter]
     public class AnalyticOfficeController : Controller
     {
         private readonly AnalyticOfficeService _analyticOfficeProvider;
@@ -27,7 +22,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Efficiency")]
-        public IActionResult Efficiency([FromQuery(Name = "begTime")] string beg,
+        public string Efficiency([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -40,8 +35,7 @@ namespace UserOperations.Controllers
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds,
-                Authorization
+                workerTypeIds
             );
            
         

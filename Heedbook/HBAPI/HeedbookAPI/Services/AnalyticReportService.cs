@@ -16,9 +16,7 @@ using HBData.Models;
 
 namespace UserOperations.Services
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AnalyticReportService : Controller
+    public class AnalyticReportService
     {
         private readonly IConfiguration _config;
         private readonly LoginService _loginService;
@@ -33,7 +31,6 @@ namespace UserOperations.Services
             RequestFilters requestFilters,
             IGenericRepository repository,
             AnalyticReportUtils analyticReportUtils
-            // ElasticClient log
             )
         {
             _config = config;
@@ -41,51 +38,25 @@ namespace UserOperations.Services
             _requestFilters = requestFilters;
             _repository = repository;
             _analyticReportUtils = analyticReportUtils;
-            // _log = log;
         }
 
-        [HttpGet("ActiveEmployee")]
-        public IActionResult ReportActiveEmployee([FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public string ReportActiveEmployee( List<Guid> applicationUserIds, List<Guid> companyIds, 
+                                                   List<Guid> corporationIds, List<Guid> workerTypeIds)
         {
-            try
-            {
-                // _log.Info("AnalyticReport/ActiveEmployee started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var sessions = GetSessions(companyIds, applicationUserIds, workerTypeIds);
-                // _log.Info("AnalyticReport/ActiveEmployee finished");
-                return Ok(JsonConvert.SerializeObject(sessions));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(sessions);
         }
 
-        [HttpGet("UserPartial")]
-        public IActionResult ReportUserPartial([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public string ReportUserPartial( string beg, string end,
+                                                  List<Guid> applicationUserIds, List<Guid> companyIds,
+                                               List<Guid> corporationIds, List<Guid> workerTypeIds)
         {
-            try
-            {
-                // _log.Info("AnalyticReport/UserPartial started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
+                var currentUserId = _loginService.GetCurrentUserId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
@@ -112,7 +83,7 @@ namespace UserOperations.Services
                     applicationUserIds,
                     workerTypeIds,
                     userIds,
-                    userClaims,
+                    currentUserId,
                     employeeRole);
                 var result = sessions
                     .GroupBy(p => p.ApplicationUserId)
@@ -140,38 +111,19 @@ namespace UserOperations.Services
                         }).ToList();
                    
                 result.AddRange(emptyUsers);
-                // _log.Info("AnalyticReport/UserPartial finished");
-                return Ok(JsonConvert.SerializeObject(result));
+                return JsonConvert.SerializeObject(result);
 
             }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
-        }
 
-        [HttpGet("UserFull")]
-        public IActionResult ReportUserFull([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public string ReportUserFull( string beg, string end,
+                                         List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds )
         {
-            try
-            {
-                // _log.Info("AnalyticReport/UserFull started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                var begTime = _requestFilters.GetBegDate(beg);
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
+            var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);    
                 var employeeRole = GetEmployeeRoleId();
-                System.Console.WriteLine($"employeeRole: {employeeRole}");
                 var sessions = GetSessionsWithTimeFilter(
                     begTime,
                     endTime,
@@ -179,7 +131,6 @@ namespace UserOperations.Services
                     companyIds,
                     applicationUserIds,
                     workerTypeIds);
-                System.Console.WriteLine($"sessions: {sessions.Count}");
                 var dialogues = GetDialoguesWithWorkerType(
                     begTime,
                     endTime,
@@ -188,7 +139,7 @@ namespace UserOperations.Services
                     applicationUserIds,
                     workerTypeIds
                 );
-                System.Console.WriteLine($"dialogues: {dialogues.Count}");
+
                 var result = new List<ReportFullPeriodInfo>();
 
                 foreach (var date in dialogues.Select(p => p.BegTime.Date).Distinct().ToList())
@@ -215,22 +166,15 @@ namespace UserOperations.Services
                         }
                     }
                 }
-                System.Console.WriteLine($"result: {result.Count}");
-                // _log.Info("AnalyticReport/UserFull finished");
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(result);
         }
 
+
+        //---PRIVATE---
         private List<SessionInfo> GetSessions(
           List<Guid> companyIds,
           List<Guid> applicationUserIds,
-          List<Guid> workerTypeIds
-      )
+          List<Guid> workerTypeIds )
         {
             var sessions = _repository.GetAsQueryable<Session>()
                 .Where(p =>
@@ -253,8 +197,7 @@ namespace UserOperations.Services
             Guid employeeRole,
             List<Guid> companyIds,
             List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds
-        )
+            List<Guid> workerTypeIds )
         {
             var sessions = _repository.GetAsQueryable<Session>()
                 .Where(p =>
@@ -281,6 +224,7 @@ namespace UserOperations.Services
             var roleId = _repository.GetAsQueryable<ApplicationRole>().FirstOrDefault(x => x.Name == "Employee").Id;
             return roleId;
         }
+
         private List<DialogueInfo> GetDialogues(
             DateTime begTime,
             DateTime endTime,
@@ -346,9 +290,8 @@ namespace UserOperations.Services
             List<Guid> applicationUserIds,
             List<Guid> workerTypeIds,
             List<Guid> userIds,
-            Dictionary<string, string> userClaims,
-            Guid employeeRole
-        )
+            Guid currentUserId,
+            Guid employeeRole )
         {
             var users = _repository.GetAsQueryable<ApplicationUser>()
                 .Where(p =>
@@ -358,7 +301,7 @@ namespace UserOperations.Services
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.Id))
                     && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId))
                     && !userIds.Contains(p.Id)
-                    && p.Id != Guid.Parse(userClaims["applicationUserId"])
+                    && p.Id != currentUserId
                     && (p.UserRoles.Any(x => x.RoleId == employeeRole)))
                 .ToList();
 
