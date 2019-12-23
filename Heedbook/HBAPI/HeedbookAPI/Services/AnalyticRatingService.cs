@@ -78,7 +78,7 @@ namespace UserOperations.Services
             }
 
 
-        public async Task<List<RatingUserInfo>> RatingUsers( string beg, string end, 
+        public async Task<string> RatingUsers( string beg, string end, 
                                           List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds )
         {
                 var role = _loginService.GetCurrentRoleName();
@@ -124,7 +124,7 @@ namespace UserOperations.Services
                     }).ToList();
 
                 result = result.Union(emptyUsers).OrderByDescending(p => p.SatisfactionIndex).ToList();
-                return result;
+                return JsonConvert.SerializeObject(result);
         }  
 
 
