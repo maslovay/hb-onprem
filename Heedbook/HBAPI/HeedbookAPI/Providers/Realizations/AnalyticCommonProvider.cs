@@ -12,7 +12,7 @@ using UserOperations.Models.Get.AnalyticServiceQualityController;
 
 namespace UserOperations.Providers
 {
-    public class AnalyticCommonProvider : IAnalyticCommonProvider
+    public class AnalyticCommonProvider
     {
         private readonly IGenericRepository _repository;
         public AnalyticCommonProvider(IGenericRepository repository)

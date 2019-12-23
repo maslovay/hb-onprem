@@ -2,78 +2,58 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using HBData;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using UserOperations.Utils;
 using UserOperations.Models.Get.AnalyticRatingController;
 using UserOperations.Utils.AnalyticRatingUtils;
-using UserOperations.Providers;
+using HBData.Repository;
+using System.Threading.Tasks;
+using HBData.Models;
 
 namespace UserOperations.Services
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AnalyticRatingService : Controller
+    public class AnalyticRatingService
     {    
         private readonly LoginService _loginService;
         private readonly RecordsContext _context;
         private readonly RequestFilters _requestFilters;
         private readonly AnalyticRatingUtils _analyticRatingUtils;
-        private readonly IAnalyticRatingProvider _analyticRatingProvider;
+        private readonly IGenericRepository _repository;
 
         public AnalyticRatingService(
             LoginService loginService,
             RecordsContext context,
             RequestFilters requestFilters,
             AnalyticRatingUtils analyticRatingUtils,
-            IAnalyticRatingProvider analyticRatingProvider
+            IGenericRepository repository
             )
         {
             _loginService = loginService;
             _context = context;
             _requestFilters = requestFilters;
             _analyticRatingUtils = analyticRatingUtils;
-            _analyticRatingProvider = analyticRatingProvider;
+            _repository = repository;
         }
 
-        [HttpGet("Progress")]
-        public IActionResult RatingProgress([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+
+        public async Task<List<RatingProgressInfo>> RatingProgress( string beg,  string end, 
+                                             List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds)
         {
-            try
-            {
-                // _log.Info("AnalyticRating/Progress started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
-                var typeIdCross = _analyticRatingProvider.GetCrossPhraseTypeId();
+                var typeIdCross = await GetCrossPhraseTypeId();
 
-                var sessions = _analyticRatingProvider.GetSessions(
-                    begTime,
-                    endTime,
-                    companyIds,
-                    applicationUserIds,
-                    workerTypeIds);
+                var sessions = await GetSessions(
+                    begTime, endTime,
+                    companyIds, applicationUserIds, workerTypeIds);
 
-                var dialogues = _analyticRatingProvider.GetDialogues(
-                    begTime,
-                    endTime,
-                    companyIds,
-                    applicationUserIds,
-                    workerTypeIds,
-                    typeIdCross);
+                var dialogues = await GetDialogues(
+                    begTime, endTime,
+                    companyIds, applicationUserIds, workerTypeIds, typeIdCross);
 
                 var results = dialogues
                     .GroupBy(p => p.ApplicationUserId)
@@ -93,55 +73,29 @@ namespace UserOperations.Services
                                 CrossInProcents = _analyticRatingUtils.CrossIndex(p)
                             }).ToList()
                     }).ToList();
-
-                // _log.Info("AnalyticRating/Progress finished");
-                return Ok(JsonConvert.SerializeObject(results));
+                return results;
             }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
-        }
 
 
-        [HttpGet("RatingUsers")]
-        public IActionResult RatingUsers([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public async Task<List<RatingUserInfo>> RatingUsers( string beg, string end, 
+                                          List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds )
         {
-            try
-            {
-                // _log.Info("AnalyticRating/RatingUsers started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                // var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var sessions = _analyticRatingProvider.GetSessions(
-                    begTime,
-                    endTime,
-                    companyIds,
-                    applicationUserIds,
-                    workerTypeIds);
+                var sessions = await GetSessions(
+                    begTime, endTime,
+                    companyIds, applicationUserIds, workerTypeIds);
 
-                var typeIdCross = _analyticRatingProvider.GetCrossPhraseTypeId();
+                var typeIdCross = await GetCrossPhraseTypeId();
 
-                var dialogues = _analyticRatingProvider.GetDialogues(
-                    begTime,
-                    endTime,
-                    companyIds,
-                    applicationUserIds,
-                    workerTypeIds,
-                    typeIdCross
+                var dialogues = await GetDialogues(
+                    begTime, endTime,
+                    companyIds, applicationUserIds, workerTypeIds, typeIdCross
                 );
 
                 var result = dialogues
@@ -169,52 +123,32 @@ namespace UserOperations.Services
                     }).ToList();
 
                 result = result.Union(emptyUsers).OrderByDescending(p => p.SatisfactionIndex).ToList();
-                // _log.Info("AnalyticRating/RatingUsers finished");
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
+                return result;
         }  
 
 
-        [HttpGet("RatingOffices")]
-        public IActionResult RatingOffices([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public async Task<List<RatingOfficeInfo>> RatingOffices( string beg, string end, 
+                                                                 List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds )
         {
-            try
-            {
-                // _log.Info("AnalyticRating/RatingOffices started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                 //var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var sessions = _analyticRatingProvider.GetSessionInfoCompanys(
+                var sessions = await GetSessionInfoCompanys(
                     begTime,
                     endTime,
                     companyIds,
                     workerTypeIds
                 );
 
-                var typeIdCross = _analyticRatingProvider.GetCrossPhraseTypeId();
+                var typeIdCross = await GetCrossPhraseTypeId();
 
-                var dialogues = _analyticRatingProvider.GetDialogueInfoCompanys(
-                    begTime,
-                    endTime,
-                    companyIds,
-                    workerTypeIds,
-                    typeIdCross
+                var dialogues = await GetDialogueInfoCompanys(
+                    begTime, endTime,
+                    companyIds, workerTypeIds, typeIdCross
                 );
 
                 var result = dialogues
@@ -234,14 +168,116 @@ namespace UserOperations.Services
                         DialogueAveragePause = _analyticRatingUtils.DialogueAveragePause(sessions, p, begTime, endTime)
                     }).ToList();
                 result = result.OrderBy(p => p.EfficiencyIndex).ToList();
-                // _log.Info("AnalyticRating/RatingOffices finished");
-                return Ok(JsonConvert.SerializeObject(result));
+                return result;
             }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
-        }            
+
+
+        //---PRIVATE---
+        private async Task<Guid> GetCrossPhraseTypeId()
+        {
+            var typeIdCross = await _repository.GetAsQueryable<PhraseType>()
+                    .Where(p => p.PhraseTypeText == "Cross")
+                    .Select(p => p.PhraseTypeId).FirstOrDefaultAsync();
+            return typeIdCross;
+        }
+        private async Task<List<SessionInfo>> GetSessions(
+            DateTime begTime, DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds)
+        {
+            var sessions = await _repository.GetAsQueryable<Session>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 7
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new SessionInfo
+                {
+                    ApplicationUserId = p.ApplicationUserId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    FullName = p.ApplicationUser.FullName,
+                    CompanyId = p.ApplicationUser.CompanyId
+                })
+                .ToListAsync();
+            return sessions;
+        }
+        private async Task<List<DialogueInfo>> GetDialogues(
+            DateTime begTime, DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds,
+            Guid typeIdCross)
+        {
+            var dialogues = await _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new DialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    CompanyId = p.ApplicationUser.CompanyId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    FullName = p.ApplicationUser.FullName,
+                    CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
+                })
+                .ToListAsync();
+            return dialogues;
+        }
+        private async Task<List<SessionInfoCompany>> GetSessionInfoCompanys(
+            DateTime begTime, DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> workerTypeIds)
+        {
+            var sessions = await _repository.GetAsQueryable<Session>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 7
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new SessionInfoCompany
+                {
+                    CompanyId = (Guid)p.ApplicationUser.CompanyId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime
+                })
+                .ToListAsync();
+            return sessions;
+        }
+        private async Task<List<DialogueInfoCompany>> GetDialogueInfoCompanys(
+            DateTime begTime, DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> workerTypeIds,
+            Guid typeIdCross)
+        {
+            var dialogues = await _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new DialogueInfoCompany
+                {
+                    DialogueId = p.DialogueId,
+                    CompanyId = (Guid)p.ApplicationUser.CompanyId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    FullName = p.ApplicationUser.Company.CompanyName,
+                    CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
+                })
+                .ToListAsync();
+            return dialogues;
+        }
     }
 }

@@ -1,40 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
 using HBData.Models;
-using HBData.Models.AccountViewModels;
-using UserOperations.Services;
-using UserOperations.Models.AnalyticModels;
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
-using HBData;
 using UserOperations.Utils;
-using HBLib.Utils;
 using Swashbuckle.AspNetCore.Annotations;
-using UserOperations.Providers;
 using UserOperations.Models.Get.AnalyticSpeechController;
 using UserOperations.Utils.AnalyticSpeechController;
+using HBData.Repository;
 
 namespace UserOperations.Services
 {
@@ -44,20 +18,20 @@ namespace UserOperations.Services
     {  
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
-        private readonly IAnalyticSpeechProvider _analyticSpeechProvider;
+        private readonly IGenericRepository _repository;
         private readonly AnalyticSpeechUtils _analyticSpeechUtils;
 
 
         public AnalyticSpeechService(
             LoginService loginService,
             RequestFilters requestFilters,
-            IAnalyticSpeechProvider analyticSpeechProvider,
+            IGenericRepository repository,
             AnalyticSpeechUtils analyticSpeechUtils
             )
         {
             _loginService = loginService;
             _requestFilters = requestFilters;
-            _analyticSpeechProvider = analyticSpeechProvider;
+            _repository = repository;
             _analyticSpeechUtils = analyticSpeechUtils;
         }    
 
@@ -83,10 +57,10 @@ namespace UserOperations.Services
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId); 
-                var typeIdCross = _analyticSpeechProvider.GetCrossTypeId();
-                var typeIdAlert = _analyticSpeechProvider.GetAlertTypeId();
+                var typeIdCross = GetCrossTypeId();
+                var typeIdAlert = GetAlertTypeId();
 
-                var dialogues = _analyticSpeechProvider.GetDialogueInfos(
+                var dialogues = GetDialogueInfos(
                     begTime,
                     endTime,
                     companyIds,
@@ -137,7 +111,7 @@ namespace UserOperations.Services
 
                 // var companysPhrases = _analyticSpeechProvider.GetCompanyPhrases(companyIds);
                 
-                var dialogueIds = _analyticSpeechProvider.GetDialogueIds(
+                var dialogueIds = GetDialogueIds(
                     begTime,
                     endTime,
                     companyIds,
@@ -147,7 +121,7 @@ namespace UserOperations.Services
                 var dialoguesTotal = dialogueIds.Count();               
                
                 // GET ALL PHRASES INFORMATION
-                var phrasesInfo = _analyticSpeechProvider.GetPhraseInfo(
+                var phrasesInfo = GetPhraseInfo(
                     dialogueIds,
                     phraseIds,
                     phraseTypeIds);    
@@ -199,7 +173,7 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
-                var dialogueIds = _analyticSpeechProvider.GetDialogueIds(
+                var dialogueIds = GetDialogueIds(
                     begTime,
                     endTime,
                     companyIds,
@@ -208,7 +182,7 @@ namespace UserOperations.Services
                 // CREATE PARAMETERS                
                 var totalInfo = new SpeechPhraseTotalInfo();
 
-                var requestPhrase = _analyticSpeechProvider.DialoguePhrasesInfo(
+                var requestPhrase = DialoguePhrasesInfo(
                     dialogueIds,
                     phraseIds,
                     phraseTypeIds);             
@@ -242,7 +216,7 @@ namespace UserOperations.Services
                         Colour = p.First().Colour
                     }).ToList();
 
-                var types = _analyticSpeechProvider.GetPhraseTypes();
+                var types = GetPhraseTypes();
                // var employeeType = employee.GetType();
                 foreach (var type in types)
                 {
@@ -306,14 +280,14 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
-                var dialogueIds = _analyticSpeechProvider.GetDialogueIds(
+                var dialogueIds = GetDialogueIds(
                     begTime,
                     endTime,
                     companyIds,
                     applicationUserIds,
                     workerTypeIds);
 
-                var phrases = _analyticSpeechProvider.DialoguePhrasesInfoAsQueryable(
+                var phrases = DialoguePhrasesInfoAsQueryable(
                     dialogueIds,
                     phraseIds,
                     phraseTypeIds);
@@ -332,6 +306,148 @@ namespace UserOperations.Services
 //                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
+        }
+
+
+        private Guid GetCrossTypeId()
+        {
+            var typeIdCross = _repository.GetAsQueryable<PhraseType>()
+                .Where(p => p.PhraseTypeText == "Cross")
+                .Select(p => p.PhraseTypeId).First();
+            return typeIdCross;
+        }
+        private Guid GetAlertTypeId()
+        {
+            var typeIdAlert = _repository.GetAsQueryable<PhraseType>()
+                .Where(p => p.PhraseTypeText == "Alert")
+                .Select(p => p.PhraseTypeId).First();
+            return typeIdAlert;
+        }
+        private IQueryable<DialogueInfo> GetDialogueInfos(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds,
+            Guid typeIdCross,
+            Guid typeIdAlert)
+        {
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new DialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    FullName = p.ApplicationUser.FullName,
+                    CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                    AlertCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
+                })
+                .AsQueryable();
+            return dialogues;
+        }
+        private List<Guid?> GetCompanyPhrases(List<Guid> companyIds)
+        {
+            var companysPhrases = _repository.GetAsQueryable<PhraseCompany>()
+                .Where(p => (!companyIds.Any() || companyIds.Contains((Guid)p.CompanyId)))
+                .Select(p => p.PhraseId)
+                .ToList();
+            return companysPhrases;
+        }
+        private List<Guid> GetDialogueIds(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds)
+        {
+            var dialogueIds = _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.EndTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true)
+                .Where(p => (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => p.DialogueId).ToList();
+            return dialogueIds;
+        }
+
+        private IQueryable<PhrasesInfo> GetPhraseInfo(
+            List<Guid> dialogueIds,
+            List<Guid> phraseIds,
+            List<Guid> phraseTypeIds)
+        {
+            var phrasesInfo = _repository.GetAsQueryable<DialoguePhrase>()
+                .Where(p => p.DialogueId.HasValue
+                    && dialogueIds.Contains(p.DialogueId.Value)
+                    && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
+                    && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid)p.Phrase.PhraseTypeId))
+                    //&& (companysPhrases.Contains(p.PhraseId))
+                    )
+                .Select(p => new PhrasesInfo
+                {
+                    IsClient = p.IsClient,
+                    FullName = p.Dialogue.ApplicationUser.FullName,
+                    ApplicationUserId = p.Dialogue.ApplicationUserId,
+                    DialogueId = p.DialogueId,
+                    PhraseId = p.PhraseId,
+                    PhraseText = p.Phrase.PhraseText,
+                    PhraseTypeText = p.Phrase.PhraseType.PhraseTypeText
+                })
+                .AsQueryable();
+            return phrasesInfo;
+        }
+
+        private List<DialoguePhrasesInfo> DialoguePhrasesInfo(
+            List<Guid> dialogueIds,
+            List<Guid> phraseIds,
+            List<Guid> phraseTypeIds
+        )
+        {
+            var requestPhrase = _repository.GetAsQueryable<DialoguePhrase>()
+                .Where(p => p.DialogueId.HasValue && dialogueIds.Contains(p.DialogueId.Value)
+                    && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
+                    && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid)p.Phrase.PhraseTypeId)))
+                .Select(p => new DialoguePhrasesInfo
+                {
+                    IsClient = p.IsClient,
+                    PhraseType = p.Phrase.PhraseType.PhraseTypeText,
+                    Colour = p.Phrase.PhraseType.Colour,
+                    DialogueId = p.DialogueId
+                }).ToList();
+            return requestPhrase;
+        }
+        private List<PhraseType> GetPhraseTypes()
+        {
+            return _repository.GetAsQueryable<PhraseType>().ToList();
+        }
+        private IQueryable<DialoguePhrasesInfo> DialoguePhrasesInfoAsQueryable(
+            List<Guid> dialogueIds,
+            List<Guid> phraseIds,
+            List<Guid> phraseTypeIds
+        )
+        {
+            var phrases = _repository.GetAsQueryable<DialoguePhrase>()
+                .Where(p => p.DialogueId.HasValue
+                    && dialogueIds.Contains(p.DialogueId.Value)
+                    && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
+                    && (!phraseTypeIds.Any() || phraseTypeIds.Contains((Guid)p.Phrase.PhraseTypeId)))
+                .Select(p => new DialoguePhrasesInfo
+                {
+                    PhraseText = p.Phrase.PhraseText,
+                    PhraseColor = p.Phrase.PhraseType.Colour
+                })
+                .AsQueryable();
+            return phrases;
         }
     }
 }

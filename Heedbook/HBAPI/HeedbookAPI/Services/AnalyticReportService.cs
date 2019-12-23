@@ -11,6 +11,8 @@ using HBData;
 using UserOperations.Utils.AnalyticReportUtils;
 using UserOperations.Providers;
 using UserOperations.Utils;
+using HBData.Repository;
+using HBData.Models;
 
 namespace UserOperations.Services
 {
@@ -21,7 +23,7 @@ namespace UserOperations.Services
         private readonly IConfiguration _config;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
-        private readonly IAnalyticReportProvider _analyticReportProvider;
+        private readonly IGenericRepository _repository;
         private readonly AnalyticReportUtils _analyticReportUtils;
         // private readonly ElasticClient _log;
 
@@ -29,7 +31,7 @@ namespace UserOperations.Services
             IConfiguration config,
             LoginService loginService,
             RequestFilters requestFilters,
-            IAnalyticReportProvider analyticReportProvider,
+            IGenericRepository repository,
             AnalyticReportUtils analyticReportUtils
             // ElasticClient log
             )
@@ -37,7 +39,7 @@ namespace UserOperations.Services
             _config = config;
             _loginService = loginService;
             _requestFilters = requestFilters;
-            _analyticReportProvider = analyticReportProvider;
+            _repository = repository;
             _analyticReportUtils = analyticReportUtils;
             // _log = log;
         }
@@ -57,7 +59,7 @@ namespace UserOperations.Services
                 var role = userClaims["role"];
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
-                var sessions = _analyticReportProvider.GetSessions(companyIds, applicationUserIds, workerTypeIds);
+                var sessions = GetSessions(companyIds, applicationUserIds, workerTypeIds);
                 // _log.Info("AnalyticReport/ActiveEmployee finished");
                 return Ok(JsonConvert.SerializeObject(sessions));
             }
@@ -88,15 +90,15 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var employeeRole = _analyticReportProvider.GetEmployeeRoleId();
-                var sessions = _analyticReportProvider.GetSessions(
+                var employeeRole = GetEmployeeRoleId();
+                var sessions = GetSessionsWithTimeFilter(
                     begTime,
                     endTime,
                     employeeRole,
                     companyIds,
                     applicationUserIds,
                     workerTypeIds);
-                var dialogues = _analyticReportProvider.GetDialogues(
+                var dialogues = GetDialogues(
                     begTime, 
                     endTime, 
                     companyIds, 
@@ -104,7 +106,7 @@ namespace UserOperations.Services
                     workerTypeIds);
                     //---USER WITHOUT SESSIONS---
                 var userIds = sessions.Select(x => x.ApplicationUserId).Distinct().ToList();
-                var usersToAdd = _analyticReportProvider.GetApplicationUsersToAdd(
+                var usersToAdd = GetApplicationUsersToAdd(
                     endTime,
                     companyIds,
                     applicationUserIds,
@@ -168,9 +170,9 @@ namespace UserOperations.Services
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);    
-                var employeeRole = _analyticReportProvider.GetEmployeeRoleId();
+                var employeeRole = GetEmployeeRoleId();
                 System.Console.WriteLine($"employeeRole: {employeeRole}");
-                var sessions = _analyticReportProvider.GetSessions(
+                var sessions = GetSessionsWithTimeFilter(
                     begTime,
                     endTime,
                     employeeRole,
@@ -178,7 +180,7 @@ namespace UserOperations.Services
                     applicationUserIds,
                     workerTypeIds);
                 System.Console.WriteLine($"sessions: {sessions.Count}");
-                var dialogues = _analyticReportProvider.GetDialoguesWithWorkerType(
+                var dialogues = GetDialoguesWithWorkerType(
                     begTime,
                     endTime,
                     employeeRole,
@@ -222,6 +224,145 @@ namespace UserOperations.Services
                 // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
+        }
+
+        private List<SessionInfo> GetSessions(
+          List<Guid> companyIds,
+          List<Guid> applicationUserIds,
+          List<Guid> workerTypeIds
+      )
+        {
+            var sessions = _repository.GetAsQueryable<Session>()
+                .Where(p =>
+                    p.StatusId == 6
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new SessionInfo
+                {
+                    ApplicationUserId = p.ApplicationUserId,
+                    FullName = p.ApplicationUser.FullName
+                })
+                .ToList().Distinct().ToList();
+            return sessions;
+        }
+
+        private List<SessionInfo> GetSessionsWithTimeFilter(
+            DateTime begTime,
+            DateTime endTime,
+            Guid employeeRole,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds
+        )
+        {
+            var sessions = _repository.GetAsQueryable<Session>()
+                .Where(p =>
+                    p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 7
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
+                .Select(p => new SessionInfo
+                {
+                    ApplicationUserId = p.ApplicationUserId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    FullName = p.ApplicationUser.FullName,
+                    // WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
+                })
+                .ToList();
+            return sessions;
+        }
+        private Guid GetEmployeeRoleId()
+        {
+            var roleId = _repository.GetAsQueryable<ApplicationRole>().FirstOrDefault(x => x.Name == "Employee").Id;
+            return roleId;
+        }
+        private List<DialogueInfo> GetDialogues(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds)
+        {
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new DialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    // WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
+                    FullName = p.ApplicationUser.FullName,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                })
+                .ToList();
+            return dialogues;
+        }
+        private List<DialogueInfo> GetDialoguesWithWorkerType(
+            DateTime begTime,
+            DateTime endTime,
+            Guid employeeRole,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds)
+        {
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime >= begTime
+                        && p.EndTime <= endTime
+                        && p.StatusId == 3
+                        && p.InStatistic == true
+                        && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                        && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                        && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                        && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
+                .Select(p => new DialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
+                    FullName = p.ApplicationUser.FullName,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    // Date = DbFunctions.TruncateTime(p.BegTime)
+                })
+                .ToList();
+            return dialogues;
+        }
+        private List<ApplicationUser> GetApplicationUsersToAdd(
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds,
+            List<Guid> userIds,
+            Dictionary<string, string> userClaims,
+            Guid employeeRole
+        )
+        {
+            var users = _repository.GetAsQueryable<ApplicationUser>()
+                .Where(p =>
+                    p.CreationDate <= endTime
+                    && p.StatusId == 3
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.Id))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId))
+                    && !userIds.Contains(p.Id)
+                    && p.Id != Guid.Parse(userClaims["applicationUserId"])
+                    && (p.UserRoles.Any(x => x.RoleId == employeeRole)))
+                .ToList();
+
+            return users;
         }
     }
 }

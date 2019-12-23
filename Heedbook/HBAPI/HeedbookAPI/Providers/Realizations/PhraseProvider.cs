@@ -12,7 +12,7 @@ using UserOperations.Services;
 
 namespace UserOperations.Providers
 {
-    public class PhraseProvider : IPhraseProvider
+    public class PhraseProvider
     {
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;

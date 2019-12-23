@@ -10,26 +10,29 @@ using UserOperations.Providers;
 using System.Threading.Tasks;
 using UserOperations.Models.Get.HomeController;
 using UserOperations.Utils.AnalyticHomeUtils;
+using HBData.Models;
+using HBData.Repository;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Services
 {
     public class AnalyticHomeService : Controller
     {
-        private readonly IAnalyticHomeProvider _analyticHomeProvider;
+        private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly AnalyticHomeUtils _utils;
 
         public AnalyticHomeService(
-            IAnalyticHomeProvider homeProvider,
+            IGenericRepository repository,
             IConfiguration config,
             LoginService loginService,
             RequestFilters requestFilters,
             AnalyticHomeUtils utils
             )
         {
-            _analyticHomeProvider = homeProvider;
+            _repository = repository;
             _config = config;
             _loginService = loginService;
             _requestFilters = requestFilters;
@@ -57,12 +60,12 @@ namespace UserOperations.Services
 
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);               
 
-                var sessions = await _analyticHomeProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
+                var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
                 var sessionCur = sessions != null? sessions.Where(p => p.BegTime.Date >= begTime).ToList() : null;
                 var sessionOld = sessions != null ? sessions.Where(p => p.BegTime.Date < begTime).ToList() : null;
-                var typeIdCross = await _analyticHomeProvider.GetCrossPhraseTypeIdAsync();
+                var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
-                var dialogues = _analyticHomeProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
+                var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
@@ -77,7 +80,7 @@ namespace UserOperations.Services
                        }).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = (await _analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds)).ToList();
+                List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
                 var dialoguesCur = (dialogues.Where(p => p.BegTime >= begTime).ToList());
                 var dialoguesOld = (dialogues.Where(p => p.BegTime < begTime).ToList());
@@ -120,14 +123,14 @@ namespace UserOperations.Services
                 //---benchmarks
                 if (benchmarksList != null && benchmarksList.Count() != 0)
                 {
-                    result.SatisfactionIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "SatisfactionIndexIndustryAvg");
-                    result.SatisfactionIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "SatisfactionIndexIndustryBenchmark");
+                    result.SatisfactionIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "SatisfactionIndexIndustryAvg");
+                    result.SatisfactionIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "SatisfactionIndexIndustryBenchmark");
 
-                    result.LoadIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
-                    result.LoadIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark"); 
+                    result.LoadIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
+                    result.LoadIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark"); 
 
-                    result.CrossIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg"); 
-                    result.CrossIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
+                    result.CrossIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg"); 
+                    result.CrossIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
                 }           
 
                 result.NumberOfDialoguesPerEmployeesDelta += result.NumberOfDialoguesPerEmployees;
@@ -169,12 +172,12 @@ namespace UserOperations.Services
 
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var sessions = await _analyticHomeProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
+                var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
                 var sessionCur = sessions != null ? sessions.Where(p => p.BegTime.Date >= begTime).ToList() : null;
                 var sessionOld = sessions != null ? sessions.Where(p => p.BegTime.Date < begTime).ToList() : null;
-                var typeIdCross = await _analyticHomeProvider.GetCrossPhraseTypeIdAsync();
+                var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
-                var dialogues = _analyticHomeProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
+                var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
@@ -192,17 +195,15 @@ namespace UserOperations.Services
               
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = (await _analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds)).ToList();
+                List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
-                var slideShowSessionsInDialoguesOld = await _analyticHomeProvider
-                    .GetSlideShowWithDialogueIdFilteredByPoolAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds, false, dialoguesOld);
+                var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds, false, dialoguesOld);
                 var viewsOld = slideShowSessionsInDialoguesOld.Where(x => x.Campaign == null || !x.Campaign.IsSplash).Count();
 
-                var slideShowSessionsInDialoguesCur = await _analyticHomeProvider
-                    .GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds, false, dialoguesCur);
+                var slideShowSessionsInDialoguesCur = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds, false, dialoguesCur);
                 var viewsCur = slideShowSessionsInDialoguesCur.Where(x => x.Campaign == null || !x.Campaign.IsSplash).Count();
 
                 var result = new NewDashboardInfo()
@@ -210,7 +211,7 @@ namespace UserOperations.Services
                     ClientsCount = _utils.DialoguesCount(dialoguesCur),
                     ClientsCountDelta = -_utils.DialoguesCount(dialoguesOld),
 
-                    EmployeeCount = (await _analyticHomeProvider.GetEmployees(endTime, companyIds, null, workerTypeIds)).Count(),
+                    EmployeeCount = (await GetEmployees(endTime, companyIds, null, workerTypeIds)).Count(),
                     BestEmployees = _utils.BestThreeEmployees(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
 
                     SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
@@ -224,8 +225,8 @@ namespace UserOperations.Services
 
                     AdvCount = viewsCur,
                     AdvCountDelta = viewsCur - viewsOld,
-                    AnswerCount = (await _analyticHomeProvider.GetAnswersAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds)).Count(),
-                    AnswerCountDelta = - (await _analyticHomeProvider.GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds)).Count()//,
+                    AnswerCount = (await GetAnswersAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds)).Count(),
+                    AnswerCountDelta = - (await GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds)).Count()//,
                     //EmployeeOnlineCount = await _analyticHomeProvider.GetSessionOnline(companyIds, workerTypeIds),
                     //EmployeeServingClientCount = 0,
                     //EmployeeTabletActiveCount = 0
@@ -235,14 +236,14 @@ namespace UserOperations.Services
                 //---benchmarks
                 if (benchmarksList != null && benchmarksList.Count() != 0)
                 {
-                    result.SatisfactionIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "SatisfactionIndexIndustryAvg");
-                    result.SatisfactionIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "SatisfactionIndexIndustryBenchmark");
+                    result.SatisfactionIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "SatisfactionIndexIndustryAvg");
+                    result.SatisfactionIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "SatisfactionIndexIndustryBenchmark");
 
-                    result.LoadIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
-                    result.LoadIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark");
+                    result.LoadIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
+                    result.LoadIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark");
 
-                    result.CrossIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg");
-                    result.CrossIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
+                    result.CrossIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg");
+                    result.CrossIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
                 }
 
                 result.CrossIndexDelta += result.CrossIndex;
@@ -282,8 +283,8 @@ namespace UserOperations.Services
 
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var typeIdCross = await _analyticHomeProvider.GetCrossPhraseTypeIdAsync();
-                var dialogues = _analyticHomeProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                var typeIdCross = await GetCrossPhraseTypeIdAsync();
+                var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
                         .Select(p => new DialogueInfo
                          {
                              DialogueId = p.DialogueId,
@@ -294,13 +295,13 @@ namespace UserOperations.Services
                          })
                          .ToList();
 
-                var sessions = await _analyticHomeProvider.GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds);
+                var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds);
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = (await _analyticHomeProvider.GetBenchmarksList(begTime, endTime, companyIds)).ToList();
+                List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
@@ -315,11 +316,11 @@ namespace UserOperations.Services
                 //---benchmarks
                 if (benchmarksList != null && benchmarksList.Count() != 0)
                 {
-                    loadIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
-                    loadIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark");
+                    loadIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
+                    loadIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark");
 
-                    crossIndexIndustryAverage = _analyticHomeProvider.GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg");
-                    crossIndexIndustryBenchmark = _analyticHomeProvider.GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
+                    crossIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg");
+                    crossIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
                 }
 
                 var result = new
@@ -367,7 +368,7 @@ namespace UserOperations.Services
         //    var endTime = _requestFilters.GetEndDate(end);
         //    _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
         //    var hintCount = !String.IsNullOrEmpty(_config["hint : hintCount"]) ? Convert.ToInt32(_config["hint : hintCount"]): 3;
-          
+
 
         //    var hints = _analyticHomeProvider.GetDialogueHints(begTime, endTime, companyIds, applicationUserIds, workerTypeIds)
         //            .Select(p => new
@@ -409,6 +410,213 @@ namespace UserOperations.Services
         //    });
         //    return Ok(JsonConvert.SerializeObject(topHints));
         //}
+
+
+        //---PRIVATE---
+        private async Task<IEnumerable<BenchmarkModel>> GetBenchmarksList(DateTime begTime, DateTime endTime, List<Guid> companyIds)
+        {
+            var industryIds = await GetIndustryIdsAsync(companyIds);
+            try
+            {
+                var benchmarksList = _repository.Get<Benchmark>().Where(x => x.Day >= begTime && x.Day <= endTime
+                                                             && industryIds.Contains(x.IndustryId))
+                                                              .Join(_repository.Get<BenchmarkName>(),
+                                                              bench => bench.BenchmarkNameId,
+                                                              names => names.Id,
+                                                              (bench, names) => new BenchmarkModel { Name = names.Name, Value = bench.Value });
+                return benchmarksList;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private double? GetBenchmarkIndustryAvg(List<BenchmarkModel> benchmarksList, string banchmarkName)
+        {
+            if (benchmarksList == null || benchmarksList.Count() == 0) return null;
+            return benchmarksList.Any(x => x.Name == banchmarkName) ?
+                 (double?)benchmarksList.Where(x => x.Name == banchmarkName).Average(x => x.Value) : null;
+        }
+
+        private double? GetBenchmarkIndustryMax(List<BenchmarkModel> benchmarksList, string banchmarkName)
+        {
+            if (benchmarksList == null || benchmarksList.Count() == 0) return null;
+            return benchmarksList.Any(x => x.Name == banchmarkName) ?
+                 (double?)benchmarksList.Where(x => x.Name == banchmarkName).Max(x => x.Value) : null;
+        }
+
+        private async Task<IEnumerable<Guid?>> GetIndustryIdsAsync(List<Guid> companyIds)
+        {
+            var industryIds = (await _repository.FindByConditionAsync<Company>(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)))?
+                     .Select(x => x.CompanyIndustryId).Distinct();
+            return industryIds;
+        }
+
+        private async Task<int> GetSessionOnline(List<Guid> companyIds, List<Guid> workerTypeIds)
+        {
+            return await _repository.GetAsQueryable<Session>().Where(p =>
+                     p.StatusId == 6
+                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                     && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).CountAsync();
+        }
+        private async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
+        {
+            var sessions = await _repository.GetAsQueryable<Session>()
+                         .Where(p => p.BegTime >= begTime
+                                 && p.EndTime <= endTime
+                                 && p.StatusId == 7
+                                 && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                                 && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                                 && (userIds == null || (!userIds.Any() || userIds.Contains(p.ApplicationUserId))))
+                         .Select(p => new SessionInfo
+                         {
+                             ApplicationUserId = p.ApplicationUserId,
+                             BegTime = p.BegTime,
+                             EndTime = p.EndTime
+                         })
+                         .ToListAsync();
+            return sessions;
+        }
+        private IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> applicationUserIds = null)
+        {
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
+                       .Include(p => p.ApplicationUser)
+                       .Include(p => p.DialogueClientSatisfaction)
+                       .Include(p => p.DialoguePhrase)
+                       .Where(p => p.BegTime >= begTime
+                               && p.EndTime <= endTime
+                               && p.StatusId == 3
+                               && p.InStatistic == true
+                               && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                               && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                               && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))).AsQueryable();
+            return dialogues;
+        }
+        private async Task<Guid> GetCrossPhraseTypeIdAsync()
+        {
+            var typeIdCross = await _repository.GetAsQueryable<PhraseType>()
+                    .Where(p => p.PhraseTypeText == "Cross")
+                    .Select(p => p.PhraseTypeId)
+                    .FirstOrDefaultAsync();
+            return typeIdCross;
+        }
+        private async Task<List<SlideShowInfo>> GetSlideShowWithDialogueIdFilteredByPoolAsync(
+          DateTime begTime,
+          DateTime endTime,
+          List<Guid> companyIds,
+          List<Guid> applicationUserIds,
+          List<Guid> workerTypeIds,
+          bool isPool,
+          List<DialogueInfo> dialogues
+          )
+        {
+            var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
+                .Where(p => p.IsPoll == isPool
+                    && p.BegTime >= begTime
+                    && p.BegTime <= endTime
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    && p.CampaignContent != null)
+                .Select(p =>
+                    new SlideShowInfo
+                    {
+                        BegTime = p.BegTime,
+                        ContentId = p.CampaignContent.ContentId,
+                        Campaign = p.CampaignContent.Campaign,
+                        ContentType = p.ContentType,
+                        ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
+                        EndTime = p.EndTime,
+                        IsPoll = p.IsPoll,
+                        Url = p.Url,
+                        ApplicationUserId = (Guid)p.ApplicationUserId,
+                        DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
+                                && x.EndTime >= p.BegTime
+                                && x.ApplicationUserId == p.ApplicationUserId)
+                            .DialogueId
+                    })
+                .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
+                .ToListAsyncSafe();
+            return slideShows;
+        }
+        private async Task<List<SlideShowInfo>> GetSlideShowWithDialogueIdFilteredByPoolAsync(
+           DateTime begTime,
+           DateTime endTime,
+           List<Guid> companyIds,
+           List<Guid> applicationUserIds,
+           List<Guid> workerTypeIds,
+           bool isPool,
+           List<DialogueInfoWithFrames> dialogues
+           )
+        {
+            var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
+                .Where(p => p.IsPoll == isPool
+                    && p.BegTime >= begTime
+                    && p.BegTime <= endTime
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    && p.CampaignContent != null)
+                .Select(p =>
+                    new SlideShowInfo
+                    {
+                        BegTime = p.BegTime,
+                        ContentId = p.CampaignContent.ContentId,
+                        Campaign = p.CampaignContent.Campaign,
+                        ContentType = p.ContentType,
+                        ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
+                        EndTime = p.EndTime,
+                        IsPoll = p.IsPoll,
+                        Url = p.Url,
+                        ApplicationUserId = (Guid)p.ApplicationUserId,
+                        DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
+                                && x.EndTime >= p.BegTime
+                                && x.ApplicationUserId == p.ApplicationUserId)
+                            .DialogueId,
+                        DialogueFrames = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
+                                && x.EndTime >= p.BegTime
+                                && x.ApplicationUserId == p.ApplicationUserId)
+                            .DialogueFrame,
+                        Age = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
+                                && x.EndTime >= p.BegTime
+                                && x.ApplicationUserId == p.ApplicationUserId)
+                            .Age,
+                        Gender = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
+                                && x.EndTime >= p.BegTime
+                                && x.ApplicationUserId == p.ApplicationUserId)
+                            .Gender
+                    })
+                .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
+                .ToListAsyncSafe();
+            return slideShows;
+        }
+        private async Task<List<ApplicationUser>> GetEmployees(DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        {
+            var employeeRole = (await _repository.FindOrNullOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
+            var users = _repository.GetAsQueryable<ApplicationUser>()
+                   .Where(p =>
+                       p.CreationDate <= endTime
+                       && p.StatusId == 3
+                       && (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.CompanyId)))
+                       && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.Id)))
+                       && (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId)))
+                       && (p.UserRoles.Any(x => x.RoleId == employeeRole))
+                   ).ToList();
+            return users;
+        }
+        private async Task<IEnumerable<CampaignContentAnswer>> GetAnswersAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
+        {
+            var result = await _repository.GetAsQueryable<CampaignContentAnswer>()
+                                     .Include(x => x.CampaignContent)
+                                     .Where(p =>
+                                    p.CampaignContent != null
+                                    && (p.Time >= begTime && p.Time <= endTime)
+                                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))).ToListAsyncSafe();
+            return result;
+        }
     }
 
 }
