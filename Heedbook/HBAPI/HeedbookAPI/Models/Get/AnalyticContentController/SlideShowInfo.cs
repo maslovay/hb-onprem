@@ -22,4 +22,5 @@ namespace UserOperations.Models.Get.AnalyticContentController
         public string Gender { get; set; }
         public EmotionAttention EmotionAttention { get; set; }
     }
+
 }

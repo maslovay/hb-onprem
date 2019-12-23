@@ -70,7 +70,7 @@ namespace UserOperations.Services.Scheduler
                              && p.StatusId == 3
                              && p.InStatistic == true
                              && p.ApplicationUser.Company.CompanyIndustryId != null)
-                     .Select(p => new DialogueInfo
+                     .Select(p => new DialogueInfoFull
                      {
                          IndustryId = p.ApplicationUser.Company.CompanyIndustryId,
                          CompanyId = p.ApplicationUser.CompanyId,
@@ -85,7 +85,7 @@ namespace UserOperations.Services.Scheduler
             var sessions = _context.Sessions
                      .Where(p => p.BegTime.Date == today
                            && p.StatusId == 7)
-                   .Select(p => new SessionInfo
+                   .Select(p => new SessionInfoFull
                    {
                        IndustryId = p.ApplicationUser.Company.CompanyIndustryId,
                        CompanyId = p.ApplicationUser.CompanyId,
