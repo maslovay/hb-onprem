@@ -6,7 +6,7 @@ namespace UserOperations.Utils.AnalyticSpeechController
 {
     public class AnalyticSpeechUtils
     {
-        public double? CrossIndex(IGrouping<Guid, DialogueInfo> dialogues)
+        public double? CrossIndex(IGrouping<Guid, UserOperations.Models.Get.AnalyticSpeechController.DialogueInfo> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;

@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 using System.Reflection;
 using System.Net;
 using UserOperations.Providers;
+using HBData.Repository;
 
 namespace UserOperations.Services
 {
@@ -25,19 +26,19 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private Dictionary<string, string> userClaims;
         private readonly RequestFilters _requestFilters;
-        private readonly ICampaignContentProvider _campaignContentProvider;
+        private readonly IGenericRepository _repository;
 
         public CampaignContentService(
             LoginService loginService,
             RequestFilters requestFilters,
-            ICampaignContentProvider campaignContentProvider
+            IGenericRepository repository
             )
         {
             try
             {
                 _loginService = loginService;
                 _requestFilters = requestFilters;
-                _campaignContentProvider = campaignContentProvider;
+                _repository = repository;
             }
             catch (Exception e)
             {
@@ -60,8 +61,8 @@ namespace UserOperations.Services
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var statusInactiveId =  _campaignContentProvider.GetStatusId("Inactive");
-                var campaigns = _campaignContentProvider.GetCampaignForCompanys(companyIds, statusInactiveId);
+                var statusInactiveId =  GetStatusId("Inactive");
+                var campaigns = GetCampaignForCompanys(companyIds, statusInactiveId);
                 
                 var result = campaigns
                     .Select(p => 
@@ -92,21 +93,21 @@ namespace UserOperations.Services
             if (!_loginService.GetDataFromToken(Authorization, out userClaims))
                 return BadRequest("Token wrong");
             var companyId = Guid.Parse(userClaims["companyId"]);
-            var activeStatus = _campaignContentProvider.GetStatusId("Active");
+            var activeStatus = GetStatusId("Active");
             Campaign campaign = model.Campaign;
             campaign.CompanyId = (Guid)companyId;
             campaign.CreationDate = DateTime.UtcNow;
             campaign.StatusId = activeStatus;
             campaign.CampaignContents = new List<CampaignContent>();
-            _campaignContentProvider.AddInBase<Campaign>(campaign);
-            _campaignContentProvider.SaveChanges();
+            AddInBase<Campaign>(campaign);
+            SaveChanges();
             foreach (var campCont in model.CampaignContents)
             {
                 campCont.CampaignId = campaign.CampaignId;
                 campCont.StatusId = activeStatus;
-                _campaignContentProvider.AddInBase<CampaignContent>(campCont);
+                AddInBase<CampaignContent>(campCont);
             }
-            _campaignContentProvider.SaveChanges();
+            SaveChanges();
             // _log.Info("Campaign POST finished");
             return Ok(campaign);
         }
@@ -128,7 +129,7 @@ namespace UserOperations.Services
             Campaign modelCampaign = model.Campaign;
             try
             {
-                var campaignEntity = _campaignContentProvider.GetCampaign(modelCampaign.CampaignId);
+                var campaignEntity = GetCampaign(modelCampaign.CampaignId);
                 if (campaignEntity == null) return null;
                 if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, campaignEntity.CompanyId, roleInToken) == false)
                     return BadRequest($"Not allowed user company");
@@ -139,8 +140,8 @@ namespace UserOperations.Services
                         p.SetValue(campaignEntity, p.GetValue(modelCampaign, null), null);
                 }
 
-                var inactiveStatusId = _campaignContentProvider.GetStatusId("Inactive");
-                var activeStatusId = _campaignContentProvider.GetStatusId("Active");
+                var inactiveStatusId = GetStatusId("Inactive");
+                var activeStatusId = GetStatusId("Active");
                 var activeCampaignContents = campaignEntity.CampaignContents.Where(x => x.StatusId != inactiveStatusId).ToList();
 
                 if (model.CampaignContents != null && model.CampaignContents.Count != 0)
@@ -175,12 +176,12 @@ namespace UserOperations.Services
                             {
                                 p.CampaignId = campaignEntity.CampaignId;
                                 p.StatusId = activeStatusId;
-                                _campaignContentProvider.AddInBase<CampaignContent>(p);
+                                AddInBase<CampaignContent>(p);
                                 return p;
                             })
                         .ToList();
                 }
-                _campaignContentProvider.SaveChanges();
+                SaveChanges();
                 campaignEntity.CampaignContents = campaignEntity.CampaignContents.Where(x => x.StatusId != inactiveStatusId).ToList();
                 return Ok(campaignEntity);
             }
@@ -202,24 +203,24 @@ namespace UserOperations.Services
             Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
             var roleInToken = userClaims["role"];
 
-            var campaign = _campaignContentProvider.GetCampaign(campaignId);
+            var campaign = GetCampaign(campaignId);
             if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, campaign.CompanyId, roleInToken) == false)
                 return BadRequest($"Not allowed user company");
             if (campaign != null)
             {
-                var inactiveStatusId = _campaignContentProvider.GetStatusId("Inactive");
+                var inactiveStatusId = GetStatusId("Inactive");
                 var links = campaign.CampaignContents.ToList();
                 foreach (var campaignContent in links)
                 {
                     campaignContent.StatusId = inactiveStatusId;
                 }
                 campaign.StatusId = inactiveStatusId;
-                _campaignContentProvider.SaveChanges();
+                SaveChanges();
                 try
                 {
-                    _campaignContentProvider.RemoveRange<CampaignContent>(campaign.CampaignContents);
-                    _campaignContentProvider.RemoveEntity<Campaign>(campaign);
-                    _campaignContentProvider.SaveChanges();
+                    RemoveRange<CampaignContent>(campaign.CampaignContents);
+                    RemoveEntity<Campaign>(campaign);
+                    SaveChanges();
                 }
                 catch
                 {
@@ -236,7 +237,7 @@ namespace UserOperations.Services
         public async Task<IActionResult> ContentGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                [FromQuery(Name = "inActive")] bool? inActive,
+                                [FromQuery(Name = "inActive")] bool? inactive,
                                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -247,12 +248,12 @@ namespace UserOperations.Services
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var activeStatusId = _campaignContentProvider.GetStatusId("Active");
+                var activeStatusId = GetStatusId("Active");
                 List<Content> contents;
-                if (inActive == true)
-                    contents = _campaignContentProvider.GetContentsWithActiveStatusId(activeStatusId, companyIds);
+                if (inactive == false)
+                    contents = GetContentsWithActiveStatusId(activeStatusId, companyIds);
                 else
-                    contents = _campaignContentProvider.GetContentsWithTemplateIsTrue(companyIds);
+                    contents = GetContentsWithTemplateIsTrue(companyIds);
                 return Ok(contents);
             }
             catch (Exception e)
@@ -281,12 +282,12 @@ namespace UserOperations.Services
                 var companyId = Guid.Parse(userClaims["companyId"]);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var activeStatusId = _campaignContentProvider.GetStatusId("Active");
+                var activeStatusId = GetStatusId("Active");
                 List<Content> contents;
                 if(inActive == true)
-                    contents = _campaignContentProvider.GetContentsWithActiveStatusId(activeStatusId, companyIds);
+                    contents = GetContentsWithActiveStatusId(activeStatusId, companyIds);
                 else
-                    contents = _campaignContentProvider.GetContentsWithTemplateIsTrue(companyIds);
+                    contents = GetContentsWithTemplateIsTrue(companyIds);
 
                 if(contents.Count == 0) return Ok(contents);
 
@@ -326,9 +327,9 @@ namespace UserOperations.Services
             if (!content.IsTemplate) content.CompanyId = companyIdInToken; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
-            content.StatusId = _campaignContentProvider.GetStatusId("Active");
-            _campaignContentProvider.AddInBase<Content>(content);
-            _campaignContentProvider.SaveChanges();
+            content.StatusId = GetStatusId("Active");
+            AddInBase<Content>(content);
+            SaveChanges();
             return Ok(content);
         }
 
@@ -349,14 +350,14 @@ namespace UserOperations.Services
             if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken) == false)
                 return BadRequest($"Not allowed user company");
 
-            var contentEntity = _campaignContentProvider.GetContent(content.ContentId);
+            var contentEntity = GetContent(content.ContentId);
             foreach (var p in typeof(Content).GetProperties())
             {
                 if (p.GetValue(content, null) != null && p.GetValue(content, null).ToString() != Guid.Empty.ToString())
                     p.SetValue(contentEntity, p.GetValue(content, null), null);
             }
             contentEntity.UpdateDate = DateTime.UtcNow;
-            await _campaignContentProvider.SaveChangesAsync();
+            await SaveChangesAsync();
             return Ok(contentEntity);
         }
 
@@ -372,12 +373,12 @@ namespace UserOperations.Services
             Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
             var roleInToken = userClaims["role"];
 
-            var content = _campaignContentProvider.GetContentWithIncludeCampaignContent(contentId);
+            var content = GetContentWithIncludeCampaignContent(contentId);
             if (content == null) return BadRequest("No such content");
             if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken) == false)
                 return BadRequest($"Not allowed user company");
 
-            var inactiveStatusId = _campaignContentProvider.GetStatusId("Inactive");
+            var inactiveStatusId = GetStatusId("Inactive");
             var links = content.CampaignContents.ToList();
             if (links.Count() != 0)
             {
@@ -387,16 +388,16 @@ namespace UserOperations.Services
                 }
             }
             content.StatusId = inactiveStatusId;
-            _campaignContentProvider.SaveChanges();
+            SaveChanges();
             try
             {
-                _campaignContentProvider.RemoveRange<CampaignContent>(links);
-                _campaignContentProvider.RemoveEntity(content);
-                _campaignContentProvider.SaveChanges();
+                RemoveRange<CampaignContent>(links);
+                RemoveEntity(content);
+                SaveChanges();
             }
             catch
             {
-                return BadRequest("Set inactive");
+                return Ok("Set inactive");
             }
             return Ok("Removed");
         }
@@ -419,6 +420,79 @@ namespace UserOperations.Services
             {
                 return BadRequest("Error");
             }
+        }
+
+        private int GetStatusId(string statusName)
+        {
+            var statusId = _repository.GetAsQueryable<Status>()
+                .FirstOrDefault(p => p.StatusName == statusName).StatusId;
+            return statusId;
+        }
+        private List<Campaign> GetCampaignForCompanys(List<Guid> companyIds, int statusId)
+        {
+            var campaigns = _repository.GetAsQueryable<Campaign>()
+                .Include(x => x.CampaignContents)
+                .Where(x => companyIds.Contains(x.CompanyId)
+                    && x.StatusId != statusId).ToList();
+            return campaigns;
+        }
+        private Campaign GetCampaign(Guid campaignId)
+        {
+            var campaignEntity = _repository.GetAsQueryable<Campaign>()
+                .Include(x => x.CampaignContents)
+                .Where(p => p.CampaignId == campaignId)
+                .FirstOrDefault();
+            return campaignEntity;
+        }
+        private void AddInBase<T>(T campaign) where T : class
+        {
+            _repository.Create<T>(campaign);
+        }
+        private void SaveChanges()
+        {
+            _repository.Save();
+        }
+        public void RemoveRange<T>(IEnumerable<T> list) where T : class
+        {
+            _repository.Delete<T>(list);
+        }
+        private void RemoveEntity<T>(T entity) where T : class
+        {
+            _repository.Delete<T>(entity);
+        }
+        private List<Content> GetContentsWithActiveStatusId(int activeStatusId, List<Guid> companyIds)
+        {
+            var contents = _repository.GetAsQueryable<Content>()
+                .Where(x => x.StatusId == activeStatusId
+                    && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
+                .ToList();
+            return contents;
+        }
+        private List<Content> GetContentsWithTemplateIsTrue(List<Guid> companyIds)
+        {
+            var contents = _repository.GetAsQueryable<Content>()
+                .Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))
+                .ToList();
+            return contents;
+        }
+        private Content GetContent(Guid contentId)
+        {
+            var contentEntity = _repository.GetAsQueryable<Content>()
+                .Where(p => p.ContentId == contentId)
+                .FirstOrDefault();
+            return contentEntity;
+        }
+        private Content GetContentWithIncludeCampaignContent(Guid contentId)
+        {
+            var content = _repository.GetAsQueryable<Content>()
+                .Include(x => x.CampaignContents)
+                .Where(p => p.ContentId == contentId)
+                .FirstOrDefault();
+            return content;
+        }
+        private async Task SaveChangesAsync()
+        {
+            await _repository.SaveAsync();
         }
     }
 }

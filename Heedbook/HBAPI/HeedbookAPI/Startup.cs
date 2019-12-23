@@ -69,18 +69,10 @@ namespace UserOperations
             .AddEntityFrameworkStores<RecordsContext>();
             services.AddScoped<LoginService>();
             services.AddScoped<MailSender>();
-            services.AddScoped<IAnalyticCommonProvider, AnalyticCommonProvider>();
-            services.AddScoped<IAnalyticHomeProvider, AnalyticHomeProvider>();
-            services.AddScoped<IAnalyticOfficeProvider, AnalyticOfficeProvider>();
-            services.AddScoped<IAnalyticRatingProvider, AnalyticRatingProvider>();
-            services.AddScoped<IAnalyticServiceQualityProvider, AnalyticServiceQualityProvider>();
-            services.AddScoped<IAnalyticSpeechProvider, AnalyticSpeechProvider>();
-            services.AddScoped<IAnalyticWeeklyReportProvider, AnalyticWeeklyReportProvider>();
-            services.AddScoped<ICampaignContentProvider, CampaignContentProvider>();
+            services.AddScoped<AnalyticCommonProvider>();
             services.AddScoped<HelpProvider>();
+            services.AddScoped<PhraseProvider>();
             services.AddScoped<IUserProvider, UserProvider>();
-            services.AddScoped<IPhraseProvider, PhraseProvider>();
-            services.AddScoped(typeof(IAnalyticReportProvider), typeof(AnalyticReportProvider));
 
             services.AddScoped<AccountService>();
             services.AddScoped<AnalyticClientProfileService>();

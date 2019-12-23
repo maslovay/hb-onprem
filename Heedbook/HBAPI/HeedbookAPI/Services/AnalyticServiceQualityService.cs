@@ -8,6 +8,8 @@ using UserOperations.Utils;
 using System.Threading.Tasks;
 using UserOperations.Utils.AnalyticServiceQualityUtils;
 using UserOperations.Providers;
+using HBData.Repository;
+using HBData.Models;
 //---OLD---
 namespace UserOperations.Services
 {
@@ -17,19 +19,19 @@ namespace UserOperations.Services
     {   
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
-        private readonly IAnalyticServiceQualityProvider _analyticServiceQualityProvider;
+        private readonly IGenericRepository _repository;
         private readonly AnalyticServiceQualityUtils _analyticServiceQualityUtils;
 
         public AnalyticServiceQualityService(
             LoginService loginService,
             RequestFilters requestFilters,
-            IAnalyticServiceQualityProvider analyticServiceQualityProvider,
+            IGenericRepository repository,
             AnalyticServiceQualityUtils analyticServiceQualityUtils
             )
         {
             _loginService = loginService;
             _requestFilters = requestFilters;
-            _analyticServiceQualityProvider = analyticServiceQualityProvider;
+            _repository = repository;
             _analyticServiceQualityUtils = analyticServiceQualityUtils;
         }
 
@@ -52,11 +54,11 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
-                var phraseTypes = await _analyticServiceQualityProvider.GetComponentsPhraseInfo();
+                var phraseTypes = await GetComponentsPhraseInfo();
                 var loyaltyTypeId = phraseTypes.First(p => p.PhraseTypeText == "Loyalty").PhraseTypeId;
 
                 //Dialogues info
-                var dialogues = await _analyticServiceQualityProvider.GetComponentsDialogueInfo(begTime, endTime, companyIds, applicationUserIds, workerTypeIds,loyaltyTypeId);
+                var dialogues = await GetComponentsDialogueInfo(begTime, endTime, companyIds, applicationUserIds, workerTypeIds,loyaltyTypeId);
                 //Result
                 var result = new ComponentsSatisfactionInfo
                 {
@@ -123,7 +125,7 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = _analyticServiceQualityProvider.GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
                         .Select(p => new DialogueInfo
                         {
                             DialogueId = p.DialogueId,
@@ -182,13 +184,13 @@ namespace UserOperations.Services
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
-                var phrasesTypes = _analyticServiceQualityProvider.GetPhraseTypes();
+                var phrasesTypes = GetPhraseTypes();
                 //var typeIdCross = phrasesTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
                 //var typeIdAlert = phrasesTypes.Where(p => p.PhraseTypeText == "Alert").Select(p => p.PhraseTypeId).First();
                 //var typeIdNecessary = phrasesTypes.Where(p => p.PhraseTypeText == "Necessary").Select(p => p.PhraseTypeId).First();
                 var typeIdLoyalty = phrasesTypes.Where(p => p.PhraseTypeText == "Loyalty").Select(p => p.PhraseTypeId).First();
 
-                var dialogues = _analyticServiceQualityProvider.GetRatingDialogueInfos(
+                var dialogues = GetRatingDialogueInfos(
                     begTime, 
                     endTime, 
                     companyIds, 
@@ -247,7 +249,7 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
               //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = await _analyticServiceQualityProvider.GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
 
                 var result = new SatisfactionStatsInfo
                 {
@@ -269,6 +271,141 @@ namespace UserOperations.Services
                 // _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
+        }
+
+        private async Task<List<ComponentsPhraseInfo>> GetComponentsPhraseInfo()
+        {
+            return await _repository.GetAsQueryable<PhraseType>()
+                .Select(p => new ComponentsPhraseInfo
+                {
+                    PhraseTypeId = p.PhraseTypeId,
+                    PhraseTypeText = p.PhraseTypeText,
+                    Colour = p.Colour
+                }).ToListAsyncSafe();
+        }
+        private async Task<List<ComponentsDialogueInfo>> GetComponentsDialogueInfo(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds,
+            Guid loyaltyTypeId)
+        {
+            var dialogues = await _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new ComponentsDialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    PositiveTone = p.DialogueAudio.Average(q => q.PositiveTone),
+                    NegativeTone = p.DialogueAudio.Average(q => q.NegativeTone),
+                    NeutralityTone = p.DialogueAudio.Average(q => q.NeutralityTone),
+
+                    EmotivityShare = p.DialogueSpeech.Average(q => q.PositiveShare),
+
+                    HappinessShare = p.DialogueVisual.Average(q => q.HappinessShare),
+                    NeutralShare = p.DialogueVisual.Average(q => q.NeutralShare),
+                    SurpriseShare = p.DialogueVisual.Average(q => q.SurpriseShare),
+                    SadnessShare = p.DialogueVisual.Average(q => q.SadnessShare),
+                    AngerShare = p.DialogueVisual.Average(q => q.AngerShare),
+                    DisgustShare = p.DialogueVisual.Average(q => q.DisgustShare),
+                    ContemptShare = p.DialogueVisual.Average(q => q.ContemptShare),
+                    FearShare = p.DialogueVisual.Average(q => q.FearShare),
+
+                    AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
+                    Loyalty = p.DialoguePhraseCount.Where(q => q.PhraseTypeId == loyaltyTypeId).Sum(q => q.PhraseCount),
+                })
+                .ToListAsyncSafe();
+            return dialogues;
+        }
+        private IQueryable<Dialogue> GetDialoguesIncludedPhrase(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> workerTypeIds,
+            List<Guid> applicationUserIds = null)
+        {
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))))
+                .AsQueryable();
+            return dialogues;
+        }
+        private IQueryable<PhraseType> GetPhraseTypes()
+        {
+            return _repository.GetAsQueryable<PhraseType>().AsQueryable();
+        }
+        // public async Task<List<RatingDialogueInfo>> GetRatingDialogueInfos(
+        private IQueryable<RatingDialogueInfo> GetRatingDialogueInfos(
+        DateTime begTime,
+        DateTime endTime,
+        List<Guid> companyIds,
+        List<Guid> applicationUserIds,
+        List<Guid> workerTypeIds,
+        Guid typeIdLoyalty)
+        {
+            return _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new RatingDialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId.ToString(),
+                    FullName = p.ApplicationUser.FullName,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    //CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                    //AlertCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdAlert).Count(),
+                    //NecessaryCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdNecessary).Count(),
+                    LoyaltyCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdLoyalty).Count(),
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    PositiveTone = p.DialogueAudio.FirstOrDefault().PositiveTone,
+                    AttentionShare = p.DialogueVisual.Average(q => q.AttentionShare),
+                    PositiveEmotion = p.DialogueVisual.FirstOrDefault().SurpriseShare + p.DialogueVisual.FirstOrDefault().HappinessShare,
+                    TextShare = p.DialogueSpeech.FirstOrDefault().PositiveShare,
+                })
+                .AsQueryable();
+            // .ToListAsyncSafe(); 
+        }
+        private async Task<List<DialogueInfo>> GetDialogueInfos(
+            DateTime begTime,
+            DateTime endTime,
+            List<Guid> companyIds,
+            List<Guid> applicationUserIds,
+            List<Guid> workerTypeIds)
+        {
+            return await _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                .Select(p => new DialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                })
+                .ToListAsyncSafe();
         }
     }
 }

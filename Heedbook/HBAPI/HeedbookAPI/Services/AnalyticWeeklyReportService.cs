@@ -18,6 +18,7 @@ using HBLib.Utils;
 using HBData.Models;
 using UserOperations.Providers;
 using UserOperations.Utils.AnalyticWeeklyReportController;
+using HBData.Repository;
 
 namespace UserOperations.Services
 {
@@ -28,21 +29,21 @@ namespace UserOperations.Services
         private readonly IConfiguration _config;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
-        private readonly IAnalyticWeeklyReportProvider _analyticWeeklyReportProvider;
+        private readonly IGenericRepository _repository;
         private readonly AnalyticWeeklyReportUtils _analyticWeeklyReportUtils;
 
         public AnalyticWeeklyReportService(
             IConfiguration config,
             LoginService loginService,
             RequestFilters requestFilters,
-            IAnalyticWeeklyReportProvider analyticWeeklyReportProvider,
+            IGenericRepository repository,
             AnalyticWeeklyReportUtils analyticWeeklyReportUtils
             )
         {
             _config = config;
             _loginService = loginService;
             _requestFilters = requestFilters;
-            _analyticWeeklyReportProvider = analyticWeeklyReportProvider;
+            _repository = repository;
             _analyticWeeklyReportUtils = analyticWeeklyReportUtils;
         }
 
@@ -59,33 +60,33 @@ namespace UserOperations.Services
                     return BadRequest("Token wrong");
 
                 var begTime = DateTime.Now.AddDays(-7);
-                var employeeRoleId = _analyticWeeklyReportProvider.GetEmployeeRoleId();
+                var employeeRoleId = GetEmployeeRoleId();
                 var jsonToReturn = new Dictionary<string, object>();
-                var companyId = _analyticWeeklyReportProvider.GetCompanyId(userId);
-                var corporationId = _analyticWeeklyReportProvider.GetCorporationId(companyId);
+                var companyId = GetCompanyId(userId);
+                var corporationId = GetCorporationId(companyId);
                 var userIdsInCorporation = corporationId != null
-                    ? _analyticWeeklyReportProvider.GetUserIdsInCorporation(corporationId, employeeRoleId) 
+                    ? GetUserIdsInCorporation(corporationId, employeeRoleId) 
                     : null;
-                var userIdsInCompany = _analyticWeeklyReportProvider.GetUserIdsInCompany(companyId, employeeRoleId);
+                var userIdsInCompany = GetUserIdsInCompany(companyId, employeeRoleId);
 
                 //----ALL FOR WEEK Corporation---
                 var sessionsCorporation = userIdsInCorporation != null
-                    ? _analyticWeeklyReportProvider.GetSessionMoreThanBegTime(userIdsInCorporation, begTime) 
+                    ? GetSessionMoreThanBegTime(userIdsInCorporation, begTime) 
                     : null;
                 var sessionsCorporationOld = userIdsInCorporation != null
-                    ? _analyticWeeklyReportProvider.GetSessionLessThanBegTime(userIdsInCorporation, begTime) 
+                    ? GetSessionLessThanBegTime(userIdsInCorporation, begTime) 
                     : null;
                 var dialoguesCorporation = userIdsInCorporation != null
-                    ? _analyticWeeklyReportProvider.GetDialoguesMoreThanBegTime(userIdsInCorporation, begTime) 
+                    ? GetDialoguesMoreThanBegTime(userIdsInCorporation, begTime) 
                     : null;
                 var dialoguesCorporationOld = userIdsInCorporation != null
-                    ? _analyticWeeklyReportProvider.GetDialoguesLessThanBegTime(userIdsInCorporation, begTime)
+                    ? GetDialoguesLessThanBegTime(userIdsInCorporation, begTime)
                     : null;
                 //----ALL FOR WEEK Company---
-                var sessionsCompany = _analyticWeeklyReportProvider.GetSessionMoreThanBegTime(userIdsInCompany, begTime);
-                var sessionsCompanyOld = _analyticWeeklyReportProvider.GetSessionLessThanBegTime(userIdsInCompany, begTime);
-                var dialoguesCompany = _analyticWeeklyReportProvider.GetDialoguesMoreThanBegTime(userIdsInCompany, begTime);
-                var dialoguesCompanyOld = _analyticWeeklyReportProvider.GetDialoguesLessThanBegTime(userIdsInCompany, begTime);
+                var sessionsCompany = GetSessionMoreThanBegTime(userIdsInCompany, begTime);
+                var sessionsCompanyOld = GetSessionLessThanBegTime(userIdsInCompany, begTime);
+                var dialoguesCompany = GetDialoguesMoreThanBegTime(userIdsInCompany, begTime);
+                var dialoguesCompanyOld = GetDialoguesLessThanBegTime(userIdsInCompany, begTime);
                 //-----for User---
                 var userSessions = sessionsCompany.Where(p => p.AspNetUserId == userId).ToList();
                 var userSessionsOld = sessionsCompanyOld.Where(p => p.AspNetUserId == userId).ToList();
@@ -338,6 +339,74 @@ namespace UserOperations.Services
 //                _log.Fatal($"Exception occurred {e}");
                 return BadRequest(e);
             }
+        }
+
+        private Guid GetEmployeeRoleId()
+        {
+            var emplyeeRoleId = _repository.GetAsQueryable<ApplicationRole>().FirstOrDefault(x => x.Name == "Employee").Id;
+            return emplyeeRoleId;
+        }
+        private Guid? GetCompanyId(Guid? userId)
+        {
+            var companyId = _repository.GetAsQueryable<ApplicationUser>().Where(p => p.Id == userId).FirstOrDefault().CompanyId;
+            return companyId;
+        }
+        private Guid? GetCorporationId(Guid? companyId)
+        {
+            var corporationId = _repository.GetAsQueryable<Company>().Where(p => p.CompanyId == companyId).FirstOrDefault()?.CorporationId;
+            return corporationId;
+        }
+        private List<Guid> GetUserIdsInCorporation(Guid? corporationId, Guid emplyeeRoleId)
+        {
+            var userIds = _repository.GetAsQueryable<Company>()
+                .Where(p => p.CorporationId == corporationId)
+                .SelectMany(p => p.ApplicationUser.Where(u => u.UserRoles.Select(r => r.RoleId)
+                    .Contains(emplyeeRoleId))
+                    .Select(u => u.Id))
+                .ToList();
+            return userIds;
+        }
+        private List<Guid> GetUserIdsInCompany(Guid? companyId, Guid employeeRoleId)
+        {
+            var userIdsInCompany = _repository.GetAsQueryable<ApplicationUser>()
+                .Where(p => p.CompanyId == companyId
+                    && p.UserRoles.Select(r => r.RoleId).Contains(employeeRoleId))
+                .Select(u => u.Id)
+                .ToList();
+            return userIdsInCompany;
+        }
+        private List<VSessionUserWeeklyReport> GetSessionMoreThanBegTime(List<Guid> userIds, DateTime begTime)
+        {
+            var sessionCorporation = _repository.GetAsQueryable<VSessionUserWeeklyReport>()
+                .Where(p => userIds.Contains(p.AspNetUserId)
+                    && p.Day > begTime)
+                .ToList();
+            return sessionCorporation;
+        }
+
+        private List<VSessionUserWeeklyReport> GetSessionLessThanBegTime(List<Guid> userIds, DateTime begTime)
+        {
+            var sessionCorporation = _repository.GetAsQueryable<VSessionUserWeeklyReport>()
+                .Where(p => userIds.Contains(p.AspNetUserId)
+                    && p.Day <= begTime)
+                .ToList();
+            return sessionCorporation;
+        }
+        private List<VWeeklyUserReport> GetDialoguesMoreThanBegTime(List<Guid> userIds, DateTime begTime)
+        {
+            var dialoguesCorporation = _repository.GetAsQueryable<VWeeklyUserReport>()
+                .Where(p => userIds.Contains(p.AspNetUserId)
+                    && p.Day > begTime)
+                .ToList();
+            return dialoguesCorporation;
+        }
+        private List<VWeeklyUserReport> GetDialoguesLessThanBegTime(List<Guid> userIds, DateTime begTime)
+        {
+            var dialogueCorporation = _repository.GetAsQueryable<VWeeklyUserReport>()
+                .Where(p => userIds.Contains(p.AspNetUserId)
+                    && p.Day <= begTime)
+                .ToList();
+            return dialogueCorporation;
         }
 
     }

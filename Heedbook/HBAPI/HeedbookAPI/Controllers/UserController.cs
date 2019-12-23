@@ -34,7 +34,7 @@ namespace UserOperations.Controllers
         private readonly SmtpClient _smtpClient;
         private readonly MailSender _mailSender;
         private readonly IUserProvider _userProvider;
-        private readonly IPhraseProvider _phraseProvider;
+        private readonly PhraseProvider _phraseProvider;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
         private readonly int activeStatus;
@@ -50,7 +50,7 @@ namespace UserOperations.Controllers
             SmtpClient smtpClient,
             MailSender mailSender,
             IUserProvider userProvider,
-            IPhraseProvider phraseProvider
+            PhraseProvider phraseProvider
             )
         {
             _config = config;
