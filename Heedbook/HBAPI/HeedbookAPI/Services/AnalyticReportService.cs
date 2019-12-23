@@ -23,7 +23,6 @@ namespace UserOperations.Services
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticReportUtils _analyticReportUtils;
-        // private readonly ElasticClient _log;
 
         public AnalyticReportService(
             IConfiguration config,

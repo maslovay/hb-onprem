@@ -52,7 +52,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("RatingOffices")]
-        public async Task<List<RatingOfficeInfo>> RatingOffices([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> RatingOffices([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,

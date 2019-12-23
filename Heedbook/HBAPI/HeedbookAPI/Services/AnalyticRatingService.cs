@@ -128,7 +128,7 @@ namespace UserOperations.Services
         }  
 
 
-        public async Task<List<RatingOfficeInfo>> RatingOffices( string beg, string end, 
+        public async Task<string> RatingOffices( string beg, string end, 
                                                                  List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds )
         {
                 var role = _loginService.GetCurrentRoleName();
@@ -169,8 +169,8 @@ namespace UserOperations.Services
                         DialogueAveragePause = _analyticRatingUtils.DialogueAveragePause(sessions, p, begTime, endTime)
                     }).ToList();
                 result = result.OrderBy(p => p.EfficiencyIndex).ToList();
-                return result;
-            }
+                return JsonConvert.SerializeObject(result);
+        }
 
 
         //---PRIVATE---
