@@ -237,7 +237,7 @@ namespace UserOperations.Services
         public async Task<IActionResult> ContentGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                [FromQuery(Name = "inActive")] bool? inActive,
+                                [FromQuery(Name = "inActive")] bool? inactive,
                                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
             try
@@ -250,7 +250,7 @@ namespace UserOperations.Services
 
                 var activeStatusId = GetStatusId("Active");
                 List<Content> contents;
-                if (inActive == true)
+                if (inactive == false)
                     contents = GetContentsWithActiveStatusId(activeStatusId, companyIds);
                 else
                     contents = GetContentsWithTemplateIsTrue(companyIds);
@@ -397,7 +397,7 @@ namespace UserOperations.Services
             }
             catch
             {
-                return BadRequest("Set inactive");
+                return Ok("Set inactive");
             }
             return Ok("Removed");
         }
