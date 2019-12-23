@@ -38,7 +38,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("RatingUsers")]
-        public async Task<List<RatingUserInfo>> RatingUsers([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> RatingUsers([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
