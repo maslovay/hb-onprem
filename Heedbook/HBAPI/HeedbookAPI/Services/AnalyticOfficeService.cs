@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HBData;
-using Microsoft.AspNetCore.Mvc;
-using UserOperations.Providers;
 using UserOperations.Utils;
 using UserOperations.Models.Get.AnalyticOfficeController;
 using UserOperations.Utils.AnalyticOfficeUtils;
@@ -14,46 +11,30 @@ using HBData.Models;
 
 namespace UserOperations.Services
 {
-    public class AnalyticOfficeService : Controller
+    public class AnalyticOfficeService
     {  
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticOfficeUtils _analyticOfficeUtils;
-        private readonly IConfiguration _config;
-        // private readonly ElasticClient _log;
 
         public AnalyticOfficeService(
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,
-            AnalyticOfficeUtils analyticOfficeUtils,
-            IConfiguration config
-            // ElasticClient log
+            AnalyticOfficeUtils analyticOfficeUtils
             )
         {
             _loginService = loginService;
             _requestFilters = requestFilters;
             _repository = repository;
             _analyticOfficeUtils = analyticOfficeUtils;
-            _config = config;
-            // _log = log;
         }
-        public IActionResult Efficiency([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public string Efficiency(string beg, string end,
+                                        List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds)
         {
-            try
-            {
-                // _log.Info("AnalyticOffice/Efficiency started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);   
@@ -106,8 +87,8 @@ namespace UserOperations.Services
                             dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime))                      
-                }).    
-                ToList();
+                }).ToList();
+
                 var optimalLoad = 0.7;
                 var employeeWorked = sessionCur
                 .GroupBy(p => p.BegTime.Date)
@@ -124,8 +105,8 @@ namespace UserOperations.Services
                             dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime))                  
-                }).    
-                ToList();
+                }).ToList();
+
                 var diagramEmployeeWorked = employeeWorked.Select(
                     p => new {
                         p.Day,
@@ -190,16 +171,10 @@ namespace UserOperations.Services
                 jsonToReturn["PausesAmount"] = pausesAmount;
                 jsonToReturn["PausesShare"] = pausesShareInSession;
                 jsonToReturn["PausesInMinutes"] = pausesInMinutes;
-                // _log.Info("AnalyticOffice/Efficiency finished");
-                return Ok(JsonConvert.SerializeObject(jsonToReturn));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                System.Console.WriteLine(e.Message);
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(jsonToReturn);
         }
+
+        //---PRIVATE---
 
         private List<SessionInfo> GetSessionsInfo(
         DateTime prevBeg,
