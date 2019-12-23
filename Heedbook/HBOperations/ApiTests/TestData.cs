@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Linq.Expressions;
 using System.Threading;
 using UserOperations.Models.Get;
+using UserOperations.Models.Get.HomeController;
 
 namespace ApiTests
 {
@@ -35,11 +36,11 @@ namespace ApiTests
         /// SESSIONS
         /// </summary>
         /// <returns></returns>
-        internal static async Task<IEnumerable<SessionInfo>> GetSessions()
+        internal static async Task<IEnumerable<SessionInfoFull>> GetSessions()
         {
-            return new List<SessionInfo>
+            return new List<SessionInfoFull>
             {
-                new SessionInfo
+                new SessionInfoFull
                 {
                     ApplicationUserId = userId,
                     BegTime = new DateTime(2019,10,04, 12, 19,00),
@@ -48,7 +49,7 @@ namespace ApiTests
                     FullName = fullName,
                     IndustryId = industryId
                 },
-                  new SessionInfo
+                  new SessionInfoFull
                 {
                     ApplicationUserId = userId,
                     BegTime = new DateTime(2019,10,04, 18, 19,00),
@@ -59,7 +60,7 @@ namespace ApiTests
                 }
             };
         }
-        internal static async Task<IEnumerable<SessionInfo>> GetEmptySessions()
+        internal static async Task<IEnumerable<SessionInfoFull>> GetEmptySessions()
         {
             return null;
         }
@@ -277,26 +278,26 @@ namespace ApiTests
         {
             return new List<Dialogue>().AsQueryable();
         }
-        internal static List<DialogueInfo> GetDialogueInfo()
+        internal static List<DialogueInfoFull> GetDialogueInfo()
         {
-            return new List<DialogueInfo>()
+            return new List<DialogueInfoFull>()
             {
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 29, 18, 30, 00), EndTime = new DateTime(2019, 10, 29, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607361")},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 18, 30, 00), EndTime = new DateTime(2019, 10, 30, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607362")},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607363")},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 50, 00), EndTime = new DateTime(2019, 10, 30, 20, 20, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607364")},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607365")},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 20, 30, 00), EndTime = new DateTime(2019, 10, 30, 21, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607366")},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 30, 21, 10, 00), EndTime = new DateTime(2019, 10, 30, 21, 40, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607367")},
-                new DialogueInfo(){BegTime = new DateTime(2019, 10, 31, 18, 30, 00), EndTime = new DateTime(2019, 10, 31, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607368")},
-                new DialogueInfo(){BegTime = new DateTime(2019, 11, 01, 18, 30, 00), EndTime = new DateTime(2019, 11, 01, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607369")}
+                new DialogueInfoFull(){BegTime = new DateTime(2019, 10, 29, 18, 30, 00), EndTime = new DateTime(2019, 10, 29, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607361")},
+                new DialogueInfoFull(){BegTime = new DateTime(2019, 10, 30, 18, 30, 00), EndTime = new DateTime(2019, 10, 30, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607362")},
+                new DialogueInfoFull(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607363")},
+                new DialogueInfoFull(){BegTime = new DateTime(2019, 10, 30, 19, 50, 00), EndTime = new DateTime(2019, 10, 30, 20, 20, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607364")},
+                new DialogueInfoFull(){BegTime = new DateTime(2019, 10, 30, 19, 10, 00), EndTime = new DateTime(2019, 10, 30, 19, 40, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607365")},
+                new DialogueInfoFull(){BegTime = new DateTime(2019, 10, 30, 20, 30, 00), EndTime = new DateTime(2019, 10, 30, 21, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607366")},
+                new DialogueInfoFull(){BegTime = new DateTime(2019, 10, 30, 21, 10, 00), EndTime = new DateTime(2019, 10, 30, 21, 40, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607367")},
+                new DialogueInfoFull(){BegTime = new DateTime(2019, 10, 31, 18, 30, 00), EndTime = new DateTime(2019, 10, 31, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607368")},
+                new DialogueInfoFull(){BegTime = new DateTime(2019, 11, 01, 18, 30, 00), EndTime = new DateTime(2019, 11, 01, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607369")}
             };
         }
-        internal static IQueryable<DialogueInfoWithFrames> GetDialogueInfoWithFrames()
+        internal static IQueryable<UserOperations.Models.AnalyticModels.DialogueInfoWithFrames> GetDialogueInfoWithFrames()
         {
-            var dialogues = new List<DialogueInfoWithFrames>
+            var dialogues = new List<UserOperations.Models.AnalyticModels.DialogueInfoWithFrames>
             {
-                new DialogueInfoWithFrames
+                new UserOperations.Models.AnalyticModels.DialogueInfoWithFrames
                 {
                     ApplicationUserId = userId,
                     BegTime = begDate,
@@ -328,7 +329,7 @@ namespace ApiTests
                     }
                     },
                 },
-                  new DialogueInfoWithFrames
+                  new UserOperations.Models.AnalyticModels.DialogueInfoWithFrames
                 {
                     ApplicationUserId = userId,
                    BegTime = begDate.AddMinutes(3),
@@ -504,56 +505,56 @@ namespace ApiTests
                 }
             }.AsQueryable();
         }
-        internal static List<SlideShowInfo> GetSlideShowInfos()
-        {
-            return new List<SlideShowInfo>
-            {
-                new SlideShowInfo
-                {
-                    ApplicationUserId = userId,
-                    BegTime = begDate,
-                    EndTime = begDate.AddMinutes(2),
-                    CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
-                    ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
-                    DialogueId = null,// Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
-                    Age = 30,
-                    IsPoll = false,
-                    ContentName = "test content",
-                    EmotionAttention = new EmotionAttention()
-                    {
-                        //Attention = 0.5,
-                        //Negative = 0.3,
-                        //Neutral = 0.5,
-                        //Positive = 0.2
-                    },
-                     ContentType = "media",
-                     Gender = "1",
-                     Campaign = GetCampaigns().FirstOrDefault()
-                },
-                  new SlideShowInfo
-                {
-                    ApplicationUserId = userId,
-                    BegTime = begDate.AddMinutes(2),
-                    EndTime = begDate.AddMinutes(4),
-                    CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
-                    ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
-                    DialogueId = null,// Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
-                    Age = 30,
-                    IsPoll = false,
-                    ContentName = "test content",
-                    EmotionAttention = new EmotionAttention()
-                    {
-                        //Attention = 0.7,
-                        //Negative = 0.3,
-                        //Neutral = 0.2,
-                        //Positive = 0.5
-                    },
-                     ContentType = "media",
-                     Gender = "1",
-                     Campaign = GetCampaigns().FirstOrDefault()
-                }
-            }.ToList();
-        }
+        //internal static List<SlideShowInfo> GetSlideShowInfos()
+        //{
+        //    return new List<SlideShowInfo>
+        //    {
+        //        new SlideShowInfo
+        //        {
+        //            ApplicationUserId = userId,
+        //            BegTime = begDate,
+        //            EndTime = begDate.AddMinutes(2),
+        //            CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
+        //            ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
+        //            DialogueId = null,// Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+        //            Age = 30,
+        //            IsPoll = false,
+        //            ContentName = "test content",
+        //            EmotionAttention = new UserOperations.Models.AnalyticModels.EmotionAttention()
+        //            {
+        //                //Attention = 0.5,
+        //                //Negative = 0.3,
+        //                //Neutral = 0.5,
+        //                //Positive = 0.2
+        //            },
+        //             ContentType = "media",
+        //             Gender = "1",
+        //             Campaign = GetCampaigns().FirstOrDefault()
+        //        },
+        //          new SlideShowInfo
+        //        {
+        //            ApplicationUserId = userId,
+        //            BegTime = begDate.AddMinutes(2),
+        //            EndTime = begDate.AddMinutes(4),
+        //            CampaignContentId = Guid.Parse("3d3cd11c-2ea0-406e-8ec1-a544d048a9d3"),
+        //            ContentId = Guid.Parse("2d2cd22c-2ea2-406e-8ec1-a544d048a9d0"),
+        //            DialogueId = null,// Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
+        //            Age = 30,
+        //            IsPoll = false,
+        //            ContentName = "test content",
+        //            EmotionAttention = new UserOperations.Models.AnalyticModels.EmotionAttention()
+        //            {
+        //                //Attention = 0.7,
+        //                //Negative = 0.3,
+        //                //Neutral = 0.2,
+        //                //Positive = 0.5
+        //            },
+        //             ContentType = "media",
+        //             Gender = "1",
+        //             Campaign = GetCampaigns().FirstOrDefault()
+        //        }
+        //    }.ToList();
+        //}
         internal static List<SlideShowInfo> GetSlideShowInfosSimple()
         {
             return new List<SlideShowInfo>()

@@ -19,7 +19,7 @@ using UserOperations.Models.AnalyticModels;
 namespace ApiTests
 {public class AnalyticReportControllerTests : ApiServiceTest
     {   
-        private Mock<IAnalyticReportProvider> analyticReportProviderMock;
+        //private Mock<IAnalyticReportProvider> analyticReportProviderMock;
         [SetUp]
         public new void Setup()
         {
@@ -29,7 +29,7 @@ namespace ApiTests
         public async Task ReportActiveEmployeeTest()
         {
             //Arrange
-            analyticReportProviderMock = new Mock<IAnalyticReportProvider>();
+            //analyticReportProviderMock = new Mock<IAnalyticReportProvider>();
             var task = TestData.GetSessions();
             task.Wait();
             var sessionInfos = task.Result.ToList();

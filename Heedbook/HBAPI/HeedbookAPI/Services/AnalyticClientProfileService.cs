@@ -2,13 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using HBData;
-using UserOperations.Services;
-using Newtonsoft.Json;
 using UserOperations.Utils;
-using Swashbuckle.AspNetCore.Annotations;
-using UserOperations.Providers;
 using System.Threading.Tasks;
 using UserOperations.Models.Get.AnalyticClientProfileController;
 using HBData.Repository;
@@ -17,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Services
 {
-    public class AnalyticClientProfileService : Controller
+    public class AnalyticClientProfileService
     {
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
@@ -51,7 +45,7 @@ namespace UserOperations.Services
                 }};
             _repository = repository;
         }
-        public async Task<string> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
+        public async Task<Dictionary<string, object>> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -99,15 +93,16 @@ namespace UserOperations.Services
                             };
                         })
                     .ToList();
-                var jsonToReturn = new Dictionary<string, object>();
-                jsonToReturn["allClients"] = data.Select(p => p.DialogueId).Distinct().Count();
-                jsonToReturn["uniquePerYearClients"] = data
+                var objToReturn = new Dictionary<string, object>();
+                objToReturn["allClients"] = data.Select(p => p.DialogueId).Distinct().Count();
+                objToReturn["uniquePerYearClients"] = data
                     .Where(p => p.PersonId != null && !persondIdsPerYear.Contains(p.PersonId))
                     .Select(p => p.PersonId).Distinct().Count() + data.Where(p => p.PersonId == null).Select(p => p.DialogueId).Distinct().Count();
-                jsonToReturn["genderAge"] = result;
-                return JsonConvert.SerializeObject(jsonToReturn);
+                objToReturn["genderAge"] = result;
+                return objToReturn;
         }
 
+        //---PRIVATE---
         private async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
             var persondIds = await GetDialogues(begTime, endTime, companyIds)

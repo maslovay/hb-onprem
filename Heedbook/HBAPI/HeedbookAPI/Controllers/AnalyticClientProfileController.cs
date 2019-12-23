@@ -26,7 +26,7 @@ namespace UserOperations.Controllers
         [HttpGet("GenderAgeStructure")]
         [SwaggerOperation(Summary = "Return data on dashboard", Description = "For admins ignore companyId filter")]
         [SwaggerResponse(200, "GenderAgeStructureResult", typeof(List<GenderAgeStructureResult>))]
-        public async Task<string> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
+        public async Task<Dictionary<string, object>> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,

@@ -24,7 +24,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Progress")]
-        public async Task<List<RatingProgressInfo>> RatingProgress([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> RatingProgress([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,

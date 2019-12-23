@@ -9,6 +9,7 @@ using UserOperations.Utils.AnalyticRatingUtils;
 using HBData.Repository;
 using System.Threading.Tasks;
 using HBData.Models;
+using Newtonsoft.Json;
 
 namespace UserOperations.Services
 {
@@ -36,7 +37,7 @@ namespace UserOperations.Services
         }
 
 
-        public async Task<List<RatingProgressInfo>> RatingProgress( string beg,  string end, 
+        public async Task<string> RatingProgress( string beg,  string end, 
                                              List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds)
         {
                 var role = _loginService.GetCurrentRoleName();
@@ -73,7 +74,7 @@ namespace UserOperations.Services
                                 CrossInProcents = _analyticRatingUtils.CrossIndex(p)
                             }).ToList()
                     }).ToList();
-                return results;
+                return JsonConvert.SerializeObject(results);
             }
 
 

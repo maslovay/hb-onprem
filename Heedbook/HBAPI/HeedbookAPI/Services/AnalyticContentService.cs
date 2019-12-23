@@ -222,53 +222,6 @@ namespace UserOperations.Services
         }
 
 
-        //public async Task<MemoryStream> PollFile(
-        //                        string beg, string end, 
-        //                        List<Guid> applicationUserIds,
-        //                        List<Guid> companyIds,
-        //                        List<Guid> corporationIds,
-        //                        List<Guid> workerTypeIds )
-        //{
-        //    var role = _loginService.GetCurrentRoleName();
-        //    var companyId = _loginService.GetCurrentCompanyId();
-        //    var begTime = _requestFilters.GetBegDate(beg);
-        //    var endTime = _requestFilters.GetEndDate(end);
-        //    _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
-
-        //    var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
-        //    var slideShowSessionsAll = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, true, dialogues);
-        //    var answers = await GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
-
-        //    double conversion = GetConversion(slideShowSessionsAll.Count(), answers.Count());
-
-        //    var slideShowInfoGroupByContent = slideShowSessionsAll
-        //        .GroupBy(p => p.ContentId)
-        //        .Select(ssh => new AnswerInfo
-        //        {
-        //            Content = ssh.Key.ToString(),
-        //            AmountViews = ssh.Count(),
-        //            ContentName = ssh.FirstOrDefault().ContentName,
-        //            Answers = GetAnswersForOneContent(answers, ssh.Key),
-        //            AnswersAmount = GetAnswersForOneContent(answers, ssh.Key).Count(),
-        //            Conversion = (double)GetAnswersForOneContent(answers, ssh.Key).Count() / (double)ssh.Count()
-        //        }).ToList();
-
-        //    var contentInfo = new
-        //    {
-        //        Views = slideShowSessionsAll.Count(),
-        //        Clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count(),
-        //        Answers = slideShowInfoGroupByContent.Sum(x => x.AnswersAmount), //answers.Count(),//                    
-        //        Conversion = conversion,
-        //        ContentFullInfo = slideShowInfoGroupByContent
-        //    };
-        //        MemoryStream excelDocStream = _utils.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList(), $"{begTime.ToShortDateString()}_{endTime.ToShortDateString()}");
-        //        excelDocStream.Seek(0, SeekOrigin.Begin);
-        //    return excelDocStream;
-        //}
-
-
-
-
         //-----PRIVATE---
         private async Task<List<SlideShowInfo>> GetSlideShowsForOneDialogueAsync(Dialogue dialogue)
         {

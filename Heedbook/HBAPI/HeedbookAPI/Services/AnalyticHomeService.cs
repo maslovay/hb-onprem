@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using UserOperations.Services;
 using Newtonsoft.Json;
 using UserOperations.Utils;
-using UserOperations.Providers;
 using System.Threading.Tasks;
 using UserOperations.Models.Get.HomeController;
 using UserOperations.Utils.AnalyticHomeUtils;
@@ -16,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Services
 {
-    public class AnalyticHomeService : Controller
+    public class AnalyticHomeService
     {
         private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
@@ -39,30 +37,23 @@ namespace UserOperations.Services
             _utils = utils;
         }
 
-        [HttpGet("Dashboard")]
-        public async Task<IActionResult> GetDashboard([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+
+        public async Task<DashboardInfo> GetDashboard( string beg, string end,
+                                                        List<Guid> companyIds, List<Guid> corporationIds,
+                                                        List<Guid> workerTypeIds)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
 
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);               
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
-                var sessionCur = sessions != null? sessions.Where(p => p.BegTime.Date >= begTime).ToList() : null;
-                var sessionOld = sessions != null ? sessions.Where(p => p.BegTime.Date < begTime).ToList() : null;
+                var sessionCur = sessions?.Where(p => p.BegTime.Date >= begTime).ToList();
+                var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
                 var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
                 var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
@@ -141,30 +132,15 @@ namespace UserOperations.Services
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.DialoguesCountDelta += result.DialoguesCount;
                 result.DialogueDurationDelta += result.DialogueDuration;
-
-                var jsonToReturn = JsonConvert.SerializeObject(result);
-                return Ok(jsonToReturn);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+                return result;
         }
 
-        [HttpGet("NewDashboard")]
-        public async Task<IActionResult> GetNewDashboard([FromQuery(Name = "begTime")] string beg,
-                                                   [FromQuery(Name = "endTime")] string end,
-                                                   [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                   [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                   [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                   [FromHeader] string Authorization)
+        public async Task<NewDashboardInfo> GetNewDashboard( string beg, string end,
+                                                             List<Guid> companyIds, List<Guid> corporationIds,
+                                                             List<Guid> workerTypeIds)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
 
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
@@ -173,8 +149,8 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, workerTypeIds);
-                var sessionCur = sessions != null ? sessions.Where(p => p.BegTime.Date >= begTime).ToList() : null;
-                var sessionOld = sessions != null ? sessions.Where(p => p.BegTime.Date < begTime).ToList() : null;
+                var sessionCur = sessions?.Where(p => p.BegTime.Date >= begTime).ToList();
+                var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
                 var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
                 var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds)
@@ -190,9 +166,6 @@ namespace UserOperations.Services
                            SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
                        }).ToList();
-
-
-              
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
                 List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
@@ -226,12 +199,8 @@ namespace UserOperations.Services
                     AdvCount = viewsCur,
                     AdvCountDelta = viewsCur - viewsOld,
                     AnswerCount = (await GetAnswersAsync(begTime, endTime, companyIds, new List<Guid>(), workerTypeIds)).Count(),
-                    AnswerCountDelta = - (await GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds)).Count()//,
-                    //EmployeeOnlineCount = await _analyticHomeProvider.GetSessionOnline(companyIds, workerTypeIds),
-                    //EmployeeServingClientCount = 0,
-                    //EmployeeTabletActiveCount = 0
+                    AnswerCountDelta = - (await GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid>(), workerTypeIds)).Count()
                 };
-
 
                 //---benchmarks
                 if (benchmarksList != null && benchmarksList.Count() != 0)
@@ -252,31 +221,14 @@ namespace UserOperations.Services
                 result.AnswerCountDelta += result.AnswerCount;
                 result.AdvCountDelta += result.AdvCount;
                 result.ClientsCountDelta += result.ClientsCount;
-
-                var jsonToReturn = JsonConvert.SerializeObject(result);
-                return Ok(jsonToReturn);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+                return result;
         }
 
-        [HttpGet("DashboardFiltered")]
-        public async Task<IActionResult> GetDashboardFiltered([FromQuery(Name = "begTime")] string beg,
-                                                  [FromQuery(Name = "endTime")] string end,
-                                                  [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                  [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                  [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                  [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                  [FromHeader] string Authorization)
+        public async Task<object> GetDashboardFiltered(string beg, string end,
+                                                      List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
@@ -340,14 +292,7 @@ namespace UserOperations.Services
                     LoadIndexIndustryAverage = loadIndexIndustryAverage,
                     LoadIndexIndustryBenchmark = loadIndexIndustryBenchmark
             };
-
-                var jsonToReturn = JsonConvert.SerializeObject(result);
-                return Ok(jsonToReturn);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
+                return result;
         }
 
         //[HttpGet("Recomendation")]
