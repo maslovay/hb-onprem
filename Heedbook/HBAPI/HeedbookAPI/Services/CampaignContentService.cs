@@ -5,26 +5,20 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using HBData.Models;
-using UserOperations.Services;
 using Microsoft.EntityFrameworkCore;
-using HBData;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.CommonModels;
 using UserOperations.Utils;
-using Newtonsoft.Json;
 using System.Reflection;
 using System.Net;
-using UserOperations.Providers;
 using HBData.Repository;
+using UserOperations.Controllers;
 
 namespace UserOperations.Services
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CampaignContentService : Controller
+    public class CampaignContentService
     {
         private readonly LoginService _loginService;
-        private Dictionary<string, string> userClaims;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
 
@@ -45,54 +39,32 @@ namespace UserOperations.Services
             }
         }
 
-        [HttpGet("Campaign")]
-        [SwaggerOperation(Summary = "Return campaigns with content", Description = "Return all campaigns for loggined company with content relations")]
-        [SwaggerResponse(200, "Campaigns list", typeof(List<CampaignGetModel>))]
-        public IActionResult CampaignGet(
-                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public List<Campaign> CampaignGet( List<Guid> companyIds, List<Guid> corporationIds )
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
+            _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var statusInactiveId =  GetStatusId("Inactive");
-                var campaigns = GetCampaignForCompanys(companyIds, statusInactiveId);
-                
-                var result = campaigns
-                    .Select(p => 
-                        {
-                            p.CampaignContents = p.CampaignContents.Where(x => p.CampaignContents != null
-                                    && p.CampaignContents.Count != 0
-                                    && x.StatusId != statusInactiveId)
-                                .ToList();
-                            return p;
-                        })
-                    .ToList();
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest("Error");
-            }
+            var statusInactiveId =  GetStatusId("Inactive");
+            var campaigns = GetCampaignForCompanys(companyIds, statusInactiveId);
+
+            var result = campaigns
+                .Select(p =>
+                    {
+                        p.CampaignContents = p.CampaignContents.Where(x => p.CampaignContents != null
+                                && p.CampaignContents.Count != 0
+                                && x.StatusId != statusInactiveId)
+                            .ToList();
+                        return p;
+                    })
+                .ToList();
+            return result;
         }
 
-        [HttpPost("Campaign")]
-        [SwaggerOperation(Summary = "Create campaign with content", Description = "Create new campaign with content relations and return created one")]
-        [SwaggerResponse(200, "New campaign", typeof(CampaignGetModel))]
-        public IActionResult CampaignPost(
-                [FromBody, SwaggerParameter("Send content separately from the campaign", Required = true)] CampaignPutPostModel model,
-                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public Campaign CampaignPost( CampaignPutPostModel model )
         {
-            // _log.Info("Campaign POST started");
-            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                return BadRequest("Token wrong");
-            var companyId = Guid.Parse(userClaims["companyId"]);
+            var companyId = _loginService.GetCurrentCompanyId();
+
             var activeStatus = GetStatusId("Active");
             Campaign campaign = model.Campaign;
             campaign.CompanyId = (Guid)companyId;
@@ -108,31 +80,20 @@ namespace UserOperations.Services
                 AddInBase<CampaignContent>(campCont);
             }
             SaveChanges();
-            // _log.Info("Campaign POST finished");
-            return Ok(campaign);
+            return campaign;
         }
 
-        [HttpPut("Campaign")]
-        [SwaggerOperation(Summary = "Edit campaign with content", Description = "Edit existing campaign. Remove all content relations and create new")]
-        [SwaggerResponse(200, "Edited campaign", typeof(CampaignGetModel))]
-
-        public IActionResult CampaignPut(
-                [FromBody, SwaggerParameter("Send content separately from the campaign or send CampaignContents:[] if you dont need to change content relations", Required = true)]
-                    CampaignPutPostModel model, 
-                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public Campaign CampaignPut( CampaignPutPostModel model )
         {
-            if (!_loginService.GetDataFromToken(Authorization, out userClaims)) return BadRequest("Token wrong");
-            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-            var roleInToken = userClaims["role"];
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                var corporationIdInToken = _loginService.GetCurrentCorporationId();
 
-            Campaign modelCampaign = model.Campaign;
-            try
-            {
+                Campaign modelCampaign = model.Campaign;
+
                 var campaignEntity = GetCampaign(modelCampaign.CampaignId);
                 if (campaignEntity == null) return null;
-                if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, campaignEntity.CompanyId, roleInToken) == false)
-                    return BadRequest($"Not allowed user company");
+                _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, campaignEntity.CompanyId, roleInToken);
 
                 foreach (var p in typeof(Campaign).GetProperties())
                 {
@@ -146,30 +107,13 @@ namespace UserOperations.Services
 
                 if (model.CampaignContents != null && model.CampaignContents.Count != 0)
                 {
-                    // foreach (var item in activeCampaignContents)
-                    // {
-                    //     if (!model.CampaignContents.Select(x => x.CampaignContentId).Contains(item.CampaignContentId))
-                    //     {
-                    //         item.StatusId = inactiveStatusId;
-                    //     }
-                    // }
                     var modelCampaignContentIds = model.CampaignContents.Select(x => x.CampaignContentId);
                     activeCampaignContents.Where(p => !modelCampaignContentIds.Contains(p.CampaignContentId))
                         .Select(p => 
                             {
                                 p.StatusId = inactiveStatusId;
                                 return p;
-                            })
-                        .ToList();
-                    // foreach (var campCont in model.CampaignContents)
-                    // {
-                    //     if (!activeCampaignContents.Select(x => x.CampaignContentId).Contains(campCont.CampaignContentId))
-                    //     {
-                    //         campCont.CampaignId = campaignEntity.CampaignId;
-                    //         campCont.StatusId = activeStatusId;
-                    //         _campaignContentProvider.AddInBase<CampaignContent>(campCont);
-                    //     }
-                    // }
+                            }).ToList();
                     var activeCampaignContentsIds = activeCampaignContents.Select(x => x.CampaignContentId);
                     model.CampaignContents.Where(p => !activeCampaignContentsIds.Contains(p.CampaignContentId))
                         .Select(p =>
@@ -178,34 +122,20 @@ namespace UserOperations.Services
                                 p.StatusId = activeStatusId;
                                 AddInBase<CampaignContent>(p);
                                 return p;
-                            })
-                        .ToList();
+                            }).ToList();
                 }
                 SaveChanges();
                 campaignEntity.CampaignContents = campaignEntity.CampaignContents.Where(x => x.StatusId != inactiveStatusId).ToList();
-                return Ok(campaignEntity);
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal("Cant update");
-                return BadRequest(e.Message);
-            }
+                return campaignEntity;
         }
-
-        [HttpDelete("Campaign")]
-        [SwaggerOperation(Summary = "Delete or set campaign inactive", Description = "Delete or set campaign status Inactive and delete all content relations for this campaign")]
-        public IActionResult CampaignDelete([FromQuery] Guid campaignId, [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public string CampaignDelete( Guid campaignId )
         {
-            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                return BadRequest("Token wrong");
-
-            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-            var roleInToken = userClaims["role"];
+            var roleInToken = _loginService.GetCurrentRoleName();
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            var corporationIdInToken = _loginService.GetCurrentCorporationId();
 
             var campaign = GetCampaign(campaignId);
-            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, campaign.CompanyId, roleInToken) == false)
-                return BadRequest($"Not allowed user company");
+            _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, campaign.CompanyId, roleInToken);
             if (campaign != null)
             {
                 var inactiveStatusId = GetStatusId("Inactive");
@@ -224,29 +154,18 @@ namespace UserOperations.Services
                 }
                 catch
                 {
-                    return Ok("Set inactive");
+                    return "Set inactive";
                 }
-                return Ok("Deleted");
+                return "Deleted";
             }
-            return BadRequest("No such campaign");
+            return "No such campaign";
         }
 
-        [HttpGet("Content")]
-        [SwaggerOperation(Summary = "Get all content", Description = "Get all content for loggined company with screenshot url links")]
-        [SwaggerResponse(200, "Content list", typeof(List<Content>))]
-        public async Task<IActionResult> ContentGet(
-                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                [FromQuery(Name = "inActive")] bool? inactive,
-                                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<List<Content>> ContentGet( List<Guid> companyIds, List<Guid> corporationIds, bool? inactive )
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
 
                 var activeStatusId = GetStatusId("Active");
                 List<Content> contents;
@@ -254,42 +173,25 @@ namespace UserOperations.Services
                     contents = GetContentsWithActiveStatusId(activeStatusId, companyIds);
                 else
                     contents = GetContentsWithTemplateIsTrue(companyIds);
-                return Ok(contents);
-            }
-            catch (Exception e)
-            {
-                return BadRequest("Error");
-            }
+                return contents;
         }
-        [HttpGet("ContentPaginated")]
-        [SwaggerOperation(Summary = "Get all content", Description = "Return content for loggined company with screenshot url links (one page). limit=10, page=0, orderBy=Name/CreationDate/UpdateDate, orderDirection=desc/asc")]
-        [SwaggerResponse(200, "Content list", typeof(List<Content>))]
-        public async Task<IActionResult> ContentPaginatedGet(
-                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                [FromQuery(Name = "inActive")] bool? inActive,
-                                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization,
-                                [FromQuery(Name = "limit")] int limit = 10,
-                                [FromQuery(Name = "page")] int page = 0,
-                                [FromQuery(Name = "orderBy")] string orderBy = "Name",
-                                [FromQuery(Name = "orderDirection")] string orderDirection = "desc")
+
+        public async Task<object> ContentPaginatedGet( List<Guid> companyIds, List<Guid> corporationIds,
+                                 bool? inactive, int limit = 10, int page = 0,
+                                 string orderBy = "Name", string orderDirection = "desc")
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
 
                 var activeStatusId = GetStatusId("Active");
                 List<Content> contents;
-                if(inActive == true)
+                if(inactive == false)
                     contents = GetContentsWithActiveStatusId(activeStatusId, companyIds);
                 else
                     contents = GetContentsWithTemplateIsTrue(companyIds);
 
-                if(contents.Count == 0) return Ok(contents);
+                if(contents.Count == 0) return contents;
 
                 ////---PAGINATION---
                 var pageCount = (int)Math.Ceiling((double)contents.Count() / limit);//---round to the bigger 
@@ -300,29 +202,19 @@ namespace UserOperations.Services
                 if (orderDirection == "asc")
                 {
                     var contentsList = contents.OrderBy(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
-                    return Ok(new { contentsList, pageCount, orderBy, limit, page });                    
+                    return new { contentsList, pageCount, orderBy, limit, page };
                 }
                 else
                 {
                     var contentsList = contents.OrderByDescending(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
-                    return Ok(new { contentsList, pageCount, orderBy, limit, page });                    
+                    return new { contentsList, pageCount, orderBy, limit, page };
                 }
-            }
-            catch (Exception e)
-            {
-                return BadRequest("Error");
-            }
         }
 
-        [HttpPost("Content")]
-        [SwaggerOperation(Summary = "Save new content", Description = "Create new content")]
-        [SwaggerResponse(200, "New content", typeof(Content))]
-        public async Task<IActionResult> ContentPost([FromBody] Content content, [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<Content> ContentPost( Content content )
         {
-            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                return BadRequest("Token wrong");
-            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-            var roleInToken = userClaims["role"];
+            var roleInToken = _loginService.GetCurrentRoleName();
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
 
             if (!content.IsTemplate) content.CompanyId = companyIdInToken; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
@@ -330,25 +222,16 @@ namespace UserOperations.Services
             content.StatusId = GetStatusId("Active");
             AddInBase<Content>(content);
             SaveChanges();
-            return Ok(content);
+            return content;
         }
 
-        [HttpPut("Content")]
-        [SwaggerOperation(Summary = "Edit content", Description = "Edit existing content")]
-        [SwaggerResponse(200, "Edited content", typeof(Content))]
-        public async Task<IActionResult> ContentPut(
-                    [FromBody] Content content,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<Content> ContentPut( Content content )
         {
-            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                return BadRequest("Token wrong");
+            var roleInToken = _loginService.GetCurrentRoleName();
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            var corporationIdInToken = _loginService.GetCurrentCorporationId();
 
-            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-            var roleInToken = userClaims["role"];
-
-            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken) == false)
-                return BadRequest($"Not allowed user company");
+            _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken);
 
             var contentEntity = GetContent(content.ContentId);
             foreach (var p in typeof(Content).GetProperties())
@@ -358,25 +241,18 @@ namespace UserOperations.Services
             }
             contentEntity.UpdateDate = DateTime.UtcNow;
             await SaveChangesAsync();
-            return Ok(contentEntity);
+            return contentEntity;
         }
 
-        [HttpDelete("Content")]
-        [SwaggerOperation(Summary = "Remove content", Description = "Delete content")]
-        public async Task<IActionResult> ContentDelete([FromQuery] Guid contentId, [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<string> ContentDelete( Guid contentId )
         {
-            // _log.Info("Content DELETE started");
-            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                return BadRequest("Token wrong");
-
-            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-            var roleInToken = userClaims["role"];
+            var roleInToken = _loginService.GetCurrentRoleName();
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            var corporationIdInToken = _loginService.GetCurrentCorporationId();
 
             var content = GetContentWithIncludeCampaignContent(contentId);
-            if (content == null) return BadRequest("No such content");
-            if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken) == false)
-                return BadRequest($"Not allowed user company");
+            if (content == null) throw new NoFoundException("No such content");
+            _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken);
 
             var inactiveStatusId = GetStatusId("Inactive");
             var links = content.CampaignContents.ToList();
@@ -397,16 +273,13 @@ namespace UserOperations.Services
             }
             catch
             {
-                return Ok("Set inactive");
+                return "Set inactive";
             }
-            return Ok("Removed");
+            return "Removed";
         }
 
-        [HttpGet("GetResponseHeaders")]
-        public async Task<IActionResult> GetResponseHeaders([FromQuery] string url)
+        public async Task<Dictionary<string, string>> GetResponseHeaders( string url)
         {
-            try
-            {
                 var MyClient = WebRequest.Create(url) as HttpWebRequest;
                 MyClient.Method = WebRequestMethods.Http.Get;
                 MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
@@ -414,14 +287,10 @@ namespace UserOperations.Services
                 var answer = new Dictionary<string, string>();
                 for (int i = 0; i < response.Headers.Count; i++)
                     answer[response.Headers.GetKey(i)] = response.Headers.Get(i).ToString();
-                return Ok(answer);
-            }
-            catch
-            {
-                return BadRequest("Error");
-            }
+                return answer;
         }
 
+        //---PRIVATE---
         private int GetStatusId(string statusName)
         {
             var statusId = _repository.GetAsQueryable<Status>()
