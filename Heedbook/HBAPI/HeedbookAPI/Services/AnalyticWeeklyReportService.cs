@@ -1,30 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using UserOperations.Services;
 using UserOperations.Models.Get.AnalyticWeeklyReportController;
-using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
-using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
-using HBData;
 using UserOperations.Utils;
-using HBLib.Utils;
 using HBData.Models;
-using UserOperations.Providers;
 using UserOperations.Utils.AnalyticWeeklyReportController;
 using HBData.Repository;
 
 namespace UserOperations.Services
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AnalyticWeeklyReportService : Controller
+    public class AnalyticWeeklyReportService
     {
         private readonly IConfiguration _config;
         private readonly LoginService _loginService;
@@ -47,18 +34,8 @@ namespace UserOperations.Services
             _analyticWeeklyReportUtils = analyticWeeklyReportUtils;
         }
 
-        [HttpGet("User")]
-        public IActionResult User(
-         [FromHeader] string Authorization,
-         [FromQuery(Name = "applicationUserId")] Guid userId
-     )
-        {
-            try
-            {
-//                _log.Info("AnalyticWeeklyReport/User started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-
+        public Dictionary<string, object> User( Guid userId )
+        { 
                 var begTime = DateTime.Now.AddDays(-7);
                 var employeeRoleId = GetEmployeeRoleId();
                 var jsonToReturn = new Dictionary<string, object>();
@@ -332,15 +309,10 @@ namespace UserOperations.Services
                 jsonToReturn["RiskPhrase"] = RiskPhrase;
 
                 jsonToReturn["corporationId"] = corporationId;
-                return Ok(jsonToReturn);
-            }
-            catch (Exception e)
-            {
-//                _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
+                return jsonToReturn;
         }
 
+        //---PRIVATE---
         private Guid GetEmployeeRoleId()
         {
             var emplyeeRoleId = _repository.GetAsQueryable<ApplicationRole>().FirstOrDefault(x => x.Name == "Employee").Id;
