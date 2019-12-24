@@ -24,7 +24,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Dashboard")]
-        public async Task<DashboardInfo> GetDashboard([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> GetDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,

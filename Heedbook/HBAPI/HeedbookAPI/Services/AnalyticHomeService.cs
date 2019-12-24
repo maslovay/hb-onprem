@@ -38,7 +38,7 @@ namespace UserOperations.Services
         }
 
 
-        public async Task<DashboardInfo> GetDashboard( string beg, string end,
+        public async Task<string> GetDashboard( string beg, string end,
                                                         List<Guid> companyIds, List<Guid> corporationIds,
                                                         List<Guid> workerTypeIds)
         {
@@ -132,7 +132,8 @@ namespace UserOperations.Services
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.DialoguesCountDelta += result.DialoguesCount;
                 result.DialogueDurationDelta += result.DialogueDuration;
-                return result;
+                var json = JsonConvert.SerializeObject(result);
+                return json;
         }
 
         public async Task<NewDashboardInfo> GetNewDashboard( string beg, string end,
