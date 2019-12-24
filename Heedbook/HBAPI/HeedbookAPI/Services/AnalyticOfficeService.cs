@@ -44,7 +44,7 @@ namespace UserOperations.Services
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
-                var dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, workerTypeIds);                
+                var dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, workerTypeIds);
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
