@@ -107,7 +107,7 @@ namespace PersonDetectionService
                 if (dialogueClientProfile == null) return (null, "client exception -  dialogueClientProfile == null");
                 if (dialogueClientProfile.Age == null || dialogueClientProfile.Gender == null) return (null, "client exception -  dialogueClientProfile == null");
 
-            var activeStatusId = _context.Statuss
+                var activeStatusId = _context.Statuss
                                 .Where(x => x.StatusName == "Active")
                                 .Select(x => x.StatusId)
                                 .FirstOrDefault();

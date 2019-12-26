@@ -47,12 +47,16 @@ namespace HBData.Models
         public DateTime EndTime { get; set; }
 
         /// <summary>
+        ///     Device id
+        /// </summary>
+        public Guid? DeviceId { get; set; }
+        [JsonIgnore] public Device Device { get; set; }
+
+        /// <summary>
         ///     Dialogue's author
         /// </summary>
-        public Guid ApplicationUserId { get; set; }
-
-       [JsonIgnore] 
-        public ApplicationUser ApplicationUser { get; set; }
+        public Guid? ApplicationUserId { get; set; }
+        [JsonIgnore] public ApplicationUser ApplicationUser { get; set; }
 
         /// <summary>
         ///     Dilaogue language

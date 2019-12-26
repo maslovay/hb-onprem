@@ -80,7 +80,8 @@ namespace UserOperations.Controllers
                 try
                 {
                     if (curDialogue.ClientId != null) continue;
-                    if(_context.Clients.Where(x => x.ClientId == curDialogue.PersonId).Any())
+                    if (curDialogue.PersonId == null) continue;
+                    if (_context.Clients.Where(x => x.ClientId == curDialogue.PersonId).Any())
                     {
                         curDialogue.ClientId = curDialogue.PersonId;
                         _context.SaveChanges();
@@ -92,7 +93,6 @@ namespace UserOperations.Controllers
                                   .Select(x => x.Company)
                                   .FirstOrDefault();
 
-                    Guid? personId = curDialogue.PersonId ?? Guid.NewGuid();
 
                     var dialogueClientProfile = curDialogue.DialogueClientProfile.FirstOrDefault();
                     if (dialogueClientProfile == null) continue;
@@ -108,7 +108,7 @@ namespace UserOperations.Controllers
 
                     Client client = new Client
                     {
-                        ClientId = (Guid)personId,
+                        ClientId = (Guid)curDialogue.PersonId,
                         CompanyId = (Guid)company?.CompanyId,
                         CorporationId = company?.CorporationId,
                         FaceDescriptor = faceDescr,
@@ -120,7 +120,7 @@ namespace UserOperations.Controllers
                     _context.Clients.Add(client);
                     //  _context.SaveChanges();
 
-                    curDialogue.ClientId = personId;
+                    curDialogue.ClientId = curDialogue.PersonId;
                    // _context.SaveChanges();
                     counter++;
                 }

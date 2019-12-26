@@ -131,6 +131,9 @@ namespace HBData
 
         public DbSet<Benchmark> Benchmarks { get; set; }
         public DbSet<BenchmarkName> BenchmarkNames { get; set; }
+
+        public DbSet<Device> Devices { get; set; }
+        public DbSet<DeviceType> DeviceTypes { get; set; }
         //---VIES
         public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
         public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }        

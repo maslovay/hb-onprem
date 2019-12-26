@@ -58,6 +58,11 @@ namespace HBData.Models
         public ICollection<ApplicationUser> ApplicationUser { get; set; }
 
         /// <summary>
+        ///     Link to company devices
+        /// </summary>
+        public ICollection<Device> Devices { get; set; }
+
+        /// <summary>
         ///     Link to payments
         /// </summary>
         [JsonIgnore] public ICollection<Payment> Payment { get; set; }
