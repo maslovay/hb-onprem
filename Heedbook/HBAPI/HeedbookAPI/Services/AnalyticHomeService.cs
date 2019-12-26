@@ -225,7 +225,7 @@ namespace UserOperations.Services
                 return result;
         }
 
-        public async Task<object> GetDashboardFiltered(string beg, string end,
+        public async Task<string> GetDashboardFiltered(string beg, string end,
                                                       List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds)
         {
                 var role = _loginService.GetCurrentRoleName();
@@ -293,7 +293,8 @@ namespace UserOperations.Services
                     LoadIndexIndustryAverage = loadIndexIndustryAverage,
                     LoadIndexIndustryBenchmark = loadIndexIndustryBenchmark
             };
-                return result;
+            var res = JsonConvert.SerializeObject(result);
+            return res;
         }
 
         //[HttpGet("Recomendation")]
