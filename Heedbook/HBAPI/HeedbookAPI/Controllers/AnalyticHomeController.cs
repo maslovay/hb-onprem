@@ -52,7 +52,7 @@ namespace UserOperations.Controllers
                 workerTypeIds );
 
         [HttpGet("DashboardFiltered")]
-        public async Task<object> GetDashboardFiltered([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> GetDashboardFiltered([FromQuery(Name = "begTime")] string beg,
                                                   [FromQuery(Name = "endTime")] string end,
                                                   [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                   [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
