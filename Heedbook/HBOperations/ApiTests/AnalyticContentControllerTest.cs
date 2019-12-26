@@ -57,14 +57,14 @@ namespace ApiTests
         [Test]
         public async Task Efficiency()
         {
-            //Arrange
-            commonProviderMock.Setup(p => p.GetDialoguesInfoWithFramesAsync(
-                It.IsAny<DateTime>(), 
-                It.IsAny<DateTime>(), 
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>(),
-                It.IsAny<List<Guid>>()))
-                .Returns(Task.FromResult( TestData.GetDialogueInfoWithFrames().ToList()));
+            ////Arrange
+            //commonProviderMock.Setup(p => p.GetDialoguesInfoWithFramesAsync(
+            //    It.IsAny<DateTime>(), 
+            //    It.IsAny<DateTime>(), 
+            //    It.IsAny<List<Guid>>(),
+            //    It.IsAny<List<Guid>>(),
+            //    It.IsAny<List<Guid>>()))
+            //    .Returns(Task.FromResult( TestData.GetDialogueInfoWithFrames().ToList()));
                 
             //var analyticContentController = new AnalyticContentService(
             //    analyticContentProviderMock.Object,
