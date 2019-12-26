@@ -121,7 +121,7 @@ namespace UserOperations.Controllers
                     //  _context.SaveChanges();
 
                     curDialogue.ClientId = personId;
-                    _context.SaveChanges();
+                   // _context.SaveChanges();
                     counter++;
                 }
                 catch (Exception ex)
@@ -130,7 +130,8 @@ namespace UserOperations.Controllers
                     //return null;
                 }
             }
-                    return Ok(counter);
+            _context.SaveChanges();
+            return Ok(counter);
         }
     }
 }
