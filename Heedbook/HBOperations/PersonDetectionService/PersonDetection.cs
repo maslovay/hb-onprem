@@ -56,9 +56,12 @@ namespace PersonDetectionService
                     curDialogue.PersonId = FindId(curDialogue, dialoguesProceeded);
                     try
                     {
-                        _log.Info($"client { curDialogue.PersonId  } try to create");
-                        curDialogue.ClientId = CreateNewClient(curDialogue);//clientId = personId (the same)
-                        _log.Info($"client { curDialogue.PersonId  } created");
+                        string error = String.Empty;
+                        (curDialogue.ClientId, error)  = CreateNewClient(curDialogue);//clientId = personId (the same)
+                        if (error != String.Empty)
+                            _log.Error($"client { curDialogue.PersonId  } creation error: {error}");
+                        else
+                            _log.Info($"client { curDialogue.PersonId  } created");
                     }
                     catch( Exception ex )
                     {
@@ -87,10 +90,8 @@ namespace PersonDetectionService
             return Guid.NewGuid();
         }
 
-        public Guid? CreateNewClient(Dialogue curDialogue)
+        public (Guid?, string) CreateNewClient(Dialogue curDialogue)
         {
-            try
-            {
                 var company = _context.ApplicationUsers
                               .Where(x => x.Id == curDialogue.ApplicationUserId)
                               .Select(x => x.Company)
@@ -99,11 +100,11 @@ namespace PersonDetectionService
                 var clientId = _context.Clients
                         .Where(x => x.ClientId == curDialogue.PersonId)
                         .Select(x => x.ClientId).FirstOrDefault();
-                if (clientId != null && clientId != Guid.Empty) return clientId;
+                if (clientId != null && clientId != Guid.Empty) return (clientId, String.Empty);
 
                 var dialogueClientProfile = _context.DialogueClientProfiles
                                 .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
-                if (dialogueClientProfile == null) return null;
+                if (dialogueClientProfile == null) return (null, "client exception -  dialogueClientProfile == null");
 
                 var activeStatusId = _context.Statuss
                                 .Where(x => x.StatusName == "Active")
@@ -129,12 +130,7 @@ namespace PersonDetectionService
                 };
                 _context.Clients.Add(client);
                 _context.SaveChanges();
-                return client.ClientId;
-            }
-            catch
-                {
-                return null;
-            }
+                return (client.ClientId, String.Empty);
         }
     }
 }
