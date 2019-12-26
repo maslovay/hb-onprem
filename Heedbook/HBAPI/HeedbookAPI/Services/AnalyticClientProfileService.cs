@@ -8,6 +8,7 @@ using UserOperations.Models.Get.AnalyticClientProfileController;
 using HBData.Repository;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace UserOperations.Services
 {
@@ -45,7 +46,7 @@ namespace UserOperations.Services
                 }};
             _repository = repository;
         }
-        public async Task<Dictionary<string, object>> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -99,7 +100,7 @@ namespace UserOperations.Services
                     .Where(p => p.PersonId != null && !persondIdsPerYear.Contains(p.PersonId))
                     .Select(p => p.PersonId).Distinct().Count() + data.Where(p => p.PersonId == null).Select(p => p.DialogueId).Distinct().Count();
                 objToReturn["genderAge"] = result;
-                return objToReturn;
+                return JsonConvert.SerializeObject(objToReturn);
         }
 
         //---PRIVATE---

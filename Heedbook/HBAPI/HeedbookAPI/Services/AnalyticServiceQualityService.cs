@@ -1,21 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
 using Newtonsoft.Json;
 using UserOperations.Utils;
 using System.Threading.Tasks;
 using UserOperations.Utils.AnalyticServiceQualityUtils;
-using UserOperations.Providers;
 using HBData.Repository;
 using HBData.Models;
-//---OLD---
+using Microsoft.EntityFrameworkCore;
+
 namespace UserOperations.Services
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AnalyticServiceQualityService : Controller
+    public class AnalyticServiceQualityService
     {   
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
@@ -35,21 +32,12 @@ namespace UserOperations.Services
             _analyticServiceQualityUtils = analyticServiceQualityUtils;
         }
 
-        [HttpGet("Components")]
-        public async Task<IActionResult> ServiceQualityComponents([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public async Task<string> ServiceQualityComponents( string beg, string end, 
+                                                        List<Guid> applicationUserIds, List<Guid> companyIds,
+                                                        List<Guid> corporationIds, List<Guid> workerTypeIds )
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
@@ -97,32 +85,18 @@ namespace UserOperations.Services
                         RiskColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Risk").Colour
                     }
                 };
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e )
-            {
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(result);
         }
 
-        [HttpGet("Dashboard")]
-        public IActionResult ServiceQualityDashboard([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public string ServiceQualityDashboard( string beg, string end, 
+                                                     List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                                     List<Guid> workerTypeIds )
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
@@ -155,34 +129,18 @@ namespace UserOperations.Services
                     BestProgressiveEmployeeDelta = _analyticServiceQualityUtils.BestProgressiveEmployeeDelta(dialogues, begTime)
                 };
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(result);
         }
 
-        [HttpGet("Rating")]
-        public async Task<IActionResult> ServiceQualityRating([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public async Task<string> ServiceQualityRating( string beg, string end, 
+                                                         List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                                         List<Guid> workerTypeIds )
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-              //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var phrasesTypes = GetPhraseTypes();
                 //var typeIdCross = phrasesTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
@@ -198,9 +156,7 @@ namespace UserOperations.Services
                     workerTypeIds, 
                     typeIdLoyalty);
 
-               // return Ok(dialogues.Select(p => p.DialogueId).Distinct().Count());
-
-                var result = dialogues
+                var result = await dialogues
                     .GroupBy(p => p.ApplicationUserId)
                     .Select(p => new RatingRatingInfo
                     {
@@ -216,38 +172,21 @@ namespace UserOperations.Services
                         //TextNecessaryShare =   _dbOperation.NecessaryIndex(p),
                         TextLoyaltyShare = _analyticServiceQualityUtils.LoyaltyIndex(p),
                         TextPositiveShare = p.Any()? p.Where(q => q.TextShare != null).Average(q => q.TextShare) : null
-                    }).ToList();
+                    }).ToListAsync();
                
                 result = result.OrderBy(p => p.SatisfactionIndex).ToList();
-                // _log.Info("AnalyticServiceQuality/Rating finished");
-
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(result);
         }
 
-        [HttpGet("SatisfactionStats")]
-        public async Task<IActionResult> ServiceQualitySatisfactionStats([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
+        public async Task<string> ServiceQualitySatisfactionStats( string beg, string end,
+                                                    List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                                    List<Guid> workerTypeIds )
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
-              //  var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
 
@@ -263,16 +202,10 @@ namespace UserOperations.Services
                 };
                 
                 result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
-                // _log.Info("AnalyticServiceQuality/SatisfactionStats finished");
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(result);
         }
 
+        //---PRIVATE---
         private async Task<List<ComponentsPhraseInfo>> GetComponentsPhraseInfo()
         {
             return await _repository.GetAsQueryable<PhraseType>()

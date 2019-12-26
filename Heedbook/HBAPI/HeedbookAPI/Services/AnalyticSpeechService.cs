@@ -1,20 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using HBData.Models;
 using Newtonsoft.Json;
 using UserOperations.Utils;
-using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Models.Get.AnalyticSpeechController;
 using UserOperations.Utils.AnalyticSpeechController;
 using HBData.Repository;
 
 namespace UserOperations.Services
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AnalyticSpeechService : Controller
+    public class AnalyticSpeechService
     {  
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
@@ -33,26 +29,16 @@ namespace UserOperations.Services
             _requestFilters = requestFilters;
             _repository = repository;
             _analyticSpeechUtils = analyticSpeechUtils;
-        }    
+        }
 
-        [HttpGet("EmployeeRating")]
-        public IActionResult SpeechEmployeeRating([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        // [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
-                                                        // [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
-                                                        [FromHeader] string Authorization)
+        public string SpeechEmployeeRating( string beg, string end, 
+                                            List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                            List<Guid> workerTypeIds
+                                                        // List<Guid> phraseIds, List<Guid> phraseTypeIds
+                                            )
         {
-            try
-            {
-//                _log.Info("AnalyticSpeech/EmployeeRating started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
 
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
@@ -78,33 +64,15 @@ namespace UserOperations.Services
                         CrossFreq = _analyticSpeechUtils.CrossIndex(p),
                         AlertFreq = _analyticSpeechUtils.AlertIndex(p)
                     });
-//                _log.Info("AnalyticSpeech/EmployeeRating finished");
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(result);
         }
 
-        [HttpGet("PhraseTable")]
-        public IActionResult SpeechPhraseTable([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
-                                                        [FromHeader] string Authorization)
+        public string SpeechPhraseTable( string beg, string end, 
+                                         List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                         List<Guid> workerTypeIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
         {
-            try
-            {
-//                _log.Info("AnalyticSpeech/PhraseTable started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);                  
@@ -141,34 +109,15 @@ namespace UserOperations.Services
                             Math.Round(Convert.ToDouble(p.GroupBy(q => q.ApplicationUserId).Max(q => q.Count())) / Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()), 2) :
                             0
                     });
-//                _log.Info("AnalyticSpeech/PhraseTable finished");
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(result);
         }
 
-        [HttpGet("PhraseTypeCount")]
-        [SwaggerOperation(Summary = "% phrases in dialogues", Description = "Return type, procent and colour of phrase type in dialogues (for employees, clients and total)")]
-        public IActionResult SpeechPhraseTypeCount([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
-                                                        [FromHeader] string Authorization)
+        public SpeechPhraseTotalInfo SpeechPhraseTypeCount( string beg, string end, 
+                                             List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                             List<Guid> workerTypeIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
         {
-            try
-            {
-//                _log.Info("AnalyticSpeech/PhraseTypeCount started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
@@ -179,13 +128,13 @@ namespace UserOperations.Services
                     companyIds,
                     applicationUserIds,
                     workerTypeIds);
-                // CREATE PARAMETERS                
+                // CREATE PARAMETERS
                 var totalInfo = new SpeechPhraseTotalInfo();
 
                 var requestPhrase = DialoguePhrasesInfo(
                     dialogueIds,
                     phraseIds,
-                    phraseTypeIds);             
+                    phraseTypeIds);
 
                 var employee = requestPhrase.Where(p => p.IsClient == false)
                     .GroupBy(p => p.PhraseType)
@@ -195,7 +144,7 @@ namespace UserOperations.Services
                         Count = (requestPhrase.Where(q => q.IsClient == false).Select(q => q.DialogueId).Distinct().Count() != 0) ?
                             Math.Round(100 * Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(requestPhrase.Where(q => q.IsClient == false).Select(q => q.DialogueId).Distinct().Count())) : 0,
                         Colour = p.First().Colour
-                    }).ToList();          
+                    }).ToList();
 
                 var client = requestPhrase.Where(p => p.IsClient == true & (p.PhraseType == "Loyalty" | p.PhraseType == "Alert"))
                     .GroupBy(p => p.PhraseType)
@@ -247,35 +196,15 @@ namespace UserOperations.Services
                 totalInfo.Client = client;
                 totalInfo.Employee = employee;
                 totalInfo.Total = total;
-
-//                _log.Info("AnalyticSpeech/PhraseTypeCount finished");
-                return Ok(totalInfo);
-            }
-            catch (Exception e)
-            {
-//                _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);            
-            }
+                return totalInfo;
         }
 
-        [HttpGet("WordCloud")]
-        public IActionResult SpeechWordCloud([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
-                                                        [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
-                                                        [FromHeader] string Authorization)
+        public string SpeechWordCloud( string beg, string end, List<Guid> applicationUserIds, List<Guid> companyIds,
+                                       List<Guid> corporationIds, List<Guid> workerTypeIds, List<Guid> phraseIds,
+                                       List<Guid> phraseTypeIds )
         {
-            try
-            {
-//                _log.Info("AnalyticSpeech/WordCloud started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);     
+                var role = _loginService.GetCurrentRoleName();
+                var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
@@ -297,15 +226,7 @@ namespace UserOperations.Services
                         Text = p.First().PhraseText,
                         Weight = 2 * p.Count(),
                         Colour = p.First().PhraseColor});
-
-//                _log.Info("AnalyticSpeech/WordCloud finished");
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-//                _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
+                return JsonConvert.SerializeObject(result);
         }
 
 

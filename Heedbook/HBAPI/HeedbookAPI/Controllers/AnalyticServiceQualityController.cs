@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using System.Threading.Tasks;
-//---OLD---
+using Microsoft.AspNetCore.Authorization;
+
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [ControllerExceptionFilter]
     public class AnalyticServiceQualityController : Controller
     {
         private readonly AnalyticServiceQualityService _analyticServiceQualityService;
@@ -20,7 +23,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Components")]
-        public async Task<IActionResult> ServiceQualityComponents([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> ServiceQualityComponents([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -33,12 +36,11 @@ namespace UserOperations.Controllers
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds,
-                Authorization);
+                workerTypeIds);
         
 
         [HttpGet("Dashboard")]
-        public IActionResult ServiceQualityDashboard([FromQuery(Name = "begTime")] string beg,
+        public string ServiceQualityDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -51,12 +53,11 @@ namespace UserOperations.Controllers
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds,
-                Authorization);
+                workerTypeIds);
         
 
         [HttpGet("Rating")]
-        public async Task<IActionResult> ServiceQualityRating([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> ServiceQualityRating([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -69,12 +70,11 @@ namespace UserOperations.Controllers
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds,
-                Authorization);
+                workerTypeIds);
         
 
         [HttpGet("SatisfactionStats")]
-        public async Task<IActionResult> ServiceQualitySatisfactionStats([FromQuery(Name = "begTime")] string beg,
+        public async Task<string> ServiceQualitySatisfactionStats([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -87,7 +87,6 @@ namespace UserOperations.Controllers
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds,
-                Authorization);   
+                workerTypeIds);
     }
 }

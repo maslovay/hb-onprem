@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -23,6 +24,6 @@ namespace HBData.Models
         /// <summary>
         ///     Link to companys with this language
         /// </summary>
-        public ICollection<Company> Company { get; set; }
+        [JsonIgnore] public ICollection<Company> Company { get; set; }
     }
 }
