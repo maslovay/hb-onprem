@@ -19,16 +19,20 @@ namespace UserOperations.Providers
         {
             _repository = repository;
         }
-        public async Task<IEnumerable<Models.AnalyticModels.SessionInfoFull>> GetSessionInfoAsync( DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> userIds = null)
+        public async Task<IEnumerable<Models.AnalyticModels.SessionInfo>> GetSessionInfoAsync( 
+                                DateTime begTime, DateTime endTime, 
+                                List<Guid> companyIds, 
+                                List<Guid?> userIds = null,
+                                List<Guid> deviceIds = null)
         {
             var sessions = await _repository.GetAsQueryable<Session>()
                          .Where(p => p.BegTime >= begTime
                                  && p.EndTime <= endTime
                                  && p.StatusId == 7
                                  && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                                 && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                                 && (userIds == null || (!userIds.Any() || userIds.Contains(p.ApplicationUserId))))
-                         .Select(p => new Models.AnalyticModels.SessionInfoFull
+                                 && (userIds == null || (!userIds.Any() || userIds.Contains(p.ApplicationUserId)))
+                                 && (deviceIds == null || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))))
+                         .Select(p => new Models.AnalyticModels.SessionInfo
                          {
                              ApplicationUserId = p.ApplicationUserId,
                              BegTime = p.BegTime,
@@ -38,7 +42,11 @@ namespace UserOperations.Providers
             return sessions;
         }
 
-        public IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> workerTypeIds, List<Guid> applicationUserIds = null)
+        public IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime, 
+                        List<Guid> companyIds, 
+                        List<Guid?> applicationUserIds = null,
+                        List<Guid> deviceIds = null
+                        )
         {
             var dialogues = _repository.GetAsQueryable<Dialogue>()
                        .Include(p => p.ApplicationUser)
@@ -49,12 +57,16 @@ namespace UserOperations.Providers
                                && p.StatusId == 3
                                && p.InStatistic == true
                                && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                               && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                               && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                                && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))).AsQueryable();
             return dialogues;
         }
 
-        public IQueryable<Dialogue> GetDialoguesIncludedClientProfile(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
+        public IQueryable<Dialogue> GetDialoguesIncludedClientProfile(
+                        DateTime begTime, DateTime endTime, 
+                        List<Guid> companyIds, 
+                        List<Guid?> applicationUserIds, 
+                        List<Guid> deviceIds)
         {
             var data = _repository.GetAsQueryable<Dialogue>()
                 .Include(p => p.DialogueClientProfile)
@@ -64,8 +76,8 @@ namespace UserOperations.Providers
                     p.StatusId == 3 &&
                     p.InStatistic == true &&
                     (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
-                    (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
-                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
+                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
+                    (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))).AsQueryable();
             return data;
         }
 
@@ -81,8 +93,8 @@ namespace UserOperations.Providers
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds
             )
         {
             var dialogues = await _repository.GetAsQueryable<Dialogue>()
@@ -93,13 +105,14 @@ namespace UserOperations.Providers
                            && p.EndTime <= endTime
                            && p.StatusId == 3
                            && p.InStatistic == true
-                           && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                           && (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId))
                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                           && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                           && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                    .Select(p => new DialogueInfoWithFrames
                    {
                        DialogueId = p.DialogueId,
                        ApplicationUserId = p.ApplicationUserId,
+                       DeviceId = p.DeviceId,
                        BegTime = p.BegTime,
                        EndTime = p.EndTime,
                        DialogueFrame = p.DialogueFrame.ToList(),
@@ -132,8 +145,8 @@ namespace UserOperations.Providers
             DateTime begTime, 
             DateTime endTime, 
             List<Guid> companyIds, 
-            List<Guid> applicationUserIds, 
-            List<Guid> workerTypeIds,
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds,
             Guid loyaltyTypeId)
         {
             var dialogues = await _repository.GetAsQueryable<Dialogue>()
@@ -146,9 +159,9 @@ namespace UserOperations.Providers
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains( p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new ComponentsDialogueInfo
                 {
                     DialogueId = p.DialogueId,
@@ -192,8 +205,8 @@ namespace UserOperations.Providers
             DateTime begTime, 
             DateTime endTime, 
             List<Guid> companyIds, 
-            List<Guid> applicationUserIds, 
-            List<Guid> workerTypeIds,
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds,
             Guid typeIdLoyalty)
         {
             return await _repository.GetAsQueryable<Dialogue>()
@@ -207,13 +220,13 @@ namespace UserOperations.Providers
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains( p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new RatingDialogueInfo
                 {
                     DialogueId = p.DialogueId,
-                    ApplicationUserId = p.ApplicationUserId.ToString(),
+                    ApplicationUserId = p.ApplicationUserId,
                     FullName = p.ApplicationUser.FullName,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
@@ -234,8 +247,8 @@ namespace UserOperations.Providers
             DateTime begTime, 
             DateTime endTime, 
             List<Guid> companyIds, 
-            List<Guid> applicationUserIds, 
-            List<Guid> workerTypeIds)
+            List<Guid?> applicationUserIds, 
+            List<Guid> deviceIds)
         {
             return await _repository.GetAsQueryable<Dialogue>()
                 .Include(p => p.ApplicationUser)
@@ -246,7 +259,7 @@ namespace UserOperations.Providers
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid) p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new Models.AnalyticModels.DialogueInfoFull
                 {
                     DialogueId = p.DialogueId,
@@ -258,20 +271,27 @@ namespace UserOperations.Providers
                 .ToListAsyncSafe();
         }
 
-        private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        private IQueryable<Dialogue> GetDialogues(
+                            DateTime begTime, DateTime endTime, 
+                            List<Guid> companyIds = null, 
+                            List<Guid?> applicationUserIds = null, 
+                            List<Guid> deviceIds = null)
         {
             var data = _repository.GetAsQueryable<Dialogue>()
                     .Where(p => p.BegTime >= begTime &&
                         p.EndTime <= endTime &&
                         p.StatusId == 3 &&
                         p.InStatistic == true &&
-                        (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))) &&
-                        (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
-                        (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))).AsQueryable();
+                        (companyIds == null || (!companyIds.Any() || companyIds.Contains( p.Device.CompanyId))) &&
+                        (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))) &&
+                        (deviceIds == null || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))).AsQueryable();
             return data;
         }
 
-        public async Task<List<ApplicationUser>> GetEmployees(DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        public async Task<List<ApplicationUser>> GetEmployees(
+                    DateTime endTime, 
+                    List<Guid> companyIds = null, 
+                    List<Guid?> applicationUserIds = null)
         {
             var employeeRole = (await _repository.FindOrNullOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
             var users =  _repository.GetAsQueryable<ApplicationUser>()
@@ -280,7 +300,6 @@ namespace UserOperations.Providers
                        && p.StatusId == 3
                        && (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.CompanyId)))
                        && (applicationUserIds == null || ( !applicationUserIds.Any() || applicationUserIds.Contains(p.Id)))
-                       && (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId)))
                        && (p.UserRoles.Any(x => x.RoleId == employeeRole))
                    ).ToList();
             return users;

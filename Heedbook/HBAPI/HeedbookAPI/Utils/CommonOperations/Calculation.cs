@@ -85,7 +85,7 @@ namespace UserOperations.Utils
             return workinHours != 0 ? (double?)dialogueHours / workinHours : 0;
         }
 
-        public double? LoadIndex(List<SessionInfoFull> sessions, List<DialogueInfoFull> dialogues, DateTime beg , DateTime end )
+        public double? LoadIndex(List<SessionInfo> sessions, List<DialogueInfoFull> dialogues, DateTime beg , DateTime end )
         {           
              var sessionHours = sessions.Any() ? sessions.Sum(p =>
                 Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
@@ -95,7 +95,7 @@ namespace UserOperations.Utils
             return 100 * LoadIndex( sessionHours, dialoguesHours);
         }
 
-        public double? LoadIndex(List<SessionInfoFull> sessions, List<DialogueInfoFull> dialogues)
+        public double? LoadIndex(List<SessionInfo> sessions, List<DialogueInfoFull> dialogues)
         {
             var sessionHours = sessions.Any() ? sessions.Sum(p =>
                 p.EndTime.Subtract(p.BegTime).TotalHours) : 0;
@@ -104,7 +104,7 @@ namespace UserOperations.Utils
             return sessionHours != 0 ? (double?)100 * dialoguesHours / sessionHours : null;
         }
 
-        public double? LoadIndex(List<SessionInfoFull> sessions, IGrouping<Guid, DialogueInfoFull> dialogues, DateTime beg, DateTime end)
+        public double? LoadIndex(List<SessionInfo> sessions, IGrouping<Guid?, DialogueInfoFull> dialogues, DateTime beg, DateTime end)
         {
             var sessionsGroup = sessions.Where(p => p.ApplicationUserId == dialogues.Key);
             var sessionHours = sessionsGroup.Any() ? sessionsGroup.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
@@ -112,7 +112,7 @@ namespace UserOperations.Utils
             return 100 * LoadIndex( sessionHours, dialoguesHours);
         }
 
-        public double? LoadIndex(List<SessionInfoCompany> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
+        public double? LoadIndex(List<SessionInfo> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
         {
             var sessionsGroup = sessions.Where(p => p.CompanyId == dialogues.Key);
             var sessionHours = sessionsGroup.Any() ? sessionsGroup.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
@@ -120,7 +120,7 @@ namespace UserOperations.Utils
             return 100 * LoadIndex( sessionHours, dialoguesHours);
         }       
       
-        public double? LoadIndex(List<SessionInfoFull> sessions, IGrouping<DateTime, DialogueInfoFull> dialogues,
+        public double? LoadIndex(List<SessionInfo> sessions, IGrouping<DateTime, DialogueInfoFull> dialogues,
             Guid applicationUserId, DateTime? date,  DateTime beg = default(DateTime), DateTime end = default(DateTime))
         {
             var sessionsUser = sessions.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date);
@@ -129,14 +129,14 @@ namespace UserOperations.Utils
             return 100 * LoadIndex( sessionHours, dialoguesHours);
         }
 
-        public double? LoadIndex(IGrouping<Guid, SessionInfoFull> sessions, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
+        public double? LoadIndex(IGrouping<Guid, SessionInfo> sessions, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
         {
             var sessionHours = sessions.Count() != 0 ? sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
             var dialoguesHours = dialogues.Count() != 0 ? dialogues.Where(p => p.ApplicationUserId == sessions.Key).Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
             return 100 * LoadIndex( sessionHours, dialoguesHours);
         }
 
-        public double? LoadIndex(List<SessionInfoFull> sessions, List<DialogueInfoFull> dialogues,
+        public double? LoadIndex(List<SessionInfo> sessions, List<DialogueInfoFull> dialogues,
             Guid applicationUserId, DateTime date, DateTime beg = default(DateTime), DateTime end = default(DateTime))
         {
             var sessionsUser = sessions.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date);
@@ -151,12 +151,12 @@ namespace UserOperations.Utils
             return dialogues.Any() ? dialogues.Where(p => p.SatisfactionScore != null && p.SatisfactionScore != 0).Average(p => p.SatisfactionScore) : null;
         }
 
-        public double? SatisfactionIndex(IGrouping<Guid, DialogueInfoFull> dialogues)
+        public double? SatisfactionIndex(IGrouping<Guid?, DialogueInfoFull> dialogues)
         {
             return dialogues.Any() ? dialogues.Where(p => p.SatisfactionScore != null && p.SatisfactionScore != 0).Average(p => p.SatisfactionScore) : null;
         }
 
-        public double? SatisfactionIndex(IGrouping<Guid, DialogueInfoCompany> dialogues)
+        public double? SatisfactionIndex(IGrouping<Guid?, DialogueInfoCompany> dialogues)
         {
             return dialogues.Any() ? dialogues.Where(p => p.SatisfactionScore != null && p.SatisfactionScore != 0).Average(p => p.SatisfactionScore) : null;
         }
@@ -169,14 +169,14 @@ namespace UserOperations.Utils
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
 
-        public double? CrossIndex(IGrouping<Guid, DialogueInfoFull> dialogues)
+        public double? CrossIndex(IGrouping<Guid?, DialogueInfoFull> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
 
-        public double? CrossIndex(IGrouping<Guid, DialogueInfoCompany> dialogues)
+        public double? CrossIndex(IGrouping<Guid?, DialogueInfo> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;
@@ -223,7 +223,7 @@ namespace UserOperations.Utils
       
 
         // Efficiency index calculation
-        public double? EfficiencyIndex(List<SessionInfoFull> sessions, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
+        public double? EfficiencyIndex(List<SessionInfo> sessions, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
         {
             double? result = 0;
             double? normCoeff = 0;
@@ -241,7 +241,7 @@ namespace UserOperations.Utils
             return normCoeff != 0 ? result / normCoeff : null;
         }
 
-        public double? EfficiencyIndex(List<SessionInfoFull> sessions, IGrouping<Guid, DialogueInfoFull> dialogues, DateTime beg, DateTime end)
+        public double? EfficiencyIndex(List<SessionInfo> sessions, IGrouping<Guid?, DialogueInfoFull> dialogues, DateTime beg, DateTime end)
         {
             double? result = 0;
             double? normCoeff = 0;
@@ -258,25 +258,6 @@ namespace UserOperations.Utils
             normCoeff = (normCoeff != 0 & normCoeff != null) ? normCoeff : 1;
             return normCoeff != 0 ? result / normCoeff : null;
         }
-
-        public double? EfficiencyIndex(List<SessionInfoCompany> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
-        {
-            double? result = 0;
-            double? normCoeff = 0;
-
-            result += (SatisfactionIndex(dialogues) != null) ? Convert.ToDouble(_config["Weights: SatisfactionIndexWeight"]) * SatisfactionIndex(dialogues) : 0;
-            normCoeff += Convert.ToDouble(_config["Weights: SatisfactionIndexWeight"]);
-
-            result += (LoadIndex(sessions, dialogues, beg, end) != null) ? Convert.ToDouble(_config["Weights: LoadIndexWeight"]) * LoadIndex(sessions, dialogues, beg, end) : 0;
-            normCoeff += Convert.ToDouble(_config["Weights: LoadIndexWeight"]);
-
-            result += (CrossIndex(dialogues) != null) ? Convert.ToDouble(_config["Weights: CrossIndexWeight"]) * CrossIndex(dialogues) : 0;
-            normCoeff += Convert.ToDouble(_config["Weights: CrossIndexWeight"]);
-
-            normCoeff = (normCoeff != 0 & normCoeff != null) ? normCoeff : 1;
-            return normCoeff != 0 ? result / normCoeff : null;
-        }
-
 
         public int EmployeeCount(List<DialogueInfoFull> dialogues)
         {
@@ -316,7 +297,7 @@ namespace UserOperations.Utils
                     (date == null || p.BegTime.Date == date))
                 .Select(p => p.DialogueId).Distinct().Count() : 0;
         }
-        public Employee BestEmployeeLoad(List<DialogueInfoFull> dialogues, List<SessionInfoFull> sessions, DateTime beg, DateTime end)
+        public Employee BestEmployeeLoad(List<DialogueInfoFull> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return dialogues.Any() ? dialogues
                 .GroupBy(p => p.ApplicationUserId)
@@ -333,7 +314,7 @@ namespace UserOperations.Utils
                 .FirstOrDefault() : null;
         }
 
-        public string BestEmployee(List<DialogueInfoFull> dialogues, List<SessionInfoFull> sessions, DateTime beg, DateTime end)
+        public string BestEmployee(List<DialogueInfoFull> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return dialogues.Any() ? dialogues
                 .GroupBy(p => p.ApplicationUserId)
@@ -349,7 +330,7 @@ namespace UserOperations.Utils
                 .FullName : "";
         }
 
-        public List<BestEmployee> BestThreeEmployees(List<DialogueInfoFull> dialogues, List<SessionInfoFull> sessions, DateTime beg, DateTime end)
+        public List<BestEmployee> BestThreeEmployees(List<DialogueInfoFull> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return dialogues.Any() ? dialogues
                 .GroupBy(p => p.ApplicationUserId)
@@ -381,7 +362,7 @@ namespace UserOperations.Utils
         }
 
 
-        public double? BestEmployeeEfficiency(List<DialogueInfoFull> dialogues, List<SessionInfoFull> sessions, DateTime beg, DateTime end)
+        public double? BestEmployeeEfficiency(List<DialogueInfoFull> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return dialogues.Any() ? dialogues
                 .GroupBy(p => p.ApplicationUserId)
@@ -441,13 +422,13 @@ namespace UserOperations.Utils
                 .FirstOrDefault()
                 .SatisfactionScoreDelta : 0;
         }
-        public double? SessionTotalHours(List<SessionInfoFull> sessions, DateTime beg, DateTime end)
+        public double? SessionTotalHours(List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return sessions.Any() ?
                 (double?)sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
         }
 
-        public double? SessionAverageHours(List<SessionInfoFull> sessions, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        public double? SessionAverageHours(List<SessionInfo> sessions, DateTime beg = default(DateTime), DateTime end = default(DateTime))
         {
             return sessions.Any() ?
                 (double?)sessions.GroupBy(p => p.BegTime.Date)
@@ -456,14 +437,14 @@ namespace UserOperations.Utils
                         ).Average() : null;
         }
 
-        public double? SessionAverageHours(IGrouping<DateTime, SessionInfoFull> sessions)
+        public double? SessionAverageHours(IGrouping<DateTime, SessionInfo> sessions)
         {     
             DateTime beg = sessions.Key;
             DateTime end = sessions.Key.AddDays(1);
             var sessionHours = sessions.Any() ? (double?)Convert.ToDouble(sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : null;
             return sessionHours;
         }
-        public double? SessionAverageHours(List<SessionInfoFull> sessions, Guid applicationUserId, DateTime? date, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        public double? SessionAverageHours(List<SessionInfo> sessions, Guid applicationUserId, DateTime? date, DateTime beg = default(DateTime), DateTime end = default(DateTime))
         {
             var sessionsUser = sessions.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date);
             return sessionsUser.Any() ? (double?)sessionsUser.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : null;
@@ -480,7 +461,7 @@ namespace UserOperations.Utils
             return dialogues.Any() ? (double?)dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : null;
         }
 
-        public double? DialogueSumDuration(IGrouping<DateTime, SessionInfoFull> sessions, List<DialogueInfoFull> dialogues, Guid applicationUserId)
+        public double? DialogueSumDuration(IGrouping<DateTime, SessionInfo> sessions, List<DialogueInfoFull> dialogues, Guid applicationUserId)
         {
             DateTime beg = sessions.Key;
             DateTime end = sessions.Key.AddDays(1);
@@ -488,20 +469,20 @@ namespace UserOperations.Utils
             var dialoguesHours = dialoguesUser.Count() != 0 ? (double?)Convert.ToDouble(dialoguesUser.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : null;
             return dialoguesHours??0;
         }
-        public double? DialogueAveragePause(List<SessionInfoFull> sessions, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
+        public double? DialogueAveragePause(List<SessionInfo> sessions, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
         {
             var sessionHours = sessions.Any() ? sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
             var dialoguesHours = dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
             return dialogues.Any() ? (double?)(sessionHours - dialoguesHours) / dialogues.Select(p => p.DialogueId).Distinct().Count() : null;
         }
-        public double? DialogueAveragePause(List<SessionInfoFull> sessions, IGrouping<Guid, DialogueInfoFull> dialogues, DateTime beg, DateTime end)
+        public double? DialogueAveragePause(List<SessionInfo> sessions, IGrouping<Guid, DialogueInfoFull> dialogues, DateTime beg, DateTime end)
         {
             var sessionHours = sessions.Where(p => p.ApplicationUserId == dialogues.Key).Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours);
             var dialoguesHours = dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours);
             return (sessionHours - dialoguesHours) / dialogues.Select(p => p.DialogueId).Distinct().Count();
         }
 
-        public List<double> DialogueAvgPauseListInMinutes(List<SessionInfoFull> sessions, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
+        public List<double> DialogueAvgPauseListInMinutes(List<SessionInfo> sessions, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
         {
             int counter = 0;
             List<double> pauses = new List<double>();
@@ -565,7 +546,7 @@ namespace UserOperations.Utils
         }
 
 
-        public double? DialogueAveragePause(List<SessionInfoCompany> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
+        public double? DialogueAveragePause(List<SessionInfo> sessions, IGrouping<Guid, DialogueInfoCompany> dialogues, DateTime beg, DateTime end)
         {
             var sessionHours = sessions.Where(p => p.CompanyId == dialogues.Key).Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours);
             var dialoguesHours = dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours);
@@ -607,7 +588,7 @@ namespace UserOperations.Utils
             return dialogues.Select(p => p.BegTime.Date).Distinct().Count();
         }
 
-        public double LoadPeriod(DateTime beg, DateTime end, List<DialogueInfoFull> dialogues, List<SessionInfoFull> sessions)
+        public double LoadPeriod(DateTime beg, DateTime end, List<DialogueInfoFull> dialogues, List<SessionInfo> sessions)
         {
             var loadHours = dialogues
                 .Where(p => (p.BegTime <= beg && p.EndTime >= beg) ||
@@ -625,7 +606,7 @@ namespace UserOperations.Utils
             return load;
         }
 
-        public List<EfficiencyOptimizationHourInfo> LoadDaily(DateTime beg, List<DialogueInfoFull> dialogues, List<SessionInfoFull> sessions)
+        public List<EfficiencyOptimizationHourInfo> LoadDaily(DateTime beg, List<DialogueInfoFull> dialogues, List<SessionInfo> sessions)
         {
             var curDate = beg.Date;
             var result = new List<EfficiencyOptimizationHourInfo>();
@@ -709,7 +690,7 @@ namespace UserOperations.Utils
 
         }
 
-        public double? LoadInterval(List<DialogueInfoFull> dialogues, List<SessionInfoFull> sessions, TimeSpan beg, TimeSpan end)
+        public double? LoadInterval(List<DialogueInfoFull> dialogues, List<SessionInfo> sessions, TimeSpan beg, TimeSpan end)
         {
             double? dialoguesTime = 0;
             double? sessionsTime = 0;
@@ -735,7 +716,7 @@ namespace UserOperations.Utils
             return (satisfactionInfo.Sum(p => p.Weight) != 0 && satisfactionInfo.Any()) ? satisfactionInfo.Sum(p => p.SatisfactionScore * p.Weight) / satisfactionInfo.Sum(p => p.Weight) : 0;
         }
 
-        public List<EfficiencyLoadEmployeeTimeInfo> EmployeeTimeCalculation(List<DialogueInfoFull> dialogues, List<SessionInfoFull> sessions)
+        public List<EfficiencyLoadEmployeeTimeInfo> EmployeeTimeCalculation(List<DialogueInfoFull> dialogues, List<SessionInfo> sessions)
         {
             var result = new List<EfficiencyLoadEmployeeTimeInfo>();
 
@@ -843,7 +824,7 @@ namespace UserOperations.Utils
             return intervals;
         }
 
-        public List<ReportFullDayInfo> TimeTable(List<SessionInfoFull> sessions, List<DialogueInfoFull> dialogues, Guid applicationUserId, DateTime date)
+        public List<ReportFullDayInfo> TimeTable(List<SessionInfo> sessions, List<DialogueInfoFull> dialogues, Guid applicationUserId, DateTime date)
         {
             var result = new List<ReportFullDayInfo>();
 

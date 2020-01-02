@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using UserOperations.Utils;
 using System.Threading.Tasks;
 using UserOperations.Models.Get.AnalyticClientProfileController;
@@ -46,12 +45,8 @@ namespace UserOperations.Services
                 }};
             _repository = repository;
         }
-        public async Task<string> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds)
+        public async Task<string> EfficiencyDashboard(string beg, string end, List<Guid?> applicationUserIds, List<Guid> companyIds,
+                                                      List<Guid> corporationIds, List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -61,7 +56,7 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
     
                 var persondIdsPerYear = await GetPersondIdsAsync(begYearTime, begTime, companyIds);
-                var data = GetDialoguesIncludedClientProfile(begTime, endTime, companyIds, applicationUserIds, workerTypeIds)
+                var data = GetDialoguesIncludedClientProfile(begTime, endTime, companyIds, applicationUserIds, deviceIds)
                     .Select(p => new
                     {
                         p.DialogueClientProfile.FirstOrDefault().Age,
@@ -112,7 +107,11 @@ namespace UserOperations.Services
                     .ToListAsyncSafe();
             return persondIds;
         }
-        private IQueryable<Dialogue> GetDialogues(DateTime begTime, DateTime endTime, List<Guid> companyIds = null, List<Guid> applicationUserIds = null, List<Guid> workerTypeIds = null)
+        private IQueryable<Dialogue> GetDialogues(
+            DateTime begTime, DateTime endTime, 
+            List<Guid> companyIds = null, 
+            List<Guid> applicationUserIds = null, 
+            List<Guid> deviceIds = null)
         {
             var data = _repository.GetAsQueryable<Dialogue>()
                     .Where(p => p.BegTime >= begTime &&
@@ -121,10 +120,14 @@ namespace UserOperations.Services
                         p.InStatistic == true &&
                         (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))) &&
                         (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
-                        (workerTypeIds == null || (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))).AsQueryable();
+                        (deviceIds == null || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))).AsQueryable();
             return data;
         }
-        private IQueryable<Dialogue> GetDialoguesIncludedClientProfile(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
+        private IQueryable<Dialogue> GetDialoguesIncludedClientProfile(
+            DateTime begTime, DateTime endTime, 
+            List<Guid> companyIds, 
+            List<Guid?> applicationUserIds, 
+            List<Guid> deviceIds)
         {
             var data = _repository.GetAsQueryable<Dialogue>()
                 .Include(p => p.DialogueClientProfile)
@@ -135,7 +138,7 @@ namespace UserOperations.Services
                     p.InStatistic == true &&
                     (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
-                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))).AsQueryable();
+                    (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))).AsQueryable();
             return data;
         }
     }

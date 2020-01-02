@@ -36,6 +36,12 @@ namespace HBData.Models
         [JsonIgnore]
         [ForeignKey("ApplicationUserId")]
         public ApplicationUser ApplicationUser { get; set; }
-      
+        /// <summary>
+        ///     Device id
+        /// </summary>
+        public Guid DeviceId { get; set; }
+        [JsonIgnore]
+        [ForeignKey("DeviceId")]
+        public Device Device { get; set; }
     }
 }

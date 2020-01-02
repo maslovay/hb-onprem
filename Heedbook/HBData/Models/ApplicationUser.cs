@@ -44,12 +44,6 @@ namespace HBData.Models
         //id пользователей в OneSignal
         public String OneSignalId { get; set; }
 
-        //id position
-
-        public Guid? WorkerTypeId { get; set; }
-
-        [ForeignKey("WorkerTypeId")] public WorkerType WorkerType { get; set; }
-
         //links
 
         //роли сотрудника
@@ -61,8 +55,5 @@ namespace HBData.Models
         [JsonIgnore]
         //сессии
         public ICollection<Session> Session { get; set; }
-        [JsonIgnore]
-        //пароли
-        public ICollection<PasswordHistory> PasswordHistorys { get; set; }
     }
 }

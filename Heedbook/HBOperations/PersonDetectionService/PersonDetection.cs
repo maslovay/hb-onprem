@@ -44,15 +44,23 @@ namespace PersonDetectionService
             try
             {
                 var begTime = DateTime.Now.AddYears(-1);
+                var companyIds = _context.ApplicationUsers.Where(x => message.ApplicationUserIds.Contains(x.Id)).Select(x => x.CompanyId).Distinct().ToList();              
+
+                //---dialogues for users in company or for devices in company
                 var dialogues = _context.Dialogues
-                    .Where(p => message.ApplicationUserIds.Contains(p.ApplicationUserId))
+                    .Where(p => (p.ApplicationUserId != null && companyIds.Contains(p.ApplicationUser.CompanyId))
+                                 || (p.DeviceId != null && companyIds.Contains(p.Device.CompanyId)))
                     .Where(p => !String.IsNullOrEmpty(p.PersonFaceDescriptor) && p.BegTime >= begTime)
                     .OrderBy(p => p.BegTime)
                     .ToList();
                 
                 foreach (var curDialogue in dialogues.Where(p => p.PersonId == null).ToList())
                 {
-                    var dialoguesProceeded = dialogues.Where(p => p.ApplicationUserId == curDialogue.ApplicationUserId && p.PersonId != null).ToList();
+                    var dialoguesProceeded = dialogues
+                        .Where(p => p.PersonId != null &&
+                         ((p.ApplicationUserId != null && p.ApplicationUserId == curDialogue.ApplicationUserId)
+                            || p.DeviceId != null && p.DeviceId == curDialogue.DeviceId))
+                        .ToList();
                     curDialogue.PersonId = FindId(curDialogue, dialoguesProceeded);
                     try
                     {
@@ -92,12 +100,15 @@ namespace PersonDetectionService
 
         public (Guid?, string) CreateNewClient(Dialogue curDialogue)
         {
-                var company = _context.ApplicationUsers
-                              .Where(x => x.Id == curDialogue.ApplicationUserId)
-                              .Select(x => x.Company)
-                              .FirstOrDefault();
+            Company company = null;
+            if(curDialogue.ApplicationUserId != null)
+            company = _context.ApplicationUsers
+                              .Where(x => x.Id == curDialogue.ApplicationUserId).Select(x => x.Company).FirstOrDefault();
+            else
+            company = _context.Devices
+                              .Where(x => x.DeviceId == curDialogue.DeviceId).Select(x => x.Company).FirstOrDefault();
 
-                var clientId = _context.Clients
+            var clientId = _context.Clients
                         .Where(x => x.ClientId == curDialogue.PersonId)
                         .Select(x => x.ClientId).FirstOrDefault();
                 if (clientId != null && clientId != Guid.Empty) return (clientId, String.Empty);

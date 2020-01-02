@@ -7,6 +7,7 @@ using UserOperations.Utils;
 using UserOperations.Models.Get.AnalyticSpeechController;
 using UserOperations.Utils.AnalyticSpeechController;
 using HBData.Repository;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Services
 {
@@ -32,8 +33,8 @@ namespace UserOperations.Services
         }
 
         public string SpeechEmployeeRating( string beg, string end, 
-                                            List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
-                                            List<Guid> workerTypeIds
+                                            List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                            List<Guid> deviceIds
                                                         // List<Guid> phraseIds, List<Guid> phraseTypeIds
                                             )
         {
@@ -51,7 +52,7 @@ namespace UserOperations.Services
                     endTime,
                     companyIds,
                     applicationUserIds,
-                    workerTypeIds,
+                    deviceIds,
                     typeIdCross,
                     typeIdAlert);
               
@@ -68,8 +69,8 @@ namespace UserOperations.Services
         }
 
         public string SpeechPhraseTable( string beg, string end, 
-                                         List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
-                                         List<Guid> workerTypeIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
+                                         List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                         List<Guid> deviceIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -84,15 +85,15 @@ namespace UserOperations.Services
                     endTime,
                     companyIds,
                     applicationUserIds,
-                    workerTypeIds);
+                    deviceIds);
 
-                var dialoguesTotal = dialogueIds.Count();               
+                var dialoguesTotal = dialogueIds.Count();
                
                 // GET ALL PHRASES INFORMATION
                 var phrasesInfo = GetPhraseInfo(
                     dialogueIds,
                     phraseIds,
-                    phraseTypeIds);    
+                    phraseTypeIds);
 
                 var result = phrasesInfo
                     .GroupBy(p => p.PhraseText.ToLower())
@@ -113,21 +114,21 @@ namespace UserOperations.Services
         }
 
         public SpeechPhraseTotalInfo SpeechPhraseTypeCount( string beg, string end, 
-                                             List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
-                                             List<Guid> workerTypeIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
+                                             List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                             List<Guid> deviceIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var dialogueIds = GetDialogueIds(
                     begTime,
                     endTime,
                     companyIds,
                     applicationUserIds,
-                    workerTypeIds);
+                    deviceIds);
                 // CREATE PARAMETERS
                 var totalInfo = new SpeechPhraseTotalInfo();
 
@@ -199,8 +200,8 @@ namespace UserOperations.Services
                 return totalInfo;
         }
 
-        public string SpeechWordCloud( string beg, string end, List<Guid> applicationUserIds, List<Guid> companyIds,
-                                       List<Guid> corporationIds, List<Guid> workerTypeIds, List<Guid> phraseIds,
+        public string SpeechWordCloud( string beg, string end, List<Guid?> applicationUserIds, List<Guid> companyIds,
+                                       List<Guid> corporationIds, List<Guid> deviceIds, List<Guid> phraseIds,
                                        List<Guid> phraseTypeIds )
         {
                 var role = _loginService.GetCurrentRoleName();
@@ -214,7 +215,7 @@ namespace UserOperations.Services
                     endTime,
                     companyIds,
                     applicationUserIds,
-                    workerTypeIds);
+                    deviceIds);
 
                 var phrases = DialoguePhrasesInfoAsQueryable(
                     dialogueIds,
@@ -248,8 +249,8 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds,
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds,
             Guid typeIdCross,
             Guid typeIdAlert)
         {
@@ -260,11 +261,12 @@ namespace UserOperations.Services
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
                     ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
@@ -287,8 +289,8 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds)
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds)
         {
             var dialogueIds = _repository.GetAsQueryable<Dialogue>()
                 .Where(p => p.EndTime >= begTime
@@ -297,7 +299,7 @@ namespace UserOperations.Services
                     && p.InStatistic == true)
                 .Where(p => (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => p.DialogueId).ToList();
             return dialogueIds;
         }

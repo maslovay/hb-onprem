@@ -19,7 +19,7 @@ namespace HBData
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-           // optionsBuilder.UseNpgsql("User ID=test_user;Password=test_password;Host=40.69.85.181;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0");
+            // optionsBuilder.UseNpgsql("User ID=test_user;Password=test_password;Host=104.40.181.96;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0");
         }
 
 
@@ -119,9 +119,6 @@ namespace HBData
         public DbSet<Status> Statuss { get; set; }
         public DbSet<Tariff> Tariffs { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
-        public DbSet<WorkerType> WorkerTypes { get; set; }
-        public DbSet<PasswordHistory> PasswordHistorys { get; set; }
-        public DbSet<LoginHistory> LoginHistorys { get; set; }
         public DbSet<AlertType> AlertTypes { get; set; }
         public DbSet<Alert> Alerts { get; set; }
         public DbSet<TabletAppInfo> TabletAppInfos { get; set; }
@@ -136,6 +133,6 @@ namespace HBData
         public DbSet<DeviceType> DeviceTypes { get; set; }
         //---VIES
         public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
-        public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }        
+        public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }
     }
 }

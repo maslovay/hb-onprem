@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using System.Threading.Tasks;
-using UserOperations.Models.Get.AnalyticRatingController;
 using Microsoft.AspNetCore.Authorization;
 
 namespace UserOperations.Controllers
@@ -26,13 +25,13 @@ namespace UserOperations.Controllers
         [HttpGet("Progress")]
         public async Task<string> RatingProgress([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds ) =>
+                                                         [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
             await _analyticRatingService.RatingProgress(
                 beg, end,
-                applicationUserIds, companyIds, corporationIds, workerTypeIds
+                applicationUserIds, companyIds, corporationIds, deviceIds
             );
         
 
@@ -40,13 +39,13 @@ namespace UserOperations.Controllers
         [HttpGet("RatingUsers")]
         public async Task<string> RatingUsers([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds ) =>
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
             await _analyticRatingService.RatingUsers(
                 beg, end,
-                applicationUserIds, companyIds, corporationIds, workerTypeIds
+                applicationUserIds, companyIds, corporationIds, deviceIds
             );
         
 
@@ -56,10 +55,10 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds) =>
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
             await _analyticRatingService.RatingOffices(
                 beg, end,
-                companyIds, corporationIds, workerTypeIds
+                companyIds, corporationIds, deviceIds
             );
                  
     }

@@ -49,7 +49,7 @@ namespace HBData.Models
         /// <summary>
         ///     Device id
         /// </summary>
-        public Guid? DeviceId { get; set; }
+        public Guid DeviceId { get; set; }//!!!required
         [JsonIgnore] public Device Device { get; set; }
 
         /// <summary>

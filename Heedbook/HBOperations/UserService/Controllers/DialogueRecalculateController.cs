@@ -67,7 +67,7 @@ namespace UserService.Controllers
 
                 var dialogueVideoMerge = new DialogueVideoAssembleRun
                 {
-                    ApplicationUserId = dialogue.ApplicationUserId,
+                    ApplicationUserId = (Guid)dialogue.ApplicationUserId,
                     DialogueId = dialogue.DialogueId,
                     BeginTime = dialogue.BegTime,
                     EndTime = dialogue.EndTime
@@ -76,7 +76,7 @@ namespace UserService.Controllers
 
                 var fillingFrame = new DialogueCreationRun
                 {
-                    ApplicationUserId = dialogue.ApplicationUserId,
+                    ApplicationUserId = (Guid)dialogue.ApplicationUserId,
                     DialogueId = dialogue.DialogueId,
                     BeginTime = dialogue.BegTime,
                     EndTime = dialogue.EndTime
@@ -167,7 +167,7 @@ namespace UserService.Controllers
                         result += "Starting FillingFrames, ";
                         var @event = new DialogueCreationRun
                         {
-                            ApplicationUserId = dialogue.ApplicationUserId,
+                            ApplicationUserId = (Guid)dialogue.ApplicationUserId,
                             DialogueId = dialogue.DialogueId,
                             BeginTime = dialogue.BegTime,
                             EndTime = dialogue.EndTime
@@ -181,7 +181,7 @@ namespace UserService.Controllers
                     result += "Starting DialogueVideoAssemble, ";                
                     var @event = new DialogueVideoAssembleRun
                     {
-                        ApplicationUserId = dialogue.ApplicationUserId,
+                        ApplicationUserId = (Guid)dialogue.ApplicationUserId,
                         DialogueId = dialogue.DialogueId,
                         BeginTime = dialogue.BegTime,
                         EndTime = dialogue.EndTime

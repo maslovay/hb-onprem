@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UserOperations.Utils;
-using UserOperations.Models.Get.AnalyticOfficeController;
 using UserOperations.Utils.AnalyticOfficeUtils;
 using Newtonsoft.Json;
-using Microsoft.Extensions.Configuration;
 using HBData.Repository;
 using HBData.Models;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Services
 {
@@ -31,20 +30,20 @@ namespace UserOperations.Services
             _analyticOfficeUtils = analyticOfficeUtils;
         }
         public string Efficiency(string beg, string end,
-                                        List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds)
+                                        List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);   
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var sessions = GetSessionsInfo(prevBeg, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var sessions = GetSessionsInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
-                var dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
@@ -180,8 +179,8 @@ namespace UserOperations.Services
         DateTime prevBeg,
         DateTime endTime,
         List<Guid> companyIds,
-        List<Guid> applicationUserIds,
-        List<Guid> workerTypeIds)
+        List<Guid?> applicationUserIds,
+        List<Guid> deviceIds)
         {
             var sessions = _repository.GetWithInclude<Session>(
                     p => p.BegTime >= prevBeg
@@ -189,12 +188,13 @@ namespace UserOperations.Services
                     && p.StatusId == 7
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     , o => o.ApplicationUser)
                 .AsQueryable()
                 .Select(p => new SessionInfo
                 {
                     ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime
                 })
@@ -205,8 +205,8 @@ namespace UserOperations.Services
             DateTime prevBeg,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds)
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds)
         {
             var dialogues = _repository.GetWithInclude<Dialogue>(
                     p => p.BegTime >= prevBeg
@@ -215,13 +215,14 @@ namespace UserOperations.Services
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     , p => p.ApplicationUser)
                 .AsQueryable()
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
                     ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     FullName = p.ApplicationUser.FullName,

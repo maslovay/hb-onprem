@@ -241,7 +241,6 @@ namespace ApiTests
             var user = new ApplicationUser(){NormalizedEmail = "IVANOVIVAN@HEEDBOOK.COM"};
             var tariffs = TestData.GetTariffs();
             var transactions = TestData.GetTransactions();
-            var workerTypes = TestData.GetWorkerTypes();
             var campaigns = new List<Campaign>
             {
                 new Campaign
@@ -263,7 +262,7 @@ namespace ApiTests
                     }
                 }) .AsQueryable();
             var phraseCompanys = TestData.GetPhraseCompanies();
-            var passwordHistory = TestData.GetPasswordHistorys();
+           // var passwordHistory = TestData.GetPasswordHistorys();
 
             //Mock
             repositoryMock.Setup(p => p.GetAsQueryable<ApplicationUser>()).Returns(users);
@@ -274,20 +273,17 @@ namespace ApiTests
                     It.IsAny<Expression<Func<ApplicationUser, object>>[]>()))
                 .Returns(users);            
             repositoryMock.Setup(p => p.GetAsQueryable<Tariff>()).Returns(tariffs);            
-            repositoryMock.Setup(p => p.GetAsQueryable<Transaction>()).Returns(transactions);            
-            repositoryMock.Setup(p => p.GetAsQueryable<WorkerType>()).Returns(workerTypes);            
+            repositoryMock.Setup(p => p.GetAsQueryable<Transaction>()).Returns(transactions);
             repositoryMock.Setup(p => p.GetAsQueryable<Content>()).Returns(contents);            
             repositoryMock.Setup(p => p.GetWithInclude<Campaign>(
                     It.IsAny<Expression<Func<Campaign, bool>>>(), 
                     It.IsAny<Expression<Func<Campaign, object>>[]>()))
                 .Returns(campaigns);            
             repositoryMock.Setup(p => p.GetAsQueryable<PhraseCompany>()).Returns(phraseCompanys);            
-            repositoryMock.Setup(p => p.GetAsQueryable<PasswordHistory>()).Returns(passwordHistory);
+           
 
             //Mock delete methods
-            var basePasswordHistory = passwordHistory.ToList();
-            repositoryMock.Setup(p => p.Delete<PasswordHistory>(It.IsAny<IEnumerable<PasswordHistory>>()))
-                .Callback((IEnumerable<PasswordHistory> passwordhistory) => basePasswordHistory.RemoveAll(p => passwordHistory.Contains(p)));
+          
 
             var basePhraseCompany = phraseCompanys.ToList();
             repositoryMock.Setup(p => p.Delete<PhraseCompany>(It.IsAny<IEnumerable<PhraseCompany>>()))
@@ -305,9 +301,7 @@ namespace ApiTests
             repositoryMock.Setup(p => p.Delete<Content>(It.IsAny<IEnumerable<Content>>()))
                 .Callback((IEnumerable<Content> contentList) => baseContents.RemoveAll(p => contentList.Contains(p)));
 
-            var baseWorkerType = workerTypes.ToList();
-            repositoryMock.Setup(p => p.Delete<WorkerType>(It.IsAny<IEnumerable<WorkerType>>()))
-                .Callback((IEnumerable<WorkerType> workerTypesList) => baseWorkerType.RemoveAll(p => workerTypesList.Contains(p)));
+           
 
             var baseApplicationUserRoles = users.FirstOrDefault().UserRoles.ToList();
             repositoryMock.Setup(p => p.Delete<ApplicationUserRole>(It.IsAny<IEnumerable<ApplicationUserRole>>()))

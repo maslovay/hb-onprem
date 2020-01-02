@@ -18,13 +18,13 @@ namespace HBData.Models
         /// <summary>
         ///     User id
         /// </summary>
-        public Guid ApplicationUserId { get; set; }
+        public Guid? ApplicationUserId { get; set; }
         [JsonIgnore] public ApplicationUser ApplicationUser { get; set; }
 
         /// <summary>
         ///     Device id
         /// </summary>
-        public Guid? DeviceId { get; set; }
+        public Guid DeviceId { get; set; }//!!!required
         [JsonIgnore] public Device Device { get; set; }
 
         /// <summary>

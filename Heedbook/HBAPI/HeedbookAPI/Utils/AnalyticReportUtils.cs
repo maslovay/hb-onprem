@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
-using UserOperations.Models.Get.AnalyticReportController;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Utils.AnalyticReportUtils
 {
     public class AnalyticReportUtils
     {
-        public List<ReportFullDayInfo> TimeTable(List<SessionInfo> sessions, List<DialogueInfo> dialogues, Guid applicationUserId, DateTime date)
+        public List<ReportFullDayInfo> TimeTable(List<SessionInfo> sessions, List<DialogueInfo> dialogues, Guid? applicationUserId, DateTime date)
         {
             var result = new List<ReportFullDayInfo>();
 
@@ -163,7 +162,7 @@ namespace UserOperations.Utils.AnalyticReportUtils
             if ((val2 as DateTime?) == default(DateTime)) return val1;
             return val1.CompareTo(val2) < 0 ? val1 : val2;
         }
-        public double? SessionAverageHours(List<SessionInfo> sessions, Guid applicationUserId, DateTime? date, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        public double? SessionAverageHours(List<SessionInfo> sessions, Guid? applicationUserId, DateTime? date, DateTime beg = default(DateTime), DateTime end = default(DateTime))
         {
             var sessionsUser = sessions.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date);
             return sessionsUser.Any() ? (double?)sessionsUser.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : null;
@@ -173,7 +172,7 @@ namespace UserOperations.Utils.AnalyticReportUtils
             return dialogues.Any() ? (double?)dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : null;
         }
         public double? LoadIndex(List<SessionInfo> sessions, List<DialogueInfo> dialogues,
-            Guid applicationUserId, DateTime date, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+            Guid? applicationUserId, DateTime date, DateTime beg = default(DateTime), DateTime end = default(DateTime))
         {
             var sessionsUser = sessions.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date);
             var sessionHours = sessionsUser.Count() != 0 ? Convert.ToDouble(sessionsUser.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : 0;
@@ -196,7 +195,7 @@ namespace UserOperations.Utils.AnalyticReportUtils
                     (date == null || p.BegTime.Date == date))
                 .Select(p => p.DialogueId).Distinct().Count() : 0;
         }
-        public double? DialogueSumDuration(IGrouping<DateTime, SessionInfo> sessions, List<DialogueInfo> dialogues, Guid applicationUserId)
+        public double? DialogueSumDuration(IGrouping<DateTime, SessionInfo> sessions, List<DialogueInfo> dialogues, Guid? applicationUserId)
         {
             DateTime beg = sessions.Key;
             DateTime end = sessions.Key.AddDays(1);
@@ -211,7 +210,7 @@ namespace UserOperations.Utils.AnalyticReportUtils
             var sessionHours = sessions.Any() ? (double?)Convert.ToDouble(sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : null;
             return sessionHours;
         }
-        public double? LoadIndex(IGrouping<Guid, SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
+        public double? LoadIndex(IGrouping<Guid?, SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
             var sessionHours = sessions.Count() != 0 ? sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
             var dialoguesHours = dialogues.Count() != 0 ? dialogues.Where(p => p.ApplicationUserId == sessions.Key).Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;

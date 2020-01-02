@@ -48,10 +48,16 @@ namespace UserOperations.Providers
             if (await GetTariffsAsync(company?.CompanyId) == 0)
             {
                 await CreateCompanyTariffAndTransaction(company);
-                await AddWorkerType(company);
                 await AddContentAndCampaign(company);
             }
-            await _repository.SaveAsync();
+            try
+            {
+                await _repository.SaveAsync();
+            }
+            catch(Exception ex)
+            {
+                var a = ex.Message;
+            }
             try
             {
                 await _mailSender.SendRegisterEmail(user);
@@ -219,16 +225,7 @@ namespace UserOperations.Providers
             _repository.Create<Tariff>(tariff);
             _repository.Create<HBData.Models.Transaction>(transaction);
         }
-        private async Task AddWorkerType(Company company)
-        {
-            var workerType = new WorkerType
-            {
-                WorkerTypeId = Guid.NewGuid(),
-                CompanyId = company.CompanyId,
-                WorkerTypeName = "Employee"
-            };
-            await _repository.CreateAsync<WorkerType>(workerType);
-        }
+     
         private async Task AddContentAndCampaign(Company company)
         {
             Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
@@ -279,7 +276,8 @@ namespace UserOperations.Providers
             return user;
         }
         private async Task RemoveAccountWithSave(string email)
-        {            
+        {
+            var usersAll = _repository.GetAsQueryable<ApplicationUser>().ToList();
             var user = _repository.GetAsQueryable<ApplicationUser>().FirstOrDefault(p => p.Email == email);
             var company = _repository.GetAsQueryable<Company>().FirstOrDefault(x => x.CompanyId == user.CompanyId);
             var users = _repository.GetWithInclude<ApplicationUser>(x => x.CompanyId == company.CompanyId, o => o.UserRoles).ToList();            
@@ -287,38 +285,24 @@ namespace UserOperations.Providers
             
             var taskTransactions = _repository.GetAsQueryable<HBData.Models.Transaction>().Where(x => x.TariffId == tariff.TariffId).ToListAsync();
             taskTransactions.Wait();
-            var transactions = taskTransactions.Result;            
-            
-            var userRoles = users.SelectMany(x => x.UserRoles).ToList();    
-
-            var workerTypeTask = _repository.GetAsQueryable<WorkerType>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
-            workerTypeTask.Wait();
-            var workerTypes = workerTypeTask.Result;
-            
-            var taskContents = _repository.GetAsQueryable<Content>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();            
-            taskContents.Wait();
-            var contents = taskContents.Result;
-
+            var transactions = taskTransactions.Result;
+            var userRoles = users.SelectMany(x => x.UserRoles).ToList();
+            var contents = await _repository.GetAsQueryable<Content>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
             var campaigns = _repository.GetWithInclude<Campaign>(x => x.CompanyId == company.CompanyId, p => p.CampaignContents).ToList();
             var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
-            var taskPhraseCompany = _repository.GetAsQueryable<PhraseCompany>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
-            taskPhraseCompany.Wait();
-            var phrases = taskPhraseCompany.Result;
+            var phrases = await _repository.GetAsQueryable<PhraseCompany>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
             
-            var taskPasswordHistory = _repository.GetAsQueryable<PasswordHistory>().Where(x => users.Select(p=>p.Id).Contains( x.UserId)).ToListAsync();
-            taskPasswordHistory.Wait();
-            var pswdHist = taskPasswordHistory.Result;
-            if (pswdHist.Count() != 0)
-                _repository.Delete<PasswordHistory>(pswdHist);            
+         
+         
             if (phrases != null && phrases.Count() != 0)
-                _repository.Delete<PhraseCompany>(phrases);                
+                _repository.Delete<PhraseCompany>(phrases);
             if (campaignContents.Count() != 0)
                 _repository.Delete<CampaignContent>(campaignContents); 
             if (campaigns.Count() != 0)
                 _repository.Delete<Campaign>(campaigns);
             if (contents.Count() != 0)
                 _repository.Delete<Content>(contents);
-            _repository.Delete<WorkerType>(workerTypes);
+            
             _repository.Delete<ApplicationUserRole>(userRoles);
             _repository.Delete<HBData.Models.Transaction>(transactions);
             _repository.Delete<ApplicationUser>(users);

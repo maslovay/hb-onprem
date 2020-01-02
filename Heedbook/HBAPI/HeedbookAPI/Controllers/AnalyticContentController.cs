@@ -34,11 +34,11 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Views, Clients, SplashViews, EmotionAttention, Age, Gender statistic for content", typeof(Dictionary<string, object>))]
         public async Task<Dictionary<string, object>> Efficiency([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds) 
-            => await _analyticContentService.Efficiency( beg, end, applicationUserIds, companyIds, corporationIds, workerTypeIds);
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) 
+            => await _analyticContentService.Efficiency( beg, end, applicationUserIds, companyIds, corporationIds, deviceIds);
 
 
         [HttpGet("Poll")]
@@ -46,13 +46,13 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Views, Clients, Answers, Conversion -pool statistic for content. If type != json, return xls file", typeof(Dictionary<string, object>))]
         public async Task<IActionResult> Poll([FromQuery(Name = "begTime")] string beg,
                                                      [FromQuery(Name = "endTime")] string end,
-                                                     [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                     [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                      [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                      [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                     [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                      [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
                                                      [FromQuery(Name = "type")] string type = "json")
         {
-            var result = await _analyticContentService.Poll( beg, end, applicationUserIds, companyIds, corporationIds, workerTypeIds, type);
+            var result = await _analyticContentService.Poll( beg, end, applicationUserIds, companyIds, corporationIds, deviceIds, type);
             if (type == "json")
                 return Ok(result);
             return  File(result as MemoryStream, "application/octet-stream", "answers.xls");

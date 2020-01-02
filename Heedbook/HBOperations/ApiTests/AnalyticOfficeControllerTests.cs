@@ -22,9 +22,9 @@ namespace ApiTests
         protected override void InitServices()
         {
          //   analyticOfficeProviderMock = new Mock<IAnalyticOfficeProvider>();
-            var sessionsInfo = new List<SessionInfoFull>
+            var sessionsInfo = new List<SessionInfo>
             {
-                new SessionInfoFull
+                new SessionInfo
                 {
                     ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
                     BegTime = new DateTime(2019,10,04, 12, 19,00),
@@ -33,7 +33,7 @@ namespace ApiTests
                     FullName = "tuisv@heedbook.com",
                     IndustryId = Guid.Parse("99960395-2cc3-46e8-bcef-c844f1048999")
                 },
-                  new SessionInfoFull
+                  new SessionInfo
                 {
                     ApplicationUserId = Guid.Parse("8d5cd62c-2ea0-406e-8ec1-a544d048a9d0"),
                     BegTime = new DateTime(2019,10,04, 18, 19,00),

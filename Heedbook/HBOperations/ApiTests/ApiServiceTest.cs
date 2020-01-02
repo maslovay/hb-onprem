@@ -115,7 +115,7 @@ namespace ApiTests
         public void InitMockIDBOperations()
         {
             dbOperationMock.Setup(p => p.LoadIndex(
-                    It.IsAny<List<SessionInfoFull>>(),
+                    It.IsAny<List<SessionInfo>>(),
                     It.IsAny<List<DialogueInfoFull>>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
@@ -126,7 +126,7 @@ namespace ApiTests
                     It.IsAny<DateTime>()))
                 .Returns(3);
             dbOperationMock.Setup(p => p.SessionAverageHours(
-                    It.IsAny<List<SessionInfoFull>>(),                    
+                    It.IsAny<List<SessionInfo>>(),                    
                     It.IsAny<DateTime>(),
                     It.IsAny<DateTime>()))
                 .Returns(5d);
@@ -137,7 +137,7 @@ namespace ApiTests
                 .Returns(5d);
             dbOperationMock.Setup(p => p.BestEmployeeLoad(
                     It.IsAny<List<DialogueInfoFull>>(),
-                    It.IsAny<List<SessionInfoFull>>(), 
+                    It.IsAny<List<SessionInfo>>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(new Employee());
@@ -148,19 +148,19 @@ namespace ApiTests
                     It.IsAny<List<DialogueInfoFull>>()))
                 .Returns(3);
             dbOperationMock.Setup(p => p.DialogueAveragePause(
-                    It.IsAny<List<SessionInfoFull>>(),
+                    It.IsAny<List<SessionInfo>>(),
                     It.IsAny<List<DialogueInfoFull>>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(20d);
             dbOperationMock.Setup(p => p.DialogueAvgPauseListInMinutes(
-                    It.IsAny<List<SessionInfoFull>>(),
+                    It.IsAny<List<SessionInfo>>(),
                     It.IsAny<List<DialogueInfoFull>>(), 
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(new List<double>(){});
             dbOperationMock.Setup(p => p.SessionTotalHours(
-                    It.IsAny<List<SessionInfoFull>>(),
+                    It.IsAny<List<SessionInfo>>(),
                     It.IsAny<DateTime>(), 
                     It.IsAny<DateTime>()))
                 .Returns(9d);

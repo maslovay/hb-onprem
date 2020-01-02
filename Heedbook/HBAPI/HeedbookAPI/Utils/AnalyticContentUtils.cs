@@ -1,21 +1,13 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using HBData;
-using UserOperations.Models.Get.HomeController;
-using HBData.Models;
-using UserOperations.Controllers;
-using System.Reflection;
-using UserOperations.Models.Get;
 using HBData.Repository;
-using Microsoft.EntityFrameworkCore;
 using System.IO;
-using UserOperations.Models.Get.AnalyticContentController;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Utils.AnalyticContentUtils
 {

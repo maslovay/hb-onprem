@@ -1,4 +1,4 @@
-namespace UserOperations.Models.Get.AnalyticOfficeController
+namespace UserOperations.Models.AnalyticModels
 {
     public class EfficiencyLoadClientDayInfo
     {

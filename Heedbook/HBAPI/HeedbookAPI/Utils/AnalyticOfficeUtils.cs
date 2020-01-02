@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
-using UserOperations.Models.Get.AnalyticOfficeController;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Utils.AnalyticOfficeUtils
 {
@@ -17,7 +17,8 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
         public Employee BestEmployeeLoad(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return dialogues.Any() ? dialogues
-                .GroupBy(p => p.ApplicationUserId)
+                .Where(p => p.ApplicationUserId != null)
+                .GroupBy(p => (Guid)p.ApplicationUserId)
                 .Select(p => new Employee
                 {
                     BestEmployeeId = p.First().ApplicationUserId,

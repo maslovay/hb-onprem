@@ -5,7 +5,8 @@ namespace RabbitMqEventBus.Events
 {
     public class DialogueVideoMergeRun : IntegrationEvent
     {
-        public Guid ApplicationUserId { get; set; }
+        public Guid? ApplicationUserId { get; set; }
+        public Guid DeviceId { get; set; }
 
         public Guid DialogueId { get; set; }
 

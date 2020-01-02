@@ -16,7 +16,6 @@ namespace UserOperations.Models
         public Guid? RoleId;
         [Required]
         public string Password;
-        public Guid? WorkerTypeId;
         public Guid? CompanyId;
     }
     public class CompanyModel
@@ -57,7 +56,6 @@ namespace UserOperations.Models
             CompanyId = user.CompanyId;
             StatusId = user.StatusId;
             OneSignalId = user.OneSignalId;
-            WorkerTypeId = user.WorkerTypeId;
             Role = user.UserRoles.FirstOrDefault()?.Role ?? role;
             RoleId = user.UserRoles.FirstOrDefault()?.RoleId;
         }

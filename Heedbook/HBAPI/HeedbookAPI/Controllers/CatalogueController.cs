@@ -30,12 +30,11 @@ namespace UserOperations.Controllers
         public IEnumerable<ApplicationRole> RolesGet() =>
             _catalogueService.RolesGet();
 
-        [HttpGet("WorkerType")]
-        [SwaggerOperation(Summary = "Return worker types", Description = "Return all available worker types for company with id ('Кассир','Кредитный менеджер' и др). Require to transfer a token")]
-        [SwaggerResponse(200, "Content", typeof(WorkerType))]
-        [Authorize(AuthenticationSchemes = "Bearer")]
-        public IEnumerable<object> WorkerTypeGet() =>
-            _catalogueService.WorkerTypeGet();
+        [HttpGet("DeviceType")]
+        [SwaggerOperation(Summary = "Return device types", Description = "Return all available device types")]
+        [SwaggerResponse(200, "Content", typeof(DeviceType))]
+        public IEnumerable<object> DeviceTypeGet() =>
+            _catalogueService.DeviceTypeGet();
 
         [HttpGet("Industry")]
         [SwaggerOperation(Description = "Return all industries. Does not require to transfer a token")]

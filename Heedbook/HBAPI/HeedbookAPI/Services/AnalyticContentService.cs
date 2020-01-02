@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using UserOperations.Utils;
 using System.Threading.Tasks;
 using System.IO;
-using UserOperations.Models.Get.AnalyticContentController;
 using HBData.Repository;
 using UserOperations.Utils.AnalyticContentUtils;
 using UserOperations.Controllers;
 using HBData.Models;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Services
 {
@@ -82,7 +81,7 @@ namespace UserOperations.Services
                         Key2 = key.ContentId,
                         Result = group.ToList()
                     });
-                var answers = await GetAnswersInOneDialogueAsync(slideShowSessionsAll, dialogue.BegTime, dialogue.EndTime, dialogue.ApplicationUserId);
+                var answers = await GetAnswersInOneDialogueAsync(slideShowSessionsAll, dialogue.BegTime, dialogue.EndTime, dialogue.ApplicationUserId, (Guid)dialogue.DeviceId);
                   
                 var answersByContent = pollAmount.Where(x => x.Key2 != null)
                     .Select(x => new
@@ -107,10 +106,10 @@ namespace UserOperations.Services
 
         public async Task<Dictionary<string, object>> Efficiency(
                                 string beg, string end,
-                                List<Guid> applicationUserIds,
+                                List<Guid?> applicationUserIds,
                                 List<Guid> companyIds,
                                 List<Guid> corporationIds,
-                                List<Guid> workerTypeIds )
+                                List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -118,7 +117,7 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds);
                 //var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, false);
                
                 //foreach ( var session in slideShowSessionsAll )
@@ -129,7 +128,7 @@ namespace UserOperations.Services
                 //    session.Age = dialog?.Age;
                 //    session.Gender = dialog?.Gender;
                 //}
-                var slideShowSessionsInDialogues = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, false, dialogues);
+                var slideShowSessionsInDialogues = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds, false, dialogues);
                 var views = slideShowSessionsInDialogues.Count();
                 var clients = slideShowSessionsInDialogues.Select(x => x.DialogueId).Distinct().Count();
                
@@ -175,10 +174,10 @@ namespace UserOperations.Services
 
         public async Task<object> Poll(
                                 string beg, string end,
-                                List<Guid> applicationUserIds,
+                                List<Guid?> applicationUserIds,
                                 List<Guid> companyIds,
                                 List<Guid> corporationIds,
-                                List<Guid> workerTypeIds,
+                                List<Guid> deviceIds,
                                 string type)
         {
                 var role = _loginService.GetCurrentRoleName();
@@ -187,9 +186,9 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
-                var slideShowSessionsAll = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, true, dialogues);
-                var answers = await GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+                var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, deviceIds);
+                var slideShowSessionsAll = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds, true, dialogues);
+                var answers = await GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, deviceIds);
 
                 double conversion = GetConversion(slideShowSessionsAll.Count(), answers.Count());
 
@@ -251,8 +250,8 @@ namespace UserOperations.Services
            DateTime begTime,
            DateTime endTime,
            List<Guid> companyIds,
-           List<Guid> applicationUserIds,
-           List<Guid> workerTypeIds,
+           List<Guid?> applicationUserIds,
+           List<Guid> deviceIds,
            bool isPool,
            List<DialogueInfoWithFrames> dialogues
            )
@@ -261,9 +260,9 @@ namespace UserOperations.Services
                 .Where(p => p.IsPoll == isPool
                     && p.BegTime >= begTime
                     && p.BegTime <= endTime
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     && p.CampaignContent != null)
                 .Select(p =>
                     new SlideShowInfo
@@ -303,8 +302,8 @@ namespace UserOperations.Services
           DateTime begTime,
           DateTime endTime,
           List<Guid> companyIds,
-          List<Guid> applicationUserIds,
-          List<Guid> workerTypeIds,
+          List<Guid?> applicationUserIds,
+          List<Guid> deviceIds,
           bool isPool,
           List<DialogueInfo> dialogues
           )
@@ -315,7 +314,7 @@ namespace UserOperations.Services
                     && p.BegTime <= endTime
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     && p.CampaignContent != null)
                 .Select(p =>
                     new SlideShowInfo
@@ -339,7 +338,9 @@ namespace UserOperations.Services
             return slideShows;
         }
 
-        private async Task<List<CampaignContentAnswer>> GetAnswersInOneDialogueAsync(List<SlideShowInfo> slideShowInfos, DateTime begTime, DateTime endTime, Guid applicationUserId)
+        private async Task<List<CampaignContentAnswer>> GetAnswersInOneDialogueAsync(List<SlideShowInfo> slideShowInfos, 
+            DateTime begTime, DateTime endTime, 
+            Guid? applicationUserId, Guid deviceId)
         {
             var answers = await _repository.GetAsQueryable<CampaignContentAnswer>()
                 .Where(p => slideShowInfos
@@ -363,9 +364,14 @@ namespace UserOperations.Services
             return viewsAmount != 0 ? answersAmount / viewsAmount : 0;
         }
 
-        private async Task<List<AnswerInfo.AnswerOne>> GetAnswersFullAsync(List<SlideShowInfo> slideShowSessionsAll, DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
+        private async Task<List<AnswerInfo.AnswerOne>> GetAnswersFullAsync(
+                        List<SlideShowInfo> slideShowSessionsAll, 
+                        DateTime begTime, DateTime endTime, 
+                        List<Guid> companyIds, 
+                        List<Guid?> applicationUserIds, 
+                        List<Guid> deviceIds)
         {
-            var answers = await GetAnswersAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
+            var answers = await GetAnswersAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds);
 
             List<AnswerInfo.AnswerOne> answersResult = new List<AnswerInfo.AnswerOne>();
             foreach (var answ in answers)
@@ -463,7 +469,12 @@ namespace UserOperations.Services
             return null;
         }
 
-        private async Task<IEnumerable<CampaignContentAnswer>> GetAnswersAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds, List<Guid> applicationUserIds, List<Guid> workerTypeIds)
+        private async Task<IEnumerable<CampaignContentAnswer>> GetAnswersAsync(
+                        DateTime begTime, 
+                        DateTime endTime, 
+                        List<Guid> companyIds, 
+                        List<Guid?> applicationUserIds, 
+                        List<Guid> deviceIds)
         {
             var result = await _repository.GetAsQueryable<CampaignContentAnswer>()
                                      .Include(x => x.CampaignContent)
@@ -471,7 +482,7 @@ namespace UserOperations.Services
                                     p.CampaignContent != null
                                     && (p.Time >= begTime && p.Time <= endTime)
                                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))).ToListAsyncSafe();
             return result;
         }
@@ -496,8 +507,8 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds
             )
         {
             var dialogues = await _repository.GetAsQueryable<Dialogue>()
@@ -509,12 +520,13 @@ namespace UserOperations.Services
                            && p.StatusId == 3
                            && p.InStatistic == true
                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                           && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                           && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                           && (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId)))
+                           && (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))))
                    .Select(p => new DialogueInfoWithFrames
                    {
                        DialogueId = p.DialogueId,
                        ApplicationUserId = p.ApplicationUserId,
+                       DeviceId = p.DeviceId,
                        BegTime = p.BegTime,
                        EndTime = p.EndTime,
                        DialogueFrame = p.DialogueFrame.ToList(),
@@ -529,8 +541,8 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds)
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds)
         {
             return await _repository.GetAsQueryable<Dialogue>()
                 .Include(p => p.ApplicationUser)
@@ -540,12 +552,13 @@ namespace UserOperations.Services
                     && p.StatusId == 3
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId)))
+                    && (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))))
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
                     ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal

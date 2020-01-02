@@ -129,8 +129,7 @@ namespace UserOperations.Providers
                 FullName = message.FullName,
                 PasswordHash = _loginService.GeneratePasswordHash(message.Password),
                 StatusId = activeStatus,//3
-                EmpoyeeId = message.EmployeeId,
-                WorkerTypeId = message.WorkerTypeId ??(await _repository.FindOrNullOneByConditionAsync<WorkerType>(x => x.WorkerTypeName == "Employee")).WorkerTypeId
+                EmpoyeeId = message.EmployeeId
             };
             _repository.Create<ApplicationUser>(user);
             await _repository.SaveAsync();

@@ -85,7 +85,7 @@ namespace UserOperations.Services.Scheduler
             var sessions = _context.Sessions
                      .Where(p => p.BegTime.Date == today
                            && p.StatusId == 7)
-                   .Select(p => new SessionInfoFull
+                   .Select(p => new SessionInfo
                    {
                        IndustryId = p.ApplicationUser.Company.CompanyIndustryId,
                        CompanyId = p.ApplicationUser.CompanyId,

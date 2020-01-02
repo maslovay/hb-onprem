@@ -29,17 +29,10 @@ namespace UserOperations.Services
         {
             return _repository.GetAsQueryable<ApplicationRole>().ToList();
         }
-        public IEnumerable<object> WorkerTypeGet()
+        public IEnumerable<object> DeviceTypeGet()
         {
-            try
-            {
                 var companyId = _loginService.GetCurrentCompanyId();
-                return _repository.GetAsQueryable<WorkerType>().Where(p => p.CompanyId == companyId).Select(p => new { p.WorkerTypeId, p.WorkerTypeName }).ToList();
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
+                return _repository.GetAsQueryable<DeviceType>().ToList();
         }
         public IEnumerable<CompanyIndustry> IndustryGet()
         {

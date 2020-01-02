@@ -535,11 +535,11 @@ namespace UserOperations.Controllers
         public IActionResult DialogueGet([FromQuery(Name = "begTime")] string beg,
                                                 [FromQuery(Name = "endTime")] string end,
                                                 [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
                                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
-                                                [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
                                                 [FromQuery(Name = "inStatistic")] bool? inStatistic,
                                                 [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
         {
@@ -565,9 +565,9 @@ namespace UserOperations.Controllers
                     p.EndTime <= endTime &&
                     p.StatusId == activeStatus &&
                     p.InStatistic == inStatistic &&
-                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
+                    (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
+                    (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))) &&
                     (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
-                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
                     (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid)q.PhraseId))) &&
                     (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)))
                 )
@@ -601,6 +601,7 @@ namespace UserOperations.Controllers
         public IActionResult DialoguePaginatedGet([FromQuery(Name = "begTime")] string beg,
                                            [FromQuery(Name = "endTime")] string end,
                                            [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                           [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
                                            [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                            [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                            [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
@@ -633,9 +634,9 @@ namespace UserOperations.Controllers
                     p.EndTime <= endTime &&
                     p.StatusId == activeStatus &&
                     p.InStatistic == inStatistic &&
-                    (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
+                    (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
+                    (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))) &&
                     (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
-                    (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)) &&
                     (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid)q.PhraseId))) &&
                     (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)))
                 )
@@ -810,9 +811,9 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "all alerts for period", Description = "Return all alerts for period, type, employee, worker type, time")]
         public IActionResult AlertGet([FromQuery(Name = "begTime")] string beg,
                                                             [FromQuery(Name = "endTime")] string end,
-                                                            [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                            [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                             [FromQuery(Name = "alertTypeId[]")] List<Guid> alertTypeIds,
-                                                            [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
+                                                            [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
                                                             [FromHeader] string Authorization)
         {
             if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
@@ -847,7 +848,7 @@ namespace UserOperations.Controllers
                                 && p.ApplicationUser.CompanyId == companyId
                                 && (!alertTypeIds.Any() || alertTypeIds.Contains(p.AlertTypeId))
                                 && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                                && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                                && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                         .Select(x => new
                         {
                             x.AlertId,

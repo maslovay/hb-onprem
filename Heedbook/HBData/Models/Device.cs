@@ -32,7 +32,7 @@ namespace HBData.Models
         /// <summary>
         ///     Id of company
         /// </summary>
-        public Guid? CompanyId { get; set; }
+        public Guid CompanyId { get; set; }
         [JsonIgnore] public Company Company { get; set; }
 
         /// <summary>

@@ -6,6 +6,6 @@ namespace RabbitMqEventBus.Events
 {
     public class PersonDetectionRun : IntegrationEvent
     {
-        public List<Guid> ApplicationUserIds {get; set; }
+        public List<Guid?> ApplicationUserIds {get; set; }
     }
 }
