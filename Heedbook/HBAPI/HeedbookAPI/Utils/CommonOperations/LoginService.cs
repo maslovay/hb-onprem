@@ -62,7 +62,7 @@ namespace UserOperations.Services
             return _context.ApplicationUsers.Count(p => p.NormalizedEmail == login && p.PasswordHash == password) == 1;
         }
 
-        public string CreateTokenForUser(ApplicationUser user, bool remember)
+        public string CreateTokenForUser(ApplicationUser user)
         {
             try
             {
@@ -84,7 +84,7 @@ namespace UserOperations.Services
                         new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
                         new Claim("fullName", user.FullName),
-                        new Claim("avatar", AvatarExist(user.Avatar) ? $"http://{_sftpSettings.Host}/useravatars/{user.Avatar}":""),
+                        new Claim("avatar", AvatarExist(user.Avatar) ? $"http://{_config["FileRefPath:url"]}/useravatars/{user.Avatar}":""),
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -93,7 +93,7 @@ namespace UserOperations.Services
                     var token = new JwtSecurityToken(_config["Tokens:Issuer"],
                         _config["Tokens:Issuer"],
                         claims,
-                        expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
+                        expires: DateTime.Now.AddDays(31),
                         signingCredentials: creds);
 
                     var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
@@ -314,9 +314,9 @@ namespace UserOperations.Services
         {
             if(String.IsNullOrEmpty(avatarPath))
                 return false;
-            var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");      
+            var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");
             task.Wait();
-            bool exist = task.Result;      
+            bool exist = task.Result;
             return exist;
         }
         public bool IsAdmin()
