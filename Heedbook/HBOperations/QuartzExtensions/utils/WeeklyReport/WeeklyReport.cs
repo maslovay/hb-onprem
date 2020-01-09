@@ -173,24 +173,21 @@ namespace QuartzExtensions.Utils.WeeklyReport
             }         
             var UserLoginChecked = _loginService.CheckUserLogin(_autorizationData.UserName, _autorizationData.Password);
             if (UserLoginChecked)
-            {            
+            {
                 _loginService.SaveErrorLoginHistory(user.Id, "success");
-                return _loginService.CreateTokenForUser(user, _autorizationData.Remember);
+                return _loginService.CreateTokenForUser(user);
             }
-            else
-            {                
-                return null;                
-            }                            
+                return null;
         }
          
         public async Task SendHttpReport()
-        {                         
+        {
             var email = _applicationUser.Email;
             if(email == "" || email == null)
             {
                 _log.Error($"ApplicationUser {_applicationUser.Id} email is empty");
                 return;
-            }     
+            }
             
             var beginWeek = DateTime.Now.AddDays(-7).ToString("dd/MM/yyyy");
             var endWeek = DateTime.Now.AddDays(-1).ToString("dd/MM/yyyy");
@@ -204,7 +201,7 @@ namespace QuartzExtensions.Utils.WeeklyReport
             mail.To.Add(email);
             
             System.Net.Mail.AlternateView alternateView = System.Net.Mail.AlternateView.CreateAlternateViewFromString(_htmlTemplate, Encoding.UTF8, MediaTypeNames.Text.Html);   
-                        
+
             mail.AlternateViews.Add(alternateView); 
             try
             {
@@ -214,11 +211,11 @@ namespace QuartzExtensions.Utils.WeeklyReport
             catch(Exception ex)
             {
                 _log.Fatal($"Failed send email to {_applicationUser.Id} - {email}:\n{ex.Message}");
-            }     
+            }
         }
 
         private MemoryStream GeneratePng(Dictionary<DateTime, float> points, string name, double colourData, int ReportStyle)
-        {            
+        {
             float leftMargin = 10;
             float rightMargin = 10;
             float topMargin = 10;
@@ -235,11 +232,11 @@ namespace QuartzExtensions.Utils.WeeklyReport
             
             float item = 0;
             foreach(KeyValuePair<DateTime, float> pair in points)
-            {                         
+            {
                 item = pair.Value;  
                 list.Add(counter * pointsStep, item);
                 counter++;
-            }       
+            }
             LineItem myCurve;
             if(ReportStyle == 1)
             {
