@@ -31,8 +31,7 @@ namespace UserOperations.Services
         }
         public IEnumerable<object> DeviceTypeGet()
         {
-                var companyId = _loginService.GetCurrentCompanyId();
-                return _repository.GetAsQueryable<DeviceType>().ToList();
+            return _repository.GetAsQueryable<DeviceType>().ToList();
         }
         public IEnumerable<CompanyIndustry> IndustryGet()
         {
