@@ -30,22 +30,31 @@ namespace UserOperations.Services
 
         public async Task<string> GenerateToken(DeviceAuthorization message)
         {
+            if (!_loginService.CheckDeviceLogin(message.DeviceName, message.Code))
+            throw new Exception("Error in device name or code");
+
             var device = GetDeviceIncludeCompany(message.DeviceName);
             if (device.StatusId != GetStatusId("Active")) throw new Exception("Device not activated");
 
-            if (_loginService.CheckDeviceLogin(device.Name, device.Code))
-                return _loginService.CreateTokenForDevice(device);
-            throw new UnauthorizedAccessException("Error in device name or code");
+            return _loginService.CreateTokenForDevice(device);
         }
 
-        public async Task<List<Device>> GetAll(List<Guid> companyIds)
+        public async Task<List<GetDevice>> GetAll(List<Guid> companyIds)
         {
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, null, role, companyId);
 
             var data = _repository.GetAsQueryable<Device>()
-                .Where(c => (!companyIds.Any() || companyIds.Contains(c.CompanyId)));
+                .Where(c => (!companyIds.Any() || companyIds.Contains(c.CompanyId)))
+                .Select(c => new GetDevice
+                                 {
+                                    CompanyId = c.CompanyId,
+                                    DeviceId = c.DeviceId,
+                                    DeviceTypeId = c.DeviceTypeId,
+                                    Name = c.Name,
+                                    StatusId = c.StatusId
+                                 });
                
             return data.ToList();
         }
@@ -62,7 +71,7 @@ namespace UserOperations.Services
 
             Device newDevice = new Device
             {
-                Code = device.Code,
+                Code = _loginService.GeneratePasswordHash(device.Code),
                 CompanyId = newDeviceCompanyId,
                 DeviceTypeId = device.DeviceTypeId,
                 Name = device.Name,
@@ -73,7 +82,7 @@ namespace UserOperations.Services
             return newDevice;
         }
 
-        public async Task<string> Update(Device device)
+        public async Task<string> Update(PutDevice device)
         {
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
@@ -81,16 +90,10 @@ namespace UserOperations.Services
             Device deviceEntity = await _repository.FindOrExceptionOneByConditionAsync<Device>(c => c.DeviceId == device.DeviceId);
             _requestFilters.IsCompanyBelongToUser(corporationId, companyId, deviceEntity.CompanyId, role);
 
-            Type deviceType = deviceEntity.GetType();
-            foreach (var p in typeof(Device).GetProperties())
-            {
-                var val = p.GetValue(device, null);
-                if (val != null && val.ToString() != Guid.Empty.ToString() && p.Name != "DeviceId")
-                {
-                    deviceType.GetProperty(p.Name).SetValue(deviceEntity, val);
-                }
-            }
-            _repository.Update<Device>(deviceEntity);
+            deviceEntity.Code = device.Code != null ? _loginService.GeneratePasswordHash(device.Code) : deviceEntity.Code;
+            deviceEntity.DeviceTypeId = device.DeviceTypeId ?? deviceEntity.DeviceTypeId;
+            deviceEntity.Name = device.Name ?? deviceEntity.Name;
+            deviceEntity.StatusId = device.StatusId != 0? device.StatusId : deviceEntity.StatusId;
             await _repository.SaveAsync();
             return "Saved";
         }

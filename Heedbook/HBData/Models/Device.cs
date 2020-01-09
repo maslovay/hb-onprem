@@ -45,7 +45,7 @@ namespace HBData.Models
         /// <summary>
         ///     Device status - active / inactive
         /// </summary>
-        public Int32? StatusId { get; set; }
+        public Int32 StatusId { get; set; }
         [JsonIgnore] public Status Status { get; set; }
 
         /// <summary>

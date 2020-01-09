@@ -33,8 +33,8 @@ namespace UserOperations.Controllers
         [HttpGet("List")]
         [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "list of devices", Description = "")]
-        [SwaggerResponse(200, "Devices[]", typeof(List<Device>))]
-        public async Task<ICollection<Device>> DevicesGet( [FromQuery(Name = "companyId[]")] List<Guid> companyIds) 
+        [SwaggerResponse(200, "Devices[]", typeof(List<GetDevice>))]
+        public async Task<ICollection<GetDevice>> DevicesGet( [FromQuery(Name = "companyId[]")] List<Guid> companyIds) 
             => await _deviceService.GetAll(companyIds);
 
         [HttpPost]
@@ -48,7 +48,7 @@ namespace UserOperations.Controllers
         [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "set device code, type, name, status", Description = "")]
         [SwaggerResponse(200, "Saved", typeof(string))]
-        public async Task<string> DeviceUpdate([FromBody] Device device)
+        public async Task<string> DeviceUpdate([FromBody] PutDevice device)
             => await _deviceService.Update(device);
 
         [HttpDelete]
