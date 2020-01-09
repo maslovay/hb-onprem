@@ -7,7 +7,5 @@ namespace HBData.Models.AccountViewModels
         public String UserName { get; set; }
 
         public String Password { get; set; }
-
-        public Boolean Remember { get; set; }
     }
 }

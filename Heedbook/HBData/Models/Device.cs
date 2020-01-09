@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
@@ -26,7 +27,7 @@ namespace HBData.Models
         /// <summary>
         ///     Device name
         /// </summary>
-        /// [Required]
+        [Required]
         public string Name { get; set; }
 
         /// <summary>
@@ -46,5 +47,25 @@ namespace HBData.Models
         /// </summary>
         public Int32? StatusId { get; set; }
         [JsonIgnore] public Status Status { get; set; }
+
+        /// <summary>
+        ///     Link to dialogues from this device
+        /// </summary>
+        [JsonIgnore] public ICollection<Dialogue> Dialogues { get; set; }
+
+        /// <summary>
+        ///     Link to sessions from this device
+        /// </summary>
+        [JsonIgnore] public ICollection<Session> Sessions { get; set; }
+
+        /// <summary>
+        ///     Link to content shown sessions from this device
+        /// </summary>
+        [JsonIgnore] public ICollection<SlideShowSession> SlideShowSessions { get; set; }
+
+        /// <summary>
+        ///     Link to answers on poll shown from this device
+        /// </summary>
+        [JsonIgnore] public ICollection<CampaignContentAnswer> CampaignContentAnswers { get; set; }
     }
 }

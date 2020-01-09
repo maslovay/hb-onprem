@@ -68,11 +68,10 @@ namespace UserOperations.Providers
         public string GenerateToken(AccountAuthorization message)
         {
                 var user = GetUserIncludeCompany(message.UserName);
-               
                 if (user.StatusId != GetStatusId("Active")) throw new Exception("User not activated");
 
                 if (_loginService.CheckUserLogin(message.UserName, message.Password))
-                    return _loginService.CreateTokenForUser(user, message.Remember);
+                    return _loginService.CreateTokenForUser(user);
                 else
                     throw new UnauthorizedAccessException("Error in username or password");
         }
@@ -112,7 +111,7 @@ namespace UserOperations.Providers
             using (var transactionScope = new TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
                        { IsolationLevel = IsolationLevel.Serializable }))
             {
-                    await RemoveAccountWithSave(email);
+                    RemoveAccountWithSave(email);
                     transactionScope.Complete();
                     return "Removed";
             }
@@ -275,7 +274,7 @@ namespace UserOperations.Providers
             if (user is null) throw new Exception("No such user");
             return user;
         }
-        private async Task RemoveAccountWithSave(string email)
+        private void RemoveAccountWithSave(string email)
         {
             var usersAll = _repository.GetAsQueryable<ApplicationUser>().ToList();
             var user = _repository.GetAsQueryable<ApplicationUser>().FirstOrDefault(p => p.Email == email);
@@ -287,10 +286,10 @@ namespace UserOperations.Providers
             taskTransactions.Wait();
             var transactions = taskTransactions.Result;
             var userRoles = users.SelectMany(x => x.UserRoles).ToList();
-            var contents = await _repository.GetAsQueryable<Content>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
+            var contents = _repository.GetAsQueryable<Content>().Where(x => x.CompanyId == company.CompanyId).ToList();
             var campaigns = _repository.GetWithInclude<Campaign>(x => x.CompanyId == company.CompanyId, p => p.CampaignContents).ToList();
             var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
-            var phrases = await _repository.GetAsQueryable<PhraseCompany>().Where(x => x.CompanyId == company.CompanyId).ToListAsync();
+            var phrases = _repository.GetAsQueryable<PhraseCompany>().Where(x => x.CompanyId == company.CompanyId).ToList();
             
          
          
@@ -308,7 +307,7 @@ namespace UserOperations.Providers
             _repository.Delete<ApplicationUser>(users);
             _repository.Delete<Tariff>(tariff);
             _repository.Delete<Company>(company);
-            await _repository.SaveAsync();
+            _repository.Save();
         }
     }
 }

@@ -76,8 +76,6 @@ namespace UserOperations
 
             services.AddScoped<AccountService>();
             services.AddScoped<AnalyticClientProfileService>();
-            services.AddScoped<ClientService>();
-            services.AddScoped<ClientNoteService>();
             services.AddScoped<AnalyticContentService>();
             services.AddScoped<AnalyticHomeService>();
             services.AddScoped<AnalyticOfficeService>();
@@ -86,12 +84,15 @@ namespace UserOperations
             services.AddScoped<AnalyticServiceQualityService>();
             services.AddScoped<AnalyticSpeechService>();
             services.AddScoped<AnalyticWeeklyReportService>();
+            services.AddScoped<ClientService>();
+            services.AddScoped<ClientNoteService>();
             services.AddScoped<CampaignContentService>();
             services.AddScoped<CatalogueService>();
             services.AddScoped<DemonstrationService>();
+            services.AddScoped<DemonstrationV2Service>();
+            services.AddScoped<DeviceService>();
             services.AddScoped<MediaFileService>();
             services.AddScoped<SessionService>();
-            services.AddScoped<DemonstrationV2Service>();
             services.AddScoped<SiteService>();
             services.AddScoped<TabletAppInfoService>();
 

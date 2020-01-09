@@ -175,7 +175,7 @@ namespace QuartzExtensions.Utils.WeeklyReport
             if (UserLoginChecked)
             {            
                 _loginService.SaveErrorLoginHistory(user.Id, "success");
-                return _loginService.CreateTokenForUser(user, _autorizationData.Remember);
+                return _loginService.CreateTokenForUser(user);
             }
             else
             {                

@@ -71,21 +71,21 @@ namespace ApiTests
 
         public void InitMockILoginService()
         {
-            moqILoginService.Setup(p => p.CheckUserLogin(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(true);
-            moqILoginService.Setup(p => p.SaveErrorLoginHistory(It.IsAny<Guid>(), It.IsAny<string>()))
-                .Returns(true);
-            var dict = TestData.GetClaims();
-            moqILoginService.Setup(p => p.GetDataFromToken(It.IsAny<string>(), out dict, null))
-                .Returns(true);
-            moqILoginService.Setup(p => p.GeneratePasswordHash(It.IsAny<string>()))
-                .Returns("Hash");
-            moqILoginService.Setup(p => p.SavePasswordHistory(It.IsAny<Guid>(), It.IsAny<string>()))
-                .Returns(true);
-            moqILoginService.Setup(p => p.GeneratePass(6))
-                .Returns("123456");
-            moqILoginService.Setup(p => p.CreateTokenForUser(It.IsAny<ApplicationUser>(), It.IsAny<bool>()))
-                .Returns("Token");
+            //moqILoginService.Setup(p => p.CheckUserLogin(It.IsAny<string>(), It.IsAny<string>()))
+            //    .Returns(true);
+            //moqILoginService.Setup(p => p.SaveErrorLoginHistory(It.IsAny<Guid>(), It.IsAny<string>()))
+            //    .Returns(true);
+            //var dict = TestData.GetClaims();
+            //moqILoginService.Setup(p => p.GetDataFromToken(It.IsAny<string>(), out dict, null))
+            //    .Returns(true);
+            //moqILoginService.Setup(p => p.GeneratePasswordHash(It.IsAny<string>()))
+            //    .Returns("Hash");
+            //moqILoginService.Setup(p => p.SavePasswordHistory(It.IsAny<Guid>(), It.IsAny<string>()))
+            //    .Returns(true);
+            //moqILoginService.Setup(p => p.GeneratePass(6))
+            //    .Returns("123456");
+            //moqILoginService.Setup(p => p.CreateTokenForUser(It.IsAny<ApplicationUser>(), It.IsAny<bool>()))
+            //    .Returns("Token");
         }
         public void InitMockIMailSender()
         {

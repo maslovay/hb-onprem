@@ -62,7 +62,14 @@ namespace UserOperations.Services
             return _context.ApplicationUsers.Count(p => p.NormalizedEmail == login && p.PasswordHash == password) == 1;
         }
 
-        public string CreateTokenForUser(ApplicationUser user, bool remember)
+        public bool CheckDeviceLogin(string deviceName, string code)
+        {
+            if (code == null || deviceName == null) return false;
+            code = GeneratePasswordHash(code);
+            return _context.Devices.Count(p => p.Name.ToUpper() == deviceName.ToUpper() && p.Code == code) == 1;
+        }
+
+        public string CreateTokenForUser(ApplicationUser user)
         {
             try
             {
@@ -97,14 +104,12 @@ namespace UserOperations.Services
                         signingCredentials: creds);
 
                     var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
-
                     return tokenenc;
                 }
                 else
                 {
                     return "User inactive";
                 }
-
             }
             catch (Exception e)
             {
@@ -112,32 +117,35 @@ namespace UserOperations.Services
             }
         }
 
-        // <summary>
-        /// Parse JWT token 
-        /// </summary>
-        /// <param name="token">JWT token in request</param>
-        /// <returns></returns>
-        public Dictionary<string, string> GetDataFromToken(string token, string sign = null)
+        public string CreateTokenForDevice(Device device)
         {
-            if (sign == "" || sign == null)
-                sign = _config["Tokens:Key"];
             try
             {
-
-                var pureToken = token.Split(' ')[1];
-                if (CheckToken(pureToken, sign))
+                var claims = new[]
                 {
-                    var jwt = new JwtSecurityToken(pureToken);
-                    Dictionary<string, string> claims;
-                    claims = jwt.Payload.ToDictionary(key => key.Key.ToString(), value => value.Value.ToString());
-                    return claims;
-                }
-                else
-                    return null;
+                    new Claim(JwtRegisteredClaimNames.Sub, device.Name),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim("deviceId", device.DeviceId.ToString()),
+                    new Claim("deviceName", device.Name),
+                    new Claim("companyId", device.CompanyId.ToString()),
+                    new Claim("corporationId", device.Company.CorporationId.ToString())
+                };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken(_config["Tokens:Issuer"],
+                    _config["Tokens:Issuer"],
+                    claims,
+                    expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
+                    signingCredentials: creds);
+
+                var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
+                return tokenenc;
             }
             catch (Exception e)
             {
-                return null;
+                return $"Device not exist or internal error {e}";
             }
         }
 
