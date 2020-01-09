@@ -567,7 +567,7 @@ namespace UserOperations.Controllers
                     p.InStatistic == inStatistic &&
                     (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
                     (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))) &&
-                    (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
+                    (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId)) &&
                     (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid)q.PhraseId))) &&
                     (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)))
                 )
@@ -575,8 +575,8 @@ namespace UserOperations.Controllers
                 {
                     p.DialogueId,
                     Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
-                    p.ApplicationUserId,
-                    p.ApplicationUser.FullName,
+                    ApplicationUserId = p.ApplicationUserId?? null,
+                    FullName =  p.ApplicationUser != null? p.ApplicationUser.FullName:null,
                     DialogueHints = p.DialogueHint,
                     p.BegTime,
                     p.EndTime,
@@ -636,23 +636,23 @@ namespace UserOperations.Controllers
                     p.InStatistic == inStatistic &&
                     (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
                     (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))) &&
-                    (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
+                    (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId)) &&
                     (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid)q.PhraseId))) &&
                     (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)))
                 )
                 .Select(p => new
                 {
-                    dialogueId = p.DialogueId,
-                    avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
-                    applicationUserId = p.ApplicationUserId,
-                    fullName = p.ApplicationUser.FullName,
-                    dialogueHints = p.DialogueHint.Count() != 0 ? "YES" : null,
-                    begTime = p.BegTime,
-                    endTime = p.EndTime,
+                    p.DialogueId,
+                    Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
+                    ApplicationUserId = p.ApplicationUserId,
+                    FullName = p.ApplicationUser != null ? p.ApplicationUser.FullName : null,
+                    DialogueHints = p.DialogueHint.Count() != 0 ? "YES" : null,
+                    p.BegTime,
+                    p.EndTime,
                     duration = p.EndTime.Subtract(p.BegTime),
-                    statusId = p.StatusId,
-                    inStatistic = p.InStatistic,
-                    meetingExpectationsTotal = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                    p.StatusId,
+                    p.InStatistic,
+                    p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 }).ToList();
 
                 if (dialogues.Count() == 0) return Ok(dialogues);
@@ -712,18 +712,18 @@ namespace UserOperations.Controllers
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
 
                 var begTime = DateTime.UtcNow.AddDays(-30);
-                var companyId = dialogue.ApplicationUser.CompanyId;
+                var companyId = dialogue.Device.CompanyId;
                 var avgDialogueTime = 0.0;
 
                 avgDialogueTime = _context.Dialogues.Where(p =>
                         p.BegTime >= begTime &&
                         p.StatusId == activeStatus &&
-                        p.ApplicationUser.CompanyId == companyId)
+                        p.Device.CompanyId == companyId)
                     .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
 
                 var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
 
-                jsonDialogue["FullName"] = dialogue.ApplicationUser.FullName;
+                jsonDialogue["FullName"] = dialogue.ApplicationUser?.FullName;
                 jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
                 jsonDialogue["Video"] = dialogue == null ? null : _sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
                 jsonDialogue["DialogueAvgDurationLastMonth"] = avgDialogueTime;
@@ -845,7 +845,7 @@ namespace UserOperations.Controllers
               .Include(p => p.ApplicationUser)
                         .Where(p => p.CreationDate >= begTime
                                 && p.CreationDate <= endTime
-                                && p.ApplicationUser.CompanyId == companyId
+                                && p.Device.CompanyId == companyId
                                 && (!alertTypeIds.Any() || alertTypeIds.Contains(p.AlertTypeId))
                                 && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                                 && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
