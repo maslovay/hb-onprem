@@ -118,7 +118,7 @@ namespace UserOperations.Services
                         p.EndTime <= endTime &&
                         p.StatusId == 3 &&
                         p.InStatistic == true &&
-                        (companyIds == null || (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))) &&
+                        (companyIds == null || (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))) &&
                         (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
                         (deviceIds == null || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))).AsQueryable();
             return data;
@@ -136,7 +136,7 @@ namespace UserOperations.Services
                     p.EndTime <= endTime &&
                     p.StatusId == 3 &&
                     p.InStatistic == true &&
-                    (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
+                    (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId)) &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)) &&
                     (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))).AsQueryable();
             return data;

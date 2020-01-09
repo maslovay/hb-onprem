@@ -312,7 +312,7 @@ namespace UserOperations.Services
                 .Where(p => p.IsPoll == isPool
                     && p.BegTime >= begTime
                     && p.BegTime <= endTime
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     && p.CampaignContent != null)
@@ -483,7 +483,7 @@ namespace UserOperations.Services
                                     && (p.Time >= begTime && p.Time <= endTime)
                                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
-                                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))).ToListAsyncSafe();
+                                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))).ToListAsyncSafe();
             return result;
         }
 
@@ -519,7 +519,7 @@ namespace UserOperations.Services
                            && p.EndTime <= endTime
                            && p.StatusId == 3
                            && p.InStatistic == true
-                           && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                           && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                            && (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId)))
                            && (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))))
                    .Select(p => new DialogueInfoWithFrames
@@ -551,7 +551,7 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId)))
                     && (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))))
                 .Select(p => new DialogueInfo

@@ -48,9 +48,7 @@ namespace PersonDetectionService
 
                 //---dialogues for users in company or for devices in company
                 var dialogues = _context.Dialogues
-                    .Where(p => (p.ApplicationUserId != null && companyIds.Contains(p.ApplicationUser.CompanyId))
-                                 || (p.DeviceId != null && companyIds.Contains(p.Device.CompanyId)))
-                    .Where(p => !String.IsNullOrEmpty(p.PersonFaceDescriptor) && p.BegTime >= begTime)
+                    .Where(p => ( companyIds.Contains(p.Device.CompanyId)) && !String.IsNullOrEmpty(p.PersonFaceDescriptor) && p.BegTime >= begTime)
                     .OrderBy(p => p.BegTime)
                     .ToList();
                 

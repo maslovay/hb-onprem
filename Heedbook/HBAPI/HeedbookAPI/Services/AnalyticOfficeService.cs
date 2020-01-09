@@ -186,7 +186,7 @@ namespace UserOperations.Services
                     p => p.BegTime >= prevBeg
                     && p.EndTime <= endTime
                     && p.StatusId == 7
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     , o => o.ApplicationUser)
@@ -213,7 +213,7 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     , p => p.ApplicationUser)

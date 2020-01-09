@@ -172,13 +172,13 @@ namespace UserOperations.Services
             var sessions = _repository.GetAsQueryable<Session>()
                 .Where(p =>
                     p.StatusId == 6
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new SessionInfo
                 {
                     ApplicationUserId = p.ApplicationUserId,
-                    FullName = p.ApplicationUser.FullName
+                    FullName = p.ApplicationUser != null? p.ApplicationUser.FullName : null
                 })
                 .ToList().Distinct().ToList();
             return sessions;
@@ -197,7 +197,7 @@ namespace UserOperations.Services
                     p.BegTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 7
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
@@ -230,7 +230,7 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new DialogueInfo

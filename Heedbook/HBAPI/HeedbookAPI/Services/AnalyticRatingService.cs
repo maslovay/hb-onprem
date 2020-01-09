@@ -195,7 +195,7 @@ namespace UserOperations.Services
                 .Where(p => p.BegTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 7
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new SessionInfo
@@ -204,8 +204,8 @@ namespace UserOperations.Services
                     DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
-                    FullName = p.ApplicationUser.FullName,
-                    CompanyId = p.ApplicationUser.CompanyId
+                    FullName = p.ApplicationUser != null? p.ApplicationUser.FullName : null,
+                    CompanyId = p.Device.CompanyId
                 })
                 .ToListAsync();
             return sessions;
@@ -222,7 +222,7 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new DialogueInfo
@@ -234,7 +234,7 @@ namespace UserOperations.Services
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                    FullName = p.ApplicationUser.FullName,
+                    FullName = p.ApplicationUser != null? p.ApplicationUser.FullName : null,
                     CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
                 })
                 .ToListAsync();
@@ -249,11 +249,11 @@ namespace UserOperations.Services
                 .Where(p => p.BegTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 7
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new SessionInfo
                 {
-                    CompanyId = (Guid)p.ApplicationUser.CompanyId,
+                    CompanyId = p.Device.CompanyId,
                     DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime
@@ -272,17 +272,17 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
                     DeviceId = p.DeviceId,
-                    CompanyId = (Guid)p.ApplicationUser.CompanyId,
+                    CompanyId = p.Device.CompanyId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                    FullName = p.ApplicationUser.Company.CompanyName,
+                    FullName = p.Device.Company.CompanyName,
                     CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
                 })
                 .ToListAsync();

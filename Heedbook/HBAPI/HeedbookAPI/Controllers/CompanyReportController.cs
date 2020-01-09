@@ -80,7 +80,7 @@ namespace UserOperations.Controllers
                 .Select(p => new DialogueReportModel
                     {
                         CompanyName = p.ApplicationUser.Company.CompanyName,
-                        CompanyId = (Guid)p.ApplicationUser.CompanyId,
+                        CompanyId = p.Device.CompanyId,
                         DialogueId = p.DialogueId,
                         ApplicationUserId = p.ApplicationUserId,
                         BeginTime = p.BegTime,

@@ -94,9 +94,9 @@ namespace QuartzExtensions.Jobs
             
             var sessions = _context.Sessions
                 .Include(p => p.ApplicationUser)
-                .Include(p => p.ApplicationUser.Company)
+                .Include(p => p.Device.Company)
                 .Where(p => p.BegTime > DateTime.UtcNow.AddHours(-24))
-                .GroupBy(p => p.ApplicationUser.CompanyId)
+                .GroupBy(p => p.Device.CompanyId)
                 .Select(p => new CompanyReport
                     {
                         CompanyId = p.Key,
@@ -114,20 +114,20 @@ namespace QuartzExtensions.Jobs
                         TotalVideoDuration = TimeSpan.FromSeconds(videos.Where(s => s.ApplicationUser.CompanyId == p.Key)
                             .Sum(o => (double)o.Duration))
                             .ToString("d'd 'h'h 'm'm 's's'"),
-                        TotalDialoguesDuration = TimeSpan.FromSeconds(dialogues.Where(s => s.ApplicationUser.CompanyId == p.Key)
+                        TotalDialoguesDuration = TimeSpan.FromSeconds(dialogues.Where(s => s.Device.CompanyId == p.Key)
                             .Sum(s => s.EndTime.Subtract(s.BegTime).TotalSeconds))
                             .ToString("d'd 'h'h 'm'm 's's'"),                        
-                        CountOfDialoguesStat3 = dialogues.Where(s => s.ApplicationUser.CompanyId == p.Key
+                        CountOfDialoguesStat3 = dialogues.Where(s => s.Device.CompanyId == p.Key
                             && s.StatusId == 3)
                             .Count(),
-                        CountOfDialoguesStat8 = dialogues.Where(s => s.ApplicationUser.CompanyId == p.Key
+                        CountOfDialoguesStat8 = dialogues.Where(s => s.Device.CompanyId == p.Key
                             && s.StatusId == 8)
                             .Count(),
                         CountOfFramesWithFaces = frames.Where(s => s.ApplicationUser.CompanyId == p.Key)
                             .Count(),
                         CountOfDifferentFaces = frames.Where(s => s.ApplicationUser.CompanyId == p.Key)
                             .GroupBy(s => s.FaceId).Distinct().Count(),
-                        DialoguesWithStatus8 = dialogues.Where(s => s.ApplicationUser.CompanyId == p.Key
+                        DialoguesWithStatus8 = dialogues.Where(s => s.Device.CompanyId == p.Key
                             && s.StatusId == 8).Select(o => o.DialogueId).ToList()
                     })
                 .ToList();

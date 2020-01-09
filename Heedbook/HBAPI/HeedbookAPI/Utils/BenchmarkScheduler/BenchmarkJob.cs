@@ -69,11 +69,11 @@ namespace UserOperations.Services.Scheduler
                      .Where(p => p.BegTime.Date == today
                              && p.StatusId == 3
                              && p.InStatistic == true
-                             && p.ApplicationUser.Company.CompanyIndustryId != null)
+                             && p.Device.Company.CompanyIndustryId != null)
                      .Select(p => new DialogueInfoFull
                      {
                          IndustryId = p.ApplicationUser.Company.CompanyIndustryId,
-                         CompanyId = p.ApplicationUser.CompanyId,
+                         CompanyId = p.Device.CompanyId,
                          DialogueId = p.DialogueId,
                          CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
                          SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
@@ -87,8 +87,8 @@ namespace UserOperations.Services.Scheduler
                            && p.StatusId == 7)
                    .Select(p => new SessionInfo
                    {
-                       IndustryId = p.ApplicationUser.Company.CompanyIndustryId,
-                       CompanyId = p.ApplicationUser.CompanyId,
+                       IndustryId = p.Device.Company.CompanyIndustryId,
+                       CompanyId = p.Device.CompanyId,
                        BegTime = p.BegTime,
                        EndTime = p.EndTime
                    })

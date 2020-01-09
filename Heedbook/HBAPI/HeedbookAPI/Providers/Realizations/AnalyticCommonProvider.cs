@@ -29,7 +29,7 @@ namespace UserOperations.Providers
                          .Where(p => p.BegTime >= begTime
                                  && p.EndTime <= endTime
                                  && p.StatusId == 7
-                                 && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                                 && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                                  && (userIds == null || (!userIds.Any() || userIds.Contains(p.ApplicationUserId)))
                                  && (deviceIds == null || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))))
                          .Select(p => new Models.AnalyticModels.SessionInfo
@@ -56,7 +56,7 @@ namespace UserOperations.Providers
                                && p.EndTime <= endTime
                                && p.StatusId == 3
                                && p.InStatistic == true
-                               && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                               && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                                && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                                && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))).AsQueryable();
             return dialogues;
@@ -75,7 +75,7 @@ namespace UserOperations.Providers
                     p.EndTime <= endTime &&
                     p.StatusId == 3 &&
                     p.InStatistic == true &&
-                    (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId)) &&
+                    (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId)) &&
                     (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)) &&
                     (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))).AsQueryable();
             return data;
@@ -257,7 +257,7 @@ namespace UserOperations.Providers
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid) p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new Models.AnalyticModels.DialogueInfoFull

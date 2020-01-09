@@ -706,6 +706,7 @@ namespace UserOperations.Controllers
                     .Include(p => p.DialogueWord)
                     .Include(p => p.ApplicationUser)
                     .Include(p => p.DialogueHint)
+                    .Include(p => p.Device)
                     .Where(p => p.StatusId == 3 && p.DialogueId == dialogueId)
                     .FirstOrDefault();
 
