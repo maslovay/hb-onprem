@@ -38,7 +38,6 @@ namespace UserOperations.Models
         public Guid? CompanyId { get; set; }
         public Int32? StatusId { get; set; }
         public string OneSignalId { get; set; }
-        public Guid? WorkerTypeId { get; set; }
         public ApplicationRole Role { get; set; }
         public Guid? RoleId { get; set; }
         public UserModel()

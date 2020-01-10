@@ -294,6 +294,8 @@ namespace UserOperations.Services
 
         public Guid GetCurrentUserId()
             => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "applicationUserId")?.Value);
+        public Int32 GetCurrentLanguagueId()
+           => Int32.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "languageCode")?.Value);
 
         public string GetCurrentRoleName()
         {

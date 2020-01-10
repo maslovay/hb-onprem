@@ -27,24 +27,24 @@ namespace UserOperations.Providers
             //disabledStatus = 4;
         }
 
-        public async Task<List<Guid>> GetPhraseIdsByCompanyIdAsync(Guid companyIdInToken, string languageId, bool isTemplate)
+        public async Task<List<Guid>> GetPhraseIdsByCompanyIdAsync(Guid companyIdInToken, int languageId, bool isTemplate)
         {
             return await _repository.GetAsQueryable<PhraseCompany>()
                    .Where( x =>
                        x.CompanyId == companyIdInToken &&
                        x.Phrase.IsTemplate == isTemplate &&
                        x.Phrase.PhraseText != null &&
-                       x.Phrase.LanguageId.ToString() == languageId)
+                       x.Phrase.LanguageId == languageId)
                    .Select(x => x.Phrase.PhraseId).ToListAsync();
         }
-        public async Task<List<Phrase>> GetPhrasesNotBelongToCompanyByIdsAsync(List<Guid> phraseIds, string languageId, bool isTemplate)
+        public async Task<List<Phrase>> GetPhrasesNotBelongToCompanyByIdsAsync(List<Guid> phraseIds, int languageId, bool isTemplate)
         {
             return await _repository.GetAsQueryable<Phrase>()
                    .Where( x => 
                         x.IsTemplate == true &&
                         x.PhraseText != null &&
                         !phraseIds.Contains(x.PhraseId) &&
-                        x.LanguageId.ToString() == languageId).ToListAsync();
+                        x.LanguageId == languageId).ToListAsync();
         }
         public async Task<Phrase> GetLibraryPhraseByTextAsync(string phraseText, bool isTemplate)
         {

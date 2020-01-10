@@ -18,11 +18,14 @@ using UserOperations.Utils;
 using System.Reflection;
 using UserOperations.Models;
 using UserOperations.Providers;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [ControllerExceptionFilter]
     public class UserController : Controller
     {
         private readonly IConfiguration _config;
@@ -71,54 +74,39 @@ namespace UserOperations.Controllers
         [HttpGet("User")]
         [SwaggerOperation(Summary = "All company users", Description = "Return all active (status 3) users (array) for loggined company with role Id")]
         [SwaggerResponse(200, "Users with role", typeof(List<UserModel>))]
-        public async Task<IActionResult> UserGet(
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<IActionResult> UserGet()
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                var corporationIdInToken = _loginService.GetCurrentCorporationId();
+                var userIdInToken = _loginService.GetCurrentUserId();
                 List<ApplicationUser> users = null;
-
-                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-                Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-                Guid.TryParse(userClaims["applicationUserId"], out var userIdInToken);
-                var roleInToken = userClaims["role"];
 
                 if (roleInToken == "Admin")
                     users = await _userProvider.GetUsersForAdminAsync();
               
                 if (roleInToken == "Supervisor" )
-                    users = await _userProvider.GetUsersForSupervisorAsync(corporationIdInToken, userIdInToken);
+                    users = await _userProvider.GetUsersForSupervisorAsync((Guid)corporationIdInToken, userIdInToken);
 
                 if (roleInToken == "Manager")
                     users = await _userProvider.GetUsersForManagerAsync(companyIdInToken, userIdInToken);
 
                 var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default).path : null));
                 return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpPost("User")]
         [SwaggerOperation(Description = "Create new user with role Employee in loggined company (taked from token) and can save avatar for user / Return new user")]
         [SwaggerResponse(200, "User", typeof(UserModel))]
         public async Task<IActionResult> UserPostAsync(
-                    [FromForm, SwaggerParameter("json user (include password and unique email) in FormData with key 'data' + file avatar (not required)")] IFormCollection formData,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                    [FromForm, 
+                    SwaggerParameter("json user (include password and unique email) in FormData with key 'data' + file avatar (not required)")]
+                    IFormCollection formData )
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                var corporationIdInToken = _loginService.GetCurrentCorporationId();
 
-                Guid.TryParse( userClaims["companyId"], out var companyIdInToken );
-                Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-
-                var roleInToken = userClaims["role"];
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
 
                 PostUser message = JsonConvert.DeserializeObject<PostUser>(userDataJson);
@@ -151,11 +139,6 @@ namespace UserOperations.Controllers
                 }
                 catch { }
                 return Ok(new UserModel(user, avatarUrl, role));
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpPut("User")]
@@ -163,25 +146,19 @@ namespace UserOperations.Controllers
                 Description = "Edit user (any from loggined company) and return edited. Don't send password and role (can't change). Email must been unique. May contain avatar file")]
         [SwaggerResponse(200, "Edited user", typeof(UserModel))]
         public async Task<IActionResult> UserPut(
-                    [FromForm, SwaggerParameter("Avatar file (not required) + json User with key 'data' in FormData")] IFormCollection formData,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                    [FromForm, SwaggerParameter("Avatar file (not required) + json User with key 'data' in FormData")] IFormCollection formData)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims)) return BadRequest("Token wrong");
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                var corporationIdInToken = _loginService.GetCurrentCorporationId();
+                var userIdInToken = _loginService.GetCurrentUserId();
 
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
                 UserModel message = JsonConvert.DeserializeObject<UserModel>(userDataJson);
                 var user = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(message.Id);
                 if (user == null) return BadRequest("No such user");
 
-                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-                Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-                var roleInToken = userClaims["role"];
-                var employeeId = Guid.Parse(userClaims["applicationUserId"]);
-
-                if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user?.CompanyId, roleInToken) == false)
-                    return BadRequest($"Not allowed user company");
+                _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user?.CompanyId, roleInToken);
 
                 if (await _userProvider.CheckAbilityToCreateOrChangeUserAsync(roleInToken, message.RoleId, user.UserRoles.FirstOrDefault().RoleId) == false)
                     return BadRequest("Not allowed user role");
@@ -221,27 +198,17 @@ namespace UserOperations.Controllers
                 }
                 _context.SaveChanges();
                 return Ok(new UserModel(user, avatarUrl, newRole));
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
 
         [HttpDelete("User")]
         [SwaggerOperation(Summary = "Delete or make disabled", Description = "Delete user by Id if he hasn't any relations in DB or make status Disabled")]
-        public async Task<IActionResult> UserDelete(
-                    [FromQuery] Guid applicationUserId,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<IActionResult> UserDelete( [FromQuery] Guid applicationUserId)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims)) return BadRequest("Token wrong");
-
-                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-                Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-                var roleInToken = userClaims["role"];
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                var corporationIdInToken = _loginService.GetCurrentCorporationId();
+                var userIdInToken = _loginService.GetCurrentUserId();
 
                 ApplicationUser user = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(applicationUserId);
                 if (user == null) return BadRequest("No such user");
@@ -262,54 +229,37 @@ namespace UserOperations.Controllers
                 {                       
                     return Ok("Disabled Status");
                 }
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpGet("Companies")]
         [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for loggined corporation (only for role Supervisor)")]
         [SwaggerResponse(200, "Companies", typeof(List<Company>))]
-        public async Task<IActionResult> CompaniesGet(
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<IActionResult> CompaniesGet()
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                if (userClaims["role"] != "Admin" && userClaims["role"] != "Supervisor")
+                var roleInToken = _loginService.GetCurrentRoleName();
+                if (roleInToken != "Admin" && roleInToken != "Supervisor")
                     return BadRequest("Not allowed access(role)");
 
                 IEnumerable<Company> companies = null;
-                if (userClaims["role"] == "Admin")
+                if (roleInToken == "Admin")
                     companies = await _userProvider.GetCompaniesForAdminAsync();
-                if (userClaims["role"] == "Supervisor") // only for corporations
+                if (roleInToken == "Supervisor") // only for corporations
                     companies = await _userProvider.GetCompaniesForSupervisorAsync(userClaims["corporationId"]);
 
                 return Ok(companies?? new List<Company>());
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpPost("Company")]
         [SwaggerOperation(Description = "Create new company for corporation")]
         [SwaggerResponse(200, "Company", typeof(Company))]
-        public async Task<IActionResult> CompanysPostAsync(
-                    [FromBody] Company model,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<IActionResult> CompanysPostAsync( [FromBody] Company model)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-                Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-                var roleInToken = userClaims["role"];
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+
+                if (roleInToken != "Admin" && roleInToken != "Supervisor")
+                    return BadRequest("Not allowed access(role)");
+              
 
                 if (roleInToken != "Admin" && roleInToken != "Supervisor")
                     return BadRequest("Not allowed access(role)");
@@ -323,25 +273,16 @@ namespace UserOperations.Controllers
                     newCompany = await _userProvider.AddNewCompanyAsync(supervisorCompany, model.CompanyName);
                 }
                 return Ok(newCompany);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpPut("Company")]
         [SwaggerOperation(Summary = "Edit company", Description = "Edit company")]
         [SwaggerResponse(200, "Edited company", typeof(Company))]
-        public async Task<IActionResult> CompanyPut(
-                    [FromBody] Company model,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<IActionResult> CompanyPut( [FromBody] Company model)
         {
-            if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                return BadRequest("Token wrong");
-            Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-            Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-            var roleInToken = userClaims["role"];
+            var roleInToken = _loginService.GetCurrentRoleName();
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            var corporationIdInToken = _loginService.GetCurrentCorporationId();
 
             if (roleInToken != "Admin" && roleInToken != "Supervisor")
                 return BadRequest("Not allowed access(role)");
@@ -359,22 +300,13 @@ namespace UserOperations.Controllers
         [HttpGet("Corporations")]
         [SwaggerOperation(Summary = "All corporations", Description = "Return all corporations for loggined admins (only for role Admin)")]
         [SwaggerResponse(200, "Corporations", typeof(List<Company>))]
-        public async Task<IActionResult> CorporationsGet(
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<IActionResult> CorporationsGet()
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                if (userClaims["role"] != "Admin") return BadRequest("Not allowed access(role)");
+                var roleInToken = _loginService.GetCurrentRoleName();
+                if (roleInToken != "Admin") return BadRequest("Not allowed access(role)");
 
                 var corporations = await _userProvider.GetCorporationsForAdminAsync();
                 return Ok(corporations);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
 
@@ -383,24 +315,14 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Library",
                 Description = "Return collections phrases from library (only templates and only with language code = loggined company language code) which company has not yet used")]
         [SwaggerResponse(200, "Library phrase collection", typeof(List<Phrase>))]
-        public async Task<IActionResult> PhraseGet(
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+        public async Task<IActionResult> PhraseGet()
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-                var languageId = userClaims["languageCode"];
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                var languageId = _loginService.GetCurrentLanguagueId();
 
                 var phraseIds = await _phraseProvider.GetPhraseIdsByCompanyIdAsync(companyIdInToken, languageId, true);
                 var phrases = await _phraseProvider.GetPhrasesNotBelongToCompanyByIdsAsync(phraseIds, languageId, true);
                 return Ok(phrases);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpPost("PhraseLib")]
@@ -408,124 +330,71 @@ namespace UserOperations.Controllers
             Description = "Save new phrase to DB and attach it to loggined company (create new PhraseCompany). Assigned that the phrase is not template")]
         [SwaggerResponse(200, "New phrase", typeof(Phrase))]
         public async Task<IActionResult> PhrasePost(
-                    [FromBody] PhrasePost message,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                    [FromBody] PhrasePost message)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                var languageId = Int32.Parse(userClaims["languageCode"]);
-                var phrase = await _phraseProvider.GetLibraryPhraseByTextAsync(message.PhraseText, true);
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            var languageId = _loginService.GetCurrentLanguagueId();
 
-                if (phrase == null)
-                    phrase = await _phraseProvider.CreateNewPhraseAsync(message, languageId);
+            var phrase = await _phraseProvider.GetLibraryPhraseByTextAsync(message.PhraseText, true);
+            phrase = phrase?? await _phraseProvider.CreateNewPhraseAsync(message, languageId);
 
-                await _phraseProvider.CreateNewPhraseCompanyAsync(companyId, phrase.PhraseId);
-                await _phraseProvider.SaveChangesAsync();
-                return Ok(phrase);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            await _phraseProvider.CreateNewPhraseCompanyAsync(companyIdInToken, phrase.PhraseId);
+            await _phraseProvider.SaveChangesAsync();
+            return Ok(phrase);
         }
 
         [HttpPut("PhraseLib")]
         [SwaggerOperation(Summary = "Edit company phrase", Description = "Edit phrase. You can edit only your own phrase (not template from library)")]
         public async Task<IActionResult> PhrasePut(
-                    [FromBody] Phrase message,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                    [FromBody] Phrase message)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
 
-                var phrase = await _phraseProvider.GetPhraseInCompanyByIdAsync(message.PhraseId, companyId, false);
-                if (phrase != null)
-                {
-                    await _phraseProvider.EditAndSavePhraseAsync(phrase, message);
-                    return Ok(phrase);
-                }
-                else
-                {
-                    return BadRequest("No permission for changing phrase");
-                }
-            }
-            catch (Exception e)
+            var phrase = await _phraseProvider.GetPhraseInCompanyByIdAsync(message.PhraseId, companyIdInToken, false);
+            if (phrase != null)
             {
-                return BadRequest(e.Message);
+                await _phraseProvider.EditAndSavePhraseAsync(phrase, message);
+                return Ok(phrase);
             }
-
+            return BadRequest("No permission for changing phrase");
         }
 
         [HttpDelete("PhraseLib")]
         [SwaggerOperation(Summary = "Delete company phrase", Description = "Delete phrase (if this phrase are Template it can't be deleted, it only delete connection to company")]
         public async Task<IActionResult> PhraseDelete(
-                    [FromQuery(Name = "phraseId"), SwaggerParameter("phraseId Guid", Required = true)] Guid phraseId,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                    [FromQuery(Name = "phraseId"), SwaggerParameter("phraseId Guid", Required = true)] Guid phraseId)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+
                 var phrase = await _phraseProvider.GetPhraseByIdAsync(phraseId);
                 if (phrase == null) return BadRequest("No such phrase");
-                var answer = await _phraseProvider.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase, companyId);
+                var answer = await _phraseProvider.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase, companyIdInToken);
                 return Ok(answer);
-            }
-            catch
-            {
-                return BadRequest("Deleted from PhraseCompany. Phrase has relations");
-            }
         }
 
         [HttpGet("CompanyPhrase")]
         [SwaggerOperation(Summary = "Return attached to company(-ies) phrases", Description = "Return own and template phrases collection for companies sended in params or for loggined company")]
         public async Task<IActionResult> CompanyPhraseGet(
-                [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds,
-                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                companyIds = !companyIds.Any() ? new List<Guid> { Guid.Parse(userClaims["companyId"]) } : companyIds;
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                companyIds = !companyIds.Any() ? new List<Guid> { companyIdInToken } : companyIds;
                 var companyPhrase = await _phraseProvider.GetPhrasesInCompanyByIdsAsync(companyIds);
                 return Ok(companyPhrase);
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpPost("CompanyPhrase")]
         [SwaggerOperation(Summary = "Attach library(template) phrases to company", Description = "Attach phrases  from library (ids sended in body) to loggined company  (create new PhraseCompany entities)")]
         public async Task<IActionResult> CompanyPhrasePost(
-                [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds,
-                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
                 foreach (var phraseId in phraseIds)
                 {
-                    await _phraseProvider.CreateNewPhraseCompanyAsync(companyId, phraseId);
+                    await _phraseProvider.CreateNewPhraseCompanyAsync(companyIdInToken, phraseId);
                 }
                 await _phraseProvider.SaveChangesAsync();
                 return Ok("OK");
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
         // to do: add dialogue phrase and add make migration 
@@ -534,25 +403,19 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Return collection of dialogues from dialogue phrases by filters")]
         public IActionResult DialogueGet([FromQuery(Name = "begTime")] string beg,
                                                 [FromQuery(Name = "endTime")] string end,
-                                                [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                 [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
                                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
-                                                [FromQuery(Name = "inStatistic")] bool? inStatistic,
-                                                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                                                [FromQuery(Name = "inStatistic")] bool? inStatistic)
         {
-            try
-            {
-                // _log.Info("User/Dialogue GET started");
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
                 inStatistic = inStatistic ?? true;
 
                 var dialogues = _context.Dialogues
@@ -565,9 +428,9 @@ namespace UserOperations.Controllers
                     p.EndTime <= endTime &&
                     p.StatusId == activeStatus &&
                     p.InStatistic == inStatistic &&
-                    (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
-                    (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))) &&
-                    (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId)) &&
+                    (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains(p.ApplicationUserId))) &&
+                    (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains(p.DeviceId))) &&
+                    (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId)) &&
                     (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid)q.PhraseId))) &&
                     (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)))
                 )
@@ -585,46 +448,33 @@ namespace UserOperations.Controllers
                     p.InStatistic,
                     p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
                 }).ToList();
-                // _log.Info("User/Dialogue GET finished");
                 return Ok(dialogues);
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpGet("DialoguePaginated")]
         [SwaggerOperation(Description =
-            "Return collection of dialogues from dialogue phrases by filters (one page). limit=10, page=0, orderBy=begTime/endTime/fullName/duration/meetingExpectationsTotal, orderDirection=desc/asc")]
+            "Return collection of dialogues from dialogue phrases by filters (one page). limit=10, page=0, orderBy=BegTime/EndTime/FullName/Duration/MeetingExpectationsTotal, orderDirection=desc/asc")]
         public IActionResult DialoguePaginatedGet([FromQuery(Name = "begTime")] string beg,
                                            [FromQuery(Name = "endTime")] string end,
-                                           [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                           [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                            [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
                                            [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                            [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                            [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                            [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                            [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-
-                                           [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization,
+                                           
                                            [FromQuery(Name = "inStatistic")] bool? inStatistic,
                                            [FromQuery(Name = "limit")] int limit = 10,
                                            [FromQuery(Name = "page")] int page = 0,
-                                           [FromQuery(Name = "orderBy")] string orderBy = "begTime",
+                                           [FromQuery(Name = "orderBy")] string orderBy = "BegTime",
                                            [FromQuery(Name = "orderDirection")] string orderDirection = "desc")
         {
-            try
-            {
-                // _log.Info("User/Dialogue GET started");
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
                 inStatistic = inStatistic ?? true;
 
                 var dialogues = _context.Dialogues
@@ -634,9 +484,9 @@ namespace UserOperations.Controllers
                     p.EndTime <= endTime &&
                     p.StatusId == activeStatus &&
                     p.InStatistic == inStatistic &&
-                    (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId))) &&
-                    (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))) &&
-                    (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId)) &&
+                    (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains(p.ApplicationUserId))) &&
+                    (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains(p.DeviceId))) &&
+                    (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId)) &&
                     (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid)q.PhraseId))) &&
                     (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)))
                 )
@@ -649,7 +499,7 @@ namespace UserOperations.Controllers
                     DialogueHints = p.DialogueHint.Count() != 0 ? "YES" : null,
                     p.BegTime,
                     p.EndTime,
-                    duration = p.EndTime.Subtract(p.BegTime),
+                    Duration = p.EndTime.Subtract(p.BegTime),
                     p.StatusId,
                     p.InStatistic,
                     p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
@@ -672,27 +522,13 @@ namespace UserOperations.Controllers
                     var dialoguesList = dialogues.OrderByDescending(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
                     return Ok(new { dialoguesList, pageCount, orderBy, limit, page });
                 }
-                // _log.Info("User/Dialogue GET finished");
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpGet("DialogueInclude")]
         [SwaggerOperation(Description = "Return dialogue with relative data by filters")]
         public IActionResult DialogueGetInclude(
-                    [FromQuery(Name = "dialogueId")] Guid dialogueId,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                    [FromQuery(Name = "dialogueId")] Guid dialogueId)
         {
-            try
-            {
-                // _log.Info("Function DialogueInclude started");
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-
                 var dialogue = _context.Dialogues
                     .Include(p => p.DialogueAudio)
                     .Include(p => p.DialogueClientProfile)
@@ -729,28 +565,15 @@ namespace UserOperations.Controllers
                 jsonDialogue["Video"] = dialogue == null ? null : _sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
                 jsonDialogue["DialogueAvgDurationLastMonth"] = avgDialogueTime;
 
-                // _log.Info("Function DialogueInclude finished");
                 return Ok(jsonDialogue);
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred while executing DialogueInclude {e}");
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpPut("Dialogue")]
         [SwaggerOperation(Summary = "Change InStatistic", Description = "Change InStatistic(true/false) of dialogue/dialogues")]
         public IActionResult DialoguePut(
-                [FromBody] DialoguePut message,
-                [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                [FromBody] DialoguePut message)
         {
-            try
-            {
-                // _log.Info("Function DialoguePut started");
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-                var companyId = Guid.Parse(userClaims["companyId"]);
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
                 List<Dialogue> dialogues;
                 if (message.DialogueIds != null)
                     dialogues = _context.Dialogues.Where(x => message.DialogueIds.Contains(x.DialogueId)).ToList();
@@ -761,32 +584,18 @@ namespace UserOperations.Controllers
                     dialogue.InStatistic = message.InStatistic;
                 }
                 _context.SaveChanges();
-                // _log.Info("Function DialoguePut finished");
                 return Ok(message.InStatistic);
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred while executing DialoguePut {e}");
-                return BadRequest(e.Message);
-            }
         }
 
 
         [HttpPut("DialogueSatisfaction")]
         [SwaggerOperation(Summary = "Change Satisfaction ", Description = "Change Satisfaction (true/false) of dialogue")]
         public IActionResult DialogueSatisfactionPut(
-            [FromBody] DialogueSatisfactionPut message,
-            [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+            [FromBody] DialogueSatisfactionPut message)
         {
-            try
-            {
-                // _log.Info("Function DialogueSatisfactionPut started");
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                    return BadRequest("Token wrong");
-
-                Guid.TryParse(userClaims["companyId"], out var companyIdInToken);
-                Guid.TryParse(userClaims["corporationId"], out var corporationIdInToken);
-                var roleInToken = userClaims["role"];
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                var corporationIdInToken = _loginService.GetCurrentCorporationId();
                 if (roleInToken != "Admin" && roleInToken != "Supervisor")
                     return BadRequest("No permission");
                 if( !_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, companyIdInToken, roleInToken))
@@ -801,11 +610,6 @@ namespace UserOperations.Controllers
                 dialogueClientSatisfaction.Gender = message.Gender;
                 _context.SaveChanges();
                 return Ok(JsonConvert.SerializeObject(dialogueClientSatisfaction));
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
         }
 
         [HttpGet("Alert")]
@@ -814,13 +618,9 @@ namespace UserOperations.Controllers
                                                             [FromQuery(Name = "endTime")] string end,
                                                             [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                             [FromQuery(Name = "alertTypeId[]")] List<Guid> alertTypeIds,
-                                                            [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
-                                                            [FromHeader] string Authorization)
+                                                            [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds)
         {
-            if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                return BadRequest("Token wrong");
-            var companyId = Guid.Parse(userClaims["companyId"]);
-
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
 
             var begTime = _requestFilters.GetBegDate(beg);
             var endTime = _requestFilters.GetEndDate(end);
@@ -846,7 +646,7 @@ namespace UserOperations.Controllers
               .Include(p => p.ApplicationUser)
                         .Where(p => p.CreationDate >= begTime
                                 && p.CreationDate <= endTime
-                                && p.Device.CompanyId == companyId
+                                && p.Device.CompanyId == companyIdInToken
                                 && (!alertTypeIds.Any() || alertTypeIds.Contains(p.AlertTypeId))
                                 && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                                 && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
@@ -869,44 +669,39 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "SendVideoMessageToManager",
                 Description = "Send video messgae to office manager")]
         public IActionResult SendVideo(
-                    [FromForm, SwaggerParameter("json message with key 'data' in FormData")] IFormCollection formData,
-                    [FromHeader, SwaggerParameter("JWT token", Required = true)] string Authorization)
+                    [FromForm, SwaggerParameter("json message with key 'data' in FormData")] IFormCollection formData)
         {
-            try
-            {
-                if (!_loginService.GetDataFromToken(Authorization, out userClaims))
-                return BadRequest("Token wrong");
+                var roleInToken = _loginService.GetCurrentRoleName();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                var corporationIdInToken = _loginService.GetCurrentCorporationId();
+                var userIdInToken = _loginService.GetCurrentUserId();
 
                 var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-                VideoMessage message = JsonConvert.DeserializeObject<VideoMessage>(userDataJson);  
+                VideoMessage message = JsonConvert.DeserializeObject<VideoMessage>(userDataJson);
 
-                var companyIdFromToken = Guid.Parse(userClaims["companyId"]);
-                var corporationIdExist = Guid.TryParse(userClaims["corporationId"], out Guid corporationIdFromToken);
-                var roleFromToken = userClaims["role"];
-                var empployeeIdFromToken = Guid.Parse(userClaims["applicationUserId"]);
-                var user = _context.ApplicationUsers.First(p => p.Id == empployeeIdFromToken);
+                var user = _context.ApplicationUsers.First(p => p.Id == userIdInToken);
 
                 List<ApplicationUser> recepients = null;
-                if(roleFromToken == "Employee")
+                if(roleInToken == "Employee")
                 {
                     var managerRole = _context.Roles.First(p => p.Name == "Manager");
-                    recepients = _context.ApplicationUsers.Where(p => p.CompanyId == companyIdFromToken
+                    recepients = _context.ApplicationUsers.Where(p => p.CompanyId == companyIdInToken
                             && p.UserRoles.Where(r => r.Role == managerRole).Any())
                         .Distinct()
                         .ToList();
                 }
-                else if(roleFromToken == "Manager" && corporationIdExist)
+                else if(roleInToken == "Manager" && corporationIdInToken != null)
                 {
                     var supervisorRole = _context.Roles.First(p => p.Name == "Supervisor");
                     recepients = _context.ApplicationUsers
                         .Include(p => p.Company)
-                        .Where(p => p.Company.CorporationId == corporationIdFromToken
+                        .Where(p => p.Company.CorporationId == corporationIdInToken
                             && p.UserRoles.Where(r => r.Role == supervisorRole).Any())
                         .Distinct()
                         .ToList();
                 }
                 else
-                    return BadRequest($"{roleFromToken} not have leader");
+                    return BadRequest($"{roleInToken} not have leader");
 
                 if (formData.Files.Count != 0 && recepients != null && recepients.Count != 0)
                 {
@@ -946,11 +741,6 @@ namespace UserOperations.Controllers
                     return BadRequest("Video File is null");
                 }
                 return Ok();
-            }
-            catch(Exception ex)
-            {
-                return BadRequest($"{ex.Message}");
-            }
         }
     }
 }
