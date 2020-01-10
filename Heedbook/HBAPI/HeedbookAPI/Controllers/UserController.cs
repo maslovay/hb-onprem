@@ -397,6 +397,8 @@ namespace UserOperations.Controllers
                 return Ok("OK");
         }
 
+
+
         // to do: add dialogue phrase and add make migration 
         // format of datetime is yyyymmddhhmmss
         [HttpGet("Dialogue")]
@@ -560,6 +562,7 @@ namespace UserOperations.Controllers
 
                 var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
 
+                jsonDialogue["DeviceName"] = dialogue.Device.Name;
                 jsonDialogue["FullName"] = dialogue.ApplicationUser?.FullName;
                 jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
                 jsonDialogue["Video"] = dialogue == null ? null : _sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
