@@ -197,7 +197,8 @@ namespace UserOperations.Services
                     && p.StatusId == 7
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
+                    && p.ApplicationUserId != null)
                 .Select(p => new SessionInfo
                 {
                     ApplicationUserId = p.ApplicationUserId,
@@ -224,7 +225,8 @@ namespace UserOperations.Services
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
+                    && p.ApplicationUserId != null)
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
