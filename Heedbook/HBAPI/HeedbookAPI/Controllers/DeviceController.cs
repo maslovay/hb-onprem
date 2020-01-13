@@ -27,8 +27,8 @@ namespace UserOperations.Controllers
         [AllowAnonymous]
         [SwaggerOperation(Summary = "Generate token for device", Description = "JWT token")]
         [SwaggerResponse(200, "JWT token", typeof(string))]
-        public async Task<string> GenerateToken([FromBody] DeviceAuthorization message)
-           => await _deviceService.GenerateToken(message);
+        public async Task<string> GenerateToken([FromBody] string code)
+           => await _deviceService.GenerateToken(code);
 
         [HttpGet("List")]
         [Authorize(AuthenticationSchemes = "Bearer")]

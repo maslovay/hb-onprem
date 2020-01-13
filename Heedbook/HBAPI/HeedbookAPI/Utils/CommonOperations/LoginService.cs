@@ -92,6 +92,7 @@ namespace UserOperations.Services
                         new Claim("role", role),
                         new Claim("fullName", user.FullName),
                         new Claim("avatar", AvatarExist(user.Avatar) ? $"http://{_sftpSettings.Host}/useravatars/{user.Avatar}":""),
+                        new Claim("isCorporate", "true")
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -128,7 +129,8 @@ namespace UserOperations.Services
                     new Claim("deviceId", device.DeviceId.ToString()),
                     new Claim("deviceName", device.Name),
                     new Claim("companyId", device.CompanyId.ToString()),
-                    new Claim("corporationId", device.Company.CorporationId.ToString())
+                    new Claim("corporationId", device.Company.CorporationId.ToString()),
+                    new Claim("isCorporate", "false")
                 };
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -159,9 +161,6 @@ namespace UserOperations.Services
             claims = null;
             if (sign == "" || sign == null)
                 sign = _config["Tokens:Key"];
-            try
-            {
-
                 var pureToken = token.Split(' ')[1];
                 if (CheckToken(pureToken, sign))
                 {
@@ -171,11 +170,6 @@ namespace UserOperations.Services
                 }
                 else
                     return false;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
         }
 
         /// <summary>
@@ -282,6 +276,8 @@ namespace UserOperations.Services
             }
             return pass;
         }
+        public bool GetIsCorporate()
+        => Boolean.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "isCorporate")?.Value);
         public Guid GetCurrentCompanyId()
            => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "companyId")?.Value);
         public Guid? GetCurrentCorporationId()
