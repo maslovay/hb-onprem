@@ -43,6 +43,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         public async Task Execute(IJobExecutionContext context)
         {
+            System.Console.WriteLine("Function AudioAnalyzeScheduler started");
             using (var scope = _factory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
