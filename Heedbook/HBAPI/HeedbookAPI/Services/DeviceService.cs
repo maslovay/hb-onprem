@@ -28,12 +28,10 @@ namespace UserOperations.Services
             _repository = repository;
         }
 
-        public async Task<string> GenerateToken(DeviceAuthorization message)
+        public async Task<string> GenerateToken(string code)
         {
-            if (!_loginService.CheckDeviceLogin(message.DeviceName, message.Code))
-            throw new Exception("Error in device name or code");
-
-            var device = GetDeviceIncludeCompany(message.DeviceName);
+            code = _loginService.GeneratePasswordHash(code);
+            var device = GetDeviceIncludeCompany(code);
             if (device.StatusId != GetStatusId("Active")) throw new Exception("Device not activated");
 
             return _loginService.CreateTokenForDevice(device);
@@ -67,7 +65,7 @@ namespace UserOperations.Services
             var userId = _loginService.GetCurrentUserId();
             var newDeviceCompanyId = device.CompanyId ?? companyId;
             _requestFilters.IsCompanyBelongToUser(corporationId, companyId, newDeviceCompanyId, role);
-            CheckUniqueDeviceName(device.Name, newDeviceCompanyId);
+            CheckUniqueDeviceCode(device.Code, newDeviceCompanyId);
 
             Device newDevice = new Device
             {
@@ -123,16 +121,16 @@ namespace UserOperations.Services
             return _repository.GetAsQueryable<Status>().FirstOrDefault(p => p.StatusName == statusName).StatusId;
         }
 
-        private void CheckUniqueDeviceName(string deviceName, Guid companyId)
+        private void CheckUniqueDeviceCode(string code, Guid companyId)
         {
-            if (_repository.GetAsQueryable<Device>().Any(x => x.Name == deviceName && x.CompanyId == companyId))
+            if (_repository.GetAsQueryable<Device>().Any(x => x.Code == code && x.CompanyId == companyId))
                 throw new NotUniqueException();
         }
 
-        private Device GetDeviceIncludeCompany(string name)
+        private Device GetDeviceIncludeCompany(string code)
         {
-            var device = _repository.GetWithIncludeOne<Device>(p => p.Name.ToLower() == name.ToLower(), o => o.Company);
-            if (device is null) throw new Exception("No such user");
+            var device = _repository.GetWithIncludeOne<Device>(p => p.Code == code, o => o.Company);
+            if (device is null) throw new Exception("No such device");
             return device;
         }
     }
