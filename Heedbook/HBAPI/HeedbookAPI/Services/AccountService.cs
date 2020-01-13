@@ -133,12 +133,12 @@ namespace UserOperations.Providers
         }
         private async Task<bool> CompanyExist(string companyName)
         {
-            var companys = await _repository.GetAsQueryable<Company>().Where(x => x.CompanyName == companyName).ToListAsync();            
+            var companys = await _repository.GetAsQueryable<Company>().Where(x => x.CompanyName == companyName).ToListAsync();
             return companys.Any();
         }
         private async Task<bool> EmailExist(string email)
         {
-            var emails = await _repository.GetAsQueryable<ApplicationUser>().Where(x => x.NormalizedEmail == email.ToUpper()).ToListAsync();            
+            var emails = await _repository.GetAsQueryable<ApplicationUser>().Where(x => x.NormalizedEmail == email.ToUpper()).ToListAsync();
             return emails.Any();
         }
         private Company AddNewCompanysInBase(UserRegister message)
@@ -151,7 +151,8 @@ namespace UserOperations.Providers
                 CreationDate = DateTime.UtcNow,
                 CountryId = message.CountryId,
                 CorporationId = message.CorporationId,
-                StatusId = GetStatusId("Inactive")
+                StatusId = GetStatusId("Inactive"),
+                TimeZoneName = message.TimeZoneName
             };
             _repository.Create<Company>(company);
             return company;

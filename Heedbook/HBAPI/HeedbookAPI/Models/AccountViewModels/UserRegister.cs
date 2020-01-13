@@ -21,5 +21,6 @@ namespace UserOperations.AccountModels
         public Guid CompanyIndustryId; 
         public Guid? CorporationId;
         public string Role;
+        public string TimeZoneName;
     }
 }

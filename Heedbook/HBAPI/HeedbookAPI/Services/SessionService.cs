@@ -64,7 +64,9 @@ namespace UserOperations.Services
 
                 //---CLOSE OLD SESSION FROM THIS USER
                 if (data.ApplicationUserId != null)
-                    CloseSessions(_repository.GetAsQueryable <Session>().Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == OPEN).ToList(), CLOSE, curTime);
+                    CloseSessions(_repository.GetAsQueryable <Session>()
+                                        .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.StatusId == OPEN)
+                                        .ToList(), CLOSE, curTime);
 
                 //---OPEN (CREATE) NEW SESSION
                 CreateNewSession(data, OPEN);
@@ -119,8 +121,6 @@ namespace UserOperations.Services
             };
             _repository.Create<Alert>(newAlert);
             _repository.Save();
-            // response.Message = "Alert saved";
-            // return response.Message;
             return "Alert saved";
         }
 
@@ -132,10 +132,23 @@ namespace UserOperations.Services
                   {
                       p.SessionId = p.SessionId;
                       p.StatusId = CLOSE;
-                      p.EndTime = p.BegTime.AddHours(24) > curTime ? curTime : p.BegTime.AddHours(24);
+                      p.EndTime = FindNextSessionBegTime(p.EndTime, p.DeviceId);
                       return p;
                   }).ToList();
             return true;
+        }
+
+        private DateTime FindNextSessionBegTime(DateTime endTime, Guid deviceId)
+        {
+            DateTime endOfADay = DateTime.UtcNow.Date.AddDays(1).AddSeconds(-1);
+            DateTime begOfNextSession =  _repository.GetAsQueryable<Session>()
+                    .Where(p =>p.DeviceId == deviceId && p.BegTime > endTime)
+                        ?.OrderByDescending(p => p.BegTime)
+                        .Select(p => p.BegTime)
+                        ?.FirstOrDefault() ?? endOfADay;
+
+            DateTime endOfSession = begOfNextSession < DateTime.UtcNow ? begOfNextSession : DateTime.UtcNow;
+            return endOfSession < endOfADay ? endOfSession : endOfADay;
         }
 
         private void CreateNewSession(SessionParams data, int OPEN)
