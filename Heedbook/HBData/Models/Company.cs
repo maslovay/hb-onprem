@@ -34,6 +34,7 @@ namespace HBData.Models
         ///     Company creation date
         /// </summary>
         public DateTime CreationDate { get; set; }
+        public string TimeZoneName { get; set; }
 
         /// <summary>
         ///     Company language id

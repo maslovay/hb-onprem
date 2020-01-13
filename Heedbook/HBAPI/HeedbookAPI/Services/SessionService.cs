@@ -1,43 +1,33 @@
 using System;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using HBData.Models;
-using HBData;
-using UserOperations.Utils;
 using HBLib.Utils;
 using UserOperations.Models.Session;
 using HBData.Repository;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace UserOperations.Services
 {
     public class SessionService
     {
-       // private readonly RecordsContext _context;
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
 
         public SessionService(
-           // RecordsContext context,
             ElasticClient log,
             IGenericRepository repository,
             LoginService loginService
             )
         {
-            //_context = context;
             _log = log;
             _repository = repository;
             _loginService = loginService;
         }
 
-        public Response SessionStatus(SessionParams data, string Authorization)
+        public Response SessionStatus(SessionParams data)
         {
-            if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                throw new Exception("Token wrong");
-            Guid.TryParse(userClaims["companyId"], out Guid companyIdInToken);
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
             var company = _repository.GetWithIncludeOne<Company>(x => x.CompanyId == companyIdInToken, x => x.Devices, x => x.ApplicationUser);
             if(!company.Devices.Any( x => x.DeviceId == data.DeviceId))
                 throw new Exception("The device is not owned by the company");
@@ -100,11 +90,9 @@ namespace UserOperations.Services
             return response;
         }
 
-        public object SessionStatus(Guid deviceId, Guid? applicationUserId, string Authorization)
+        public object SessionStatus(Guid deviceId, Guid? applicationUserId)
         {
-            if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                throw new Exception("Token wrong");
-            Guid.TryParse(userClaims["companyId"], out Guid companyIdInToken);
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
             var company = _repository.GetWithIncludeOne<Company>(x => x.CompanyId == companyIdInToken, x => x.Devices, x => x.ApplicationUser);
             if (!company.Devices.Any(x => x.DeviceId == deviceId))
                 throw new Exception("The device is not owned by the company");
@@ -119,16 +107,10 @@ namespace UserOperations.Services
             return result;
         }      
 
-        public string AlertNotSmile([FromBody] Guid applicationUserId)
+        public string AlertNotSmile(Guid applicationUserId)
         {
-            //var response = new Response();
             if (String.IsNullOrEmpty(applicationUserId.ToString())) 
-            {
-                // response.Message  "ApplicationUser is empty";
-                // return response.Message;
                 return "ApplicationUser is empty";
-            }
-
             var newAlert = new Alert
             {
                 CreationDate = DateTime.UtcNow,
@@ -139,7 +121,7 @@ namespace UserOperations.Services
             _repository.Save();
             // response.Message = "Alert saved";
             // return response.Message;
-            return "Alert saved";            
+            return "Alert saved";
         }
 
         //---PRIVATE---
