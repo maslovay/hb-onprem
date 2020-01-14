@@ -59,7 +59,7 @@ namespace FaceAnalyzeService
                     _log.Info($"Download to path - {localPath}");
                     if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
                     {
-                        _log.Info($"{localPath}: Face detected!");
+                        _log.Info($"{localPath}: Face detected!  {faceLength}: faceLength");
 
                         var byteArray = await File.ReadAllBytesAsync(localPath);
                         var base64String = Convert.ToBase64String(byteArray);
@@ -72,30 +72,48 @@ namespace FaceAnalyzeService
                         {
                             fileFrame = _context.FileFrames.Where(entity => entity.FileName == fileName).FirstOrDefault();
                         }
+                        FrameEmotion frameEmotion = null;
+                        FrameAttribute frameAttribute = null;
                         if (fileFrame != null && faceResult.Any())
                         {
-                            var frameEmotion = new FrameEmotion
+                            try
                             {
-                                FileFrameId = fileFrame.FileFrameId,
-                                AngerShare = faceResult.Average(item => item.Emotions.Anger),
-                                ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
-                                DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
-                                FearShare = faceResult.Average(item => item.Emotions.Fear),
-                                HappinessShare = faceResult.Average(item => item.Emotions.Happiness),
-                                NeutralShare = faceResult.Average(item => item.Emotions.Neutral),
-                                SadnessShare = faceResult.Average(item => item.Emotions.Sadness),
-                                SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
-                                YawShare = faceResult.Average(item => item.Headpose.Yaw)
-                            };
+                                frameEmotion = new FrameEmotion
+                                {
+                                    FileFrameId = fileFrame.FileFrameId,
+                                    AngerShare = faceResult.Average(item => item.Emotions.Anger),
+                                    ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
+                                    DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
+                                    FearShare = faceResult.Average(item => item.Emotions.Fear),
+                                    HappinessShare = faceResult.Average(item => item.Emotions.Happiness),
+                                    NeutralShare = faceResult.Average(item => item.Emotions.Neutral),
+                                    SadnessShare = faceResult.Average(item => item.Emotions.Sadness),
+                                    SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
+                                    YawShare = faceResult.Average(item => item.Headpose.Yaw)
+                                };
+                            }
+                            catch (Exception e)
+                            {
+                                _log.Fatal($"can't create FrameEmotion: {e}");
+                                throw new Exception(e.Message);
+                            }
 
-                            var frameAttribute = faceResult.Select(item => new FrameAttribute
+                            try
                             {
-                                Age = item.Attributes.Age,
-                                Gender = item.Attributes.Gender,
-                                Descriptor = JsonConvert.SerializeObject(item.Descriptor),
-                                FileFrameId = fileFrame.FileFrameId,
-                                Value = JsonConvert.SerializeObject(item.Rectangle)
-                            }).FirstOrDefault();
+                                frameAttribute = faceResult.Select(item => new FrameAttribute
+                                {
+                                    Age = item.Attributes.Age,
+                                    Gender = item.Attributes.Gender,
+                                    Descriptor = JsonConvert.SerializeObject(item.Descriptor),
+                                    FileFrameId = fileFrame.FileFrameId,
+                                    Value = JsonConvert.SerializeObject(item.Rectangle)
+                                }).FirstOrDefault();
+                            }
+                            catch (Exception e)
+                            {
+                                _log.Fatal($"can't create FrameAttribute: {e}");
+                                throw new Exception(e.Message);
+                            }
 
                             fileFrame.FaceLength = faceLength;
                             fileFrame.IsFacePresent = true;
