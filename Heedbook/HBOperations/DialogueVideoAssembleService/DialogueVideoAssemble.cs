@@ -60,8 +60,6 @@ namespace DialogueVideoAssembleService
             _log.SetFormat("{DialogueId}");
             _log.SetArgs(message.DialogueId);
 
-            _log.Info($"DIALOGUE VideoAssemble START");
-
             try
             {
                 var cmd = new CMDWithOutput();

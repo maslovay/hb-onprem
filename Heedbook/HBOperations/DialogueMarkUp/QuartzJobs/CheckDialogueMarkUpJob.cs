@@ -44,7 +44,6 @@ namespace DialogueMarkUp.QuartzJobs
          public async Task Execute(IJobExecutionContext context)
         {
             var _log = _elasticClientFactory.GetElasticClient();
-            _log.Info($"DIALOGUE MARKUP JOB START");
             var periodTime = 5 * 60; 
             var periodFrame = 30;
 

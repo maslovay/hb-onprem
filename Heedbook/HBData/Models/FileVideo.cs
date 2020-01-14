@@ -17,9 +17,16 @@ namespace HBData.Models
         /// <summary>
         ///     User id
         /// </summary>
-        public Guid ApplicationUserId { get; set; }
+        public Guid? ApplicationUserId { get; set; }
 
         public ApplicationUser ApplicationUser { get; set; }
+        /// <summary>
+        ///     Device id
+        /// </summary>
+        public Guid DeviceId { get; set; }
+
+        public Device Device { get; set; }
+
 
         /// <summary>
         ///     Video file beginnig time
