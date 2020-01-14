@@ -261,7 +261,8 @@ namespace UserOperations.Services
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
+                    && p.ApplicationUserId != null)
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
@@ -296,7 +297,8 @@ namespace UserOperations.Services
                 .Where(p => p.EndTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 3
-                    && p.InStatistic == true)
+                    && p.InStatistic == true
+                    && p.ApplicationUserId != null)
                 .Where(p => (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
