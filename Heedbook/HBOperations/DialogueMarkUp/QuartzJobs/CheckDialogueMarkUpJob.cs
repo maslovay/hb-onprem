@@ -109,8 +109,7 @@ namespace DialogueMarkUp.QuartzJobs
                     if (markUps.Any()) 
                     {
                         _log.Info($"Creating dialogue for markup {JsonConvert.SerializeObject(markUps.Select(p => new {p.BegTime, p.EndTime}))}");
-                        //TODO::ucomment!!!
-                        //CreateMarkUp(markUps, framesUser, applicationUserId, deviceId, _log);
+                        CreateMarkUp(markUps, framesDevice, deviceId, _log);
                     }
                 }
                 _context.SaveChanges();
@@ -151,7 +150,7 @@ namespace DialogueMarkUp.QuartzJobs
             public List<Guid?> FaceIds;
         } 
 
-        private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid? applicationUserId, ElasticClient log)
+        private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid deviceId, ElasticClient log)
         {
             var dialogueCreationList = new List<DialogueCreationRun>();
             var dialogueVideoAssembleList = new List<DialogueVideoAssembleRun>();
@@ -190,24 +189,24 @@ namespace DialogueMarkUp.QuartzJobs
                         foreach (var updatedMarkUp in updatedMarkUps)
                         {   
                             var dialogueId = Guid.NewGuid();
-                            var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.DeviceId, updatedMarkUp.BegTime, 
+                            var dialogue = _classCreator.CreateDialogueClass(dialogueId, updatedMarkUp.ApplicationUserId, updatedMarkUp.DeviceId, updatedMarkUp.BegTime, 
                                 updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
                             log.Info($"Create dialogue --- {dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
                             dialogues.Add(dialogue);
 
-                            var markUpNew = _classCreator.CreateMarkUpClass(applicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
+                            var markUpNew = _classCreator.CreateMarkUpClass(updatedMarkUp.ApplicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
                             _context.DialogueMarkups.Add(markUpNew);
 
                             dialogueVideoAssembleList.Add( new DialogueVideoAssembleRun
                             {
-                                ApplicationUserId = applicationUserId,
+                                ApplicationUserId = updatedMarkUp.ApplicationUserId,
                                 DialogueId = dialogueId,
                                 BeginTime = updatedMarkUp.BegTime,
                                 EndTime = updatedMarkUp.EndTime
                             });
                             dialogueCreationList.Add(new DialogueCreationRun {
                                 DeviceId = updatedMarkUp.DeviceId,
-                                ApplicationUserId = applicationUserId,
+                                ApplicationUserId = updatedMarkUp.ApplicationUserId,
                                 DialogueId = dialogueId,
                                 BeginTime = updatedMarkUp.BegTime,
                                 EndTime = updatedMarkUp.EndTime,
