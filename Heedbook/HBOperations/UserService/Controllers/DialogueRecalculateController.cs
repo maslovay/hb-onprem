@@ -58,12 +58,12 @@ namespace UserService.Controllers
             {
 //                _log.Info("Function Dialogue recalculation started");
                 var dialogue = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.ApplicationUser.Company)
+                    .Include(p => p.Device)
+                    .Include(p => p.Device.Company)
                     .Where(p => p.DialogueId == dialogueId)
                     .First();
 
-                var languageId = dialogue.ApplicationUser.Company.LanguageId;
+                var languageId = dialogue.Device.Company.LanguageId;
 
                 var dialogueVideoMerge = new DialogueVideoAssembleRun
                 {
@@ -76,7 +76,8 @@ namespace UserService.Controllers
 
                 var fillingFrame = new DialogueCreationRun
                 {
-                    ApplicationUserId = (Guid)dialogue.ApplicationUserId,
+                    ApplicationUserId = dialogue.ApplicationUserId,
+                    DeviceId = dialogue.DeviceId,
                     DialogueId = dialogue.DialogueId,
                     BeginTime = dialogue.BegTime,
                     EndTime = dialogue.EndTime
@@ -167,7 +168,8 @@ namespace UserService.Controllers
                         result += "Starting FillingFrames, ";
                         var @event = new DialogueCreationRun
                         {
-                            ApplicationUserId = (Guid)dialogue.ApplicationUserId,
+                            ApplicationUserId = dialogue.ApplicationUserId,
+                            DeviceId = dialogue.DeviceId,
                             DialogueId = dialogue.DialogueId,
                             BeginTime = dialogue.BegTime,
                             EndTime = dialogue.EndTime
@@ -178,10 +180,10 @@ namespace UserService.Controllers
                 else
                 {  
 //                    _log.Info("Starting dialogue video assemble");
-                    result += "Starting DialogueVideoAssemble, ";                
+                    result += "Starting DialogueVideoAssemble, ";
                     var @event = new DialogueVideoAssembleRun
                     {
-                        ApplicationUserId = (Guid)dialogue.ApplicationUserId,
+                        ApplicationUserId = dialogue.ApplicationUserId,
                         DialogueId = dialogue.DialogueId,
                         BeginTime = dialogue.BegTime,
                         EndTime = dialogue.EndTime
@@ -189,14 +191,14 @@ namespace UserService.Controllers
                     _notificationPublisher.Publish(@event);
                 } 
 
-                if (dialogue.StatusId != 3)    
+                if (dialogue.StatusId != 3)
                 {
                     dialogue.StatusId = 6;
                     dialogue.CreationTime = DateTime.UtcNow;
                     dialogue.Comment = "";
                     _context.SaveChanges();
                 }      
-//                _log.Info("Function finished");            
+//                _log.Info("Function finished");
                 
                 return Ok(result);
             }
