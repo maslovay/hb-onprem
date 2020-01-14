@@ -43,6 +43,10 @@ namespace DialogueMarkUp.QuartzJobs
 
          public async Task Execute(IJobExecutionContext context)
         {
+            var dialogue = _classCreator.CreateDialogueClass(Guid.NewGuid(),Guid.Parse("a60621a7-f456-4d6d-b2bb-9c8f146bf085"), Guid.Parse("ff5cf655-e0b0-40af-8c8d-ffcb9d18fd86"), DateTime.Now,
+                               DateTime.Now.Date.AddDays(1).AddSeconds(-1), null);
+
+
             var _log = _elasticClientFactory.GetElasticClient();
             var periodTime = 5 * 60; 
             var periodFrame = 30;
@@ -105,12 +109,12 @@ namespace DialogueMarkUp.QuartzJobs
                     if (markUps.Any()) 
                     {
                         _log.Info($"Creating dialogue for markup {JsonConvert.SerializeObject(markUps.Select(p => new {p.BegTime, p.EndTime}))}");
-                        CreateMarkUp(markUps, framesUser, applicationUserId, _log);
-                        
+                        //TODO::ucomment!!!
+                        //CreateMarkUp(markUps, framesUser, applicationUserId, deviceId, _log);
                     }
                 }
                 _context.SaveChanges();
-                _log.Info("Function DialogueMarkUp finished");                
+                _log.Info("Function DialogueMarkUp finished");
             }
             catch (Exception e)
             {
@@ -147,7 +151,7 @@ namespace DialogueMarkUp.QuartzJobs
             public List<Guid?> FaceIds;
         } 
 
-        private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid applicationUserId, ElasticClient log)
+        private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid? applicationUserId, Guid deviceId, ElasticClient log)
         {
             var dialogueCreationList = new List<DialogueCreationRun>();
             var dialogueVideoAssembleList = new List<DialogueVideoAssembleRun>();
@@ -186,7 +190,7 @@ namespace DialogueMarkUp.QuartzJobs
                         foreach (var updatedMarkUp in updatedMarkUps)
                         {   
                             var dialogueId = Guid.NewGuid();
-                            var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
+                            var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, deviceId, updatedMarkUp.BegTime, 
                                 updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
                             log.Info($"Create dialogue --- {dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
                             dialogues.Add(dialogue);
