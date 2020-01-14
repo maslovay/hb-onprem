@@ -43,11 +43,8 @@ namespace DialogueMarkUp.QuartzJobs
 
          public async Task Execute(IJobExecutionContext context)
         {
-            var dialogue = _classCreator.CreateDialogueClass(Guid.NewGuid(),Guid.Parse("a60621a7-f456-4d6d-b2bb-9c8f146bf085"), Guid.Parse("ff5cf655-e0b0-40af-8c8d-ffcb9d18fd86"), DateTime.Now,
-                               DateTime.Now.Date.AddDays(1).AddSeconds(-1), null);
-
-
             var _log = _elasticClientFactory.GetElasticClient();
+            _log.Info($"DIALOGUE MARKUP JOB START");
             var periodTime = 5 * 60; 
             var periodFrame = 30;
 
