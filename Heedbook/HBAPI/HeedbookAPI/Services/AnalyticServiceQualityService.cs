@@ -296,7 +296,8 @@ namespace UserOperations.Services
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
+                    && p.ApplicationUserId != null)
                 .Select(p => new RatingDialogueInfo
                 {
                     DialogueId = p.DialogueId,
