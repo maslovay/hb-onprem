@@ -18,7 +18,7 @@ namespace HBData.Models
         /// <summary>
         ///     User id
         /// </summary>
-        public Guid? ApplicationUserId { get; set; }
+        public Guid ApplicationUserId { get; set; }
         [JsonIgnore] public ApplicationUser ApplicationUser { get; set; }
 
         /// <summary>

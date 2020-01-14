@@ -28,16 +28,16 @@ namespace UserOperations.Services
         public Response SessionStatus(SessionParams data)
         {
             var response = new Response();
-            if (String.IsNullOrEmpty(data.DeviceId.ToString()))
+            if (String.IsNullOrEmpty(data.DeviceId.ToString()) || String.IsNullOrEmpty(data.ApplicationUserId.ToString()))
             {
-                response.Message = "DeviceId is empty";
+                response.Message = "DeviceId or UserId is empty";
                 return response;
             }
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             var company = _repository.GetWithIncludeOne<Company>(x => x.CompanyId == companyIdInToken, x => x.Devices, x => x.ApplicationUser);
             if(!company.Devices.Any( x => x.DeviceId == data.DeviceId))
                 throw new Exception("The device is not owned by the company");
-            if (data.ApplicationUserId != null && !company.ApplicationUser.Any(x => x.Id == data.ApplicationUserId))
+            if (!company.ApplicationUser.Any(x => x.Id == data.ApplicationUserId))
                 throw new Exception("User does not belong to the company");
 
             _log.Info($"session on device {data.DeviceId} try {data.Action}");
@@ -58,13 +58,10 @@ namespace UserOperations.Services
                     if (CloseSessions(oldSessionsOnDevice, CLOSE)) _repository.Save();
 
                     //---CLOSE OLD SESSION FROM THIS USER
-                    if (data.ApplicationUserId != null)
-                    {
-                        var oldSessionsFromUser = _repository.GetAsQueryable<Session>()
-                                        .Where(p => p.ApplicationUserId == data.ApplicationUserId
-                                                    && p.StatusId == OPEN && p.SessionId != lastSession.SessionId).ToList();
-                        if (CloseSessions(oldSessionsFromUser, CLOSE)) _repository.Save();
-                    }
+                    var oldSessionsFromUser = _repository.GetAsQueryable<Session>()
+                                    .Where(p => p.ApplicationUserId == data.ApplicationUserId
+                                                && p.StatusId == OPEN && p.SessionId != lastSession.SessionId).ToList();
+                    if (CloseSessions(oldSessionsFromUser, CLOSE)) _repository.Save();
             }
 
             if (data.Action == "open")
@@ -104,7 +101,7 @@ namespace UserOperations.Services
             var company = _repository.GetWithIncludeOne<Company>(x => x.CompanyId == companyIdInToken, x => x.Devices, x => x.ApplicationUser);
             if (!company.Devices.Any(x => x.DeviceId == deviceId))
                 throw new Exception("The device is not owned by the company");
-            if (applicationUserId != null && !company.ApplicationUser.Any(x => x.Id == applicationUserId))
+            if (!company.ApplicationUser.Any(x => x.Id == applicationUserId))
                 throw new Exception("User does not belong to the company");
 
             var session = _repository.GetAsQueryable<Session>()

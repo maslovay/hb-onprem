@@ -39,12 +39,12 @@ namespace PersonDetectionService
         {
             var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{ApplicationUserIds}");
-            _log.SetArgs(JsonConvert.SerializeObject(message.ApplicationUserIds));
+            _log.SetArgs(JsonConvert.SerializeObject(message.DeviceIds));
             _log.Info("Function started");
             try
             {
                 var begTime = DateTime.Now.AddYears(-1);
-                var companyIds = _context.ApplicationUsers.Where(x => message.ApplicationUserIds.Contains(x.Id)).Select(x => x.CompanyId).Distinct().ToList();              
+                var companyIds = _context.Devices.Where(x => message.DeviceIds.Contains(x.DeviceId)).Select(x => x.CompanyId).Distinct().ToList();              
 
                 //---dialogues for users in company or for devices in company
                 var dialogues = _context.Dialogues

@@ -7,6 +7,7 @@ namespace DialogueMarkUp.QuartzJobs
     public class MarkUp
     {
         public Guid? ApplicationUserId;
+        public Guid DeviceId;
         public Guid? FaceId;
         public DateTime BegTime;
         public DateTime EndTime;

@@ -94,7 +94,7 @@ namespace DialogueVideoAssembleService
                 }
                 
                 var pathClient = new PathClient();
-                var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));      
+                var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
                 System.Console.WriteLine(sessionDir);          
                 
                 var frameCommands = new List<FFMpegWrapper.FFmpegCommand>();
