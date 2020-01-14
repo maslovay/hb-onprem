@@ -32,16 +32,16 @@ namespace UserService.Controllers
 
         [HttpPost("PersonDetectionAllUsersRun")]
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
-        public async Task PersonDetectionAllUsersRun()
+        public async Task PersonDetectionAllDevicesRun()
         {
             
             var begTime = DateTime.UtcNow.AddDays(-30);
-            var users = _context.Dialogues.Where(p => p.BegTime > begTime)
-                .Select(p => p.ApplicationUserId)
+            var devices = _context.Dialogues.Where(p => p.BegTime > begTime)
+                .Select(p => p.DeviceId)
                 .ToList();
             var message = new PersonDetectionRun
             {
-                ApplicationUserIds = users
+                DeviceIds = devices
             };
             _handler.EventRaised(message);
         }
