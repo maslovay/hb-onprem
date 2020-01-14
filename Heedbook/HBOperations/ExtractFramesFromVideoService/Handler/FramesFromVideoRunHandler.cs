@@ -15,7 +15,7 @@ namespace ExtractFramesFromVideo.Handler
 
         public async Task Handle(FramesFromVideoRun @event)
         {
-            await _framesFromVideo.Run(@event.Path);
+            await _framesFromVideo.Run(@event.Path, @event.deviceId);
         }
     }
 }

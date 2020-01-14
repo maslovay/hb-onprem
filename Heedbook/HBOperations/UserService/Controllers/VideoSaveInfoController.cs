@@ -57,7 +57,7 @@ namespace UserService.Controllers
                 var stringFormat = "yyyyMMddHHmmss";
                 var timeBeg = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): timeBeg.AddSeconds((double)duration);
-                var fileName = $"{deviceId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
+                var fileName = $"{applicationUserId?? Guid.Empty}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
 
                 var videoIntersectVideosAny = _context.FileVideos
                     .Where(p => p.DeviceId == deviceId
@@ -89,7 +89,7 @@ namespace UserService.Controllers
                 if (videoIntersectVideosAny)
                 {
                     videoFile.StatusId = 8;
-                }
+                }    
                 _context.FileVideos.Add(videoFile);
                 _context.SaveChanges();
 
@@ -97,6 +97,7 @@ namespace UserService.Controllers
                 {
                     var message = new FramesFromVideoRun();
                     message.Path = $"videos/{fileName}";
+                    message.deviceId = deviceId;
 //                    _log.Info($"Sending message {JsonConvert.SerializeObject(message)}");
                     _handler.EventRaised(message);
                 }

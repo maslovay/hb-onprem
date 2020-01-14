@@ -31,6 +31,7 @@ namespace ExtractFramesFromVideoService.Tests
         private IGenericRepository _repository;
         private string videoFileName;
         private string correctFileName;
+        private Guid deviceId = Guid.Parse("9c7cbe18-517d-47b1-ab58-ffb813a3ba2e");
         private DateTime minDate;
         private DateTime maxDate;
         public Guid TestUserId => Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
@@ -154,7 +155,8 @@ namespace ExtractFramesFromVideoService.Tests
         {
             var framesFromVideoRun = new FramesFromVideoRun()
             {
-                Path = $"videos/{correctFileName}"
+                Path = $"videos/{correctFileName}",
+                deviceId = deviceId
             };
 
             var json = JsonConvert.SerializeObject(framesFromVideoRun);

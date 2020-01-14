@@ -50,7 +50,7 @@ namespace ExtractFramesFromVideo
             _log = _clientFactory.GetElasticClient();
         }
 
-        public async Task Run(string videoBlobRelativePath)
+        public async Task Run(string videoBlobRelativePath, Guid deviceId)
         {
             _log.SetFormat("{Path}");
             _log.SetArgs(videoBlobRelativePath);
@@ -78,7 +78,7 @@ namespace ExtractFramesFromVideo
                 var localFilePath = Path.Combine(sessionDir, Path.GetFileName(videoBlobRelativePath));
 
                 var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
-                var frames = GetLocalFilesInformation(applicationUserId, sessionDir, videoTimeStamp);
+                List<FrameInfo> frames = GetLocalFilesInformation(applicationUserId, sessionDir, videoTimeStamp);
                 System.Console.WriteLine($"Frames info - {JsonConvert.SerializeObject(frames)}");
                 var tasks = frames.Select(p => {
                     return Task.Run(async() => 
@@ -97,7 +97,7 @@ namespace ExtractFramesFromVideo
                     var existedFrame = existedFrames?.FirstOrDefault(p => p.FileName == frame.FrameName);
                     if(existedFrame == null)
                     {
-                        var fileFrame = await CreateFileFrameAsync(applicationUserId, frame.FrameTime, frame.FrameName);
+                        var fileFrame = await CreateFileFrameAsync(applicationUserId, deviceId, frame.FrameTime, frame.FrameName);
                         fileFrames.Add(fileFrame);
                         _log.Info($"Creating frame - {frame.FrameName}");
                         RaiseNewFrameEvent(frame.FrameName);
@@ -126,11 +126,14 @@ namespace ExtractFramesFromVideo
             }   
         }
 
-        private async Task<FileFrame> CreateFileFrameAsync(string applicationUserId, string frameTime, string fileName)
+        private async Task<FileFrame> CreateFileFrameAsync(string applicationUserId, Guid deviceId, string frameTime, string fileName)
         {
+            Guid? userId = Guid.Parse(applicationUserId);
+            if (userId == Guid.Empty) userId = null;
             var fileFrame = new FileFrame {
                 FileFrameId = Guid.NewGuid(),
-                ApplicationUserId = Guid.Parse(applicationUserId),
+                ApplicationUserId = userId,
+                DeviceId = deviceId,
                 FaceLength = 0,
                 FileContainer = "frames",
                 FileExist = true,
