@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBLib;
-using HBLib.Utils;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Quartz;
-using Microsoft.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using HBData.Models;
 using UserOperations.Models.AnalyticModels;

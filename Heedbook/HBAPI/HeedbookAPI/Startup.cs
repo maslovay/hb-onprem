@@ -188,8 +188,9 @@ namespace UserOperations
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
                 };
             });
-
-            services.AddBenchmarkFillQuartzJob(); //-----------
+            //---STARTET SCHEDULERS---
+            services.AddSessionCloseQuartzJob();
+            services.AddBenchmarkFillQuartzJob();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
