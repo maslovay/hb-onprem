@@ -84,7 +84,6 @@ namespace UserService.Controllers
                 {
                     var message = new FramesFromVideoRun();
                     message.Path = $"videos/{fileName}";
-                    message.deviceId = deviceId;
                     Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
                     _handler.EventRaised(message);
                 }

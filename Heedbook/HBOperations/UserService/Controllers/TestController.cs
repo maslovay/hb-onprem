@@ -190,7 +190,7 @@ namespace UserService.Controllers
        }
 
        [HttpGet("[action]")]
-       public async Task ResendVideosForFraming(string fileNamesString, Guid deviceId)
+       public async Task ResendVideosForFraming(string fileNamesString)
        {
            var names = fileNamesString.Split(',');
 
@@ -201,17 +201,16 @@ namespace UserService.Controllers
                if ( i % 30 == 0 )
                    Thread.Sleep(60000);
                ++i;
-               await ResendVideoForFraming(name, deviceId);
+               await ResendVideoForFraming(name);
            }
        }
        
        [HttpGet("[action]")]
-       public async Task ResendVideoForFraming(string fileName, Guid deviceId)
+       public async Task ResendVideoForFraming(string fileName)
        {
             var message = new FramesFromVideoRun
             {
-                Path = $"videos/{fileName}",
-                deviceId = deviceId
+                Path = $"videos/{fileName}"
             };
             Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
            _handler.EventRaised(message);

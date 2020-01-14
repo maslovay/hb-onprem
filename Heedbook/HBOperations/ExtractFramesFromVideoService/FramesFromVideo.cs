@@ -50,14 +50,14 @@ namespace ExtractFramesFromVideo
             _log = _clientFactory.GetElasticClient();
         }
 
-        public async Task Run(string videoBlobRelativePath, Guid deviceId)
+        public async Task Run(string videoBlobRelativePath)
         {
             _log.SetFormat("{Path}");
             _log.SetArgs(videoBlobRelativePath);
 
             try
             {
-                _log.Info("Function Extract Frames From Video Started");            
+                _log.Info("Function Extract Frames From Video Started");
                 
                 var fileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
                 var applicationUserId = fileName.Split(("_"))[0];
@@ -97,7 +97,7 @@ namespace ExtractFramesFromVideo
                     var existedFrame = existedFrames?.FirstOrDefault(p => p.FileName == frame.FrameName);
                     if(existedFrame == null)
                     {
-                        var fileFrame = await CreateFileFrameAsync(applicationUserId, deviceId, frame.FrameTime, frame.FrameName);
+                        var fileFrame = await CreateFileFrameAsync(applicationUserId, frame.FrameTime, frame.FrameName);
                         fileFrames.Add(fileFrame);
                         _log.Info($"Creating frame - {frame.FrameName}");
                         RaiseNewFrameEvent(frame.FrameName);
@@ -126,14 +126,24 @@ namespace ExtractFramesFromVideo
             }   
         }
 
-        private async Task<FileFrame> CreateFileFrameAsync(string applicationUserId, Guid deviceId, string frameTime, string fileName)
+        private async Task<FileFrame> CreateFileFrameAsync(string applicationUserId, string frameTime, string fileName)
         {
             Guid? userId = Guid.Parse(applicationUserId);
+            Guid? deviceId = null;
+
             if (userId == Guid.Empty) userId = null;
+            try
+            {
+                deviceId = _context.FileVideos.Where(x => x.FileName == fileName).Select(x => x.DeviceId).First();
+            }
+            catch (Exception e)
+            {
+                _log.Fatal($"Exception No File Video (deviceId) {e}");
+            }
             var fileFrame = new FileFrame {
                 FileFrameId = Guid.NewGuid(),
                 ApplicationUserId = userId,
-                DeviceId = deviceId,
+                DeviceId = (Guid)deviceId,
                 FaceLength = 0,
                 FileContainer = "frames",
                 FileExist = true,
