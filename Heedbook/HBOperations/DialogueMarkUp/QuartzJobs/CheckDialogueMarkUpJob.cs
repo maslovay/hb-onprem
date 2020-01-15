@@ -57,7 +57,12 @@ namespace DialogueMarkUp.QuartzJobs
                     .GroupBy(p => p.FileFrame.FileName)
                     .Select(p => p.FirstOrDefault())
                     .ToList();
-                _log.Info($"CheckDialogueMarkUpJob. FrameAttributes COUNT: {frameAttributes.Count()}");
+
+                if(frameAttributes.Count() == 0)
+                {
+                    _log.Info($"CheckDialogueMarkUpJob stopped. FrameAttributes COUNT 0");
+                    return;
+                }
                 // frameAttributes = frameAttributes.Where(p => JsonConvert.DeserializeObject<Value>(p.Value).Height > 135 && 
                     // JsonConvert.DeserializeObject<Value>(p.Value).Height > 135).ToList();
                 System.Console.WriteLine(frameAttributes.Count());
