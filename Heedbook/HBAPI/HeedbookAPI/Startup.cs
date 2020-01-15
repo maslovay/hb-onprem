@@ -95,6 +95,7 @@ namespace UserOperations
             services.AddScoped<SessionService>();
             services.AddScoped<SiteService>();
             services.AddScoped<TabletAppInfoService>();
+            services.AddScoped<FillingFileFrameService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
