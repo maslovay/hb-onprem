@@ -37,7 +37,7 @@ namespace QuartzExtensions.Jobs
             using (var scope = _scopeFactory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
-                _log.Info("Audio analyze scheduler started.");
+                _log.Info("DialogueStatusChecker scheduler started.");
                 try
                 {
                     _log.Info("Function started.");

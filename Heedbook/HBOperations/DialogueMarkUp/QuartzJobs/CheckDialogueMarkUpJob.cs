@@ -75,7 +75,7 @@ namespace DialogueMarkUp.QuartzJobs
 
                 foreach (var deviceId in deviceIds)
                 {
-                    _log.Info($"Processing application user id --{deviceId}");
+                    _log.Info($"Processing device id --{deviceId}");
                     var framesDevice = frameAttributes
                         .Where(p => p.FileFrame.DeviceId == deviceId)
                         .OrderBy(p => p.FileFrame.Time)
@@ -90,6 +90,8 @@ namespace DialogueMarkUp.QuartzJobs
                         FileVideoId = p.Video.FileVideoId,
                         FaceId = JsonConvert.SerializeObject(p.FaceIds)
                     }));
+                    _log.Info($"Processing framesDevice --{JsonConvert.SerializeObject(framesDevice)}");
+                    _log.Info($"Processing videoFacesDevice --{JsonConvert.SerializeObject(videoFacesDevice)}");
 
                     var markUps = framesDevice.GroupBy(p => p.FileFrame.FaceId)
                         .Where(p => p.Where(q => JsonConvert.DeserializeObject<Value>(q.Value).Height > 135 
