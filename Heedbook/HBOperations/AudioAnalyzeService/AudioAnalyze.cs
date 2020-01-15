@@ -28,12 +28,19 @@ namespace AudioAnalyzeService
             SftpClient sftpclient
         )
         {
-            // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
-            _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
-            _asrHttpClient = asrHttpClient;
-            _elasticClientFactory = elasticClientFactory;
-            _googleConnector = googleConnector;
-            _sftpclient = sftpclient;
+            try
+            {
+                // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
+                _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
+                _asrHttpClient = asrHttpClient;
+                _elasticClientFactory = elasticClientFactory;
+                _googleConnector = googleConnector;
+                _sftpclient = sftpclient;
+            }
+            catch
+            {
+
+            }
         }
 
         public async Task Run(String path)
