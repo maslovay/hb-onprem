@@ -11,7 +11,7 @@ using Nest;
 using Nest.JsonNetSerializer;
 using ElasticClient = Nest.ElasticClient;
 using Field = Nest.Field;
-
+using Newtonsoft.Json;
 
 namespace ErrorKibanaScheduler.QuartzJob
 {
@@ -62,7 +62,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                                         .Query("Error")))) && q.DateRange(r=>r
                                     .Field(fd=>fd.Timestamp)
                                     .GreaterThanOrEquals(DateTime.UtcNow.AddHours(-4)))));
-
+                System.Console.WriteLine(JsonConvert.SerializeObject(searchRequest));
                 var documents = searchRequest.Documents.ToList();
                 var alarm = new TelegramMessage()
                 {
@@ -74,7 +74,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                 }
                 
                 var dmp = new TextCompare();
-
+                System.Console.WriteLine($"documents count: {documents.Count}");
                 for (var i = 0; i < documents.Count; i++)
                 {
                     var count = 1;
