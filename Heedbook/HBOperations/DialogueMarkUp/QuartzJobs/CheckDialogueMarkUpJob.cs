@@ -189,6 +189,7 @@ namespace DialogueMarkUp.QuartzJobs
                         foreach (var updatedMarkUp in updatedMarkUps)
                         {   
                             var dialogueId = Guid.NewGuid();
+                            log.Info($"Prepared dialogue - {JsonConvert.SerializeObject(updatedMarkUp)}");
                             var dialogue = _classCreator.CreateDialogueClass(dialogueId, updatedMarkUp.ApplicationUserId, updatedMarkUp.DeviceId, updatedMarkUp.BegTime, 
                                 updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
                             log.Info($"Create dialogue --- {dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");

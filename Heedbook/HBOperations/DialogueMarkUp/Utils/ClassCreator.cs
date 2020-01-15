@@ -23,6 +23,7 @@ namespace DialogueMarkUp.Utils
             {
                 _dialogue = new Dialogue{
                     DialogueId = dialogueId,
+                    DeviceId = deviceId,
                     ApplicationUserId = applicationUserId,
                     BegTime = begTime,
                     EndTime = endTime,
