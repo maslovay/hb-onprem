@@ -18,9 +18,10 @@ namespace CloneFtpOnAzure
         {
             _storageAccInfo = storageAccInfo;
         }
-        
+
         public async Task UploadFileStreamToBlob(String filePath, Stream stream)
         {
+            
             var splited = filePath.Split('/');
             var containerName = splited.First();
             var fileName = splited.Last();
@@ -28,10 +29,11 @@ namespace CloneFtpOnAzure
             var storageCredentials = new StorageCredentials(_storageAccInfo.AccName, _storageAccInfo.AccKey);
             var cloudStorageAccount = new CloudStorageAccount(storageCredentials, true);
             var cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
-
+            
             var container = cloudBlobClient.GetContainerReference(containerName);
             await container.CreateIfNotExistsAsync();
             var newBlob = container.GetBlockBlobReference(fileName);
+            stream.Position = 0;
             await newBlob.UploadFromStreamAsync(stream);
         }
     }
