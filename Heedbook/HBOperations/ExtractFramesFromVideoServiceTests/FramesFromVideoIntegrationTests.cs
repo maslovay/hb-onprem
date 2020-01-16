@@ -90,7 +90,7 @@ namespace ExtractFramesFromVideoService.Tests
             if (!await _ftpClient.IsFileExistsAsync(Path.Combine("videos", correctFileName)))
                 await _ftpClient.UploadAsync(Path.Combine(rootDir, "Resources", videoFileName), "videos", correctFileName);
             
-            var videoTimestampText = videoFileName.Split(("_"))[1];
+            var videoTimestampText = videoFileName.Split(("_"))[2];
             minDate = DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
             maxDate = minDate.AddSeconds(30);
         }
