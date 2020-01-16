@@ -12,7 +12,7 @@ using UserOperations.Services;
 
 namespace UserOperations.Providers
 {
-    public class UserProvider : IUserProvider
+    public class UserProvider
     {
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
@@ -55,7 +55,7 @@ namespace UserOperations.Providers
                             .ToListAsync();
         }
 
-        public async Task<List<ApplicationUser>> GetUsersForManagerAsync(Guid companyIdInToken, Guid userIdInToken)
+        public async Task<List<ApplicationUser>> GetUsersForManagerAsync(Guid companyIdInToken, Guid? userIdInToken)
         {
             return await _repository.GetAsQueryable<ApplicationUser>()
                       .Include(p => p.UserRoles).ThenInclude(x => x.Role)
@@ -63,6 +63,18 @@ namespace UserOperations.Providers
                       .Where(p => p.CompanyId == companyIdInToken
                           && (p.StatusId == activeStatus)
                           && p.Id != userIdInToken)
+                      .ToListAsync();
+        }
+
+        public async Task<List<ApplicationUser>> GetUsersForDeviceAsync(Guid companyIdInToken)
+        {
+            var employeeRoleId = (await _repository.FindOrExceptionOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
+            return await _repository.GetAsQueryable<ApplicationUser>()
+                      .Include(p => p.UserRoles).ThenInclude(x => x.Role)
+                      .Include(p => p.Company)
+                      .Where(p => p.CompanyId == companyIdInToken
+                          && (p.StatusId == activeStatus)
+                          && p.UserRoles.Select(r => r.RoleId).Contains(employeeRoleId))
                       .ToListAsync();
         }
 

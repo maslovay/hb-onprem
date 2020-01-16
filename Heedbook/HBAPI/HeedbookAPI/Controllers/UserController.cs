@@ -36,7 +36,7 @@ namespace UserOperations.Controllers
         private readonly SmtpSettings _smtpSetting;
         private readonly SmtpClient _smtpClient;
         private readonly MailSender _mailSender;
-        private readonly IUserProvider _userProvider;
+        private readonly UserProvider _userProvider;
         private readonly PhraseProvider _phraseProvider;
         private Dictionary<string, string> userClaims;
         private readonly string _containerName;
@@ -52,7 +52,7 @@ namespace UserOperations.Controllers
             SmtpSettings smtpSetting,
             SmtpClient smtpClient,
             MailSender mailSender,
-            IUserProvider userProvider,
+            UserProvider userProvider,
             PhraseProvider phraseProvider
             )
         {
@@ -80,18 +80,22 @@ namespace UserOperations.Controllers
                 var companyIdInToken = _loginService.GetCurrentCompanyId();
                 var corporationIdInToken = _loginService.GetCurrentCorporationId();
                 var userIdInToken = _loginService.GetCurrentUserId();
+                var deviceId = _loginService.GetCurrentDeviceId();
                 List<ApplicationUser> users = null;
 
                 if (roleInToken == "Admin")
                     users = await _userProvider.GetUsersForAdminAsync();
               
                 if (roleInToken == "Supervisor" )
-                    users = await _userProvider.GetUsersForSupervisorAsync((Guid)corporationIdInToken, userIdInToken);
+                    users = await _userProvider.GetUsersForSupervisorAsync((Guid)corporationIdInToken, (Guid)userIdInToken);
 
                 if (roleInToken == "Manager")
                     users = await _userProvider.GetUsersForManagerAsync(companyIdInToken, userIdInToken);
 
-                var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default).path : null));
+                if (deviceId != null)
+                    users = await _userProvider.GetUsersForDeviceAsync(companyIdInToken);
+
+            var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default).path : null));
                 return Ok(result);
         }
 

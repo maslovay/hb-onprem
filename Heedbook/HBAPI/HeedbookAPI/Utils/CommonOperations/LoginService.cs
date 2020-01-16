@@ -288,11 +288,19 @@ namespace UserOperations.Services
         }
 
 
-        public Guid GetCurrentUserId()
-            => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "applicationUserId")?.Value);
+        public Guid? GetCurrentUserId()
+        { 
+            Guid.TryParse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "applicationUserId")?.Value, out var userId);
+            return (userId == Guid.Empty || userId == null) ? null : (Guid?)userId;
+        }
         public Int32 GetCurrentLanguagueId()
            => Int32.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "languageCode")?.Value);
 
+        public Guid? GetCurrentDeviceId()
+        { 
+            Guid.TryParse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "deviceId")?.Value, out var deviceId);
+            return (deviceId == Guid.Empty || deviceId == null) ? null : (Guid?)deviceId;
+        }
         public string GetCurrentRoleName()
         {
            return _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value;

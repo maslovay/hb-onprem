@@ -77,7 +77,7 @@ namespace UserOperations.Services
                     companyIds,
                     applicationUserIds,
                     userIds,
-                    currentUserId,
+                    (Guid)currentUserId,
                     employeeRole);
                 var result = sessions
                     .GroupBy(p => p.ApplicationUserId)
