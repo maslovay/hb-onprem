@@ -13,6 +13,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
+using AlarmSender;
+using Configurations;
+using RabbitMqEventBus;
 
 namespace ErrorKibanaScheduler
 {
@@ -38,11 +41,14 @@ namespace ErrorKibanaScheduler
             services.AddSingleton<MessengerClient>();
             services.AddErrorMessageOnQuartzJob();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddRabbitMqEventBus(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env,IScheduler scheduler)
         {
+            var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
+            
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
