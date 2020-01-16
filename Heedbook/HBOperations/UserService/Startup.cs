@@ -81,10 +81,9 @@ namespace UserService
                 var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
                 return new ElasticClient(settings);
             });
-            services.AddSingleton<ElasticClientFactory>();
 
             // (!isCalledFromUnitTest)
-            services.AddRabbitMqEventBus(Configuration);
+                services.AddRabbitMqEventBus(Configuration);
 //            else
 //            {
 //                StartupExtensions.MockRabbitPublisher(services);

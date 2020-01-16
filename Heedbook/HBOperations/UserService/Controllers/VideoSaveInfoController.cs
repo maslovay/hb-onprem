@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
-using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,19 +20,18 @@ namespace UserService.Controllers
     [ApiController]
     public class VideoSaveInfoController : Controller
     {
-        private ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        //private readonly ElasticClient _log;
 
 
-        public VideoSaveInfoController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient, ElasticClientFactory elasticClientFactory)
+        public VideoSaveInfoController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient /*, ElasticClient log*/)
         {
             _handler = handler;
             _context = context;
             _sftpClient = sftpClient;
-            _elasticClientFactory = elasticClientFactory;
+           // _log = log;
 
         }
 
@@ -48,8 +46,6 @@ namespace UserService.Controllers
         {
             try
             {
-                _log = _elasticClientFactory.GetElasticClient();
-                _log.Info("Function Video save info started");
                 duration = duration == null ? 15 : duration;
                 var languageId = _context.Devices
                                          .Where(p => p.DeviceId == deviceId)
@@ -59,7 +55,7 @@ namespace UserService.Controllers
                 var timeBeg = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): timeBeg.AddSeconds((double)duration);
                 var fileName = $"{applicationUserId?? Guid.Empty}_{deviceId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
-                _log.Info($" VideoSaveInfo : Filename {fileName}");
+                //_log.Info($"Function Video save info started. Filename {fileName}");
                 var videoIntersectVideosAny = _context.FileVideos
                     .Where(p => p.DeviceId == deviceId
                     && ((p.BegTime <= timeBeg
