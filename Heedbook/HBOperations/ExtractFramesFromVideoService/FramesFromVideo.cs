@@ -61,8 +61,9 @@ namespace ExtractFramesFromVideo
                 
                 var fileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
                 var applicationUserId = fileName.Split(("_"))[0];
+                var deviceId = fileName.Split(("_"))[1];
                 var videoTimeStamp =
-                    DateTime.ParseExact(fileName.Split(("_"))[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+                    DateTime.ParseExact(fileName.Split(("_"))[2], "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
                 
                     var pathClient = new PathClient();
                 var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
@@ -78,7 +79,7 @@ namespace ExtractFramesFromVideo
                 var localFilePath = Path.Combine(sessionDir, Path.GetFileName(videoBlobRelativePath));
 
                 var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
-                List<FrameInfo> frames = GetLocalFilesInformation(applicationUserId, sessionDir, videoTimeStamp);
+                List<FrameInfo> frames = GetLocalFilesInformation(applicationUserId, deviceId, sessionDir, videoTimeStamp);
                 System.Console.WriteLine($"Frames info - {JsonConvert.SerializeObject(frames)}");
                 var tasks = frames.Select(p => {
                     return Task.Run(async() => 
@@ -92,17 +93,6 @@ namespace ExtractFramesFromVideo
                 var existedFrames = _context.FileFrames.Where(p => p.ApplicationUserId == Guid.Parse(applicationUserId))
                     .ToList();
                 var fileFrames = new List<FileFrame>();
-                Guid deviceId = Guid.Empty;
-                string fileNameWithExt = Path.GetFileName(videoBlobRelativePath);
-                try
-                { 
-                   deviceId = _context.FileVideos.Where(x => x.FileName == fileNameWithExt).Select(x => x.DeviceId).First();
-                }
-                catch (Exception e)
-                {
-                    _log.Fatal($"Exception No File Video (deviceId) {e}");
-                    throw new Exception("No File Video");
-                }
                 foreach (var frame in frames)
                 {
                     var existedFrame = existedFrames?.FirstOrDefault(p => p.FileName == frame.FrameName);
@@ -137,7 +127,7 @@ namespace ExtractFramesFromVideo
             }   
         }
 
-        private async Task<FileFrame> CreateFileFrameAsync(string applicationUserId, string frameTime, string fileName, Guid deviceId)
+        private async Task<FileFrame> CreateFileFrameAsync(string applicationUserId, string frameTime, string fileName, string deviceId)
         {
             Guid? userId = Guid.Parse(applicationUserId);
             if (userId == Guid.Empty) userId = null;
@@ -145,7 +135,7 @@ namespace ExtractFramesFromVideo
             var fileFrame = new FileFrame {
                 FileFrameId = Guid.NewGuid(),
                 ApplicationUserId = userId,
-                DeviceId = deviceId,
+                DeviceId = Guid.Parse(deviceId),
                 FaceLength = 0,
                 FileContainer = "frames",
                 FileExist = true,
@@ -158,7 +148,7 @@ namespace ExtractFramesFromVideo
             return fileFrame;
         }
 
-        private List<FrameInfo> GetLocalFilesInformation(string applicationUserId, string sessionDir, DateTime videoTimeStamp)
+        private List<FrameInfo> GetLocalFilesInformation(string applicationUserId, string deviceId, string sessionDir, DateTime videoTimeStamp)
         {
             var frames = Directory.GetFiles(sessionDir, "*.jpg")
                 .OrderBy(p => Convert.ToInt32((Path.GetFileNameWithoutExtension(p))))
@@ -170,7 +160,7 @@ namespace ExtractFramesFromVideo
             for (int i = 0; i< frames.Count(); i++)
             {
                 frames[i].FrameTime =  videoTimeStamp.AddSeconds(i * 3).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-                frames[i].FrameName = $"{applicationUserId}_{frames[i].FrameTime}.jpg";
+                frames[i].FrameName = $"{applicationUserId}_{deviceId}_{frames[i].FrameTime}.jpg";
             }
             return frames;
         }
