@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
+using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,18 +21,19 @@ namespace UserService.Controllers
     [ApiController]
     public class VideoSaveInfoController : Controller
     {
+        private ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
-        private readonly ElasticClient _log;
+        private readonly ElasticClientFactory _elasticClientFactory;
 
 
-        public VideoSaveInfoController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient , ElasticClient log)
+        public VideoSaveInfoController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient, ElasticClientFactory elasticClientFactory)
         {
             _handler = handler;
             _context = context;
             _sftpClient = sftpClient;
-            _log = log;
+            _elasticClientFactory = elasticClientFactory;
 
         }
 
@@ -45,20 +47,19 @@ namespace UserService.Controllers
             [FromQuery] Guid? applicationUserId = null)
         {
             try
-            {   
+            {
+                _log = _elasticClientFactory.GetElasticClient();
                 _log.Info("Function Video save info started");
                 duration = duration == null ? 15 : duration;
                 var languageId = _context.Devices
-                                         .Include(p => p.Company)
-                                         .Include(p => p.Company.Language)
                                          .Where(p => p.DeviceId == deviceId)
-                                         .First().Company.Language.LanguageId;
+                                         .Select( x => x.Company.Language.LanguageId).First();
 
                 var stringFormat = "yyyyMMddHHmmss";
                 var timeBeg = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): timeBeg.AddSeconds((double)duration);
                 var fileName = $"{applicationUserId?? Guid.Empty}_{deviceId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
-                _log.Info("Function Video save info started. Filename {fileName}");
+                _log.Info($" VideoSaveInfo : Filename {fileName}");
                 var videoIntersectVideosAny = _context.FileVideos
                     .Where(p => p.DeviceId == deviceId
                     && ((p.BegTime <= timeBeg
