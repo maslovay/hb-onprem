@@ -12,6 +12,8 @@ using Nest.JsonNetSerializer;
 using ElasticClient = Nest.ElasticClient;
 using Field = Nest.Field;
 using Newtonsoft.Json;
+using RabbitMqEventBus.Events;
+using RabbitMqEventBus;
 
 namespace ErrorKibanaScheduler.QuartzJob
 {
@@ -20,13 +22,18 @@ namespace ErrorKibanaScheduler.QuartzJob
         private ElasticClientFactory _elasticClientFactory;
         private MessengerClient _client;
         private UriPathOnKibana _path;
+        private readonly INotificationPublisher _publisher;
 
-        public KibanaErrorJob(ElasticClientFactory elasticClientFactory,
-            MessengerClient client,UriPathOnKibana path)
+        public KibanaErrorJob(
+            ElasticClientFactory elasticClientFactory,
+            MessengerClient client,
+            UriPathOnKibana path, 
+            INotificationPublisher publisher)
         {
             _path = path;
             _elasticClientFactory = elasticClientFactory;
             _client = client;
+            _publisher = publisher;            
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -88,12 +95,12 @@ namespace ErrorKibanaScheduler.QuartzJob
                         }
                     }
 
-                    var message = new TelegramMessage()
+                    var message = new MessengerMessageRun()
                     {
                         logText =
                             $"<b>FunctionName:</b>{documents[i].FunctionName} \r\n<b>LogLevel:</b> {documents[i].LogLevel} \r\n<b>Count:</b> {count} \r\n<b>ErrorHead:</b> {String.Concat(documents[i].OriginalFormat.Take(200))} \r\n<b>InvocationId:</b> {documents[i].InvocationId}"
                     };
-                    _client.PostMessage(message);
+                    _publisher.Publish(message);
                 }
             }
             catch (Exception e)
