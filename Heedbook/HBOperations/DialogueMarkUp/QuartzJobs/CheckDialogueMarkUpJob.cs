@@ -90,30 +90,6 @@ namespace DialogueMarkUp.QuartzJobs
                         FileVideoId = p.Video.FileVideoId,
                         FaceId = JsonConvert.SerializeObject(p.FaceIds)
                     }));
-                    var checkSum1 = framesDevice.GroupBy(p => p.FileFrame.FaceId)
-                       .Select(p => p.Where(q => JsonConvert.DeserializeObject<Value>(q.Value).Height > 135)).Count();
-                    var checkSum2 = framesDevice.GroupBy(p => p.FileFrame.FaceId)
-                       .Where(p => p.Where(q => JsonConvert.DeserializeObject<Value>(q.Value).Height > 135
-                         && JsonConvert.DeserializeObject<Value>(q.Value).Height > 135).Count() >= 4).Count();
-                    var checkSum3 = framesDevice.GroupBy(p => p.FileFrame.FaceId)
-                        .Where(p => p.Where(q => JsonConvert.DeserializeObject<Value>(q.Value).Height > 135
-                          && JsonConvert.DeserializeObject<Value>(q.Value).Height > 135).Count() >= 4)
-                        .Select(x => new MarkUp
-                        {
-                            ApplicationUserId = x.FirstOrDefault()?.FileFrame?.ApplicationUserId,
-                            DeviceId = deviceId,
-                            FaceId = x.Key,
-                            BegTime = x.Min(q => q.FileFrame.Time),
-                            EndTime = x.Max(q => q.FileFrame.Time),
-                            FileNames = x.OrderBy(p => p.FileFrame.Time).Select(q => q.FileFrame).ToList(),
-                            Descriptor = x.First().Descriptor,
-                            Gender = x.First().Gender,
-                            Videos = videoFacesDevice.Where(q => q.FaceIds.Contains(x.Key))
-                                .Select(q => q.Video)
-                                .OrderBy(q => q.BegTime)
-                                .ToList()
-                        }).Count();
-                    _log.Info($"Processing markups --{checkSum1}---{checkSum2}------{checkSum3}");
 
                     var markUps = framesDevice.GroupBy(p => p.FileFrame.FaceId)
                         .Where(p => p.Where(q => JsonConvert.DeserializeObject<Value>(q.Value).Height > 135 

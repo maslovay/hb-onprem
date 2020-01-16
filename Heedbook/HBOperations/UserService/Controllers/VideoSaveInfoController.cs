@@ -57,7 +57,7 @@ namespace UserService.Controllers
                 var stringFormat = "yyyyMMddHHmmss";
                 var timeBeg = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): timeBeg.AddSeconds((double)duration);
-                var fileName = $"{applicationUserId?? Guid.Empty}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
+                var fileName = $"{applicationUserId?? Guid.Empty}_{deviceId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
 
                 var videoIntersectVideosAny = _context.FileVideos
                     .Where(p => p.DeviceId == deviceId
