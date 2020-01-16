@@ -33,6 +33,7 @@ namespace UserOperations.Services.Scheduler
                 var _log = _elasticClientFactory.GetElasticClient();
                 try
                 {
+                    _log.Info("Session close start");
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     _dbOperation = scope.ServiceProvider.GetRequiredService<DBOperations>();
 

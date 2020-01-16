@@ -88,7 +88,6 @@ namespace UserOperations
             services.AddScoped<ClientNoteService>();
             services.AddScoped<CampaignContentService>();
             services.AddScoped<CatalogueService>();
-            services.AddScoped<DemonstrationService>();
             services.AddScoped<DemonstrationV2Service>();
             services.AddScoped<DeviceService>();
             services.AddScoped<MediaFileService>();
@@ -123,6 +122,7 @@ namespace UserOperations
                     Type = "object",
                     Properties = new Dictionary<string, Schema> {
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
+                            {"deviceId", new Schema{Type = "string", Format = "uuid"}},
                             {"begTime", new Schema{Type = "string", Format = "date-time"}},
                             {"endTime", new Schema{Type = "string", Format = "date-time"}},
                             {"contentType", new Schema{Type = "string"}},
@@ -135,6 +135,7 @@ namespace UserOperations
                     Type = "object",
                     Properties = new Dictionary<string, Schema> {
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
+                            {"deviceId", new Schema{Type = "string", Format = "uuid"}},
                             {"answer", new Schema{Type = "string"}},
                             {"time", new Schema{Type = "string", Format = "date-time"}}
                         }

@@ -33,7 +33,16 @@ namespace UserOperations.Services
 
         public async Task FlushStats( List<SlideShowSession> stats)
         {
-            var userId = _loginService.GetCurrentUserId();
+            Guid? userId = null;
+            try//---check is it user token authorization
+            {
+                userId = _loginService.GetCurrentUserId();
+            }
+            catch
+            {
+                userId = null;
+            }
+
             foreach (SlideShowSession stat in stats)
             {
                 if(stat.ContentType == "url")//"url" "media" "content"
@@ -56,7 +65,14 @@ namespace UserOperations.Services
         public async Task<string> PollAnswer( CampaignContentAnswer answer)
         {
             answer.CampaignContentAnswerId = Guid.NewGuid();
-            answer.ApplicationUserId = _loginService.GetCurrentUserId();
+            try
+            {
+                answer.ApplicationUserId = _loginService.GetCurrentUserId();
+            }
+            catch
+            {
+                answer.ApplicationUserId = null;
+            }
             //answer.Time = DateTime.UtcNow;
             await _repository.CreateAsync<CampaignContentAnswer>(answer);
             await _repository.SaveAsync();

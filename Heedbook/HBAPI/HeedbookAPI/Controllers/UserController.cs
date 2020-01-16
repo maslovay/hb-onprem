@@ -76,24 +76,29 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Users with role", typeof(List<UserModel>))]
         public async Task<IActionResult> UserGet()
         {
-                var roleInToken = _loginService.GetCurrentRoleName();
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                var corporationIdInToken = _loginService.GetCurrentCorporationId();
-                var userIdInToken = _loginService.GetCurrentUserId();
-                var deviceId = _loginService.GetCurrentDeviceId();
                 List<ApplicationUser> users = null;
-
-                if (roleInToken == "Admin")
-                    users = await _userProvider.GetUsersForAdminAsync();
-              
-                if (roleInToken == "Supervisor" )
-                    users = await _userProvider.GetUsersForSupervisorAsync((Guid)corporationIdInToken, (Guid)userIdInToken);
-
-                if (roleInToken == "Manager")
-                    users = await _userProvider.GetUsersForManagerAsync(companyIdInToken, userIdInToken);
+                var deviceId = _loginService.GetCurrentDeviceId();
+                var companyIdInToken = _loginService.GetCurrentCompanyId();
 
                 if (deviceId != null)
                     users = await _userProvider.GetUsersForDeviceAsync(companyIdInToken);
+
+                else
+                {
+                    var roleInToken = _loginService.GetCurrentRoleName();
+                    var corporationIdInToken = _loginService.GetCurrentCorporationId();
+                    var userIdInToken = _loginService.GetCurrentUserId();
+
+                    if (roleInToken == "Admin")
+                        users = await _userProvider.GetUsersForAdminAsync();
+
+                    if (roleInToken == "Supervisor")
+                        users = await _userProvider.GetUsersForSupervisorAsync((Guid)corporationIdInToken, (Guid)userIdInToken);
+
+                    if (roleInToken == "Manager")
+                        users = await _userProvider.GetUsersForManagerAsync(companyIdInToken, userIdInToken);
+                }
+
 
             var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default).path : null));
                 return Ok(result);

@@ -92,7 +92,7 @@ namespace UserOperations.Services
                         new Claim("role", role),
                         new Claim("fullName", user.FullName),
                         new Claim("avatar", AvatarExist(user.Avatar) ? $"http://{_sftpSettings.Host}/useravatars/{user.Avatar}":""),
-                        new Claim("isCorporate", "true")
+                        new Claim("IsExtended", "true")
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -130,7 +130,7 @@ namespace UserOperations.Services
                     new Claim("deviceName", device.Name),
                     new Claim("companyId", device.CompanyId.ToString()),
                     new Claim("corporationId", device.Company.CorporationId.ToString()),
-                    new Claim("isCorporate", "false")
+                    new Claim("IsExtended", "false")
                 };
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -288,11 +288,9 @@ namespace UserOperations.Services
         }
 
 
-        public Guid? GetCurrentUserId()
-        { 
-            Guid.TryParse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "applicationUserId")?.Value, out var userId);
-            return (userId == Guid.Empty || userId == null) ? null : (Guid?)userId;
-        }
+        public Guid GetCurrentUserId() =>
+            Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "applicationUserId")?.Value);
+
         public Int32 GetCurrentLanguagueId()
            => Int32.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "languageCode")?.Value);
 

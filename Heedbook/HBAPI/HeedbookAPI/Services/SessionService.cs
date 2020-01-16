@@ -101,7 +101,7 @@ namespace UserOperations.Services
             var company = _repository.GetWithIncludeOne<Company>(x => x.CompanyId == companyIdInToken, x => x.Devices, x => x.ApplicationUser);
             if (!company.Devices.Any(x => x.DeviceId == deviceId))
                 throw new Exception("The device is not owned by the company");
-            if (!company.ApplicationUser.Any(x => x.Id == applicationUserId))
+            if (applicationUserId != null && !company.ApplicationUser.Any(x => x.Id == applicationUserId))
                 throw new Exception("User does not belong to the company");
 
             var session = _repository.GetAsQueryable<Session>()
