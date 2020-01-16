@@ -1,31 +1,31 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using DialogueMarkUp.QuartzJobs;
+using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
-using UserOperations.Utils;
+using QuartzExtensions;
 
-namespace UserOperations.Services.Scheduler
+namespace DialogueMarkUp.Extensions
 {
-    public static class AddQuartzJobOnSessionClose
+    public static class AddSessionCloseScheduleJob
     {
-        public static void AddSessionCloseQuartzJob(this IServiceCollection services)
+        public static void AddSessionCloseQuartz(this IServiceCollection services)
         {
             services.Add(new ServiceDescriptor(typeof(IJob), typeof(SessionCloseJob),
                 ServiceLifetime.Singleton));
-
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
             services.AddSingleton(provider => JobBuilder.Create<SessionCloseJob>()
-                                                        .WithIdentity("SessionCloseJob.job")
+                                                        .WithIdentity("SessionClose.job", "Sessions")
                                                         .Build());
-
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity("SessionCloseJob.trigger")
+                                     .WithIdentity("SessionClose.trigger", "Sessions")
                                      .StartNow()
                                      .WithSimpleSchedule(s => s.WithIntervalInHours(24).RepeatForever())
                                      .Build();
             });
+
             services.AddSingleton(provider =>
             {
                 var schedulerFactory = new StdSchedulerFactory();

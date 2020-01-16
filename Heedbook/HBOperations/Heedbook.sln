@@ -119,6 +119,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinkToBlobController", "Lin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiTests", "ApiTests\ApiTests.csproj", "{663F0DA3-45FF-4B32-B3C7-F33784A5FF11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SessionCloseScheduler", "SessionCloseScheduler\SessionCloseScheduler.csproj", "{1545B19B-F2AC-4FCC-BF8C-FA479E068465}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -325,6 +327,10 @@ Global
 		{663F0DA3-45FF-4B32-B3C7-F33784A5FF11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{663F0DA3-45FF-4B32-B3C7-F33784A5FF11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{663F0DA3-45FF-4B32-B3C7-F33784A5FF11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1545B19B-F2AC-4FCC-BF8C-FA479E068465}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1545B19B-F2AC-4FCC-BF8C-FA479E068465}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1545B19B-F2AC-4FCC-BF8C-FA479E068465}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1545B19B-F2AC-4FCC-BF8C-FA479E068465}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -379,6 +385,7 @@ Global
 		{1E6128F8-2FED-44F1-9ED2-F6C6CB2D3E4F} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{46A5FFC4-C224-409E-9029-AAC4306D6A9B} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{663F0DA3-45FF-4B32-B3C7-F33784A5FF11} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
+		{1545B19B-F2AC-4FCC-BF8C-FA479E068465} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}

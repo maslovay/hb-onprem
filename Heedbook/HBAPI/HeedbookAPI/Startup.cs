@@ -191,7 +191,6 @@ namespace UserOperations
                 };
             });
             //---STARTET SCHEDULERS---
-            services.AddSessionCloseQuartzJob();
             services.AddBenchmarkFillQuartzJob();
         }
 

@@ -1,52 +1,49 @@
-﻿using System;
+using HBData.Models;
+using Microsoft.Extensions.DependencyInjection;
+using Quartz;
+using RabbitMqEventBus;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBLib;
-using Quartz;
-using Microsoft.Extensions.DependencyInjection;
-using HBData.Models;
-using UserOperations.Utils;
 
-namespace UserOperations.Services.Scheduler
+
+namespace DialogueMarkUp.QuartzJobs
 {
     public class SessionCloseJob : IJob
     {
-        private RecordsContext _context;
-        private DBOperations _dbOperation;
-        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly RecordsContext _context;
+        private readonly INotificationPublisher _publisher;
         private readonly ElasticClientFactory _elasticClientFactory;
 
-        public SessionCloseJob(IServiceScopeFactory scopeFactory, ElasticClientFactory elasticClientFactory)
+        public SessionCloseJob(IServiceScopeFactory factory,
+            ElasticClientFactory elasticClientFactory)
         {
-            _scopeFactory = scopeFactory;
+            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _elasticClientFactory = elasticClientFactory;
         }
 
-        public async Task Execute(IJobExecutionContext context)
+         public async Task Execute(IJobExecutionContext context)
         {
-            using (var scope = _scopeFactory.CreateScope())
+            var _log = _elasticClientFactory.GetElasticClient();
+            try
             {
+                _log.Info("Function SessionClose start");
                 const int OPEN = 6;
                 const int CLOSE = 7;
-                var _log = _elasticClientFactory.GetElasticClient();
-                try
-                {
-                    _log.Info("Session close start");
-                    _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
-                    _dbOperation = scope.ServiceProvider.GetRequiredService<DBOperations>();
+                _log.Info("Session close start");
 
-                    DateTime today = DateTime.Now.Date;
-                    var sessionsForClose = _context.Sessions.Where(x => x.BegTime.Date < today && x.StatusId == OPEN).ToList();
-                    CloseSessions(sessionsForClose, CLOSE);
-                    _context.SaveChanges();
-                }
-                catch (Exception e)
-                {
-                    _log.Fatal($"{e}");
-                    throw;
-                }
+                DateTime today = DateTime.Now.Date;
+                var sessionsForClose = _context.Sessions.Where(x => x.BegTime.Date < today && x.StatusId == OPEN).ToList();
+                CloseSessions(sessionsForClose, CLOSE);
+                _context.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                _log.Fatal($"Exception while executing SessionClose occured {e}");
+                throw;
             }
         }
 
