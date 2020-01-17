@@ -24,7 +24,7 @@ namespace UserOperations.Utils.CommonOperations
             return $"http://{_sftpSettings.Host}/{path}";
         }
 
-        public string GetFileLink(string directory, string file, DateTime exp = default(DateTime))
+        public string GetFileLink(string directory, string file, DateTime exp = default)
         {
             return $"http://{_sftpSettings.Host}/{directory}/{file}";
         }

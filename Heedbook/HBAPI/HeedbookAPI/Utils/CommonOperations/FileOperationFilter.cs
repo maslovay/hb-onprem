@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using HBData.Models;
+using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;
@@ -37,6 +38,20 @@ namespace UserOperations.Utils
                         In = "formData",
                         Type = "object",
                         Default = JsonConvert.SerializeObject(new PostUser() { CompanyId=Guid.NewGuid(), Email="uniqueField", Password="required", RoleId=Guid.NewGuid()}),
+                        Description = "fill the user fields",
+                        Required = true
+                    });
+                    operation.Consumes.Add("application/form-data");
+                }
+
+                if (context.ApiDescription.ActionDescriptor.AttributeRouteInfo.Template == "api/CampaignContent/Content")
+                {
+                    operation.Parameters.Add(new NonBodyParameter
+                    {
+                        Name = "data",
+                        In = "formData",
+                        Type = "object",
+                        Default = JsonConvert.SerializeObject(new Content() { ContentId = Guid.NewGuid(), Duration = 0, IsTemplate = false, JSONData = "{}", Name = "", RawHTML = "" }),
                         Description = "fill the user fields",
                         Required = true
                     });

@@ -40,7 +40,6 @@ namespace UserOperations.Controllers
         private readonly MailSender _mailSender;
         private readonly UserProvider _userProvider;
         private readonly PhraseProvider _phraseProvider;
-        private Dictionary<string, string> userClaims;
         private readonly string _containerName;
         private readonly int activeStatus;
         //private readonly int disabledStatus;
@@ -143,6 +142,8 @@ namespace UserOperations.Controllers
                     FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
                     var fn = user.Id + fileInfo.Extension;
                     user.Avatar = fn;
+                    var memoryStream = formData.Files[0].OpenReadStream();
+                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
                     avatarUrl = _fileRef.GetFileLink(_containerName, fn, default);
                 }
                 var userForEmail = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(user.Id);
@@ -257,7 +258,7 @@ namespace UserOperations.Controllers
                 if (roleInToken == "Admin")
                     companies = await _userProvider.GetCompaniesForAdminAsync();
                 if (roleInToken == "Supervisor") // only for corporations
-                    companies = await _userProvider.GetCompaniesForSupervisorAsync(userClaims["corporationId"]);
+                    companies = await _userProvider.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
 
                 return Ok(companies?? new List<Company>());
         }
@@ -509,7 +510,7 @@ namespace UserOperations.Controllers
                 {
                     p.DialogueId,
                     Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _fileRef.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
-                    ApplicationUserId = p.ApplicationUserId,
+                    p.ApplicationUserId,
                     FullName = p.ApplicationUser != null ? p.ApplicationUser.FullName : null,
                     DialogueHints = p.DialogueHint.Count() != 0 ? "YES" : null,
                     p.BegTime,

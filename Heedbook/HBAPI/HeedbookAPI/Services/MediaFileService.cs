@@ -17,7 +17,6 @@ namespace UserOperations.Services
         private readonly SftpClient _sftpClient;
         private readonly FileRefUtils _fileRef;
         private readonly string _containerName;
-        private Dictionary<string, string> userClaims;
       
 
         public MediaFileService(
@@ -82,7 +81,7 @@ namespace UserOperations.Services
             List<string> result = new List<string>();
             foreach (var file in fileNames)
             {
-                result.Add( _fileRef.GetFileLink(containerName + "/" + companyId, file, default(DateTime)));
+                result.Add( _fileRef.GetFileLink(containerName + "/" + companyId, file, default));
             }
             // _log.Info("MediaFile/File POST finished"); 
             return result;
@@ -104,7 +103,7 @@ namespace UserOperations.Services
                 // var result = new { 
                 //     path =  await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fn}"), 
                 //     ext = Path.GetExtension(fileName.Trim('.'))};
-                var result = _fileRef.GetFileLink(containerName + "/" + companyId, fn, default(DateTime));
+                var result = _fileRef.GetFileLink(containerName + "/" + companyId, fn, default);
                 // _log.Info("MediaFile/File PUT finished"); 
                 return result;
         }

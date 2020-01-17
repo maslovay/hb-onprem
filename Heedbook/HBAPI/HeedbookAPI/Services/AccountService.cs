@@ -19,7 +19,6 @@ namespace UserOperations.Providers
         private readonly IGenericRepository _repository;
         private readonly MailSender _mailSender;
         private readonly HelpProvider _helpProvider;
-        private Dictionary<string, string> userClaims;
 
 
         public AccountService(
@@ -82,7 +81,7 @@ namespace UserOperations.Providers
                 //---FOR LOGGINED USER CHANGE PASSWORD WITH INPUT (receive new password in body message.Password)
                 if (_loginService.GetDataFromToken(token, out var userClaims))
                 {
-                    var userId = Guid.Parse(userClaims["applicationUserId"]);
+                    var userId = _loginService.GetCurrentUserId();
                     user = GetUserIncludeCompany(userId, message);
                     user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
                 }

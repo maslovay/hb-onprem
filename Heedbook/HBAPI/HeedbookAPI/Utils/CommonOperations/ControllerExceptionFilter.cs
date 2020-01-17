@@ -23,6 +23,8 @@ namespace UserOperations.Controllers
                     code = 400; break;
                 case NotUniqueException notUnique:
                     code = 400; break;
+                case NoDataException noData:
+                    code = 400; break;
                 default:
                     code = 400; break;
             }
@@ -50,5 +52,11 @@ namespace UserOperations.Controllers
     {
         public NotUniqueException(string message, Exception innerException = null) : base(message, innerException) { }
         public NotUniqueException(Exception innerException = null) : base("Not unique", innerException) { }
+    }
+
+    public class NoDataException : Exception
+    {
+        public NoDataException(string message, Exception innerException = null) : base(message, innerException) { }
+        public NoDataException(Exception innerException = null) : base("No data", innerException) { }
     }
 }

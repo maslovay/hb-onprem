@@ -182,9 +182,8 @@ namespace UserOperations.Providers
             return await _repository.FindByConditionAsync<Company>(p => p.StatusId == activeStatus || p.StatusId == disabledStatus);
         }
 
-        public async Task<IEnumerable<Company>> GetCompaniesForSupervisorAsync(string corporationIdInToken)
+        public async Task<IEnumerable<Company>> GetCompaniesForSupervisorAsync(Guid? corporationId)
         {
-            Guid.TryParse(corporationIdInToken, out var corporationId);
             if (corporationId == null || corporationId == Guid.Empty) return null;
             return await _repository.FindByConditionAsync<Company>(p => 
                         p.CorporationId == corporationId 

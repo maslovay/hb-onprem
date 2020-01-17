@@ -2,14 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using HBData.Models;
-using Microsoft.EntityFrameworkCore;
 using HBLib.Utils;
-using System.Collections;
-using System.Text.RegularExpressions;
-using static HBLib.Utils.SftpClient;
-using UserOperations.CommonModels;
 using HBData.Repository;
 
 namespace UserOperations.Services
