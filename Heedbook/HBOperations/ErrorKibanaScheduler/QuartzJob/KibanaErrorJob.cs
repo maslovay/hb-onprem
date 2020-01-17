@@ -71,13 +71,14 @@ namespace ErrorKibanaScheduler.QuartzJob
                                     .GreaterThanOrEquals(DateTime.UtcNow.AddHours(-4)))));
                 System.Console.WriteLine(JsonConvert.SerializeObject(searchRequest));
                 var documents = searchRequest.Documents.ToList();
-                var alarm = new TelegramMessage()
+                var alarm = new MessengerMessageRun()
                 {
-                    logText = "<b>8000 or more error</b>"
+                    logText = "<b>8000 or more error</b>",
+                    ChannelName = "LogSender"
                 };
                 if (documents.Count >= 8000)
                 {
-                    _client.PostMessage(alarm);
+                    _publisher.Publish(alarm);
                 }
                 
                 var dmp = new TextCompare();
@@ -98,13 +99,15 @@ namespace ErrorKibanaScheduler.QuartzJob
                     var message = new MessengerMessageRun()
                     {
                         logText =
-                            $"<b>FunctionName:</b>{documents[i].FunctionName} \r\n<b>LogLevel:</b> {documents[i].LogLevel} \r\n<b>Count:</b> {count} \r\n<b>ErrorHead:</b> {String.Concat(documents[i].OriginalFormat.Take(200))} \r\n<b>InvocationId:</b> {documents[i].InvocationId}"
+                            $"<b>FunctionName:</b>{documents[i].FunctionName} \r\n<b>LogLevel:</b> {documents[i].LogLevel} \r\n<b>Count:</b> {count} \r\n<b>ErrorHead:</b> {String.Concat(documents[i].OriginalFormat.Take(200))} \r\n<b>InvocationId:</b> {documents[i].InvocationId}",
+                        ChannelName = "LogSender"
                     };
                     _publisher.Publish(message);
                 }
             }
             catch (Exception e)
             {
+                System.Console.WriteLine($"Exception: \n{e}");
                 _log.Fatal($"{e}");
             }
 
