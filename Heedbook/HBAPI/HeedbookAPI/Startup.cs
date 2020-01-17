@@ -14,7 +14,6 @@ using UserOperations.Services;
 using HBLib.Utils;
 using HBLib;
 using UserOperations.Utils;
-using UserOperations.Services.Scheduler;
 using Quartz;
 using UserOperations.Providers;
 using UserOperations.Utils.AnalyticHomeUtils;
@@ -29,6 +28,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations
 {
@@ -73,6 +73,7 @@ namespace UserOperations
             services.AddScoped<HelpProvider>();
             services.AddScoped<PhraseProvider>();
             services.AddScoped<UserProvider>();
+            services.AddScoped<FileRefUtils>();
 
             services.AddScoped<AccountService>();
             services.AddScoped<AnalyticClientProfileService>();
@@ -190,12 +191,10 @@ namespace UserOperations
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
                 };
             });
-            //---STARTET SCHEDULERS---
-            services.AddBenchmarkFillQuartzJob();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseSwagger(c =>
             {
@@ -209,9 +208,6 @@ namespace UserOperations
             });
             app.UseAuthentication();
             app.UseMvc();
-
-            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
-             app.ApplicationServices.GetService<ITrigger>());
 
             // add seed
            // BenchmarkRunner.Run<TestRepository>();

@@ -13,6 +13,9 @@ using System.Reflection;
 using System.Net;
 using HBData.Repository;
 using UserOperations.Controllers;
+using HBLib.Utils;
+using UserOperations.Utils.CommonOperations;
+using Newtonsoft.Json;
 
 namespace UserOperations.Services
 {
@@ -21,11 +24,17 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
+        private readonly SftpClient _sftpClient;
+        private readonly FileRefUtils _fileRef;
+
+        private const string _containerName = "screenshots";
 
         public CampaignContentService(
             LoginService loginService,
             RequestFilters requestFilters,
-            IGenericRepository repository
+            IGenericRepository repository,
+            SftpClient sftpClient,
+            FileRefUtils fileRef
             )
         {
             try
@@ -33,6 +42,8 @@ namespace UserOperations.Services
                 _loginService = loginService;
                 _requestFilters = requestFilters;
                 _repository = repository;
+                _sftpClient = sftpClient;
+                _fileRef = fileRef;
             }
             catch (Exception e)
             {
@@ -161,18 +172,24 @@ namespace UserOperations.Services
             return "No such campaign";
         }
 
-        public async Task<List<Content>> ContentGet( List<Guid> companyIds, List<Guid> corporationIds, bool? inactive )
+        public async Task<string> ContentGet( List<Guid> companyIds, List<Guid> corporationIds, bool? inactive, bool screenshot)
         {
                 var roleInToken = _loginService.GetCurrentRoleName();
                 var companyIdInToken = _loginService.GetCurrentCompanyId();
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
 
                 var activeStatusId = GetStatusId("Active");
-                List<Content> contents;
-                if (inactive == false)
-                    contents = GetContentsWithActiveStatusId(activeStatusId, companyIds);
-                else
-                    contents = GetContentsWithTemplateIsTrue(companyIds);
+                string contents;
+            if (inactive == false)
+            {
+                contents = screenshot == true? GetActiveContentsWithUrls(activeStatusId, companyIds) :
+                                    JsonConvert.SerializeObject(GetActiveContents(activeStatusId, companyIds));
+            }
+            else
+            {
+                contents = screenshot == true? GetAllContentsWithUrls(companyIds) :
+                                    JsonConvert.SerializeObject(GetAllContents(companyIds));
+            }
                 return contents;
         }
 
@@ -187,9 +204,9 @@ namespace UserOperations.Services
                 var activeStatusId = GetStatusId("Active");
                 List<Content> contents;
                 if(inactive == false)
-                    contents = GetContentsWithActiveStatusId(activeStatusId, companyIds);
+                    contents = GetActiveContents(activeStatusId, companyIds);
                 else
-                    contents = GetContentsWithTemplateIsTrue(companyIds);
+                    contents = GetAllContents(companyIds);
 
                 if(contents.Count == 0) return contents;
 
@@ -329,7 +346,7 @@ namespace UserOperations.Services
         {
             _repository.Delete<T>(entity);
         }
-        private List<Content> GetContentsWithActiveStatusId(int activeStatusId, List<Guid> companyIds)
+        private List<Content> GetActiveContents(int activeStatusId, List<Guid> companyIds)
         {
             var contents = _repository.GetAsQueryable<Content>()
                 .Where(x => x.StatusId == activeStatusId
@@ -337,12 +354,56 @@ namespace UserOperations.Services
                 .ToList();
             return contents;
         }
-        private List<Content> GetContentsWithTemplateIsTrue(List<Guid> companyIds)
+        private List<Content> GetAllContents(List<Guid> companyIds)
         {
             var contents = _repository.GetAsQueryable<Content>()
                 .Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))
                 .ToList();
             return contents;
+        }
+
+        private string GetActiveContentsWithUrls(int activeStatusId, List<Guid> companyIds)
+        {
+            var contents = _repository.GetAsQueryable<Content>()
+                .Where(x => x.StatusId == activeStatusId
+                    && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
+                 .Select(x => new
+                 {
+                     x.ContentId,
+                     x.CompanyId,
+                     x.CreationDate,
+                     x.Duration,
+                     x.IsTemplate,
+                     x.JSONData,
+                     x.Name,
+                     x.RawHTML,
+                     x.StatusId,
+                     x.UpdateDate,
+                     url = _fileRef.GetFileLink(_containerName, x.ContentId.ToString() + ".png", default)
+                 })
+                .ToList();
+            return JsonConvert.SerializeObject(contents);
+        }
+        private string GetAllContentsWithUrls(List<Guid> companyIds)
+        {
+            var contents = _repository.GetAsQueryable<Content>()
+                .Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))
+               .Select(x => new
+               {
+                   x.ContentId,
+                   x.CompanyId,
+                   x.CreationDate,
+                   x.Duration,
+                   x.IsTemplate,
+                   x.JSONData,
+                   x.Name,
+                   x.RawHTML,
+                   x.StatusId,
+                   x.UpdateDate,
+                   url = _fileRef.GetFileLink(_containerName, x.ContentId.ToString() + ".png", default)
+               })
+                .ToList();
+            return JsonConvert.SerializeObject(contents);
         }
         private Content GetContent(Guid contentId)
         {

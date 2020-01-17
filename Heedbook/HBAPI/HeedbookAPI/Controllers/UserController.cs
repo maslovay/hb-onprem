@@ -19,6 +19,7 @@ using System.Reflection;
 using UserOperations.Models;
 using UserOperations.Providers;
 using Microsoft.AspNetCore.Authorization;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Controllers
 {
@@ -33,6 +34,7 @@ namespace UserOperations.Controllers
         private readonly RecordsContext _context;
         private readonly RequestFilters _requestFilters;
         private readonly SftpClient _sftpClient;
+        private readonly FileRefUtils _fileRef;
         private readonly SmtpSettings _smtpSetting;
         private readonly SmtpClient _smtpClient;
         private readonly MailSender _mailSender;
@@ -48,6 +50,7 @@ namespace UserOperations.Controllers
             LoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
+            FileRefUtils fileRef,
             RequestFilters requestFilters,
             SmtpSettings smtpSetting,
             SmtpClient smtpClient,
@@ -60,6 +63,7 @@ namespace UserOperations.Controllers
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
+            _fileRef = fileRef;
             _requestFilters = requestFilters;
             _mailSender = mailSender;
             _containerName = "useravatars";
@@ -100,7 +104,7 @@ namespace UserOperations.Controllers
                 }
 
 
-            var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default) : null));
+            var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _fileRef.GetFileLink(_containerName, p.Avatar, default) : null));
                 return Ok(result);
         }
 
@@ -139,7 +143,7 @@ namespace UserOperations.Controllers
                     FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
                     var fn = user.Id + fileInfo.Extension;
                     user.Avatar = fn;
-                    avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default);
+                    avatarUrl = _fileRef.GetFileLink(_containerName, fn, default);
                 }
                 var userForEmail = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(user.Id);
                 try
@@ -203,7 +207,7 @@ namespace UserOperations.Controllers
                 }
                 if (user.Avatar != null)
                 {
-                    avatarUrl = _sftpClient.GetFileLink(_containerName, user.Avatar, default);
+                    avatarUrl = _fileRef.GetFileLink(_containerName, user.Avatar, default);
                 }
                 _context.SaveChanges();
                 return Ok(new UserModel(user, avatarUrl, newRole));
@@ -448,7 +452,7 @@ namespace UserOperations.Controllers
                 .Select(p => new
                 {
                     p.DialogueId,
-                    Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
+                    Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _fileRef.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
                     ApplicationUserId = p.ApplicationUserId?? null,
                     FullName =  p.ApplicationUser != null? p.ApplicationUser.FullName:null,
                     DialogueHints = p.DialogueHint,
@@ -504,7 +508,7 @@ namespace UserOperations.Controllers
                 .Select(p => new
                 {
                     p.DialogueId,
-                    Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
+                    Avatar = (p.DialogueClientProfile.FirstOrDefault() == null) ? null : _fileRef.GetFileUrlFast($"clientavatars/{p.DialogueClientProfile.FirstOrDefault().Avatar}"),
                     ApplicationUserId = p.ApplicationUserId,
                     FullName = p.ApplicationUser != null ? p.ApplicationUser.FullName : null,
                     DialogueHints = p.DialogueHint.Count() != 0 ? "YES" : null,
@@ -573,8 +577,8 @@ namespace UserOperations.Controllers
 
                 jsonDialogue["DeviceName"] = dialogue.Device.Name;
                 jsonDialogue["FullName"] = dialogue.ApplicationUser?.FullName;
-                jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _sftpClient.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
-                jsonDialogue["Video"] = dialogue == null ? null : _sftpClient.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
+                jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _fileRef.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
+                jsonDialogue["Video"] = dialogue == null ? null : _fileRef.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
                 jsonDialogue["DialogueAvgDurationLastMonth"] = avgDialogueTime;
 
                 return Ok(jsonDialogue);

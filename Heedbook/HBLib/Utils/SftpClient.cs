@@ -69,16 +69,7 @@ namespace HBLib.Utils
                 return $"http://{_sftpSettings.Host}/{path}";
             return null;
         }
-
-        /// <summary>
-        /// Get url to file. 
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public string GetFileUrlFast(String path)
-        {
-            return $"http://{_sftpSettings.Host}/{path}";
-        }
+     
         public async Task<List<string>> GetFileNames(String directory)
         {
             await ConnectToSftpAsync();
@@ -386,12 +377,7 @@ namespace HBLib.Utils
             if (_client.IsConnected)
                 await Task.Run(() => _client.Disconnect());
         }
-
-        public string GetFileLink(string directory, string file, DateTime exp = default(DateTime))
-        {
-            //return new FileResult { path = $"{httpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
-            return $"{httpFileUrl}{directory}/{file}";
-        }
+    
         public class FileInfoModel
         {
             public string url;
@@ -404,11 +390,5 @@ namespace HBLib.Utils
 
         public string Host =>
             _sftpSettings.Host;
-    }
-
-    public class FileResult
-    {
-        public string path;
-        public string ext;
     }
 }

@@ -59,11 +59,12 @@ namespace UserOperations.Controllers
         [HttpGet("Content")]
         [SwaggerOperation(Summary = "Get all content", Description = "Get all content for loggined company with screenshot url links")]
         [SwaggerResponse(200, "Content list", typeof(List<Content>))]
-        public async Task<List<Content>> ContentGet(
+        public async Task<string> ContentGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                [FromQuery(Name = "inActive")] bool? inActive ) =>
-            await _campaignContentService.ContentGet( companyIds, corporationIds, inActive );
+                                [FromQuery(Name = "inActive")] bool? inActive,
+                                [FromQuery(Name = "screenshot")] bool screenshot = false) =>
+            await _campaignContentService.ContentGet( companyIds, corporationIds, inActive, screenshot);
         
 
         [HttpGet("ContentPaginated")]

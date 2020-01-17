@@ -7,6 +7,7 @@ using System.IO;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using HBLib.Utils;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Services
 {
@@ -14,18 +15,21 @@ namespace UserOperations.Services
     {
         private readonly LoginService _loginService;
         private readonly SftpClient _sftpClient;
+        private readonly FileRefUtils _fileRef;
         private readonly string _containerName;
         private Dictionary<string, string> userClaims;
       
 
         public MediaFileService(
             LoginService loginService,
-            SftpClient sftpClient
+            SftpClient sftpClient,
+            FileRefUtils fileRef
             )
         {
             _loginService = loginService;
             _sftpClient = sftpClient;
-            _containerName = "media";         
+            _fileRef = fileRef;
+            _containerName = "media";
         }
 
         public async Task<object> FileGet(
@@ -39,7 +43,7 @@ namespace UserOperations.Services
 
             if (fileName != null)
             {
-                var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fileName, (DateTime)expirationDate);
+                var result = _fileRef.GetFileLink(containerName + "/" + companyId, fileName, (DateTime)expirationDate);
                 return result;
             }
             else
@@ -49,9 +53,9 @@ namespace UserOperations.Services
                 List<string> result = new List<string>();
                 foreach (var file in files)
                 {
-                    result.Add(_sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
+                    result.Add(_fileRef.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
                 }
-                return files;
+                return result;
             }            
         }
       
@@ -78,7 +82,7 @@ namespace UserOperations.Services
             List<string> result = new List<string>();
             foreach (var file in fileNames)
             {
-                result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, default(DateTime)));
+                result.Add( _fileRef.GetFileLink(containerName + "/" + companyId, file, default(DateTime)));
             }
             // _log.Info("MediaFile/File POST finished"); 
             return result;
@@ -100,7 +104,7 @@ namespace UserOperations.Services
                 // var result = new { 
                 //     path =  await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fn}"), 
                 //     ext = Path.GetExtension(fileName.Trim('.'))};
-                var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fn, default(DateTime));
+                var result = _fileRef.GetFileLink(containerName + "/" + companyId, fn, default(DateTime));
                 // _log.Info("MediaFile/File PUT finished"); 
                 return result;
         }
