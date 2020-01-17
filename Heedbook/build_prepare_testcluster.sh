@@ -28,3 +28,4 @@ sed -i "s/testcluster/true/" tmp/OldVideoToFrameCutSheduler.Dockerfile
 sed -i "s/testcluster/true/" tmp/LogSaveService.Dockerfile
 sed -i "s/testcluster/true/" tmp/MessengerReporterService.Dockerfile
 sed -i "s/testcluster/true/" tmp/CloneFtpOnAzureService.Dockerfile
+sed -i "s/testcluster/true/" tmp/DeleteOldLogsOnElasticScheduler.Dockerfile
