@@ -10,7 +10,7 @@ using HBData;
 using HBLib;
 
 
-namespace DialogueMarkUp.QuartzJobs
+namespace SessionCloseSchedule
 {
     public class SessionCloseJob : IJob
     {
@@ -25,7 +25,7 @@ namespace DialogueMarkUp.QuartzJobs
             _elasticClientFactory = elasticClientFactory;
         }
 
-         public async Task Execute(IJobExecutionContext context)
+        public async Task Execute(IJobExecutionContext context)
         {
             var _log = _elasticClientFactory.GetElasticClient();
             try

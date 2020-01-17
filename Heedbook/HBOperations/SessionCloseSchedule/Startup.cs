@@ -1,8 +1,5 @@
-﻿using AsrHttpClient;
-using AudioAnalyzeScheduler.Extensions;
-using AudioAnalyzeScheduler.Settings;
+﻿using Configurations;
 using HBData;
-using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
@@ -14,7 +11,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Quartz;
 
-namespace AudioAnalyzeScheduler
+
+
+namespace SessionCloseSchedule
 {
     public class Startup
     {
@@ -30,31 +29,21 @@ namespace AudioAnalyzeScheduler
         {
             services.AddOptions();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
-            //services.Configure<AudioAnalyseSchedulerSettings>(Configuration.GetSection(nameof(AudioAnalyseSchedulerSettings)));
-
-            var schedulerSettings = new AudioAnalyseSchedulerSettings()
-            {
-                Period = Configuration.GetSection(nameof(AudioAnalyseSchedulerSettings)).GetValue<int>("Period")
-            };
-            
             services.AddDbContext<RecordsContext>
             (options =>
             {
                 var connectionString = Configuration.GetConnectionString("DefaultConnection");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
-            });
-            services.AddSingleton(provider => provider.GetService<IOptions<AsrSettings>>().Value);
+            }, ServiceLifetime.Scoped);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddTransient<GoogleConnector>();
             services.AddSingleton<ElasticClientFactory>();
-            services.AddSingleton<AsrHttpClient.AsrHttpClient>();
             services.AddSingleton<SftpClient>();
+            services.AddRabbitMqEventBus(Configuration);
+
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddAudioRecognizeQuartz(schedulerSettings);
+            services.AddSessionCloseQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

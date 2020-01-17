@@ -1,28 +1,27 @@
-using SessionStatusSchedule.QuartzJobs;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions;
 
-namespace SessionStatusSchedule.Extensions
+namespace SessionCloseSchedule
 {
-    public static class AddSessionStatusScheduleJob
+    public static class AddSessionCloseScheduleJob
     {
-        public static void AddSessionStatusScheduleQuartz(this IServiceCollection services)
+        public static void AddSessionCloseQuartz(this IServiceCollection services)
         {
-            services.Add(new ServiceDescriptor(typeof(IJob), typeof(CheckSessionStatusScheduleJob),
+            services.Add(new ServiceDescriptor(typeof(IJob), typeof(SessionCloseJob),
                 ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
-            services.AddSingleton(provider => JobBuilder.Create<CheckSessionStatusScheduleJob>()
-                                                        .WithIdentity("CheckSessionStatusSchedule.job", "Dialogues")
+            services.AddSingleton(provider => JobBuilder.Create<SessionCloseJob>()
+                                                        .WithIdentity("SessionClose.job", "Sessions")
                                                         .Build());
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity("CheckDSessionStatusSchedule.trigger", "Dialogues")
+                                     .WithIdentity("SessionClose.trigger", "Sessions")
                                      .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
+                                     .WithSimpleSchedule(s => s.WithIntervalInHours(24).RepeatForever())
                                      .Build();
             });
 
