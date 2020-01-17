@@ -46,6 +46,7 @@ namespace MessengerReporterService
             }
             catch (Exception e)
             {
+                System.Console.WriteLine($"Exception: \n{e}");
                 _log.Fatal($"exception occured {e}");
             }
         }
