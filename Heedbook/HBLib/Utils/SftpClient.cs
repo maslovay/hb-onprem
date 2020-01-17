@@ -387,10 +387,10 @@ namespace HBLib.Utils
                 await Task.Run(() => _client.Disconnect());
         }
 
-        public FileResult GetFileLink(string directory, string file, DateTime exp = default(DateTime))
+        public string GetFileLink(string directory, string file, DateTime exp = default(DateTime))
         {
-            return new FileResult { path = $"{httpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
-            // return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
+            //return new FileResult { path = $"{httpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
+            return $"{httpFileUrl}{directory}/{file}";
         }
         public class FileInfoModel
         {

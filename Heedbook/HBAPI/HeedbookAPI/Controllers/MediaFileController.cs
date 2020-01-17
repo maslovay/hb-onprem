@@ -32,7 +32,7 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Return all files from sftp. If no parameters are passed return files from 'media', for loggined company")]
         [SwaggerResponse(400, "No such file / Exception message", typeof(string))]
         [SwaggerResponse(200, "File exist")]
-        public async Task<object> FileGet(   
+        public async Task<object> FileGet(
                 [FromQuery(Name= "containerName")] string containerName = null, 
                 [FromQuery(Name = "fileName")] string fileName = null,
                 [FromQuery(Name = "expirationDate")]  DateTime? expirationDate = null) =>

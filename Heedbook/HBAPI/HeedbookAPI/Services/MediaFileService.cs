@@ -46,12 +46,12 @@ namespace UserOperations.Services
             {
                 await _sftpClient.CreateIfDirNoExistsAsync(_containerName + "/" + companyId);
                 var files = await _sftpClient.GetFileNames(_containerName+"/"+companyId);  
-                List<object> result = new List<object>();        
-                foreach(var file in files)         
-                {
-                    result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
-                }
-                return result;
+                //List<object> result = new List<object>();
+                //foreach(var file in files)
+                //{
+                //    result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
+                //}
+                return files;
             }            
         }
       

@@ -100,7 +100,7 @@ namespace UserOperations.Controllers
                 }
 
 
-            var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default).path : null));
+            var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _sftpClient.GetFileLink(_containerName, p.Avatar, default) : null));
                 return Ok(result);
         }
 
@@ -139,7 +139,7 @@ namespace UserOperations.Controllers
                     FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
                     var fn = user.Id + fileInfo.Extension;
                     user.Avatar = fn;
-                    avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default).path;
+                    avatarUrl = _sftpClient.GetFileLink(_containerName, fn, default);
                 }
                 var userForEmail = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(user.Id);
                 try
@@ -203,7 +203,7 @@ namespace UserOperations.Controllers
                 }
                 if (user.Avatar != null)
                 {
-                    avatarUrl = _sftpClient.GetFileLink(_containerName, user.Avatar, default).path;
+                    avatarUrl = _sftpClient.GetFileLink(_containerName, user.Avatar, default);
                 }
                 _context.SaveChanges();
                 return Ok(new UserModel(user, avatarUrl, newRole));
