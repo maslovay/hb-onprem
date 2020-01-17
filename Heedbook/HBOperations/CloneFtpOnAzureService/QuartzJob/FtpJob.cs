@@ -74,7 +74,6 @@ namespace CloneFtpOnAzureService
                 catch (Exception e)
                 {
                     _log.Fatal($"{e}");
-                    throw;
                 }
             }
         }
