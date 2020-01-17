@@ -8,7 +8,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace CloneFtpOnAzure
+namespace CloneFtpOnAzureService
 {
     public class BlobController
     {

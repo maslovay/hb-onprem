@@ -26,7 +26,8 @@ docker build -t hbtestregistry.azurecr.io/referencecontroller:latesttest -f tmp/
 docker build -t hbtestregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest -f DialogueAndSessionsNestedScheduler.Dockerfile . &&
 docker build -t hbtestregistry.azurecr.io/oldvideotoframecutsheduler:latest -f OldVideoToFrameCutSheduler.Dockerfile . &&
 docker build -t hbtestregistry.azurecr.io/logsaveservice:latest -f LogSaveService.Dockerfile . &&
-docker build -t hbtestregistry.azurecr.io/messengerreporterservice:latest -f MessengerReporterService.Dockerfile .
+docker build -t hbtestregistry.azurecr.io/messengerreporterservice:latest -f MessengerReporterService.Dockerfile . &&
+docker build -t hbtestregistry.azurecr.io/cloneftponazureservice:latest -f CloneFtpOnAzureService.Dockerfile .
 
 
 docker push hbtestregistry.azurecr.io/faceanalyzeservice:latesttest &&
@@ -53,6 +54,7 @@ docker push hbtestregistry.azurecr.io/referencecontroller:latesttest &&
 docker push hbtestregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest &&
 docker push hbtestregistry.azurecr.io/oldvideotoframecutsheduler:latest &&
 docker push hbtestregistry.azurecr.io/logsaveservice:latest &&
-docker push hbtestregistry.azurecr.io/messengerreporterservice:latest 
+docker push hbtestregistry.azurecr.io/messengerreporterservice:latest &&
+docker push hbtestregistry.azurecr.io/cloneftponazureservice:latest
 
 rm -rf tmp

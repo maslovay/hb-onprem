@@ -69,7 +69,6 @@ namespace ErrorKibanaScheduler.QuartzJob
                                         .Query("Error")))) && q.DateRange(r=>r
                                     .Field(fd=>fd.Timestamp)
                                     .GreaterThanOrEquals(DateTime.UtcNow.AddHours(-4)))));
-                System.Console.WriteLine(JsonConvert.SerializeObject(searchRequest));
                 var documents = searchRequest.Documents.ToList();
                 var alarm = new MessengerMessageRun()
                 {

@@ -4,7 +4,7 @@ using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions;
 
-namespace CloneFtpOnAzure.Extension
+namespace CloneFtpOnAzureService.Extension
 {
     public static class AddQuartzJobOnBacupFtp
     {

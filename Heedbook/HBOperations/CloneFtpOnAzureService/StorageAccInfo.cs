@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace CloneFtpOnAzure
+namespace CloneFtpOnAzureService
 {
     public class StorageAccInfo
     {
