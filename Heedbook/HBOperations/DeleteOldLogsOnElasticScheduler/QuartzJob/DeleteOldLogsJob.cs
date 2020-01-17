@@ -36,7 +36,8 @@ namespace DeleteOldLogsOnElasticScheduler.QuartzJob
                     .AllIndices()
                     .Query(q => q.DateRange(r => r
                         .Field(fd => fd.Timestamp)
-                        .LessThanOrEquals(DateTime.UtcNow.AddDays(-14)))));
+                        .LessThanOrEquals(DateTime.UtcNow.AddDays(-1)))));
+                        // .LessThanOrEquals(DateTime.UtcNow.AddDays(-14)))));
             }
             catch (Exception e)
             {

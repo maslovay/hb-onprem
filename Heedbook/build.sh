@@ -23,7 +23,8 @@ docker build -t heedbookcontainerregistry.azurecr.io/dialogueandsessionsnestedsc
 docker build -t heedbookcontainerregistry.azurecr.io/oldvideotoframecutsheduler:latest -f OldVideoToFrameCutSheduler.Dockerfile . &&
 docker build -t heedbookcontainerregistry.azurecr.io/logsaveservice:latest -f LogSaveService.Dockerfile . &&
 docker build -t heedbookcontainerregistry.azurecr.io/messengerreporterservice:latest -f MessengerReporterService.Dockerfile . &&
-docker build -t heedbookcontainerregistry.azurecr.io/cloneftponazureservice:latest -f CloneFtpOnAzureService.Dockerfile .
+docker build -t heedbookcontainerregistry.azurecr.io/cloneftponazureservice:latest -f CloneFtpOnAzureService.Dockerfile . &&
+docker build -t heedbookcontainerregistry.azurecr.io/deleteoldlogsonelasticscheduler:latest -f DeleteOldLogsOnElasticScheduler.Dockerfile .
 
 docker push heedbookcontainerregistry.azurecr.io/faceanalyzeservice:latest &&
 docker push heedbookcontainerregistry.azurecr.io/userservice:latest && 
@@ -49,4 +50,5 @@ docker push heedbookcontainerregistry.azurecr.io/dialogueandsessionsnestedschedu
 docker push heedbookcontainerregistry.azurecr.io/oldvideotoframecutsheduler:latest &&
 docker push heedbookcontainerregistry.azurecr.io/logsaveservice:latest &&
 docker push heedbookcontainerregistry.azurecr.io/messengerreporterservice:latest &&
-docker push heedbookcontainerregistry.azurecr.io/cloneftponazureservice:latest
+docker push heedbookcontainerregistry.azurecr.io/cloneftponazureservice:latest &&
+docker push heedbookcontainerregistry.azurecr.io/deleteoldlogsonelasticscheduler:latest
