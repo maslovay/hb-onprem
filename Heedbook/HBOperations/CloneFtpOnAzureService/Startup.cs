@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CloneFtpOnAzure.Extension;
+using CloneFtpOnAzureService.Extension;
 using HBData;
 using HBLib;
 using HBLib.Utils;
@@ -17,7 +17,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
 
-namespace CloneFtpOnAzure
+namespace CloneFtpOnAzureService
 {
     public class Startup
     {

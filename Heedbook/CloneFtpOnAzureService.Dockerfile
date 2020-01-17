@@ -2,13 +2,13 @@ FROM microsoft/dotnet:2.2-sdk-alpine AS build-env
 WORKDIR /app
 COPY . .
 # Copy everything else and build
-RUN dotnet publish ./HBOperations/CloneFtpOnAzure -c Release -o publish
+RUN dotnet publish ./HBOperations/CloneFtpOnAzureService -c Release -o publish
 
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
-COPY --from=build-env /app/HBOperations/CloneFtpOnAzure/publish .
-ENTRYPOINT ["dotnet", "CloneFtpOnAzure.dll"]
+COPY --from=build-env /app/HBOperations/CloneFtpOnAzureService/publish .
+ENTRYPOINT ["dotnet", "CloneFtpOnAzureService.dll"]
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download

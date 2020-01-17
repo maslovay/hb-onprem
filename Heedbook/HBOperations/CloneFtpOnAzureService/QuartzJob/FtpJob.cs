@@ -12,7 +12,7 @@ using Quartz;
 using Microsoft.Azure;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CloneFtpOnAzure
+namespace CloneFtpOnAzureService
 {
     public class FtpJob : IJob
     {
