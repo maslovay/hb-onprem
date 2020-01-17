@@ -30,6 +30,13 @@ namespace UserOperations.Controllers
         public async Task<string> GenerateToken([FromBody] string code)
            => await _deviceService.GenerateToken(code);
 
+        [HttpGet("EmployeeList")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
+        [SwaggerOperation(Summary = "list of users", Description = "get users and session status on devices")]
+        [SwaggerResponse(200, "Users[]", typeof(List<GetUsersSessions>))]
+        public async Task<ICollection<GetUsersSessions>> UsersGet()
+           => await _deviceService.GetAllUsersSessions();
+
         [HttpGet("List")]
         [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "list of devices", Description = "")]

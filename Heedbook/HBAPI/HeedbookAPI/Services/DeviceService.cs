@@ -57,6 +57,36 @@ namespace UserOperations.Services
             return data.ToList();
         }
 
+        public async Task<List<GetUsersSessions>> GetAllUsersSessions()
+        {
+            var deviceId = _loginService.GetCurrentDeviceId();
+            var companyId = _loginService.GetCurrentCompanyId();
+            var employeeRoleId = (await _repository.FindOrExceptionOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
+
+            var userIds = _repository.GetAsQueryable<ApplicationUser>()
+                .Where(u => u.CompanyId == companyId && u.UserRoles.Select(r => r.RoleId).Contains(employeeRoleId))
+                .Select(u => u.Id).ToList();
+
+            var sessions = _repository.GetAsQueryable<Session>()
+                .GroupBy(x => x.ApplicationUserId)
+                .Select(x => new GetUsersSessions
+                {
+                    UserId = x.Key,
+                    DeviceId = x.OrderByDescending(s => s.BegTime).FirstOrDefault().DeviceId,
+                    SessionStatus = x.OrderByDescending(s => s.BegTime).FirstOrDefault().StatusId == 6 ? "open" : "close"
+                });
+
+            var usersInSessions = sessions.Select(x => x.UserId).ToList();
+            var userSessionsNotIncludedInResult = userIds.Where(id => !usersInSessions.Contains(id))
+                .Select(id => new GetUsersSessions
+                {
+                    UserId = id,
+                    DeviceId = null,
+                    SessionStatus = "close"
+                });
+            return sessions.Union(userSessionsNotIncludedInResult).ToList();
+        }
+
         public async Task<Device> Create(PostDevice device)
         {
             var role = _loginService.GetCurrentRoleName();

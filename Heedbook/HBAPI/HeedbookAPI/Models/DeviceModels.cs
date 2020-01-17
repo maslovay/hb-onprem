@@ -30,5 +30,10 @@ namespace UserOperations.Models
         public Guid? DeviceTypeId { get; set; }
     }
 
-  
+        public class GetUsersSessions
+    {
+            public Guid UserId { get; set; }
+            public string SessionStatus { get; set; }
+            public Guid? DeviceId { get; set; }
+        }
 }
