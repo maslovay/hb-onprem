@@ -63,24 +63,39 @@ namespace UserOperations.Services
             var companyId = _loginService.GetCurrentCompanyId();
             var employeeRoleId = (await _repository.FindOrExceptionOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
 
-            var userIds = _repository.GetAsQueryable<ApplicationUser>()
-                .Where(u => u.CompanyId == companyId && u.UserRoles.Select(r => r.RoleId).Contains(employeeRoleId))
-                .Select(u => u.Id).ToList();
+            var users = _repository.GetAsQueryable<ApplicationUser>()
+                .Where(u => u.CompanyId == companyId && u.UserRoles.Select(r => r.RoleId).Contains(employeeRoleId));
+
+            var userIds = users.Select(u => u.Id).ToList();
 
             var sessions = _repository.GetAsQueryable<Session>()
+                .Join(users , s => s.ApplicationUserId, u => u.Id, (s, u) => 
+                    new
+                    {
+                        s.ApplicationUserId,
+                        s.DeviceId,
+                        s.BegTime,
+                        s.StatusId,
+                        u.FullName,
+                        u.Avatar
+                    })
                 .GroupBy(x => x.ApplicationUserId)
                 .Select(x => new GetUsersSessions
                 {
                     UserId = x.Key,
-                    DeviceId = x.OrderByDescending(s => s.BegTime).FirstOrDefault().DeviceId,
-                    SessionStatus = x.OrderByDescending(s => s.BegTime).FirstOrDefault().StatusId == 6 ? "open" : "close"
+                    DeviceId = x.OrderByDescending(p => p.BegTime).FirstOrDefault().DeviceId,
+                    SessionStatus = x.OrderByDescending(p => p.BegTime).FirstOrDefault().StatusId == 6 ? "open" : "close",
+                    FullName = x.OrderByDescending(p => p.BegTime).FirstOrDefault().FullName,
+                    Avatar = _loginService.GetAvatar(x.OrderByDescending(p => p.BegTime).FirstOrDefault().Avatar)
                 });
 
             var usersInSessions = sessions.Select(x => x.UserId).ToList();
-            var userSessionsNotIncludedInResult = userIds.Where(id => !usersInSessions.Contains(id))
-                .Select(id => new GetUsersSessions
+            var userSessionsNotIncludedInResult = users.Where(x => !usersInSessions.Contains(x.Id))
+                .Select(x => new GetUsersSessions
                 {
-                    UserId = id,
+                    UserId = x.Id,
+                    FullName = x.FullName,
+                    Avatar = _loginService.GetAvatar(x.Avatar),
                     DeviceId = null,
                     SessionStatus = "close"
                 });

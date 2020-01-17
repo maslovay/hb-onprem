@@ -91,7 +91,7 @@ namespace UserOperations.Services
                         new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
                         new Claim("fullName", user.FullName),
-                        new Claim("avatar", AvatarExist(user.Avatar) ? $"http://{_sftpSettings.Host}/useravatars/{user.Avatar}":""),
+                        new Claim("avatar", GetAvatar(user.Avatar)),
                         new Claim("IsExtended", "true")
                     };
 
@@ -326,10 +326,17 @@ namespace UserOperations.Services
         {
             if(String.IsNullOrEmpty(avatarPath))
                 return false;
-            var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");      
+            var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");
             task.Wait();
-            bool exist = task.Result;      
+            bool exist = task.Result;
             return exist;
+        }
+
+        public string GetAvatar(string avatarPath)
+        {
+            if (AvatarExist(avatarPath))
+                return $"{_sftpSettings.Host}/useravatars/{avatarPath}";
+            return "";
         }
         public bool IsAdmin()
         {

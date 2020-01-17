@@ -33,6 +33,8 @@ namespace UserOperations.Models
         public class GetUsersSessions
     {
             public Guid UserId { get; set; }
+            public string FullName { get; set; }
+            public string Avatar { get; set; }
             public string SessionStatus { get; set; }
             public Guid? DeviceId { get; set; }
         }
