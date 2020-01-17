@@ -10,7 +10,7 @@ using HBData.Models;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Utils;
 
-namespace Benchmark
+namespace BenchmarkScheduler
 {
     public class BenchmarkJob : IJob
     {

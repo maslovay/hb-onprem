@@ -4,7 +4,7 @@ using Quartz.Impl;
 using Quartz.Spi;
 using UserOperations.Utils;
 
-namespace Benchmark
+namespace BenchmarkScheduler
 {
     public static class AddQuartzJobOnBenchmarkFill
     {

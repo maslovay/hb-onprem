@@ -13,7 +13,7 @@ using Quartz;
 
 
 
-namespace Benchmark
+namespace BenchmarkScheduler
 {
     public class Startup
     {
