@@ -335,7 +335,7 @@ namespace UserOperations.Services
         public string GetAvatar(string avatarPath)
         {
             if (AvatarExist(avatarPath))
-                return $"{_sftpSettings.Host}/useravatars/{avatarPath}";
+                return $"{_config["FileRefPath:url"]}/useravatars/{avatarPath}";
             return "";
         }
         public bool IsAdmin()
