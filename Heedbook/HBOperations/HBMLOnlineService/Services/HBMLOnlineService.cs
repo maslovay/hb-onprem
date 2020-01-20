@@ -30,7 +30,7 @@ namespace HBMLOnlineService.Service
         {
             _context = context;
             _client = client;
-            // _publisher = publisher;
+            _publisher = publisher;
             _sftpClient = sftpClient;
         }
 
