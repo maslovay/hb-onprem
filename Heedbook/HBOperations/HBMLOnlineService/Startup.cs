@@ -40,7 +40,7 @@ namespace HBMLOnlineService
                 c.EnableAnnotations();
                 c.SwaggerDoc("v1", new Info
                 {
-                    Title = "HBML Face Service",
+                    Title = "HBML Face Servise",
                     Version = "v1"
                 });
             });

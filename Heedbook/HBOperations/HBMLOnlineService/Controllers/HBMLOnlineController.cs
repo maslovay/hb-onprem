@@ -15,7 +15,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace HBMLOnlineService.Controllers
 {
-    [Route("face/[controller]")]
+    [Route("face")]
     [ApiController]
     public class HBMLOnlineService : Controller
     {
