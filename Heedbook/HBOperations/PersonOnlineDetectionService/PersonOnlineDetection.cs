@@ -27,7 +27,6 @@ namespace PersonOnlineDetectionService
         public PersonOnlineDetection(
             IServiceScopeFactory factory,
             ElasticClientFactory elasticClientFactory,
-            GoogleConnector googleConnector,
             SftpClient sftpclient,
             PersonDetectionUtils personDetectionUtils
         )
@@ -41,6 +40,7 @@ namespace PersonOnlineDetectionService
 
         public async Task Run(PersonOnlineDetectionRun message)
         {
+            System.Console.WriteLine("Function started");
             var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(message.Path);
