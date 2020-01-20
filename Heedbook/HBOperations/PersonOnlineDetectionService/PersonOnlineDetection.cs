@@ -27,7 +27,6 @@ namespace PersonOnlineDetectionService
         public PersonOnlineDetection(
             IServiceScopeFactory factory,
             ElasticClientFactory elasticClientFactory,
-            GoogleConnector googleConnector,
             SftpClient sftpclient,
             PersonDetectionUtils personDetectionUtils
         )
