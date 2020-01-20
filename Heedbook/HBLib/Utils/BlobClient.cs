@@ -14,18 +14,13 @@ namespace HBLib.Utils
         private CloudBlobClient _cloudBlobClient;
         public BlobClient(BlobSettings blobSettings)
         {
-            _blobSettings = blobSettings;            
-        }
-        private void Connect()
-        {
+            _blobSettings = blobSettings;   
             var storageCredentials = new StorageCredentials(_blobSettings.AccName, _blobSettings.AccKey);
             var cloudStorageAccount = new CloudStorageAccount(storageCredentials, true);
-            _cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();
-        }
-        
+            _cloudBlobClient = cloudStorageAccount.CreateCloudBlobClient();         
+        }        
         public string CreateSasUri(string containerName, string fileName)
         {
-            Connect();
             var container = _cloudBlobClient.GetContainerReference(containerName);
             var newBlob = container.GetBlockBlobReference(fileName);
             var policy = new SharedAccessBlobPolicy()
@@ -40,7 +35,6 @@ namespace HBLib.Utils
         }
         public async Task UploadFileStreamToBlob(String containerName, String fileName, Stream stream)
         {
-            Connect();
             var container = _cloudBlobClient.GetContainerReference(containerName);
             await container.CreateIfNotExistsAsync();
             var newBlob = container.GetBlockBlobReference(fileName);
