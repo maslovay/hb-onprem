@@ -52,6 +52,7 @@ namespace PersonOnlineDetectionService
 
             services.AddTransient<PersonOnlineDetection>();
             services.AddTransient<PersonOnlineDetectionHandler>();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddRabbitMqEventBus(Configuration);
 
