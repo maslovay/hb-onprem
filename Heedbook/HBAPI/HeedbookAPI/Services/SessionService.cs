@@ -30,7 +30,7 @@ namespace UserOperations.Services
                 response.Message = "DeviceId or UserId is empty";
                 return response;
             }
-            _log.Info($"session on device {data.DeviceId} try {data.Action}");
+           // _log.Info($"session on device {data.DeviceId} try {data.Action}");
 
             //------------------------------------------------------------------
             const int OPEN = 6;
@@ -66,7 +66,7 @@ namespace UserOperations.Services
                 CreateNewSession(data, OPEN);
                 _repository.Save();
                 response.Message = "Session successfully opened";
-                _log.Info($"Session successfully opened on device: {data.DeviceId}");
+             //   _log.Info($"Session successfully opened on device: {data.DeviceId}");
             }
 
             if (data.Action == "close")
@@ -80,7 +80,7 @@ namespace UserOperations.Services
                 if (CloseSession(lastSession, CLOSE))
                     _repository.Save();
                 response.Message = "session successfully closed";
-                _log.Info($"session successfully closed for device: {data.DeviceId}");
+              //  _log.Info($"session successfully closed for device: {data.DeviceId}");
             }
             return response;
         }
