@@ -41,8 +41,8 @@ namespace UserService.Controllers
             [FromQuery] Guid deviceId,
             [FromQuery] String begTime,
             [FromQuery] Double? duration,
-            [FromQuery] String endTime = null,
-            [FromQuery] Guid? applicationUserId = null)
+            [FromQuery] string applicationUserId,
+            [FromQuery] String endTime = null)
         {
             try
             {
@@ -50,11 +50,16 @@ namespace UserService.Controllers
                 var languageId = _context.Devices
                                          .Where(p => p.DeviceId == deviceId)
                                          .Select( x => x.Company.Language.LanguageId).First();
-
+                Guid? userId = null;
+                try
+                {
+                    userId = Guid.Parse(applicationUserId);
+                }
+                catch {}
                 var stringFormat = "yyyyMMddHHmmss";
                 var timeBeg = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): timeBeg.AddSeconds((double)duration);
-                var fileName = $"{applicationUserId?? Guid.Empty}_{deviceId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
+                var fileName = $"{userId?? Guid.Empty}_{deviceId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
                 //_log.Info($"Function Video save info started. Filename {fileName}");
                 var videoIntersectVideosAny = _context.FileVideos
                     .Where(p => p.DeviceId == deviceId
@@ -71,7 +76,7 @@ namespace UserService.Controllers
                     .Any();
                 var videoFile = new FileVideo
                 {
-                    ApplicationUserId = applicationUserId,
+                    ApplicationUserId = userId,
                     DeviceId = deviceId,
                     BegTime = timeBeg,
                     CreationTime = DateTime.UtcNow,
