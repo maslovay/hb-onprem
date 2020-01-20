@@ -38,8 +38,8 @@ namespace PersonDetectionService
         {
             var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{deviceIds}");
-            _log.SetArgs(JsonConvert.SerializeObject(message.DeviceIds));
             _log.Info("Function started");
+            _log.SetArgs(JsonConvert.SerializeObject(message.DeviceIds));
             try
             {
                 var begTime = DateTime.Now.AddYears(-1);

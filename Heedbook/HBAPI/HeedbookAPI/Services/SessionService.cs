@@ -62,6 +62,11 @@ namespace UserOperations.Services
                     return response;
                 }
 
+                if (lastSession != null && lastSession.StatusId == OPEN)//---means active session on this device
+                {
+                    CloseSession(lastSession, CLOSE);
+                }
+
                 //---OPEN (CREATE) NEW SESSION
                 CreateNewSession(data, OPEN);
                 _repository.Save();
