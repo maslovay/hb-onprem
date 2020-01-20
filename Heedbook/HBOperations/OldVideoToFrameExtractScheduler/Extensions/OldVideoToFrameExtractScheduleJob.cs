@@ -1,28 +1,30 @@
-using SessionStatusSchedule.QuartzJobs;
+using OldVideoToFrameExtract.QuartzJobs;
+using OldVideoToFrameExtract.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions;
+using System;
 
-namespace SessionStatusSchedule.Extensions
+namespace OldVideoToFrameExtract.Extensions
 {
-    public static class AddSessionStatusScheduleJob
+    public static class AddOldVideoToFrameExtractScheduleJob
     {
-        public static void AddSessionStatusScheduleQuartz(this IServiceCollection services)
+        public static void AddMarkUpQuartz(this IServiceCollection services, OldVideoToFrameExtractSettings settings)
         {
-            services.Add(new ServiceDescriptor(typeof(IJob), typeof(CheckSessionStatusScheduleJob),
+            services.Add(new ServiceDescriptor(typeof(IJob), typeof(OldVideoToFrameExtractJob),
                 ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
-            services.AddSingleton(provider => JobBuilder.Create<CheckSessionStatusScheduleJob>()
-                                                        .WithIdentity("CheckSessionStatusSchedule.job", "Dialogues")
+            services.AddSingleton(provider => JobBuilder.Create<OldVideoToFrameExtractJob>()
+                                                        .WithIdentity("OldVideoToFrameExtract.job", "Dialogues")
                                                         .Build());
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity("CheckDSessionStatusSchedule.trigger", "Dialogues")
+                                     .WithIdentity("OldVideoToFrameExtract.trigger", "Dialogues")
                                      .StartNow()
-                                     .WithSimpleSchedule(s => s.WithIntervalInMinutes(30).RepeatForever())
+                                     .WithCronSchedule("0 00 5 * * ?", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())  
                                      .Build();
             });
 

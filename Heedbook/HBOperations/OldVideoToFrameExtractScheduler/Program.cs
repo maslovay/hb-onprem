@@ -8,17 +8,20 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace SessionStatusSchedule
+namespace OldVideoToFrameExtract
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static void Main(String[] args)
         {
             CreateWebHostBuilder(args).Build().Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
+        public static IWebHostBuilder CreateWebHostBuilder(String[] args)
+        {
+            return WebHost.CreateDefaultBuilder(args)
+                          .UseStartup<Startup>();
+            
+        }
     }
 }
