@@ -40,7 +40,7 @@ namespace HBMLOnlineService
                 c.EnableAnnotations();
                 c.SwaggerDoc("v1", new Info
                 {
-                    Title = "User Service Api",
+                    Title = "HBML Face Service",
                     Version = "v1"
                 });
             });
@@ -76,13 +76,13 @@ namespace HBMLOnlineService
             else
                 app.UseHsts();
 
-            app.UseSwagger(c => { c.RouteTemplate = "user/swagger/{documentName}/swagger.json"; });
+            app.UseSwagger(c => { c.RouteTemplate = "face/swagger/{documentName}/swagger.json"; });
             var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/user/swagger/v1/swagger.json", "Sample API");
-                c.RoutePrefix = "user/swagger";
+                c.SwaggerEndpoint("/face/swagger/v1/swagger.json", "Sample API");
+                c.RoutePrefix = "face/swagger";
             });
             app.UseMvc();
         }
