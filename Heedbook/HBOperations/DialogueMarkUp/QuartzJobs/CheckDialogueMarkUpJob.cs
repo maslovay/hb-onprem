@@ -157,6 +157,9 @@ namespace DialogueMarkUp.QuartzJobs
 
         private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid deviceId, ElasticClient log)
         {
+            log.Info($"CreateMarkUp markUps: {markUps.Count()}");
+            log.Info($"CreateMarkUp framesUser count: {framesUser.Count()}");
+
             var dialogueCreationList = new List<DialogueCreationRun>();
             var dialogueVideoAssembleList = new List<DialogueVideoAssembleRun>();
             int markUpCount;
