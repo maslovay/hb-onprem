@@ -44,6 +44,12 @@ namespace HBLib.Utils
             }
         }
 
+        public void RenameFile(String oldPath, String newPath)
+        {
+            ConnectToSftpAsync().Wait();
+            _client.RenameFile(oldPath, newPath);
+        }
+        
         public void Dispose()
         {
             _client.Dispose();
