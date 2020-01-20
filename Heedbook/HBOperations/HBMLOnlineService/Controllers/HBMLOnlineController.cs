@@ -41,7 +41,6 @@ namespace HBMLOnlineService.Controllers
         {
             try
             {
-                System.Console.WriteLine(base64String);
                 var stringFormat = "yyyyMMddHHmmss";
                 var dateTime = DateTime.UtcNow.ToString(stringFormat);
                 var filename = $"{companyId}_{deviceId}_{dateTime}.jpg";
