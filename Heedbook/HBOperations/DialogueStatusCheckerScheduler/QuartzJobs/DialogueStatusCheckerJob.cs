@@ -33,14 +33,12 @@ namespace QuartzExtensions.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            System.Console.WriteLine("Function started");
             using (var scope = _scopeFactory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
                 _log.Info("DialogueStatusChecker scheduler started.");
                 try
                 {
-                    _log.Info("Function started.");
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     var dialogues = _context.Dialogues
                         .Include(p => p.DialogueFrame)
