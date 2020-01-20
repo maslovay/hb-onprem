@@ -35,11 +35,12 @@ namespace PersonOnlineDetectionService.Utils
 
         public Client CreateNewClient(PersonOnlineDetectionRun message, Guid clientId)
         {
+            var corporationId = _context.Companys.Where(p => p.CompanyId == message.CompanyId).First().CorporationId;
             Client client = new Client
             {
                 ClientId = clientId,
                 CompanyId = (Guid) message.CompanyId,
-                CorporationId = (Guid) message.CorporationId,
+                CorporationId = corporationId,
                 FaceDescriptor = JsonConvert.DeserializeObject<double[]>(message.Descriptor),
                 Age = message.Age,
                 Avatar = $"useravatars/{clientId}.jpg",

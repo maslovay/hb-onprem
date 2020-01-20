@@ -18,6 +18,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using PersonOnlineDetectionService.Handler;
 using Microsoft.AspNetCore.Mvc;
+using PersonOnlineDetectionService.Utils;
 
 namespace PersonOnlineDetectionService
 {
@@ -54,6 +55,9 @@ namespace PersonOnlineDetectionService
             services.AddTransient<PersonOnlineDetection>();
             services.AddTransient<PersonOnlineDetectionHandler>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.AddScoped<PersonDetectionUtils>();
+            services.AddSingleton<DescriptorCalculations>();
 
             services.AddRabbitMqEventBus(Configuration);
 
