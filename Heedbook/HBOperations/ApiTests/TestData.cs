@@ -81,7 +81,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 12, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
+                    ClientId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
                     DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     LanguageId = 2                    ,
                     DialoguePhrase = new List<DialoguePhrase>
@@ -107,7 +107,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 19, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
+                    ClientId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
                     DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                     LanguageId = 2,
                     DialoguePhrase = new List<DialoguePhrase>
@@ -187,7 +187,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 12, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
+                    ClientId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
                     DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     LanguageId = 2                    ,
                     DialogueFrame = new List<DialogueFrame>
@@ -228,7 +228,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 19, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
+                    ClientId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
                     DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                     LanguageId = 2,
                     DialogueFrame = new List<DialogueFrame>
@@ -262,13 +262,13 @@ namespace ApiTests
                     new Dialogue
                     {
                         DialogueId = Guid.NewGuid(),
-                        PersonId = Guid.NewGuid(),
+                        ClientId = Guid.NewGuid(),
                         DialogueClientProfile = new List<DialogueClientProfile>(){new DialogueClientProfile{Age = 20, Gender = "male"}}
                     },
                     new Dialogue
                     {
                         DialogueId = Guid.NewGuid(),
-                        PersonId = Guid.NewGuid(),
+                        ClientId = Guid.NewGuid(),
                         DialogueClientProfile = new List<DialogueClientProfile>(){new DialogueClientProfile{Age = 25, Gender = "female"}}
                     },
                 }
@@ -363,7 +363,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 12, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
+                    ClientId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
                     DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     LanguageId = 2                    ,
                     DialoguePhrase = new List<DialoguePhrase>
@@ -389,7 +389,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 19, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
+                    ClientId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
                     DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                     LanguageId = 2,
                     DialoguePhrase = new List<DialoguePhrase>

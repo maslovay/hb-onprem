@@ -51,29 +51,30 @@ namespace PersonDetectionService
                     .OrderBy(p => p.BegTime)
                     .ToList();
                 
-                foreach (var curDialogue in dialogues.Where(p => p.PersonId == null).ToList())
+                foreach (var curDialogue in dialogues.Where(p => p.ClientId == null).ToList())
                 {
                     var dialoguesProceeded = dialogues
-                        .Where(p => p.PersonId != null &&
+                        .Where(p => p.ClientId != null &&
                          ((p.ApplicationUserId != null && p.ApplicationUserId == curDialogue.ApplicationUserId)
                             || p.DeviceId != null && p.DeviceId == curDialogue.DeviceId))
                         .ToList();
-                    curDialogue.PersonId = FindId(curDialogue, dialoguesProceeded);
+                    var clientId = FindId(curDialogue, dialoguesProceeded);
                     try
                     {
                         string error = String.Empty;
-                        (curDialogue.ClientId, error)  = CreateNewClient(curDialogue);//clientId = personId (the same)
+                        (curDialogue.ClientId, error)  = CreateNewClient(curDialogue, clientId);//clientId = personId (the same)
+                        _context.SaveChanges();
+
                         if (error != String.Empty)
-                            _log.Error($"client { curDialogue.PersonId  } creation error: {error}");
+                            _log.Error($"client { curDialogue.ClientId  } creation error: {error}");
                         else
-                            _log.Info($"client { curDialogue.PersonId  } created");
+                            _log.Info($"client { curDialogue.ClientId  } created");
                     }
                     catch( Exception ex )
                     {
-                        _log.Error($"client {curDialogue.PersonId} creation error: " + ex.Message);
+                        _log.Error($"client {curDialogue.ClientId} creation error: " + ex.Message);
                     }
                 }
-                _context.SaveChanges();
                 _log.Info("Function finished");
             }
             catch (Exception e)
@@ -90,25 +91,20 @@ namespace PersonDetectionService
             {
                 var cosResult = _calc.Cos(curDialogue.PersonFaceDescriptor, dialogue.PersonFaceDescriptor);
                 System.Console.WriteLine($"Cos distance is -- {cosResult}");
-                if (cosResult > threshold) return dialogue.PersonId;
+                if (cosResult > threshold) return dialogue.ClientId;
             }
             return Guid.NewGuid();
         }
 
-        public (Guid?, string) CreateNewClient(Dialogue curDialogue)
+        public (Guid?, string) CreateNewClient(Dialogue curDialogue, Guid? clientId)
         {
-            Company company = null;
-            if(curDialogue.ApplicationUserId != null)
-            company = _context.ApplicationUsers
-                              .Where(x => x.Id == curDialogue.ApplicationUserId).Select(x => x.Company).FirstOrDefault();
-            else
-            company = _context.Devices
+            Company company = _context.Devices
                               .Where(x => x.DeviceId == curDialogue.DeviceId).Select(x => x.Company).FirstOrDefault();
 
-            var clientId = _context.Clients
-                        .Where(x => x.ClientId == curDialogue.PersonId)
+            var findClientId = _context.Clients
+                        .Where(x => x.ClientId == clientId)
                         .Select(x => x.ClientId).FirstOrDefault();
-                if (clientId != null && clientId != Guid.Empty) return (clientId, String.Empty);
+                if (findClientId != null && findClientId != Guid.Empty) return (findClientId, String.Empty);
 
                 var dialogueClientProfile = _context.DialogueClientProfiles
                                 .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
@@ -128,7 +124,7 @@ namespace PersonDetectionService
                 catch { }
                 Client client = new Client
                 {
-                    ClientId = (Guid)curDialogue.PersonId,
+                    ClientId = (Guid)clientId,
                     CompanyId = (Guid)company?.CompanyId,
                     CorporationId = company?.CorporationId,
                     FaceDescriptor = faceDescr,

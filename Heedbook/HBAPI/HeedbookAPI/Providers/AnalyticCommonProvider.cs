@@ -123,14 +123,14 @@ namespace UserOperations.Providers
             return dialogues;
         }
 
-        public async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
-        {
-            var persondIds = await GetDialogues(begTime, endTime, companyIds)
-                    .Where ( p => p.PersonId != null )
-                    .Select(p => p.PersonId).Distinct()
-                    .ToListAsyncSafe();
-            return persondIds;
-        }
+        //public async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
+        //{
+        //    var persondIds = await GetDialogues(begTime, endTime, companyIds)
+        //            .Where ( p => p.ClientId != null )
+        //            .Select(p => p.ClientId).Distinct()
+        //            .ToListAsyncSafe();
+        //    return persondIds;
+        //}
 
         public async Task<Guid> GetCrossPhraseTypeIdAsync()
         {

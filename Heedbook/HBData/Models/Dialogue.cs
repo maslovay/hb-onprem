@@ -18,9 +18,6 @@ namespace HBData.Models
 
         /// <summary>
         ///     Person face id
-        /// </summary>
-        public Guid? PersonId {get;set;}
-        /// <summary>
         ///     Reference on the table with clients (unique client in one company) = Person face id
         /// </summary>
         public Guid? ClientId { get; set; }

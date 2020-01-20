@@ -61,7 +61,7 @@ namespace UserOperations.Services
                     {
                         p.DialogueClientProfile.FirstOrDefault().Age,
                         p.DialogueClientProfile.FirstOrDefault().Gender,
-                        p.PersonId,
+                        p.ClientId,
                         p.DialogueId
                     }).ToList();
 
@@ -92,8 +92,8 @@ namespace UserOperations.Services
                 var objToReturn = new Dictionary<string, object>();
                 objToReturn["allClients"] = data.Select(p => p.DialogueId).Distinct().Count();
                 objToReturn["uniquePerYearClients"] = data
-                    .Where(p => p.PersonId != null && !persondIdsPerYear.Contains(p.PersonId))
-                    .Select(p => p.PersonId).Distinct().Count() + data.Where(p => p.PersonId == null).Select(p => p.DialogueId).Distinct().Count();
+                    .Where(p => p.ClientId != null && !persondIdsPerYear.Contains(p.ClientId))
+                    .Select(p => p.ClientId).Distinct().Count() + data.Where(p => p.ClientId == null).Select(p => p.DialogueId).Distinct().Count();
                 objToReturn["genderAge"] = result;
                 return JsonConvert.SerializeObject(objToReturn);
         }
@@ -102,8 +102,8 @@ namespace UserOperations.Services
         private async Task<List<Guid?>> GetPersondIdsAsync(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
             var persondIds = await GetDialogues(begTime, endTime, companyIds)
-                    .Where ( p => p.PersonId != null )
-                    .Select(p => p.PersonId).Distinct()
+                    .Where ( p => p.ClientId != null )
+                    .Select(p => p.ClientId).Distinct()
                     .ToListAsyncSafe();
             return persondIds;
         }
