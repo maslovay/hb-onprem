@@ -150,7 +150,7 @@ namespace RabbitMqEventBus
                         _subsManager.GetEventTypeByName(ea.RoutingKey));
                     Console.WriteLine(@event.RetryCount);
                     @event.RetryCount += 1;
-                    Console.WriteLine("exception occured in rabbitmq event bus, retry count is: " + @event.RetryCount);
+                    Console.WriteLine($"Exception occured in rabbitmq event bus {e}, retry count is: " + @event.RetryCount);
                     channel.BasicAck(ea.DeliveryTag, false);
                     Publish(@event);
                 }

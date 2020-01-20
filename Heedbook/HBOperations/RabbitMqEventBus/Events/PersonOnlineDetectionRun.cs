@@ -11,7 +11,6 @@ namespace RabbitMqEventBus.Events
         public int Age {get;set;}
         public string Gender{get;set;}
         public Guid CorporationId {get;set;}
-
         public Guid? DeviceId {get;set;}
     }
 }
