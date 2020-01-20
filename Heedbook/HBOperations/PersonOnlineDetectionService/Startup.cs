@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using PersonOnlineDetectionService.Handler;
+using Microsoft.AspNetCore.Mvc;
 
 namespace PersonOnlineDetectionService
 {
