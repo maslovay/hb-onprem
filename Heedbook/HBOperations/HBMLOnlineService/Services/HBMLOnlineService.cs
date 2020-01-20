@@ -29,15 +29,16 @@ namespace HBMLOnlineService.Service
             _sftpClient = sftpClient;
         }
 
-        public async Task<List<HBMLHttpClient.Model.FaceResult>> UploadFrameAndGetFaceResultAsync(byte[] file, string fileName, bool description, bool emotions, bool headpose, bool attributes)
+        public async Task<List<HBMLHttpClient.Model.FaceResult>> UploadFrameAndGetFaceResultAsync(string base64String, string fileName, bool description, bool emotions, bool headpose, bool attributes)
         {
-            var memoryStream = new MemoryStream(file);
-            
-            var base64String = Convert.ToBase64String(file);
             var faceResult = await _client.GetFaceResultWithParams(base64String, description, emotions, headpose, attributes);
 
             if (faceResult.Any())
+            {
+                byte[] bytes = Convert.FromBase64String(base64String);
+                var memoryStream = new MemoryStream(bytes);
                 await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, "useravatars/", fileName);
+            }
             
             return faceResult;
         } 

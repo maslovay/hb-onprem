@@ -21,7 +21,7 @@ namespace HBMLOnlineService.Controllers
     {
         private readonly HBMLOnlineFaceService _hbmlservice;
         
-        public HBMLOnlineService(  HBMLOnlineFaceService hbmlservice)
+        public HBMLOnlineService( HBMLOnlineFaceService hbmlservice)
         {
             _hbmlservice = hbmlservice;
         }
@@ -36,31 +36,37 @@ namespace HBMLOnlineService.Controllers
             [FromQuery] bool emotions,
             [FromQuery] bool headpose,
             [FromQuery] bool attributes,
-            [FromBody] byte[] file 
+            [FromBody] string base64String 
         )
         {
             try
             {
+                System.Console.WriteLine(base64String);
                 var stringFormat = "yyyyMMddHHmmss";
                 var dateTime = DateTime.UtcNow.ToString(stringFormat);
                 var filename = $"{companyId}_{deviceId}_{dateTime}.jpg";
 
-                if(file != null)
+                System.Console.WriteLine(filename);
+
+                if(base64String != null)
                 {   
-                    var faceResults = await _hbmlservice.UploadFrameAndGetFaceResultAsync(file, filename, description, emotions, headpose, attributes);
+                    var faceResults = await _hbmlservice.UploadFrameAndGetFaceResultAsync(base64String, filename, description, emotions, headpose, attributes);
                     if (faceResults.Any())
                     {
                         _hbmlservice.PublishMessageToRabbit(deviceId, companyId, filename, faceResults);
                     }
+                    System.Console.WriteLine("Finished");
                     return Ok(JsonConvert.SerializeObject(faceResults));
                 }
                 else
                 {
+                    System.Console.WriteLine("No files found");
                     return BadRequest("No files found");
                 }
             }
             catch (Exception e)
             {
+                System.Console.WriteLine($"Exception occured {e}");
                 return BadRequest($"Exception occured {e}");
             }
         }
