@@ -21,8 +21,7 @@ namespace DeleteScheduler
             {
                 return TriggerBuilder.Create()
                     .WithIdentity("GetFile.trigger", "FileDelete")
-                    .StartNow()
-                    .WithSimpleSchedule(s => s.WithIntervalInHours(24).RepeatForever())
+                    .WithCronSchedule("0 0 0 * * *")
                     .Build();
             });
 
