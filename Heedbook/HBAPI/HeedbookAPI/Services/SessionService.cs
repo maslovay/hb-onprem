@@ -12,17 +12,14 @@ namespace UserOperations.Services
     {
         private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
-        private readonly LoginService _loginService;
 
         public SessionService(
             ElasticClient log,
-            IGenericRepository repository,
-            LoginService loginService
+            IGenericRepository repository
             )
         {
             _log = log;
             _repository = repository;
-            _loginService = loginService;
         }
 
         public Response SessionStatus(SessionParams data)
@@ -33,13 +30,6 @@ namespace UserOperations.Services
                 response.Message = "DeviceId or UserId is empty";
                 return response;
             }
-            var companyIdInToken = _loginService.GetCurrentCompanyId();
-            var company = _repository.GetWithIncludeOne<Company>(x => x.CompanyId == companyIdInToken, x => x.Devices, x => x.ApplicationUser);
-            if(!company.Devices.Any( x => x.DeviceId == data.DeviceId))
-                throw new Exception("The device is not owned by the company");
-            if (!company.ApplicationUser.Any(x => x.Id == data.ApplicationUserId))
-                throw new Exception("User does not belong to the company");
-
             _log.Info($"session on device {data.DeviceId} try {data.Action}");
 
             //------------------------------------------------------------------
@@ -97,17 +87,21 @@ namespace UserOperations.Services
 
         public object SessionStatus(Guid deviceId, Guid? applicationUserId)
         {
-            var companyIdInToken = _loginService.GetCurrentCompanyId();
-            var company = _repository.GetWithIncludeOne<Company>(x => x.CompanyId == companyIdInToken, x => x.Devices, x => x.ApplicationUser);
-            if (!company.Devices.Any(x => x.DeviceId == deviceId))
-                throw new Exception("The device is not owned by the company");
-            if (applicationUserId != null && !company.ApplicationUser.Any(x => x.Id == applicationUserId))
-                throw new Exception("User does not belong to the company");
-
-            var session = _repository.GetAsQueryable<Session>()
-                    .Where(p => p.DeviceId == deviceId && p.ApplicationUserId == applicationUserId)
-                        ?.OrderByDescending(p => p.BegTime)
-                        ?.FirstOrDefault();
+            Session session = null;
+            if (applicationUserId != null)
+            {
+                session = _repository.GetAsQueryable<Session>()
+                        .Where(p => p.DeviceId == deviceId && p.ApplicationUserId == applicationUserId)
+                            ?.OrderByDescending(p => p.BegTime)
+                            ?.FirstOrDefault();
+            }
+            else
+            {
+                session = _repository.GetAsQueryable<Session>()
+                        .Where(p => p.DeviceId == deviceId)
+                            ?.OrderByDescending(p => p.BegTime)
+                            ?.FirstOrDefault();
+            }
             var result = new { session?.BegTime, session?.StatusId };
             return result;
         }      

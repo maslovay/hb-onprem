@@ -18,7 +18,6 @@ namespace PersonDetectionService
 {
     public class PersonDetection
     {
-       //private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly DescriptorCalculations _calc;
@@ -38,7 +37,7 @@ namespace PersonDetectionService
         public async Task Run(PersonDetectionRun message)
         {
             var _log = _elasticClientFactory.GetElasticClient();
-            _log.SetFormat("{ApplicationUserIds}");
+            _log.SetFormat("{deviceIds}");
             _log.SetArgs(JsonConvert.SerializeObject(message.DeviceIds));
             _log.Info("Function started");
             try

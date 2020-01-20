@@ -239,6 +239,7 @@ namespace DialogueMarkUp.QuartzJobs
                 var personDetection = new PersonDetectionRun{
                     DeviceIds = dialogues.Select(p => p.DeviceId).Distinct().ToList()
                 };
+                log.Info($"Run personDetection for {dialogues.Count()} dialogues");
                 _publisher.Publish(personDetection);
             }
         }
