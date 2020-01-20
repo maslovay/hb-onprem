@@ -102,7 +102,7 @@ namespace UserOperations.Services
                             ?.OrderByDescending(p => p.BegTime)
                             ?.FirstOrDefault();
             }
-            var result = new { session?.BegTime, session?.StatusId };
+            var result = new { session?.BegTime, session?.StatusId, session.ApplicationUserId };
             return result;
         }      
 
