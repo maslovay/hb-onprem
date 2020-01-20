@@ -1,3 +1,4 @@
+using System;
 using DeleteScheduler.QuartzJob;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
@@ -21,7 +22,8 @@ namespace DeleteScheduler
             {
                 return TriggerBuilder.Create()
                     .WithIdentity("GetFile.trigger", "FileDelete")
-                    .WithCronSchedule("0 0 0 * * *")
+                    .StartNow()                                       
+                    .WithCronSchedule("0 0 0 * * ?", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())
                     .Build();
             });
 

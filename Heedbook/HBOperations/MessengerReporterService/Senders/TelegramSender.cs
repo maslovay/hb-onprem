@@ -33,12 +33,10 @@ namespace MessengerReporterService.Senders
                     var token = section.GetSection("Telegram").GetValue<string>("Token");
                     var chatId = section.GetSection("Telegram").GetValue<string>("ChatId");
                     var client = ((TelegramChat) (Chats.FirstOrDefault(c => (c is TelegramChat tc && tc.Token == token))))?.Client;
-                    System.Console.WriteLine($"client is null: {client is null}");
                     var chat = new TelegramChat(section.Key, 
                     chatId,
                     token,
                     client);
-                    System.Console.WriteLine($"chat is null: {chat is null}");
 
                     Chats.Add(chat);   
                 }
@@ -48,7 +46,6 @@ namespace MessengerReporterService.Senders
                 }
                              
             }
-            System.Console.WriteLine($"Chats count: {Chats.Count}");
             var receiveThrd = new Thread(ReceiveCommands);
             receiveThrd.Start();
         }
@@ -56,8 +53,7 @@ namespace MessengerReporterService.Senders
         public override async void Send(string message, string chatName, bool processCallback = true)
         {
             if (!(Chats.FirstOrDefault(c => c.Name == chatName) is TelegramChat chat))
-                return;
-            System.Console.WriteLine($"chat.Client is null: {chat.Client is null}");
+                return;            
             await chat.Client?.SendTextMessageAsync(chat.ChatId, message, ParseMode.Html);
             if (processCallback == true)
                 ProcessCallbackImmediately(chat);
