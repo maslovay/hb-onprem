@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Quartz;
 
 namespace CloneFtpOnAzureService
@@ -39,17 +40,19 @@ namespace CloneFtpOnAzureService
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
-            services.AddFtpFileOnQuartzJob();
+            
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
-            services.AddSingleton<BlobController>();
-            services.Configure<StorageAccInfo>(Configuration.GetSection(nameof(StorageAccInfo)));
-            services.AddSingleton(provider=> provider.GetRequiredService<IOptions<StorageAccInfo>>().Value);
+            System.Console.WriteLine(JsonConvert.SerializeObject(Configuration.GetSection(nameof(SftpSettings))));
+            services.Configure<BlobSettings>(Configuration.GetSection(nameof(BlobSettings)));
+            services.AddSingleton(provider=> provider.GetRequiredService<IOptions<BlobSettings>>().Value);
+            services.AddSingleton<BlobClient>();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddSingleton<SftpClient>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddFtpFileOnQuartzJob();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -17,22 +17,22 @@ namespace CloneFtpOnAzureService
     public class FtpJob : IJob
     {
         private SftpClient _sftpClient;
-        private BlobController _blobController;
-        private readonly ElasticClientFactory _elasticClientFactory;
-        private StorageAccInfo _storageAccInfo;
+        private BlobSettings _blobSettings;
+        private BlobClient _blobClient;
+        private readonly ElasticClientFactory _elasticClientFactory;        
         private RecordsContext _context;
         private readonly IServiceScopeFactory _scopeFactory;
 
         public FtpJob(IServiceScopeFactory scopeFactory,
             SftpClient sftpClient,
-            BlobController blobController,
-            ElasticClientFactory elasticClientFactory,
-            StorageAccInfo storageAccInfo)
+            BlobSettings blobSettings,
+            BlobClient blobClient,
+            ElasticClientFactory elasticClientFactory)
         {
             _scopeFactory = scopeFactory;
-            _storageAccInfo = storageAccInfo;
             _elasticClientFactory = elasticClientFactory;
-            _blobController = blobController;
+            _blobSettings = blobSettings;
+            _blobClient = blobClient;
             _sftpClient = sftpClient;
         }
 
@@ -53,23 +53,24 @@ namespace CloneFtpOnAzureService
                     var tasks = new List<Task>();
                     var dict = new Dictionary<String, String>()
                     {
-                        {_storageAccInfo.AvatarName, ".jpg"},
-                        {_storageAccInfo.VideoName, ".mkv"},
-                        {_storageAccInfo.AudioName, ".wav"}
+                        {_blobSettings.AvatarName, ".jpg"},
+                        {_blobSettings.VideoName, ".mkv"},
+                        {_blobSettings.AudioName, ".wav"}
                     };
-                    _log.Info("Try to download and upload");
+                    System.Console.WriteLine("Try to download and upload");
                     foreach (var dialogue in dialogues)
                     {
                         foreach (var (key, value) in dict)
                         {
-                            var filePath = key + "/" + dialogue + value;
+                            var fileName = dialogue + value;
+                            var filePath = key + "/" + fileName;
                             var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
-                            tasks.Add(_blobController.UploadFileStreamToBlob(filePath, stream));
-                        }                        
+                            tasks.Add(_blobClient.UploadFileStreamToBlob(key, fileName, stream));
+                        }
                     }
                     
                     await Task.WhenAll(tasks);
-                    _log.Info("Download and Upload finished");
+                    System.Console.WriteLine("Download and Upload finished");
                 }
                 catch (Exception e)
                 {
