@@ -22,10 +22,15 @@ namespace HBMLOnlineService.Service
         private readonly SftpClient _sftpClient;
     
 
-        public HBMLOnlineFaceService(RecordsContext context, INotificationPublisher publisher, SftpClient sftpClient)
+        public HBMLOnlineFaceService(RecordsContext context,
+            HbMlHttpClient client,
+            INotificationPublisher publisher, 
+            SftpClient sftpClient
+        )
         {
             _context = context;
-            _publisher = publisher;
+            _client = client;
+            // _publisher = publisher;
             _sftpClient = sftpClient;
         }
 
