@@ -46,6 +46,10 @@ namespace HBMLOnlineService.Controllers
                 var filename = $"{companyId}_{deviceId}_{dateTime}.jpg";
 
                 System.Console.WriteLine(filename);
+                System.Console.WriteLine(description);
+                System.Console.WriteLine(emotions);
+                System.Console.WriteLine(headpose);
+                System.Console.WriteLine(attributes);
 
                 if(base64String != null)
                 {   
