@@ -85,7 +85,7 @@ namespace UserOperations.Services
                         new Claim("role", role),
                         new Claim("fullName", user.FullName),
                         new Claim("avatar", GetAvatar(user.Avatar)),
-                        new Claim("IsExtended", "true")
+                        new Claim("isExtended", "true")
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -123,7 +123,7 @@ namespace UserOperations.Services
                     new Claim("deviceName", device.Name),
                     new Claim("companyId", device.CompanyId.ToString()),
                     new Claim("corporationId", device.Company.CorporationId.ToString()),
-                    new Claim("IsExtended", "false")
+                    new Claim("isExtended", "false")
                 };
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -269,8 +269,8 @@ namespace UserOperations.Services
             }
             return pass;
         }
-        public bool GetIsCorporate()
-        => Boolean.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "isCorporate")?.Value);
+        public bool GetIsExtended()
+        => Boolean.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "isExtended")?.Value);
         public Guid GetCurrentCompanyId()
            => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "companyId")?.Value);
         public Guid? GetCurrentCorporationId()

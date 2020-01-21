@@ -30,15 +30,15 @@ namespace SessionCloseSchedule
             var _log = _elasticClientFactory.GetElasticClient();
             try
             {
-                _log.Info("Function SessionClose start");
                 const int OPEN = 6;
                 const int CLOSE = 7;
-                _log.Info("Session close start");
 
                 DateTime today = DateTime.Now.Date;
                 var sessionsForClose = _context.Sessions.Where(x => x.BegTime.Date < today && x.StatusId == OPEN).ToList();
                 CloseSessions(sessionsForClose, CLOSE);
                 _context.SaveChanges();
+
+                _log.Info($"Closed {sessionsForClose.Count()} sessions");
             }
             catch (Exception e)
             {
