@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HBMLHttpClient
+namespace HBLib
 {
     public class HttpSettings
     {

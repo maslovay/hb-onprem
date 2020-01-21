@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using HBLib.Model;
 
-namespace AsrHttpClient
+namespace HBLib.Utils
 {
     public class AsrHttpClient
     {

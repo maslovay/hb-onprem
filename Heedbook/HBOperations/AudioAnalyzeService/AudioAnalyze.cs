@@ -14,7 +14,7 @@ namespace AudioAnalyzeService
 {
     public class AudioAnalyze
     {
-        private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
+        private readonly AsrHttpClient _asrHttpClient;
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
@@ -22,7 +22,7 @@ namespace AudioAnalyzeService
         private readonly SftpClient _sftpclient;
         public AudioAnalyze(
             IServiceScopeFactory factory,
-            AsrHttpClient.AsrHttpClient asrHttpClient,
+            AsrHttpClient asrHttpClient,
             ElasticClientFactory elasticClientFactory,
             GoogleConnector googleConnector,
             SftpClient sftpclient

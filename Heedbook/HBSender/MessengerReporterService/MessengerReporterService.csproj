@@ -10,11 +10,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Configurations\Configurations.csproj" />
+    <ProjectReference Include="..\..\HBOperations\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
-    <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
-    <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
-    <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj" />
+    <ProjectReference Include="..\..\HBOperations\QuartzExtensions\QuartzExtensions.csproj" />
+    <ProjectReference Include="..\..\HBOperations\RabbitMqEventBus\RabbitMqEventBus.csproj" />
+    <ProjectReference Include="..\..\HBOperations\ServiceExtensions\ServiceExtensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

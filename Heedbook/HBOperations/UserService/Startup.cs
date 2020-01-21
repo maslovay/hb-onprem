@@ -19,7 +19,6 @@ using RabbitMqEventBus.Base;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
 using UnitTestExtensions;
-using HBMLHttpClient;
 
 namespace UserService
 {

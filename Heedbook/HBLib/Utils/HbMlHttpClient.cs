@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using HBMLHttpClient.Model;
+using HBLib;
+using HBLib.Model;
 using Newtonsoft.Json;
 
-namespace HBMLHttpClient
+namespace HBLib.Utils
 {
     public class HbMlHttpClient
     {

@@ -1,10 +1,10 @@
-﻿using AsrHttpClient;
-using AudioAnalyzeScheduler.Extensions;
+﻿using AudioAnalyzeScheduler.Extensions;
 using AudioAnalyzeScheduler.Settings;
 using Configurations;
 using HBData;
 using HBData.Repository;
 using HBLib;
+using HBLib.Model;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -51,7 +51,7 @@ namespace AudioAnalyzeScheduler
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddTransient<GoogleConnector>();
             services.AddSingleton<ElasticClientFactory>();
-            services.AddSingleton<AsrHttpClient.AsrHttpClient>();
+            services.AddSingleton<AsrHttpClient>();
             services.AddSingleton<SftpClient>();
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddScoped<IGenericRepository, GenericRepository>();

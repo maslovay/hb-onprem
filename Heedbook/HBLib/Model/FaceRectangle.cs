@@ -1,6 +1,6 @@
 using System;
 
-namespace HBMLHttpClient.Model
+namespace HBLib.Model
 {
     public class FaceRectangle
     {
