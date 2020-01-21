@@ -7,10 +7,9 @@ namespace PersonOnlineDetectionService.Utils
     {
         public WebSocketIoUtils()
         {
-
         }
 
-        public void Execute(string room, string companyId, string tabletId, string role, string clientId)
+        public string Execute(string room, string companyId, string tabletId, string role, string clientId)
         {
             var cmd = new CMDWithOutput();
             var path = Directory.GetCurrentDirectory(); 
@@ -20,6 +19,8 @@ namespace PersonOnlineDetectionService.Utils
             var output = cmd.runCMD("python3", args);
             
             System.Console.WriteLine(output);
+            return output;
+
         }
     }
 

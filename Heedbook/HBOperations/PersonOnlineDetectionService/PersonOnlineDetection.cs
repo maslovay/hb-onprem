@@ -13,6 +13,7 @@ using PersonOnlineDetectionService.Utils;
 using PersonOnlineDetectionService.Models;
 using RabbitMqEventBus.Events;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace PersonOnlineDetectionService
 {
@@ -49,6 +50,8 @@ namespace PersonOnlineDetectionService
             _log.SetArgs(message.Path);
             _log.Info("Function started");
 
+            System.Console.WriteLine(JsonConvert.SerializeObject(message));
+
             try
             {
                 var begTime = DateTime.Now.AddDays(-30);
@@ -63,14 +66,16 @@ namespace PersonOnlineDetectionService
                     clientId = Guid.NewGuid();
                     var client = _personDetectionUtils.CreateNewClient(message, (Guid) clientId);
                     _sftpclient.RenameFile(message.Path, $"useravatars/{client.ClientId}.jpg");
-                    _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
+                    var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
+                    System.Console.WriteLine(result);
                 }
                 else
                 {
                     await _sftpclient.DeleteFileIfExistsAsync(message.Path);
-                    _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
+                    var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
+                    System.Console.WriteLine(result);
                 }
 
                 _log.Info("Function finished");
