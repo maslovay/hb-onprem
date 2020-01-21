@@ -8,6 +8,7 @@ RUN dotnet publish ./HBOperations/PersonOnlineDetectionService -c Release -o pub
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/PersonOnlineDetectionService/publish .
+COPY --from=build-env /app/HBOperations/PersonOnlineDetectionService/websocketio.py /app/websocketio.py
 
 RUN apk add --update python3
 RUN pip3 install --upgrade pip
