@@ -8,7 +8,6 @@ using HBData.Models;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
-using HBMLHttpClient;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Renci.SshNet.Common;

@@ -1,6 +1,6 @@
 using System;
 
-namespace AsrHttpClient
+namespace HBLib.Model
 {
     public class AsrResult
     {

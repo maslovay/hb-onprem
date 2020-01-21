@@ -1,9 +1,9 @@
-﻿using AsrHttpClient;
-using AudioAnalyzeService.Handler;
+﻿using AudioAnalyzeService.Handler;
 using Configurations;
 using HBData;
 using HBData.Repository;
 using HBLib;
+using HBLib.Model;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -51,7 +51,7 @@ namespace AudioAnalyzeService
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
             services.AddTransient(provider => provider.GetService<IOptions<AsrSettings>>().Value);
-            services.AddTransient<AsrHttpClient.AsrHttpClient>();
+            services.AddTransient<AsrHttpClient>();
             services.AddTransient<AudioAnalyze>();
 
             services.AddTransient<AudioAnalyzeRunHandler>();

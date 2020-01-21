@@ -8,7 +8,6 @@ using FillingFrameService.Exceptions;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
-using HBMLHttpClient.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using RabbitMqEventBus.Events;
@@ -16,6 +15,7 @@ using Renci.SshNet.Common;
 using HBLib;
 using HBData;
 using Microsoft.EntityFrameworkCore;
+using HBLib.Model;
 
 namespace FillingFrameService
 {
