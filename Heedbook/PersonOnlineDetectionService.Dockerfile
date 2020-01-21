@@ -8,6 +8,10 @@ RUN dotnet publish ./HBOperations/PersonOnlineDetectionService -c Release -o pub
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/PersonOnlineDetectionService/publish .
+
+RUN apk add --update python3
+RUN pip3 install socketio
+
 ENTRYPOINT ["dotnet", "PersonOnlineDetectionService.dll"]
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/

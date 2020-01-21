@@ -23,12 +23,14 @@ namespace PersonOnlineDetectionService
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly SftpClient _sftpclient;
         private readonly PersonDetectionUtils _personDetectionUtils;
+        private readonly WebSocketIoUtils _socket;
 
         public PersonOnlineDetection(
             IServiceScopeFactory factory,
             ElasticClientFactory elasticClientFactory,
             SftpClient sftpclient,
-            PersonDetectionUtils personDetectionUtils
+            PersonDetectionUtils personDetectionUtils,
+            WebSocketIoUtils socket
         )
         {
             // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
@@ -36,6 +38,7 @@ namespace PersonOnlineDetectionService
             _elasticClientFactory = elasticClientFactory;
             _sftpclient = sftpclient;
             _personDetectionUtils = personDetectionUtils;
+            _socket = socket;
         }
 
         public async Task Run(PersonOnlineDetectionRun message)
@@ -55,28 +58,19 @@ namespace PersonOnlineDetectionService
                     .ToList();
                 
                 var clientId = _personDetectionUtils.FindId(message.Descriptor, lastClientsInfo);
-                ClientInfo fullClientInfo;
                 if (clientId == null)
                 {
                     clientId = Guid.NewGuid();
                     var client = _personDetectionUtils.CreateNewClient(message, (Guid) clientId);
-                    fullClientInfo = new ClientInfo{
-                        Client = client,
-                        ClientNotes = new List<ClientNote>()
-                    }; 
                     _sftpclient.RenameFile(message.Path, $"useravatars/{client.ClientId}.jpg");
+                    _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
+                        tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
                 }
                 else
                 {
-                    fullClientInfo = new ClientInfo{
-                        Client = lastClientsInfo.Where(p => p.Client.ClientId == clientId)
-                                .Select(p => p.Client)
-                                .First(),
-                        ClientNotes = lastClientsInfo.Where(p => p.Client.ClientId == clientId)
-                                .ToList()
-                    };
-                    fullClientInfo.ClientNotes.ForEach(p => p.Client = null);
                     await _sftpclient.DeleteFileIfExistsAsync(message.Path);
+                    _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
+                        tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
                 }
 
                 _log.Info("Function finished");
