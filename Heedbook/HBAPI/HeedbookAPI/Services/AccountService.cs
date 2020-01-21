@@ -78,21 +78,22 @@ namespace UserOperations.Providers
         public async Task<string> ChangePassword(AccountAuthorization message, string token = null)
         {
                 ApplicationUser user = null;
-                //---FOR LOGGINED USER CHANGE PASSWORD WITH INPUT (receive new password in body message.Password)
-                if (_loginService.GetDataFromToken(token, out var userClaims))
-                {
-                    var userId = _loginService.GetCurrentUserId();
-                    user = GetUserIncludeCompany(userId, message);
-                    user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
-                }
-                //---IF USER NOT LOGGINED HE RECEIVE GENERATED PASSWORD ON EMAIL
-                else
-                {
-                    user = GetUserIncludeCompany(message.UserName);
-                    string password = _loginService.GeneratePass(6);
-                    await _mailSender.SendPasswordChangeEmail(user, password);
-                    user.PasswordHash = _loginService.GeneratePasswordHash(password);
-                }
+            //---FOR LOGGINED USER CHANGE PASSWORD WITH INPUT (receive new password in body message.Password)
+            try
+            {
+                _loginService.GetDataFromToken(token, out var userClaims);
+                var userId = _loginService.GetCurrentUserId();
+                user = GetUserIncludeCompany(userId, message);
+                user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
+                await _repository.SaveAsync();
+                return "Password changed";
+            }
+            catch { }
+            //---IF USER NOT LOGGINED HE RECEIVE GENERATED PASSWORD ON EMAIL
+                user = GetUserIncludeCompany(message.UserName);
+                string password = _loginService.GeneratePass(6);
+                await _mailSender.SendPasswordChangeEmail(user, password);
+                user.PasswordHash = _loginService.GeneratePasswordHash(password);
                 await _repository.SaveAsync();
                 return "Password changed";
         }
