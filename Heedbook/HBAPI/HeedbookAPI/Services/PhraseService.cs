@@ -1,13 +1,12 @@
-﻿using HBData;
-using HBData.Models;
+﻿using HBData.Models;
 using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UserOperations.Controllers;
 using UserOperations.Models;
-using UserOperations.Models.AnalyticModels;
 using UserOperations.Services;
 
 namespace UserOperations.Providers
@@ -35,6 +34,7 @@ namespace UserOperations.Providers
                        x.Phrase.LanguageId == languageId)
                    .Select(x => x.Phrase.PhraseId).ToListAsync();
         }
+
         public async Task<List<Phrase>> GetPhrasesNotBelongToCompanyByIdsAsync(List<Guid> phraseIds, bool isTemplate)
         {
             var languageId = _loginService.GetCurrentLanguagueId();
@@ -45,32 +45,31 @@ namespace UserOperations.Providers
                         !phraseIds.Contains(x.PhraseId) &&
                         x.LanguageId == languageId).ToListAsync();
         }
-        public async Task<Phrase> GetLibraryPhraseByTextAsync(string phraseText, bool isTemplate)
-        {
-            //---search phrase that is in library or that is not belong to any company
-            return await _repository.GetAsQueryable<Phrase>()
-                   .Include(x => x.PhraseCompany)
-                   .Where(x => 
-                        x.PhraseText.ToLower() == phraseText.ToLower()
-                        && (x.IsTemplate == isTemplate || x.PhraseCompany.Count() == 0)).FirstOrDefaultAsync();
-        }
+       
         public async Task<Phrase> GetPhraseByIdAsync(Guid phraseId)
         {
-            return await _repository.GetAsQueryable<Phrase>()
+            var phrase =  await _repository.GetAsQueryable<Phrase>()
                   .Include(x => x.PhraseCompany).FirstOrDefaultAsync(x => x.PhraseId == phraseId);
+            if (phrase == null) throw new NoFoundException("No such phrase");
+            return phrase;
         }
-        public async Task<Phrase> GetPhraseInCompanyByIdAsync(Guid phraseId, Guid companyId, bool isTemplate)
+
+        public async Task<Phrase> GetPhraseInCompanyByIdAsync(Guid phraseId, bool isTemplate)
         {
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
             return await _repository.GetAsQueryable<PhraseCompany>()
                     .Where(p =>
                         p.Phrase.PhraseId == phraseId
-                        && p.CompanyId == companyId
+                        && p.CompanyId == companyIdInToken
                         && p.Phrase.IsTemplate == isTemplate)
                     .Select(p => p.Phrase)
                     .FirstOrDefaultAsync();
         }
+
         public async Task<List<Phrase>> GetPhrasesInCompanyByIdsAsync (List<Guid> companyIds)
         {
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            companyIds = !companyIds.Any() ? new List<Guid> { companyIdInToken } : companyIds;
             return await _repository.GetAsQueryable<PhraseCompany>()
                     .Where(p =>
                         companyIds.Contains((Guid)p.CompanyId))
@@ -99,8 +98,10 @@ namespace UserOperations.Providers
             }
             await _repository.SaveAsync();
         }
+
         public async Task<Phrase> EditAndSavePhraseAsync(Phrase entity, Phrase newPhrase)
         {
+            if (entity == null) throw new AccessException("No permission for changing phrase");
             foreach (var p in typeof(Phrase).GetProperties())
             {
                 if (p.GetValue(newPhrase, null) != null && p.GetValue(newPhrase, null).ToString() != Guid.Empty.ToString())
@@ -110,9 +111,11 @@ namespace UserOperations.Providers
             await _repository.SaveAsync();
             return entity;
         }
-        public async Task<string> DeleteAndSavePhraseWithPhraseCompanyAsync(Phrase phraseIncluded, Guid companyId)
+
+        public async Task<string> DeleteAndSavePhraseWithPhraseCompanyAsync(Phrase phraseIncluded)
         {
-            var phrasesCompany = phraseIncluded.PhraseCompany.Where(x => x.CompanyId == companyId).ToList();
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            var phrasesCompany = phraseIncluded.PhraseCompany.Where(x => x.CompanyId == companyIdInToken).ToList();
             _repository.Delete<PhraseCompany>(phrasesCompany);//--remove connections to phrase in library
             if (!phraseIncluded.IsTemplate)
             {
@@ -126,6 +129,17 @@ namespace UserOperations.Providers
 
 
         //---PRIVATE---
+
+        private async Task<Phrase> GetLibraryPhraseByTextAsync(string phraseText, bool isTemplate)
+        {
+            //---search phrase that is in library or that is not belong to any company
+            return await _repository.GetAsQueryable<Phrase>()
+                   .Include(x => x.PhraseCompany)
+                   .Where(x =>
+                        x.PhraseText.ToLower() == phraseText.ToLower()
+                        && (x.IsTemplate == isTemplate || x.PhraseCompany.Count() == 0)).FirstOrDefaultAsync();
+        }
+
         private async Task<Phrase> CreateNewPhraseAsync(PhrasePost message, int languageId)
         {
             var phrase = new Phrase
@@ -142,6 +156,7 @@ namespace UserOperations.Providers
             await _repository.CreateAsync<Phrase>(phrase);
             return phrase;
         }
+
         private async Task CreateNewPhraseCompanyAsync(Guid phraseId, Guid companyIdInToken)
         {
             var phraseCompany = new PhraseCompany
@@ -152,6 +167,7 @@ namespace UserOperations.Providers
             };
             await _repository.CreateAsync<PhraseCompany>(phraseCompany);
         }
+
         private async Task SaveChangesAsync()
         {
             await _repository.SaveAsync();

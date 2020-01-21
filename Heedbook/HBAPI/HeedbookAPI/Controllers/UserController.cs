@@ -348,52 +348,33 @@ namespace UserOperations.Controllers
 
         [HttpPut("PhraseLib")]
         [SwaggerOperation(Summary = "Edit company phrase", Description = "Edit phrase. You can edit only your own phrase (not template from library)")]
-        public async Task<IActionResult> PhrasePut(
+        public async Task<Phrase> PhrasePut(
                     [FromBody] Phrase message)
         {
-            var companyIdInToken = _loginService.GetCurrentCompanyId();
-
-            var phrase = await _phraseService.GetPhraseInCompanyByIdAsync(message.PhraseId, companyIdInToken, false);
-            if (phrase != null)
-            {
-                await _phraseService.EditAndSavePhraseAsync(phrase, message);
-                return Ok(phrase);
-            }
-            return BadRequest("No permission for changing phrase");
+            var phrase = await _phraseService.GetPhraseInCompanyByIdAsync(message.PhraseId, false);
+            return await _phraseService.EditAndSavePhraseAsync(phrase, message);
         }
 
         [HttpDelete("PhraseLib")]
         [SwaggerOperation(Summary = "Delete company phrase", Description = "Delete phrase (if this phrase are Template it can't be deleted, it only delete connection to company")]
-        public async Task<IActionResult> PhraseDelete(
+        public async Task<string> PhraseDelete(
                     [FromQuery(Name = "phraseId"), SwaggerParameter("phraseId Guid", Required = true)] Guid phraseId)
         {
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-
                 var phrase = await _phraseService.GetPhraseByIdAsync(phraseId);
-                if (phrase == null) return BadRequest("No such phrase");
-                var answer = await _phraseService.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase, companyIdInToken);
-                return Ok(answer);
+                return await _phraseService.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase);
         }
 
         [HttpGet("CompanyPhrase")]
         [SwaggerOperation(Summary = "Return attached to company(-ies) phrases", Description = "Return own and template phrases collection for companies sended in params or for loggined company")]
-        public async Task<IActionResult> CompanyPhraseGet(
-                [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds)
-        {
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                companyIds = !companyIds.Any() ? new List<Guid> { companyIdInToken } : companyIds;
-                var companyPhrase = await _phraseService.GetPhrasesInCompanyByIdsAsync(companyIds);
-                return Ok(companyPhrase);
-        }
+        public async Task<List<Phrase>> CompanyPhraseGet(
+                [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds) =>
+                await _phraseService.GetPhrasesInCompanyByIdsAsync(companyIds);
 
         [HttpPost("CompanyPhrase")]
         [SwaggerOperation(Summary = "Attach library(template) phrases to company", Description = "Attach phrases  from library (ids sended in body) to loggined company  (create new PhraseCompany entities)")]
-        public async Task<IActionResult> CompanyPhrasePost(
-                [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds)
-        {
+        public async Task CompanyPhrasePost(
+                [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds) =>
                 await _phraseService.CreateNewPhrasesCompanyAsync(phraseIds);
-                return Ok("OK");
-        }
 
 
 
