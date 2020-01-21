@@ -30,37 +30,43 @@ namespace UserOperations.Services
 
         public async Task<string> GenerateToken(string code)
         {
-            code = _loginService.GeneratePasswordHash(code);
             var device = GetDeviceIncludeCompany(code);
             if (device.StatusId != GetStatusId("Active")) throw new Exception("Device not activated");
 
             return _loginService.CreateTokenForDevice(device);
         }
 
-        public async Task<List<GetDevice>> GetAll(List<Guid> companyIds)
+        public async Task<List<Device>> GetAll(List<Guid> companyIds)
         {
             var role = _loginService.GetCurrentRoleName();
-            var companyId = _loginService.GetCurrentCompanyId();
+            Guid companyId;
+            try
+            {
+                companyId = _loginService.GetCurrentCompanyId();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, null, role, companyId);
 
             var data = _repository.GetAsQueryable<Device>()
-                .Where(c => (!companyIds.Any() || companyIds.Contains(c.CompanyId)))
-                .Select(c => new GetDevice
-                                 {
-                                    CompanyId = c.CompanyId,
-                                    DeviceId = c.DeviceId,
-                                    DeviceTypeId = c.DeviceTypeId,
-                                    Name = c.Name,
-                                    StatusId = c.StatusId
-                                 });
-               
+                .Where(c => (!companyIds.Any() || companyIds.Contains(c.CompanyId)));
             return data.ToList();
         }
 
         public async Task<List<GetUsersSessions>> GetAllUsersSessions()
         {
             var deviceId = _loginService.GetCurrentDeviceId();
-            var companyId = _loginService.GetCurrentCompanyId();
+            Guid companyId;
+            try
+            {
+                companyId = _loginService.GetCurrentCompanyId();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
             var employeeRoleId = (await _repository.FindOrExceptionOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
 
             var users = _repository.GetAsQueryable<ApplicationUser>()
@@ -104,20 +110,27 @@ namespace UserOperations.Services
 
         public async Task<Device> Create(PostDevice device)
         {
+            Guid companyId;
+            try
+            {
+                companyId = _loginService.GetCurrentCompanyId();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
             var role = _loginService.GetCurrentRoleName();
-            var companyId = _loginService.GetCurrentCompanyId();
             var corporationId = _loginService.GetCurrentCorporationId();
-            var userId = _loginService.GetCurrentUserId();
             var newDeviceCompanyId = device.CompanyId ?? companyId;
             _requestFilters.IsCompanyBelongToUser(corporationId, companyId, newDeviceCompanyId, role);
             CheckUniqueDeviceCode(device.Code, newDeviceCompanyId);
 
             Device newDevice = new Device
             {
-                Code = _loginService.GeneratePasswordHash(device.Code),
                 CompanyId = newDeviceCompanyId,
                 DeviceTypeId = device.DeviceTypeId,
                 Name = device.Name,
+                Code = device.Code,
                 StatusId = GetStatusId("Active")
             };
             await _repository.CreateAsync<Device>(newDevice);
@@ -127,13 +140,22 @@ namespace UserOperations.Services
 
         public async Task<string> Update(PutDevice device)
         {
+            Guid companyId;
+            try
+            {
+                companyId = _loginService.GetCurrentCompanyId();
+            }
+            catch
+            {
+                throw new UnauthorizedAccessException();
+            }
             var role = _loginService.GetCurrentRoleName();
-            var companyId = _loginService.GetCurrentCompanyId();
             var corporationId = _loginService.GetCurrentCorporationId();
             Device deviceEntity = await _repository.FindOrExceptionOneByConditionAsync<Device>(c => c.DeviceId == device.DeviceId);
             _requestFilters.IsCompanyBelongToUser(corporationId, companyId, deviceEntity.CompanyId, role);
 
-            deviceEntity.Code = device.Code != null ? _loginService.GeneratePasswordHash(device.Code) : deviceEntity.Code;
+            CheckUniqueDeviceCode(device.Code, companyId, device.DeviceId);
+            deviceEntity.Code = device.Code != null ?device.Code : deviceEntity.Code;
             deviceEntity.DeviceTypeId = device.DeviceTypeId ?? deviceEntity.DeviceTypeId;
             deviceEntity.Name = device.Name ?? deviceEntity.Name;
             deviceEntity.StatusId = device.StatusId != 0? device.StatusId : deviceEntity.StatusId;
@@ -166,9 +188,9 @@ namespace UserOperations.Services
             return _repository.GetAsQueryable<Status>().FirstOrDefault(p => p.StatusName == statusName).StatusId;
         }
 
-        private void CheckUniqueDeviceCode(string code, Guid companyId)
+        private void CheckUniqueDeviceCode(string code, Guid companyId, Guid? deviceId = null)
         {
-            if (_repository.GetAsQueryable<Device>().Any(x => x.Code == code && x.CompanyId == companyId))
+            if (_repository.GetAsQueryable<Device>().Any(x => x.Code == code && x.CompanyId == companyId && x.DeviceId != deviceId))
                 throw new NotUniqueException();
         }
 

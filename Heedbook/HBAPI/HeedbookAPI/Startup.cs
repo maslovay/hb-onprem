@@ -71,7 +71,7 @@ namespace UserOperations
             services.AddScoped<MailSender>();
             services.AddScoped<AnalyticCommonProvider>();
             services.AddScoped<HelpProvider>();
-            services.AddScoped<PhraseProvider>();
+            services.AddScoped<PhraseService>();
             services.AddScoped<UserProvider>();
             services.AddScoped<FileRefUtils>();
 

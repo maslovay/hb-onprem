@@ -39,7 +39,7 @@ namespace UserOperations.Controllers
         private readonly SmtpClient _smtpClient;
         private readonly MailSender _mailSender;
         private readonly UserProvider _userProvider;
-        private readonly PhraseProvider _phraseProvider;
+        private readonly PhraseService _phraseService;
         private readonly string _containerName;
         private readonly int activeStatus;
         //private readonly int disabledStatus;
@@ -55,7 +55,7 @@ namespace UserOperations.Controllers
             SmtpClient smtpClient,
             MailSender mailSender,
             UserProvider userProvider,
-            PhraseProvider phraseProvider
+            PhraseService phraseProvider
             )
         {
             _config = config;
@@ -71,7 +71,7 @@ namespace UserOperations.Controllers
             _smtpSetting = smtpSetting;
             _smtpClient = smtpClient;
             _userProvider = userProvider;
-            _phraseProvider = phraseProvider;
+            _phraseService = phraseProvider;
         }
 
         [HttpGet("User")]
@@ -331,11 +331,8 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Library phrase collection", typeof(List<Phrase>))]
         public async Task<IActionResult> PhraseGet()
         {
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                var languageId = _loginService.GetCurrentLanguagueId();
-
-                var phraseIds = await _phraseProvider.GetPhraseIdsByCompanyIdAsync(companyIdInToken, languageId, true);
-                var phrases = await _phraseProvider.GetPhrasesNotBelongToCompanyByIdsAsync(phraseIds, languageId, true);
+                var phraseIds = await _phraseService.GetPhraseIdsByCompanyIdAsync(true);
+                var phrases = await _phraseService.GetPhrasesNotBelongToCompanyByIdsAsync(phraseIds, true);
                 return Ok(phrases);
         }
 
@@ -343,18 +340,10 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Create company phrase (not library!)",
             Description = "Save new phrase to DB and attach it to loggined company (create new PhraseCompany). Assigned that the phrase is not template")]
         [SwaggerResponse(200, "New phrase", typeof(Phrase))]
-        public async Task<IActionResult> PhrasePost(
+        public async Task<Phrase> PhrasePost(
                     [FromBody] PhrasePost message)
         {
-            var companyIdInToken = _loginService.GetCurrentCompanyId();
-            var languageId = _loginService.GetCurrentLanguagueId();
-
-            var phrase = await _phraseProvider.GetLibraryPhraseByTextAsync(message.PhraseText, true);
-            phrase = phrase?? await _phraseProvider.CreateNewPhraseAsync(message, languageId);
-
-            await _phraseProvider.CreateNewPhraseCompanyAsync(companyIdInToken, phrase.PhraseId);
-            await _phraseProvider.SaveChangesAsync();
-            return Ok(phrase);
+            return await _phraseService.CreateNewPhraseAndAddToCompanyAsync(message);
         }
 
         [HttpPut("PhraseLib")]
@@ -364,10 +353,10 @@ namespace UserOperations.Controllers
         {
             var companyIdInToken = _loginService.GetCurrentCompanyId();
 
-            var phrase = await _phraseProvider.GetPhraseInCompanyByIdAsync(message.PhraseId, companyIdInToken, false);
+            var phrase = await _phraseService.GetPhraseInCompanyByIdAsync(message.PhraseId, companyIdInToken, false);
             if (phrase != null)
             {
-                await _phraseProvider.EditAndSavePhraseAsync(phrase, message);
+                await _phraseService.EditAndSavePhraseAsync(phrase, message);
                 return Ok(phrase);
             }
             return BadRequest("No permission for changing phrase");
@@ -380,9 +369,9 @@ namespace UserOperations.Controllers
         {
                 var companyIdInToken = _loginService.GetCurrentCompanyId();
 
-                var phrase = await _phraseProvider.GetPhraseByIdAsync(phraseId);
+                var phrase = await _phraseService.GetPhraseByIdAsync(phraseId);
                 if (phrase == null) return BadRequest("No such phrase");
-                var answer = await _phraseProvider.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase, companyIdInToken);
+                var answer = await _phraseService.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase, companyIdInToken);
                 return Ok(answer);
         }
 
@@ -393,7 +382,7 @@ namespace UserOperations.Controllers
         {
                 var companyIdInToken = _loginService.GetCurrentCompanyId();
                 companyIds = !companyIds.Any() ? new List<Guid> { companyIdInToken } : companyIds;
-                var companyPhrase = await _phraseProvider.GetPhrasesInCompanyByIdsAsync(companyIds);
+                var companyPhrase = await _phraseService.GetPhrasesInCompanyByIdsAsync(companyIds);
                 return Ok(companyPhrase);
         }
 
@@ -402,12 +391,7 @@ namespace UserOperations.Controllers
         public async Task<IActionResult> CompanyPhrasePost(
                 [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds)
         {
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                foreach (var phraseId in phraseIds)
-                {
-                    await _phraseProvider.CreateNewPhraseCompanyAsync(companyIdInToken, phraseId);
-                }
-                await _phraseProvider.SaveChangesAsync();
+                await _phraseService.CreateNewPhrasesCompanyAsync(phraseIds);
                 return Ok("OK");
         }
 
