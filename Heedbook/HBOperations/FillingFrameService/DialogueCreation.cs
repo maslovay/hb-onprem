@@ -84,9 +84,9 @@ namespace FillingFrameService
                     string gender; 
                     if (message.Gender == null)
                     {
-                        var genderMaleCount = attributes.Count(item => item.Gender == "Male");
-                        var genderFemaleCount = attributes.Count(item => item.Gender == "Female");
-                        gender = genderMaleCount > genderFemaleCount ? "male" : "female";
+                        var genderMaleCount = attributes.Count(item => item.Gender.ToLower() == "male");
+                        var genderFemaleCount = attributes.Count(item => item.Gender.ToLower() == "female");
+                        gender = genderMaleCount > genderFemaleCount ? "Male" : "Female";
                     }
                     else
                     {
