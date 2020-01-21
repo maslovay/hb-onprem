@@ -10,7 +10,8 @@ WORKDIR /app
 COPY --from=build-env /app/HBOperations/PersonOnlineDetectionService/publish .
 
 RUN apk add --update python3
-RUN pip install "python-socketio[client]"
+RUN pip3 install –upgrade pip3
+RUN pip3 install "python-socketio[client]"
 
 ENTRYPOINT ["dotnet", "PersonOnlineDetectionService.dll"]
 RUN mkdir -p /opt/
