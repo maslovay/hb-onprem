@@ -439,6 +439,7 @@ namespace UserOperations.Controllers
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.DialogueHint)
                 .Include(p => p.DialogueClientProfile)
+                .Include(p => p.Device)
                 .Where(p =>
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
@@ -462,7 +463,9 @@ namespace UserOperations.Controllers
                     duration = p.EndTime.Subtract(p.BegTime),
                     p.StatusId,
                     p.InStatistic,
-                    p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                    p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    p.DeviceId,
+                    p.Device.Name
                 }).ToList();
                 return Ok(dialogues);
         }
@@ -495,6 +498,7 @@ namespace UserOperations.Controllers
 
                 var dialogues = _context.Dialogues
                 .Include(p => p.DialogueHint)
+                .Include(p => p.Device)
                 .Where(p =>
                     p.BegTime >= begTime &&
                     p.EndTime <= endTime &&
@@ -518,7 +522,9 @@ namespace UserOperations.Controllers
                     Duration = p.EndTime.Subtract(p.BegTime),
                     p.StatusId,
                     p.InStatistic,
-                    p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                    p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    p.DeviceId,
+                    p.Device.Name
                 }).ToList();
 
                 if (dialogues.Count() == 0) return Ok(dialogues);
