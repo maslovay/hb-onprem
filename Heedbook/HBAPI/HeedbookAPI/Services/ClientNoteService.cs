@@ -47,7 +47,12 @@ namespace UserOperations.Services
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
             var corporationId = _loginService.GetCurrentCorporationId();
-            var userId = _loginService.GetCurrentUserId();
+            Guid? userId = null;
+            try
+            {
+                userId = _loginService.GetCurrentUserId();
+            }
+            catch { }
 
             Guid clientCompanyId = _repository.GetAsQueryable<Client>()
                         .Where(x => x.ClientId == clientNote.ClientId)
@@ -60,7 +65,6 @@ namespace UserOperations.Services
                 ApplicationUserId = userId,
                 ClientId = clientNote.ClientId,
                 CreationDate = DateTime.UtcNow,
-                Tags = clientNote.Tags,
                 Text = clientNote.Text
             };
 

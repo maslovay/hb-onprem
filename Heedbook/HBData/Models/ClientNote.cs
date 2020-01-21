@@ -39,10 +39,5 @@ namespace HBData.Models
         /// text of this record
         /// </summary>
         public string Text { get; set; }
-
-        /// <summary>
-        /// list of tags in this record
-        /// </summary>
-        public string[] Tags { get; set; }
     }
 }
