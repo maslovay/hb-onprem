@@ -150,6 +150,7 @@ namespace UserOperations.Services
                 CountryId = message.CountryId,
                 CorporationId = message.CorporationId,
                 StatusId = GetStatusId("Inactive"),
+                IsExtended = message.IsExtended?? true,
                 TimeZoneName = message.TimeZoneName
             };
             _repository.Create<Company>(company);

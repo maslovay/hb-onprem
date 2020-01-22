@@ -85,6 +85,7 @@ namespace UserOperations
             services.AddScoped<CompanyService>();
             services.AddScoped<DemonstrationV2Service>();
             services.AddScoped<DeviceService>();
+            services.AddScoped<DialogueService>();
             services.AddScoped<FillingFileFrameService>();
             services.AddScoped<LoginService>();
             services.AddScoped<MediaFileService>();
