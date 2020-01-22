@@ -36,11 +36,13 @@ if __name__ == '__main__':
     connect_event = "connectToRoom"
     connect_event_status = "connectToRoomStatus"
     send_push_event = "sendPush"
+    disconnect_event = "disconnectFromRoom"
 
     sio = socketio.Client()
     sio.connect(socket_io)
     sio.emit(event=connect_event, data=data)
     sio.emit(event=send_push_event, data=client_data)
+    sio.emot(event=disconnect_event)
     time.sleep(1)
     sio.disconnect()
     print('WebSocket finished')

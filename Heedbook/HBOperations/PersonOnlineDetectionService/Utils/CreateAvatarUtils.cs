@@ -33,10 +33,11 @@ namespace PersonOnlineDetectionService.Utils
             var stream = FaceDetection.CreateAvatar(localPath, rectangle);
             stream.Seek(0, SeekOrigin.Begin);
             System.Console.WriteLine("Upload");
-            await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{clientId}.jpg");
+            await _sftpClient.UploadAsMemoryStreamAsync(stream, "useravatars/", $"{clientId}.jpg");
             stream.Close();
 
             System.Console.WriteLine(path);
+            _sftpClient.ChangeDirectoryToDefault();
             await _sftpClient.DeleteFileIfExistsAsync(path);
         }
 
