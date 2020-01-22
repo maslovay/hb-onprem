@@ -9,7 +9,7 @@ using UserOperations.Controllers;
 using UserOperations.Models;
 using UserOperations.Services;
 
-namespace UserOperations.Providers
+namespace UserOperations.Services
 {
     public class PhraseService
     {

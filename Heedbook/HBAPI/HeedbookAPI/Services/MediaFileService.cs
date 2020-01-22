@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using HBLib.Utils;
 using UserOperations.Utils.CommonOperations;
 

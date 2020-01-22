@@ -14,11 +14,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models;
-using UserOperations.Services;
 using UserOperations.Utils;
 using UserOperations.Utils.CommonOperations;
 
-namespace UserOperations.Providers
+namespace UserOperations.Services
 {
     public class UserService
     {
@@ -63,36 +62,38 @@ namespace UserOperations.Providers
 
 
 
-        public async Task<List<ApplicationUser>> GetUsers()
+        public async Task<IEnumerable<UserModel>> GetUsers()
         {
             var roleInToken = _loginService.GetCurrentRoleName();
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             var corporationIdInToken = _loginService.GetCurrentCorporationId();
             var userIdInToken = _loginService.GetCurrentUserId();
-
+            List<ApplicationUser> users = null;
             if (roleInToken == "Admin")
-                return await GetUsersForAdminAsync();
+                users =  await GetUsersForAdminAsync();
 
             if (roleInToken == "Supervisor")
-                return await GetUsersForSupervisorAsync((Guid)corporationIdInToken, (Guid)userIdInToken);
+                users = await GetUsersForSupervisorAsync((Guid)corporationIdInToken, (Guid)userIdInToken);
 
             if (roleInToken == "Manager")
-                return await GetUsersForManagerAsync(companyIdInToken, userIdInToken);
+                users = await GetUsersForManagerAsync(companyIdInToken, userIdInToken);
 
-            return null;
+            return users?.Select(p => new UserModel(p, p.Avatar != null ? _fileRef.GetFileLink(_containerName, p.Avatar, default) : null));
         }
 
-        public async Task<List<ApplicationUser>> GetUsersForDeviceAsync()
+        public async Task<IEnumerable<UserModel>> GetUsersForDeviceAsync()
         {
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             var employeeRoleId = (await _repository.FindOrExceptionOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
-            return await _repository.GetAsQueryable<ApplicationUser>()
+            var users =  await _repository.GetAsQueryable<ApplicationUser>()
                       .Include(p => p.UserRoles).ThenInclude(x => x.Role)
                       .Include(p => p.Company)
                       .Where(p => p.CompanyId == companyIdInToken
                           && (p.StatusId == activeStatus)
                           && p.UserRoles.Select(r => r.RoleId).Contains(employeeRoleId))
                       .ToListAsync();
+
+            return users?.Select(p => new UserModel(p, p.Avatar != null ? _fileRef.GetFileLink(_containerName, p.Avatar, default) : null));
         }
 
         public async Task<UserModel> CreateUserWithAvatarAsync(IFormCollection formData)
@@ -223,6 +224,79 @@ namespace UserOperations.Providers
             }
         }
 
+
+        public async Task SendVideoMessageToManager(IFormCollection formData)
+        {
+            var roleInToken = _loginService.GetCurrentRoleName();
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            var corporationIdInToken = _loginService.GetCurrentCorporationId();
+            var userIdInToken = _loginService.GetCurrentUserId();
+
+            var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
+            VideoMessage message = JsonConvert.DeserializeObject<VideoMessage>(userDataJson);
+
+            var user = _repository.GetAsQueryable<ApplicationUser>().First(p => p.Id == userIdInToken);
+
+            List<ApplicationUser> recepients = null;
+            if (roleInToken == "Employee")
+            {
+                var managerRole = _repository.GetAsQueryable<ApplicationRole>().First(p => p.Name == "Manager");
+                recepients = _repository.GetAsQueryable<ApplicationUser>().Where(p => p.CompanyId == companyIdInToken
+                        && p.UserRoles.Where(r => r.Role == managerRole).Any())
+                    .Distinct()
+                    .ToList();
+            }
+            else if (roleInToken == "Manager" && corporationIdInToken != null)
+            {
+                var supervisorRole = _repository.GetAsQueryable<ApplicationRole>().First(p => p.Name == "Supervisor");
+                recepients = _repository.GetAsQueryable<ApplicationUser>()
+                    .Include(p => p.Company)
+                    .Where(p => p.Company.CorporationId == corporationIdInToken
+                        && p.UserRoles.Where(r => r.Role == supervisorRole).Any())
+                    .Distinct()
+                    .ToList();
+            }
+            else
+                throw new Exception($"{roleInToken} not have leader");
+
+            if (formData.Files.Count != 0 && recepients != null && recepients.Count != 0)
+            {
+                var mail = new System.Net.Mail.MailMessage
+                {
+                    From = new System.Net.Mail.MailAddress(_smtpSetting.FromEmail),
+                    Subject = user.FullName + " - " + message.Subject,
+                    Body = message.Body,
+                    IsBodyHtml = false
+                };
+
+                foreach (var r in recepients)
+                {
+                    mail.To.Add(r.Email);
+                }
+
+                var amountAttachmentsSize = 0f;
+                foreach (var f in formData.Files)
+                {
+                    var fn = user.FullName + "_" + formData.Files[0].FileName;
+                    var memoryStream = f.OpenReadStream();
+                    amountAttachmentsSize += (memoryStream.Length / 1024f) / 1024f;
+
+                    memoryStream.Position = 0;
+                    var attachment = new System.Net.Mail.Attachment(memoryStream, fn);
+                    mail.Attachments.Add(attachment);
+                }
+                if (amountAttachmentsSize > 25)
+                {
+                    throw new Exception($"Files size more than 25 MB");
+                }
+
+                _smtpClient.Send(mail);
+            }
+            else
+            {
+                throw new Exception("Video File is null");
+            }
+        }
 
 
 

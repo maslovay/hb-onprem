@@ -10,7 +10,6 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using UserOperations.AccountModels;
 using UserOperations.Models.AnalyticModels;
-using UserOperations.Providers;
 using UserOperations.Services;
 using UserOperations.Utils;
 

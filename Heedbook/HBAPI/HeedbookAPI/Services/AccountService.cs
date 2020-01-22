@@ -5,13 +5,11 @@ using HBData.Models;
 using HBData.Models.AccountViewModels;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.AccountModels;
-using UserOperations.Services;
 using HBData.Repository;
-using System.Collections.Generic;
 using System.Transactions;
 using UserOperations.Utils;
 
-namespace UserOperations.Providers
+namespace UserOperations.Services
 {
     public class AccountService
     {

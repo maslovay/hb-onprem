@@ -1,36 +1,17 @@
-﻿using HBData;
-using HBData.Models;
+﻿using HBData.Models;
 using HBData.Repository;
-using HBLib;
-using HBLib.Utils;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using UserOperations.Controllers;
-using UserOperations.Models;
-using UserOperations.Services;
 using UserOperations.Utils;
-using UserOperations.Utils.CommonOperations;
 
-namespace UserOperations.Providers
+namespace UserOperations.Services
 {
     public class CompanyService
     {
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
-        private readonly SftpClient _sftpClient;
-        private readonly FileRefUtils _fileRef;
-        private readonly SmtpSettings _smtpSetting;
-        private readonly SmtpClient _smtpClient;
-        private readonly MailSender _mailSender;
-        private readonly string _containerName;
 
         private readonly int activeStatus;
         private readonly int disabledStatus;
@@ -38,25 +19,11 @@ namespace UserOperations.Providers
         public CompanyService(
             IGenericRepository repository, 
             LoginService loginService,
-            IConfiguration config,
-            RecordsContext context,
-            SftpClient sftpClient,
-            FileRefUtils fileRef,
-            RequestFilters requestFilters,
-            SmtpSettings smtpSetting,
-            SmtpClient smtpClient,
-            MailSender mailSender)
+            RequestFilters requestFilters)
         {
             _repository = repository;
             _loginService = loginService;
-            _sftpClient = sftpClient;
-            _fileRef = fileRef;
             _requestFilters = requestFilters;
-            _mailSender = mailSender;
-            _containerName = "useravatars";
-
-            _smtpSetting = smtpSetting;
-            _smtpClient = smtpClient;
             activeStatus = 3;
             disabledStatus = 4;
         }
@@ -83,12 +50,18 @@ namespace UserOperations.Providers
             return companies ?? new List<Company>();
         }
 
-        public async Task<IEnumerable<Corporation>> GetCorporationsForAdminAsync()
+        public async Task<IEnumerable<Corporation>> GetCorporationAsync()
         {
             return await _repository.FindAllAsync<Corporation>();
         }
-        public async Task<Company> UpdateCompanAsync(Company entity, Company companyInParams)
+
+        public async Task<Company> UpdateCompanAsync(Company companyInParams)
         {
+            var roleInToken = _loginService.GetCurrentRoleName();
+            var entity = await GetCompanyByIdAsync(companyInParams.CompanyId);
+
+            _requestFilters.IsCompanyBelongToUser(companyInParams.CompanyId);
+
             foreach (var p in typeof(Company).GetProperties())
             {
                 var val = p.GetValue(companyInParams, null);
