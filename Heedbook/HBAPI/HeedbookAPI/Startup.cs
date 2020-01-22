@@ -72,7 +72,7 @@ namespace UserOperations
             services.AddScoped<AnalyticCommonProvider>();
             services.AddScoped<HelpProvider>();
             services.AddScoped<PhraseService>();
-            services.AddScoped<UserProvider>();
+            services.AddScoped<UserService>();
             services.AddScoped<FileRefUtils>();
 
             services.AddScoped<AccountService>();

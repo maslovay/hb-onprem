@@ -73,17 +73,17 @@ namespace UserOperations.Services
                             {
                                 Age = $"{p.BegAge}-{p.EndAge}",
                                 MaleCount = dataBoarders
-                                    .Where(d => d.Gender == "male")
+                                    .Where(d => d.Gender.ToLower() == "male")
                                     .Count(),
                                 FemaleCount = dataBoarders
-                                    .Where(d => d.Gender == "female")
+                                    .Where(d => d.Gender.ToLower() == "female")
                                     .Count(),
                                 MaleAverageAge = dataBoarders
-                                    .Where(d => d.Gender == "male")
+                                    .Where(d => d.Gender.ToLower() == "male")
                                     .Select(d => d.Age)
                                     .Average(),
                                 FemaleAverageAge = dataBoarders
-                                    .Where(d => d.Gender == "female")
+                                    .Where(d => d.Gender.ToLower() == "female")
                                     .Select(d => d.Age)
                                     .Average()
                             };

@@ -62,7 +62,7 @@ namespace UserOperations.Controllers
         => await _clientNoteService.Create(clientNote);
 
         [HttpPut("Clientnote")]
-        [SwaggerOperation(Summary = "change text of note or tags", Description = "")]
+        [SwaggerOperation(Summary = "change text of note", Description = "")]
         [SwaggerResponse(200, "ClientNote", typeof(ClientNote))]
         public async Task<ClientNote> ClientNotesUpdate([FromBody] PutClientNote clientNote)
          => await _clientNoteService.Update(clientNote);

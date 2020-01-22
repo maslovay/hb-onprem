@@ -29,7 +29,6 @@ namespace UserOperations.Controllers
     [ControllerExceptionFilter]
     public class UserController : Controller
     {
-        private readonly IConfiguration _config;
         private readonly LoginService _loginService;
         private readonly RecordsContext _context;
         private readonly RequestFilters _requestFilters;
@@ -38,14 +37,13 @@ namespace UserOperations.Controllers
         private readonly SmtpSettings _smtpSetting;
         private readonly SmtpClient _smtpClient;
         private readonly MailSender _mailSender;
-        private readonly UserProvider _userProvider;
+        private readonly UserService _userService;
         private readonly PhraseService _phraseService;
         private readonly string _containerName;
         private readonly int activeStatus;
         //private readonly int disabledStatus;
 
         public UserController(
-            IConfiguration config,
             LoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
@@ -54,11 +52,10 @@ namespace UserOperations.Controllers
             SmtpSettings smtpSetting,
             SmtpClient smtpClient,
             MailSender mailSender,
-            UserProvider userProvider,
+            UserService userProvider,
             PhraseService phraseProvider
             )
         {
-            _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
@@ -70,180 +67,52 @@ namespace UserOperations.Controllers
             //disabledStatus = 4;
             _smtpSetting = smtpSetting;
             _smtpClient = smtpClient;
-            _userProvider = userProvider;
+            _userService = userProvider;
             _phraseService = phraseProvider;
         }
 
         [HttpGet("User")]
         [SwaggerOperation(Summary = "All company users", Description = "Return all active (status 3) users (array) for loggined company with role Id")]
         [SwaggerResponse(200, "Users with role", typeof(List<UserModel>))]
-        public async Task<IActionResult> UserGet()
+        public async Task<IEnumerable<UserModel>> UserGet()
         {
                 List<ApplicationUser> users = null;
-                var deviceId = _loginService.GetCurrentDeviceId();
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
+                bool isExtended = _loginService.GetIsExtended();
 
-                if (deviceId != null)
-                    users = await _userProvider.GetUsersForDeviceAsync(companyIdInToken);
+                if (!isExtended) users =  await _userService.GetUsersForDeviceAsync();
+                else users =  await _userService.GetUsers();
 
-                else
-                {
-                    var roleInToken = _loginService.GetCurrentRoleName();
-                    var corporationIdInToken = _loginService.GetCurrentCorporationId();
-                    var userIdInToken = _loginService.GetCurrentUserId();
-
-                    if (roleInToken == "Admin")
-                        users = await _userProvider.GetUsersForAdminAsync();
-
-                    if (roleInToken == "Supervisor")
-                        users = await _userProvider.GetUsersForSupervisorAsync((Guid)corporationIdInToken, (Guid)userIdInToken);
-
-                    if (roleInToken == "Manager")
-                        users = await _userProvider.GetUsersForManagerAsync(companyIdInToken, userIdInToken);
-                }
-
-
-            var result = users?.Select(p => new UserModel(p, p.Avatar != null ? _fileRef.GetFileLink(_containerName, p.Avatar, default) : null));
-                return Ok(result);
+                return users?.Select(p => new UserModel(p, p.Avatar != null ? _fileRef.GetFileLink(_containerName, p.Avatar, default) : null));
         }
+
 
         [HttpPost("User")]
         [SwaggerOperation(Description = "Create new user with role Employee in loggined company (taked from token) and can save avatar for user / Return new user")]
         [SwaggerResponse(200, "User", typeof(UserModel))]
-        public async Task<IActionResult> UserPostAsync(
-                    [FromForm, 
+        public async Task<UserModel> UserPostAsync(
+                    [FromForm,
                     SwaggerParameter("json user (include password and unique email) in FormData with key 'data' + file avatar (not required)")]
-                    IFormCollection formData )
-        {
-                var roleInToken = _loginService.GetCurrentRoleName();
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                var corporationIdInToken = _loginService.GetCurrentCorporationId();
+                    IFormCollection formData) =>
+                await _userService.CreateUserWithAvatarAsync(formData);
 
-                var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-
-                PostUser message = JsonConvert.DeserializeObject<PostUser>(userDataJson);
-                if (!await _userProvider.CheckUniqueEmailAsync(message.Email))
-                    return BadRequest("User email not unique");
-               
-                message.CompanyId = message.CompanyId ?? companyIdInToken;
-                if (_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, message.CompanyId, roleInToken) == false)
-                    return BadRequest($"Not allowed user company");
-
-                if (await _userProvider.CheckAbilityToCreateOrChangeUserAsync(roleInToken, message.RoleId, null) == false)
-                    return BadRequest("Not allowed user role");
-
-                ApplicationUser user =  await _userProvider.AddNewUserAsync(message);
-                ApplicationRole role =  await _userProvider.AddOrChangeUserRolesAsync (user.Id, message.RoleId, null);
-
-                //---save avatar---
-                string avatarUrl = null;
-                if (formData.Files.Count != 0)
-                {
-                    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-                    var fn = user.Id + fileInfo.Extension;
-                    user.Avatar = fn;
-                    var memoryStream = formData.Files[0].OpenReadStream();
-                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
-                    avatarUrl = _fileRef.GetFileLink(_containerName, fn, default);
-                }
-                var userForEmail = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(user.Id);
-                try
-                {
-                    await _mailSender.SendUserRegisterEmail(userForEmail, message.Password);
-                }
-                catch { }
-                return Ok(new UserModel(user, avatarUrl, role));
-        }
 
         [HttpPut("User")]
         [SwaggerOperation(Summary = "Edit user",
                 Description = "Edit user (any from loggined company) and return edited. Don't send password and role (can't change). Email must been unique. May contain avatar file")]
         [SwaggerResponse(200, "Edited user", typeof(UserModel))]
-        public async Task<IActionResult> UserPut(
-                    [FromForm, SwaggerParameter("Avatar file (not required) + json User with key 'data' in FormData")] IFormCollection formData)
-        {
-                var roleInToken = _loginService.GetCurrentRoleName();
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                var corporationIdInToken = _loginService.GetCurrentCorporationId();
-                var userIdInToken = _loginService.GetCurrentUserId();
-
-                var userDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
-                UserModel message = JsonConvert.DeserializeObject<UserModel>(userDataJson);
-                var user = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(message.Id);
-                if (user == null) return BadRequest("No such user");
-
-                _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user?.CompanyId, roleInToken);
-
-                if (await _userProvider.CheckAbilityToCreateOrChangeUserAsync(roleInToken, message.RoleId, user.UserRoles.FirstOrDefault().RoleId) == false)
-                    return BadRequest("Not allowed user role");
-
-                if (message.Email != null && user.Email != message.Email)
-                    return BadRequest("Not allowed change email");
-
-                ApplicationRole newRole = null;
-                Type userType = user.GetType();
-                foreach (var p in typeof(UserModel).GetProperties())
-                {
-                    var val = p.GetValue(message, null);
-                    if (val != null && val.ToString() != Guid.Empty.ToString() && p.Name != "Role")
-                    {
-                        if (p.Name == "EmployeeId")//---its a mistake in DB
-                            userType.GetProperty("EmpoyeeId").SetValue(user, val);
-                        else if (p.Name == "RoleId")
-                            newRole =  await _userProvider.AddOrChangeUserRolesAsync(user.Id, message.RoleId, user.UserRoles.FirstOrDefault().RoleId);
-                        else
-                            userType.GetProperty(p.Name).SetValue(user, val);
-                    }
-                }
-
-                string avatarUrl = null;
-                if (formData.Files.Count != 0)
-                {
-                    await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
-                    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-                    var fn = user.Id + fileInfo.Extension;
-                    var memoryStream = formData.Files[0].OpenReadStream();
-                    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
-                    user.Avatar = fn;
-                }
-                if (user.Avatar != null)
-                {
-                    avatarUrl = _fileRef.GetFileLink(_containerName, user.Avatar, default);
-                }
-                _context.SaveChanges();
-                return Ok(new UserModel(user, avatarUrl, newRole));
-        }
+        public async Task<UserModel> UserPut(
+                    [FromForm, SwaggerParameter("Avatar file (not required) + json User with key 'data' in FormData")]
+                    IFormCollection formData) =>
+                await _userService.EditUserWithAvatarAsync(formData);
 
 
         [HttpDelete("User")]
         [SwaggerOperation(Summary = "Delete or make disabled", Description = "Delete user by Id if he hasn't any relations in DB or make status Disabled")]
-        public async Task<IActionResult> UserDelete( [FromQuery] Guid applicationUserId)
-        {
-                var roleInToken = _loginService.GetCurrentRoleName();
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                var corporationIdInToken = _loginService.GetCurrentCorporationId();
-                var userIdInToken = _loginService.GetCurrentUserId();
+        public async Task<string> UserDelete( [FromQuery] Guid applicationUserId) =>
+                await _userService.DeleteUserWithAvatarAsync(applicationUserId);
 
-                ApplicationUser user = await _userProvider.GetUserWithRoleAndCompanyByIdAsync(applicationUserId);
-                if (user == null) return BadRequest("No such user");
 
-                if (! await _userProvider.CheckAbilityToDeleteUserAsync(roleInToken, user.UserRoles.FirstOrDefault().RoleId))
-                    return BadRequest("Not allowed user role");
-                if (!_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user.CompanyId, roleInToken))
-                    return BadRequest($"Not allowed user company");
 
-                await _userProvider.SetUserInactiveAsync(user);
-                try
-                {
-                    await _userProvider.DeleteUserWithRolesAsync(user);
-                    await _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}");
-                    return Ok("Deleted");
-                }
-                catch
-                {                       
-                    return Ok("Disabled Status");
-                }
-        }
 
         [HttpGet("Companies")]
         [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for loggined corporation (only for role Supervisor)")]
@@ -256,9 +125,9 @@ namespace UserOperations.Controllers
 
                 IEnumerable<Company> companies = null;
                 if (roleInToken == "Admin")
-                    companies = await _userProvider.GetCompaniesForAdminAsync();
+                    companies = await _userService.GetCompaniesForAdminAsync();
                 if (roleInToken == "Supervisor") // only for corporations
-                    companies = await _userProvider.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
+                    companies = await _userService.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
 
                 return Ok(companies?? new List<Company>());
         }
@@ -280,11 +149,11 @@ namespace UserOperations.Controllers
 
                 Company newCompany = null;
                 if (roleInToken == "Admin")
-                    newCompany = await _userProvider.AddNewCompanyAsync(model, model.CompanyName);
+                    newCompany = await _userService.AddNewCompanyAsync(model, model.CompanyName);
                 if (roleInToken == "Supervisor")
                 {
-                    var supervisorCompany = await _userProvider.GetCompanyByIdAsync(companyIdInToken);
-                    newCompany = await _userProvider.AddNewCompanyAsync(supervisorCompany, model.CompanyName);
+                    var supervisorCompany = await _userService.GetCompanyByIdAsync(companyIdInToken);
+                    newCompany = await _userService.AddNewCompanyAsync(supervisorCompany, model.CompanyName);
                 }
                 return Ok(newCompany);
         }
@@ -301,13 +170,13 @@ namespace UserOperations.Controllers
             if (roleInToken != "Admin" && roleInToken != "Supervisor")
                 return BadRequest("Not allowed access(role)");
 
-            var company = await _userProvider.GetCompanyByIdAsync(model.CompanyId);
+            var company = await _userService.GetCompanyByIdAsync(model.CompanyId);
             if (company is null)
                 return BadRequest($"company with such companyId: {model.CompanyId} not exist");
             if( ! _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, model.CompanyId, roleInToken))
                 return BadRequest($"Not allowed user company");
 
-            company = await _userProvider.UpdateCompanAsync(company, model);
+            company = await _userService.UpdateCompanAsync(company, model);
             return Ok(company);
         }
 
@@ -319,7 +188,7 @@ namespace UserOperations.Controllers
                 var roleInToken = _loginService.GetCurrentRoleName();
                 if (roleInToken != "Admin") return BadRequest("Not allowed access(role)");
 
-                var corporations = await _userProvider.GetCorporationsForAdminAsync();
+                var corporations = await _userService.GetCorporationsForAdminAsync();
                 return Ok(corporations);
         }
 
@@ -348,52 +217,33 @@ namespace UserOperations.Controllers
 
         [HttpPut("PhraseLib")]
         [SwaggerOperation(Summary = "Edit company phrase", Description = "Edit phrase. You can edit only your own phrase (not template from library)")]
-        public async Task<IActionResult> PhrasePut(
+        public async Task<Phrase> PhrasePut(
                     [FromBody] Phrase message)
         {
-            var companyIdInToken = _loginService.GetCurrentCompanyId();
-
-            var phrase = await _phraseService.GetPhraseInCompanyByIdAsync(message.PhraseId, companyIdInToken, false);
-            if (phrase != null)
-            {
-                await _phraseService.EditAndSavePhraseAsync(phrase, message);
-                return Ok(phrase);
-            }
-            return BadRequest("No permission for changing phrase");
+            var phrase = await _phraseService.GetPhraseInCompanyByIdAsync(message.PhraseId, false);
+            return await _phraseService.EditAndSavePhraseAsync(phrase, message);
         }
 
         [HttpDelete("PhraseLib")]
         [SwaggerOperation(Summary = "Delete company phrase", Description = "Delete phrase (if this phrase are Template it can't be deleted, it only delete connection to company")]
-        public async Task<IActionResult> PhraseDelete(
+        public async Task<string> PhraseDelete(
                     [FromQuery(Name = "phraseId"), SwaggerParameter("phraseId Guid", Required = true)] Guid phraseId)
         {
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-
                 var phrase = await _phraseService.GetPhraseByIdAsync(phraseId);
-                if (phrase == null) return BadRequest("No such phrase");
-                var answer = await _phraseService.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase, companyIdInToken);
-                return Ok(answer);
+                return await _phraseService.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase);
         }
 
         [HttpGet("CompanyPhrase")]
         [SwaggerOperation(Summary = "Return attached to company(-ies) phrases", Description = "Return own and template phrases collection for companies sended in params or for loggined company")]
-        public async Task<IActionResult> CompanyPhraseGet(
-                [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds)
-        {
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                companyIds = !companyIds.Any() ? new List<Guid> { companyIdInToken } : companyIds;
-                var companyPhrase = await _phraseService.GetPhrasesInCompanyByIdsAsync(companyIds);
-                return Ok(companyPhrase);
-        }
+        public async Task<List<Phrase>> CompanyPhraseGet(
+                [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds) =>
+                await _phraseService.GetPhrasesInCompanyByIdsAsync(companyIds);
 
         [HttpPost("CompanyPhrase")]
         [SwaggerOperation(Summary = "Attach library(template) phrases to company", Description = "Attach phrases  from library (ids sended in body) to loggined company  (create new PhraseCompany entities)")]
-        public async Task<IActionResult> CompanyPhrasePost(
-                [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds)
-        {
+        public async Task CompanyPhrasePost(
+                [FromBody, SwaggerParameter("array ids", Required = true)] List<Guid> phraseIds) =>
                 await _phraseService.CreateNewPhrasesCompanyAsync(phraseIds);
-                return Ok("OK");
-        }
 
 
 
