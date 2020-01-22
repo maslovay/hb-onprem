@@ -18,14 +18,14 @@ namespace UserOperations.Providers
         private readonly LoginService _loginService;
         private readonly IGenericRepository _repository;
         private readonly MailSender _mailSender;
-        private readonly HelpProvider _helpProvider;
+        private readonly SpreadsheetDocumentUtils _helpProvider;
 
 
         public AccountService(
             LoginService loginService,
             IGenericRepository repository,
             MailSender mailSender,
-            HelpProvider helpProvider
+            SpreadsheetDocumentUtils helpProvider
         )
         {
             _loginService = loginService;

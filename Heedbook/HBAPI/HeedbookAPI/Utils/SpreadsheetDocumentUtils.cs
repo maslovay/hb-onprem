@@ -12,10 +12,10 @@ using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Utils
 {
-    public class HelpProvider
+    public class SpreadsheetDocumentUtils
     {
         private readonly RecordsContext _context;
-        public HelpProvider( RecordsContext context )
+        public SpreadsheetDocumentUtils( RecordsContext context )
         {
             _context = context;
             //xlsx

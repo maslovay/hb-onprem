@@ -14,7 +14,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models;
-using UserOperations.Models.AnalyticModels;
 using UserOperations.Services;
 using UserOperations.Utils;
 using UserOperations.Utils.CommonOperations;
@@ -227,60 +226,6 @@ namespace UserOperations.Providers
 
 
 
-
-
-        //---COMPANY----
-        public async Task<Company> GetCompanyByIdAsync(Guid companyId)
-        {
-            return await _repository.FindOrNullOneByConditionAsync<Company>(p => p.CompanyId == companyId);
-        }
-
-        public async Task<IEnumerable<Company>> GetCompaniesForAdminAsync()
-        {
-            return await _repository.FindByConditionAsync<Company>(p => p.StatusId == activeStatus || p.StatusId == disabledStatus);
-        }
-
-        public async Task<IEnumerable<Company>> GetCompaniesForSupervisorAsync(Guid? corporationId)
-        {
-            if (corporationId == null || corporationId == Guid.Empty) return null;
-            return await _repository.FindByConditionAsync<Company>(p => 
-                        p.CorporationId == corporationId 
-                        && (p.StatusId == activeStatus || p.StatusId == disabledStatus));
-        }
-
-        public async Task<IEnumerable<Corporation>> GetCorporationsForAdminAsync()
-        {
-            return await _repository.FindAllAsync<Corporation>();
-        }
-        public async Task<Company> UpdateCompanAsync(Company entity, Company companyInParams)
-        {
-            foreach (var p in typeof(Company).GetProperties())
-            {
-                var val = p.GetValue(companyInParams, null);
-                if (val != null && val.ToString() != Guid.Empty.ToString())
-                    p.SetValue(entity, p.GetValue(companyInParams, null), null);
-            }
-            await _repository.SaveAsync();
-            return entity;
-        }
-
-        public async Task<Company> AddNewCompanyAsync(Company message, string companyName)
-        {
-            var newCompany = new Company()
-            {
-                CompanyName = companyName,
-                CompanyIndustryId = message.CompanyIndustryId,
-                CreationDate = DateTime.UtcNow,
-                LanguageId = message.LanguageId,
-                CountryId = message.CountryId,
-                StatusId = activeStatus,
-                CorporationId = message.CorporationId
-            };
-            _repository.Create<Company>(newCompany);
-            await _repository.SaveAsync();
-            return newCompany;
-        }
-
         //---PRIVATE---
         private async Task<List<ApplicationUser>> GetUsersForAdminAsync()
         {
@@ -386,12 +331,14 @@ namespace UserOperations.Providers
             _repository.Create<ApplicationUser>(user);
             return user;
         }
+
         private async Task DeleteUserWithRolesAsync(ApplicationUser user)
         {
             if (user.UserRoles != null && user.UserRoles.Count() != 0)
                 _repository.Delete<ApplicationUserRole>(user.UserRoles);
             _repository.Delete<ApplicationUser>(user);
         }
+
         private async Task<List<Guid>> GetAllowedRolesAsync(string roleInToken)
         {
             List<ApplicationRole> allRoles = (await _repository.FindAllAsync<ApplicationRole>()).ToList();

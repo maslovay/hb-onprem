@@ -36,7 +36,7 @@ namespace UserOperations.Controllers
         private readonly FileRefUtils _fileRef;
         private readonly SmtpSettings _smtpSetting;
         private readonly SmtpClient _smtpClient;
-        private readonly MailSender _mailSender;
+        private readonly CompanyService _companyService;
         private readonly UserService _userService;
         private readonly PhraseService _phraseService;
         private readonly string _containerName;
@@ -51,7 +51,7 @@ namespace UserOperations.Controllers
             RequestFilters requestFilters,
             SmtpSettings smtpSetting,
             SmtpClient smtpClient,
-            MailSender mailSender,
+            CompanyService companyService,
             UserService userProvider,
             PhraseService phraseProvider
             )
@@ -61,7 +61,7 @@ namespace UserOperations.Controllers
             _sftpClient = sftpClient;
             _fileRef = fileRef;
             _requestFilters = requestFilters;
-            _mailSender = mailSender;
+            _companyService = companyService;
             _containerName = "useravatars";
             activeStatus = 3;
             //disabledStatus = 4;
@@ -70,6 +70,8 @@ namespace UserOperations.Controllers
             _userService = userProvider;
             _phraseService = phraseProvider;
         }
+
+        //---USER---
 
         [HttpGet("User")]
         [SwaggerOperation(Summary = "All company users", Description = "Return all active (status 3) users (array) for loggined company with role Id")]
@@ -112,72 +114,54 @@ namespace UserOperations.Controllers
                 await _userService.DeleteUserWithAvatarAsync(applicationUserId);
 
 
-
+        //---COMPANY---
 
         [HttpGet("Companies")]
         [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for loggined corporation (only for role Supervisor)")]
         [SwaggerResponse(200, "Companies", typeof(List<Company>))]
-        public async Task<IActionResult> CompaniesGet()
+        public async Task<IEnumerable<Company>> CompaniesGet()
         {
                 var roleInToken = _loginService.GetCurrentRoleName();
-                if (roleInToken != "Admin" && roleInToken != "Supervisor")
-                    return BadRequest("Not allowed access(role)");
-
-                IEnumerable<Company> companies = null;
                 if (roleInToken == "Admin")
-                    companies = await _userService.GetCompaniesForAdminAsync();
+                    return await _companyService.GetCompaniesForAdminAsync();
                 if (roleInToken == "Supervisor") // only for corporations
-                    companies = await _userService.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
-
-                return Ok(companies?? new List<Company>());
+                    return await _companyService.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
+                throw new AccessException("Not allowed access(role)");
         }
 
         [HttpPost("Company")]
         [SwaggerOperation(Description = "Create new company for corporation")]
         [SwaggerResponse(200, "Company", typeof(Company))]
-        public async Task<IActionResult> CompanysPostAsync( [FromBody] Company model)
+        public async Task<Company> CompanysPostAsync( [FromBody] Company model)
         {
                 var roleInToken = _loginService.GetCurrentRoleName();
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
 
-                if (roleInToken != "Admin" && roleInToken != "Supervisor")
-                    return BadRequest("Not allowed access(role)");
-              
-
-                if (roleInToken != "Admin" && roleInToken != "Supervisor")
-                    return BadRequest("Not allowed access(role)");
-
-                Company newCompany = null;
                 if (roleInToken == "Admin")
-                    newCompany = await _userService.AddNewCompanyAsync(model, model.CompanyName);
+                    return await _companyService.AddNewCompanyAsync(model, model.CorporationId);
                 if (roleInToken == "Supervisor")
                 {
-                    var supervisorCompany = await _userService.GetCompanyByIdAsync(companyIdInToken);
-                    newCompany = await _userService.AddNewCompanyAsync(supervisorCompany, model.CompanyName);
+                    var corporatioIdInToken = _loginService.GetCurrentCorporationId();
+                    return await _companyService.AddNewCompanyAsync(model, corporatioIdInToken);
                 }
-                return Ok(newCompany);
+                throw new AccessException("Not allowed access(role)");
         }
 
         [HttpPut("Company")]
         [SwaggerOperation(Summary = "Edit company", Description = "Edit company")]
         [SwaggerResponse(200, "Edited company", typeof(Company))]
-        public async Task<IActionResult> CompanyPut( [FromBody] Company model)
+        public async Task<Company> CompanyPut( [FromBody] Company model)
         {
             var roleInToken = _loginService.GetCurrentRoleName();
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             var corporationIdInToken = _loginService.GetCurrentCorporationId();
 
             if (roleInToken != "Admin" && roleInToken != "Supervisor")
-                return BadRequest("Not allowed access(role)");
+                throw new AccessException("Not allowed access(role)");
 
-            var company = await _userService.GetCompanyByIdAsync(model.CompanyId);
-            if (company is null)
-                return BadRequest($"company with such companyId: {model.CompanyId} not exist");
-            if( ! _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, model.CompanyId, roleInToken))
-                return BadRequest($"Not allowed user company");
+            var company = await _companyService.GetCompanyByIdAsync(model.CompanyId);
+            _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, model.CompanyId, roleInToken);
 
-            company = await _userService.UpdateCompanAsync(company, model);
-            return Ok(company);
+            return await _companyService.UpdateCompanAsync(company, model);
         }
 
         [HttpGet("Corporations")]
@@ -188,7 +172,7 @@ namespace UserOperations.Controllers
                 var roleInToken = _loginService.GetCurrentRoleName();
                 if (roleInToken != "Admin") return BadRequest("Not allowed access(role)");
 
-                var corporations = await _userService.GetCorporationsForAdminAsync();
+                var corporations = await _companyService.GetCorporationsForAdminAsync();
                 return Ok(corporations);
         }
 
@@ -591,7 +575,7 @@ namespace UserOperations.Controllers
                         return BadRequest($"Files size more than 25 MB");
                     }
 
-                    _smtpClient.Send(mail);                            
+                    _smtpClient.Send(mail);
                 }
                 else
                 {

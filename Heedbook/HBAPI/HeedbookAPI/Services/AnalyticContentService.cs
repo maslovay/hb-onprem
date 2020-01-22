@@ -16,14 +16,14 @@ namespace UserOperations.Services
 {
     public class AnalyticContentService
     {
-        private readonly HelpProvider _helpProvider;
+        private readonly SpreadsheetDocumentUtils _helpProvider;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticContentUtils _utils;
 
         public AnalyticContentService(
-            HelpProvider helpProvider,
+            SpreadsheetDocumentUtils helpProvider,
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,
