@@ -11,7 +11,7 @@ namespace UserOperations.Models
         public Guid? ApplicationUserId { get; set; }
         public Guid? DeviceId { get; set; }
         public DateTime Time { get; set; }
-        public string Descriptor { get; set; }
+        public double[] Descriptor { get; set; }
         public double? FaceArea { get; set; }
     }
 }
