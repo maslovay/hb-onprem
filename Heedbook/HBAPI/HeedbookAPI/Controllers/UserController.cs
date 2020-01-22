@@ -59,10 +59,7 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Users with role", typeof(List<UserModel>))]
         public async Task<IEnumerable<UserModel>> UserGet()
         {
-                List<ApplicationUser> users = null;
-                bool isExtended = _loginService.GetIsExtended();
-
-                if (!isExtended)
+                if (_loginService.GetCurrentDeviceId() != null)
                     return  await _userService.GetUsersForDeviceAsync();
                 return  await _userService.GetUsers();
 

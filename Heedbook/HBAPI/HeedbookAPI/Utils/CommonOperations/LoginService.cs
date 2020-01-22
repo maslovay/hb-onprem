@@ -85,7 +85,7 @@ namespace UserOperations.Services
                         new Claim("role", role),
                         new Claim("fullName", user.FullName),
                         new Claim("avatar", GetAvatar(user.Avatar)),
-                        new Claim("isExtended", "true")
+                        new Claim("isExtended", user.Company.IsExtended.ToString())
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -124,7 +124,7 @@ namespace UserOperations.Services
                     new Claim("companyId", device.CompanyId.ToString()),
                     new Claim("corporationId", device.Company.CorporationId.ToString()),
                     new Claim("languageCode", device.Company.LanguageId.ToString()),
-                    new Claim("isExtended", "false")
+                    new Claim("isExtended", device.Company.IsExtended.ToString())
                 };
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));

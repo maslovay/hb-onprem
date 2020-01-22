@@ -22,5 +22,6 @@ namespace UserOperations.AccountModels
         public Guid? CorporationId;
         public string Role;
         public string TimeZoneName;
+        public bool? IsExtended;
     }
 }
