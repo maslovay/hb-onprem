@@ -22,35 +22,34 @@ namespace PersonOnlineDetectionService
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
-        private readonly SftpClient _sftpclient;
         private readonly PersonDetectionUtils _personDetectionUtils;
+        private readonly CreateAvatarUtils _createAvatar;
         private readonly WebSocketIoUtils _socket;
 
         public PersonOnlineDetection(
             IServiceScopeFactory factory,
             ElasticClientFactory elasticClientFactory,
-            SftpClient sftpclient,
             PersonDetectionUtils personDetectionUtils,
+            CreateAvatarUtils createAvatar,
             WebSocketIoUtils socket
         )
         {
             // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
             _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
             _elasticClientFactory = elasticClientFactory;
-            _sftpclient = sftpclient;
             _personDetectionUtils = personDetectionUtils;
             _socket = socket;
+            _createAvatar = createAvatar;
         }
 
         public async Task Run(PersonOnlineDetectionRun message)
         {
-            System.Console.WriteLine("Function started");
+            System.Console.WriteLine($"Function started {JsonConvert.SerializeObject(message)}");
+
             var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(message.Path);
             _log.Info("Function started");
-
-            System.Console.WriteLine(JsonConvert.SerializeObject(message));
 
             try
             {
@@ -64,18 +63,20 @@ namespace PersonOnlineDetectionService
                 if (clientId == null)
                 {
                     clientId = Guid.NewGuid();
+                    System.Console.WriteLine($"New client -- {clientId}");
                     var client = _personDetectionUtils.CreateNewClient(message, (Guid) clientId);
-                    _sftpclient.RenameFile(message.Path, $"useravatars/{client.ClientId}.jpg");
+                    System.Console.WriteLine("Created client");
+                    await _createAvatar.ExecuteAsync(message.Attributes, (Guid) clientId, message.Path);
+                    System.Console.WriteLine("Created avatar");
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
-                    System.Console.WriteLine(result);
+                    
                 }
                 else
                 {
-                    await _sftpclient.DeleteFileIfExistsAsync(message.Path);
+                    await _createAvatar.DeleteFileAsync(message.Path);
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
-                    System.Console.WriteLine(result);
                 }
 
                 _log.Info("Function finished");

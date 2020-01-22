@@ -15,6 +15,8 @@ RUN pip3 install --upgrade pip
 RUN pip3 install "python-socketio[client]"
 
 ENTRYPOINT ["dotnet", "PersonOnlineDetectionService.dll"]
+
+RUN apk add libgdiplus --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ --allow-untrusted
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download

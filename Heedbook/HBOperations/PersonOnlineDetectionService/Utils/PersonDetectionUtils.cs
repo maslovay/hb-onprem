@@ -22,7 +22,7 @@ namespace PersonOnlineDetectionService.Utils
             _context = context;
         }
 
-        public Guid? FindId(string descriptor, List<ClientNote> clients, double threshold=0.42)
+        public Guid? FindId(string descriptor, List<ClientNote> clients, double threshold=0.38)
         {
             if (!clients.Any()) return null;
             foreach(var client in clients.Select(p => new {Descriptor = p.Client.FaceDescriptor, ClientId = p.Client.ClientId}).Distinct())
@@ -43,7 +43,7 @@ namespace PersonOnlineDetectionService.Utils
                 CorporationId = corporationId,
                 FaceDescriptor = JsonConvert.DeserializeObject<double[]>(message.Descriptor),
                 Age = message.Age,
-                Avatar = $"useravatars/{clientId}.jpg",
+                Avatar = $"{clientId}.jpg",
                 Gender = message.Gender,
                 StatusId = 3
             };

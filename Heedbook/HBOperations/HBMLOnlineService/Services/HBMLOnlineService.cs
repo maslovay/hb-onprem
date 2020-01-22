@@ -57,6 +57,7 @@ namespace HBMLOnlineService.Service
             var personOnlineDetectionRun = new PersonOnlineDetectionRun
             {
                 DeviceId = deviceId,
+                Attributes = JsonConvert.SerializeObject(faceResults.First().Rectangle),
                 Path = $"useravatars/{filename}",
                 CompanyId = companyId,
                 Descriptor = JsonConvert.SerializeObject(faceResults.First().Descriptor),
