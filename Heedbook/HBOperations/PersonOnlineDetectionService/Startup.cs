@@ -58,6 +58,7 @@ namespace PersonOnlineDetectionService
 
             services.AddScoped<PersonDetectionUtils>();
             services.AddScoped<WebSocketIoUtils>();
+            services.AddScoped<CreateAvatarUtils>();
             services.AddSingleton<DescriptorCalculations>();
 
             services.AddRabbitMqEventBus(Configuration);

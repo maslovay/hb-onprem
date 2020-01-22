@@ -6,6 +6,7 @@ namespace RabbitMqEventBus.Events
     public class PersonOnlineDetectionRun : IntegrationEvent
     {
         public String Path { get; set; }
+        public String Attributes {get;set;}
         public String Descriptor {get; set;}
         public Guid? CompanyId {get; set;}
         public int Age {get;set;}
