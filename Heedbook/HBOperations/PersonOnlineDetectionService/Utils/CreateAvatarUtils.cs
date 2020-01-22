@@ -37,6 +37,7 @@ namespace PersonOnlineDetectionService.Utils
             stream.Close();
 
             System.Console.WriteLine(path);
+            _sftpClient.ChangeDirectoryToDefault();
             await _sftpClient.DeleteFileIfExistsAsync(path);
         }
 
