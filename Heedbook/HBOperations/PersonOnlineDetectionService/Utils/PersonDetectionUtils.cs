@@ -43,7 +43,7 @@ namespace PersonOnlineDetectionService.Utils
                 CorporationId = corporationId,
                 FaceDescriptor = JsonConvert.DeserializeObject<double[]>(message.Descriptor),
                 Age = message.Age,
-                Avatar = $"useravatars/{clientId}.jpg",
+                Avatar = $"{clientId}.jpg",
                 Gender = message.Gender,
                 StatusId = 3
             };
