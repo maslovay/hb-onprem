@@ -3,15 +3,17 @@ using System;
 using HBData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace UserOperations.Migrations
 {
     [DbContext(typeof(RecordsContext))]
-    partial class RecordsContextModelSnapshot : ModelSnapshot
+    [Migration("20200122125527_add isextended")]
+    partial class addisextended
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -368,7 +370,7 @@ namespace UserOperations.Migrations
 
                     b.Property<DateTime>("CreationDate");
 
-                    b.Property<bool>("IsExtended");
+                    b.Property<bool?>("IsExtended");
 
                     b.Property<int?>("LanguageId");
 

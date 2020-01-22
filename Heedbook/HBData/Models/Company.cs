@@ -24,6 +24,8 @@ namespace HBData.Models
         [Required]
         public String CompanyName { get; set; }
 
+        public bool IsExtended { get; set; }
+
         /// <summary>
         ///     Id of company industry
         /// </summary>
