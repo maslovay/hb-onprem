@@ -50,6 +50,10 @@ namespace UserService.Controllers
                 var languageId = _context.Devices
                                          .Where(p => p.DeviceId == deviceId)
                                          .Select( x => x.Company.Language.LanguageId).First();
+                var isExtended = _context.Devices
+                    .Include(p => p.Company)
+                    .Where(p => p.DeviceId == deviceId).FirstOrDefault().Company.IsExtended;
+                            
                 Guid? userId = null;
                 try
                 {
@@ -60,7 +64,7 @@ namespace UserService.Controllers
                 var timeBeg = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): timeBeg.AddSeconds((double)duration);
                 var fileName = $"{userId?? Guid.Empty}_{deviceId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
-                //_log.Info($"Function Video save info started. Filename {fileName}");
+
                 var videoIntersectVideosAny = _context.FileVideos
                     .Where(p => p.DeviceId == deviceId
                     && ((p.BegTime <= timeBeg
@@ -95,7 +99,7 @@ namespace UserService.Controllers
                 _context.FileVideos.Add(videoFile);
                 _context.SaveChanges();
 
-                if (videoFile.FileExist)
+                if (videoFile.FileExist && isExtended)
                 {
                     var message = new FramesFromVideoRun();
                     message.Path = $"videos/{fileName}";

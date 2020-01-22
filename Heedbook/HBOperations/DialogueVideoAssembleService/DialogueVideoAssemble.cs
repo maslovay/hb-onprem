@@ -16,6 +16,7 @@ using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using Renci.SshNet.Common;
 using DialogueVideoAssembleService.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace DialogueVideoAssembleService
 {
@@ -62,6 +63,13 @@ namespace DialogueVideoAssembleService
 
             try
             {
+                var isExtended = _context.Dialogues
+                    .Include(p => p.Device)
+                    .Include(p => p.Device.Company)
+                    .Where(p => p.DialogueId == message.DialogueId)
+                    .Select(p => p.Device.Company.IsExtended)
+                    .FirstOrDefault();
+
                 var cmd = new CMDWithOutput();
 
                 var fileVideos = _utils.GetFileVideos(message);
@@ -83,7 +91,7 @@ namespace DialogueVideoAssembleService
                 var dialogueDuration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds;
 
                 var videosDuration = _utils.GetTotalVideoDuration(fileVideos, message);
-                if (Convert.ToInt16(dialogueDuration) - Convert.ToInt16(videosDuration) > 1000)
+                if (Convert.ToInt16(dialogueDuration) - Convert.ToInt16(videosDuration) > 1500)
                 {
                     var comment = $"Too many holes in dialogue {dialogue.DialogueId}, Dialogue duration {dialogueDuration}s, Videos duration - {videosDuration}s";
                     _log.Error(comment);
@@ -122,7 +130,10 @@ namespace DialogueVideoAssembleService
                 await _sftpClient.UploadAsync(outputFn, "dialoguevideos", $"{message.DialogueId}{extension}");
 
                 _log.Info("Send message to video to sound");
-                _utils.SendMessageToVideoToSound(message, extension, _notificationPublisher);
+                if (isExtended)
+                {
+                    _utils.SendMessageToVideoToSound(message, extension, _notificationPublisher);
+                }
                 
                 _log.Info("Delete all local files");
                 Directory.Delete(sessionDir, true);

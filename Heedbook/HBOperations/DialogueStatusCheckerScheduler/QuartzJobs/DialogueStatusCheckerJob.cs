@@ -33,12 +33,14 @@ namespace QuartzExtensions.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
+            System.Console.WriteLine("Function started");
             using (var scope = _scopeFactory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
-                _log.Info("DialogueStatusChecker scheduler started.");
+                _log.Info("Audio analyze scheduler started.");
                 try
                 {
+                    _log.Info("Function started.");
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     var dialogues = _context.Dialogues
                         .Include(p => p.DialogueFrame)
@@ -46,6 +48,8 @@ namespace QuartzExtensions.Jobs
                         .Include(p => p.DialogueInterval)
                         .Include(p => p.DialogueVisual)
                         .Include(p => p.DialogueClientProfile)
+                        .Include(p => p.Device)
+                        .Include(p => p.Device.Company)
                         .Where(item => item.StatusId == 6)
                         .ToList();
                     System.Console.WriteLine($"{dialogues.Count()}");
@@ -60,19 +64,24 @@ namespace QuartzExtensions.Jobs
                     foreach (var dialogue in dialogues)
                     {
 
-                        if (dialogue.DialogueAudio.Any() &&
+                        if ((dialogue.Device.Company.IsExtended && dialogue.DialogueAudio.Any() &&
                             dialogue.DialogueInterval.Any() &&
                             dialogue.DialogueVisual.Any() &&
                             dialogue.DialogueClientProfile.Any() &&
-                            dialogue.DialogueFrame.Any())
+                            dialogue.DialogueFrame.Any()) || (!dialogue.Device.Company.IsExtended &&  dialogue.DialogueVisual.Any() &&
+                            dialogue.DialogueClientProfile.Any() &&
+                            dialogue.DialogueFrame.Any()))
                         {
                             _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
                             dialogue.StatusId = 3;
-                            var @event = new FillingSatisfactionRun
+                            if (dialogue.Device.Company.IsExtended)
                             {
-                                DialogueId = dialogue.DialogueId
-                            };
-                            _notificationPublisher.Publish(@event);
+                                var @event = new FillingSatisfactionRun
+                                {
+                                    DialogueId = dialogue.DialogueId
+                                };
+                                _notificationPublisher.Publish(@event);
+                            }
                         }
                         else
                         {
@@ -80,13 +89,24 @@ namespace QuartzExtensions.Jobs
                             {
                                 _log.Error($"Error dialogue. Dialogue id {dialogue.DialogueId}");
                                 dialogue.StatusId = 8;
-                                var comment = "";
-                                comment += !dialogue.DialogueAudio.Any() ? "DialogueAudio is unfilled ," : "";
-                                comment += !dialogue.DialogueInterval.Any() ? "DialogueInterval is unfilled ," : "";
-                                comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
-                                comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
-                                comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
-                                dialogue.Comment = comment;
+                                if (dialogue.Device.Company.IsExtended)
+                                {
+                                    var comment = "";
+                                    comment += !dialogue.DialogueAudio.Any() ? "DialogueAudio is unfilled ," : "";
+                                    comment += !dialogue.DialogueInterval.Any() ? "DialogueInterval is unfilled ," : "";
+                                    comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
+                                    comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
+                                    comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
+                                    dialogue.Comment = comment;
+                                }
+                                else
+                                {
+                                    var comment = "";
+                                    comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
+                                    comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
+                                    comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
+                                    dialogue.Comment = comment;
+                                }
                             }
                             else
                             {
