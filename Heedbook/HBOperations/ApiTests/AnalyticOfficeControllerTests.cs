@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UserOperations.Controllers;
 using System;
 using System.Threading.Tasks;
-using UserOperations.Providers;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Models.AnalyticModels;

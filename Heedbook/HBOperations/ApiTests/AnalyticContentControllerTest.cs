@@ -5,7 +5,6 @@ using HBData.Models;
 using NUnit.Framework;
 using Moq;
 using UserOperations.Controllers;
-using UserOperations.Providers;
 using System.Collections.Generic;
 using UserOperations.Models.AnalyticModels;
 using Microsoft.AspNetCore.Mvc;
