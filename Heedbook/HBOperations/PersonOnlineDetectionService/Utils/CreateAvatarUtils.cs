@@ -17,9 +17,11 @@ namespace PersonOnlineDetectionService.Utils
 
         public async System.Threading.Tasks.Task ExecuteAsync(string attribute, Guid clientId, string path)
         {
+            System.Console.WriteLine($"Attribute is {attribute}");
             var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
-            
+            System.Console.WriteLine("Downloaded");
             var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute);
+            System.Console.WriteLine($"Rectangle {JsonConvert.SerializeObject(faceRectangle)}");
             var rectangle = new Rectangle
             {
                 Height = faceRectangle.Height,
@@ -30,8 +32,11 @@ namespace PersonOnlineDetectionService.Utils
 
             var stream = FaceDetection.CreateAvatar(localPath, rectangle);
             stream.Seek(0, SeekOrigin.Begin);
+            System.Console.WriteLine("Upload");
             await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{clientId}.jpg");
             stream.Close();
+
+            System.Console.WriteLine(path);
             await _sftpClient.DeleteFileIfExistsAsync(path);
         }
 

@@ -44,7 +44,7 @@ namespace PersonOnlineDetectionService
 
         public async Task Run(PersonOnlineDetectionRun message)
         {
-            System.Console.WriteLine("Function started");
+            System.Console.WriteLine($"Function started {JsonConvert.SerializeObject(message)}");
 
             var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
@@ -65,7 +65,9 @@ namespace PersonOnlineDetectionService
                     clientId = Guid.NewGuid();
                     System.Console.WriteLine($"New client -- {clientId}");
                     var client = _personDetectionUtils.CreateNewClient(message, (Guid) clientId);
+                    System.Console.WriteLine("Created client");
                     await _createAvatar.ExecuteAsync(message.Attributes, (Guid) clientId, message.Path);
+                    System.Console.WriteLine("Created avatar");
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
                     
