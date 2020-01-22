@@ -67,13 +67,7 @@ namespace UserOperations
                 p.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<RecordsContext>();
-            services.AddScoped<LoginService>();
             services.AddScoped<MailSender>();
-            services.AddScoped<AnalyticCommonProvider>();
-            services.AddScoped<HelpProvider>();
-            services.AddScoped<PhraseService>();
-            services.AddScoped<UserService>();
-            services.AddScoped<FileRefUtils>();
 
             services.AddScoped<AccountService>();
             services.AddScoped<AnalyticClientProfileService>();
@@ -85,17 +79,21 @@ namespace UserOperations
             services.AddScoped<AnalyticServiceQualityService>();
             services.AddScoped<AnalyticSpeechService>();
             services.AddScoped<AnalyticWeeklyReportService>();
-            services.AddScoped<ClientService>();
-            services.AddScoped<ClientNoteService>();
             services.AddScoped<CampaignContentService>();
             services.AddScoped<CatalogueService>();
+            services.AddScoped<ClientNoteService>();
+            services.AddScoped<ClientService>();
+            services.AddScoped<CompanyService>();
             services.AddScoped<DemonstrationV2Service>();
             services.AddScoped<DeviceService>();
+            services.AddScoped<FillingFileFrameService>();
+            services.AddScoped<LoginService>();
             services.AddScoped<MediaFileService>();
+            services.AddScoped<PhraseService>();
             services.AddScoped<SessionService>();
             services.AddScoped<SiteService>();
             services.AddScoped<TabletAppInfoService>();
-            services.AddScoped<FillingFileFrameService>();
+            services.AddScoped<UserService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
@@ -105,6 +103,8 @@ namespace UserOperations
             services.AddScoped<AnalyticServiceQualityUtils>();
             services.AddScoped<AnalyticSpeechUtils>();
             services.AddScoped<AnalyticWeeklyReportUtils>();
+            services.AddScoped<FileRefUtils>();
+            services.AddScoped<SpreadsheetDocumentUtils>();
 
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 

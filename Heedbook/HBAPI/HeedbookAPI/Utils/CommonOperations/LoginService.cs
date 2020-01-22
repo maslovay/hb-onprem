@@ -123,6 +123,7 @@ namespace UserOperations.Services
                     new Claim("deviceName", device.Name),
                     new Claim("companyId", device.CompanyId.ToString()),
                     new Claim("corporationId", device.Company.CorporationId.ToString()),
+                    new Claim("languageCode", device.Company.LanguageId.ToString()),
                     new Claim("isExtended", "false")
                 };
 
