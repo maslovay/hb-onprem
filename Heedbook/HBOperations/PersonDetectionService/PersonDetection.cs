@@ -43,7 +43,7 @@ namespace PersonDetectionService
             try
             {
                 var begTime = DateTime.Now.AddYears(-1);
-                var companyIds = _context.Devices.Where(x => message.DeviceIds.Contains(x.DeviceId)).Select(x => x.CompanyId).Distinct().ToList();              
+                var companyIds = _context.Devices.Where(x => message.DeviceIds.Contains(x.DeviceId)).Select(x => x.CompanyId).Distinct().ToList();
 
                 //---dialogues for users in company or for devices in company
                 var dialogues = _context.Dialogues
@@ -100,11 +100,13 @@ namespace PersonDetectionService
         {
             Company company = _context.Devices
                               .Where(x => x.DeviceId == curDialogue.DeviceId).Select(x => x.Company).FirstOrDefault();
-
-            var findClientId = _context.Clients
-                        .Where(x => x.ClientId == clientId)
-                        .Select(x => x.ClientId).FirstOrDefault();
-                if (findClientId != null && findClientId != Guid.Empty) return (findClientId, String.Empty);
+            var findClient = _context.Clients
+                        .Where(x => x.ClientId == clientId).FirstOrDefault();
+            if (findClient.ClientId != null && findClient.ClientId != Guid.Empty)
+            {
+                findClient.LastDate = DateTime.UtcNow;
+                return (findClient.ClientId, String.Empty);
+            }
 
                 var dialogueClientProfile = _context.DialogueClientProfiles
                                 .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
