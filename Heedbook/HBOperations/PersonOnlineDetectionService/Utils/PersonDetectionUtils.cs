@@ -22,14 +22,12 @@ namespace PersonOnlineDetectionService.Utils
             _context = context;
         }
 
-        public Guid? FindId(string descriptor, List<ClientNote> clients, double threshold=0.3)
+        public Guid? FindId(string descriptor, List<Client> clients, double threshold=0.3)
         {
             if (!clients.Any()) return null;
-            var clientsDistinct = clients.Select(p => new {Descriptor = p.Client.FaceDescriptor, ClientId = p.Client.ClientId}).Distinct();
-            System.Console.WriteLine($"Distinct clients  count {clientsDistinct.Count()}");
-            foreach(var client in clientsDistinct)
+            foreach(var client in clients.Distinct())
             {
-                var cos = _calc.Cos(descriptor, JsonConvert.SerializeObject(client.Descriptor));
+                var cos = _calc.Cos(descriptor, JsonConvert.SerializeObject(client.FaceDescriptor));
                 System.Console.WriteLine($"Cos distance is {cos} with client {client.ClientId}");
                 if (cos > threshold) return client.ClientId;
             }
@@ -48,7 +46,8 @@ namespace PersonOnlineDetectionService.Utils
                 Age = message.Age,
                 Avatar = $"{clientId}.jpg",
                 Gender = message.Gender,
-                StatusId = 3
+                StatusId = 3,
+                LastDate = DateTime.UtcNow
             };
             _context.Clients.Add(client);
             _context.SaveChanges();

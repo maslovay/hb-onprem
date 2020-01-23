@@ -44,6 +44,8 @@ namespace PersonOnlineDetectionService
 
         public async Task Run(PersonOnlineDetectionRun message)
         {
+            System.Console.WriteLine(message.Path);
+            System.Console.WriteLine(message.DeviceId);
             var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(message.Path);
@@ -52,10 +54,13 @@ namespace PersonOnlineDetectionService
             try
             {
                 var begTime = DateTime.Now.AddDays(-30);
-                var lastClientsInfo = _context.ClientNotes
-                    .Include(p => p.Client)
-                    .Where(p => p.Client.CompanyId == message.CompanyId && p.CreationDate >= begTime)
+                var lastClientsInfo = _context.Clients
+                    .Where(p => p.CompanyId == message.CompanyId && p.LastDate >= begTime)
                     .ToList();
+                // var lastClientsInfo = _context.ClientNotes
+                    // .Include(p => p.Client)
+                    // .Where(p => p.Client.CompanyId == message.CompanyId && p.CreationDate >= begTime)
+                    // .ToList();
 
                 System.Console.WriteLine($"Clients count {lastClientsInfo.Count()}");
                 
@@ -76,7 +81,11 @@ namespace PersonOnlineDetectionService
                 }
                 else
                 {
-                    await _createAvatar.DeleteFileAsync(message.Path);
+                    var curTime = DateTime.UtcNow;
+                    lastClientsInfo.Where(p => p.ClientId == clientId).ToList().ForEach(p => p.LastDate = curTime);
+                    _context.SaveChanges();
+                    System.Console.WriteLine("Last time updated");
+                    // await _createAvatar.DeleteFileAsync(message.Path);
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
 
