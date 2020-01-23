@@ -40,7 +40,6 @@ namespace UserOperations.Services
 
             var company = AddNewCompanysInBase(message);
             var user = await AddNewUserInBase(message, company?.CompanyId);
-            await _repository.SaveAsync();
             await AddUserRoleInBase(message, user);
             await _repository.SaveAsync();
 
