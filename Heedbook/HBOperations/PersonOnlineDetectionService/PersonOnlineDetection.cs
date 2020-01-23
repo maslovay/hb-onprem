@@ -70,6 +70,8 @@ namespace PersonOnlineDetectionService
                     System.Console.WriteLine("Created avatar");
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
+
+                    System.Console.WriteLine(result);
                     
                 }
                 else
@@ -77,6 +79,8 @@ namespace PersonOnlineDetectionService
                     await _createAvatar.DeleteFileAsync(message.Path);
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
+
+                    System.Console.WriteLine(result);
                 }
 
                 _log.Info("Function finished");
