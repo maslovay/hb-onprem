@@ -99,14 +99,21 @@ namespace ErrorKibanaScheduler.QuartzJob
                 }
 
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
-                _log.Info($"Messages count: {groupingByName.Count()}");
+                
 
-                var errMsg = $"PERIOD: {period.ToShortTimeString()} - {DateTime.UtcNow.ToShortTimeString()}";
+                var errMsg = $"<b>PERIOD: {period.ToShortTimeString()} - {DateTime.UtcNow.ToShortTimeString()}</b>";
+                var head = new MessengerMessageRun()
+                {
+                    logText = errMsg,
+                    ChannelName = "LogSender"
+                };
+                _publisher.Publish(head);
+
                 foreach (var function in groupingByName)
                 {
-                    errMsg += String.Concat(function.Select(x => "<details><summary>"+ 
-                                    String.Concat(x.OriginalFormat.Take(100))+ "</summary>"+ 
-                                    $"<b> {x.LogLevel} </b>+ {x.OriginalFormat} \n (invokationId: {x.InvocationId})\n" + "</details>"));
+                    errMsg = String.Concat(function.Select(x => "<details><summary>"+ 
+                                    String.Concat(x.OriginalFormat.Take(50))+ "</summary>"+ 
+                                    $"<b> {x.LogLevel} </b>+ {x.OriginalFormat.Take(250)} \n (invokationId: {x.InvocationId})\n" + "</details>"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
@@ -114,7 +121,6 @@ namespace ErrorKibanaScheduler.QuartzJob
                         ChannelName = "LogSender"
                     };
                     _publisher.Publish(message);
-                    errMsg = "";
                 }
             }
             catch (Exception e)
