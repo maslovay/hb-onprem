@@ -69,7 +69,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                                         .Query("Error")))) && q.DateRange(r=>r
                                     .Field(fd=>fd.Timestamp)
                                     .GreaterThanOrEquals(DateTime.UtcNow.AddHours(-4)))));
-                var documents = searchRequest.Documents.ToList();
+                List<SearchSetting> documents = searchRequest.Documents.ToList();
                 var alarm = new MessengerMessageRun()
                 {
                     logText = "<b>8000 or more error</b>",
@@ -82,23 +82,30 @@ namespace ErrorKibanaScheduler.QuartzJob
                 
                 var dmp = new TextCompare();
                 System.Console.WriteLine($"documents count: {documents.Count}");
+
+                ///---remove the same OriginalFormats of errors
                 for (var i = 0; i < documents.Count; i++)
                 {
-                    var count = 1;
                     for (int j = documents.Count - 1; j > i; j--)
                     {
                         var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
                         if (percentageMatch >= 80)
                         {
-                            count += 1;
+                            documents[i].Count++;
                             documents.RemoveAt(j);
                         }
-                    }
+                    } 
+                }
 
+                var groupingByName = documents.GroupBy(x => x.FunctionName);
+
+                foreach (var function in groupingByName)
+                {
+                    var errMsg = String.Concat(function.Select(x => new { error =$"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(200))} (invokationId: {x.InvocationId})\n" }));
                     var message = new MessengerMessageRun()
                     {
                         logText =
-                            $"<b>FunctionName:</b>{documents[i].FunctionName} \r\n<b>LogLevel:</b> {documents[i].LogLevel} \r\n<b>Count:</b> {count} \r\n<b>ErrorHead:</b> {String.Concat(documents[i].OriginalFormat.Take(200))} \r\n<b>InvocationId:</b> {documents[i].InvocationId}",
+                          $"<b>{function.Key}</b> \r <b>Count:</b> {function.Sum(x => x.Count)} \r\n<b>Errors:</b> {errMsg} \r\n",
                         ChannelName = "LogSender"
                     };
                     _publisher.Publish(message);
