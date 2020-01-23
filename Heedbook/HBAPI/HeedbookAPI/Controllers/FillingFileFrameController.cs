@@ -10,7 +10,7 @@ namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+    [AllowAnonymous]
     [ControllerExceptionFilter]
     public class FillingFileFrameController : Controller
     {

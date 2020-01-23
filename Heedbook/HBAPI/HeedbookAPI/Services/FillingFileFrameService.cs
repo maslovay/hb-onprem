@@ -56,7 +56,7 @@ namespace UserOperations.Services
                 Gender = frameWithMaxArea.Gender,
                 Age = (double)frameWithMaxArea.Age,
                 Value = "",
-                Descriptor = frameWithMaxArea.Descriptor
+                Descriptor = JsonConvert.SerializeObject(frameWithMaxArea.Descriptor)
             };
             var frameEmotions = new FrameEmotion
             {
