@@ -40,14 +40,16 @@ namespace UserOperations.Services
 
             var company = AddNewCompanysInBase(message);
             var user = await AddNewUserInBase(message, company?.CompanyId);
+            await _repository.SaveAsync();
             await AddUserRoleInBase(message, user);
+            await _repository.SaveAsync();
 
             if (await GetTariffsAsync(company?.CompanyId) == 0)
             {
                 await CreateCompanyTariffAndTransaction(company);
                 await AddContentAndCampaign(company);
             }
-                await _repository.SaveAsync();
+            await _repository.SaveAsync();
             try
             {
                 await _mailSender.SendRegisterEmail(user);
@@ -143,8 +145,7 @@ namespace UserOperations.Services
                 CountryId = message.CountryId,
                 CorporationId = message.CorporationId,
                 StatusId = GetStatusId("Inactive"),
-                IsExtended = message.IsExtended?? true,
-                TimeZoneName = message.TimeZoneName
+                IsExtended = message.IsExtended?? true
             };
             _repository.Create<Company>(company);
             return company;
