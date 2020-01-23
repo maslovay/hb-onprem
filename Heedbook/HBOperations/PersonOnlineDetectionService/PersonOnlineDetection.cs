@@ -44,8 +44,6 @@ namespace PersonOnlineDetectionService
 
         public async Task Run(PersonOnlineDetectionRun message)
         {
-            System.Console.WriteLine($"Function started {JsonConvert.SerializeObject(message)}");
-
             var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(message.Path);
@@ -58,6 +56,8 @@ namespace PersonOnlineDetectionService
                     .Include(p => p.Client)
                     .Where(p => p.Client.CompanyId == message.CompanyId && p.CreationDate >= begTime)
                     .ToList();
+
+                System.Console.WriteLine($"Clients count {lastClientsInfo.Count()}");
                 
                 var clientId = _personDetectionUtils.FindId(message.Descriptor, lastClientsInfo);
                 if (clientId == null)

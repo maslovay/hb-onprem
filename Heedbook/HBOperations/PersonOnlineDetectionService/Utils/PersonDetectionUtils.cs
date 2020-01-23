@@ -25,7 +25,9 @@ namespace PersonOnlineDetectionService.Utils
         public Guid? FindId(string descriptor, List<ClientNote> clients, double threshold=0.3)
         {
             if (!clients.Any()) return null;
-            foreach(var client in clients.Select(p => new {Descriptor = p.Client.FaceDescriptor, ClientId = p.Client.ClientId}).Distinct())
+            var clientsDistinct = clients.Select(p => new {Descriptor = p.Client.FaceDescriptor, ClientId = p.Client.ClientId}).Distinct();
+            System.Console.WriteLine($"Distinct clients  count {clientsDistinct.Count()}");
+            foreach(var client in clientsDistinct)
             {
                 var cos = _calc.Cos(descriptor, JsonConvert.SerializeObject(client.Descriptor));
                 System.Console.WriteLine($"Cos distance is {cos} with client {client.ClientId}");
