@@ -70,7 +70,6 @@ namespace ErrorKibanaScheduler.QuartzJob
                                     .Field(fd=>fd.Timestamp)
                                     .GreaterThanOrEquals(period))));
                 List<SearchSetting> documents = searchRequest.Documents.ToList();
-                _log.Info($"Documents count: {documents.Count()}");
                 var alarm = new MessengerMessageRun()
                 {
                     logText = "<b>8000 or more error</b>",
@@ -111,9 +110,14 @@ namespace ErrorKibanaScheduler.QuartzJob
 
                 foreach (var function in groupingByName)
                 {
-                    errMsg = String.Concat(function.Select(x => "<details><summary>"+ 
-                                    String.Concat(x.OriginalFormat.Take(50))+ "</summary>"+ 
-                                    $"<b> {x.LogLevel} </b>+ {x.OriginalFormat.Take(250)} \n (invokationId: {x.InvocationId})\n" + "</details>"));
+                    //errMsg = String.Concat(function.Select(x => "<details><summary>"+ 
+                    //                String.Concat(x.OriginalFormat.Take(50))+ "</summary>"+ 
+                    //                $"<b> {x.LogLevel} </b>+ {x.OriginalFormat.Take(250)} \n (invokationId: {x.InvocationId})\n" + "</details>"));
+
+                    errMsg = String.Concat(function.Select(x => "<details><summary>" +
+                                   String.Concat(x.OriginalFormat.Take(10)) + "</summary>" +
+                                   $"<b> {x.LogLevel} </b>+ {x.OriginalFormat.Take(150)} \n (invokationId: {x.InvocationId})\n" + "</details>"));
+                    _log.Info($"errMsg: { errMsg}");
                     var message = new MessengerMessageRun()
                     {
                         logText =
