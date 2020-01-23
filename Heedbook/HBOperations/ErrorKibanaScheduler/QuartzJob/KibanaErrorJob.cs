@@ -89,7 +89,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                     for (int j = documents.Count - 1; j > i; j--)
                     {
                         var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
-                        if (percentageMatch >= 80)
+                        if (percentageMatch >= 70)
                         {
                             documents[i].Count++;
                             documents.RemoveAt(j);
@@ -99,13 +99,17 @@ namespace ErrorKibanaScheduler.QuartzJob
 
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
 
+                var details = @"<details><summary>Группа свойств 1</summary>скрытое/показанное содержимое</details>";
+
                 foreach (var function in groupingByName)
                 {
-                    var errMsg = String.Concat(function.Select(x => new { error =$"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(200))} (invokationId: {x.InvocationId})\n" }));
+                    var errMsg = String.Concat(function.Select(x => "<details><summary>"+ 
+                                    String.Concat(x.OriginalFormat.Take(100))+ "</summary>"+ 
+                                    $"<b> {x.LogLevel} </b>+ {x.OriginalFormat} \n (invokationId: {x.InvocationId})\n" + "</details>"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
-                          $"<b>{function.Key}</b> \r <b>Count:</b> {function.Sum(x => x.Count)} \r\n<b>Errors:</b> {errMsg} \r\n",
+                          $"<b>{function.Key}</b> \r <b>Count:</b> {function.Sum(x => x.Count)} \r\n<b>Errors:</b>\n {errMsg} \r\n",
                         ChannelName = "LogSender"
                     };
                     _publisher.Publish(message);
