@@ -115,8 +115,8 @@ namespace ErrorKibanaScheduler.QuartzJob
                     //                $"<b> {x.LogLevel} </b>+ {x.OriginalFormat.Take(250)} \n (invokationId: {x.InvocationId})\n" + "</details>"));
 
                     errMsg = String.Concat(function.Select(x => "<details><summary>" +
-                                   String.Concat(x.OriginalFormat.Take(10)) + "</summary>" +
-                                   $"<b> {x.LogLevel} </b>+ {x.OriginalFormat.Take(150)} \n (invokationId: {x.InvocationId})\n" + "</details>"));
+                                   String.Concat(x.OriginalFormat.Take(20)) + "</summary>" +
+                                   $"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(150))} \n (invokationId: {x.InvocationId})\n" + "</details>"));
                     _log.Info($"errMsg: { errMsg}");
                     var message = new MessengerMessageRun()
                     {
