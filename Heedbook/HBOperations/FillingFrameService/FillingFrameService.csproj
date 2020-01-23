@@ -14,7 +14,7 @@
     <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
-    <ProjectReference Include="..\..\HBML\HBMLHttpClient\HBMLHttpClient.csproj" />
+    <!--<ProjectReference Include="..\..\HBML\HBMLHttpClient\HBMLHttpClient.csproj" />-->
     <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
     <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
   </ItemGroup>

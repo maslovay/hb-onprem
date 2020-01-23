@@ -33,6 +33,8 @@ namespace ErrorKibanaScheduler
         public int TikTak { get; set; }
         
         public string CustomDimensions;
+
+        public int? Count { set; get; } = 0;
         
     }
 }
