@@ -85,7 +85,7 @@ namespace PersonOnlineDetectionService
                     lastClientsInfo.Where(p => p.ClientId == clientId).ToList().ForEach(p => p.LastDate = curTime);
                     _context.SaveChanges();
                     System.Console.WriteLine("Last time updated");
-                    await _createAvatar.DeleteFileAsync(message.Path);
+                    // await _createAvatar.DeleteFileAsync(message.Path);
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
 
