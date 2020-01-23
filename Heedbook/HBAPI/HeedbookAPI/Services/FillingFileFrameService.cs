@@ -66,7 +66,12 @@ namespace UserOperations.Services
                     FileFrameId = fileFrame.FileFrameId,
                     Gender = frameWithMaxArea.Gender,
                     Age = (double)frameWithMaxArea.Age,
-                    Value = "",
+                    Value = JsonConvert.SerializeObject(new {
+                        Top = 0,
+                        Width = Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
+                        Height = Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
+                        Left =0
+                    }),
                     Descriptor = JsonConvert.SerializeObject(frameWithMaxArea.Descriptor)
                 });
                 frameEmotions.Add(new FrameEmotion
