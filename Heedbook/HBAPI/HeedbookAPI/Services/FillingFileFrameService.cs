@@ -20,18 +20,28 @@ namespace UserOperations.Services
             if(frames == null || frames.Count == 0)
                 throw new Exception("List of frames is empty");
 
-            var frameWithMaxArea = frames.OrderByDescending(p => p.FaceArea).FirstOrDefault();
+            var framesWithMaxArea = frames
+                .GroupBy(p => p.Time)
+                .Select(p => p.OrderByDescending(q => q.FaceArea).First())
+                .ToList();
+            
+            var fileFrames = new List<FileFrame>();
+            var frameAttributes = new List<FrameAttribute>();
+            var frameEmotions = new List<FrameEmotion>();
 
-            if(frameWithMaxArea.Age == null 
-                || frameWithMaxArea.Gender == null 
-                || frameWithMaxArea.Yaw == null 
-                || frameWithMaxArea.Smile == null || Double.IsNaN((double)frameWithMaxArea.Smile)
-                || frameWithMaxArea.DeviceId == null 
-                || frameWithMaxArea.Time == null
-                || frameWithMaxArea.Descriptor == null)
-                throw new Exception("One of the fields of the frame with max Area is empty");
+            foreach (var frameWithMaxArea  in framesWithMaxArea)
+            {
 
-            var fileFrame = new FileFrame
+                if(frameWithMaxArea.Age == null 
+                    || frameWithMaxArea.Gender == null 
+                    || frameWithMaxArea.Yaw == null 
+                    || frameWithMaxArea.Smile == null || Double.IsNaN((double)frameWithMaxArea.Smile)
+                    || frameWithMaxArea.DeviceId == null 
+                    || frameWithMaxArea.Time == null
+                    || frameWithMaxArea.Descriptor == null)
+                    throw new Exception("One of the fields of the frame with max Area is empty");
+
+                var fileFrame = new FileFrame
                 {
                     FileFrameId = Guid.NewGuid(),
                     ApplicationUserId = frameWithMaxArea?.ApplicationUserId,
@@ -46,38 +56,39 @@ namespace UserOperations.Services
                         && frameWithMaxArea.Smile != null
                         && frameWithMaxArea.DeviceId != null
                         && frameWithMaxArea.Descriptor != null,
-                    FaceLength = frames.Count,
+                    FaceLength = 1,
                     DeviceId = (Guid)frameWithMaxArea.DeviceId
                 };
-            var frameAttribute = new FrameAttribute
-            {
-                FrameAttributeId = Guid.NewGuid(),
-                FileFrameId = fileFrame.FileFrameId,
-                Gender = frameWithMaxArea.Gender,
-                Age = (double)frameWithMaxArea.Age,
-                Value = "",
-                Descriptor = JsonConvert.SerializeObject(frameWithMaxArea.Descriptor)
-            };
-            var frameEmotions = new FrameEmotion
-            {
-                FrameEmotionId = Guid.NewGuid(),
-                FileFrameId = fileFrame.FileFrameId,
-                AngerShare = 0,
-                ContemptShare = 0,
-                DisgustShare = 0,
-                HappinessShare = frameWithMaxArea.Smile,
-                NeutralShare = 1.0 - frameWithMaxArea.Smile,
-                SadnessShare = 0,
-                SurpriseShare = 0,
-                FearShare = 0,
-                YawShare = frameWithMaxArea.Yaw
-            };
-            _repository.Create<FileFrame>(fileFrame);
-            _repository.Create<FrameAttribute>(frameAttribute);
-            _repository.Create<FrameEmotion>(frameEmotions);
-            System.Console.WriteLine(JsonConvert.SerializeObject(fileFrame));
-            System.Console.WriteLine(JsonConvert.SerializeObject(frameAttribute));
-            System.Console.WriteLine(JsonConvert.SerializeObject(frameEmotions));
+                fileFrames.Add(fileFrame);
+                frameAttributes.Add(new FrameAttribute
+                {
+                    FrameAttributeId = Guid.NewGuid(),
+                    FileFrameId = fileFrame.FileFrameId,
+                    Gender = frameWithMaxArea.Gender,
+                    Age = (double)frameWithMaxArea.Age,
+                    Value = "",
+                    Descriptor = JsonConvert.SerializeObject(frameWithMaxArea.Descriptor)
+                });
+                frameEmotions.Add(new FrameEmotion
+                {
+                    FrameEmotionId = Guid.NewGuid(),
+                    FileFrameId = fileFrame.FileFrameId,
+                    AngerShare = 0,
+                    ContemptShare = 0,
+                    DisgustShare = 0,
+                    HappinessShare = frameWithMaxArea.Smile,
+                    NeutralShare = 1.0 - frameWithMaxArea.Smile,
+                    SadnessShare = 0,
+                    SurpriseShare = 0,
+                    FearShare = 0,
+                    YawShare = frameWithMaxArea.Yaw
+                });
+            }
+            System.Console.WriteLine("1");
+            _repository.CreateRange<FileFrame>(fileFrames);
+            _repository.CreateRange<FrameAttribute>(frameAttributes);
+            _repository.CreateRange<FrameEmotion>(frameEmotions);
+            
             _repository.Save();
             return "success";
         }

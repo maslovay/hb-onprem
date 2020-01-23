@@ -81,6 +81,11 @@ namespace HBData.Repository
             return dbSet.FirstOrDefault();
         }
 
+        public void CreateRange<T>(List<T> entities) where T: class
+        {
+            _context.Set<T>().AddRange(entities);
+        }
+
         public void BulkInsert<T>(IEnumerable<T> entities) where T : class
         {
             _context.Set<T>().AddRange(entities);
