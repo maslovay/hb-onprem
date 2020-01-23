@@ -12,7 +12,7 @@ COPY --from=build-env /app/HBOperations/PersonOnlineDetectionService/websocketio
 
 RUN apk add --update python3
 RUN pip3 install --upgrade pip
-RUN pip3 install "python-socketio[client]"
+RUN pip3 install "python-socketio[client]" ndg-httpsclient pyopenssl pyasn1
 
 ENTRYPOINT ["dotnet", "PersonOnlineDetectionService.dll"]
 
