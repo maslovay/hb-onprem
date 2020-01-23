@@ -19,7 +19,7 @@
 
   
   <ItemGroup>
-    <ProjectReference Include="..\AsrHttpClient\AsrHttpClient.csproj" />
+    <!--<ProjectReference Include="..\AsrHttpClient\AsrHttpClient.csproj" />-->
     <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />

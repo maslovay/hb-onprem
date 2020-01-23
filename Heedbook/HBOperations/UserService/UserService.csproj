@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
@@ -16,11 +16,11 @@
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.10.0-beta0002"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AsrHttpClient\AsrHttpClient.csproj"/>
+    <!--<ProjectReference Include="..\AsrHttpClient\AsrHttpClient.csproj"/>-->
     <ProjectReference Include="..\Configurations\Configurations.csproj"/>
     <ProjectReference Include="..\..\HBData\HBData.csproj"/>
     <ProjectReference Include="..\..\HBLib\HBLib.csproj"/>
-    <ProjectReference Include="..\..\HBML\HBMLHttpClient\HBMLHttpClient.csproj" />
+    <!--<ProjectReference Include="..\..\HBML\HBMLHttpClient\HBMLHttpClient.csproj" />-->
     <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj"/>
   </ItemGroup>
   <ItemGroup>

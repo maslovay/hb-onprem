@@ -21,7 +21,7 @@ namespace AudioAnalyzeService.Tests
         private GoogleConnector _googleConnector;
         private ElasticClientFactory _elasticClientFactory;
         private FFMpegWrapper _ffmpegWrapper;
-        private AsrHttpClient.AsrHttpClient _asrClient;
+        private AsrHttpClient _asrClient;
         private string testDialogVideoCorrectFileName;
         private string testDialogAudioCorrectFileName;
         private Dialogue testDialog;
@@ -97,7 +97,7 @@ namespace AudioAnalyzeService.Tests
             _elasticClientFactory = ServiceProvider.GetService<ElasticClientFactory>();
             
             _ffmpegWrapper = ServiceProvider.GetService<FFMpegWrapper>();
-            _asrClient = ServiceProvider.GetService<AsrHttpClient.AsrHttpClient>();
+            _asrClient = ServiceProvider.GetService<AsrHttpClient>();
             _googleConnector = ServiceProvider.GetService<GoogleConnector>();
             _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _asrClient, _elasticClientFactory, _googleConnector, _sftpClient);
         }
