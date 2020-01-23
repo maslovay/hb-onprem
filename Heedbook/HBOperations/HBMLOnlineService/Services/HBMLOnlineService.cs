@@ -46,7 +46,7 @@ namespace HBMLOnlineService.Service
             {
                 byte[] bytes = Convert.FromBase64String(base64String);
                 var memoryStream = new MemoryStream(bytes);
-                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, "useravatars/", fileName);
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, "clientavatars/", fileName);
             }
             
             return faceResult;
