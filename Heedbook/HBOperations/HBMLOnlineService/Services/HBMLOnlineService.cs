@@ -58,7 +58,7 @@ namespace HBMLOnlineService.Service
             {
                 DeviceId = deviceId,
                 Attributes = JsonConvert.SerializeObject(faceResults.First().Rectangle),
-                Path = $"useravatars/{filename}",
+                Path = $"clientavatars/{filename}",
                 CompanyId = companyId,
                 Descriptor = JsonConvert.SerializeObject(faceResults.First().Descriptor),
                 Age = Convert.ToInt32(faceResults.First().Attributes.Age),
