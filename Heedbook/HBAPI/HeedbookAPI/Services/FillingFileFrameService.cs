@@ -84,9 +84,10 @@ namespace UserOperations.Services
                     YawShare = frameWithMaxArea.Yaw
                 });
             }
-            _repository.Create<List<FileFrame>>(fileFrames);
-            _repository.Create<List<FrameAttribute>>(frameAttributes);
-            _repository.Create<List<FrameEmotion>>(frameEmotions);
+            System.Console.WriteLine("1");
+            _repository.CreateRange<FileFrame>(fileFrames);
+            _repository.CreateRange<FrameAttribute>(frameAttributes);
+            _repository.CreateRange<FrameEmotion>(frameEmotions);
             
             _repository.Save();
             return "success";

@@ -44,6 +44,8 @@ namespace HBData.Repository
         Task CreateAsync<T>(T entity)
             where T : class;
 
+        void  CreateRange<T>(List<T> entity) where T: class;
+
         Task BulkInsertAsync<T>(IEnumerable<T> entities) where T : class;
 
         void BulkInsert<T>(IEnumerable<T> entities) where T : class;
