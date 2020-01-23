@@ -34,7 +34,7 @@ namespace ErrorKibanaScheduler
         
         public string CustomDimensions;
 
-        public int? Count { set; get; } = 0;
+        public int? Count { set; get; } = 1;
         
     }
 }

@@ -45,6 +45,7 @@ namespace ErrorKibanaScheduler.QuartzJob
             var client = new ElasticClient(settings);
             try
             {
+                var period = DateTime.UtcNow.AddHours(-1);
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
                         .Includes(i => i
@@ -68,7 +69,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                                         .Field(fd => fd.LogLevel)
                                         .Query("Error")))) && q.DateRange(r=>r
                                     .Field(fd=>fd.Timestamp)
-                                    .GreaterThanOrEquals(DateTime.UtcNow.AddHours(-4)))));
+                                    .GreaterThanOrEquals(period))));
                 List<SearchSetting> documents = searchRequest.Documents.ToList();
                 var alarm = new MessengerMessageRun()
                 {
@@ -99,20 +100,20 @@ namespace ErrorKibanaScheduler.QuartzJob
 
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
 
-                var details = @"<details><summary>Группа свойств 1</summary>скрытое/показанное содержимое</details>";
-
+                var errMsg = $"PERIOD: {period.ToShortTimeString()} - {DateTime.UtcNow.ToShortTimeString()}";
                 foreach (var function in groupingByName)
                 {
-                    var errMsg = String.Concat(function.Select(x => "<details><summary>"+ 
+                    errMsg += String.Concat(function.Select(x => "<details><summary>"+ 
                                     String.Concat(x.OriginalFormat.Take(100))+ "</summary>"+ 
                                     $"<b> {x.LogLevel} </b>+ {x.OriginalFormat} \n (invokationId: {x.InvocationId})\n" + "</details>"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
-                          $"<b>{function.Key}</b> \r <b>Count:</b> {function.Sum(x => x.Count)} \r\n<b>Errors:</b>\n {errMsg} \r\n",
+                          $"<b>{function.Key}</b> \r Count: {function.Sum(x => x.Count)} \r\n<b>Errors:</b>\n {errMsg} \r\n",
                         ChannelName = "LogSender"
                     };
                     _publisher.Publish(message);
+                    errMsg = "";
                 }
             }
             catch (Exception e)
