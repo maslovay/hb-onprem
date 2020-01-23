@@ -47,14 +47,7 @@ namespace UserOperations.Services
                 await CreateCompanyTariffAndTransaction(company);
                 await AddContentAndCampaign(company);
             }
-            try
-            {
                 await _repository.SaveAsync();
-            }
-            catch(Exception ex)
-            {
-                var a = ex.Message;
-            }
             try
             {
                 await _mailSender.SendRegisterEmail(user);

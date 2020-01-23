@@ -11,9 +11,6 @@ namespace UserOperations.Models.AnalyticModels
         public int UsersCount;
     }
 
-
-    
-
     public class EfficiencyLoadEmployeeTimeInfo
     {
         public string Time;
