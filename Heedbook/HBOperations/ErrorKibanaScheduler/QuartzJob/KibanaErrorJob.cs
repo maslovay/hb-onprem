@@ -44,7 +44,7 @@ namespace ErrorKibanaScheduler.QuartzJob
             var client = new ElasticClient(settings);
             try
             {
-                var period = DateTime.UtcNow.AddHours(-1);
+                var period = DateTime.UtcNow.AddHours(-12);
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
                         .Includes(i => i
@@ -108,16 +108,26 @@ namespace ErrorKibanaScheduler.QuartzJob
                 };
                 _publisher.Publish(head);
 
+
+                errMsg = "<details><summary>View</summary>test info</details>";
+                _log.Info($"errMsg: { errMsg}");
+                var test = new MessengerMessageRun()
+                {
+                    logText = errMsg,
+                    ChannelName = "LogSender"
+                };
+                _publisher.Publish(test);
+
                 foreach (var function in groupingByName)
                 {
-                    //errMsg = String.Concat(function.Select(x => "<details><summary>"+ 
-                    //                String.Concat(x.OriginalFormat.Take(50))+ "</summary>"+ 
-                    //                $"<b> {x.LogLevel} </b>+ {x.OriginalFormat.Take(250)} \n (invokationId: {x.InvocationId})\n" + "</details>"));
 
-                    errMsg = String.Concat(function.Select(x => "<details><summary>" +
-                                   String.Concat(x.OriginalFormat.Take(20)) + "</summary>" +
-                                   $"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(150))} \n (invokationId: {x.InvocationId})\n" + "</details>"));
-                    _log.Info($"errMsg: { errMsg}");
+                    //errMsg = String.Concat(function.Select(x => "<details><summary>" +
+                    //               String.Concat(x.OriginalFormat.Take(20)) + "</summary>" +
+                    //               $"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(150))} \n (invokationId: {x.InvocationId})\n" + "</details>"));
+                    //_log.Info($"errMsg: { errMsg}");
+
+                    errMsg = String.Concat(function.Select(x => 
+                                  $"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(150))} \n (invokationId: {x.InvocationId})\n"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
