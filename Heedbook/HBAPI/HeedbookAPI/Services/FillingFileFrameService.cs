@@ -40,12 +40,12 @@ namespace UserOperations.Services
                     || frameWithMaxArea.Time == null
                     || frameWithMaxArea.Descriptor == null)
                     throw new Exception("One of the fields of the frame with max Area is empty");
-
+                var applicationUserId = frameWithMaxArea?.ApplicationUserId == null ? Guid.Empty : frameWithMaxArea?.ApplicationUserId;
                 var fileFrame = new FileFrame
                 {
                     FileFrameId = Guid.NewGuid(),
-                    ApplicationUserId = frameWithMaxArea?.ApplicationUserId,
-                    FileName = $"{frameWithMaxArea?.ApplicationUserId}_{frameWithMaxArea?.DeviceId}_{frameWithMaxArea?.Time.ToString("yyyyMMddHHmmss")}.jpg",
+                    ApplicationUserId = applicationUserId,
+                    FileName = $"{applicationUserId}_{frameWithMaxArea?.DeviceId}_{frameWithMaxArea?.Time.ToString("yyyyMMddHHmmss")}.jpg",
                     FileExist = false,
                     FileContainer = "frames",
                     StatusId = 6,
@@ -94,7 +94,7 @@ namespace UserOperations.Services
             _repository.CreateRange<FileFrame>(fileFrames);
             _repository.CreateRange<FrameAttribute>(frameAttributes);
             _repository.CreateRange<FrameEmotion>(frameEmotions);
-            
+            System.Console.WriteLine(JsonConvert.SerializeObject(fileFrames));
             _repository.Save();
             return "success";
         }
