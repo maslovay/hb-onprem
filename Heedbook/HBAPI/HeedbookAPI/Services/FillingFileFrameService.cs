@@ -45,6 +45,7 @@ namespace UserOperations.Services
                 {
                     FileFrameId = Guid.NewGuid(),
                     ApplicationUserId = frameWithMaxArea?.ApplicationUserId,
+                    FileName = $"{frameWithMaxArea?.ApplicationUserId}_{frameWithMaxArea?.DeviceId}_{frameWithMaxArea?.Time}.jpg",
                     FileExist = false,
                     FileContainer = "frames",
                     StatusId = 6,
