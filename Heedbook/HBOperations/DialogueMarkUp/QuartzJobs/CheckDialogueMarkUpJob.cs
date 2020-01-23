@@ -83,7 +83,10 @@ namespace DialogueMarkUp.QuartzJobs
                     var videosDevice = fileVideos.Where(p => p.DeviceId == deviceId).ToList();
 
                     framesDevice = FindAllFaceId(framesDevice, periodFrame, periodTime);
-                    
+                   
+                    _log.Info($"videosDevice COUNT {videosDevice.Count()}");
+                    _log.Info($"framesDevice COUNT {framesDevice.Count()}");
+
                     var videoFacesDevice = CreateVideoFaces(framesDevice, videosDevice);
                     _context.AddRange(videoFacesDevice.Select(p => new VideoFace{
                         VideoFaceId = Guid.NewGuid(),
