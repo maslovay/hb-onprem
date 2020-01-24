@@ -114,17 +114,17 @@ namespace ErrorKibanaScheduler.QuartzJob
                     ChannelName = "LogSender"
                 };
                 _publisher.Publish(head);
-                var functionName = "OnPremExtractFramesFromVideo";
+              //  var functionName = "OnPremExtractFramesFromVideo";
 
 
-                errMsg = @"https://heedbookapitest.westeurope.cloudapp.azure.com/app/kibana#/discover?_g=(refreshInterval:(pause:!f,value:5000),time:(from:'"+ period + @"',mode:absolute,to:'"+ period.AddHours(4) + @"'))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,key:LogLevel,negate:!t,params:(query:Information,type:phrase),type:phrase,value:Information),query:(match:(LogLevel:(query:Information,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,key:FunctionName,negate:!f,params:(query:"+ functionName + ",type:phrase),type:phrase,value:" + functionName + "),query:(match:(FunctionName:(query:" + functionName + @",type:phrase))))),index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))";
-                _log.Info($"errMsg: { errMsg}");
-                var test = new MessengerMessageRun()
-                {
-                    logText = $"<a href=\"{errMsg}\"> View </a>",
-                    ChannelName = "LogSender"
-                };
-                _publisher.Publish(test);
+              //  var link = @"https://heedbookapitest.westeurope.cloudapp.azure.com/app/kibana#/discover?_g=(refreshInterval:(pause:!f,value:5000),time:(from:'"+ period + @"',mode:absolute,to:'"+ period.AddHours(4) + @"'))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,key:LogLevel,negate:!t,params:(query:Information,type:phrase),type:phrase,value:Information),query:(match:(LogLevel:(query:Information,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,key:FunctionName,negate:!f,params:(query:"+ functionName + ",type:phrase),type:phrase,value:" + functionName + "),query:(match:(FunctionName:(query:" + functionName + @",type:phrase))))),index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))";
+                //_log.Info($"errMsg: { errMsg}");
+                //var test = new MessengerMessageRun()
+                //{
+                //    logText = $"<a href=\"{errMsg}\"> View </a>",
+                //    ChannelName = "LogSender"
+                //};
+                //_publisher.Publish(test);
 
 
                 foreach (var function in groupingByName)
@@ -135,14 +135,15 @@ namespace ErrorKibanaScheduler.QuartzJob
                     //               $"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(150))} \n (invokationId: {x.InvocationId})\n" + "</details>"));
                     //_log.Info($"errMsg: { errMsg}");
 
-                  
+                    var link = @"https://heedbookapitest.westeurope.cloudapp.azure.com/app/kibana#/discover?_g=(refreshInterval:(pause:!f,value:5000),time:(from:'"+ period + @"',mode:absolute,to:'"+ period.AddHours(4) + @"'))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,key:LogLevel,negate:!t,params:(query:Information,type:phrase),type:phrase,value:Information),query:(match:(LogLevel:(query:Information,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,key:FunctionName,negate:!f,params:(query:"+ function.Key + ",type:phrase),type:phrase,value:" + function.Key + "),query:(match:(FunctionName:(query:" + function.Key + @",type:phrase))))),index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))";
+                    var aLink = $"<a href=\"{link}\"> {function.Key} </a>";
 
                     errMsg = String.Concat(function.Select(x => 
-                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.Take(150) } (last error: {x.Timestamp.ToLongTimeString()})\n\n"));
+                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.Take(150).ToString() } (last error: {x.Timestamp.ToLongTimeString()})\n\n"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
-                          $"<b>{function.Key}</b> \r Count: {function.Sum(x => x.Count)} \r\n>{errMsg} \r\n",
+                          $"<b>{aLink}</b> \r Count: {function.Sum(x => x.Count)} \r\n{errMsg} \r\n",
                         ChannelName = "LogSender"
                     };
                     _publisher.Publish(message);
