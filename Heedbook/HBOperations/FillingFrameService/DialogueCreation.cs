@@ -55,7 +55,7 @@ namespace FillingFrameService
             {
                 var isExtended = _requests.IsExtended(message);
                 var frames = _requests.FileFrames(message);
-                FileVideo frameVideo;
+                var frameVideo = new FileVideo();
                 if (!isExtended)
                 {
                     frameVideo = _requests.FileVideo(message);
@@ -79,42 +79,10 @@ namespace FillingFrameService
                     {
                         _context.DialogueVisuals.AddAsync(dialogueVisual),
                         _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
-                        _context.DialogueFrames.AddRangeAsync(dialogueFrames)
+                        _context.DialogueFrames.AddRangeAsync(dialogueFrames),
+                        _filling.FillingAvatarAsync(message, attributes, frames, frameVideo, isExtended)
                     };
 
-
-
-
-
-
-                    FrameAttribute attribute;
-                    if (!string.IsNullOrWhiteSpace(message.AvatarFileName) )
-                    {
-                        attribute = frames.Where(item => item.FileName == message.AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
-                        if (attribute == null) attribute = attributes.First();
-                    }
-                    else
-                    {
-                        attribute = attributes.First();
-                    }
-
-                    _log.Info($"Avatar file name is {attribute.FileFrame.FileName}");
-                    var localPath =
-                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
-
-                    var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
-                    var rectangle = new Rectangle
-                    {
-                        Height = faceRectangle.Height,
-                        Width = faceRectangle.Width,
-                        X = faceRectangle.Top,
-                        Y = faceRectangle.Left
-                    };
-
-                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
-                    stream.Seek(0, SeekOrigin.Begin);
-                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
-                    stream.Close();
                     await Task.WhenAll(insertTasks);
                     _context.SaveChanges();
                     _log.Info("Function finished");
