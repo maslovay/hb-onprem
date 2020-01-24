@@ -101,7 +101,7 @@ namespace ErrorKibanaScheduler.QuartzJob
 
                 for (int i = 0; i < documents.Count(); i++)
                 {
-                    documents[i].OriginalFormat = dmp.FindMainError(documents[i].OriginalFormat);
+                    documents[i].OriginalFormat = dmp.ReplaceForMainError(documents[i].OriginalFormat);
                 }
 
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
