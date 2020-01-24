@@ -40,11 +40,6 @@ namespace ErrorKibanaScheduler
             return res;
         }
 
-        public bool CompareFirst100Symbols(string firstLog, string secondLog)
-        {
-            return firstLog.Take(100) == secondLog.Take(100);
-        }
-
         public string ReplaceForMainError(string str)
         {
             var replacePhrase = errorsArray.Where(x => str.Contains(x)).FirstOrDefault();
