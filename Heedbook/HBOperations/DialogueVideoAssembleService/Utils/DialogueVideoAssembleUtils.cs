@@ -86,6 +86,7 @@ namespace DialogueVideoAssembleService.Utils
             }
             else
             {
+                System.Console.WriteLine($"Total command count {videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First())}");
                 foreach (var command in videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First())
                     .Where(p => p.Type ==  _videoSettings.VideoType))
                 {
