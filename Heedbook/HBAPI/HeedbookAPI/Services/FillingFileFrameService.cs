@@ -40,11 +40,12 @@ namespace UserOperations.Services
                     || frameWithMaxArea.Time == null
                     || frameWithMaxArea.Descriptor == null)
                     throw new Exception("One of the fields of the frame with max Area is empty");
-
+                var applicationUserId = frameWithMaxArea?.ApplicationUserId == null ? Guid.Empty : frameWithMaxArea?.ApplicationUserId;
                 var fileFrame = new FileFrame
                 {
                     FileFrameId = Guid.NewGuid(),
                     ApplicationUserId = frameWithMaxArea?.ApplicationUserId,
+                    FileName = $"{applicationUserId}_{frameWithMaxArea?.DeviceId}_{frameWithMaxArea?.Time.ToString("yyyyMMddHHmmss")}.jpg",
                     FileExist = false,
                     FileContainer = "frames",
                     StatusId = 6,
@@ -66,7 +67,12 @@ namespace UserOperations.Services
                     FileFrameId = fileFrame.FileFrameId,
                     Gender = frameWithMaxArea.Gender,
                     Age = (double)frameWithMaxArea.Age,
-                    Value = "",
+                    Value = JsonConvert.SerializeObject(new {
+                        Top = frameWithMaxArea.Top == null ? 0 : Convert.ToInt16(frameWithMaxArea.Top),
+                        Width = frameWithMaxArea.FaceArea == null ? 0 : Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
+                        Height = frameWithMaxArea.FaceArea == null ? 0 : Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
+                        Left = frameWithMaxArea.Left == null ? 0 : Convert.ToInt16(frameWithMaxArea.Left)
+                    }),
                     Descriptor = JsonConvert.SerializeObject(frameWithMaxArea.Descriptor)
                 });
                 frameEmotions.Add(new FrameEmotion
@@ -88,7 +94,7 @@ namespace UserOperations.Services
             _repository.CreateRange<FileFrame>(fileFrames);
             _repository.CreateRange<FrameAttribute>(frameAttributes);
             _repository.CreateRange<FrameEmotion>(frameEmotions);
-            
+            System.Console.WriteLine(JsonConvert.SerializeObject(fileFrames));
             _repository.Save();
             return "success";
         }

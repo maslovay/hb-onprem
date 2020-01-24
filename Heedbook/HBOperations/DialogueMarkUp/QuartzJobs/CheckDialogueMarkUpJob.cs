@@ -58,6 +58,8 @@ namespace DialogueMarkUp.QuartzJobs
                     .Select(p => p.FirstOrDefault())
                     .ToList();
 
+                _log.Info($"Total frames -- {frameAttributes.Count()}");
+
                 if(frameAttributes.Count() == 0)
                 {
                     _log.Info($"CheckDialogueMarkUpJob stopped. FrameAttributes COUNT 0");
