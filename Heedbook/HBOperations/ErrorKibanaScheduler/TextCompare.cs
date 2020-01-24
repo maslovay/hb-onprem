@@ -24,5 +24,19 @@ namespace ErrorKibanaScheduler
             var res = count / secondList.Count * 100;
             return res;
         }
+
+        public string FindMainError(string str)
+        {
+            try
+            {
+                str = str.Substring(str.IndexOf('}') + 1);
+                str = str.Remove(str.IndexOf(" at "));
+                return str;
+            }
+            catch
+            {
+                return str.Take(150).ToString();
+            }
+        }
     }
 }
