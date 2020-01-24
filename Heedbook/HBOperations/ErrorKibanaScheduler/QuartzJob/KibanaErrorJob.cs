@@ -38,13 +38,13 @@ namespace ErrorKibanaScheduler.QuartzJob
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var _log = _elasticClientFactory.GetElasticClient();            
+            var _log = _elasticClientFactory.GetElasticClient();
             var pool = new SingleNodeConnectionPool(new Uri($"{_path.UriPath}"));
             var settings = new ConnectionSettings(pool, sourceSerializer: JsonNetSerializer.Default);
             var client = new ElasticClient(settings);
             try
             {
-                var period = DateTime.UtcNow.AddHours(-12);
+                var period = DateTime.UtcNow.AddHours(-4);
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
                         .Includes(i => i
@@ -69,7 +69,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                                         .Query("Error")))) && q.DateRange(r=>r
                                     .Field(fd=>fd.Timestamp)
                                     .GreaterThanOrEquals(period))));
-                List<SearchSetting> documents = searchRequest.Documents.ToList();
+                List<SearchSetting> documents = searchRequest.Documents.OrderByDescending(x => x.Timestamp).ToList();
                 var alarm = new MessengerMessageRun()
                 {
                     logText = "<b>8000 or more error</b>",
@@ -89,7 +89,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                     for (int j = documents.Count - 1; j > i; j--)
                     {
                         var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
-                        if (percentageMatch >= 70)
+                        if (percentageMatch >= 80)
                         {
                             documents[i].Count++;
                             documents.RemoveAt(j);
@@ -109,7 +109,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                 _publisher.Publish(head);
 
 
-                errMsg = "<details><summary>View</summary>test info</details>";
+                errMsg = "{cut Head of block} Internal block{cut}";
                 _log.Info($"errMsg: { errMsg}");
                 var test = new MessengerMessageRun()
                 {
@@ -126,12 +126,14 @@ namespace ErrorKibanaScheduler.QuartzJob
                     //               $"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(150))} \n (invokationId: {x.InvocationId})\n" + "</details>"));
                     //_log.Info($"errMsg: { errMsg}");
 
+                  
+
                     errMsg = String.Concat(function.Select(x => 
-                                  $"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(150))} \n (invokationId: {x.InvocationId})\n"));
+                                  $"<b> {x.LogLevel}({x.Count}): </b> { dmp.FindMainError(x.OriginalFormat)} (последн€€ ошибка: {x.Timestamp})\n\n"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
-                          $"<b>{function.Key}</b> \r Count: {function.Sum(x => x.Count)} \r\n<b>Errors:</b>\n {errMsg} \r\n",
+                          $"<b>{function.Key}</b> \r Count: {function.Sum(x => x.Count)} \r\n {errMsg} \r\n",
                         ChannelName = "LogSender"
                     };
                     _publisher.Publish(message);
