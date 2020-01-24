@@ -87,6 +87,42 @@ namespace HBLib.Utils
             }
         }
 
+        public async Task<String> GetLastFrameFromVideo(String videoFn, string frameFn)
+        {
+            //ffmpeg -sseof -3 -i 00000000-0000-0000-0000-000000000000_4b95777d-abe2-4987-98c6-d541f86f4894_20200123104457_1.mkv -update 1 -q:v 1 last.jpg
+            try
+            {
+                videoFn = Path.GetFullPath(videoFn);
+                frameFn = Path.GetFullPath(frameFn);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $@" -sseof -3 -i {videoFn} -update 1 -q:v 1 {frameFn}");
+            }
+            catch (Exception e)
+            {
+                 throw new Exception($"Exception occured {e.Message}");
+            }
+        }
+
+        public async Task<String> GetFrameNSeconds(String videoFn, string frameFn, int seconds)
+        {
+            //ffmpeg -ss 00:00:02 -i "file.flv" -f image2 -vframes 1 "file_out.jpg"
+            try
+            {
+                videoFn = Path.GetFullPath(videoFn);
+                frameFn = Path.GetFullPath(frameFn);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $@"-ss {seconds} -i {videoFn} -f image2 -vframes 1 {frameFn}");
+            }
+            catch (Exception e)
+            {
+                 throw new Exception($"Exception occured {e.Message}");
+            }
+        }
+
+        // public async Task<>
+
         public async Task<FileStream> VideoToWavAsync(MemoryStream videoStream)
         {
             var processStartInfo = new ProcessStartInfo(FfPath)
