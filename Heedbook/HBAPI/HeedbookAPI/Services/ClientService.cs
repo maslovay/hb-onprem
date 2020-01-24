@@ -8,6 +8,7 @@ using HBData.Models;
 using UserOperations.Models;
 using UserOperations.Controllers;
 using Microsoft.EntityFrameworkCore;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Services
 {
@@ -17,18 +18,25 @@ namespace UserOperations.Services
         private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
+        private readonly FileRefUtils _fileRef;
+
+        private readonly string _containerName;
 
         public ClientService(
             LoginService loginService,
             DBOperations dbOperation,
             RequestFilters requestFilters,
-            IGenericRepository repository
+            IGenericRepository repository,
+            FileRefUtils fileRef
             )
         {
             _loginService = loginService;
             _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _repository = repository;
+            _fileRef = fileRef;
+
+            _containerName = "clientavatars";
         }
         public async Task<List<GetClient>> GetAll( string beg, string end, List<string> genders, List<Guid> companyIds, int begAge, int endAge)
         {
@@ -48,7 +56,7 @@ namespace UserOperations.Services
                 .Select( c => new GetClient () {
                     ClientId = c.ClientId,
                     Age = c.Age,
-                    Avatar = c.Avatar,
+                    Avatar = c.Avatar != null ? _fileRef.GetFileLink(_containerName, c.Avatar, default) : null,
                     CompanyId = c.CompanyId,
                     CorporationId = c.CorporationId,
                     Email = c.Email,
