@@ -56,6 +56,10 @@ namespace FillingFrameService
 
             services.AddScoped<FillingFrameServices>();
             services.AddScoped<RequestsService>();
+
+            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<FFMpegSettings>>().Value);
+            services.AddTransient<FFMpegWrapper>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
