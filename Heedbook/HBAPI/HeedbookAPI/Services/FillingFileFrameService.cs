@@ -68,10 +68,10 @@ namespace UserOperations.Services
                     Gender = frameWithMaxArea.Gender,
                     Age = (double)frameWithMaxArea.Age,
                     Value = JsonConvert.SerializeObject(new {
-                        Top = 0,
-                        Width = Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
-                        Height = Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
-                        Left =0
+                        Top = frameWithMaxArea.Top == null ? 0 : Convert.ToInt16(frameWithMaxArea.Top),
+                        Width = frameWithMaxArea.FaceArea == null ? 0 : Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
+                        Height = frameWithMaxArea.FaceArea == null ? 0 : Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
+                        Left = frameWithMaxArea.Left == null ? 0 : Convert.ToInt16(frameWithMaxArea.Left)
                     }),
                     Descriptor = JsonConvert.SerializeObject(frameWithMaxArea.Descriptor)
                 });
