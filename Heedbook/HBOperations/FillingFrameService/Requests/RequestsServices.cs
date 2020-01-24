@@ -38,13 +38,26 @@ namespace  FillingFrameService.Requests
                 .ToList();
         }
 
-        public FileVideo FileVideo(DialogueCreationRun message)
+        public FileFrame FindFileAvatar(DialogueCreationRun message, List<FileFrame> frames)
         {
-            var formatString = "yyyyMMddHHmmss";
-            var dt = DateTime.ParseExact(message.AvatarFileName.Split('_')[2] ,formatString, CultureInfo.InvariantCulture);
+            FileFrame fileAvatar;
+            if ( !string.IsNullOrWhiteSpace(message.AvatarFileName))
+            {
+                fileAvatar = frames.Where(item => item.FileName == message.AvatarFileName).FirstOrDefault();
+                if (fileAvatar == null) fileAvatar = frames.Where(p => p.FrameAttribute.Any()).FirstOrDefault();
+            }
+            else
+            {
+                fileAvatar = frames.Where(p => p.FrameAttribute.Any()).FirstOrDefault();
+            }
+            return fileAvatar;
+        }
+
+        public FileVideo FileVideo(DialogueCreationRun message, FileFrame fileAvatar)
+        {
             return _context.FileVideos
                 .Where(p => p.DeviceId == message.DeviceId &&
-                    p.BegTime <= dt && p.EndTime >= dt
+                    p.BegTime <= fileAvatar.Time && p.EndTime >= fileAvatar.Time
                     ).FirstOrDefault();
         }
     }
