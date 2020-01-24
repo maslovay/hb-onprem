@@ -15,5 +15,7 @@ namespace UserOperations.Models
         public double? FaceArea { get; set; }
         public double? Top { get; set; }
         public double? Left { get; set; }
+        public double? VideoHeight { get; set; }
+        public double? VideoWidth { get; set; }
     }
 }
