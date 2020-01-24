@@ -85,7 +85,7 @@ namespace ErrorKibanaScheduler.QuartzJob
 
                 for (int i = 0; i < documents.Count(); i++)
                 {
-                    documents[i].OriginalFormat = dmp.ReplaceForMainError(documents[i].OriginalFormat);
+                    documents[i].OriginalFormat = dmp.FindMainError(documents[i].OriginalFormat);
                 }
 
                 ///---remove the same OriginalFormats of errors
@@ -93,8 +93,9 @@ namespace ErrorKibanaScheduler.QuartzJob
                 {
                     for (int j = documents.Count - 1; j > i; j--)
                     {
-                        var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
-                        if (percentageMatch >= 80)
+                        //var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
+                        //if (percentageMatch >= 80)
+                        if(documents[i].OriginalFormat == documents[j].OriginalFormat)
                         {
                             documents[i].Count++;
                             documents.RemoveAt(j);
@@ -139,7 +140,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                     var aLink = $"<a href=\"{link}\"> {function.Key} </a>";
 
                     errMsg = String.Concat(function.Select(x => 
-                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.Take(150).ToString() } (last error: {x.Timestamp.ToLongTimeString()})\n\n"));
+                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.ToLongTimeString()})\n\n"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
