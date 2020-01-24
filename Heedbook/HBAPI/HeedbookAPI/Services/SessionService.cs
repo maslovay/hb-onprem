@@ -5,6 +5,7 @@ using HBLib.Utils;
 using UserOperations.Models.Session;
 using HBData.Repository;
 using System.Collections.Generic;
+using UserOperations.Models;
 
 namespace UserOperations.Services
 {
@@ -111,14 +112,15 @@ namespace UserOperations.Services
             return result;
         }      
 
-        public string AlertNotSmile(Guid applicationUserId)
+        public string AlertNotSmile(AlertModel alertModel)
         {
-            if (String.IsNullOrEmpty(applicationUserId.ToString())) 
-                return "ApplicationUser is empty";
+            if (String.IsNullOrEmpty(alertModel.DeviceId.ToString())) 
+                return "DeviceId is empty";
             var newAlert = new Alert
             {
                 CreationDate = DateTime.UtcNow,
-                ApplicationUserId = applicationUserId,
+                ApplicationUserId = alertModel.ApplicationUserId,
+                DeviceId = alertModel.DeviceId,
                 AlertTypeId = _repository.GetAsQueryable<AlertType>().FirstOrDefault(x => x.Name == "client does not smile").AlertTypeId
             };
             _repository.Create<Alert>(newAlert);
