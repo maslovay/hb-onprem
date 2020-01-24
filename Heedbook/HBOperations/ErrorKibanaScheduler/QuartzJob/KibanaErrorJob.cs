@@ -33,7 +33,7 @@ namespace ErrorKibanaScheduler.QuartzJob
             _path = path;
             _elasticClientFactory = elasticClientFactory;
             _client = client;
-            _publisher = publisher;            
+            _publisher = publisher;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -83,19 +83,27 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var dmp = new TextCompare();
                 System.Console.WriteLine($"documents count: {documents.Count}");
 
+                for (int i = 0; i < documents.Count(); i++)
+                {
+                    documents[i].OriginalFormat = dmp.ReplaceForMainError(documents[i].OriginalFormat);
+                }
+
                 ///---remove the same OriginalFormats of errors
                 for (var i = 0; i < documents.Count; i++)
                 {
                     for (int j = documents.Count - 1; j > i; j--)
                     {
-                        var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
-                        if (percentageMatch >= 80)
+                        //var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
+                        //if (percentageMatch >= 80)
+                        if (dmp.CompareFirst100Symbols(documents[i].OriginalFormat, documents[j].OriginalFormat) == true)
                         {
                             documents[i].Count++;
                             documents.RemoveAt(j);
                         }
                     } 
                 }
+
+                //---)
 
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
                 
@@ -109,7 +117,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                 _publisher.Publish(head);
 
 
-                errMsg = "{cut Head of block} Internal block{cut}";
+                errMsg = @"[Kibana](https://heedbookslave.northeurope.cloudapp.azure.com/app/kibana#/discover)";
                 _log.Info($"errMsg: { errMsg}");
                 var test = new MessengerMessageRun()
                 {
@@ -129,11 +137,11 @@ namespace ErrorKibanaScheduler.QuartzJob
                   
 
                     errMsg = String.Concat(function.Select(x => 
-                                  $"<b> {x.LogLevel}({x.Count}): </b> { dmp.FindMainError(x.OriginalFormat)} (последн€€ ошибка: {x.Timestamp})\n\n"));
+                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat} (last error: {x.Timestamp.ToLongTimeString()})\n\n"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
-                          $"<b>{function.Key}</b> \r Count: {function.Sum(x => x.Count)} \r\n {errMsg} \r\n",
+                          $"<b>{function.Key}</b> \r Count: {function.Sum(x => x.Count)} \r\n>{errMsg} \r\n",
                         ChannelName = "LogSender"
                     };
                     _publisher.Publish(message);
