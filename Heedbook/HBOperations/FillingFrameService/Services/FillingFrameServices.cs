@@ -94,42 +94,32 @@ namespace FillingFrameService.Services
             return dialogueClientProfile;
         }  
 
-        public async System.Threading.Tasks.Task FillingAvatarAsync(DialogueCreationRun message, List<FrameAttribute> attributes,
-            List<FileFrame> frames, FileVideo fileVideo, bool isExtended)
+        public async System.Threading.Tasks.Task FillingAvatarAsync(DialogueCreationRun message,
+            List<FileFrame> frames, FileVideo fileVideo, bool isExtended, FileFrame fileAvatar)
         {
-            FrameAttribute attribute;
-            if ( !string.IsNullOrWhiteSpace(message.AvatarFileName))
-            {
-                attribute = frames.Where(item => item.FileName == message.AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
-                if (attribute == null) attribute = attributes.First();
-            }
-            else
-            {
-                attribute = attributes.First();
-            }
-
+            
             string localPath;
             if (isExtended)
             {
                 localPath =
-                    await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
+                    await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + fileAvatar.FileName);
                 System.Console.WriteLine($"Avatar path - {localPath}");
             }
             else
             {
-                var dt = attribute.FileFrame.Time;
+                var dt = fileAvatar.Time;
                 var seconds = dt.Subtract(fileVideo.BegTime).TotalSeconds;
                 System.Console.WriteLine($"Seconds - {seconds}, FileVideo - {fileVideo.FileName}");
 
                 var localVidePath =
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync("videos/" + fileVideo.FileName);
-                localPath = Path.Combine(_sftpSettings.DownloadPath, attribute.FileFrame.FileName);
+                localPath = Path.Combine(_sftpSettings.DownloadPath, fileAvatar.FileName);
                 System.Console.WriteLine($"Avatar path - {localPath}");
                 var output = await _wrapper.GetFrameNSeconds(localVidePath, localPath, Convert.ToInt32(seconds));
                 System.Console.WriteLine(output);
             }
 
-            var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
+            var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value);
             var rectangle = new Rectangle
             {
                 Height = faceRectangle.Height,

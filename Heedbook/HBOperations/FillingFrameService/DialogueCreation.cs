@@ -55,11 +55,11 @@ namespace FillingFrameService
             {
                 var isExtended = _requests.IsExtended(message);
                 var frames = _requests.FileFrames(message);
-                var frameVideo = new FileVideo();
-                if (!isExtended)
-                {
-                    frameVideo = _requests.FileVideo(message);
-                }
+                // var frameVideo = new FileVideo();
+                // if (!isExtended)
+                // {
+                //     frameVideo = _requests.FileVideo(message);
+                // }
 
                 var emotions = frames.Where(p => p.FrameEmotion.Any())
                     .Select(p => p.FrameEmotion.First())
@@ -71,6 +71,13 @@ namespace FillingFrameService
 
                 if (emotions.Any() && attributes.Any())
                 {
+                    var fileAvatar = _requests.FindFileAvatar(message, frames);
+                    var frameVideo = new FileVideo();
+                    if (!isExtended)
+                    {
+                        frameVideo = _requests.FileVideo(message, fileAvatar);
+                    }
+
                     var dialogueFrames = _filling.FillingDialogueFrame(message, emotions);
                     var dialogueClientProfile = _filling.FillingDialogueClientProfile(message, attributes);
                     var dialogueVisual = _filling.FiilingDialogueVisuals(message, emotions);
@@ -80,7 +87,7 @@ namespace FillingFrameService
                         _context.DialogueVisuals.AddAsync(dialogueVisual),
                         _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
                         _context.DialogueFrames.AddRangeAsync(dialogueFrames),
-                        _filling.FillingAvatarAsync(message, attributes, frames, frameVideo, isExtended)
+                        _filling.FillingAvatarAsync(message, frames, frameVideo, isExtended, fileAvatar)
                     };
 
                     await Task.WhenAll(insertTasks);

@@ -19,15 +19,18 @@ namespace DialogueVideoAssembleService.Utils
         private readonly RecordsContext _context;
         private readonly IConfiguration _config;
         private readonly DialogueVideoAssembleSettings _videoSettings;
+        private readonly FFMpegWrapper _wrapper;
 
 
         public DialogueVideoAssembleUtils(RecordsContext context,
              IConfiguration config,
+             FFMpegWrapper wrapper,
              DialogueVideoAssembleSettings videoSettings)
         {
             _context = context;
             _config = config;
             _videoSettings = videoSettings;
+            _wrapper = wrapper;
         }
 
         public List<FileVideo> GetFileVideos(DialogueVideoAssembleRun message)
@@ -69,14 +72,37 @@ namespace DialogueVideoAssembleService.Utils
             return dt2; 
         }
 
-        public async Task DownloadFilesLocalyAsync(List<FFMpegWrapper.FFmpegCommand> videoMergeCommands, SftpClient sftpClient, SftpSettings sftpSettings, ElasticClient log, string sessionDir)
+        public async Task DownloadFilesLocalyAsync(List<FFMpegWrapper.FFmpegCommand> videoMergeCommands, SftpClient sftpClient, 
+            SftpSettings sftpSettings, ElasticClient log, string sessionDir, bool isExtended)
         {
-            foreach (var command in videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First()))
+            if (isExtended)
             {
-                log.Info($"Downloading file {command.FileName}");                        
-                await sftpClient.DownloadFromFtpToLocalDiskAsync(
-                    $"{sftpSettings.DestinationPath}{command.FileFolder}/{command.FileName}", sessionDir);                    
-            } 
+                foreach (var command in videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First()))
+                {
+                    log.Info($"Downloading file {command.FileName}");                        
+                    await sftpClient.DownloadFromFtpToLocalDiskAsync(
+                        $"{sftpSettings.DestinationPath}{command.FileFolder}/{command.FileName}", sessionDir);                    
+                } 
+            }
+            else
+            {
+                System.Console.WriteLine($"Total command count {videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First())}");
+                foreach (var command in videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First())
+                    .Where(p => p.Type ==  _videoSettings.VideoType))
+                {
+                    System.Console.WriteLine($"Downloading video -- {command.FileName}");
+                    await sftpClient.DownloadFromFtpToLocalDiskAsync(
+                        $"{sftpSettings.DestinationPath}{command.FileFolder}/{command.FileName}", sessionDir);
+                }
+
+                foreach (var command in videoMergeCommands.GroupBy(p => p.FileName).Select(p => p.First())
+                    .Where(p => p.Type ==  _videoSettings.FrameType))
+                {
+                    System.Console.WriteLine($"Creating frame -- {command.FileName}");
+                    var res = await _wrapper.GetLastFrameFromVideo(command.InsideVideoPath, Path.Combine(sessionDir, command.FileName));
+                    System.Console.WriteLine(res);
+                }
+            }
         }
 
         public void RunFrameFFmpegCommands(List<FFMpegWrapper.FFmpegCommand> frameCommands, CMDWithOutput cmd, FFMpegWrapper wrapper, ElasticClient log, string sessionDir)
@@ -169,9 +195,10 @@ namespace DialogueVideoAssembleService.Utils
                 {
                     Command = $"-i {tempImageVideoPath}",                    
                     Path = tempImageVideoPath,
-                    Type = _videoSettings.VideoType,
+                    Type = _videoSettings.FrameType,
                     FileFolder = _videoSettings.FrameFolder,
-                    FileName = lastFrame.FileName
+                    FileName = lastFrame.FileName,
+                    InsideVideoPath = Path.Combine(sessionDir, fileVideos[index - 1].FileName)
                 });
 
                 frameCommands.Add(new FFMpegWrapper.FFmpegCommand

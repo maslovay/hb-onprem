@@ -457,6 +457,7 @@ namespace HBLib.Utils
             public String ImagePath;
             public String Type;
             public int Duration;
+            public String InsideVideoPath;
         }
     }
 }

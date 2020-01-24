@@ -80,7 +80,6 @@ namespace DialogueVideoAssembleService
                 }                
                 
                 var fileFrames = _utils.GetFileFrame(message);                
-                if (!fileFrames.Any()) _log.Error("No frame files");
 
                 var dialogue = _context.Dialogues.FirstOrDefault(p => p.DialogueId == message.DialogueId);
                 if (dialogue == null) 
@@ -91,7 +90,7 @@ namespace DialogueVideoAssembleService
                 var dialogueDuration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds;
 
                 var videosDuration = _utils.GetTotalVideoDuration(fileVideos, message);
-                if (Convert.ToInt16(dialogueDuration) - Convert.ToInt16(videosDuration) > 1500)
+                if (Convert.ToInt32(dialogueDuration) - Convert.ToInt32(videosDuration) > 2000)
                 {
                     var comment = $"Too many holes in dialogue {dialogue.DialogueId}, Dialogue duration {dialogueDuration}s, Videos duration - {videosDuration}s";
                     _log.Error(comment);
@@ -110,7 +109,7 @@ namespace DialogueVideoAssembleService
                 _utils.BuildFFmpegCommands(message, fileVideos, fileFrames, sessionDir, ref videoMergeCommands, ref frameCommands);    
                 
                 _log.Info("Downloading all files");
-                await _utils.DownloadFilesLocalyAsync(videoMergeCommands, _sftpClient, _sftpSettings, _log, sessionDir);                   
+                await _utils.DownloadFilesLocalyAsync(videoMergeCommands, _sftpClient, _sftpSettings, _log, sessionDir, isExtended);                   
                 _log.Info("Running commands for frames");
                 _utils.RunFrameFFmpegCommands(frameCommands, cmd, _wrapper, _log, sessionDir);
 

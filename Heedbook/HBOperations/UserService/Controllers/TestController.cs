@@ -23,6 +23,9 @@ using RabbitMqEventBus.Events;
 using Swashbuckle.AspNetCore.Annotations;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using HBLib;
+using HBMLHttpClient.Model;
+using System.Drawing;
 
 namespace UserService.Controllers
 {
@@ -33,14 +36,62 @@ namespace UserService.Controllers
         private readonly IGenericRepository _repository;
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
+        private readonly SftpClient _sftpClient;
+        private readonly SftpSettings _sftpSettings;
+        private readonly FFMpegWrapper _wrapper;
         
-        public TestController(RecordsContext context, IGenericRepository repository, INotificationHandler handler )
+        public TestController(RecordsContext context, IGenericRepository repository,
+            SftpSettings sftpSettings,
+            FFMpegWrapper wrapper,
+            INotificationHandler handler, SftpClient sftpClient)
         {
             _context = context;
             _repository = repository;
             _handler = handler;
+            _sftpClient = sftpClient;
+            _sftpSettings = sftpSettings;
+            _wrapper = wrapper;
         }
 
+        [HttpPost("[action]")]
+        public async Task CreateAvatar(string fileName)
+        {
+            var frame = _context.FileFrames
+                .Include(p => p.FrameAttribute)
+                .Where(p => p.FileName == fileName)
+                .FirstOrDefault();
+
+            var video = _context.FileVideos.Where(p => p.BegTime <= frame.Time && p.EndTime >= frame.Time && p.DeviceId == frame.DeviceId).FirstOrDefault();
+            var dt = frame.Time;
+            var seconds = dt.Subtract(video.BegTime).TotalSeconds;
+            System.Console.WriteLine($"Seconds - {seconds}, FileVideo - {video.FileName}");
+
+            var localVidePath =
+                await _sftpClient.DownloadFromFtpToLocalDiskAsync("videos/" + video.FileName);
+            System.Console.WriteLine(localVidePath);
+            var localPath = Path.Combine(_sftpSettings.DownloadPath, frame.FileName);
+            System.Console.WriteLine($"Avatar path - {localPath}");
+            var output = await _wrapper.GetFrameNSeconds(localVidePath, localPath, Convert.ToInt32(seconds));
+            System.Console.WriteLine(output);
+
+            var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(frame.FrameAttribute.FirstOrDefault().Value);
+            var rectangle = new Rectangle
+            {
+                Height = faceRectangle.Height,
+                Width = faceRectangle.Width,
+                X = faceRectangle.Top,
+                Y = faceRectangle.Left
+            };
+
+            var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+            stream.Seek(0, SeekOrigin.Begin);
+            await _sftpClient.UploadAsMemoryStreamAsync(stream, "test/", $"{frame.FileName}");
+            stream.Close();
+
+        }
+
+        
+        
         [HttpGet("[action]/{timelInHours}")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> CheckIfAnyAssembledDialogues( int timelInHours )
         {
