@@ -16,6 +16,8 @@ using Renci.SshNet.Common;
 using HBLib;
 using HBData;
 using Microsoft.EntityFrameworkCore;
+using FillingFrameService.Services;
+using FillingFrameService.Requests;
 
 namespace FillingFrameService
 {
@@ -25,15 +27,21 @@ namespace FillingFrameService
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly FillingFrameServices _filling;
+        private readonly RequestsService _requests;
 
 
         public DialogueCreation(IServiceScopeFactory factory,
             SftpClient client,
+            FillingFrameServices filling,
+            RequestsService requests,
             ElasticClientFactory elasticClientFactory)
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _sftpClient = client;
+            _filling = filling;
             _elasticClientFactory = elasticClientFactory;
+            _requests = requests;
         }
 
         public async Task Run(DialogueCreationRun message)
@@ -45,15 +53,13 @@ namespace FillingFrameService
 
             try
             {
-                var frames =
-                    _context.FileFrames
-                        .Include(p => p.FrameAttribute)
-                        .Include(p => p.FrameEmotion)
-                        .Where(item =>
-                            item.ApplicationUserId == message.ApplicationUserId
-                            && item.Time >= message.BeginTime
-                            && item.Time <= message.EndTime)
-                        .ToList();
+                var isExtended = _requests.IsExtended(message);
+                var frames = _requests.FileFrames(message);
+                FileVideo frameVideo;
+                if (!isExtended)
+                {
+                    frameVideo = _requests.FileVideo(message);
+                }
 
                 var emotions = frames.Where(p => p.FrameEmotion.Any())
                     .Select(p => p.FrameEmotion.First())
@@ -65,68 +71,21 @@ namespace FillingFrameService
 
                 if (emotions.Any() && attributes.Any())
                 {
-                    var dialogueFrames = emotions.Select(item => new DialogueFrame
-                    {
-                        DialogueId = message.DialogueId,
-                        AngerShare = item.AngerShare,
-                        FearShare = item.FearShare,
-                        DisgustShare = item.DisgustShare,
-                        ContemptShare = item.ContemptShare,
-                        NeutralShare = item.NeutralShare,
-                        SadnessShare = item.SadnessShare,
-                        SurpriseShare = item.SurpriseShare,
-                        HappinessShare = item.HappinessShare,
-                        YawShare = item.YawShare,
-                        Time = item.FileFrame.Time
-                    })
-                        .ToList();
-
-                    string gender; 
-                    if (message.Gender == null)
-                    {
-                        var genderMaleCount = attributes.Count(item => item.Gender.ToLower() == "male");
-                        var genderFemaleCount = attributes.Count(item => item.Gender.ToLower() == "female");
-                        gender = genderMaleCount > genderFemaleCount ? "Male" : "Female";
-                    }
-                    else
-                    {
-                        gender = message.Gender.ToLower();
-                    }
-
-                    var dialogueClientProfile = new DialogueClientProfile
-                    {
-                        DialogueId = message.DialogueId,
-                        Gender = gender,
-                        Age = attributes.Average(item => item.Age),
-                        Avatar = $"{message.DialogueId}.jpg"
-                    };
-
-                    var yawShare = emotions.Average(item => item.YawShare);
-                    yawShare = Math.Abs((double) yawShare);
-
-                    var dialogueVisual = new DialogueVisual
-                    {
-                        DialogueId = message.DialogueId,
-                        AngerShare = emotions.Average(item => item.AngerShare),
-                        FearShare = emotions.Average(item => item.FearShare),
-                        DisgustShare = emotions.Average(item => item.DisgustShare),
-                        ContemptShare = emotions.Average(item => item.ContemptShare),
-                        NeutralShare = emotions.Average(item => item.NeutralShare),
-                        SadnessShare = emotions.Average(item => item.SadnessShare),
-                        SurpriseShare = emotions.Average(item => item.SurpriseShare),
-                        HappinessShare = emotions.Average(item => item.HappinessShare),
-                        AttentionShare = 10 * (10 - Math.Min((double)yawShare, 10) / 1.4)
-                    };
+                    var dialogueFrames = _filling.FillingDialogueFrame(message, emotions);
+                    var dialogueClientProfile = _filling.FillingDialogueClientProfile(message, attributes);
+                    var dialogueVisual = _filling.FiilingDialogueVisuals(message, emotions);
 
                     var insertTasks = new List<Task>
                     {
                         _context.DialogueVisuals.AddAsync(dialogueVisual),
                         _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
                         _context.DialogueFrames.AddRangeAsync(dialogueFrames)
-                        // _repository.CreateAsync(dialogueVisual),
-                        // _repository.CreateAsync(dialogueClientProfile),
-                        // _repository.BulkInsertAsync(dialogueFrames)
                     };
+
+
+
+
+
 
                     FrameAttribute attribute;
                     if (!string.IsNullOrWhiteSpace(message.AvatarFileName) )

@@ -1,5 +1,7 @@
 ﻿using Configurations;
 using FillingFrameService.Handler;
+using FillingFrameService.Requests;
+using FillingFrameService.Services;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -51,6 +53,9 @@ namespace FillingFrameService
             services.AddRabbitMqEventBus(Configuration);
             services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.AddScoped<FillingFrameServices>();
+            services.AddScoped<RequestsService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
