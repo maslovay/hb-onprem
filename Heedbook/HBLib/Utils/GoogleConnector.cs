@@ -39,15 +39,16 @@ namespace HBLib.Utils
 
         private readonly DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
         private ElasticClient _log;
+        private readonly ElasticClientFactory _elasticClientFactory;
 
         public GoogleConnector(SftpClient sftpClient,
             IServiceScopeFactory scopeFactory,
-            ElasticClient log)
+            ElasticClientFactory elasticClientFactory)
         {
             _sftpClient = sftpClient;
             var scope = scopeFactory.CreateScope();
             _repository = scope.ServiceProvider.GetRequiredService<IGenericRepository>();
-            _log = log;
+            _log = elasticClientFactory.GetElasticClient();
         }
 
         public async Task<bool> CheckApiKey()
