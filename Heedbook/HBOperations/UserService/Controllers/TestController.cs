@@ -68,6 +68,7 @@ namespace UserService.Controllers
 
             var localVidePath =
                 await _sftpClient.DownloadFromFtpToLocalDiskAsync("videos/" + video.FileName);
+            System.Console.WriteLine(localVidePath);
             var localPath = Path.Combine(_sftpSettings.DownloadPath, frame.FileName);
             System.Console.WriteLine($"Avatar path - {localPath}");
             var output = await _wrapper.GetFrameNSeconds(localVidePath, localPath, Convert.ToInt32(seconds));

@@ -11,6 +11,7 @@ COPY --from=build-env /app/HBOperations/UserService/publish .
 ENTRYPOINT ["dotnet", "UserService.dll"]
 EXPOSE 53650
 ENV ASPNETCORE_URLS http://+:53650
+RUN apk add ffmpeg
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download
