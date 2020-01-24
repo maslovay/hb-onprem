@@ -32,7 +32,7 @@ namespace ErrorKibanaScheduler
             {
                 str = str.Substring(str.IndexOf('}') + 1);
                 str = str.Remove(str.IndexOf(" at "));
-                return str;
+                return str.Take(150).ToString();
             }
             catch
             {

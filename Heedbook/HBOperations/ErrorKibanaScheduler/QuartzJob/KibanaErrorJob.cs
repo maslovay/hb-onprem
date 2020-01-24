@@ -83,19 +83,15 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var dmp = new TextCompare();
                 System.Console.WriteLine($"documents count: {documents.Count}");
 
-                for (int i = 0; i < documents.Count(); i++)
-                {
-                    documents[i].OriginalFormat = dmp.FindMainError(documents[i].OriginalFormat);
-                }
+               
 
                 ///---remove the same OriginalFormats of errors
                 for (var i = 0; i < documents.Count; i++)
                 {
                     for (int j = documents.Count - 1; j > i; j--)
                     {
-                        //var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
-                        //if (percentageMatch >= 80)
-                        if(documents[i].OriginalFormat == documents[j].OriginalFormat)
+                        var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
+                        if (percentageMatch >= 80)
                         {
                             documents[i].Count++;
                             documents.RemoveAt(j);
@@ -103,7 +99,10 @@ namespace ErrorKibanaScheduler.QuartzJob
                     } 
                 }
 
-                //---)
+                for (int i = 0; i < documents.Count(); i++)
+                {
+                    documents[i].OriginalFormat = dmp.FindMainError(documents[i].OriginalFormat);
+                }
 
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
                 
@@ -115,29 +114,12 @@ namespace ErrorKibanaScheduler.QuartzJob
                     ChannelName = "LogSender"
                 };
                 _publisher.Publish(head);
-              //  var functionName = "OnPremExtractFramesFromVideo";
-
-
-              //  var link = @"https://heedbookapitest.westeurope.cloudapp.azure.com/app/kibana#/discover?_g=(refreshInterval:(pause:!f,value:5000),time:(from:'"+ period + @"',mode:absolute,to:'"+ period.AddHours(4) + @"'))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,key:LogLevel,negate:!t,params:(query:Information,type:phrase),type:phrase,value:Information),query:(match:(LogLevel:(query:Information,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,key:FunctionName,negate:!f,params:(query:"+ functionName + ",type:phrase),type:phrase,value:" + functionName + "),query:(match:(FunctionName:(query:" + functionName + @",type:phrase))))),index:b4623df0-36b1-11ea-9d1c-c54632dc01ff,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))";
-                //_log.Info($"errMsg: { errMsg}");
-                //var test = new MessengerMessageRun()
-                //{
-                //    logText = $"<a href=\"{errMsg}\"> View </a>",
-                //    ChannelName = "LogSender"
-                //};
-                //_publisher.Publish(test);
-
 
                 foreach (var function in groupingByName)
                 {
 
-                    //errMsg = String.Concat(function.Select(x => "<details><summary>" +
-                    //               String.Concat(x.OriginalFormat.Take(20)) + "</summary>" +
-                    //               $"<b> {x.LogLevel} </b>+ {String.Concat(x.OriginalFormat.Take(150))} \n (invokationId: {x.InvocationId})\n" + "</details>"));
-                    //_log.Info($"errMsg: { errMsg}");
-
                     var link = @"https://heedbookslave.northeurope.cloudapp.azure.com/app/kibana#/discover?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:'"+period+@"',mode:absolute,to:'"+DateTime.Now+@"'))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',key:LogLevel,negate:!t,params:(query:Information,type:phrase),type:phrase,value:Information),query:(match:(LogLevel:(query:Information,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',key:FunctionName,negate:!f,params:(query:"+function.Key+ @",type:phrase),type:phrase,value:" + function.Key + @"),query:(match:(FunctionName:(query:" + function.Key + @",type:phrase))))),index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))";
-                    var aLink = $"<a href=\"{link}\"> {function.Key} </a>";
+                    var aLink = $"<a href=\"{link}\">{function.Key} </a>";
 
                     errMsg = String.Concat(function.Select(x => 
                                   $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.ToLongTimeString()})\n\n"));
