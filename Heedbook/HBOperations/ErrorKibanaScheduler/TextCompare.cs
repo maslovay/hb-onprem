@@ -19,7 +19,6 @@ namespace ErrorKibanaScheduler
             "The session is not open. at Renci.SshNet.SubsystemSession",
             "The connection pool has been exhausted, either raise MaxPoolSize",
             "FileNotFoundException: Could not find file",
-            "System.Linq.Enumerable+EnumerablePartition`1[System.Char]",
             "SshOperationTimeoutException: Session operation has timed out",
             "Connection refused ---> System.Net.Sockets.SocketException"
         };
