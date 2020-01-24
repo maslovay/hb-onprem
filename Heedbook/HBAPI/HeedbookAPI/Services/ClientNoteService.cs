@@ -29,7 +29,7 @@ namespace UserOperations.Services
             _requestFilters = requestFilters;
             _repository = repository;
         }
-        public async Task<ICollection<ClientNote>> GetAll(Guid clientId)
+        public async Task<ICollection<GetClientNote>> GetAll(Guid clientId)
         {
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
@@ -39,7 +39,9 @@ namespace UserOperations.Services
             _requestFilters.IsCompanyBelongToUser(corporationId, companyId, clientEntity.CompanyId, role);
 
             return _repository.GetAsQueryable<ClientNote>()
-                .Where(c => c.ClientId == clientId).ToList();
+                .Where(c => c.ClientId == clientId)
+                .Select(c => new GetClientNote(c, c.ApplicationUser))
+                .ToList();
         }
 
         public async Task<ClientNote> Create(PostClientNote clientNote)

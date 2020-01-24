@@ -38,8 +38,8 @@ namespace UserOperations.Controllers
 
         [HttpPut]
         [SwaggerOperation(Summary = "set client email, name, phone", Description = "")]
-        [SwaggerResponse(200, "Saved", typeof(string))]
-        public async Task<string> ClientUpdate([FromBody] PutClient client)
+        [SwaggerResponse(200, "Client", typeof(Client))]
+        public async Task<Client> ClientUpdate([FromBody] PutClient client)
          => await _clientService.Update(client);
 
         [HttpDelete]
@@ -52,12 +52,12 @@ namespace UserOperations.Controllers
         [HttpGet("Clientnote")]
         [SwaggerOperation(Summary = "list of client's notes", Description = "for one client")]
         [SwaggerResponse(200, "ClientNotes[]", typeof(List<ClientNote>))]
-        public async Task<ICollection<ClientNote>> ClientNotesGet([FromQuery(Name = "clientId")] Guid clientId)
+        public async Task<ICollection<GetClientNote>> ClientNotesGet([FromQuery(Name = "clientId")] Guid clientId)
            => await _clientNoteService.GetAll(clientId);
 
         [HttpPost("Clientnote")]
         [SwaggerOperation(Summary = "add new note for client", Description = "")]
-        [SwaggerResponse(200, "Saved", typeof(string))]
+        [SwaggerResponse(200, "ClientNote", typeof(ClientNote))]
         public async Task<ClientNote> ClientNotesCreate([FromBody] PostClientNote clientNote)
         => await _clientNoteService.Create(clientNote);
 
