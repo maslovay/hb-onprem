@@ -4,6 +4,7 @@ using UserOperations.Services;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Models.Session;
 using Microsoft.AspNetCore.Authorization;
+using UserOperations.Models;
 
 namespace UserOperations.Controllers
 {
@@ -42,7 +43,7 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Save \"Client Does not smile\" alert in base")]
         [SwaggerResponse(400, "Exception occured", typeof(string))]
         [SwaggerResponse(200, "Alert saved")]
-        public string AlertNotSmile([FromBody] Guid applicationUserId) =>
-            _sessionService.AlertNotSmile(applicationUserId);
+        public string AlertNotSmile([FromBody] AlertModel alertModel) =>
+            _sessionService.AlertNotSmile(alertModel);
     }
 }

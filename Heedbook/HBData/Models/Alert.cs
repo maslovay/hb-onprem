@@ -32,7 +32,7 @@ namespace HBData.Models
         /// <summary>
         ///     User id
         /// </summary>
-        public Guid ApplicationUserId { get; set; }
+        public Guid? ApplicationUserId { get; set; }
         [JsonIgnore]
         [ForeignKey("ApplicationUserId")]
         public ApplicationUser ApplicationUser { get; set; }
