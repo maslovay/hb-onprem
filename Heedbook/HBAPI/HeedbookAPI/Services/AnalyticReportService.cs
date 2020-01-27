@@ -199,8 +199,7 @@ namespace UserOperations.Services
                     && p.StatusId == 7
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
-                    && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new SessionInfo
                 {
                     ApplicationUserId = p.ApplicationUserId,
