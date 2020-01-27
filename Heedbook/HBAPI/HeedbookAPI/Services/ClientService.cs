@@ -64,14 +64,14 @@ namespace UserOperations.Services
                     Gender = c.Gender,
                     Phone = c.Phone,
                     StatusId = c.StatusId,
-                    ClientNotes = c.ClientNotes,
+                    ClientNotes = c.ClientNotes.Select(x => new GetClientNote(x, x.ApplicationUser)),
                     DialogueIds =  c.Dialogues.Where(d => d.BegTime >= begTime && d.EndTime <= endTime).Select(d => d.DialogueId)
                 });
             return data.ToList();
             }
         
 
-        public async Task<string> Update(PutClient client)
+        public async Task<Client> Update(PutClient client)
         {
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
@@ -90,7 +90,7 @@ namespace UserOperations.Services
             }
             _repository.Update<Client>(clientEntity);
             await _repository.SaveAsync();
-            return "Saved";
+            return clientEntity;
         }
 
         public async Task<string> Delete(Guid clientId)
