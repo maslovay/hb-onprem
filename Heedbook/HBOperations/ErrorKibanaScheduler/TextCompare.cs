@@ -53,7 +53,8 @@ namespace ErrorKibanaScheduler
         {
             try
             {
-                str = str.Substring(str.IndexOf('}') + 1);
+                str = str.Substring(str.IndexOf("{Path}") + 7);
+                str = str.Substring(str.IndexOf("{DialogueId}") + 12);
                 str = str.Remove(str.IndexOf(" at "));
                 return String.Concat(str.Take(150));
             }
