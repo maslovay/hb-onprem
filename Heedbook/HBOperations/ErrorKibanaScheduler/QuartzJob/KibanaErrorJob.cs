@@ -20,7 +20,7 @@ namespace ErrorKibanaScheduler.QuartzJob
     public class KibanaErrorJob : IJob
     {
         private ElasticClientFactory _elasticClientFactory;
-        private MessengerClient _client;
+        private readonly MessengerClient _client;
         private UriPathOnKibana _path;
         private readonly INotificationPublisher _publisher;
 
@@ -44,7 +44,7 @@ namespace ErrorKibanaScheduler.QuartzJob
             var client = new ElasticClient(settings);
             try
             {
-                var period = DateTime.UtcNow.AddHours(-4);
+                var period = DateTime.Now.AddHours(-4);
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
                         .Includes(i => i
@@ -85,6 +85,7 @@ namespace ErrorKibanaScheduler.QuartzJob
 
                 for (int i = 0; i < documents.Count(); i++)
                 {
+                    documents[i].OriginalFormat = dmp.ReplaceGuids(documents[i].OriginalFormat);
                     documents[i].OriginalFormat = dmp.ReplaceForMainError(documents[i].OriginalFormat);
                 }
 
@@ -107,7 +108,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
                 
 
-                var errMsg = $"<b>PERIOD: {period.ToLocalTime().ToShortTimeString()} - {DateTime.UtcNow.ToLocalTime().ToShortTimeString()}</b>";
+                var errMsg = $"<b>PERIOD: {period.ToLocalTime().ToShortTimeString()} - {DateTime.Now.ToShortTimeString()}</b>";
                 var head = new MessengerMessageRun()
                 {
                     logText = errMsg,
