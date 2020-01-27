@@ -19,13 +19,17 @@ namespace ErrorKibanaScheduler
                 "The connection pool has been exhausted, either raise MaxPoolSize",
                 "FileNotFoundException: Could not find file",
                 "SshOperationTimeoutException: Session operation has timed out",
-                "Connection refused ---> System.Net.Sockets.SocketException"
+                "Connection refused ---> System.Net.Sockets.SocketException",
+                "Error dialogue.",
+                "Exception occured with this input parameters"
         };
 
-        public double CompareText(string firstLog, string secondLog)
-        {   
-            var firstList = firstLog.Split(' ').ToList();
-            var secondList = secondLog.Split(' ').ToList();
+        public double CompareText(string log1, string funcName1, string log2, string funcName2)
+        {
+            if (funcName1 != funcName2)
+                return 0;
+            var firstList = log1.Split(' ').ToList();
+            var secondList = log2.Split(' ').ToList();
             double count;
             if (firstList.Count <= secondList.Count)
             {

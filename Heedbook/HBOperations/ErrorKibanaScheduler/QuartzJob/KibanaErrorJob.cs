@@ -83,26 +83,26 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var dmp = new TextCompare();
                 System.Console.WriteLine($"documents count: {documents.Count}");
 
-               
+                for (int i = 0; i < documents.Count(); i++)
+                {
+                    documents[i].OriginalFormat = dmp.ReplaceForMainError(documents[i].OriginalFormat);
+                }
 
                 ///---remove the same OriginalFormats of errors
                 for (var i = 0; i < documents.Count; i++)
                 {
                     for (int j = documents.Count - 1; j > i; j--)
                     {
-                        var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
-                        if (percentageMatch >= 80)
+                        var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[i].FunctionName, documents[j].OriginalFormat, documents[j].FunctionName);
+                        if (percentageMatch >= 90)
                         {
                             documents[i].Count++;
                             documents.RemoveAt(j);
                         }
-                    } 
+                    }
                 }
 
-                for (int i = 0; i < documents.Count(); i++)
-                {
-                    documents[i].OriginalFormat = dmp.ReplaceForMainError(documents[i].OriginalFormat);
-                }
+            
 
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
                 
