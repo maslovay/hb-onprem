@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Nest;
 
@@ -8,7 +9,7 @@ namespace ErrorKibanaScheduler
 {
     public class TextCompare
     {
-        static string[] errorsArray = new string[]
+        string[] errorsArray = new string[]
         {
                 "Collection was modified; enumeration operation may not execute",
                 "FileNotFoundException: The specified path does not exist",
@@ -19,16 +20,21 @@ namespace ErrorKibanaScheduler
                 "The connection pool has been exhausted, either raise MaxPoolSize",
                 "FileNotFoundException: Could not find file",
                 "SshOperationTimeoutException: Session operation has timed out",
-                "Connection refused ---> System.Net.Sockets.SocketException",
-                "Error dialogue.",
-                "Exception occured with this input parameters",
-                "Error with stt results for"
+                "Connection refused ---> System.Net.Sockets.SocketException",               
+                "Too many holes in dialogue"
         };
+
+        //"Error dialogue.",
+        //       "Exception occured with this input parameters",
+        //       "Error with stt results for",
+        //       "System.NullReferenceException: Object reference not set to an instance of an object",
 
         public double CompareText(string log1, string funcName1, string log2, string funcName2)
         {
             if (funcName1 != funcName2)
                 return 0;
+            if (log1 == log2)
+                return 100;
             var firstList = log1.Split(' ').ToList();
             var secondList = log2.Split(' ').ToList();
             double count;
@@ -47,22 +53,23 @@ namespace ErrorKibanaScheduler
         public string ReplaceForMainError(string str)
         {
             var replacePhrase = errorsArray.Where(x => str.Contains(x)).FirstOrDefault();
-            return replacePhrase ?? FindMainError(str);
+            return replacePhrase ?? ReplacePath(str);
         }
 
-        private string FindMainError(string str)
+        public string ReplaceGuids(string s)
         {
-            try
-            {
-                str = str.Substring(str.IndexOf("{Path}") + 7);
-                str = str.Substring(str.IndexOf("{DialogueId}") + 12);
-                str = str.Remove(str.IndexOf(" at "));
-                return String.Concat(str.Take(150));
-            }
-            catch
-            {
-                return String.Concat(str.Take(150));
-            }
+            Regex regex = new Regex(@"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", RegexOptions.IgnoreCase);
+            return regex.Replace(s, "");
+        }
+
+        private string ReplacePath(string s)
+        {
+            Regex regex = new Regex(@"\{Path\}", RegexOptions.IgnoreCase);
+            s = regex.Replace(s, "");
+            regex = new Regex(@"\{DialogueId\}", RegexOptions.IgnoreCase);
+            s = regex.Replace(s, "");
+            s = s.Remove(s.IndexOf(" at "));
+            return String.Concat(s.Take(150));
         }
     }
 }
