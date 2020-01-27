@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using AlarmSender.DataStructures;
+using MessengerReporterService.Models;
 using Telegram.Bot.Types;
 
 namespace MessengerReporterService.Senders

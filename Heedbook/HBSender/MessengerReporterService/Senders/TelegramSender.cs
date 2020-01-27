@@ -5,8 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
-using AlarmSender.DataStructures;
+using MessengerReporterService.Models;
 using Microsoft.Extensions.Configuration;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
@@ -18,14 +20,17 @@ namespace MessengerReporterService.Senders
         private readonly List<string> _commands = new List<string>(10);
         private int updatesOffset = 0;
         private readonly object syncObj = new object();
+        private readonly INotificationPublisher _publisher;
 
-        public TelegramSender(/*ILogger logger, */ IConfiguration configuration)
+        public TelegramSender(/*ILogger logger, */ IConfiguration configuration, INotificationPublisher publisher)
         {
             //_logger = logger;
             _configuration = configuration;
 
             var chatSections = _configuration.GetSection("AlarmSender").GetSection("Chats").GetChildren().ToArray();
-
+            _publisher = publisher;
+            
+            CommandReceived += SendCommand;
             foreach (var section in chatSections)
             {
                 try
@@ -87,6 +92,14 @@ namespace MessengerReporterService.Senders
                 Console.WriteLine("TelegramSender.ProcessCallbackImmediately() exception: " + ex.Message);
                 chat.Client?.StopReceiving();
             }
+        }
+        private void SendCommand(string command)
+        {
+            var message = new IntegrationTestsRun()
+            {
+                Command = command
+            };
+            _publisher.Publish(message);
         }
 
         protected override string Poll(string chatName)
