@@ -331,7 +331,7 @@ namespace DialogueMarkUp.QuartzJobs
             return frameAttribute;
         }
         
-        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double threshold = 0.4)
+        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double threshold = 0.36)
         {   
             var frameCompare = frameAttribute.Last();
             if (frameCompare.FileFrame.FaceId != null) 
