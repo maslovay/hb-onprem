@@ -69,7 +69,33 @@ namespace UserOperations.Services
                 });
             return data.ToList();
             }
-        
+
+        public async Task<GetClient> Get(Guid clientId)
+        {
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
+
+            var data = _repository.GetAsQueryable<Client>()
+                .Where( c => c.ClientId == clientId)
+                .Select(c => new GetClient()
+                {
+                    ClientId = c.ClientId,
+                    Age = c.Age,
+                    Avatar = c.Avatar != null ? _fileRef.GetFileLink(_containerName, c.Avatar, default) : null,
+                    CompanyId = c.CompanyId,
+                    CorporationId = c.CorporationId,
+                    Email = c.Email,
+                    Name = c.Name,
+                    Gender = c.Gender,
+                    Phone = c.Phone,
+                    StatusId = c.StatusId,
+                    ClientNotes = c.ClientNotes.Select(x => new GetClientNote(x, x.ApplicationUser)),
+                    DialogueIds = c.Dialogues.Select(d => d.DialogueId)
+                })
+                .FirstOrDefault();
+            return data;
+        }
+
 
         public async Task<Client> Update(PutClient client)
         {

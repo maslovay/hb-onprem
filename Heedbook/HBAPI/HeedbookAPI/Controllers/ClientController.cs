@@ -36,6 +36,12 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endAge")] int endAge = 100 ) 
             => await _clientService.GetAll( beg, end, genders, companyIds, begAge, endAge);
 
+        [HttpGet]
+        [SwaggerOperation(Summary = "one client by id", Description = "with dialogue ids and client notes")]
+        [SwaggerResponse(200, "Client", typeof(GetClient))]
+        public async Task<GetClient> ClientGet([FromQuery(Name = "clientId")] Guid clientId)
+         => await _clientService.Get(clientId);
+
         [HttpPut]
         [SwaggerOperation(Summary = "set client email, name, phone", Description = "")]
         [SwaggerResponse(200, "Client", typeof(Client))]
