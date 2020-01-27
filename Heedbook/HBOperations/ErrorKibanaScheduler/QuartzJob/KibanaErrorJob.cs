@@ -107,7 +107,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
                 
 
-                var errMsg = $"<b>PERIOD: {period.ToShortTimeString()} - {DateTime.UtcNow.ToShortTimeString()}</b>";
+                var errMsg = $"<b>PERIOD: {period.ToLocalTime().ToShortTimeString()} - {DateTime.UtcNow.ToLocalTime().ToShortTimeString()}</b>";
                 var head = new MessengerMessageRun()
                 {
                     logText = errMsg,
@@ -122,7 +122,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                     var aLink = $"<a href=\"{link}\">{function.Key} </a>";
 
                     errMsg = String.Concat(function.Select(x => 
-                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.ToLongTimeString()})\n\n"));
+                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.ToLocalTime().ToLongTimeString()})\n\n"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
