@@ -210,6 +210,8 @@ namespace UserOperations.Services
                 throw new AccessException($"Not allowed user company");
 
             user.StatusId = disabledStatus;
+            user.Email = user.Email+"_deleted";
+            user.NormalizedEmail = user.Email + "_DELETED";
             await _repository.SaveAsync();
             try
             {
@@ -304,7 +306,7 @@ namespace UserOperations.Services
         private async Task<List<ApplicationUser>> GetUsersForAdminAsync()
         {
             return await _repository.GetAsQueryable<ApplicationUser>().Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                        .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToListAsync();     //2 active, 3 - disabled     
+                        .Where(p => p.StatusId != disabledStatus).ToListAsync();     //2 active, 3 - disabled     
         }
 
         private async Task<List<ApplicationUser>> GetUsersForSupervisorAsync(Guid corporationIdInToken, Guid userIdInToken)
@@ -313,7 +315,7 @@ namespace UserOperations.Services
                         .Include(p => p.UserRoles).ThenInclude(x => x.Role)
                         .Include(p => p.Company)
                         .Where(p => p.Company.CorporationId == corporationIdInToken
-                            && (p.StatusId == activeStatus || p.StatusId == disabledStatus)
+                            && (p.StatusId != disabledStatus)
                             && p.Id != userIdInToken)
                         .ToListAsync();
         }
@@ -324,7 +326,7 @@ namespace UserOperations.Services
                       .Include(p => p.UserRoles).ThenInclude(x => x.Role)
                       .Include(p => p.Company)
                       .Where(p => p.CompanyId == companyIdInToken
-                          && (p.StatusId == activeStatus)
+                          && (p.StatusId != disabledStatus)
                           && p.Id != userIdInToken)
                       .ToListAsync();
         }
@@ -336,7 +338,7 @@ namespace UserOperations.Services
         private async Task<ApplicationUser> GetUserWithRoleAndCompanyByIdAsync(Guid userId)
         {
             return await _repository.GetAsQueryable<ApplicationUser>()
-                 .Where(p => p.Id == userId && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
+                 .Where(p => p.Id == userId && (p.StatusId != disabledStatus))
                  .Include(x => x.Company)
                  .Include(p => p.UserRoles)
                  .ThenInclude(x => x.Role)
