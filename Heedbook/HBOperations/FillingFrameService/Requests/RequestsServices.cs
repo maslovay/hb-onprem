@@ -4,7 +4,9 @@ using System.Globalization;
 using System.Linq;
 using HBData;
 using HBData.Models;
+using HBMLHttpClient.Model;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using RabbitMqEventBus.Events;
 
 namespace  FillingFrameService.Requests
@@ -38,17 +40,20 @@ namespace  FillingFrameService.Requests
                 .ToList();
         }
 
-        public FileFrame FindFileAvatar(DialogueCreationRun message, List<FileFrame> frames)
+        public FileFrame FindFileAvatar(DialogueCreationRun message, List<FileFrame> frames, bool isExtended)
         {
             FileFrame fileAvatar;
-            if ( !string.IsNullOrWhiteSpace(message.AvatarFileName))
+            if ( !string.IsNullOrWhiteSpace(message.AvatarFileName) && isExtended)
             {
                 fileAvatar = frames.Where(item => item.FileName == message.AvatarFileName).FirstOrDefault();
                 if (fileAvatar == null) fileAvatar = frames.Where(p => p.FrameAttribute.Any()).FirstOrDefault();
             }
             else
             {
-                fileAvatar = frames.Where(p => p.FrameAttribute.Any()).FirstOrDefault();
+                fileAvatar = frames
+                    .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)
+                    .FirstOrDefault();
+                // .ForEach(p => p.Value= JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value));
             }
             return fileAvatar;
         }

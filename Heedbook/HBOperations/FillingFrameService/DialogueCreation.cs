@@ -71,7 +71,8 @@ namespace FillingFrameService
 
                 if (emotions.Any() && attributes.Any())
                 {
-                    var fileAvatar = _requests.FindFileAvatar(message, frames);
+                    var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended);
+                    _log.Info($"Avatar is {JsonConvert.SerializeObject(fileAvatar)}");
                     var frameVideo = new FileVideo();
                     if (!isExtended)
                     {
