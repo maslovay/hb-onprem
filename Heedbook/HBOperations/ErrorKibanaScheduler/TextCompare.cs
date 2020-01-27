@@ -68,7 +68,11 @@ namespace ErrorKibanaScheduler
             s = regex.Replace(s, "");
             regex = new Regex(@"\{DialogueId\}", RegexOptions.IgnoreCase);
             s = regex.Replace(s, "");
-            s = s.Remove(s.IndexOf(" at "));
+            try
+            {
+                s = s.Remove(s.IndexOf(" at "));
+            }
+            catch { }
             return String.Concat(s.Take(150));
         }
     }
