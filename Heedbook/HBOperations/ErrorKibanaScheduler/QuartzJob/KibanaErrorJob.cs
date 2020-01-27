@@ -109,8 +109,10 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
 
 
-                var localRusTime = period.AddHours(4);
-                var errMsg = $"<b>PERIOD: {localRusTime.ToString()} - {localRusTime.AddHours(periodHours).ToString()}</b>";
+                var localRusTimeStart = period.AddHours(4);
+                var localRusTimeEnd = DateTime.UtcNow.AddHours(4);
+
+                var errMsg = $"<b>PERIOD: {localRusTimeStart.ToString()} - {localRusTimeEnd.ToString()}</b>";
                 var head = new MessengerMessageRun()
                 {
                     logText = errMsg,
@@ -121,7 +123,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                 foreach (var function in groupingByName)
                 {
 
-                    var link = @"https://heedbookslave.northeurope.cloudapp.azure.com/app/kibana#/discover?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:'"+period+@"',mode:absolute,to:'"+DateTime.Now+@"'))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',key:LogLevel,negate:!t,params:(query:Information,type:phrase),type:phrase,value:Information),query:(match:(LogLevel:(query:Information,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',key:FunctionName,negate:!f,params:(query:"+function.Key+ @",type:phrase),type:phrase,value:" + function.Key + @"),query:(match:(FunctionName:(query:" + function.Key + @",type:phrase))))),index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))";
+                    var link = @"https://heedbookslave.northeurope.cloudapp.azure.com/app/kibana#/discover?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:'"+ localRusTimeStart + @"',mode:absolute,to:'"+ localRusTimeEnd +@"'))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',key:LogLevel,negate:!t,params:(query:Information,type:phrase),type:phrase,value:Information),query:(match:(LogLevel:(query:Information,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',key:FunctionName,negate:!f,params:(query:"+function.Key+ @",type:phrase),type:phrase,value:" + function.Key + @"),query:(match:(FunctionName:(query:" + function.Key + @",type:phrase))))),index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))";
                     var aLink = $"<a href=\"{link}\">{function.Key} </a>";
 
                     errMsg = String.Concat(function.Select(x => 
