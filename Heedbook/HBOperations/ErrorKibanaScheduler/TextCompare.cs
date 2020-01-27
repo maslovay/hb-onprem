@@ -21,7 +21,8 @@ namespace ErrorKibanaScheduler
                 "SshOperationTimeoutException: Session operation has timed out",
                 "Connection refused ---> System.Net.Sockets.SocketException",
                 "Error dialogue.",
-                "Exception occured with this input parameters"
+                "Exception occured with this input parameters",
+                "Error with stt results for"
         };
 
         public double CompareText(string log1, string funcName1, string log2, string funcName2)
@@ -53,7 +54,8 @@ namespace ErrorKibanaScheduler
         {
             try
             {
-                str = str.Substring(str.IndexOf('}') + 1);
+                str = str.Substring(str.IndexOf("{Path}") + 7);
+                str = str.Substring(str.IndexOf("{DialogueId}") + 12);
                 str = str.Remove(str.IndexOf(" at "));
                 return String.Concat(str.Take(150));
             }
