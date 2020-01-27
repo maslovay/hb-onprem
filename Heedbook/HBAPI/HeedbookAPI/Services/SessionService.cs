@@ -91,10 +91,18 @@ namespace UserOperations.Services
             return response;
         }
 
-        public object SessionStatus(Guid deviceId, Guid? applicationUserId)
+        public object SessionStatus(Guid? deviceId, Guid? applicationUserId)
         {
             Session session = null;
-            if (applicationUserId != null)
+            if (applicationUserId != null && deviceId == null)
+            {
+                session = _repository.GetAsQueryable<Session>()
+                        .Where(p => p.ApplicationUserId == applicationUserId)
+                            ?.OrderByDescending(p => p.BegTime)
+                            ?.FirstOrDefault();
+            }
+
+            else if (applicationUserId != null)
             {
                 session = _repository.GetAsQueryable<Session>()
                         .Where(p => p.DeviceId == deviceId && p.ApplicationUserId == applicationUserId)
@@ -108,7 +116,7 @@ namespace UserOperations.Services
                             ?.OrderByDescending(p => p.BegTime)
                             ?.FirstOrDefault();
             }
-            var result = new { session?.BegTime, session?.StatusId, session.ApplicationUserId };
+            var result = new { session?.BegTime, session?.StatusId, session?.ApplicationUserId, session?.DeviceId };
             return result;
         }      
 

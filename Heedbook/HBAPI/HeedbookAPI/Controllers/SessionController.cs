@@ -36,7 +36,7 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Description = "Returns begin time and StatusId for last Session (for device or for user on device). DeviceId required in params. Device or user token required")]
         [SwaggerResponse(400, "Exception occured", typeof(string))]
         [SwaggerResponse(200, "Last session exist")]
-        public object SessionStatus([FromQuery] Guid deviceId, [FromQuery] Guid? applicationUserId) =>
+        public object SessionStatus([FromQuery] Guid? deviceId, [FromQuery] Guid? applicationUserId) =>
             _sessionService.SessionStatus(deviceId, applicationUserId);
         
         [HttpPost("AlertNotSmile")]
