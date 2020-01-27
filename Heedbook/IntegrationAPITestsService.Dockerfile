@@ -9,6 +9,8 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/IntegrationAPITestsService/publish .
 ENTRYPOINT ["dotnet", "IntegrationAPITestsService.dll"]
+RUN mkdir -p /db/
+RUN chmod -R 777 /db/
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download
