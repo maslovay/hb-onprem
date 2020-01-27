@@ -22,7 +22,7 @@ namespace ErrorKibanaScheduler
                 return TriggerBuilder.Create()
                     .WithIdentity("KibanaErrorJob.trigger", "KibanaError")
                     .StartNow()
-                    .WithSimpleSchedule(s => s.WithIntervalInHours(4).RepeatForever())
+                    .WithSimpleSchedule(s => s.WithIntervalInHours(24).RepeatForever())
                     .Build();
             });
 

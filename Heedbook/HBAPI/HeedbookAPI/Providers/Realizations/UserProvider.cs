@@ -31,7 +31,7 @@ namespace UserOperations.Providers
         public async Task<ApplicationUser> GetUserWithRoleAndCompanyByIdAsync(Guid userId)
         {
            return await _repository.GetAsQueryable<ApplicationUser>()
-                .Where(p => p.Id == userId && (p.StatusId == activeStatus || p.StatusId == disabledStatus))
+                .Where(p => p.Id == userId && (p.StatusId != disabledStatus))
                 .Include(x => x.Company)
                 .Include(p => p.UserRoles)
                 .ThenInclude(x => x.Role)
@@ -41,7 +41,7 @@ namespace UserOperations.Providers
         public async Task<List<ApplicationUser>> GetUsersForAdminAsync()
         {
             return await _repository.GetAsQueryable<ApplicationUser>().Include(p => p.UserRoles).ThenInclude(x => x.Role)
-                        .Where(p => p.StatusId == activeStatus || p.StatusId == disabledStatus).ToListAsync();     //2 active, 3 - disabled     
+                        .Where(p => p.StatusId != disabledStatus).ToListAsync();     //2 active, 3 - disabled     
         }
 
         public async Task<List<ApplicationUser>> GetUsersForSupervisorAsync(Guid corporationIdInToken, Guid userIdInToken)
@@ -50,7 +50,7 @@ namespace UserOperations.Providers
                             .Include(p => p.UserRoles).ThenInclude(x => x.Role)
                             .Include(p => p.Company)
                             .Where(p => p.Company.CorporationId == corporationIdInToken
-                                && (p.StatusId == activeStatus || p.StatusId == disabledStatus)
+                                && (p.StatusId != disabledStatus)
                                 && p.Id != userIdInToken)
                             .ToListAsync();
         }
@@ -61,7 +61,7 @@ namespace UserOperations.Providers
                       .Include(p => p.UserRoles).ThenInclude(x => x.Role)
                       .Include(p => p.Company)
                       .Where(p => p.CompanyId == companyIdInToken
-                          && (p.StatusId == activeStatus)
+                          && (p.StatusId != disabledStatus)
                           && p.Id != userIdInToken)
                       .ToListAsync();
         }
@@ -137,8 +137,10 @@ namespace UserOperations.Providers
             return user;
         }
 
-        public async Task SetUserInactiveAsync(ApplicationUser user)
+        public async Task SetUserDisabledAsync(ApplicationUser user)
         {
+            user.Email = user.Email + "_deleted";
+            user.NormalizedEmail = user.Email + "_DELETED";
             user.StatusId = disabledStatus;
             await _repository.SaveAsync();
         }

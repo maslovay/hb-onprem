@@ -251,7 +251,7 @@ namespace UserOperations.Controllers
                 if (!_requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, user.CompanyId, roleInToken))
                     return BadRequest($"Not allowed user company");
 
-                await _userProvider.SetUserInactiveAsync(user);
+                await _userProvider.SetUserDisabledAsync(user);
                 try
                 {
                     await _userProvider.DeleteUserWithRolesAsync(user);
