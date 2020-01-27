@@ -20,7 +20,7 @@ namespace UserOperations.Providers
         Task<bool> CheckUniqueEmailAsync(string email);
         Task<bool> CheckAbilityToCreateOrChangeUserAsync(string roleInToken, Guid? newUserRoleId, Guid? oldUserRoleId);
         Task<bool> CheckAbilityToDeleteUserAsync(string roleInToken, Guid deletedUserRoleId);
-        Task SetUserInactiveAsync(ApplicationUser user);
+        Task SetUserDisabledAsync(ApplicationUser user);
         Task DeleteUserWithRolesAsync(ApplicationUser user);
         //---COMPANY----
         Task<Company> GetCompanyByIdAsync(Guid companyId);
