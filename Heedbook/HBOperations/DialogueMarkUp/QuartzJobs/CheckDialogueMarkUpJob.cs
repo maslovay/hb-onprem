@@ -46,21 +46,22 @@ namespace DialogueMarkUp.QuartzJobs
             var _log = _elasticClientFactory.GetElasticClient();
             var periodTime = 5 * 60; 
             var periodFrame = 45;
+            var begMarkUpTime = DateTime.UtcNow.AddDays(-2);
 
             try
             {
                 var endTime = DateTime.UtcNow.AddMinutes(-30);
                 var frameAttributes = _context.FrameAttributes
                     .Include(p => p.FileFrame)
-                    .Where(p => p.FileFrame.StatusNNId == 6 && p.FileFrame.Time < endTime)
+                    .Where(p => p.FileFrame.Time > begMarkUpTime && p.FileFrame.Time < endTime && p.FileFrame.FaceLength > 0)
                     .OrderBy(p => p.FileFrame.Time)
                     .GroupBy(p => p.FileFrame.FileName)
                     .Select(p => p.FirstOrDefault())
                     .ToList();
-                // frameAttributes = frameAttributes.Where(p => JsonConvert.DeserializeObject<Value>(p.Value).Height > 135 && 
-                    // JsonConvert.DeserializeObject<Value>(p.Value).Height > 135).ToList();
+                frameAttributes = frameAttributes.Where(p => JsonConvert.DeserializeObject<Value>(p.Value).Height > 135 && 
+                    JsonConvert.DeserializeObject<Value>(p.Value).Height > 135).ToList();
                 System.Console.WriteLine(frameAttributes.Count());
-                var appUsers = frameAttributes.Select(p => p.FileFrame.ApplicationUserId).Distinct().ToList();
+                var appUsers = frameAttributes.Where(p => p.FileFrame.StatusNNId == 6).Select(p => p.FileFrame.ApplicationUserId).Distinct().ToList();
                 
                 var minTime = frameAttributes.Min(p => p.FileFrame.Time);
                 var videos = _context.FileVideos.Where(p => appUsers.Contains(p.ApplicationUserId) && p.EndTime >= minTime).ToList();
@@ -75,7 +76,7 @@ namespace DialogueMarkUp.QuartzJobs
                     var videosUser = videos.Where(p => p.ApplicationUserId == applicationUserId).ToList();
 
                     framesUser = FindAllFaceId(framesUser, periodFrame, periodTime);
-                    framesUser = UpdateFrameAttributes(framesUser, videosUser);
+                    // framesUser = UpdateFrameAttributes(framesUser, videosUser);
                     
                     var videoFacesUser = CreateVideoFaces(framesUser, videosUser);
                     _context.AddRange(videoFacesUser.Select(p => new VideoFace{
@@ -331,15 +332,15 @@ namespace DialogueMarkUp.QuartzJobs
             return frameAttribute;
         }
         
-        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double threshold = 0.37)
-        {
+        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double threshold = 0.4)
+        {   
             var frameCompare = frameAttribute.Last();
             if (frameCompare.FileFrame.FaceId != null) 
             {
                 return frameCompare.FileFrame.FaceId;
             }
 
-            frameAttribute = frameAttribute.Where(p => p.FileFrame.Time >= frameCompare.FileFrame.Time.AddMinutes(-periodTime)).ToList();
+            frameAttribute = frameAttribute.Where(p => p.FileFrame.Time >= frameCompare.FileFrame.Time.AddSeconds(-periodTime)).ToList();
             var index = frameAttribute.Count() - 1;
             var lastFrame = frameAttribute[index];
                 
