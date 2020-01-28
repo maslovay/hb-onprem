@@ -264,7 +264,8 @@ namespace UserOperations.Controllers
                                && p.StatusId == 3
                                && p.InStatistic == true
                                && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                               && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                               && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
+                               && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId)))
                    .Select(p => new DialogueInfo
                     {
                         DialogueId = p.DialogueId,
