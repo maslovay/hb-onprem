@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using IntegrationAPITestsService.Models;
+using Newtonsoft.Json;
 using SQLite;
 
 namespace IntegrationAPITestsService.sqlite3
@@ -13,12 +14,20 @@ namespace IntegrationAPITestsService.sqlite3
         {
             Console.WriteLine("DbOperations() : establishing connection...");
 
-            using (var conn = new SQLiteConnection(dbName))
+            using (var conn = new SQLite.SQLiteConnection(dbName))
             {
+                
                 Console.WriteLine("DbOperations() : connection established! Creating/checking tables...");
-                conn.CreateTable<TestTask>();
-                conn.CreateTable<TestTaskWithDelayedResult>();
-                conn.CreateTable<TestResponse>();
+                try
+                {
+                    conn.CreateTable<TestTask>();
+                    conn.CreateTable<TestTaskWithDelayedResult>();
+                    conn.CreateTable<TestResponse>();
+                }
+                catch(Exception ex)
+                {
+                    System.Console.WriteLine($"Exception: \n{ex}");
+                }
             }
             
             Console.WriteLine("DbOperations() : OK!");

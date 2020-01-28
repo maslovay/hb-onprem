@@ -51,7 +51,7 @@ namespace IntegrationAPITestsService
             services.AddSingleton<DelayedTestsRunner>();
             services.AddSingleton<ExternalResourceTestsRunner>();
             services.AddSingleton<Checker>();
-            services.AddSingleton<DbOperations>();
+            //services.AddSingleton<DbOperations>();
             services.AddSingleton<ResultsPublisher>();
             services.AddSingleton<LogsPublisher>();
             services.AddTransient<IntegrationTests>();
