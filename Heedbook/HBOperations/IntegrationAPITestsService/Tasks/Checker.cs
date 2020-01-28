@@ -14,11 +14,12 @@ namespace IntegrationAPITestsService.Tasks
 {
     public class Checker
     {
-        private readonly DbOperations _dbOperations;
+        //private readonly DbOperations _dbOperations;
 
-        public Checker(DbOperations dbOperations)
+        // public Checker(DbOperations dbOperations)
+        public Checker()
         {
-            _dbOperations = dbOperations;
+            //_dbOperations = dbOperations;
         }
 
         public TestResponse Check<T>(T ttask)
@@ -26,7 +27,7 @@ namespace IntegrationAPITestsService.Tasks
         {
             try
             {            
-                _dbOperations.InsertTask(ttask);
+                //_dbOperations.InsertTask(ttask);
 
                 if (ttask.Method == "ftp")
                     return CheckFtp(ttask);
@@ -99,7 +100,7 @@ namespace IntegrationAPITestsService.Tasks
                         }
                     }
 
-                    _dbOperations.InsertResponse(testResponse);
+                    //_dbOperations.InsertResponse(testResponse);
                     return testResponse;
                 }
             }
@@ -123,7 +124,19 @@ namespace IntegrationAPITestsService.Tasks
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Exception:\n{ex}");
-                return null;
+                var failResponse = new TestResponse()
+                {
+                    TaskId = ttask.TaskId,
+                    ResponseId = Guid.NewGuid(),
+                    TaskName = ttask.Name,
+                    IsPositive = false,
+                    Info = $"Exception: {ex}",
+                    Timestamp = DateTime.Now,
+                    ResultMessage = ttask.FailMessage,
+                    Url = ttask.Url,
+                    IsFilled = true
+                };
+                return failResponse;
             }
         }
 

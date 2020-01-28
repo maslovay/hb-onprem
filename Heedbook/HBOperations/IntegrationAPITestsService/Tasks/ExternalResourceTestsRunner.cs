@@ -7,6 +7,7 @@ using System.Threading;
 using IntegrationAPITestsService.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Notifications.Base;
 using RabbitMqEventBus;
 
 namespace IntegrationAPITestsService.Tasks
@@ -19,8 +20,8 @@ namespace IntegrationAPITestsService.Tasks
             //NLog.ILogger logger, 
             Checker checker, 
             IServiceProvider serviceProvider,
-            INotificationPublisher publisher) : 
-            base(configuration, checker, serviceProvider, publisher)
+            INotificationHandler handler) : 
+            base(configuration, checker, serviceProvider, handler)
             // base(configuration, logger, checker, serviceProvider, publisher)
         {
             _taskFactory = new TaskFactory(settings);

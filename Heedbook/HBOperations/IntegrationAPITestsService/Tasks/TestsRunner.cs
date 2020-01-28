@@ -9,6 +9,7 @@ using IntegrationAPITestsService.Interfaces;
 using IntegrationAPITestsService.Models;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
@@ -23,7 +24,7 @@ namespace IntegrationAPITestsService.Tasks
         //private readonly List<Sender> _senders = new List<Sender>(1);
         //private readonly NLog.ILogger _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly INotificationPublisher _publisher;
+        private readonly INotificationHandler _handler;
         protected RunnerSettings _settings;
         protected TaskFactory _taskFactory;
         
@@ -39,12 +40,13 @@ namespace IntegrationAPITestsService.Tasks
             //NLog.ILogger logger, 
             Checker checker, 
             IServiceProvider serviceProvider,
-            INotificationPublisher publisher)
+            INotificationHandler handler)
         {
             //_logger = logger;
             _checker = checker;
             _configuration = configuration;
             _serviceProvider = serviceProvider;
+            _handler = handler;
         }
 
         protected virtual string TestsFilter { get; }
@@ -106,7 +108,7 @@ namespace IntegrationAPITestsService.Tasks
                     ChannelName = $"ApiTester"
                 };
                 System.Console.WriteLine($"{JsonConvert.SerializeObject(message)}");
-                _publisher.Publish(message);
+                _handler.EventRaised(message);
             };
 
 //            ApiSuccess += resp =>
