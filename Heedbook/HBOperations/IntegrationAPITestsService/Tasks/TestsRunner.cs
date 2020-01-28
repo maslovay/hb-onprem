@@ -55,7 +55,7 @@ namespace IntegrationAPITestsService.Tasks
             //_logger.Info( "Loading Runner...");
             
             //Helper.FetchSenders(_logger, _settings, _senders, _serviceProvider);
-            //FetchSenderEvents();
+            FetchSenderEvents();
             if (_settings.Tests?.Count == 0)
             {
                 //_logger.Error( "Loading Runner... no tests in config!"); 
