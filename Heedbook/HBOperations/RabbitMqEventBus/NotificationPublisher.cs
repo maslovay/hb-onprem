@@ -145,6 +145,7 @@ namespace RabbitMqEventBus
                 }
                 catch (Exception e)
                 {
+                    System.Console.WriteLine($"Exception:\n{e}");
                     var encodingString = Encoding.UTF8.GetString(ea?.Body ?? new byte[0]);
                     var @event = (IntegrationEvent)JsonConvert.DeserializeObject(encodingString,
                         _subsManager.GetEventTypeByName(ea.RoutingKey));
