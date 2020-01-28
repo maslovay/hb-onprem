@@ -88,9 +88,7 @@ namespace UserOperations.Controllers
             {
                 throw e;
             }
-        }  
-
-
+        }
         private void DialogueReport(DateTime beginTime, List<Guid> companyIds, bool isTeacherReport = false)
         {      
             var managerRoleId = _context.Roles.Where(p => p.NormalizedName == "MANAGER").FirstOrDefault().Id;
@@ -175,11 +173,13 @@ namespace UserOperations.Controllers
                         Alert = ListToText(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Alert")
                             .Select(q => q.Phrase.PhraseText).ToList()),
                         Fillers = ListToText(p.DialoguePhrase.Where(q => q.PhraseType.PhraseTypeText == "Fillers")
-                            .Select(q => q.Phrase.PhraseText).ToList())
+                            .Select(q => q.Phrase.PhraseText).ToList()),
+                        AgeTeacher = p.DialogueClientSatisfaction.FirstOrDefault().Age.ToString(),
+                        GenderTeacher = p.DialogueClientSatisfaction.FirstOrDefault().Gender
+
                     })
                 .ToList(); 
         
-
             dialogues.ForEach(p => 
                 p.WordsWord = (p.WordsWord == "[]") ? 
                     "" : 
@@ -267,7 +267,9 @@ namespace UserOperations.Controllers
                     ConstructCell("Fillers", CellValues.String),
                     
                     ConstructCell("Video", CellValues.String),
-                    ConstructCell("Avatar", CellValues.String)
+                    ConstructCell("Avatar", CellValues.String),
+                    ConstructCell("AgeTeacher", CellValues.String),
+                    ConstructCell("GenderTeacher", CellValues.String)
                 );
                 sheetData.AppendChild(row1);
 
@@ -327,7 +329,9 @@ namespace UserOperations.Controllers
                         ConstructCell(dr.Fillers, CellValues.String),
                         
                         ConstructCell(dr.Video, CellValues.String),
-                        ConstructCell(dr.Avatar, CellValues.String)
+                        ConstructCell(dr.Avatar, CellValues.String),
+                        ConstructCell(dr.AgeTeacher, CellValues.String),
+                        ConstructCell(dr.GenderTeacher, CellValues.String)
                     );
                     sheetData.AppendChild(tempRow);
                 }
@@ -411,6 +415,8 @@ namespace UserOperations.Controllers
         public string Alert {get;set;}
         public string Cross {get;set;}
         public string Fillers {get;set;}
+        public string AgeTeacher {get;set;}
+        public string GenderTeacher {get;set;}
     }   
 }
 

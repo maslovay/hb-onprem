@@ -16,40 +16,49 @@ namespace FillingSatisfactionService.Utils
 
         public int? RecalculateTotalScore(DialogueClientSatisfaction dialogueSatisfaction)
         {
-            var totalScore = dialogueSatisfaction.MeetingExpectationsByClient * _config.ClientWeight +
-                dialogueSatisfaction.MeetingExpectationsByEmpoyee * _config.EmployeeWeight +
-                dialogueSatisfaction.MeetingExpectationsByNN * _config.NnWeight +
-                dialogueSatisfaction.MeetingExpectationsByTeacher * _config.TeacherWeight;
+            var totalScore = (dialogueSatisfaction.MeetingExpectationsByClient ?? 0) * _config.ClientWeight +
+                (dialogueSatisfaction.MeetingExpectationsByEmpoyee ?? 0) * _config.EmployeeWeight +
+                (dialogueSatisfaction.MeetingExpectationsByNN ?? 0) * _config.NnWeight +
+                (dialogueSatisfaction.MeetingExpectationsByTeacher ?? 0) * _config.TeacherWeight;
+            System.Console.WriteLine($"Total score is {totalScore}");
+            System.Console.WriteLine((dialogueSatisfaction.MeetingExpectationsByClient ?? 0) * _config.ClientWeight);
+            System.Console.WriteLine((dialogueSatisfaction.MeetingExpectationsByEmpoyee ?? 0) * _config.EmployeeWeight);
+            System.Console.WriteLine((dialogueSatisfaction.MeetingExpectationsByNN ?? 0) * _config.NnWeight);
+            System.Console.WriteLine(_config.NnWeight);
+            System.Console.WriteLine(dialogueSatisfaction.MeetingExpectationsByEmpoyee ?? 0);
+            System.Console.WriteLine(Math.Sign(dialogueSatisfaction.MeetingExpectationsByEmpoyee ?? 0));
+
+
             var totalWeight = Math.Sign(dialogueSatisfaction.MeetingExpectationsByClient ?? 0) * _config.ClientWeight +
                 Math.Sign(dialogueSatisfaction.MeetingExpectationsByEmpoyee ?? 0) * _config.EmployeeWeight +
                 Math.Sign(dialogueSatisfaction.MeetingExpectationsByNN ?? 0) * _config.NnWeight +
                 Math.Sign(dialogueSatisfaction.MeetingExpectationsByTeacher ?? 0) * _config.TeacherWeight;
 
-            return (totalScore == 0) ? null : (Int32?) Math.Max(totalScore / totalWeight ?? 0, 35);
+            return (totalWeight == 0) ? null : (Int32?) Math.Max((Convert.ToInt32(totalScore / totalWeight)), 35);
         }
 
         public int? RecalculateBegTotalScore(DialogueClientSatisfaction dialogueSatisfaction)
         {
-            var begScore = dialogueSatisfaction.BegMoodByEmpoyee * _config.EmployeeWeight +
-                dialogueSatisfaction.BegMoodByNN * _config.NnWeight +
-                dialogueSatisfaction.BegMoodByTeacher * _config.TeacherWeight;
+            var begScore = (dialogueSatisfaction.BegMoodByEmpoyee ?? 0) * _config.EmployeeWeight +
+                (dialogueSatisfaction.BegMoodByNN ?? 0) * _config.NnWeight +
+                (dialogueSatisfaction.BegMoodByTeacher ?? 0) * _config.TeacherWeight;
             var begWeight = Math.Sign(dialogueSatisfaction.BegMoodByEmpoyee ?? 0) * _config.EmployeeWeight +
                 Math.Sign(dialogueSatisfaction.BegMoodByNN ?? 0) * _config.NnWeight +
                 Math.Sign(dialogueSatisfaction.BegMoodByTeacher ?? 0) * _config.TeacherWeight;
 
-            return (begScore == 0) ? null : (Int32?) Math.Max(begScore / begWeight ?? 0, 35);
+            return (begWeight == 0) ? null : (Int32?) Math.Max(Convert.ToInt32(begScore / begWeight), 35);
         }
 
         public int? RecalculateEndTotalScore(DialogueClientSatisfaction dialogueSatisfaction)
         {
-            var endScore = dialogueSatisfaction.EndMoodByEmpoyee * _config.EmployeeWeight +
-                dialogueSatisfaction.EndMoodByNN * _config.NnWeight +
-                dialogueSatisfaction.EndMoodByTeacher * _config.TeacherWeight;
+            var endScore = (dialogueSatisfaction.EndMoodByEmpoyee ?? 0) * _config.EmployeeWeight +
+                (dialogueSatisfaction.EndMoodByNN ?? 0)* _config.NnWeight +
+                (dialogueSatisfaction.EndMoodByTeacher ?? 0) * _config.TeacherWeight;
             var endWeight = Math.Sign(dialogueSatisfaction.EndMoodByEmpoyee ?? 0) * _config.EmployeeWeight +
                 Math.Sign(dialogueSatisfaction.EndMoodByNN ?? 0) * _config.NnWeight +
                 Math.Sign(dialogueSatisfaction.EndMoodByTeacher ?? 0) * _config.TeacherWeight;
 
-            return (endScore == 0) ? null : (Int32?) Math.Max(endScore / endWeight ?? 0, 35);
+            return (endWeight == 0) ? null : (Int32?) Math.Max(Convert.ToInt32(endScore / endWeight), 35);
         }
 
 

@@ -73,6 +73,39 @@ namespace UserOperations.Controllers
             string res1 = await _mailSender.TestReadFile1();
             return Ok(res1);
         }
+
+        [AllowAnonymous]
+        [HttpGet("GetAllData")]
+        public async Task<JsonResult> GetAllDataAsync()
+        {
+            try
+            {  
+                var dialogues = _context.Dialogues
+                    .Include(p => p.DialogueAudio)
+                    .Include(p => p.DialogueClientProfile)
+                    .Include(p => p.DialogueClientSatisfaction)
+                    .Include(p => p.DialogueFrame)
+                    .Include(p => p.DialogueInterval)
+                    .Include(p => p.DialoguePhrase)
+                    .Include(p => p.DialogueSpeech)
+                    .Include(p => p.DialogueVisual)
+                    .Include(p => p.DialogueWord)
+                    .Where(p => p.StatusId == 3)
+                    .Where(p => p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsByTeacher != null &&  p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsByTeacher != 0)
+                    .ToList();
+                System.Console.WriteLine(dialogues.Count());
+                byte[] byteArray = Encoding.ASCII.GetBytes( JsonConvert.SerializeObject(dialogues) );
+                MemoryStream memoryStream = new MemoryStream( byteArray );
+                var fileName = "dump_20191129.txt";
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, "test/", fileName);
+                return Json(dialogues);
+
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
      
 
         [HttpGet("DatabaseFilling")]
@@ -257,6 +290,8 @@ namespace UserOperations.Controllers
             }
             return Ok();
         }
+
+       
         
         [HttpPost("test")]
         public IActionResult test([FromBody]DateTime dateTime)

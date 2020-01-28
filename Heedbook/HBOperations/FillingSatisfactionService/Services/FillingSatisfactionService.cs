@@ -84,6 +84,7 @@ namespace FillingSatisfactionService.Services
                     clientSatisfaction.MeetingExpectationsTotal = _recalc.RecalculateTotalScore(clientSatisfaction);
                     clientSatisfaction.MeetingExpectationsTotal = _recalc.RecalculateTotalScore(clientSatisfaction);
                     clientSatisfaction.MeetingExpectationsTotal = _recalc.RecalculateTotalScore(clientSatisfaction);
+                    _context.DialogueClientSatisfactions.Add(clientSatisfaction);
                 }
                 _context.SaveChanges();
             }

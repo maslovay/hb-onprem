@@ -29,11 +29,13 @@ namespace UserService.Controllers
     {
         private readonly IGenericRepository _repository;
         private readonly RecordsContext _context;
+        private readonly INotificationHandler _handler;
         
-        public TestController(RecordsContext context, IGenericRepository repository)
+        public TestController(RecordsContext context, IGenericRepository repository, INotificationHandler handler)
         {
             _context = context;
             _repository = repository;
+            _handler = handler;
         }
 
         [HttpGet("[action]/{timelInHours}")]
@@ -138,50 +140,26 @@ namespace UserService.Controllers
             Console.WriteLine($"Delta: {dt2-dt1}");
         }
 
-       [HttpPost]
-       [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
-       public async Task<IActionResult> Test()
-       {
-           try
-           {
-               //var applicationUserId = "010039d5-895b-47ad-bd38-eb28685ab9aa";
-               var begTime = DateTime.Now.AddDays(-3);
+         [HttpPost("[action]")]
+        public async Task RecalculateSatisfaction(DateTime? begTime, DateTime? endTime)
+        {
+            var dialogueIds = _context.Dialogues
+                .Where(p => (begTime == null || p.BegTime > begTime) && (endTime == null || p.EndTime < endTime) && p.StatusId == 3 && p.InStatistic == true)
+                .Select(p => p.DialogueId)
+                .ToList();
 
-               var dialogues = _context.Dialogues
-                   .Include(p => p.DialogueFrame)
-                   .Include(p => p.DialogueAudio)
-                   .Include(p => p.DialogueInterval)
-                   .Include(p => p.DialogueVisual)
-                   .Include(p => p.DialogueClientProfile)
-                   .Where(item => item.StatusId == 6)
-                   .ToList();
+            foreach (var dialogueId in dialogueIds)
+            {
+                var message = new FillingSatisfactionRun{
+                    DialogueId = dialogueId
+                };
+                System.Console.WriteLine($"Processing dialogue {dialogueId}");
+                _handler.EventRaised(message);
+                Thread.Sleep(100);
+            }   
+        }
 
-               System.Console.WriteLine(dialogues.Count());
-               foreach (var dialogue in dialogues)
-               {
-                   var url = $"https://slavehb.northeurope.cloudapp.azure.com/user/DialogueRecalculate?dialogueId={dialogue.DialogueId}";
-                   var request = WebRequest.Create(url);
-
-                   request.Credentials = CredentialCache.DefaultCredentials;
-                   request.Method = "GET";
-                   request.ContentType = "application/json-patch+json";
-
-                   var responce = await request.GetResponseAsync();
-                   System.Console.WriteLine($"Response -- {responce}");
-
-                   Thread.Sleep(1000);
-               }
-            //    dialogues.ForEach(p=>p.StatusId = 6);
-               dialogues.ForEach(p => p.CreationTime = DateTime.UtcNow);
-               _context.SaveChanges();
-               System.Console.WriteLine("Конец");
-               return Ok();
-           }
-           catch (Exception e)
-           {
-               return BadRequest(e);
-           }
-       }
+  
     }
 }
 
