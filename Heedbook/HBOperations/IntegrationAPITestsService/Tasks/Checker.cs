@@ -24,18 +24,18 @@ namespace IntegrationAPITestsService.Tasks
         public TestResponse Check<T>(T ttask)
             where T : TestTask
         {
-            _dbOperations.InsertTask(ttask);
-
-            if (ttask.Method == "ftp")
-                return CheckFtp(ttask);
-            
-            var requestText = ttask.Url;
-
-            if (ttask.Parameters != null && ttask.Parameters.Any())
-                requestText += $"?{string.Join("", ttask.Parameters.Select(par => $"&{par.Key}={par.Value}"))}";
-            
             try
-            {
+            {            
+                _dbOperations.InsertTask(ttask);
+
+                if (ttask.Method == "ftp")
+                    return CheckFtp(ttask);
+                
+                var requestText = ttask.Url;
+
+                if (ttask.Parameters != null && ttask.Parameters.Any())
+                    requestText += $"?{string.Join("", ttask.Parameters.Select(par => $"&{par.Key}={par.Value}"))}";
+            
                 // Create a request for the URL.   
                 var request = WebRequest.Create(requestText);
                 request.Method = ttask.Method;
@@ -119,6 +119,11 @@ namespace IntegrationAPITestsService.Tasks
                 };
 
                 return failResponse;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Exception:\n{ex}");
+                return null;
             }
         }
 
