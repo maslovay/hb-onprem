@@ -109,8 +109,8 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
 
 
-                var localRusTimeStart = period.AddHours(4);
-                var localRusTimeEnd = DateTime.UtcNow.AddHours(4);
+                var localRusTimeStart = period.AddHours(3);
+                var localRusTimeEnd = DateTime.UtcNow.AddHours(3);
 
                 var errMsg = $"<b>PERIOD: {localRusTimeStart.ToString()} - {localRusTimeEnd.ToString()}</b>";
                 var head = new MessengerMessageRun()
@@ -127,7 +127,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                     var aLink = $"<a href=\"{link}\">{function.Key} </a>";
 
                     errMsg = String.Concat(function.Select(x => 
-                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.AddHours(4).ToLongTimeString()})\n\n"));
+                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.ToLongTimeString()})\n\n"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
