@@ -709,6 +709,7 @@ namespace UserOperations.Controllers
                     .FirstOrDefault();
 
                 if (dialogue == null) return BadRequest("No such dialogue or user does not have permission for dialogue");
+                dialogue.PersonFaceDescriptor = null;
 
                 var begTime = DateTime.UtcNow.AddDays(-30);
                 var companyId = dialogue.ApplicationUser.CompanyId;
