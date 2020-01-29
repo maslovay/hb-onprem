@@ -18,7 +18,7 @@ namespace DetectFaceIdScheduler.Services
             _vectorCalc = new VectorCalculation();
         }
 
-        public void DetectFaceIds( ref List<FrameAttribute> frameAttribute)
+        public List<FrameAttribute> DetectFaceIds(List<FrameAttribute> frameAttribute)
         {
             for (int i = 0; i< frameAttribute.Count(); i ++)
             {  
@@ -29,6 +29,7 @@ namespace DetectFaceIdScheduler.Services
                         .ToList()
                 );
             }
+            return frameAttribute;
         }
 
         private Guid? DetectLocalFaceId(List<FrameAttribute> frameAttribute)
@@ -38,16 +39,14 @@ namespace DetectFaceIdScheduler.Services
             {
                 return frameForCompare.FileFrame.FaceId;
             }
-
             frameAttribute = frameAttribute
                 .Where(p => p.FileFrame.Time >= frameForCompare.FileFrame.Time.AddSeconds(-_settings.PeriodTime))
                 .ToList();
 
             var index = frameAttribute.Count() - 1;
-            var lastFrame = frameAttribute[index];                
+            var lastFrame = frameAttribute[index];     
             var faceIds = new List<Guid?>();
             var i = index - 1;
-
             while (i >= 0)
             {
                 var cos = _vectorCalc.Cos(

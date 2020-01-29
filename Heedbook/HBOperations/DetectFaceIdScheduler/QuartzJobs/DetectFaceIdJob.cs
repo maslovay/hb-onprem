@@ -41,6 +41,7 @@ namespace DetectFaceIdScheduler.QuartzJobs
             try
             {
                 // Get first not marked FileFrame
+                System.Console.WriteLine("1");
                 var fileFramesEdge = _context.FileFrames
                     .Include(p => p.Device)
                     .Include(p => p.Device.Company)
@@ -76,16 +77,20 @@ namespace DetectFaceIdScheduler.QuartzJobs
 
                 foreach (var deviceId in deviceIds)
                 {
-                     _log.Info($"Proceecing {deviceId}");
+                    _log.Info($"Proceecing {deviceId}");
+                    System.Console.WriteLine($"Proceecing {deviceId}");
                     var framesDevice = framesProceed
                         .Where(p => p.FileFrame.DeviceId == deviceId)
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
-
-                    _detect.DetectFaceIds(ref framesDevice);
+                    
+                    System.Console.WriteLine($"Device count - {framesDevice.Count()}");
+                    framesDevice = _detect.DetectFaceIds(framesDevice);
                     _log.Info($"Frames device count - {framesDevice.Count()}");
+                    System.Console.WriteLine("Finished");
 
                 }
+                System.Console.WriteLine("All");
                 _context.SaveChanges();
                 _log.Info("Function finished");
             }
