@@ -44,7 +44,7 @@ namespace ErrorKibanaScheduler.QuartzJob
             var client = new ElasticClient(settings);
             try
             {
-                int periodHours = 24;
+                int periodHours = 6;
                 var period = DateTime.UtcNow.AddHours(-periodHours);
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
@@ -74,8 +74,8 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var alarm = new MessengerMessageRun()
                 {
                     logText = "<b>8000 or more error</b>",
-                    // ChannelName = "LogSender"
-                    ChannelName = "ApiTester"
+                    ChannelName = "LogSender"
+                    //ChannelName = "ApiTester"
                 };
                 if (documents.Count >= 8000)
                 {
@@ -110,8 +110,8 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var groupingByName = documents.GroupBy(x => x.FunctionName);
 
 
-                var localRusTimeStart = period.AddHours(3);
-                var localRusTimeEnd = DateTime.UtcNow.AddHours(3);
+                var localRusTimeStart = period.AddHours(4);
+                var localRusTimeEnd = DateTime.UtcNow.AddHours(4);
 
                 var errMsg = $"<b>PERIOD: {localRusTimeStart.ToString()} - {localRusTimeEnd.ToString()}</b>";
                 var head = new MessengerMessageRun()
@@ -128,7 +128,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                     var aLink = $"<a href=\"{link}\">{function.Key} </a>";
 
                     errMsg = String.Concat(function.Select(x => 
-                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.ToLongTimeString()})\n\n"));
+                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.AddHours(3).ToLongTimeString()})\n\n"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
