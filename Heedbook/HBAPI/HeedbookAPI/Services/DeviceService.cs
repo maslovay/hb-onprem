@@ -190,7 +190,7 @@ namespace UserOperations.Services
 
         private void CheckUniqueDeviceCode(string code, Guid companyId, Guid? deviceId = null)
         {
-            if (_repository.GetAsQueryable<Device>().Any(x => x.Code == code && x.CompanyId == companyId && x.DeviceId != deviceId))
+            if (_repository.GetAsQueryable<Device>().Any(x => x.Code == code && x.DeviceId != deviceId))
                 throw new NotUniqueException();
         }
 

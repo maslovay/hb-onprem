@@ -151,10 +151,11 @@ namespace UserOperations.Services
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.DialogueHint)
                 .Include(p => p.Device)
-                .Where(p => p.StatusId == 3 && p.DialogueId == dialogueId)
-                .FirstOrDefault();
+                .Where(p => p.StatusId == 3 && p.DialogueId == dialogueId).FirstOrDefault();
+
 
             if (dialogue == null) throw new NoDataException("No such dialogue or user does not have permission for dialogue");
+            dialogue.PersonFaceDescriptor = null;
 
             var begTime = DateTime.UtcNow.AddDays(-30);
             var companyId = dialogue.Device.CompanyId;
