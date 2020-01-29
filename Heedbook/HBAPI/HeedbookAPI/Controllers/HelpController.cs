@@ -32,38 +32,38 @@ namespace UserOperations.Controllers
     [ApiController]
     public class HelpController : Controller
     {
-        private readonly IConfiguration _config;
-        private readonly LoginService _loginService;
-        private readonly RecordsContext _context;
-        private readonly SftpClient _sftpClient;
-        private readonly MailSender _mailSender;
-        private readonly RequestFilters _requestFilters;
-        private readonly SftpSettings _sftpSettings;
-        private readonly DBOperations _dbOperation;
-        private readonly IGenericRepository _repository;
+    //    private readonly IConfiguration _config;
+    //    private readonly LoginService _loginService;
+    //    private readonly RecordsContext _context;
+    //    private readonly SftpClient _sftpClient;
+    //    private readonly MailSender _mailSender;
+    //    private readonly RequestFilters _requestFilters;
+    //    private readonly SftpSettings _sftpSettings;
+    //    private readonly DBOperations _dbOperation;
+    //    private readonly IGenericRepository _repository;
 
 
         public HelpController(
-            IConfiguration config,
-            LoginService loginService,
-            RecordsContext context,
-            SftpClient sftpClient,
-            MailSender mailSender,
-            RequestFilters requestFilters,
-            SftpSettings sftpSettings,
-            DBOperations dBOperations,
-            IGenericRepository repository
+            //IConfiguration config,
+            //LoginService loginService,
+            //RecordsContext context,
+            //SftpClient sftpClient,
+            //MailSender mailSender,
+            //RequestFilters requestFilters,
+            //SftpSettings sftpSettings,
+            //DBOperations dBOperations,
+            //IGenericRepository repository
             )
         {
-            _config = config;
-            _loginService = loginService;
-            _context = context;
-            _sftpClient = sftpClient;
-            _mailSender = mailSender;
-            _requestFilters = requestFilters;
-            _sftpSettings = sftpSettings;
-            _dbOperation = dBOperations;
-            _repository = repository;
+            //_config = config;
+            //_loginService = loginService;
+            //_context = context;
+            //_sftpClient = sftpClient;
+            //_mailSender = mailSender;
+            //_requestFilters = requestFilters;
+            //_sftpSettings = sftpSettings;
+            //_dbOperation = dBOperations;
+            //_repository = repository;
         }
         [HttpGet("Help3")]
         public async Task<IActionResult> Help3()
@@ -82,8 +82,8 @@ namespace UserOperations.Controllers
             contentInBackup.CreationDate = DateTime.Now;
             contentInBackup.UpdateDate = DateTime.Now;
             contentInBackup.CompanyId = null;
-            _context.Add(contentInBackup);
-            _context.SaveChanges();
+            //_context.Add(contentInBackup);
+            //_context.SaveChanges();
             return Ok();
         }
 
@@ -116,19 +116,19 @@ namespace UserOperations.Controllers
                 };
 
                 var phrases = localContext.Phrases.ToList();
-                _context.AddRange(phrases);
-                _context.SaveChanges();
+                //_context.AddRange(phrases);
+                //_context.SaveChanges();
                 var dialogueAudios = localContext.DialoguePhrases.Where(x => dialogueIds.Contains(x.DialogueId.ToString())).ToList();
                 var dialogueAudios1 = localContext.DialogueSpeechs.Where(x => dialogueIds.Contains(x.DialogueId.ToString())).ToList();
                 var dialogueAudios2 = localContext.DialogueVisuals.Where(x => dialogueIds.Contains(x.DialogueId.ToString())).ToList();
                 var dialogueAudios3 = localContext.DialogueWords.Where(x => dialogueIds.Contains(x.DialogueId.ToString())).ToList();
 
 
-                _context.AddRange(dialogueAudios);
-                _context.AddRange(dialogueAudios1);
-                _context.AddRange(dialogueAudios2);
-                _context.AddRange(dialogueAudios3);
-                _context.SaveChanges();
+                //_context.AddRange(dialogueAudios);
+                //_context.AddRange(dialogueAudios1);
+                //_context.AddRange(dialogueAudios2);
+                //_context.AddRange(dialogueAudios3);
+                //_context.SaveChanges();
                 return Ok();
             }
             catch(Exception ex)

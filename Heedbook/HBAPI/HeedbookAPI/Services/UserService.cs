@@ -36,7 +36,6 @@ namespace UserOperations.Services
             IGenericRepository repository, 
             LoginService loginService,
             IConfiguration config,
-            RecordsContext context,
           //  SftpClient sftpClient,
             FileRefUtils fileRef,
             RequestFilters requestFilters,

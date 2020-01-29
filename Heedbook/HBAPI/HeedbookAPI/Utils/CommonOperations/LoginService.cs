@@ -29,8 +29,8 @@ namespace UserOperations.Services
         public LoginService(
             IConfiguration config, 
             IGenericRepository repository, 
-            SftpClient sftpClient, 
-            SftpSettings sftpSettings, 
+         //   SftpClient sftpClient, 
+         //   SftpSettings sftpSettings, 
             IHttpContextAccessor httpContextAccessor)
         {
             _config = config;
