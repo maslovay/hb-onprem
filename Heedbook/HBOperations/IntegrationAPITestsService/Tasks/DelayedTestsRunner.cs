@@ -20,13 +20,13 @@ namespace IntegrationAPITestsService.Tasks
             //NLog.ILogger logger, 
             Checker checker, 
             IServiceProvider serviceProvider,
-            INotificationHandler handler) : 
-            base(configuration, checker, serviceProvider, handler)
+            INotificationPublisher publisher) : 
+            base(configuration, checker, serviceProvider)
             // base(configuration, logger, checker, serviceProvider, publisher)
         {
             _taskFactory = new TaskFactory(settings);
             _settings = settings;
-
+            _publisher = publisher;
             Load();
         }
 

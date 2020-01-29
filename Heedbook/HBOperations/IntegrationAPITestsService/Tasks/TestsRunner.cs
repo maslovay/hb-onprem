@@ -24,7 +24,7 @@ namespace IntegrationAPITestsService.Tasks
         //private readonly List<Sender> _senders = new List<Sender>(1);
         //private readonly NLog.ILogger _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly INotificationHandler _handler;
+        protected INotificationPublisher _publisher;
         protected RunnerSettings _settings;
         protected TaskFactory _taskFactory;
         
@@ -39,14 +39,12 @@ namespace IntegrationAPITestsService.Tasks
             IConfiguration configuration, 
             //NLog.ILogger logger, 
             Checker checker, 
-            IServiceProvider serviceProvider,
-            INotificationHandler handler)
+            IServiceProvider serviceProvider)
         {
             //_logger = logger;
             _checker = checker;
             _configuration = configuration;
             _serviceProvider = serviceProvider;
-            _handler = handler;
         }
 
         protected virtual string TestsFilter { get; }
@@ -107,9 +105,9 @@ namespace IntegrationAPITestsService.Tasks
                 var message = new MessengerMessageRun
                 {
                     logText = $"{text}",
-                    ChannelName = $"ApiTester"
+                    ChannelName = $"LogSender"
                 };
-                _handler.EventRaised(message);
+                _publisher.Publish(message);
             };
 
 //            ApiSuccess += resp =>
@@ -137,7 +135,7 @@ namespace IntegrationAPITestsService.Tasks
                 ChannelName = $"LogSender"
             };
             System.Console.WriteLine($"ErrorEvent runned: {JsonConvert.SerializeObject(message)}");
-            _handler.EventRaised(message);
+            _publisher.Publish(message);
         }
         private void ApiSuccessEvent(TestResponse resp)
         {
@@ -148,7 +146,7 @@ namespace IntegrationAPITestsService.Tasks
                 ChannelName = $"LogSender"
             };
             System.Console.WriteLine($"SuccessEvent runned: {JsonConvert.SerializeObject(message)}");
-            _handler.EventRaised(message);
+            _publisher.Publish(message);
         }
 
 
