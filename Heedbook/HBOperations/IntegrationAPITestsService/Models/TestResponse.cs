@@ -21,5 +21,6 @@ namespace IntegrationAPITestsService.Models
         public string ResultMessage { get; set; }
         
         public DateTime Timestamp { get; set; }
+        public TimeSpan TimeSpan { get; set; }
     }
 }

@@ -114,7 +114,7 @@ namespace MessengerReporterService.Senders
                     //_client.StartReceiving();
                     while (_chat.Client.IsReceiving)
                         Thread.Sleep(1);
-                    var updateTask = _chat.Client.GetUpdatesAsync(updatesOffset, 10, 5);
+                    var updateTask = _chat.Client.GetUpdatesAsync(updatesOffset);
                     updateTask.Wait();
                     //_client.StopReceiving();
                     
@@ -133,6 +133,7 @@ namespace MessengerReporterService.Senders
                     if (string.IsNullOrEmpty(command) && _chat.LastMessageId == lastMessageId)
                         return string.Empty;
                     _chat.LastMessageId = lastMessageId;
+                    System.Console.WriteLine($"MessageId: {lastMessageId}");
                     Console.WriteLine("Chat id: " + chatId);
                     Console.WriteLine("Command found: " + command);
                     return command.Replace("/", "");
