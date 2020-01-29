@@ -26,7 +26,8 @@ namespace IntegrationAPITestsService.Tasks
             where T : TestTask
         {
             try
-            {            
+            {      
+                var testStartTime = DateTime.Now;      
                 //_dbOperations.InsertTask(ttask);
 
                 if (ttask.Method == "ftp")
@@ -101,6 +102,7 @@ namespace IntegrationAPITestsService.Tasks
                     }
 
                     //_dbOperations.InsertResponse(testResponse);
+                    testResponse.TimeSpan = DateTime.Now - testStartTime;
                     return testResponse;
                 }
             }

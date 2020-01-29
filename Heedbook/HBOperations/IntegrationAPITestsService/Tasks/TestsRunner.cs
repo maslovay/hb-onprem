@@ -133,7 +133,7 @@ namespace IntegrationAPITestsService.Tasks
             {
                 logText =   $"ERROR: <b>{resp.TaskName}</b>: <b>{resp.ResultMessage}</b>: " +
                             $"__{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}__ " +
-                            $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info}",
+                            $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info} duration: {resp.TimeSpan}",
                 ChannelName = $"LogSender"
             };
             System.Console.WriteLine($"ErrorEvent runned: {JsonConvert.SerializeObject(message)}");
@@ -144,7 +144,7 @@ namespace IntegrationAPITestsService.Tasks
             var message = new MessengerMessageRun
             {
                 logText =   $"SUCCESS: <i>{resp.TaskName}: {resp.ResultMessage}</i>: " +
-                            $"<i>{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}</i> URL: {resp.Url}",
+                            $"<i>{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}</i> URL: {resp.Url} duration: {resp.TimeSpan}",
                 ChannelName = $"LogSender"
             };
             System.Console.WriteLine($"SuccessEvent runned: {JsonConvert.SerializeObject(message)}");
