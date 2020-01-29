@@ -102,6 +102,7 @@ namespace IntegrationAPITestsService.Tasks
         {
             ApiError += ApiErrorEvent;
 
+
 //            ApiSuccess += resp =>
 //            {
 //                foreach (var sender in _senders)
@@ -126,7 +127,7 @@ namespace IntegrationAPITestsService.Tasks
                             $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info}",
                 ChannelName = $"ApiTester"
             };
-            System.Console.WriteLine($"{JsonConvert.SerializeObject(message)}");
+            System.Console.WriteLine($"ErrorEvent runned: {JsonConvert.SerializeObject(message)}");
             _handler.EventRaised(message);
         }
 
