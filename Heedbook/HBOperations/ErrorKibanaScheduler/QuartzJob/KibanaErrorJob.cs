@@ -74,8 +74,8 @@ namespace ErrorKibanaScheduler.QuartzJob
                 var alarm = new MessengerMessageRun()
                 {
                     logText = "<b>8000 or more error</b>",
-                    // ChannelName = "LogSender"
-                    ChannelName = "ApiTester"
+                    ChannelName = "LogSender"
+                    //ChannelName = "ApiTester"
                 };
                 if (documents.Count >= 8000)
                 {
