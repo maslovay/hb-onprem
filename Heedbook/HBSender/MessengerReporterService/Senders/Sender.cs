@@ -18,13 +18,14 @@ namespace MessengerReporterService.Senders
 
         public void ReceiveCommands()
         {
+            System.Console.WriteLine($"Chats count: {Chats.Count}");
             for (;;)
             {
                 try
                 {
                     foreach (var chat in Chats)
                     {
-                        var pollResult = Poll(chat.Name);
+                        var pollResult = Poll(chat);
                         if (string.IsNullOrWhiteSpace(pollResult)) 
                             continue;
                         Console.WriteLine("Poll result: " + pollResult);
@@ -40,6 +41,6 @@ namespace MessengerReporterService.Senders
             }
         }
 
-        protected abstract string Poll(string chatName);
+        protected abstract string Poll(AlarmSenderChat chat);
     }
 }

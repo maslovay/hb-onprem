@@ -9,6 +9,7 @@ using IntegrationAPITestsService.Interfaces;
 using IntegrationAPITestsService.Models;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using Notifications.Base;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
@@ -23,7 +24,7 @@ namespace IntegrationAPITestsService.Tasks
         //private readonly List<Sender> _senders = new List<Sender>(1);
         //private readonly NLog.ILogger _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly INotificationPublisher _publisher;
+        private readonly INotificationHandler _handler;
         protected RunnerSettings _settings;
         protected TaskFactory _taskFactory;
         
@@ -39,12 +40,13 @@ namespace IntegrationAPITestsService.Tasks
             //NLog.ILogger logger, 
             Checker checker, 
             IServiceProvider serviceProvider,
-            INotificationPublisher publisher)
+            INotificationHandler handler)
         {
             //_logger = logger;
             _checker = checker;
             _configuration = configuration;
             _serviceProvider = serviceProvider;
+            _handler = handler;
         }
 
         protected virtual string TestsFilter { get; }
@@ -54,8 +56,10 @@ namespace IntegrationAPITestsService.Tasks
             Console.WriteLine($"Loading {nameof(this.GetType)}...");
             //_logger.Info( "Loading Runner...");
             
-            //Helper.FetchSenders(_logger, _settings, _senders, _serviceProvider);
-            //FetchSenderEvents();
+            // Helper.FetchSenders(_logger, _settings, _senders, _serviceProvider);
+
+            System.Console.WriteLine($"Events are subscribed!");
+            FetchSenderEvents();
             if (_settings.Tests?.Count == 0)
             {
                 //_logger.Error( "Loading Runner... no tests in config!"); 
@@ -96,17 +100,16 @@ namespace IntegrationAPITestsService.Tasks
 
         private void FetchSenderEvents()
         {
-            ApiError += resp =>
+            ApiError += ApiErrorEvent;
+            ApiSuccess += ApiSuccessEvent;
+            TestRunStatus += text => 
             {
                 var message = new MessengerMessageRun
                 {
-                    logText = $"ERROR: <b>{resp.TaskName}</b>: <b>{resp.ResultMessage}</b>: " +
-                                $"__{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}__ " +
-                                $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info}",
+                    logText = $"{text}",
                     ChannelName = $"ApiTester"
                 };
-                System.Console.WriteLine($"{JsonConvert.SerializeObject(message)}");
-                _publisher.Publish(message);
+                _handler.EventRaised(message);
             };
 
 //            ApiSuccess += resp =>
@@ -124,10 +127,35 @@ namespace IntegrationAPITestsService.Tasks
 //                    sender.Send( $"{DateTime.Now.ToLocalTime().ToString(CultureInfo.InvariantCulture)} {message}", "ApiTester");
 //            };
         }
+        private void ApiErrorEvent(TestResponse resp)
+        {
+            var message = new MessengerMessageRun
+            {
+                logText =   $"ERROR: <b>{resp.TaskName}</b>: <b>{resp.ResultMessage}</b>: " +
+                            $"__{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}__ " +
+                            $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info}",
+                ChannelName = $"LogSender"
+            };
+            System.Console.WriteLine($"ErrorEvent runned: {JsonConvert.SerializeObject(message)}");
+            _handler.EventRaised(message);
+        }
+        private void ApiSuccessEvent(TestResponse resp)
+        {
+            var message = new MessengerMessageRun
+            {
+                logText =   $"SUCCESS: <i>{resp.TaskName}: {resp.ResultMessage}</i>: " +
+                            $"<i>{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}</i> URL: {resp.Url}",
+                ChannelName = $"LogSender"
+            };
+            System.Console.WriteLine($"SuccessEvent runned: {JsonConvert.SerializeObject(message)}");
+            _handler.EventRaised(message);
+        }
+
 
         public void RunTests(bool needAuth = true)
         {
             TestRunStatus?.Invoke($"Running {TestsFilter} tests started...");
+            //Check Authentification
             if (needAuth)
             {
                 var authResponse = _checker.Check(_taskFactory.GenerateLoginTask());
@@ -160,6 +188,8 @@ namespace IntegrationAPITestsService.Tasks
             
             if (!response.IsPositive)
                 InvokeError(response);
+            else
+                InvokeSuccess(response);
         }
         
         public void InvokeSuccess(TestResponse response)

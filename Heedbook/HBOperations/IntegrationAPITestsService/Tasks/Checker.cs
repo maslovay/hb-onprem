@@ -14,28 +14,29 @@ namespace IntegrationAPITestsService.Tasks
 {
     public class Checker
     {
-        private readonly DbOperations _dbOperations;
+        //private readonly DbOperations _dbOperations;
 
-        public Checker(DbOperations dbOperations)
+        // public Checker(DbOperations dbOperations)
+        public Checker()
         {
-            _dbOperations = dbOperations;
+            //_dbOperations = dbOperations;
         }
 
         public TestResponse Check<T>(T ttask)
             where T : TestTask
         {
-            _dbOperations.InsertTask(ttask);
-
-            if (ttask.Method == "ftp")
-                return CheckFtp(ttask);
-            
-            var requestText = ttask.Url;
-
-            if (ttask.Parameters != null && ttask.Parameters.Any())
-                requestText += $"?{string.Join("", ttask.Parameters.Select(par => $"&{par.Key}={par.Value}"))}";
-            
             try
-            {
+            {            
+                //_dbOperations.InsertTask(ttask);
+
+                if (ttask.Method == "ftp")
+                    return CheckFtp(ttask);
+                
+                var requestText = ttask.Url;
+
+                if (ttask.Parameters != null && ttask.Parameters.Any())
+                    requestText += $"?{string.Join("", ttask.Parameters.Select(par => $"&{par.Key}={par.Value}"))}";
+            
                 // Create a request for the URL.   
                 var request = WebRequest.Create(requestText);
                 request.Method = ttask.Method;
@@ -99,7 +100,7 @@ namespace IntegrationAPITestsService.Tasks
                         }
                     }
 
-                    _dbOperations.InsertResponse(testResponse);
+                    //_dbOperations.InsertResponse(testResponse);
                     return testResponse;
                 }
             }
@@ -118,6 +119,23 @@ namespace IntegrationAPITestsService.Tasks
                     IsFilled = true
                 };
 
+                return failResponse;
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Exception:\n{ex}");
+                var failResponse = new TestResponse()
+                {
+                    TaskId = ttask.TaskId,
+                    ResponseId = Guid.NewGuid(),
+                    TaskName = ttask.Name,
+                    IsPositive = false,
+                    Info = $"Exception: {ex}",
+                    Timestamp = DateTime.Now,
+                    ResultMessage = ttask.FailMessage,
+                    Url = ttask.Url,
+                    IsFilled = true
+                };
                 return failResponse;
             }
         }
