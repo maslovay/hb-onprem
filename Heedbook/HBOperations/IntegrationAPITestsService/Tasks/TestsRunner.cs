@@ -105,7 +105,7 @@ namespace IntegrationAPITestsService.Tasks
                 var message = new MessengerMessageRun
                 {
                     logText = $"{text}",
-                    ChannelName = $"LogSender"
+                    ChannelName = $"ApiTester"
                 };
                 _publisher.Publish(message);
             };
@@ -132,7 +132,7 @@ namespace IntegrationAPITestsService.Tasks
                 logText =   $"ERROR: <b>{resp.TaskName}</b>: <b>{resp.ResultMessage}</b>: " +
                             $"__{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}__ " +
                             $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info} duration: {resp.TimeSpan}",
-                ChannelName = $"LogSender"
+                ChannelName = $"ApiTester"
             };
             System.Console.WriteLine($"ErrorEvent runned: {JsonConvert.SerializeObject(message)}");
             _publisher.Publish(message);
@@ -143,7 +143,7 @@ namespace IntegrationAPITestsService.Tasks
             {
                 logText =   $"SUCCESS: <i>{resp.TaskName}: {resp.ResultMessage}</i>: " +
                             $"<i>{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}</i> URL: {resp.Url} duration: {resp.TimeSpan}",
-                ChannelName = $"LogSender"
+                ChannelName = $"ApiTester"
             };
             System.Console.WriteLine($"SuccessEvent runned: {JsonConvert.SerializeObject(message)}");
             _publisher.Publish(message);
