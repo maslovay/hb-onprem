@@ -1,24 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
-using HBData;
 using HBData.Models;
-using HBLib;
-using HBLib.Utils;
 using UserOperations.Services;
-using UserOperations.Utils;
-using System.Reflection;
 using UserOperations.Models;
 using Microsoft.AspNetCore.Authorization;
-using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Controllers
 {
@@ -29,7 +19,6 @@ namespace UserOperations.Controllers
     public class UserController : Controller
     {
         private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
         private readonly CompanyService _companyService;
         private readonly UserService _userService;
         private readonly PhraseService _phraseService;
@@ -37,7 +26,6 @@ namespace UserOperations.Controllers
 
         public UserController(
             LoginService loginService,
-            RequestFilters requestFilters,
             CompanyService companyService,
             UserService userService,
             PhraseService phraseService,
@@ -45,7 +33,6 @@ namespace UserOperations.Controllers
             )
         {
             _loginService = loginService;
-            _requestFilters = requestFilters;
             _companyService = companyService;
             _userService = userService;
             _phraseService = phraseService;

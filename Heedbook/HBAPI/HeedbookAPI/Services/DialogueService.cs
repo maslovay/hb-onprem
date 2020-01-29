@@ -25,11 +25,7 @@ namespace UserOperations.Services
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
-        private readonly SftpClient _sftpClient;
         private readonly FileRefUtils _fileRef;
-        private readonly SmtpSettings _smtpSetting;
-        private readonly SmtpClient _smtpClient;
-        private readonly MailSender _mailSender;
         private readonly string _containerName;
 
         private readonly int activeStatus;
@@ -39,24 +35,15 @@ namespace UserOperations.Services
             IGenericRepository repository,
             LoginService loginService,
             IConfiguration config,
-            RecordsContext context,
-            SftpClient sftpClient,
             FileRefUtils fileRef,
-            RequestFilters requestFilters,
-            SmtpSettings smtpSetting,
-            SmtpClient smtpClient,
-            MailSender mailSender)
+            RequestFilters requestFilters)
         {
             _repository = repository;
             _loginService = loginService;
-            _sftpClient = sftpClient;
             _fileRef = fileRef;
             _requestFilters = requestFilters;
-            _mailSender = mailSender;
             _containerName = "useravatars";
 
-            _smtpSetting = smtpSetting;
-            _smtpClient = smtpClient;
             activeStatus = 3;
             disabledStatus = 4;
         }

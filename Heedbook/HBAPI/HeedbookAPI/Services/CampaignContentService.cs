@@ -23,7 +23,7 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly SftpClient _sftpClient;
+       // private readonly SftpClient _sftpClient;
         private readonly FileRefUtils _fileRef;
 
         private const string _containerName = "screenshots";
@@ -32,7 +32,7 @@ namespace UserOperations.Services
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,
-            SftpClient sftpClient,
+          //  SftpClient sftpClient,
             FileRefUtils fileRef
             )
         {
@@ -41,7 +41,7 @@ namespace UserOperations.Services
                 _loginService = loginService;
                 _requestFilters = requestFilters;
                 _repository = repository;
-                _sftpClient = sftpClient;
+              //  _sftpClient = sftpClient;
                 _fileRef = fileRef;
             }
             catch (Exception e)
@@ -257,14 +257,15 @@ namespace UserOperations.Services
             await SaveChangesAsync();
 
             string screenshot = string.Empty;
-            if (formData.Files.Count != 0)
-            {
-                await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{content.ContentId}"));
-                FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-                screenshot = content.ContentId + fileInfo.Extension;
-                var memoryStream = formData.Files[0].OpenReadStream();
-                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", screenshot, true);
-            }
+            //TODO::uncomment
+            //if (formData.Files.Count != 0)
+            //{
+            //    await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{content.ContentId}"));
+            //    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+            //    screenshot = content.ContentId + fileInfo.Extension;
+            //    var memoryStream = formData.Files[0].OpenReadStream();
+            //    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", screenshot, true);
+            //}
             return new ContentWithScreenshotModel(contentEntity, screenshot);
         }
 
@@ -294,7 +295,8 @@ namespace UserOperations.Services
                 RemoveRange<CampaignContent>(links);
                 RemoveEntity(content);
                 SaveChanges();
-                await _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{content.ContentId+".png"}");
+                //TODO::uncomment
+              //  await _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{content.ContentId+".png"}");
             }
             catch
             {

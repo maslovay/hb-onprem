@@ -7,19 +7,19 @@ using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Controllers;
 using UserOperations.Services;
+using HBData.Repository;
+using HBData.Models;
 
 namespace UserOperations.Utils
 {
     public class RequestFilters
     {
-        private readonly RecordsContext _context;
-        private readonly IConfiguration _config;
+        private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
 
-        public RequestFilters(RecordsContext context, IConfiguration config, LoginService loginService)
+        public RequestFilters(IGenericRepository repository, IConfiguration config, LoginService loginService)
         {
-            _context = context;
-            _config = config;
+            _repository = repository;
             _loginService = loginService;
         }
 
@@ -96,13 +96,13 @@ namespace UserOperations.Utils
                 //---take all companyIds in filter or all company ids in corporations
                 if (!companyIdsInFilter.Any() && (corporationIdsInFilter ==null || !corporationIdsInFilter.Any()))
                 {
-                    companyIdsInFilter = _context.Companys
+                    companyIdsInFilter = _repository.GetAsQueryable<Company>()
                         //.Where(x => x.StatusId == 3)
                         .Select(x => x.CompanyId).ToList();
                 }
                 else if (!companyIdsInFilter.Any())// means corporationIdsInFilter not null
                 {
-                    companyIdsInFilter = _context.Companys
+                    companyIdsInFilter = _repository.GetAsQueryable<Company>()
                         .Where(x => corporationIdsInFilter.Contains((Guid)x.CorporationId))
                         .Select(x => x.CompanyId).ToList();
                 }
@@ -112,10 +112,10 @@ namespace UserOperations.Utils
             {
                 if (!companyIdsInFilter.Any())//--- if filter by companies not set ---
                 {//--- select own corporation
-                    companyIdsInFilter = _context.Companys
+                    companyIdsInFilter = _repository.GetAsQueryable<Company>()
                         .Include(p => p.Corporation)
                         .Where(p => p.CompanyId == companyIdInToken)
-                        .SelectMany(p => _context.Companys.Where(x => p.Corporation != null
+                        .SelectMany(p => _repository.GetAsQueryable<Company>().Where(x => p.Corporation != null
                             && x.CorporationId == p.Corporation.Id)
                         .Select(x => x.CompanyId))
                         .ToList();
@@ -136,7 +136,7 @@ namespace UserOperations.Utils
         {
            if (corporationIdInToken == null || corporationIdInToken == Guid.Empty) return true;
            if (companyId == null || companyId == Guid.Empty) return false;
-           var companiesInCorporation =  _context.Companys.Where(p => p.CorporationId == corporationIdInToken)
+           var companiesInCorporation = _repository.GetAsQueryable<Company>().Where(p => p.CorporationId == corporationIdInToken)
                         .Select(p => p.CompanyId)
                         .ToList();
             return companiesInCorporation.Contains((Guid)companyId);

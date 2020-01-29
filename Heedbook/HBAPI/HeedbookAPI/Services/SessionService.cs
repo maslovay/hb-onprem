@@ -11,15 +11,12 @@ namespace UserOperations.Services
 {
     public class SessionService
     {
-        private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
 
         public SessionService(
-            ElasticClient log,
             IGenericRepository repository
             )
         {
-            _log = log;
             _repository = repository;
         }
 

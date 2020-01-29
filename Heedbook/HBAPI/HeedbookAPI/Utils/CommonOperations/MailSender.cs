@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using System.IO;
 using HBLib.Utils;
 using Newtonsoft.Json;
-using System.Net.Mime;
+using Microsoft.AspNetCore.Http;
+using UserOperations.Models;
 
 namespace UserOperations.Services
 {
@@ -14,13 +15,11 @@ namespace UserOperations.Services
     {
         private readonly SmtpSettings _smtpSettings;
         private readonly SmtpClient _smtpClient;
-        private readonly ElasticClient _log;
         private readonly string folder;
-        public MailSender(SmtpSettings smtpSettings, SmtpClient smtpClient, ElasticClient log)
+        public MailSender(SmtpSettings smtpSettings, SmtpClient smtpClient)
         {
             _smtpSettings = smtpSettings;
             _smtpClient = smtpClient;
-            _log = log;
             folder = @"/Utils/CommonOperations/";
         }
 
@@ -36,6 +35,47 @@ namespace UserOperations.Services
                 Subject = messageTitle,
                 Body = text
             };
+            try
+            {
+                _smtpClient.Send(mail);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public void SendsEmailsSubscription(IFormCollection formData, ApplicationUser user, VideoMessage message, List<ApplicationUser> recepients)
+        {
+            var mail = new System.Net.Mail.MailMessage
+            {
+                From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail),
+                Subject = user.FullName + " - " + message.Subject,
+                Body = message.Body,
+                IsBodyHtml = false
+            };
+
+            foreach (var r in recepients)
+            {
+                mail.To.Add(r.Email);
+            }
+
+            var amountAttachmentsSize = 0f;
+            foreach (var f in formData.Files)
+            {
+                var fn = user.FullName + "_" + formData.Files[0].FileName;
+                var memoryStream = f.OpenReadStream();
+                amountAttachmentsSize += (memoryStream.Length / 1024f) / 1024f;
+
+                memoryStream.Position = 0;
+                var attachment = new System.Net.Mail.Attachment(memoryStream, fn);
+                mail.Attachments.Add(attachment);
+            }
+            if (amountAttachmentsSize > 25)
+            {
+                throw new Exception($"Files size more than 25 MB");
+            }
+
             try
             {
                 _smtpClient.Send(mail);
@@ -114,7 +154,6 @@ namespace UserOperations.Services
             }
             catch (Exception ex)
             {
-                _log.Fatal($"Read Languages fatal {ex.Message}");
                 return null;
             }
         }    
@@ -145,7 +184,6 @@ namespace UserOperations.Services
             }
             catch (Exception ex)
             {
-                _log.Fatal($"Create user email fatal exception {ex.Message}");
                 return "";
             }
         }
@@ -181,7 +219,6 @@ namespace UserOperations.Services
             }
             catch (Exception ex)
             {
-                _log.Fatal($"Create user email fatal exception {ex.Message}");
                 return ex.Message +  ex.InnerException?.Message;
             }
         }

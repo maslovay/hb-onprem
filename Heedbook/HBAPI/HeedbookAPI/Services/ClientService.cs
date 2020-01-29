@@ -15,7 +15,6 @@ namespace UserOperations.Services
     public class ClientService 
     {
         private readonly LoginService _loginService;
-        private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly FileRefUtils _fileRef;
@@ -24,14 +23,12 @@ namespace UserOperations.Services
 
         public ClientService(
             LoginService loginService,
-            DBOperations dbOperation,
             RequestFilters requestFilters,
             IGenericRepository repository,
             FileRefUtils fileRef
             )
         {
             _loginService = loginService;
-            _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _repository = repository;
             _fileRef = fileRef;

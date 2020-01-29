@@ -7,7 +7,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using HBData;
 using HBData.Models;
 using HBData.Repository;
 using System.Security.Cryptography;
@@ -19,24 +18,25 @@ namespace UserOperations.Services
 {
     public class LoginService
     {
-        private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
-        private readonly RecordsContext _context;
-        private readonly SftpClient _sftpClient;
-        private readonly SftpSettings _sftpSettings;
+        private readonly IGenericRepository _repository;
+      //  private readonly SftpClient _sftpClient;
+      //  private readonly SftpSettings _sftpSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private const int PASSWORDS_TO_SAVE = 5;
         private const int ATTEMPT_TO_FAIL_LOG_IN = 5;
 
-        public LoginService(IGenericRepository repository, 
-            IConfiguration config, RecordsContext context, SftpClient sftpClient, 
-            SftpSettings sftpSettings, IHttpContextAccessor httpContextAccessor)
+        public LoginService(
+            IConfiguration config, 
+            IGenericRepository repository, 
+            SftpClient sftpClient, 
+            SftpSettings sftpSettings, 
+            IHttpContextAccessor httpContextAccessor)
         {
-            _repository = repository;
             _config = config;
-            _context = context;
-            _sftpClient = sftpClient;
-            _sftpSettings = sftpSettings;
+            _repository = repository;
+         //   _sftpClient = sftpClient;
+         //   _sftpSettings = sftpSettings;
             _httpContextAccessor = httpContextAccessor;
         }
         public string GeneratePasswordHash(string password)
@@ -52,14 +52,14 @@ namespace UserOperations.Services
             if(password == null || login == null) return false;
             login = login.ToUpper();
             password = GeneratePasswordHash(password);
-            return _context.ApplicationUsers.Count(p => p.NormalizedEmail == login && p.PasswordHash == password) == 1;
+            return _repository.GetAsQueryable<ApplicationUser>().Count(p => p.NormalizedEmail == login && p.PasswordHash == password) == 1;
         }
 
         public bool CheckDeviceLogin(string deviceName, string code)
         {
             if (code == null || deviceName == null) return false;
             code = GeneratePasswordHash(code);
-            return _context.Devices.Count(p => p.Name.ToUpper() == deviceName.ToUpper() && p.Code == code) == 1;
+            return _repository.GetAsQueryable<Device>().Count(p => p.Name.ToUpper() == deviceName.ToUpper() && p.Code == code) == 1;
         }
 
         public string CreateTokenForUser(ApplicationUser user)
@@ -67,7 +67,7 @@ namespace UserOperations.Services
             try
             {
                 // var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
-                var roleInfo = _context.ApplicationUserRoles.Include(x => x.Role).Where(x => x.UserId == user.Id).FirstOrDefault();
+                var roleInfo = _repository.GetAsQueryable<ApplicationUserRole>().Include(x => x.Role).Where(x => x.UserId == user.Id).FirstOrDefault();
                 var role = roleInfo.Role.Name;
 
                 if (user.StatusId == 3)
@@ -297,33 +297,16 @@ namespace UserOperations.Services
         {
            return _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value;
         }
-        public bool _disposed;
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    _repository.Dispose();
-                }
-            }
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
         private bool AvatarExist(string avatarPath)
         {
             if(String.IsNullOrEmpty(avatarPath))
                 return false;
-            var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");
-            task.Wait();
-            bool exist = task.Result;
-            return exist;
+            //TODO::uncomment
+            // var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");
+            // task.Wait();
+            // bool exist = task.Result;
+            return true;// exist;
         }
 
         public string GetAvatar(string avatarPath)

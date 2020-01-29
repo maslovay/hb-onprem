@@ -9,12 +9,6 @@ namespace UserOperations.Utils.AnalyticRatingUtils
 {
     public class AnalyticRatingUtils
     {
-        private readonly IConfiguration _config;
-
-        public AnalyticRatingUtils(IConfiguration config)
-        {
-            _config = config;
-        }
         public T Max<T>(T val1, T val2) where T : IComparable<T>
         {
             if ((val1 as DateTime?) == default(DateTime)) return val2;

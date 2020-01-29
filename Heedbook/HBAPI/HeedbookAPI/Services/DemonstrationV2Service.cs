@@ -3,24 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HBData.Models;
-using HBLib.Utils;
 using HBData.Repository;
 
 namespace UserOperations.Services
 {
     public class DemonstrationV2Service
     {
-        private readonly SftpClient _sftpClient;
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
 
         public DemonstrationV2Service(
-            SftpClient sftpClient,
             IGenericRepository repository,
             LoginService loginService
             )
         {
-            _sftpClient = sftpClient;
             _repository = repository;
             _loginService = loginService;
         }

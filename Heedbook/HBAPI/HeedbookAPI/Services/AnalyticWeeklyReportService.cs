@@ -13,21 +13,18 @@ namespace UserOperations.Services
 {
     public class AnalyticWeeklyReportService
     {
-        private readonly IConfiguration _config;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticWeeklyReportUtils _analyticWeeklyReportUtils;
 
         public AnalyticWeeklyReportService(
-            IConfiguration config,
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,
             AnalyticWeeklyReportUtils analyticWeeklyReportUtils
             )
         {
-            _config = config;
             _loginService = loginService;
             _requestFilters = requestFilters;
             _repository = repository;

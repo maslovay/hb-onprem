@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using HBData.Models;
 using UserOperations.Services;
 using Swashbuckle.AspNetCore.Annotations;
-using UserOperations.Models;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Controllers;
 

@@ -8,12 +8,6 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
 {
     public class AnalyticOfficeUtils
     {
-        private readonly IConfiguration _config;
-
-        public AnalyticOfficeUtils(IConfiguration config)
-        {
-            _config = config;
-        }
         public Employee BestEmployeeLoad(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return dialogues.Any() ? dialogues

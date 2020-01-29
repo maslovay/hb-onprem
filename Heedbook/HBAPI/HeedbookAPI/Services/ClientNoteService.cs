@@ -6,26 +6,22 @@ using System.Threading.Tasks;
 using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models;
-using UserOperations.Controllers;
 
 namespace UserOperations.Services
 {
     public class ClientNoteService 
     {
         private readonly LoginService _loginService;
-        private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
 
         public ClientNoteService(
             LoginService loginService,
-            DBOperations dbOperation,
             RequestFilters requestFilters,
             IGenericRepository repository
             )
         {
             _loginService = loginService;
-            _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _repository = repository;
         }

@@ -8,16 +8,13 @@ namespace UserOperations.Services
 {
     public class CatalogueService
     {
-        private readonly LoginService _loginService;
         private readonly IGenericRepository _repository;
 
 
         public CatalogueService(
-            LoginService loginService,
             IGenericRepository repository
             )
         {
-            _loginService = loginService;
             _repository = repository;
         }
         public IEnumerable<Country> CountrysGet()
