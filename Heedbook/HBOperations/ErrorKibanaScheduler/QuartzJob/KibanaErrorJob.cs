@@ -44,7 +44,7 @@ namespace ErrorKibanaScheduler.QuartzJob
             var client = new ElasticClient(settings);
             try
             {
-                int periodHours = 24;
+                int periodHours = 6;
                 var period = DateTime.UtcNow.AddHours(-periodHours);
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
@@ -127,7 +127,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                     var aLink = $"<a href=\"{link}\">{function.Key} </a>";
 
                     errMsg = String.Concat(function.Select(x => 
-                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.AddHours(4).ToLongTimeString()})\n\n"));
+                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.AddHours(3).ToLongTimeString()})\n\n"));
                     var message = new MessengerMessageRun()
                     {
                         logText =
