@@ -102,38 +102,37 @@ namespace MessengerReporterService.Senders
             _publisher.Publish(message);
         }
 
-        protected override string Poll(string chatName)
+        protected override string Poll(AlarmSenderChat chat)
         {
             try
             {
                 lock (syncObj)
                 {
-                    if (!(Chats.FirstOrDefault(c => c.Name == chatName) is TelegramChat chat))
+                    if (!(Chats.FirstOrDefault(c => c.Name == chat.Name) is TelegramChat _chat))
                         return string.Empty;
 
                     //_client.StartReceiving();
-                    while (chat.Client.IsReceiving)
+                    while (_chat.Client.IsReceiving)
                         Thread.Sleep(1);
-                    var updateTask = chat.Client.GetUpdatesAsync(updatesOffset, 10, 5);
+                    var updateTask = _chat.Client.GetUpdatesAsync(updatesOffset, 10, 5);
                     updateTask.Wait();
                     //_client.StopReceiving();
                     
                     var orderedResults = updateTask.Result?.OrderByDescending(u => u.Id);
-                    var command = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost
-                        .Text;
-                    
+                    var lastMessageId = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost.MessageId;
+                    var command = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost.Text;                    
                     var chatId = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost?.Chat?.Id;
 
                     var callbackId = orderedResults?.FirstOrDefault(r => r.CallbackQuery != null)?.CallbackQuery.Id;
                     if (callbackId != null)
-                        chat.Client.AnswerCallbackQueryAsync(callbackId).Wait();
+                        _chat.Client.AnswerCallbackQueryAsync(callbackId).Wait();
 
                     updatesOffset = orderedResults?.FirstOrDefault()?.Id ?? 0;
                     ++updatesOffset;
 
-                    if (string.IsNullOrEmpty(command))
+                    if (string.IsNullOrEmpty(command) && _chat.LastMessageId != lastMessageId)
                         return string.Empty;
-
+                    _chat.LastMessageId = lastMessageId;
                     Console.WriteLine("Chat id: " + chatId);
                     Console.WriteLine("Command found: " + command);
                     return command.Replace("/", "");
