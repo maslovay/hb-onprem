@@ -369,7 +369,8 @@ namespace UserOperations.Services
                     Answer = answ.Answer,
                     Time = answ.Time,
                     DialogueId = dialogueId,
-                    ContentId = answ.CampaignContent?.ContentId
+                    ContentId = answ.CampaignContent?.ContentId,
+                    FullName = answ.ApplicationUser.FullName
                 };
                 answersResult.Add(oneAnswer);
             }
