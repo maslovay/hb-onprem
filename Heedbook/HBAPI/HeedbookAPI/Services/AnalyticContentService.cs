@@ -187,12 +187,12 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, deviceIds);
-                var slideShowSessionsAll = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds, true, dialogues);
+                List<SlideShowInfo> slideShowSessionsAll = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds, true, dialogues);
                 var answers = await GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, deviceIds);
 
                 double conversion = GetConversion(slideShowSessionsAll.Count(), answers.Count());
 
-                var slideShowInfoGroupByContent = slideShowSessionsAll
+                List<AnswerInfo> slideShowInfoGroupByContent = slideShowSessionsAll
                     .GroupBy(p => p.ContentId)
                     .Select(ssh => new AnswerInfo
                     {
@@ -387,7 +387,8 @@ namespace UserOperations.Services
                     Answer = answ.Answer,
                     Time = answ.Time,
                     DialogueId = dialogueId,
-                    ContentId = answ.CampaignContent?.ContentId
+                    ContentId = answ.CampaignContent?.ContentId,
+                    FullName = answ.ApplicationUser.FullName
                 };
                 answersResult.Add(oneAnswer);
             }
@@ -478,6 +479,7 @@ namespace UserOperations.Services
         {
             var result = await _repository.GetAsQueryable<CampaignContentAnswer>()
                                      .Include(x => x.CampaignContent)
+                                     .Include(x => x.ApplicationUser)
                                      .Where(p =>
                                     p.CampaignContent != null
                                     && (p.Time >= begTime && p.Time <= endTime)

@@ -17,6 +17,7 @@ namespace UserOperations.Models.AnalyticModels
             public DateTime Time { get; set; }
             public Guid? DialogueId { get; set; }
             public Guid? ContentId { get; set; }
+            public string FullName { get; set; }
         }
     }
 }
