@@ -15,6 +15,7 @@ namespace MessengerReporterService.Models
         
         public string ChatId { get; private set; }
         public string Token { get; private set; }
+        public int? LastMessageId {get; set;}
         
         public ITelegramBotClient Client { get;  set; }
     }
