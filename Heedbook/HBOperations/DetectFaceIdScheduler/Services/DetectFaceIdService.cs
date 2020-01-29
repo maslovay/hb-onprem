@@ -21,13 +21,15 @@ namespace DetectFaceIdScheduler.Services
         public List<FrameAttribute> DetectFaceIds(List<FrameAttribute> frameAttribute)
         {
             for (int i = 0; i< frameAttribute.Count(); i ++)
-            {  
+            { 
+                System.Console.WriteLine("Start"); 
                 frameAttribute[i].FileFrame.FaceId = DetectLocalFaceId(
                     frameAttribute
                         .Skip(Math.Max(0, i + 1 - _settings.PeriodFrames))
                         .Take(Math.Min(i + 1, _settings.PeriodFrames))
                         .ToList()
                 );
+                System.Console.WriteLine(frameAttribute[i].FileFrame.FaceId);
             }
             return frameAttribute;
         }
