@@ -56,7 +56,9 @@ namespace IntegrationAPITestsService.Tasks
             Console.WriteLine($"Loading {nameof(this.GetType)}...");
             //_logger.Info( "Loading Runner...");
             
-            //Helper.FetchSenders(_logger, _settings, _senders, _serviceProvider);
+            // Helper.FetchSenders(_logger, _settings, _senders, _serviceProvider);
+
+            System.Console.WriteLine($"Events are subscribed!");
             FetchSenderEvents();
             if (_settings.Tests?.Count == 0)
             {
@@ -98,18 +100,8 @@ namespace IntegrationAPITestsService.Tasks
 
         private void FetchSenderEvents()
         {
-            ApiError += resp =>
-            {
-                var message = new MessengerMessageRun
-                {
-                    logText = $"ERROR: <b>{resp.TaskName}</b>: <b>{resp.ResultMessage}</b>: " +
-                                $"__{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}__ " +
-                                $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info}",
-                    ChannelName = $"ApiTester"
-                };
-                System.Console.WriteLine($"{JsonConvert.SerializeObject(message)}");
-                _handler.EventRaised(message);
-            };
+            ApiError += ApiErrorEvent;
+
 
 //            ApiSuccess += resp =>
 //            {
@@ -125,6 +117,18 @@ namespace IntegrationAPITestsService.Tasks
 //                foreach (var sender in _senders)
 //                    sender.Send( $"{DateTime.Now.ToLocalTime().ToString(CultureInfo.InvariantCulture)} {message}", "ApiTester");
 //            };
+        }
+        private void ApiErrorEvent(TestResponse resp)
+        {
+            var message = new MessengerMessageRun
+            {
+                logText = $"ERROR: <b>{resp.TaskName}</b>: <b>{resp.ResultMessage}</b>: " +
+                            $"__{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}__ " +
+                            $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info}",
+                ChannelName = $"ApiTester"
+            };
+            System.Console.WriteLine($"ErrorEvent runned: {JsonConvert.SerializeObject(message)}");
+            _handler.EventRaised(message);
         }
 
         public void RunTests(bool needAuth = true)
