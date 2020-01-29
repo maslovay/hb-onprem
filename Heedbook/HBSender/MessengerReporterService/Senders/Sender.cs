@@ -18,6 +18,7 @@ namespace MessengerReporterService.Senders
 
         public void ReceiveCommands()
         {
+            System.Console.WriteLine($"Chats count: {Chats.Count}");
             for (;;)
             {
                 try
