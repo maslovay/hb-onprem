@@ -101,7 +101,16 @@ namespace IntegrationAPITestsService.Tasks
         private void FetchSenderEvents()
         {
             ApiError += ApiErrorEvent;
-
+            ApiSuccess += ApiSuccessEvent;
+            TestRunStatus += text => 
+            {
+                var message = new MessengerMessageRun
+                {
+                    logText = $"{text}",
+                    ChannelName = $"ApiTester"
+                };
+                _handler.EventRaised(message);
+            };
 
 //            ApiSuccess += resp =>
 //            {
@@ -122,18 +131,31 @@ namespace IntegrationAPITestsService.Tasks
         {
             var message = new MessengerMessageRun
             {
-                logText = $"ERROR: <b>{resp.TaskName}</b>: <b>{resp.ResultMessage}</b>: " +
+                logText =   $"ERROR: <b>{resp.TaskName}</b>: <b>{resp.ResultMessage}</b>: " +
                             $"__{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}__ " +
                             $"Body: {resp.Body} URL: {resp.Url} info: {resp.Info}",
-                ChannelName = $"ApiTester"
+                ChannelName = $"LogSender"
             };
             System.Console.WriteLine($"ErrorEvent runned: {JsonConvert.SerializeObject(message)}");
             _handler.EventRaised(message);
         }
+        private void ApiSuccessEvent(TestResponse resp)
+        {
+            var message = new MessengerMessageRun
+            {
+                logText =   $"SUCCESS: <i>{resp.TaskName}: {resp.ResultMessage}</i>: " +
+                            $"<i>{resp.Timestamp.ToLocalTime().ToString(CultureInfo.InvariantCulture)}</i> URL: {resp.Url}",
+                ChannelName = $"LogSender"
+            };
+            System.Console.WriteLine($"SuccessEvent runned: {JsonConvert.SerializeObject(message)}");
+            _handler.EventRaised(message);
+        }
+
 
         public void RunTests(bool needAuth = true)
         {
             TestRunStatus?.Invoke($"Running {TestsFilter} tests started...");
+            //Check Authentification
             if (needAuth)
             {
                 var authResponse = _checker.Check(_taskFactory.GenerateLoginTask());
@@ -166,6 +188,8 @@ namespace IntegrationAPITestsService.Tasks
             
             if (!response.IsPositive)
                 InvokeError(response);
+            else
+                InvokeSuccess(response);
         }
         
         public void InvokeSuccess(TestResponse response)
