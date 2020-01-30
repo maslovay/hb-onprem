@@ -456,6 +456,7 @@ namespace UserOperations.Services
         {
             var result = await _repository.GetAsQueryable<CampaignContentAnswer>()
                                      .Include(x => x.CampaignContent)
+                                     .Include(x => x.ApplicationUser)
                                      .Where(p =>
                                     p.CampaignContent != null
                                     && (p.Time >= begTime && p.Time <= endTime)
