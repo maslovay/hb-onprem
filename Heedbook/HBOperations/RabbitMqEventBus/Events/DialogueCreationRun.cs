@@ -12,5 +12,6 @@ namespace RabbitMqEventBus.Events
         public DateTime EndTime { get; set; }
         public string AvatarFileName {get;set;}
         public string Gender {get;set;}
+        public Guid? ClientId {get;set;}
     }
 }
