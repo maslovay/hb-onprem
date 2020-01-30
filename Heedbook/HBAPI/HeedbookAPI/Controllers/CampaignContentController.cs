@@ -60,7 +60,7 @@ namespace UserOperations.Controllers
         [HttpGet("Content")]
         [SwaggerOperation(Summary = "Get all content", Description = "Get all content for loggined company with screenshot url links")]
         [SwaggerResponse(200, "Content list", typeof(List<ContentWithScreenshotModel>))]
-        public async Task<string> ContentGet(
+        public async Task<object> ContentGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                 [FromQuery(Name = "inActive")] bool inactive = false,

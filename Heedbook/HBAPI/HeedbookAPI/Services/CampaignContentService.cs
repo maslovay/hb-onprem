@@ -172,7 +172,7 @@ namespace UserOperations.Services
             return "No such campaign";
         }
 
-        public async Task<string> ContentGet( List<Guid> companyIds, List<Guid> corporationIds, bool inactive, bool screenshot)
+        public async Task<object> ContentGet( List<Guid> companyIds, List<Guid> corporationIds, bool inactive, bool screenshot)
         {
                 var roleInToken = _loginService.GetCurrentRoleName();
                 var companyIdInToken = _loginService.GetCurrentCompanyId();
@@ -180,10 +180,10 @@ namespace UserOperations.Services
                 if (screenshot == true)
                 {
                     var contentsWithScreen = GetContentsByStatusIdWithUrls(inactive, companyIds);
-                    return JsonConvert.SerializeObject(contentsWithScreen);
+                    return contentsWithScreen;
                 }
                     var contents = GetContentsByStatusId(inactive, companyIds);
-                    return JsonConvert.SerializeObject(contents);
+                    return contents;
         }
 
         public async Task<object> ContentPaginatedGet( List<Guid> companyIds, List<Guid> corporationIds,
