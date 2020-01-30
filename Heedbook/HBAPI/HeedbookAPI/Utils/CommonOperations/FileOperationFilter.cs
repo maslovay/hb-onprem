@@ -37,7 +37,7 @@ namespace UserOperations.Utils
                         Name = "data",
                         In = "formData",
                         Type = "object",
-                        Default = JsonConvert.SerializeObject(new PostUser() { CompanyId=Guid.NewGuid(), Email="uniqueField", Password="required", RoleId=Guid.NewGuid()}),
+                        Default = JsonConvert.SerializeObject(new PostUser() { CompanyId=Guid.Empty, Email="uniqueField", Password="required", RoleId=Guid.NewGuid()}),
                         Description = "fill the user fields",
                         Required = true
                     });
@@ -51,8 +51,8 @@ namespace UserOperations.Utils
                         Name = "data",
                         In = "formData",
                         Type = "object",
-                        Default = JsonConvert.SerializeObject(new Content() { ContentId = Guid.NewGuid(), Duration = 0, IsTemplate = false, JSONData = "{}", Name = "", RawHTML = "" }),
-                        Description = "fill the user fields",
+                        Default = JsonConvert.SerializeObject(new Content() { ContentId = Guid.Empty, Duration = 0, IsTemplate = false, JSONData = "{}", Name = "", RawHTML = "" }),
+                        Description = "fill the content fields",
                         Required = true
                     });
                     operation.Consumes.Add("application/form-data");

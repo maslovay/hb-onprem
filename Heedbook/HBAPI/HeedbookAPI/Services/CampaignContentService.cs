@@ -232,12 +232,10 @@ namespace UserOperations.Services
             Add<Content>(content);
             SaveChanges();
 
-           
-
             if (formData.Files.Count != 0)
             {
                 FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-                string screenshot = content.ContentId + fileInfo.Extension;
+                string screenshot = content.ContentId + ".png";
                 await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{screenshot}"));
                 var memoryStream = formData.Files[0].OpenReadStream();
                 await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", screenshot, true);
@@ -266,17 +264,16 @@ namespace UserOperations.Services
             contentEntity.UpdateDate = DateTime.UtcNow;
             await SaveChangesAsync();
 
-            string screenshot = string.Empty;
-            //TODO::uncomment
-            //if (formData.Files.Count != 0)
-            //{
-            //    await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{content.ContentId}"));
-            //    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-            //    screenshot = content.ContentId + fileInfo.Extension;
-            //    var memoryStream = formData.Files[0].OpenReadStream();
-            //    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", screenshot, true);
-            //}
-            return new ContentWithScreenshotModel(contentEntity, screenshot);
+            string screenshot = content.ContentId + ".png";
+
+            if (formData.Files.Count != 0)
+            {
+                FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{screenshot}"));
+                var memoryStream = formData.Files[0].OpenReadStream();
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", screenshot, true);
+            }
+            return new ContentWithScreenshotModel(contentEntity, _fileRef.GetFileLink(_containerName, screenshot, default));
         }
 
         public async Task<string> ContentDelete( Guid contentId )
@@ -306,7 +303,7 @@ namespace UserOperations.Services
                 RemoveEntity(content);
                 SaveChanges();
                 //TODO::uncomment
-              //  await _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{content.ContentId+".png"}");
+                await _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{content.ContentId+".png"}");
             }
             catch
             {
