@@ -15,6 +15,7 @@ using DialogueCreatorScheduler.Extensions;
 using Quartz;
 using HBLib.Utils;
 using DialogueCreatorScheduler.Services;
+using Configurations;
 
 namespace DialogueCreatorScheduler
 {
@@ -46,9 +47,13 @@ namespace DialogueCreatorScheduler
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
+
             services.AddSingleton<PersonDetectionService>();
             services.AddSingleton<DialogueCreatorService>();
-            // services.AddRabbitMqEventBus(Configuration);
+            services.AddSingleton<FaceIntervalsService>();
+            services.AddSingleton<DialogueSavingService>();
+
+            services.AddRabbitMqEventBus(Configuration);
 
             services.AddDialogueCreatorSchedulerQuartz(schedulerSettings);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
@@ -60,7 +65,7 @@ namespace DialogueCreatorScheduler
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
-            // var service = app.ApplicationServices.GetRequiredService<INotificationService>();
+            var service = app.ApplicationServices.GetRequiredService<INotificationService>();
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

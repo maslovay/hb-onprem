@@ -43,9 +43,7 @@ namespace DialogueCreatorScheduler.QuartzJobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            // min dialogue - 30 seconds
-            // max pause dialogue - 60 seconds
-            // max pause - 300 seconds
+            System.Console.WriteLine("Function started");
             var _log = _elasticClientFactory.GetElasticClient();
             
             try
