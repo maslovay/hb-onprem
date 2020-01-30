@@ -23,6 +23,7 @@ namespace DialogueCreatorScheduler.Service
                     BeginTime = p.BegTime,
                     EndTime = p.EndTime,
                     AvatarFileName = null,
+                    ClientId = p.ClientId,
                     Gender = p.Comment
                 }).ToList();
 

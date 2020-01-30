@@ -25,6 +25,9 @@ namespace DialogueCreatorScheduler.Services
                 {
                     var frameExample = frames.Where(p => p.FrameAttribute.Any() && p.FaceId == intervals[i].FaceId ).First();
                     var clientId = _det.FindId(frameExample, clients);
+
+                    System.Console.WriteLine($"Client id is {clientId}");
+                    
                     var curFrame = frames.Where(p => p.Time >= intervals[i].BegTime && p.Time <= intervals[i].BegTime).First();
                     dialogues.Add(new Dialogue{
                         DialogueId = Guid.NewGuid(),
