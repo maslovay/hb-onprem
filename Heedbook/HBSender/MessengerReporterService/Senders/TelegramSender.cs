@@ -142,7 +142,7 @@ namespace MessengerReporterService.Senders
             }
             catch (Exception ex)
             {
-                Console.WriteLine("TelegramSender.Poll() exception: " + ex.Message);
+                Console.WriteLine("TelegramSender.Poll() exception: " + ex);
             }
             finally
             {
