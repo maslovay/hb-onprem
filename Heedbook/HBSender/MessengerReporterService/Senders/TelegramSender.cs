@@ -130,10 +130,10 @@ namespace MessengerReporterService.Senders
                     updatesOffset = orderedResults?.FirstOrDefault()?.Id ?? 0;
                     updatesOffset++;
 
-                    if (string.IsNullOrEmpty(command) || _chat.LastMessageId == lastMessageId)
+                    if (string.IsNullOrEmpty(command) || (_chat?.LastMessageId != null && lastMessageId != null && _chat?.LastMessageId == lastMessageId))
                         return string.Empty;
                     _chat.LastMessageId = lastMessageId;
-                    System.Console.WriteLine($"_chat.LastMessageId: {_chat.LastMessageId}");
+                    System.Console.WriteLine($"_chat.LastMessageId: {_chat?.LastMessageId}");
                     System.Console.WriteLine($"MessageId: {lastMessageId}");
                     Console.WriteLine("Chat id: " + chatId);
                     Console.WriteLine("Command found: " + command);
