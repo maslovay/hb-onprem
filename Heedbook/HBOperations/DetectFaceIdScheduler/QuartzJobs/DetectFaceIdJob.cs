@@ -88,7 +88,8 @@ namespace DetectFaceIdScheduler.QuartzJobs
                     _context.SaveChanges();
 
                 }
-                _context.SaveChanges();
+                System.Console.WriteLine("Finished");
+                // _context.SaveChanges();
                 _log.Info("Function finished");
             }
             catch (Exception e)
