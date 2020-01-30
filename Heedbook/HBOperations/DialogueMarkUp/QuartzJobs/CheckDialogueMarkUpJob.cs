@@ -54,7 +54,7 @@ namespace DialogueMarkUp.QuartzJobs
                     .Include(p => p.FileFrame)
                     .Where(p => 
                         // p.FileFrame.StatusNNId == 6 
-                        p.FileFrame.Time > begMarkUpTime &&
+                        p.FileFrame.Time > begMarkUpTime
                         && p.FileFrame.Time < endTime 
                         && p.FileFrame.FaceLength > 0)
                     .OrderBy(p => p.FileFrame.Time)
