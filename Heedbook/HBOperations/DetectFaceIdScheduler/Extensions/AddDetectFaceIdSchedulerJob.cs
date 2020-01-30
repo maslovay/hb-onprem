@@ -11,7 +11,7 @@ namespace DetectFaceIdScheduler.Extensions
 {
     public static class AddDetectFaceIdSchedulerJob
     {
-        public static void AddMarkUpQuartz(this IServiceCollection services, JobSettings settings)
+        public static void AddDetectFaceIdSchedulerQuartz(this IServiceCollection services, JobSettings settings)
         {
             services.Add(new ServiceDescriptor(typeof(IJob), typeof(DetectFaceIdJob),
                 ServiceLifetime.Singleton));

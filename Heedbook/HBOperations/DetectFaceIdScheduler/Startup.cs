@@ -51,7 +51,7 @@ namespace DetectFaceIdScheduler
             services.Configure<DetectFaceIdSettings>(Configuration.GetSection(nameof(DetectFaceIdSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<DetectFaceIdSettings>>().Value);
 
-            services.AddMarkUpQuartz(schedulerSettings);
+            services.AddDetectFaceIdSchedulerQuartz(schedulerSettings);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
         }
