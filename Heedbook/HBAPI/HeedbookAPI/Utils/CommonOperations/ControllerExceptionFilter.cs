@@ -6,10 +6,6 @@ namespace UserOperations.Controllers
 {
     public class ControllerExceptionFilter : ExceptionFilterAttribute
     {
-        public ControllerExceptionFilter()
-        {
-        }
-
         public override void OnException(ExceptionContext context)
         {
             var code = 400;

@@ -1,20 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
 using UserOperations.Models.Get.AnalyticRatingController;
 
 namespace UserOperations.Utils.AnalyticRatingUtils
 {
     public class AnalyticRatingUtils
     {
-        private readonly IConfiguration _config;
-
-        public AnalyticRatingUtils(IConfiguration config)
-        {
-            _config = config;
-        }
-
         public double? LoadIndex(double? workinHours, double? dialogueHours)
         {
             workinHours = MaxDouble(workinHours, dialogueHours);

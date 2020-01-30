@@ -1,53 +1,35 @@
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using HBData.Models;
-using HBData;
-using UserOperations.Utils;
-using HBLib.Utils;
 using UserOperations.Models.Session;
 using HBData.Repository;
-using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace UserOperations.Services
 {
     public class SessionService
     {
-        private readonly RecordsContext _context;
-        private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
-
-        public SessionService(
-            RecordsContext context,
-            ElasticClient log,
-            IGenericRepository repository
-            )
+        public SessionService( IGenericRepository repository )
         {
-            _context = context;
-            _log = log;
             _repository = repository;
         }
 
-        public Response SessionStatus([FromBody] SessionParams data)
+        public async Task<Response> SessionStatus([FromBody] SessionParams data)
         {
             const int OPEN = 6;
             const int CLOSE = 7;
             try
             {
-//                _log.SetFormat("{ApplicationUserId}");
-//                _log.SetArgs(data.ApplicationUserId);
-                _log.Info($"session /sessionStatus {data.ApplicationUserId} try {data.Action}");
                 var response = new Response();
                 if (String.IsNullOrEmpty(data.ApplicationUserId.ToString())) 
                 {
-//                    _log.Info($"Session/SessionStatus ApplicationUser is empty");
                     response.Message = "ApplicationUser is empty";
                     return response;
                 }
                 if (data.Action != "open" && data.Action != "close") 
                 {
-//                    _log.Info($"Session/SessionStatus {data.ApplicationUserId} Wrong action");
                     response.Message = "Wrong action";
                     return response;
                 }
@@ -57,7 +39,7 @@ namespace UserOperations.Services
                 var oldTime = DateTime.UtcNow.AddDays(-3);
                 
                 //---last session for 3 days
-                var lastSession = _context.Sessions
+                var lastSession = _repository.GetAsQueryable<Session>()
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId && p.BegTime >= oldTime && p.BegTime <= curTime)
                         .OrderByDescending(p => p.BegTime)
                         .FirstOrDefault();
@@ -71,7 +53,7 @@ namespace UserOperations.Services
                 //---START CLOSE OLD SESSIONS IF NOT CLOSED and DEVIDE TIME FOR LONG SESSIONS---
                 var lastSessionId = lastSession != null ? lastSession.SessionId : Guid.Empty;
               
-                var veryLongSessions = _context.Sessions
+                var veryLongSessions = _repository.GetAsQueryable<Session>()
                           .Where(p => p.ApplicationUserId == data.ApplicationUserId
                            && p.SessionId != lastSessionId
                            && p.EndTime.Subtract(p.BegTime).TotalHours > 24 )
@@ -94,20 +76,20 @@ namespace UserOperations.Services
                             IsDesktop = longSes.IsDesktop,
                             StatusId = CLOSE
                         };
-                        _context.Sessions.Add(session);
+                        _repository.Create<Session>(session);
                     }
                     longSes.EndTime = longSesBeg.AddHours(24);
                 }
               //  _context.SaveChanges();
 
-                var notClosedSessions = _context.Sessions
+                var notClosedSessions = _repository.GetAsQueryable<Session>()
                         .Where(p => p.ApplicationUserId == data.ApplicationUserId
                         && p.SessionId != lastSessionId
                         && p.StatusId == OPEN)
                         .ToArray();
                 for (int i = 0; i < notClosedSessions.Count(); i++)
                 {
-                    var nextSessionByTime = _context.Sessions
+                    var nextSessionByTime = _repository.GetAsQueryable<Session>()
                             .Where(x => x.BegTime > notClosedSessions[i].BegTime 
                              && x.ApplicationUserId == data.ApplicationUserId)
                              .OrderBy(x => x.BegTime).FirstOrDefault();
@@ -115,21 +97,19 @@ namespace UserOperations.Services
                         notClosedSessions[i].EndTime = nextSessionByTime.BegTime;                  
                     notClosedSessions[i].StatusId = CLOSE;
                 }
-                _context.SaveChanges();
+                _repository.Save();
                 //---END
 
                 if (lastSession != null && actionId == lastSession.StatusId)
                 {
                     response.Message = $"Can't {data.Action} session";
                     return response;
-                    // _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't {data.Action} session");
                 }
 
                 if (lastSession == null && actionId == CLOSE)
                 {
                     response.Message = "Can't close not opened session";
                     return response;
-                    // _log.Info($"Session/SessionStatus {data.ApplicationUserId} Can't close not opened session");
                 }
 
                 if ( actionId == OPEN )
@@ -141,12 +121,11 @@ namespace UserOperations.Services
                         StatusId = actionId,
                         IsDesktop = (bool)data.IsDesktop
                     };
-                    alertOpenCloseSession.AlertTypeId = _context.AlertTypes.Where(x => x.Name == "session open").FirstOrDefault().AlertTypeId;
-                    _context.Sessions.Add(session);
-                    _context.Alerts.Add(alertOpenCloseSession);
-                    _context.SaveChanges();
+                    alertOpenCloseSession.AlertTypeId = (await _repository.FindOrNullOneByConditionAsync<AlertType>(x => x.Name == "session open")).AlertTypeId;
+                    _repository.Create<Session>(session);
+                    _repository.Create<Alert>(alertOpenCloseSession);
+                    _repository.Save();
                     response.Message = "Session successfully opened";
-                    _log.Info($"Session successfully opened {data.ApplicationUserId}"); 
                     return response;
                 }
 
@@ -156,10 +135,10 @@ namespace UserOperations.Services
                     lastSession.EndTime = DateTime.UtcNow;
 
                     //---add alerts-- -
-                    alertOpenCloseSession.AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "session close").AlertTypeId;
-                    _context.Alerts.Add(alertOpenCloseSession);
+                    alertOpenCloseSession.AlertTypeId = (await _repository.FindOrNullOneByConditionAsync<AlertType>(x => x.Name == "session close")).AlertTypeId;
+                    _repository.Create<Alert>(alertOpenCloseSession);
 
-                    var dialoquesAmount = _context.Dialogues
+                    var dialoquesAmount = _repository.GetAsQueryable<Dialogue>()
                         .Where(x => x.BegTime >= lastSession.BegTime
                         && x.EndTime <= lastSession.EndTime
                         && x.ApplicationUserId == lastSession.ApplicationUserId && x.StatusId == 3 && x.InStatistic == true).Count();
@@ -169,14 +148,13 @@ namespace UserOperations.Services
                         {
                             ApplicationUserId = data.ApplicationUserId,
                             CreationDate = DateTime.UtcNow,
-                            AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "no conversations").AlertTypeId
+                            AlertTypeId = (await _repository.FindOrNullOneByConditionAsync<AlertType>(x => x.Name == "no conversations")).AlertTypeId
                         };
-                        _context.Alerts.Add(alertNoDialogues);
+                        _repository.Create<Alert>(alertNoDialogues);
                     }
                     //---
-                    _context.SaveChanges();
+                    _repository.Save();
                     response.Message = "session successfully closed";
-                    _log.Info($"session successfully closed {data.ApplicationUserId}"); 
                     return response;
                 }
 
@@ -195,23 +173,17 @@ namespace UserOperations.Services
 
         public object SessionStatus([FromQuery] Guid applicationUserId)
         {
-            var session = _context.Sessions
-                    .Where(p => p.ApplicationUserId == applicationUserId)
+            var session = _repository.GetAsQueryable<Session>().Where(p => p.ApplicationUserId == applicationUserId)
                         ?.OrderByDescending(p => p.BegTime)
                         ?.FirstOrDefault();
             var result = new { session?.BegTime, session?.StatusId };
-//                _log.Info($"Get Session/SessionStatus {applicationUserId}");
-            return result;            
-        }      
+            return result;
+        }
 
-        public string AlertNotSmile([FromBody] Guid applicationUserId)
+        public async Task<string> AlertNotSmile([FromBody] Guid applicationUserId)
         {
-            System.Console.WriteLine(applicationUserId);
-            //var response = new Response();
             if (String.IsNullOrEmpty(applicationUserId.ToString())) 
             {
-                // response.Message  "ApplicationUser is empty";
-                // return response.Message;
                 return "ApplicationUser is empty";
             }
 
@@ -219,13 +191,11 @@ namespace UserOperations.Services
             {
                 CreationDate = DateTime.UtcNow,
                 ApplicationUserId = applicationUserId,
-                AlertTypeId = _context.AlertTypes.FirstOrDefault(x => x.Name == "client does not smile").AlertTypeId
+                AlertTypeId = (await _repository.FindOrNullOneByConditionAsync<AlertType>(x => x.Name == "client does not smile")).AlertTypeId
             };
-            _context.Alerts.Add(newAlert);
-            _context.SaveChanges();
-            // response.Message = "Alert saved";
-            // return response.Message;
-            return "Alert saved";            
+            _repository.Create<Alert>(newAlert);
+            _repository.Save();
+            return "Alert saved";
         }
     }    
 }

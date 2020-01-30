@@ -14,13 +14,11 @@ namespace UserOperations.Services
     {
         private readonly SmtpSettings _smtpSettings;
         private readonly SmtpClient _smtpClient;
-        private readonly ElasticClient _log;
         private readonly string folder;
-        public MailSender(SmtpSettings smtpSettings, SmtpClient smtpClient, ElasticClient log)
+        public MailSender(SmtpSettings smtpSettings, SmtpClient smtpClient)
         {
             _smtpSettings = smtpSettings;
             _smtpClient = smtpClient;
-            _log = log;
             folder = @"/Utils/CommonOperations/";
         }
 
@@ -114,7 +112,6 @@ namespace UserOperations.Services
             }
             catch (Exception ex)
             {
-                _log.Fatal($"Read Languages fatal {ex.Message}");
                 return null;
             }
         }    
@@ -145,7 +142,6 @@ namespace UserOperations.Services
             }
             catch (Exception ex)
             {
-                _log.Fatal($"Create user email fatal exception {ex.Message}");
                 return "";
             }
         }
@@ -181,7 +177,6 @@ namespace UserOperations.Services
             }
             catch (Exception ex)
             {
-                _log.Fatal($"Create user email fatal exception {ex.Message}");
                 return ex.Message +  ex.InnerException?.Message;
             }
         }

@@ -25,7 +25,6 @@ namespace UserOperations.Controllers
     [ApiController]
     public class UserController : Controller
     {
-        private readonly IConfiguration _config;
         private readonly LoginService _loginService;
         private readonly RecordsContext _context;
         private readonly RequestFilters _requestFilters;
@@ -41,7 +40,6 @@ namespace UserOperations.Controllers
         //private readonly int disabledStatus;
 
         public UserController(
-            IConfiguration config,
             LoginService loginService,
             RecordsContext context,
             SftpClient sftpClient,
@@ -53,7 +51,6 @@ namespace UserOperations.Controllers
             PhraseProvider phraseProvider
             )
         {
-            _config = config;
             _loginService = loginService;
             _context = context;
             _sftpClient = sftpClient;
