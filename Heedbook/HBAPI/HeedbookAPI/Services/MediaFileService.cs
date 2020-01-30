@@ -15,7 +15,6 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private readonly SftpClient _sftpClient;
         private readonly string _containerName;
-        private Dictionary<string, string> userClaims;
       
 
         public MediaFileService(
@@ -25,7 +24,7 @@ namespace UserOperations.Services
         {
             _loginService = loginService;
             _sftpClient = sftpClient;
-            _containerName = "media";         
+            _containerName = "media";
         }
 
         public async Task<object> FileGet(

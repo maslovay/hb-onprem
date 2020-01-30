@@ -1,12 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using HBData.Models;
 using UserOperations.Services;
-using HBData;
-using HBLib.Utils;
-using UserOperations.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -18,27 +14,12 @@ namespace UserOperations.Controllers
     [AllowAnonymous]
     public class DemonstrationController : Controller
     {
-        private readonly RecordsContext _context;
-        private readonly IConfiguration _config;
-        private readonly DBOperations _dbOperation;
-        private readonly SftpClient _sftpClient;
-        private readonly LoginService _loginService;
         private readonly DemonstrationService _demonstrationService;
 
         public DemonstrationController (
-            RecordsContext context,
-            IConfiguration config,
-            DBOperations dbOperation,
-            SftpClient sftpClient,
-            LoginService loginService,
             DemonstrationService demonstrationService
             )
         {
-            _context = context;
-            _config = config;
-            _dbOperation = dbOperation;
-            _sftpClient = sftpClient;
-            _loginService = loginService;
             _demonstrationService = demonstrationService;
         }
 

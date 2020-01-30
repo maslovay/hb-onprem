@@ -4,22 +4,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
-using HBLib.Utils;
 using HBData.Repository;
 
 namespace UserOperations.Services
 {
     public class DemonstrationService
     {
-        private readonly SftpClient _sftpClient;
         private readonly IGenericRepository _repository;
 
         public DemonstrationService(
-            SftpClient sftpClient,
             IGenericRepository repository
             )
         {
-            _sftpClient = sftpClient;
             _repository = repository;
         }      
         public async Task FlushStats( List<SlideShowSession> stats)

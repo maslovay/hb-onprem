@@ -1,15 +1,6 @@
-using System;
-using System.Buffers.Text;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using HBLib;
-using HBLib.Utils;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Threading;
 
 namespace UserOperations.Controllers
 {
@@ -17,11 +8,9 @@ namespace UserOperations.Controllers
     [ApiController]
     public class LoggingController : ControllerBase
     {
-        private readonly ElasticSettings _settings;
 
-        public LoggingController(ElasticSettings settings)
+        public LoggingController()
         {
-            _settings = new ElasticSettings {Host = settings.Host, Port = settings.Port};
         }
 
         /// <summary>

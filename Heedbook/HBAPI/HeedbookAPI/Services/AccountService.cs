@@ -19,7 +19,6 @@ namespace UserOperations.Providers
         private readonly IGenericRepository _repository;
         private readonly MailSender _mailSender;
         private readonly HelpProvider _helpProvider;
-        private Dictionary<string, string> userClaims;
 
 
         public AccountService(

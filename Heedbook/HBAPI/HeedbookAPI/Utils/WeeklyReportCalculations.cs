@@ -1,24 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using HBData;
-using UserOperations.Models.AnalyticModels;
 using HBData.Models;
-using UserOperations.Controllers;
 using System.Reflection;
 
 namespace UserOperations.Utils
 {
     public class DBOperationsWeeklyReport
     {
-        private readonly RecordsContext _context;
-
-        public DBOperationsWeeklyReport(RecordsContext context, IConfiguration config)
-        {
-            _context = context;
-        }
         public double? TotalAvg(List<VWeeklyUserReport> dialogues, string property)
         {
             if (dialogues == null || dialogues.Count() == 0) return 0;

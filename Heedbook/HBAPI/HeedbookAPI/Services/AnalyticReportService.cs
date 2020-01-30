@@ -18,7 +18,6 @@ namespace UserOperations.Services
 {
     public class AnalyticReportService
     {
-        private readonly IConfiguration _config;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
@@ -32,7 +31,6 @@ namespace UserOperations.Services
             AnalyticReportUtils analyticReportUtils
             )
         {
-            _config = config;
             _loginService = loginService;
             _requestFilters = requestFilters;
             _repository = repository;

@@ -1,26 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
-using HBData;
 using UserOperations.Models.AnalyticModels;
-using HBData.Models;
-using UserOperations.Controllers;
-using System.Reflection;
-using UserOperations.Models.Get;
 using UserOperations.Models.Get.HomeController;
 
 namespace UserOperations.Utils
 {
     public class DBOperations
     {
-        private readonly RecordsContext _context;
         private readonly IConfiguration _config;
 
-        public DBOperations(RecordsContext context, IConfiguration config)
+        public DBOperations(IConfiguration config)
         {
-            _context = context;
             _config = config;
         }
         public T Max<T>(T val1, T val2) where T : IComparable<T>

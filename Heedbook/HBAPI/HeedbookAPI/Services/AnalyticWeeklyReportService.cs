@@ -13,7 +13,6 @@ namespace UserOperations.Services
 {
     public class AnalyticWeeklyReportService
     {
-        private readonly IConfiguration _config;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
@@ -27,7 +26,6 @@ namespace UserOperations.Services
             AnalyticWeeklyReportUtils analyticWeeklyReportUtils
             )
         {
-            _config = config;
             _loginService = loginService;
             _requestFilters = requestFilters;
             _repository = repository;

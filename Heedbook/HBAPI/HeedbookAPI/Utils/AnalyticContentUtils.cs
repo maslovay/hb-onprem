@@ -1,16 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using HBData;
-using UserOperations.Models.Get.HomeController;
-using HBData.Models;
-using UserOperations.Controllers;
-using System.Reflection;
-using UserOperations.Models.Get;
-using HBData.Repository;
-using Microsoft.EntityFrameworkCore;
 using System.IO;
 using UserOperations.Models.Get.AnalyticContentController;
 using DocumentFormat.OpenXml.Packaging;
@@ -21,15 +10,6 @@ namespace UserOperations.Utils.AnalyticContentUtils
 {
     public class AnalyticContentUtils
     {
-        private readonly RecordsContext _context;
-        private readonly IConfiguration _config;
-        private readonly IGenericRepository _repository;
-
-        public AnalyticContentUtils(RecordsContext context, IConfiguration config, IGenericRepository repository)
-        {
-            _context = context;
-            _config = config;
-        }
         public MemoryStream CreatePoolAnswersSheet(List<AnswerInfo> answers, string sheetName)
         {
             var answersModified = answers.SelectMany(x => x.Answers.Select(p => new { p.Answer, p.FullName, p.DialogueId, p.Time, x.ContentName })).ToList();

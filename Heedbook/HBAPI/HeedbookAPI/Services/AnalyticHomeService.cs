@@ -17,21 +17,18 @@ namespace UserOperations.Services
     public class AnalyticHomeService
     {
         private readonly IGenericRepository _repository;
-        private readonly IConfiguration _config;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly AnalyticHomeUtils _utils;
 
         public AnalyticHomeService(
             IGenericRepository repository,
-            IConfiguration config,
             LoginService loginService,
             RequestFilters requestFilters,
             AnalyticHomeUtils utils
             )
         {
             _repository = repository;
-            _config = config;
             _loginService = loginService;
             _requestFilters = requestFilters;
             _utils = utils;

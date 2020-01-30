@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using UserOperations.Utils;
@@ -17,21 +16,18 @@ namespace UserOperations.Services
 {
     public class AnalyticContentService
     {
-        private readonly HelpProvider _helpProvider;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticContentUtils _utils;
 
         public AnalyticContentService(
-            HelpProvider helpProvider,
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,
             AnalyticContentUtils utils
             )
         {
-            _helpProvider = helpProvider;
             _loginService = loginService;
             _requestFilters = requestFilters;
             _repository = repository;

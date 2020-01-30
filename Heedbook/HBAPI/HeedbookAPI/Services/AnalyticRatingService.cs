@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HBData;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Utils;
 using UserOperations.Models.Get.AnalyticRatingController;
@@ -16,21 +15,18 @@ namespace UserOperations.Services
     public class AnalyticRatingService
     {    
         private readonly LoginService _loginService;
-        private readonly RecordsContext _context;
         private readonly RequestFilters _requestFilters;
         private readonly AnalyticRatingUtils _analyticRatingUtils;
         private readonly IGenericRepository _repository;
 
         public AnalyticRatingService(
             LoginService loginService,
-            RecordsContext context,
             RequestFilters requestFilters,
             AnalyticRatingUtils analyticRatingUtils,
             IGenericRepository repository
             )
         {
             _loginService = loginService;
-            _context = context;
             _requestFilters = requestFilters;
             _analyticRatingUtils = analyticRatingUtils;
             _repository = repository;

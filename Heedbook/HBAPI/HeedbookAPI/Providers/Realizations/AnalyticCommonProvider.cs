@@ -1,12 +1,10 @@
-﻿using HBData;
-using HBData.Models;
+﻿using HBData.Models;
 using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UserOperations.Controllers;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
 

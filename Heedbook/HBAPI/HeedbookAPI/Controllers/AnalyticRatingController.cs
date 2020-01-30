@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using System.Threading.Tasks;
-using UserOperations.Models.Get.AnalyticRatingController;
 using Microsoft.AspNetCore.Authorization;
 
 namespace UserOperations.Controllers
