@@ -16,6 +16,7 @@ using Quartz;
 using HBLib.Utils;
 using DialogueCreatorScheduler.Services;
 using Configurations;
+using DialogueCreatorScheduler.Service;
 
 namespace DialogueCreatorScheduler
 {
