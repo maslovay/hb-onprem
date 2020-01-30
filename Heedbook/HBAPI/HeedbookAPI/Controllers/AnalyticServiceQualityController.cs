@@ -28,8 +28,8 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                         [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
-                                                        [FromHeader] string Authorization) => 
+                                                         [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                       ) => 
             await _analyticServiceQualityService.ServiceQualityComponents(
                 beg,
                 end,
@@ -45,8 +45,8 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
-                                                        [FromHeader] string Authorization) => 
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                        ) => 
             _analyticServiceQualityService.ServiceQualityDashboard(
                 beg,
                 end,
@@ -62,8 +62,8 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
-                                                        [FromHeader] string Authorization) =>
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                        ) =>
             await _analyticServiceQualityService.ServiceQualityRating(
                 beg,
                 end,
@@ -79,8 +79,8 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
-                                                        [FromHeader] string Authorization) =>
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                       ) =>
             await _analyticServiceQualityService.ServiceQualitySatisfactionStats(
                 beg,
                 end,

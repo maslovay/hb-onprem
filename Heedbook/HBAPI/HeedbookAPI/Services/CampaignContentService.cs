@@ -23,7 +23,7 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-       // private readonly SftpClient _sftpClient;
+        private readonly SftpClient _sftpClient;
         private readonly FileRefUtils _fileRef;
 
         private const string _containerName = "screenshots";
@@ -32,7 +32,7 @@ namespace UserOperations.Services
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,
-          //  SftpClient sftpClient,
+            SftpClient sftpClient,
             FileRefUtils fileRef
             )
         {
@@ -41,7 +41,7 @@ namespace UserOperations.Services
                 _loginService = loginService;
                 _requestFilters = requestFilters;
                 _repository = repository;
-              //  _sftpClient = sftpClient;
+                _sftpClient = sftpClient;
                 _fileRef = fileRef;
             }
             catch (Exception e)
@@ -138,6 +138,7 @@ namespace UserOperations.Services
                 campaignEntity.CampaignContents = campaignEntity.CampaignContents.Where(x => x.StatusId != inactiveStatusId).ToList();
                 return campaignEntity;
         }
+
         public string CampaignDelete( Guid campaignId )
         {
             var roleInToken = _loginService.GetCurrentRoleName();
@@ -231,9 +232,18 @@ namespace UserOperations.Services
             Add<Content>(content);
             SaveChanges();
 
-            FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-            string screenshot = content.ContentId + fileInfo.Extension;
-            return new ContentWithScreenshotModel(content, _fileRef.GetFileLink(_containerName, screenshot, default));
+           
+
+            if (formData.Files.Count != 0)
+            {
+                FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                string screenshot = content.ContentId + fileInfo.Extension;
+                await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{screenshot}"));
+                var memoryStream = formData.Files[0].OpenReadStream();
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", screenshot, true);
+                return new ContentWithScreenshotModel(content, _fileRef.GetFileLink(_containerName, screenshot, default));
+            }
+            return new ContentWithScreenshotModel(content, null);
         }
 
         public async Task<ContentWithScreenshotModel> ContentPut(IFormCollection formData)

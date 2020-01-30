@@ -37,5 +37,6 @@ namespace UserOperations.Models
             public string Avatar { get; set; }
             public string SessionStatus { get; set; }
             public Guid? DeviceId { get; set; }
-        }
+            public int? UserStatus { get; set; }
+    }
 }

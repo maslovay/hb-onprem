@@ -27,8 +27,8 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                         [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
-                                                        [FromHeader] string Authorization) =>
+                                                         [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                       ) =>
             _analyticOfficeProvider.Efficiency(
                 beg,
                 end,

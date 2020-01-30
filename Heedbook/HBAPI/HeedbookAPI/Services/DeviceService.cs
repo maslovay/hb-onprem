@@ -55,7 +55,7 @@ namespace UserOperations.Services
             return data.ToList();
         }
 
-        public async Task<List<GetUsersSessions>> GetAllUsersSessions()
+        public async Task<List<GetUsersSessions>> GetAllUsersSessions(bool active)
         {
             var deviceId = _loginService.GetCurrentDeviceId();
             Guid companyId;
@@ -71,6 +71,8 @@ namespace UserOperations.Services
 
             var users = _repository.GetAsQueryable<ApplicationUser>()
                 .Where(u => u.CompanyId == companyId && u.UserRoles.Select(r => r.RoleId).Contains(employeeRoleId));
+            if (active)
+                users = users.Where(u => u.StatusId == GetStatusId("Active"));
 
             var userIds = users.Select(u => u.Id).ToList();
 
@@ -83,7 +85,8 @@ namespace UserOperations.Services
                         s.BegTime,
                         s.StatusId,
                         u.FullName,
-                        u.Avatar
+                        u.Avatar,
+                        userStatus = u.StatusId
                     })
                 .GroupBy(x => x.ApplicationUserId)
                 .Select(x => new GetUsersSessions
@@ -92,7 +95,8 @@ namespace UserOperations.Services
                     DeviceId = x.OrderByDescending(p => p.BegTime).FirstOrDefault().DeviceId,
                     SessionStatus = x.OrderByDescending(p => p.BegTime).FirstOrDefault().StatusId == 6 ? "open" : "close",
                     FullName = x.OrderByDescending(p => p.BegTime).FirstOrDefault().FullName,
-                    Avatar = _loginService.GetAvatar(x.OrderByDescending(p => p.BegTime).FirstOrDefault().Avatar)
+                    Avatar = _loginService.GetAvatar(x.OrderByDescending(p => p.BegTime).FirstOrDefault().Avatar),
+                    UserStatus = x.First().userStatus
                 });
 
             var usersInSessions = sessions.Select(x => x.UserId).ToList();
@@ -103,7 +107,8 @@ namespace UserOperations.Services
                     FullName = x.FullName,
                     Avatar = _loginService.GetAvatar(x.Avatar),
                     DeviceId = null,
-                    SessionStatus = "close"
+                    SessionStatus = "close",
+                    UserStatus = x.StatusId
                 });
             return sessions.Union(userSessionsNotIncludedInResult).ToList();
         }
