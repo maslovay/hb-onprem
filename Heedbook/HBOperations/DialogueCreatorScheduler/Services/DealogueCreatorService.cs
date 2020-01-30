@@ -67,7 +67,7 @@ namespace DialogueCreatorScheduler.Services
 
             frames.Where(p => p.Time <= updateTime)
                 .ToList()
-                .ForEach(p => p.StatusNNId=6);
+                .ForEach(p => p.StatusNNId=7);
 
             return dialogues;
         }
