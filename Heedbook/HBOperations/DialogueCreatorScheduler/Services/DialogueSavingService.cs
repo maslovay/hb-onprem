@@ -23,6 +23,7 @@ namespace DialogueCreatorScheduler.Service
                     BeginTime = p.BegTime,
                     EndTime = p.EndTime,
                     AvatarFileName = null,
+                    ClientId = p.ClientId,
                     Gender = p.Comment
                 }).ToList();
 
@@ -34,8 +35,6 @@ namespace DialogueCreatorScheduler.Service
                 EndTime = p.EndTime
             });
 
-            // dialogues.ForEach(p => p.Comment = null);
-            // _context.Dialogues.AddRange(dialogues);
             foreach (var message in dialogueCreationList)
             {
                 _publisher.Publish(message);

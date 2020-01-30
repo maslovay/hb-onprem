@@ -32,7 +32,8 @@ namespace DialogueCreatorScheduler.QuartzJobs
             ElasticClientFactory elasticClientFactory,
             DialogueCreatorService dialogueCreator,
             DialogueSavingService publisher,
-            FaceIntervalsService intervalCalc)
+            FaceIntervalsService intervalCalc
+            )
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _elasticClientFactory = elasticClientFactory;
@@ -43,9 +44,7 @@ namespace DialogueCreatorScheduler.QuartzJobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            // min dialogue - 30 seconds
-            // max pause dialogue - 60 seconds
-            // max pause - 300 seconds
+            System.Console.WriteLine("Function started");
             var _log = _elasticClientFactory.GetElasticClient();
             
             try
@@ -87,6 +86,7 @@ namespace DialogueCreatorScheduler.QuartzJobs
                     _log.Info($"Merged intervals - {JsonConvert.SerializeObject(mergedIntervals)}");
 
                     var dialogues = _dialogueCreator.Dialogues(mergedIntervals, ref deviceFrames, deviceClients);
+                    dialogues = dialogues.Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 40).ToList();
                     _log.Info($"Created dialogues - {JsonConvert.SerializeObject(dialogues)}");
 
                     if (dialogues.Any())

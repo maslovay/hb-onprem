@@ -51,6 +51,8 @@ namespace FillingFrameService
             _log.SetArgs(message.DialogueId);
             _log.Info("Function started");
 
+            _log.Info($"Processing message {JsonConvert.SerializeObject(message)}");
+
             try
             {
                 var isExtended = _requests.IsExtended(message);

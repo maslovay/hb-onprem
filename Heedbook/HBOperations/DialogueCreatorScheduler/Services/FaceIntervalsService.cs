@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DialogueCreatorScheduler.Models;
 using HBData.Models;
+using Newtonsoft.Json;
 
 namespace DialogueCreatorScheduler.Services  
 {
@@ -14,6 +15,7 @@ namespace DialogueCreatorScheduler.Services
         }
         public List<FaceInterval> CreateFaceIntervals(List<FileFrame> frames)
         {
+            System.Console.WriteLine(JsonConvert.SerializeObject(_dialogueSettings));
             var faceIntervals = new List<FaceInterval>();
             if (!frames.Any()) return faceIntervals;
             
