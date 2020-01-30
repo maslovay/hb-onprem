@@ -8,5 +8,5 @@ RUN dotnet publish ./HBOperations/DetectFaceIdScheduler -c Release -o publish
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/DetectFaceIdScheduler/publish .
-ENTRYPOINT ["dotnet", "DialogueMarkUp.dll"]
+ENTRYPOINT ["dotnet", "DetectFaceIdScheduler.dll"]
 ENV TESTCLUSTER testcluster
