@@ -119,11 +119,11 @@ namespace MessengerReporterService.Senders
                     //_client.StopReceiving();
                     
                     var orderedResults = updateTask.Result?.OrderByDescending(u => u.Id);
-                    var lastMessageId = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost.MessageId;
-                    var command = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost.Text;                    
+                    var lastMessageId = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost?.MessageId;
+                    var command = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost?.Text;                    
                     var chatId = orderedResults?.FirstOrDefault(r => r.ChannelPost.Text.Contains("/"))?.ChannelPost?.Chat?.Id;
 
-                    var callbackId = orderedResults?.FirstOrDefault(r => r.CallbackQuery != null)?.CallbackQuery.Id;
+                    var callbackId = orderedResults?.FirstOrDefault(r => r.CallbackQuery != null)?.CallbackQuery?.Id;
                     if (callbackId != null)
                         _chat.Client.AnswerCallbackQueryAsync(callbackId).Wait();
 
