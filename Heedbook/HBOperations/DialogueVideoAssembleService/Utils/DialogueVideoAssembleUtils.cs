@@ -36,7 +36,7 @@ namespace DialogueVideoAssembleService.Utils
         public List<FileVideo> GetFileVideos(DialogueVideoAssembleRun message)
         {
             return _context.FileVideos
-                    .Where(p => p.ApplicationUserId == message.ApplicationUserId
+                    .Where(p => p.DeviceId == message.DeviceId
                         && p.EndTime >= message.BeginTime
                         && p.BegTime <= message.EndTime
                         && p.FileExist)
@@ -47,7 +47,7 @@ namespace DialogueVideoAssembleService.Utils
         public List<FileFrame> GetFileFrame(DialogueVideoAssembleRun message)
         {
             return _context.FileFrames
-                    .Where(p => p.ApplicationUserId == message.ApplicationUserId
+                    .Where(p => p.DeviceId == message.DeviceId
                         && p.Time >= message.BeginTime
                         && p.Time <= message.EndTime
                         && p.FileExist)

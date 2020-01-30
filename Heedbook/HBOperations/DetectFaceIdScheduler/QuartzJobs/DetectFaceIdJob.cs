@@ -41,7 +41,8 @@ namespace DetectFaceIdScheduler.QuartzJobs
             try
             {
                 // Get first not marked FileFrame
-                var fileFramesEdge = _context.FileFrames
+                System.Console.WriteLine("1");
+                var fileFramesEdges = _context.FileFrames
                     .Include(p => p.Device)
                     .Include(p => p.Device.Company)
                     .Where(p => 
@@ -53,40 +54,42 @@ namespace DetectFaceIdScheduler.QuartzJobs
                         MinTime = p.Min(q => q.Time).AddSeconds(-_settings.TimeGapRequest)
                     }).ToList();
 
-                _log.Info($"Proceeded file frames - {JsonConvert.SerializeObject(fileFramesEdge)}");
+                _log.Info($"Proceeded file frames - {JsonConvert.SerializeObject(fileFramesEdges)}");
+                System.Console.WriteLine($"Proceeded file frames - {JsonConvert.SerializeObject(fileFramesEdges)}");
 
-                var frameAttributes = _context.FrameAttributes
-                    .Include(p => p.FileFrame)
-                    .Where(p => 
-                        fileFramesEdge.Select(q => q.DeviceId).Contains(p.FileFrame.DeviceId) &&
-                        p.FileFrame.Time >= fileFramesEdge.Where(q => q.DeviceId == p.FileFrame.DeviceId).FirstOrDefault().MinTime)
-                    .OrderBy(p => p.FileFrame.Time)
-                    .ToList();
-
-                _log.Info($"Total frames -- {frameAttributes.Count()}");
-
-                frameAttributes.Where(p => 
-                        JsonConvert.DeserializeObject<Value>(p.Value).Height < _settings.MinHeight || 
-                        JsonConvert.DeserializeObject<Value>(p.Value).Width < _settings.MinWidth).ToList()
-                    .ForEach(p => p.FileFrame.FaceId = Guid.Empty);
-                
-                var framesProceed = frameAttributes.Where(p => p.FileFrame.FaceId != null);
-                var deviceIds = framesProceed.Select(p => p.FileFrame.DeviceId).Distinct().ToList();
-                _log.Info($"Priocessing list of devices - {JsonConvert.SerializeObject(deviceIds)}");
-
-                foreach (var deviceId in deviceIds)
+                foreach (var fileFramesEdge in fileFramesEdges)
                 {
-                     _log.Info($"Proceecing {deviceId}");
-                    var framesDevice = framesProceed
-                        .Where(p => p.FileFrame.DeviceId == deviceId)
+                    _log.Info($"Proceecing {fileFramesEdge.DeviceId}");
+
+                    var frameAttributes = _context.FrameAttributes
+                        .Include(p => p.FileFrame)
+                        .Where(p => 
+                            p.FileFrame.DeviceId == fileFramesEdge.DeviceId &&
+                            p.FileFrame.Time >= fileFramesEdge.MinTime)
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
 
-                    _detect.DetectFaceIds(ref framesDevice);
-                    _log.Info($"Frames device count - {framesDevice.Count()}");
+                    System.Console.WriteLine(frameAttributes.Count());
+
+                    _log.Info($"Total frames -- {frameAttributes.Count()}");
+
+                    frameAttributes.Where(p => 
+                            JsonConvert.DeserializeObject<Value>(p.Value).Height < _settings.MinHeight || 
+                            JsonConvert.DeserializeObject<Value>(p.Value).Width < _settings.MinWidth).ToList()
+                        .ForEach(p => p.FileFrame.FaceId = Guid.Empty);
+                
+                    var framesProceed = frameAttributes.Where(p => p.FileFrame.FaceId != Guid.Empty).ToList();
+
+                    framesProceed = _detect.DetectFaceIds(framesProceed);
+                    _log.Info($"Frames device count - {framesProceed.Count()}");
+
+                    System.Console.WriteLine(JsonConvert.SerializeObject(framesProceed.Select(p => p.FileFrame.FaceId).Distinct()));
+
+                    _context.SaveChanges();
 
                 }
-                _context.SaveChanges();
+                System.Console.WriteLine("Finished");
+                // _context.SaveChanges();
                 _log.Info("Function finished");
             }
             catch (Exception e)

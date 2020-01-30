@@ -1,28 +1,27 @@
-using DetectFaceIdScheduler.Settings;
-using DetectFaceIdScheduler.QuartzJobs;
-using DetectFaceIdScheduler.Settings;
+using DialogueCreatorScheduler.QuartzJobs;
+using DialogueCreatorScheduler.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions;
 
-namespace DetectFaceIdScheduler.Extensions
+namespace DialogueCreatorScheduler.Extensions
 {
-    public static class AddDetectFaceIdSchedulerJob
+    public static class AddDialogueCreatorSchedulerJob
     {
-        public static void AddDetectFaceIdSchedulerQuartz(this IServiceCollection services, JobSettings settings)
+        public static void AddDialogueCreatorSchedulerQuartz(this IServiceCollection services, JobSettings settings)
         {
-            services.Add(new ServiceDescriptor(typeof(IJob), typeof(DetectFaceIdJob),
+            services.Add(new ServiceDescriptor(typeof(IJob), typeof(DialogueCreatorSchedulerJob),
                 ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
-            services.AddSingleton(provider => JobBuilder.Create<DetectFaceIdJob>()
-                                                        .WithIdentity("DetectFaceId.job", "Dialogues")
+            services.AddSingleton(provider => JobBuilder.Create<DialogueCreatorSchedulerJob>()
+                                                        .WithIdentity("DialogueCreatorScheduler.job", "Dialogues")
                                                         .Build());
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity("DetectFaceId.trigger", "Dialogues")
+                                     .WithIdentity("DialogueCreatorScheduler.trigger", "Dialogues")
                                      .StartNow()
                                      .WithSimpleSchedule(s => s.WithIntervalInSeconds(settings.Period).RepeatForever())
                                      .Build();

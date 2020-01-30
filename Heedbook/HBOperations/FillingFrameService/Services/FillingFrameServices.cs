@@ -104,34 +104,58 @@ namespace FillingFrameService.Services
                 localPath =
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + fileAvatar.FileName);
                 System.Console.WriteLine($"Avatar path - {localPath}");
+            
+
+                var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value);
+                var rectangle = new Rectangle
+                {
+                    Height = faceRectangle.Height,
+                    Width = faceRectangle.Width,
+                    X = faceRectangle.Top,
+                    Y = faceRectangle.Left
+                };
+
+                var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+                stream.Seek(0, SeekOrigin.Begin);
+                await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
+                stream.Close();
             }
             else
             {
-                var dt = fileAvatar.Time;
-                var seconds = dt.Subtract(fileVideo.BegTime).TotalSeconds;
-                System.Console.WriteLine($"Seconds - {seconds}, FileVideo - {fileVideo.FileName}");
+                if (message.ClientId != null)
+                {
+                    localPath =
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync($"clientavatars/{message.ClientId}.jpg");
+                    await _sftpClient.UploadAsync(localPath, "clientavatars/", $"{message.DialogueId}.jpg");
+                }
+                else
+                {
+                    var dt = fileAvatar.Time;
+                    var seconds = dt.Subtract(fileVideo.BegTime).TotalSeconds;
+                    System.Console.WriteLine($"Seconds - {seconds}, FileVideo - {fileVideo.FileName}");
 
-                var localVidePath =
-                    await _sftpClient.DownloadFromFtpToLocalDiskAsync("videos/" + fileVideo.FileName);
-                localPath = Path.Combine(_sftpSettings.DownloadPath, fileAvatar.FileName);
-                System.Console.WriteLine($"Avatar path - {localPath}");
-                var output = await _wrapper.GetFrameNSeconds(localVidePath, localPath, Convert.ToInt32(seconds));
-                System.Console.WriteLine(output);
+                    var localVidePath =
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("videos/" + fileVideo.FileName);
+                    localPath = Path.Combine(_sftpSettings.DownloadPath, fileAvatar.FileName);
+                    System.Console.WriteLine($"Avatar path - {localPath}");
+                    var output = await _wrapper.GetFrameNSeconds(localVidePath, localPath, Convert.ToInt32(seconds));
+                    System.Console.WriteLine(output);
+
+                    var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value);
+                    var rectangle = new Rectangle
+                    {
+                        Height = faceRectangle.Height,
+                        Width = faceRectangle.Width,
+                        X = faceRectangle.Top,
+                        Y = faceRectangle.Left
+                    };
+
+                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
+                    stream.Close();
+                }
             }
-
-            var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value);
-            var rectangle = new Rectangle
-            {
-                Height = faceRectangle.Height,
-                Width = faceRectangle.Width,
-                X = faceRectangle.Top,
-                Y = faceRectangle.Left
-            };
-
-            var stream = FaceDetection.CreateAvatar(localPath, rectangle);
-            stream.Seek(0, SeekOrigin.Begin);
-            await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
-            stream.Close();
         }
 
     }
