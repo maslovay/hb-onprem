@@ -38,7 +38,7 @@ namespace UserOperations.Utils.AnalyticContentUtils
             {
                 answersList.Add(new List<string> { answ.Time.ToString(), answ.ContentId.ToString(), answ.ContentName, answ.DialogueId.ToString(), answ.Answer });
             }
-            return CreateSpreadsheetDocument(sheetName, answersList, new List<string> { "Time", "ContentId", "ContentName", "DialogueId", "Answer" });
+            return CreateSpreadsheetDocument(sheetName, answersList, new List<string> { "Time", "FullName", "ContentName", "DialogueId", "Answer" });
         }
         private MemoryStream CreateSpreadsheetDocument(string sheetName, List<List<string>> answersList, List<string> headers)
         {
