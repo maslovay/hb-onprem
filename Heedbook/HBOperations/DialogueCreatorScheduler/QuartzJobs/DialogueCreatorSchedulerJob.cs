@@ -86,6 +86,7 @@ namespace DialogueCreatorScheduler.QuartzJobs
                     _log.Info($"Merged intervals - {JsonConvert.SerializeObject(mergedIntervals)}");
 
                     var dialogues = _dialogueCreator.Dialogues(mergedIntervals, ref deviceFrames, deviceClients);
+                    dialogues = dialogues.Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 40).ToList();
                     _log.Info($"Created dialogues - {JsonConvert.SerializeObject(dialogues)}");
 
                     if (dialogues.Any())
