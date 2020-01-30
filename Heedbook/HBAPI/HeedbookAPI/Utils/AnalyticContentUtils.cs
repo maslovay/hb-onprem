@@ -32,11 +32,11 @@ namespace UserOperations.Utils.AnalyticContentUtils
         }
         public MemoryStream CreatePoolAnswersSheet(List<AnswerInfo> answers, string sheetName)
         {
-            var answersModified = answers.SelectMany(x => x.Answers.Select(p => new { p.Answer, p.ContentId, p.DialogueId, p.Time, x.ContentName })).ToList();
+            var answersModified = answers.SelectMany(x => x.Answers.Select(p => new { p.Answer, p.FullName, p.DialogueId, p.Time, x.ContentName })).ToList();
             List<List<string>> answersList = new List<List<string>>();
             foreach (var answ in answersModified)
             {
-                answersList.Add(new List<string> { answ.Time.ToString(), answ.ContentId.ToString(), answ.ContentName, answ.DialogueId.ToString(), answ.Answer });
+                answersList.Add(new List<string> { answ.Time.ToString(), answ.FullName, answ.ContentName, answ.DialogueId.ToString(), answ.Answer });
             }
             return CreateSpreadsheetDocument(sheetName, answersList, new List<string> { "Time", "FullName", "ContentName", "DialogueId", "Answer" });
         }
