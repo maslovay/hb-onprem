@@ -34,8 +34,6 @@ namespace DialogueCreatorScheduler.Service
                 EndTime = p.EndTime
             });
 
-            // dialogues.ForEach(p => p.Comment = null);
-            // _context.Dialogues.AddRange(dialogues);
             foreach (var message in dialogueCreationList)
             {
                 _publisher.Publish(message);

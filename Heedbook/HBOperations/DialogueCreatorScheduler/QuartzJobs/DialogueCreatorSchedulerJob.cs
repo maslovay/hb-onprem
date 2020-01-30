@@ -32,7 +32,8 @@ namespace DialogueCreatorScheduler.QuartzJobs
             ElasticClientFactory elasticClientFactory,
             DialogueCreatorService dialogueCreator,
             DialogueSavingService publisher,
-            FaceIntervalsService intervalCalc)
+            FaceIntervalsService intervalCalc
+            )
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _elasticClientFactory = elasticClientFactory;

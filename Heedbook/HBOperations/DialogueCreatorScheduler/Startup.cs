@@ -17,6 +17,7 @@ using HBLib.Utils;
 using DialogueCreatorScheduler.Services;
 using Configurations;
 using DialogueCreatorScheduler.Service;
+using DialogueCreatorScheduler.Models;
 
 namespace DialogueCreatorScheduler
 {
@@ -48,6 +49,9 @@ namespace DialogueCreatorScheduler
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
+
+            services.Configure<DialogueSettings>(Configuration.GetSection(nameof(DialogueSettings)));
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<DialogueSettings>>().Value);
 
             services.AddSingleton<PersonDetectionService>();
             services.AddSingleton<DialogueCreatorService>();
