@@ -72,9 +72,11 @@ namespace DialogueCreatorScheduler.Services
                     if (currentFaceIntervals[1].BegTime.Subtract(currentFaceIntervals[0].EndTime).TotalSeconds < _dialogueSettings.PauseDuration)
                     {
                         pause.ForEach(p => p.FaceId = updateInterval.FaceId);
-                        System.Console.WriteLine("Merged");
+                        System.Console.WriteLine("Merged 2");
                         // next
+                        System.Console.WriteLine(JsonConvert.SerializeObject(updateInterval));
                         updateInterval = currentFaceIntervals[1];
+                        System.Console.WriteLine(JsonConvert.SerializeObject(updateInterval));
                     }
                     else if (currentFaceIntervals[1].BegTime.Subtract(currentFaceIntervals[0].EndTime).TotalSeconds > _dialogueSettings.MaxDialoguePauseDuration)
                     {
@@ -88,8 +90,10 @@ namespace DialogueCreatorScheduler.Services
                             .Subtract(p.Min(q =>q.BegTime)).TotalSeconds) < _dialogueSettings.MinDialogueDuration)
                         {
                             pause.ForEach(p => p.FaceId = updateInterval.FaceId);
-                            System.Console.WriteLine("Merged");
+                            System.Console.WriteLine("Merged 1");
+                            System.Console.WriteLine(JsonConvert.SerializeObject(updateInterval));
                             updateInterval = currentFaceIntervals[1];
+                            System.Console.WriteLine(JsonConvert.SerializeObject(updateInterval));
                         }
                         else
                         {
