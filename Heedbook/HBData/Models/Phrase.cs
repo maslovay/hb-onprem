@@ -25,20 +25,19 @@ namespace HBData.Models
         ///     Phrase type
         /// </summary>
         public Guid? PhraseTypeId { get; set; }
-
         public PhraseType PhraseType { get; set; }
+
+        ///// <summary>
+        /////    phase of sale to which the phrase refers
+        ///// </summary>
+        //public Guid? SalesStageId { get; set; }
+        //public SalesStage SalesStage { get; set; }
 
         /// <summary>
         ///     Phrase language
         /// </summary>
         public Int32? LanguageId { get; set; }
-
         public Language Language { get; set; }
-
-        /// <summary>
-        ///     Is client's phrase or employee
-        /// </summary>
-        public Boolean IsClient { get; set; }
 
         /// <summary>
         ///     Number of additional words in phrase

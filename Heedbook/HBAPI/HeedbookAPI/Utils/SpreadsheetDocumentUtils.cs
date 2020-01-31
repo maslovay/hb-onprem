@@ -71,7 +71,6 @@ namespace UserOperations.Utils
                                     PhraseText = GetCellValue(doc, row.Descendants<Cell>().ElementAt(0)),
                                     PhraseTypeId = phraseType.PhraseTypeId,
                                     LanguageId = 2,
-                                    IsClient = false,
                                     WordsSpace = 1,
                                     Accurancy = 1,
                                     IsTemplate = false

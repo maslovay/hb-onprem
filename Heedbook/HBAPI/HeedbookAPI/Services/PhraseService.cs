@@ -117,14 +117,18 @@ namespace UserOperations.Services
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             var phrasesCompany = phraseIncluded.PhraseCompany.Where(x => x.CompanyId == companyIdInToken).ToList();
             _repository.Delete<PhraseCompany>(phrasesCompany);//--remove connections to phrase in library
-            if (!phraseIncluded.IsTemplate)
+            try
             {
-                _repository.Delete<Phrase>(phraseIncluded);//--remove own phrase
-                await _repository.SaveAsync();
-                return "Deleted from PhraseCompany and Phrases";
+                if (!phraseIncluded.IsTemplate)
+                {
+                    _repository.Delete<Phrase>(phraseIncluded);//--remove own phrase
+                    await _repository.SaveAsync();
+                    return "Deleted from PhraseCompany and Phrases";
+                }
             }
+            catch { }
             await _repository.SaveAsync();
-            return "Template! Deleted from PhraseCompany";
+            return "Deleted from PhraseCompany";
         }
 
 
@@ -148,7 +152,6 @@ namespace UserOperations.Services
                 PhraseText = message.PhraseText,
                 PhraseTypeId = message.PhraseTypeId,
                 LanguageId = languageId,
-                IsClient = message.IsClient,
                 WordsSpace = message.WordsSpace,
                 Accurancy = message.Accurancy,
                 IsTemplate = false

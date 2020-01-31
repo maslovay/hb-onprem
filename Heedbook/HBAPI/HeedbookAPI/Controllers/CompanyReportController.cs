@@ -112,8 +112,7 @@ namespace UserOperations.Controllers
                         SpeechesSpeechSpeed = p.DialogueSpeech.Average(s => s.SpeechSpeed).ToString(),
                         PhrasesPhraseText = JsonConvert.SerializeObject(p.DialoguePhrase.Select(s => new 
                                 {
-                                    phraseText = s.Phrase.PhraseText,
-                                    s.Phrase.IsClient
+                                    phraseText = s.Phrase.PhraseText
                                 })),
                         WordsWord = JsonConvert.SerializeObject(p.DialogueWord.Select(s => new
                                 {

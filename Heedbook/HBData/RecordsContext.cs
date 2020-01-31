@@ -128,9 +128,10 @@ namespace HBData
 
         public DbSet<Benchmark> Benchmarks { get; set; }
         public DbSet<BenchmarkName> BenchmarkNames { get; set; }
-
+        //---DEVICES AND SALES STAGE (NEW) ---
         public DbSet<Device> Devices { get; set; }
         public DbSet<DeviceType> DeviceTypes { get; set; }
+        public DbSet<SalesStage> SalesStages { get; set; }
         //---VIES
         public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
         public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }
