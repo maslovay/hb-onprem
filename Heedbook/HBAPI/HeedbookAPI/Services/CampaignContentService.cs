@@ -252,10 +252,10 @@ namespace UserOperations.Services
 
             var contentDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
             Content content = JsonConvert.DeserializeObject<Content>(contentDataJson);
-
-            _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken);
-
             var contentEntity = GetContent(content.ContentId);
+            _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, contentEntity.CompanyId, roleInToken);
+
+            
             foreach (var p in typeof(Content).GetProperties())
             {
                 if (p.GetValue(content, null) != null && p.GetValue(content, null).ToString() != Guid.Empty.ToString())
