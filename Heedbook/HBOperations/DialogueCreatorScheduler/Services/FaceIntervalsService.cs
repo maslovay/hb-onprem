@@ -56,29 +56,31 @@ namespace DialogueCreatorScheduler.Services
             // to do: update for
             while(updateInterval.EndTime != faceIntervals.Max(p => p.EndTime))
             {
-                var currentFaceIntervals = faceIntervals.Where(p => p.FaceId == updateInterval.FaceId && p.BegTime >= updateInterval.BegTime).ToList();
-                if (currentFaceIntervals.Count() == 1)
+                var currentFaceIntervals = faceIntervals
+                    .Where(p => p.FaceId == updateInterval.FaceId && p.BegTime >= updateInterval.BegTime)
+                    .OrderBy(p => p.BegTime)
+                    .ToList();
+                if (currentFaceIntervals.Count() == 1 || currentFaceIntervals.Max(p => p.EndTime) == updateInterval.EndTime)
                 {
                     updateInterval = faceIntervals.Where(p => p.EndTime > updateInterval.EndTime)
                         .OrderBy(p => p.BegTime).First();
                 }
                 else
                 {
+                    var nextInterval = currentFaceIntervals.Where(p => p.EndTime > updateInterval.EndTime).OrderBy(p => p.EndTime).FirstOrDefault();
                     var pause = faceIntervals.Where(
                             p => p.BegTime >= currentFaceIntervals[0].EndTime &&
                             p.EndTime <= currentFaceIntervals[1].BegTime)
                         .ToList();
 
-                    if (currentFaceIntervals[1].BegTime.Subtract(currentFaceIntervals[0].EndTime).TotalSeconds < _dialogueSettings.PauseDuration)
+                    if (nextInterval.BegTime.Subtract(updateInterval.EndTime).TotalSeconds < _dialogueSettings.PauseDuration)
                     {
                         pause.ForEach(p => p.FaceId = updateInterval.FaceId);
-                        System.Console.WriteLine("Merged 2");
-                        // next
-                        System.Console.WriteLine(JsonConvert.SerializeObject(updateInterval));
-                        updateInterval = currentFaceIntervals[1];
-                        System.Console.WriteLine(JsonConvert.SerializeObject(updateInterval));
+                        System.Console.WriteLine("Merge 22");
+                        updateInterval = nextInterval;
+
                     }
-                    else if (currentFaceIntervals[1].BegTime.Subtract(currentFaceIntervals[0].EndTime).TotalSeconds > _dialogueSettings.MaxDialoguePauseDuration)
+                    else if (nextInterval.BegTime.Subtract(updateInterval.EndTime).TotalSeconds > _dialogueSettings.MaxDialoguePauseDuration)
                     {
                         //create dialogue
                         updateInterval = faceIntervals.Where(p => p.EndTime > updateInterval.EndTime)
@@ -92,7 +94,7 @@ namespace DialogueCreatorScheduler.Services
                             pause.ForEach(p => p.FaceId = updateInterval.FaceId);
                             System.Console.WriteLine("Merged 1");
                             System.Console.WriteLine(JsonConvert.SerializeObject(updateInterval));
-                            updateInterval = currentFaceIntervals[1];
+                            updateInterval = nextInterval;
                             System.Console.WriteLine(JsonConvert.SerializeObject(updateInterval));
                         }
                         else
