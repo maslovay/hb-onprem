@@ -52,7 +52,9 @@ namespace DialogueMarkUp.QuartzJobs
                 var endTime = DateTime.UtcNow.AddMinutes(-30);
                 var frameAttributes = _context.FrameAttributes
                     .Include(p => p.FileFrame)
-                    .Where(p => p.FileFrame.StatusNNId == 6 && p.FileFrame.Time < endTime && p.FileFrame.FaceLength > 0)
+                    .Include(p => p.FileFrame.Device)
+                    .Include(p => p.FileFrame.Device.Company)
+                    .Where(p => p.FileFrame.StatusNNId == 6 && p.FileFrame.Time < endTime && p.FileFrame.FaceLength > 0 && p.FileFrame.Device.Company.IsExtended)
                     .OrderBy(p => p.FileFrame.Time)
                     .GroupBy(p => p.FileFrame.FileName)
                     .Select(p => p.FirstOrDefault())
