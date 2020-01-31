@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.SignalR.Protocol;
-using Nest;
 
 namespace ErrorKibanaScheduler
 {
@@ -20,8 +17,9 @@ namespace ErrorKibanaScheduler
                 "The connection pool has been exhausted, either raise MaxPoolSize",
                 "FileNotFoundException: Could not find file",
                 "SshOperationTimeoutException: Session operation has timed out",
-                "Connection refused ---> System.Net.Sockets.SocketException",               
-                "Too many holes in dialogue"
+                "Connection refused ---> System.Net.Sockets.SocketException",
+                "Too many holes in dialogue",
+                "Exception occured with this input parameters"
         };
 
         //"Error dialogue.",
