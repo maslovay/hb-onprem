@@ -6,12 +6,9 @@ using HBLib;
 using HBLib.Utils;
 using Quartz;
 using Elasticsearch.Net;
-using Microsoft.Azure.KeyVault.Models;
 using Nest;
 using Nest.JsonNetSerializer;
 using ElasticClient = Nest.ElasticClient;
-using Field = Nest.Field;
-using Newtonsoft.Json;
 using RabbitMqEventBus.Events;
 using RabbitMqEventBus;
 
@@ -44,7 +41,7 @@ namespace ErrorKibanaScheduler.QuartzJob
             var client = new ElasticClient(settings);
             try
             {
-                int periodHours = 6;
+                int periodHours = 24;
                 var period = DateTime.UtcNow.AddHours(-periodHours);
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
@@ -56,7 +53,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                                 f => f.InvocationId,
                                 f => f.LogLevel)))
                     .Take(10000)
-                    .Index($"logstash-{DateTime.Today:yyyy.MM.dd}")
+                   // .Index($"logstash-{DateTime.Today:yyyy.MM.dd}")
                     .Sort(x => x.Descending(a => a.Timestamp))
                     .Query(q => q
                         .Bool(m => m       
