@@ -48,7 +48,7 @@ namespace UserOperations.Services
                 .Where(c => 
                     (c.Age >= begAge)
                     &&  (c.Age <= endAge)
-                    && c.Dialogues.Any(d => d.BegTime >= begTime && d.EndTime <= endTime)
+                    && c.Dialogues.Any(d => (d.BegTime >= begTime && d.EndTime <= endTime) && d.StatusId == activeStatus)
                     && (!genders.Any() || genders.Contains(c.Gender))
                     && (!companyIds.Any() ||companyIds.Contains(c.CompanyId)))
                 .Select( c => new GetClient () {
