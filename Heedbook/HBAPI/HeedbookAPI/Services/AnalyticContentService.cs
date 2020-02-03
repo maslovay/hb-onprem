@@ -281,7 +281,7 @@ namespace UserOperations.Services
                         Campaign = p.CampaignContent.Campaign,
                         ContentType = p.ContentType,
                         ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
-                        ContentUpdateDate = p.CampaignContent.Content != null ? p.CampaignContent.Content.UpdateDate.ToString() : null,
+                        ContentUpdateDate = p.CampaignContent.Content != null ? p.CampaignContent.Content.UpdateDate.Value.ToShortDateString() : null,
                         EndTime = p.EndTime,
                         IsPoll = p.IsPoll,
                         Url = p.Url,
