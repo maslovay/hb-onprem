@@ -146,9 +146,9 @@ namespace QuartzExtensions.Jobs
             
             if (dialogues.Sum(p => MinTime(p.EndTime, dialogue.EndTime).Subtract(dialogue.BegTime).TotalSeconds) > 
                 dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds * 0.8) 
-                return true;
+                return false;
             else
-                return false; 
+                return true; 
 
         }
 
