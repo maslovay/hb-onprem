@@ -20,6 +20,7 @@ namespace UserOperations.Services
         private readonly FileRefUtils _fileRef;
 
         private readonly string _containerName;
+        private readonly int activeStatus = 3;
 
         public ClientService(
             LoginService loginService,
@@ -62,7 +63,7 @@ namespace UserOperations.Services
                     Phone = c.Phone,
                     StatusId = c.StatusId,
                     ClientNotes = c.ClientNotes.Select(x => new GetClientNote(x, x.ApplicationUser)),
-                    DialogueIds =  c.Dialogues.Where(d => d.BegTime >= begTime && d.EndTime <= endTime).Select(d => d.DialogueId)
+                    DialogueIds =  c.Dialogues.Where(d => (d.BegTime >= begTime && d.EndTime <= endTime) && d.StatusId == activeStatus).Select(d => d.DialogueId)
                 });
             return data.ToList();
             }
@@ -87,7 +88,7 @@ namespace UserOperations.Services
                     Phone = c.Phone,
                     StatusId = c.StatusId,
                     ClientNotes = c.ClientNotes.Select(x => new GetClientNote(x, x.ApplicationUser)),
-                    DialogueIds = c.Dialogues.Select(d => d.DialogueId)
+                    DialogueIds = c.Dialogues.Where(x => x.StatusId == activeStatus).Select(d => d.DialogueId)
                 })
                 .FirstOrDefault();
             return data;
