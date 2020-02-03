@@ -54,9 +54,7 @@ namespace PersonDetectionService
                 foreach (var curDialogue in dialogues.Where(p => p.ClientId == null).ToList())
                 {
                     var dialoguesProceeded = dialogues
-                        .Where(p => p.ClientId != null &&
-                         ((p.ApplicationUserId != null && p.ApplicationUserId == curDialogue.ApplicationUserId)
-                            || p.DeviceId != null && p.DeviceId == curDialogue.DeviceId))
+                        .Where(p => p.ClientId != null && p.DeviceId == curDialogue.DeviceId)
                         .ToList();
                     var clientId = FindId(curDialogue, dialoguesProceeded);
                     try
