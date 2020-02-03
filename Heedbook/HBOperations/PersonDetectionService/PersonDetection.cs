@@ -93,7 +93,7 @@ namespace PersonDetectionService
                               .Where(x => x.DeviceId == curDialogue.DeviceId).Select(x => x.Company).FirstOrDefault();
             var findClient = _context.Clients
                         .Where(x => x.ClientId == clientId).FirstOrDefault();
-            if (findClient.ClientId != null && findClient.ClientId != Guid.Empty)
+            if (findClient != null)
             {
                 findClient.LastDate = DateTime.UtcNow;
                 curDialogue.ClientId = findClient.ClientId;
