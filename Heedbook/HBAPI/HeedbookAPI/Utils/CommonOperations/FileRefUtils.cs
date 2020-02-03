@@ -21,12 +21,12 @@ namespace UserOperations.Utils.CommonOperations
         /// <returns></returns>
         public string GetFileUrlFast(String path)
         {
-            return $"http://{_sftpSettings.Host}/{path}";
+            return $"https://{_sftpSettings.Host}/{path}";
         }
 
         public string GetFileLink(string directory, string file, DateTime exp = default)
         {
-            return $"http://{_sftpSettings.Host}/{directory}/{file}";
+            return $"https://{_sftpSettings.Host}/{directory}/{file}";
         }
     }
 }
