@@ -8,6 +8,7 @@ namespace UserOperations.Models.AnalyticModels
     {
         public DateTime BegTime { get; set; }
         public Guid? ContentId { get; set; }
+        public string ContentUpdateDate { get; set; }
         public Guid? CampaignContentId { get; set; }
         public Campaign Campaign { get; set; }
         public string ContentType { get; set; }

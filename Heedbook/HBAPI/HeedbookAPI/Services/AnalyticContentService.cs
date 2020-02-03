@@ -167,12 +167,12 @@ namespace UserOperations.Services
                     {
                         Content = x.Key1.ToString(),
                         AmountViews = x.Result.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,
-                        ContentName = x.Result.FirstOrDefault().ContentName,  
+                        ContentName = x.Result.FirstOrDefault().ContentName,
                         EmotionAttention = EmotionsDuringAdv(x.Result),
                         Age = x.Result.Where(p => p.DialogueId != null).Average(p => p.Age),
                         Male = x.Result.Where(p => p.Gender.ToLower() == "male").Count(),
                         Female = x.Result.Where(p => p.Gender.ToLower() == "female").Count(),
-                        FtpLink = _fileRef.GetFileLink(_containerName, x.Key1 + ".png", default),
+                        FtpLink = _fileRef.GetFileLink(_containerName, x.Key1 + ".png", default)+ $"?{x.Result.FirstOrDefault().ContentUpdateDate}",
                         ContentType = "content"
                     }
                     )).ToList()
@@ -281,6 +281,7 @@ namespace UserOperations.Services
                         Campaign = p.CampaignContent.Campaign,
                         ContentType = p.ContentType,
                         ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
+                        ContentUpdateDate = p.CampaignContent.Content != null ? p.CampaignContent.Content.UpdateDate.ToString() : null,
                         EndTime = p.EndTime,
                         IsPoll = p.IsPoll,
                         Url = p.Url,
