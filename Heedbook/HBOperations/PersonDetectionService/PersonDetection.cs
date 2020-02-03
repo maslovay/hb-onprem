@@ -59,18 +59,11 @@ namespace PersonDetectionService
                     var clientId = FindId(curDialogue, dialoguesProceeded);
                     try
                     {
-                        string error = String.Empty;
-                        (curDialogue.ClientId, error)  = CreateNewClient(curDialogue, clientId);//clientId = personId (the same)
-                        _context.SaveChanges();
-
-                        if (error != String.Empty)
-                            _log.Error($"client { curDialogue.ClientId  } creation error: {error}");
-                        else
-                            _log.Info($"client { curDialogue.ClientId  } created");
+                        CreateNewClient(curDialogue, clientId);
                     }
                     catch( Exception ex )
                     {
-                        _log.Error($"client {curDialogue.ClientId} creation error: " + ex.Message);
+                        _log.Error($"client for dialogue {curDialogue.DialogueId} creation error: " + ex.Message);
                     }
                 }
                 _log.Info("Function finished");
@@ -94,7 +87,7 @@ namespace PersonDetectionService
             return Guid.NewGuid();
         }
 
-        public (Guid?, string) CreateNewClient(Dialogue curDialogue, Guid? clientId)
+        public Guid? CreateNewClient(Dialogue curDialogue, Guid? clientId)
         {
             Company company = _context.Devices
                               .Where(x => x.DeviceId == curDialogue.DeviceId).Select(x => x.Company).FirstOrDefault();
@@ -103,25 +96,27 @@ namespace PersonDetectionService
             if (findClient.ClientId != null && findClient.ClientId != Guid.Empty)
             {
                 findClient.LastDate = DateTime.UtcNow;
-                return (findClient.ClientId, String.Empty);
+                curDialogue.ClientId = findClient.ClientId;
+                _context.SaveChanges();
+                return findClient.ClientId;
             }
 
-                var dialogueClientProfile = _context.DialogueClientProfiles
-                                .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
-                if (dialogueClientProfile == null) return (null, "client exception -  dialogueClientProfile == null");
-                if (dialogueClientProfile.Age == null || dialogueClientProfile.Gender == null) return (null, "client exception -  dialogueClientProfile == null");
+            var dialogueClientProfile = _context.DialogueClientProfiles
+                            .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
+            if (dialogueClientProfile == null) return null;
+            if (dialogueClientProfile.Age == null || dialogueClientProfile.Gender == null) return null;
 
-                var activeStatusId = _context.Statuss
-                                .Where(x => x.StatusName == "Active")
-                                .Select(x => x.StatusId)
-                                .FirstOrDefault();
+            var activeStatusId = _context.Statuss
+                            .Where(x => x.StatusName == "Active")
+                            .Select(x => x.StatusId)
+                            .FirstOrDefault();
 
-                double[] faceDescr = new double[0];
-                try
-                {
-                    faceDescr = JsonConvert.DeserializeObject<double[]>(curDialogue.PersonFaceDescriptor);
-                }
-                catch { }
+            double[] faceDescr = new double[0];
+            try
+            {
+                faceDescr = JsonConvert.DeserializeObject<double[]>(curDialogue.PersonFaceDescriptor);
+            }
+            catch { }
                 Client client = new Client
                 {
                     ClientId = (Guid)clientId,
@@ -133,9 +128,10 @@ namespace PersonDetectionService
                     Gender = dialogueClientProfile?.Gender,
                     StatusId = activeStatusId
                 };
-                _context.Clients.Add(client);
-                _context.SaveChanges();
-                return (client.ClientId, String.Empty);
+            curDialogue.ClientId = client.ClientId;
+            _context.Clients.Add(client);
+            _context.SaveChanges();
+            return client.ClientId;
         }
     }
 }
