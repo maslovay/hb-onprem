@@ -9,5 +9,8 @@ namespace UserOperations.Models.AnalyticModels
         public int Male { get; set; }
         public int Female { get; set; }
         public double? Age { get; set; }
+        public string FtpLink { get; set; }
+        public string ExternalLink { get; set; }
+        public string ContentType { get; set; }
     }
 }

@@ -11,6 +11,7 @@ using UserOperations.Utils.AnalyticContentUtils;
 using UserOperations.Controllers;
 using HBData.Models;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Services
 {
@@ -21,13 +22,17 @@ namespace UserOperations.Services
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticContentUtils _utils;
+        private readonly FileRefUtils _fileRef;
+
+        private const string _containerName = "screenshots";
 
         public AnalyticContentService(
             SpreadsheetDocumentUtils helpProvider,
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,
-            AnalyticContentUtils utils
+            AnalyticContentUtils utils,
+            FileRefUtils fileRef
             )
         {
             _helpProvider = helpProvider;
@@ -35,6 +40,7 @@ namespace UserOperations.Services
             _requestFilters = requestFilters;
             _repository = repository;
             _utils = utils;
+            _fileRef = fileRef;
         }
 
 //---FOR ONE DIALOGUE---
@@ -149,12 +155,13 @@ namespace UserOperations.Services
                     SplashViews = splashViews,
                     ContentFullInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentFullOneInfo
                     {
-                        Content = x.Key2.ToString(),
+                        ExternalLink = x.Key2.ToString(),
                         AmountViews = x.Result.Where(p =>  p.DialogueId != null && p.DialogueId != default(Guid)).Count(),
                         EmotionAttention = EmotionsDuringAdv(x.Result),
                         Age = x.Result.Where(p => p.DialogueId != null).Average(p => p.Age),
                         Male = x.Result.Where(p => p.Gender.ToLower() == "male").Count(),
-                        Female = x.Result.Where(p => p.Gender.ToLower() == "female").Count()
+                        Female = x.Result.Where(p => p.Gender.ToLower() == "female").Count(),
+                        ContentType = "url"
                     })
                     .Union(contentsShownGroup.Where(x => x.Key2 == null).Select(x => new ContentFullOneInfo
                     {
@@ -164,7 +171,9 @@ namespace UserOperations.Services
                         EmotionAttention = EmotionsDuringAdv(x.Result),
                         Age = x.Result.Where(p => p.DialogueId != null).Average(p => p.Age),
                         Male = x.Result.Where(p => p.Gender.ToLower() == "male").Count(),
-                        Female = x.Result.Where(p => p.Gender.ToLower() == "female").Count()
+                        Female = x.Result.Where(p => p.Gender.ToLower() == "female").Count(),
+                        FtpLink = _fileRef.GetFileLink(_containerName, x.Key1 + ".png", default),
+                        ContentType = "content"
                     }
                     )).ToList()
                 };
