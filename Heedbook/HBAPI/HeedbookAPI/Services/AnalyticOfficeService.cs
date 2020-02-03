@@ -72,19 +72,19 @@ namespace UserOperations.Services
                     Day = p.Key.ToString(),
                     AvgDialogue = _analyticOfficeUtils
                         .DialogueAverageDuration(
-                            dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
+                            dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime)),
                     AvgPause = _analyticOfficeUtils
                         .DialogueAveragePause(
-                            p.ToList(), 
-                            dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
+                            p.ToList(),
+                            dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime)),
                     AvgWorkLoad  = _analyticOfficeUtils
                         .LoadIndex(
-                            p.ToList(), 
-                            dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
+                            p.ToList(),
+                            dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime))                      
                 }).ToList();
@@ -97,12 +97,12 @@ namespace UserOperations.Services
                     Day = p.Key.ToString(),
                     EmployeeCount = _analyticOfficeUtils
                         .EmployeeCount(
-                            dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList()
+                            dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList()
                            ),
                     LoadIndex = _analyticOfficeUtils
                         .LoadIndex(
-                            p.ToList(), 
-                            dialogues.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
+                            p.ToList(),
+                            dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime))                  
                 }).ToList();
@@ -116,7 +116,7 @@ namespace UserOperations.Services
                     }
                 );
 
-                 var clientTime = dialogues
+                 var clientTime = dialoguesCur
                     .GroupBy(p => p.BegTime.Hour)
                     .Select(p => new EfficiencyLoadClientTimeInfo
                     {
@@ -126,7 +126,7 @@ namespace UserOperations.Services
                             .Average(q => q.DialoguesCount)
                     }).ToList();
 
-                var clientDay = dialogues?
+                var clientDay = dialoguesCur?
                     .GroupBy(p => p.BegTime.DayOfWeek)
                     .Select(p => new EfficiencyLoadClientDayInfo
                     {
