@@ -19,6 +19,7 @@ namespace UserOperations.Models.AnalyticModels
         public double? SatisfactionScore;
         public double? SatisfactionScoreBeg;
         public double? SatisfactionScoreEnd;
+        public double? SmilesShare;
     }
 
     public class DialogueInfoCompany

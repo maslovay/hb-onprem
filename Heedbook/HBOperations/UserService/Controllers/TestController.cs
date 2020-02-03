@@ -312,11 +312,11 @@ namespace UserService.Controllers
 
                             var phraseType = phraseTypes.FirstOrDefault(p => p.PhraseTypeText == GetCellValue(doc, row.Descendants<Cell>().ElementAt(1)));
                             if(phraseType is null)
-                                continue;                            
+                                continue;
                             
                             if(existPhrase==null)
                             {   
-                                System.Console.WriteLine($"phrase not exist in base");  
+                                System.Console.WriteLine($"phrase not exist in base");
                                 var newPhrase = new Phrase
                                 {
                                     PhraseId = Guid.NewGuid(),
@@ -333,9 +333,9 @@ namespace UserService.Controllers
                                     PhraseId = newPhrase.PhraseId,
                                     CompanyId = user.CompanyId
                                 };  
-                                System.Console.WriteLine($"Phrase: {newPhrase.PhraseText} - {newPhrase.PhraseTypeId}");                              
+                                System.Console.WriteLine($"Phrase: {newPhrase.PhraseText} - {newPhrase.PhraseTypeId}");
                                 _context.Phrases.Add(newPhrase); 
-                                _context.PhraseCompanys.Add(phraseCompany);    
+                                _context.PhraseCompanys.Add(phraseCompany);
                             }
                             else
                             {

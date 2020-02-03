@@ -33,6 +33,8 @@ namespace UserOperations.Models.Get.HomeController
         public int? AnswerCount;
         public int? AnswerCountDelta;
 
-        public List<BestEmployee> BestEmployees;
+        public double? SmilesShare;
+        public double? SmilesShareDelta;
+        //public List<BestEmployee> BestEmployees;
     }
 }

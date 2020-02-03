@@ -163,7 +163,8 @@ namespace UserOperations.Services
                            CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
                            SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                            SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
-                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
+                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN,
+                           SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare)                       
                        }).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
@@ -184,7 +185,7 @@ namespace UserOperations.Services
                     ClientsCountDelta = -_utils.DialoguesCount(dialoguesOld),
 
                     EmployeeCount = (await GetEmployees(endTime, companyIds, null)).Count(),
-                    BestEmployees = _utils.BestThreeEmployees(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
+                    //BestEmployees = _utils.BestThreeEmployees(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
 
                     SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
                     SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
@@ -198,7 +199,10 @@ namespace UserOperations.Services
                     AdvCount = viewsCur,
                     AdvCountDelta = viewsCur - viewsOld,
                     AnswerCount = (await GetAnswersAsync(begTime, endTime, companyIds, new List<Guid?>(), deviceIds)).Count(),
-                    AnswerCountDelta = - (await GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid?>(), deviceIds)).Count()
+                    AnswerCountDelta = - (await GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid?>(), deviceIds)).Count(),
+
+                    SmilesShare = dialoguesCur.Average(x => x.SmilesShare),
+                    SmilesShareDelta = dialoguesCur.Average(x => x.SmilesShare) - dialoguesOld.Average(x => x.SmilesShare),
                 };
 
                 //---benchmarks
