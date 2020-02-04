@@ -59,6 +59,7 @@ namespace ApiTests
             //Assert.That(okResult.Value != null);
             //var deserialized = JsonConvert.DeserializeObject<List<SessionInfo>>(okResult.Value.ToString());
             //Assert.That(deserialized != null);
+            // Assert.IsTrue(false);
         }
         [Test]
         public void ReportUserPartialTest()

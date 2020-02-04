@@ -64,9 +64,9 @@ namespace ApiTests
         }
         public void Setup()
         {
-            BaseInit();
-            InitData();
-            InitServices();
+            // BaseInit();
+            // InitData();
+            // InitServices();
         }
 
         public void InitMockILoginService()
@@ -89,28 +89,28 @@ namespace ApiTests
         }
         public void InitMockIMailSender()
         {
-            mailSenderMock.Setup(p => p.SendRegisterEmail(new HBData.Models.ApplicationUser()))
-                .Returns(Task.FromResult(0));
-            mailSenderMock.Setup(p => p.SendPasswordChangeEmail(new HBData.Models.ApplicationUser(), "password"))
-                .Returns(Task.FromResult(0));
+            // mailSenderMock.Setup(p => p.SendRegisterEmail(new HBData.Models.ApplicationUser()))
+            //     .Returns(Task.FromResult(0));
+            // mailSenderMock.Setup(p => p.SendPasswordChangeEmail(new HBData.Models.ApplicationUser(), "password"))
+            //     .Returns(Task.FromResult(0));
         }
         public void InitMockAccountService()
         {
         }
         public void InitMockIHelpProvider()
         {
-           // helpProvider.Setup(p => p.AddComanyPhrases());
-            helpProvider.Setup(p => p.CreatePoolAnswersSheet(It.IsAny<List<AnswerInfo>>(), It.IsAny<string>()))
-                .Returns(new MemoryStream());
+        //    // helpProvider.Setup(p => p.AddComanyPhrases());
+        //     helpProvider.Setup(p => p.CreatePoolAnswersSheet(It.IsAny<List<AnswerInfo>>(), It.IsAny<string>()))
+        //         .Returns(new MemoryStream());
         }
         public void InitMockIRequestFiltersProvider()
         {
-            var list = new List<Guid>(){};
-            filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
-            filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
-                .Returns(new DateTime(2019, 10, 30));
-            filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
-                .Returns(new DateTime(2019, 11, 01));
+            // var list = new List<Guid>(){};
+            // filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            // filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
+            //     .Returns(new DateTime(2019, 10, 30));
+            // filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
+            //     .Returns(new DateTime(2019, 11, 01));
         }
         public void InitMockIDBOperations()
         {

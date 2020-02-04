@@ -16,6 +16,7 @@
     <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj"/>
     <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj"/>
     <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj"/>
+    <ProjectReference Include="..\..\HBSender\MessengerReporterService\MessengerReporterService.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <Content Update="appsettings.json">
