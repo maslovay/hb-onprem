@@ -236,120 +236,120 @@ namespace ApiTests
         [Test]
         public void RemoveAccount()
         {
-            var users = TestData.GetUsers();
-            var companys = TestData.GetCompanys();
-            var user = new ApplicationUser(){NormalizedEmail = "IVANOVIVAN@HEEDBOOK.COM"};
-            var tariffs = TestData.GetTariffs();
-            var transactions = TestData.GetTransactions();
-            var workerTypes = TestData.GetWorkerTypes();
-            var campaigns = new List<Campaign>
-            {
-                new Campaign
-                {
-                    CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2"),
-                    CampaignContents = new List<CampaignContent>
-                    {
-                        new CampaignContent{},
-                        new CampaignContent{}
-                    }
-                }
-            };
-            var contents = new TestAsyncEnumerable<Content>(
-                new List<Content>
-                {
-                    new Content
-                    {
-                        CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")
-                    }
-                }) .AsQueryable();
-            var phraseCompanys = TestData.GetPhraseCompanies();
-            var passwordHistory = TestData.GetPasswordHistorys();
+            // var users = TestData.GetUsers();
+            // var companys = TestData.GetCompanys();
+            // var user = new ApplicationUser(){NormalizedEmail = "IVANOVIVAN@HEEDBOOK.COM"};
+            // var tariffs = TestData.GetTariffs();
+            // var transactions = TestData.GetTransactions();
+            // var workerTypes = TestData.GetWorkerTypes();
+            // var campaigns = new List<Campaign>
+            // {
+            //     new Campaign
+            //     {
+            //         CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2"),
+            //         CampaignContents = new List<CampaignContent>
+            //         {
+            //             new CampaignContent{},
+            //             new CampaignContent{}
+            //         }
+            //     }
+            // };
+            // var contents = new TestAsyncEnumerable<Content>(
+            //     new List<Content>
+            //     {
+            //         new Content
+            //         {
+            //             CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")
+            //         }
+            //     }) .AsQueryable();
+            // var phraseCompanys = TestData.GetPhraseCompanies();
+            // var passwordHistory = TestData.GetPasswordHistorys();
 
-            //Mock
-            repositoryMock.Setup(p => p.GetAsQueryable<ApplicationUser>()).Returns(users);
+            // //Mock
+            // repositoryMock.Setup(p => p.GetAsQueryable<ApplicationUser>()).Returns(users);
             
-            repositoryMock.Setup(p => p.GetAsQueryable<Company>()).Returns(companys);            
-            repositoryMock.Setup(p => p.GetWithInclude<ApplicationUser>(
-                    It.IsAny<Expression<Func<ApplicationUser, bool>>>(), 
-                    It.IsAny<Expression<Func<ApplicationUser, object>>[]>()))
-                .Returns(users);            
-            repositoryMock.Setup(p => p.GetAsQueryable<Tariff>()).Returns(tariffs);            
-            repositoryMock.Setup(p => p.GetAsQueryable<Transaction>()).Returns(transactions);            
-            repositoryMock.Setup(p => p.GetAsQueryable<WorkerType>()).Returns(workerTypes);            
-            repositoryMock.Setup(p => p.GetAsQueryable<Content>()).Returns(contents);            
-            repositoryMock.Setup(p => p.GetWithInclude<Campaign>(
-                    It.IsAny<Expression<Func<Campaign, bool>>>(), 
-                    It.IsAny<Expression<Func<Campaign, object>>[]>()))
-                .Returns(campaigns);            
-            repositoryMock.Setup(p => p.GetAsQueryable<PhraseCompany>()).Returns(phraseCompanys);            
-            repositoryMock.Setup(p => p.GetAsQueryable<PasswordHistory>()).Returns(passwordHistory);
+            // repositoryMock.Setup(p => p.GetAsQueryable<Company>()).Returns(companys);            
+            // repositoryMock.Setup(p => p.GetWithInclude<ApplicationUser>(
+            //         It.IsAny<Expression<Func<ApplicationUser, bool>>>(), 
+            //         It.IsAny<Expression<Func<ApplicationUser, object>>[]>()))
+            //     .Returns(users);            
+            // repositoryMock.Setup(p => p.GetAsQueryable<Tariff>()).Returns(tariffs);            
+            // repositoryMock.Setup(p => p.GetAsQueryable<Transaction>()).Returns(transactions);            
+            // repositoryMock.Setup(p => p.GetAsQueryable<WorkerType>()).Returns(workerTypes);            
+            // repositoryMock.Setup(p => p.GetAsQueryable<Content>()).Returns(contents);            
+            // repositoryMock.Setup(p => p.GetWithInclude<Campaign>(
+            //         It.IsAny<Expression<Func<Campaign, bool>>>(), 
+            //         It.IsAny<Expression<Func<Campaign, object>>[]>()))
+            //     .Returns(campaigns);            
+            // repositoryMock.Setup(p => p.GetAsQueryable<PhraseCompany>()).Returns(phraseCompanys);            
+            // repositoryMock.Setup(p => p.GetAsQueryable<PasswordHistory>()).Returns(passwordHistory);
 
-            //Mock delete methods
-            var basePasswordHistory = passwordHistory.ToList();
-            repositoryMock.Setup(p => p.Delete<PasswordHistory>(It.IsAny<IEnumerable<PasswordHistory>>()))
-                .Callback((IEnumerable<PasswordHistory> passwordhistory) => basePasswordHistory.RemoveAll(p => passwordHistory.Contains(p)));
+            // //Mock delete methods
+            // var basePasswordHistory = passwordHistory.ToList();
+            // repositoryMock.Setup(p => p.Delete<PasswordHistory>(It.IsAny<IEnumerable<PasswordHistory>>()))
+            //     .Callback((IEnumerable<PasswordHistory> passwordhistory) => basePasswordHistory.RemoveAll(p => passwordHistory.Contains(p)));
 
-            var basePhraseCompany = phraseCompanys.ToList();
-            repositoryMock.Setup(p => p.Delete<PhraseCompany>(It.IsAny<IEnumerable<PhraseCompany>>()))
-                .Callback((IEnumerable<PhraseCompany> phrases) => basePhraseCompany.RemoveAll(p => phrases.Contains(p)));
+            // var basePhraseCompany = phraseCompanys.ToList();
+            // repositoryMock.Setup(p => p.Delete<PhraseCompany>(It.IsAny<IEnumerable<PhraseCompany>>()))
+            //     .Callback((IEnumerable<PhraseCompany> phrases) => basePhraseCompany.RemoveAll(p => phrases.Contains(p)));
             
-            var baseCampaignContents = campaigns.FirstOrDefault().CampaignContents.ToList();
-            repositoryMock.Setup(p => p.Delete<CampaignContent>(It.IsAny<IEnumerable<CampaignContent>>()))
-                .Callback((IEnumerable<CampaignContent> campaignContents) => baseCampaignContents.RemoveAll(p => campaignContents.Contains(p)));
+            // var baseCampaignContents = campaigns.FirstOrDefault().CampaignContents.ToList();
+            // repositoryMock.Setup(p => p.Delete<CampaignContent>(It.IsAny<IEnumerable<CampaignContent>>()))
+            //     .Callback((IEnumerable<CampaignContent> campaignContents) => baseCampaignContents.RemoveAll(p => campaignContents.Contains(p)));
 
-            var baseCampaigns = campaigns.ToList();
-            repositoryMock.Setup(p => p.Delete<Campaign>(It.IsAny<IEnumerable<Campaign>>()))
-                .Callback((IEnumerable<Campaign> campaign) => baseCampaigns.RemoveAll(p => campaign.Contains(p)));
+            // var baseCampaigns = campaigns.ToList();
+            // repositoryMock.Setup(p => p.Delete<Campaign>(It.IsAny<IEnumerable<Campaign>>()))
+            //     .Callback((IEnumerable<Campaign> campaign) => baseCampaigns.RemoveAll(p => campaign.Contains(p)));
 
-            var baseContents = contents.ToList();
-            repositoryMock.Setup(p => p.Delete<Content>(It.IsAny<IEnumerable<Content>>()))
-                .Callback((IEnumerable<Content> contentList) => baseContents.RemoveAll(p => contentList.Contains(p)));
+            // var baseContents = contents.ToList();
+            // repositoryMock.Setup(p => p.Delete<Content>(It.IsAny<IEnumerable<Content>>()))
+            //     .Callback((IEnumerable<Content> contentList) => baseContents.RemoveAll(p => contentList.Contains(p)));
 
-            var baseWorkerType = workerTypes.ToList();
-            repositoryMock.Setup(p => p.Delete<WorkerType>(It.IsAny<IEnumerable<WorkerType>>()))
-                .Callback((IEnumerable<WorkerType> workerTypesList) => baseWorkerType.RemoveAll(p => workerTypesList.Contains(p)));
+            // var baseWorkerType = workerTypes.ToList();
+            // repositoryMock.Setup(p => p.Delete<WorkerType>(It.IsAny<IEnumerable<WorkerType>>()))
+            //     .Callback((IEnumerable<WorkerType> workerTypesList) => baseWorkerType.RemoveAll(p => workerTypesList.Contains(p)));
 
-            var baseApplicationUserRoles = users.FirstOrDefault().UserRoles.ToList();
-            repositoryMock.Setup(p => p.Delete<ApplicationUserRole>(It.IsAny<IEnumerable<ApplicationUserRole>>()))
-                .Callback((IEnumerable<ApplicationUserRole> userRoles) => baseApplicationUserRoles.RemoveAll(p => userRoles.Contains(p)));
+            // var baseApplicationUserRoles = users.FirstOrDefault().UserRoles.ToList();
+            // repositoryMock.Setup(p => p.Delete<ApplicationUserRole>(It.IsAny<IEnumerable<ApplicationUserRole>>()))
+            //     .Callback((IEnumerable<ApplicationUserRole> userRoles) => baseApplicationUserRoles.RemoveAll(p => userRoles.Contains(p)));
 
-            var baseTransactions = transactions.ToList();
-            repositoryMock.Setup(p => p.Delete<Transaction>(It.IsAny<IEnumerable<Transaction>>()))
-                .Callback((IEnumerable<Transaction> transactionsList) => baseTransactions.RemoveAll(p => transactionsList.Contains(p)));  
+            // var baseTransactions = transactions.ToList();
+            // repositoryMock.Setup(p => p.Delete<Transaction>(It.IsAny<IEnumerable<Transaction>>()))
+            //     .Callback((IEnumerable<Transaction> transactionsList) => baseTransactions.RemoveAll(p => transactionsList.Contains(p)));  
 
-            var baseUsers = users.ToList();
-            repositoryMock.Setup(p => p.Delete<ApplicationUser>(It.IsAny<IEnumerable<ApplicationUser>>()))
-                .Callback((IEnumerable<ApplicationUser> usersList) => baseUsers.RemoveAll(p => users.Contains(p)));
+            // var baseUsers = users.ToList();
+            // repositoryMock.Setup(p => p.Delete<ApplicationUser>(It.IsAny<IEnumerable<ApplicationUser>>()))
+            //     .Callback((IEnumerable<ApplicationUser> usersList) => baseUsers.RemoveAll(p => users.Contains(p)));
 
-            var baseTariffs = tariffs.ToList();
-            repositoryMock.Setup(p => p.Delete<Tariff>(It.IsAny<Tariff>()))
-                .Callback((Tariff tariff) => baseTariffs.Remove(tariff));
+            // var baseTariffs = tariffs.ToList();
+            // repositoryMock.Setup(p => p.Delete<Tariff>(It.IsAny<Tariff>()))
+            //     .Callback((Tariff tariff) => baseTariffs.Remove(tariff));
 
-            var baseCompanys = companys.ToList();
+            // var baseCompanys = companys.ToList();
 
-            repositoryMock.Setup(p => p.Delete<Company>(It.IsAny<Company>()))
-                .Callback((Company company) => baseCompanys.Remove(company));
+            // repositoryMock.Setup(p => p.Delete<Company>(It.IsAny<Company>()))
+            //     .Callback((Company company) => baseCompanys.Remove(company));
 
-            repositoryMock.Setup(p => p.Save()).Verifiable();
+            // repositoryMock.Setup(p => p.Save()).Verifiable();
 
-            //Act
-            //var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);
-            //Task t = accountProvider.RemoveAccountWithSave(users.FirstOrDefault().Email);
-            //t.Start();
-            //t.Wait();
+            // //Act
+            // //var accountProvider = new AccountProvider(moqILoginService.Object, repositoryMock.Object);
+            // //Task t = accountProvider.RemoveAccountWithSave(users.FirstOrDefault().Email);
+            // //t.Start();
+            // //t.Wait();
 
-            ////Assert
-            //Assert.AreEqual(basePasswordHistory.Count, 0);
-            //Assert.AreEqual(basePhraseCompany.Count, 0);
-            //Assert.AreEqual(baseCampaignContents.Count, 0);
-            //Assert.AreEqual(baseCampaigns.Count, 0);
-            //Assert.AreEqual(baseContents.Count, 0);
-            //Assert.AreEqual(baseWorkerType.Count, 0);
-            //Assert.AreEqual(baseApplicationUserRoles.Count, 0);
-            //Assert.AreEqual(baseTransactions.Count, 0);
-            //Assert.AreEqual(baseUsers.Count, 0);
-            //Assert.AreEqual(baseTariffs.Count, 0);
-            //Assert.AreEqual(baseCompanys.Count, 0);
+            // ////Assert
+            // //Assert.AreEqual(basePasswordHistory.Count, 0);
+            // //Assert.AreEqual(basePhraseCompany.Count, 0);
+            // //Assert.AreEqual(baseCampaignContents.Count, 0);
+            // //Assert.AreEqual(baseCampaigns.Count, 0);
+            // //Assert.AreEqual(baseContents.Count, 0);
+            // //Assert.AreEqual(baseWorkerType.Count, 0);
+            // //Assert.AreEqual(baseApplicationUserRoles.Count, 0);
+            // //Assert.AreEqual(baseTransactions.Count, 0);
+            // //Assert.AreEqual(baseUsers.Count, 0);
+            // //Assert.AreEqual(baseTariffs.Count, 0);
+            // //Assert.AreEqual(baseCompanys.Count, 0);
         }
     }
 }

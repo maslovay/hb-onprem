@@ -5,7 +5,7 @@ using RabbitMqEventBus.Events;
 
 namespace IntegrationAPITestsService.Handler
 {
-    public class IntegrationTestsRunHandler : IIntegrationEventHandler<IntegrationTestsRun>
+    public class IntegrationTestsRunHandler : IIntegrationEventHandler<IntegrationAPITestsRun>
     {
         private readonly IntegrationTests _integrationTests;
 
@@ -14,9 +14,9 @@ namespace IntegrationAPITestsService.Handler
             _integrationTests = integrationTests;
         }
 
-        public async Task Handle(IntegrationTestsRun @event)
+        public async Task Handle(IntegrationAPITestsRun @event)
         {
-            System.Console.WriteLine($"IntegrationAPITestsServite take command: {@event.Command}");
+            System.Console.WriteLine($"IntegrationAPITestsServise take command: {@event.Command}");
             await _integrationTests.Run(@event.Command);
         }
     }

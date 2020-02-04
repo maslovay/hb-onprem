@@ -4,7 +4,7 @@ using RabbitMqEventBus.Base;
 
 namespace RabbitMqEventBus.Events
 {
-    public class IntegrationTestsRun : IntegrationEvent
+    public class UnitAPITestsRun : IntegrationEvent
     {
         public String Command { get; set; }
     }

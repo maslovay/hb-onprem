@@ -30,6 +30,7 @@ namespace ApiTests
 
             ////Assert
             //Assert.IsTrue(result == "Registred");
+            Assert.IsTrue(false);
         }
        
         [Test]
@@ -44,6 +45,7 @@ namespace ApiTests
             
             ////Assert         
             //Assert.IsTrue(result == "Token");
+            // Assert.IsTrue(false);
         }
         
         [Test]
@@ -62,6 +64,7 @@ namespace ApiTests
 
             ////Assert
             //Assert.IsTrue(result == "password changed");
+            // Assert.IsTrue(false);
         }
         
         [Test]

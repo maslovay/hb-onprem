@@ -60,10 +60,6 @@ namespace IntegrationAPITestsService.CommandHandler
                     Console.WriteLine($"CommandWorker(): running {command}");
                     _apiTestsRunner.RunTests();
                     break;
-                case "ext_res_tests":
-                    Console.WriteLine($"CommandWorker(): running {command}");
-                    _externalResourceTestsRunner.RunTests(false);
-                    break;
             }
         }
     }
