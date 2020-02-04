@@ -197,6 +197,7 @@ namespace UserOperations.Services
 
                 var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, deviceIds);
                 List<SlideShowInfo> slideShowSessionsAll = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds, true, dialogues);
+                if (slideShowSessionsAll.Count == 0) return slideShowSessionsAll;
                 var answers = await GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, deviceIds);
 
                 double conversion = GetConversion(slideShowSessionsAll.Count(), answers.Count());
