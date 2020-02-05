@@ -35,10 +35,11 @@ namespace ErrorKibanaScheduler.QuartzJob
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
+            var _log = _elasticClientFactory.GetElasticClient();           
             var pool = new SingleNodeConnectionPool(new Uri($"{_path.UriPath}"));
             var settings = new ConnectionSettings(pool, sourceSerializer: JsonNetSerializer.Default);
             var client = new ElasticClient(settings);
+            _log.Info("Try to connect");
             try
             {
                 int periodHours = 12;
@@ -68,6 +69,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                                     .Field(fd=>fd.Timestamp)
                                     .GreaterThanOrEquals(period))));
                 List<SearchSetting> documents = searchRequest.Documents.OrderByDescending(x => x.Timestamp).ToList();
+                _log.Info(documents.Count().ToString());
                 var alarm = new MessengerMessageRun()
                 {
                     logText = "<b>8000 or more error</b>",
