@@ -23,7 +23,8 @@ namespace ErrorKibanaScheduler
                 return TriggerBuilder.Create()
                     .WithIdentity("KibanaErrorJob.trigger", "KibanaError")
                     .StartNow()
-                    .WithCronSchedule("0 0 10 * * ?", a => a.InTimeZone(TimeZoneInfo.Utc).Build())
+                    .WithSimpleSchedule(s => s.WithIntervalInHours(12).RepeatForever())
+                   // .WithCronSchedule("0 0 10 * * ?", a => a.InTimeZone(TimeZoneInfo.Utc).Build())
                     .Build();
             });
 
