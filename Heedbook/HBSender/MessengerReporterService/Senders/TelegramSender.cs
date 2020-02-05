@@ -95,11 +95,22 @@ namespace MessengerReporterService.Senders
         }
         private void SendCommand(string command)
         {
-            var message = new IntegrationAPITestsRun()
+            if(command == "api_tests")
             {
-                Command = command
-            };
-            _publisher.Publish(message);
+                var message = new IntegrationAPITestsRun()
+                {
+                    Command = command
+                };
+                _publisher.Publish(message);
+            }
+            else if(command == "api_unit_tests")
+            {
+                var message = new UnitAPITestsRun()
+                {
+                    Command = command
+                };
+                _publisher.Publish(message);
+            }
         }
 
         protected override string Poll(AlarmSenderChat chat)
