@@ -21,7 +21,8 @@ namespace UnitAPITestsService.Tasks
             {   var info = new ProcessStartInfo
                 {
                     FileName = "dotnet",
-                    Arguments = "vstest ../ApiTests/bin/Debug/netcoreapp2.2/ApiTests.dll",
+                    // Arguments = "vstest ../ApiTests/bin/Debug/netcoreapp2.2/ApiTests.dll",
+                    Arguments = "vstest ApiTests.dll",
                     UseShellExecute = false,
                     RedirectStandardOutput = true
                 };

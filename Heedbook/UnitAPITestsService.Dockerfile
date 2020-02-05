@@ -9,7 +9,9 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/UnitAPITestsService/publish .
 ENTRYPOINT ["dotnet", "UnitAPITestsService.dll"]
-ADD ../ApiTests/bin/Debug/netcoreapp2.2/ApiTests.dll
+#RUN mkdir -p /ApiTests/bin/Debug/netcoreapp2.2/
+#RUN chmod -R 777 /ApiTests/bin/Debug/netcoreapp2.2/
+#COPY /ApiTests/bin/Debug/netcoreapp2.2/ApiTests.dll .
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download
