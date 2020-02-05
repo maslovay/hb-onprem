@@ -41,7 +41,7 @@ namespace ErrorKibanaScheduler.QuartzJob
             var client = new ElasticClient(settings);
             try
             {
-                int periodHours = 24;
+                int periodHours = 12;
                 var period = DateTime.UtcNow.AddHours(-periodHours);
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
