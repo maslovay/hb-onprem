@@ -35,15 +35,29 @@ namespace ErrorKibanaScheduler.QuartzJob
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var _log = _elasticClientFactory.GetElasticClient();           
+            var _log = _elasticClientFactory.GetElasticClient();
             var pool = new SingleNodeConnectionPool(new Uri($"{_path.UriPath}"));
-            var settings = new ConnectionSettings(pool, sourceSerializer: JsonNetSerializer.Default);
+            var settings = new ConnectionSettings(pool, sourceSerializer: JsonNetSerializer.Default).DefaultIndex("*");
             var client = new ElasticClient(settings);
             _log.Info("Try to connect");
             try
             {
                 int periodHours = 12;
                 var period = DateTime.UtcNow.AddHours(-periodHours);
+
+                var test = client.Search<SearchSetting>(source => source
+                  .Source(s => s
+                      .Includes(i => i
+                          .Fields(f => f.FunctionName,
+                              f => f.OriginalFormat,
+                              f => f.Timestamp,
+                              f => f.FunctionName,
+                              f => f.InvocationId,
+                              f => f.LogLevel)))
+                  .Take(10000));
+                _log.Info("test");
+                _log.Info("test: "+test.ToString());
+
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
                         .Includes(i => i
@@ -70,6 +84,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                                     .GreaterThanOrEquals(period))));
                 List<SearchSetting> documents = searchRequest.Documents.OrderByDescending(x => x.Timestamp).ToList();
                 _log.Info(documents.Count().ToString());
+
                 var alarm = new MessengerMessageRun()
                 {
                     logText = "<b>8000 or more error</b>",
