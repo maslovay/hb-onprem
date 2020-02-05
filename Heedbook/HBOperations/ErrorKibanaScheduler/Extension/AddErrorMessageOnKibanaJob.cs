@@ -21,6 +21,7 @@ namespace ErrorKibanaScheduler
             {
                 return TriggerBuilder.Create()
                     .WithIdentity("KibanaErrorJob.trigger", "KibanaError")
+                    .StartNow()
                     .WithSchedule(CronScheduleBuilder.DailyAtHourAndMinute(18, 00))
                     .Build();
             });
