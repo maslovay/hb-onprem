@@ -195,14 +195,11 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, deviceIds);
+                List<DialogueInfo> dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, deviceIds);
                 List<SlideShowInfo> slideShowSessionsAll = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds, true, dialogues);
-                if (slideShowSessionsAll.Count == 0) return slideShowSessionsAll;
-                var answers = await GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, deviceIds);
-
+                List<AnswerInfo.AnswerOne> answers = await GetAnswersFullAsync(slideShowSessionsAll, begTime, endTime, companyIds, applicationUserIds, deviceIds);
                 double conversion = GetConversion(slideShowSessionsAll.Count(), answers.Count());
-
-                List<AnswerInfo> slideShowInfoGroupByContent = slideShowSessionsAll
+                List<AnswerInfo> slideShowInfoGroupByContent = slideShowSessionsAll?
                     .GroupBy(p => p.ContentId)
                     .Select(ssh => new AnswerInfo
                     {
@@ -217,13 +214,13 @@ namespace UserOperations.Services
                 var contentInfo = new
                 {
                     Views = slideShowSessionsAll.Count(),
-                    Clients = slideShowSessionsAll.Select(x => x.DialogueId).Distinct().Count(),
-                    Answers = slideShowInfoGroupByContent.Sum(x => x.AnswersAmount), //answers.Count(),//                    
+                    Clients = slideShowSessionsAll?.Select(x => x.DialogueId).Distinct().Count(),
+                    Answers = slideShowInfoGroupByContent?.Sum(x => x.AnswersAmount), //answers.Count(),//
                     Conversion = conversion,
                     ContentFullInfo = slideShowInfoGroupByContent
                 };
             if(type == "json")
-                return JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));           
+                return JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
 
             MemoryStream excelDocStream = _utils.CreatePoolAnswersSheet(slideShowInfoGroupByContent.ToList(), $"{begTime.ToShortDateString()}_{endTime.ToShortDateString()}");
             excelDocStream.Seek(0, SeekOrigin.Begin);
@@ -385,6 +382,7 @@ namespace UserOperations.Services
             var answers = await GetAnswersAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds);
 
             List<AnswerInfo.AnswerOne> answersResult = new List<AnswerInfo.AnswerOne>();
+            if (answers.Count() == 0 || slideShowSessionsAll.Count() == 0) return answersResult;
             foreach (var answ in answers)
             {
                 var slideShowSessionForAnswer = slideShowSessionsAll.Where(x => x.BegTime <= answ.Time

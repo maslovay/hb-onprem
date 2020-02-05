@@ -10,7 +10,7 @@ namespace UserOperations.Models.AnalyticModels
         public Guid? CompanyId;//---!!!for benchmarks only
         public Guid DialogueId;
         public Guid? ApplicationUserId;
-        public Guid? DeviceId;
+        public Guid DeviceId;
         public DateTime BegTime;
         public DateTime EndTime;
         public string FullName;

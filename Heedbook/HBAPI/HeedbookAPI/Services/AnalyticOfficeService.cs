@@ -43,7 +43,7 @@ namespace UserOperations.Services
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
-                var dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
+                List<DialogueInfo> dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
@@ -124,6 +124,7 @@ namespace UserOperations.Services
                        .Average(q => q.Count())
                    }).ToList();
 
+                var days = new List<string> {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
                 var clientDay = dialoguesCur?
                     .GroupBy(p => p.BegTime.DayOfWeek)
                     .Select(p => new EfficiencyLoadClientDayInfo
@@ -132,7 +133,46 @@ namespace UserOperations.Services
                         ClientCount = p.GroupBy(q => q.BegTime.Date)
                             .Average(q => q.Count())
                     }).ToList();
+                var zeroDays = days.Where(x => !clientDay.Select(p => p.Day).Contains(x))
+                        .Select(p => new EfficiencyLoadClientDayInfo
+                        {
+                            Day = p,
+                            ClientCount = 0
+                        });
+                clientDay = clientDay.Union(zeroDays).ToList();
 
+
+            //----new diagrams---dialogue amount by device and by employee
+            var dialogueUserDate = dialoguesCur?
+                 .Where(p => p.ApplicationUserId != null)
+                 .GroupBy(p => p.BegTime.Date)
+                 .OrderBy(p => p.Key)
+                 .Select(p => new 
+                 {
+                     Day = p.Key.ToShortDateString(),
+                     DialoguesUsers = p.GroupBy(r => r.ApplicationUserId)
+                     .Select(r => new 
+                                    {
+                                        UserId = (Guid)r.Key,
+                                        ClientCount = r.Count()
+                                    }).OrderBy(r => r.UserId).ToArray()
+                 }).ToArray();
+
+
+            var dialogueDeviceDate = dialoguesCur?
+                 .GroupBy(p => p.BegTime.Date)
+                 .OrderBy(p => p.Key)
+                 .Select(p => new
+                 {
+                     Day = p.Key.ToShortDateString(),
+                     DialoguesDevices = p.GroupBy(r => r.DeviceId)
+                     .Select(r => new
+                     {
+                         DeviceId = r.Key,
+                         ClientCount = r.Count()
+                     }).OrderBy(r => r.DeviceId).ToArray()
+                 }).ToArray();
+            //---end new block
 
             var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
                             _analyticOfficeUtils.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, begTime, endTime): null;
@@ -166,6 +206,8 @@ namespace UserOperations.Services
                 jsonToReturn["DiagramEmployeeWorked"] = diagramEmployeeWorked;
                 jsonToReturn["ClientTime"] = clientTime;
                 jsonToReturn["ClientDay"] = clientDay;
+                jsonToReturn["dialogueUserDate"] = dialogueUserDate;
+                jsonToReturn["dialogueDeviceDate"] = dialogueDeviceDate;
                 jsonToReturn["PausesAmount"] = pausesAmount;
                 jsonToReturn["PausesShare"] = pausesShareInSession;
                 jsonToReturn["PausesInMinutes"] = pausesInMinutes;
