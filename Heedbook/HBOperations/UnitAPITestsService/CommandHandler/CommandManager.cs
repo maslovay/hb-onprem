@@ -18,14 +18,11 @@ namespace UnitAPITestsService.CommandHandler
             => CommandWorker(command);
         
         private void CommandWorker(string command)
-        {
-            Console.WriteLine($"CommandWorker(): command '{command}'");
-            switch (command.Trim())
+        {   
+            if(command == "api_unit_tests")
             {
-                case "api_unit_tests":
-                    Console.WriteLine($"CommandWorker(): running {command}");
-                    _checker.Check();
-                    break;
+                Console.WriteLine($"CommandWorker(): running {command}");
+                _checker.Check();
             }
         }
     }

@@ -115,6 +115,9 @@ namespace MessengerReporterService.Senders
                     _publisher.Publish(message);
                     break;
                 }
+                default:
+                    System.Console.WriteLine($"No such command: {command}");
+                    break;
                     
             }
             
