@@ -5,7 +5,7 @@ COPY . .
 RUN dotnet publish ./HBOperations/UnitAPITestsService -c Release -o publish
 
 # Build runtime image
-FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
+FROM microsoft/dotnet:2.2-sdk
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/UnitAPITestsService/publish .
 ENTRYPOINT ["dotnet", "UnitAPITestsService.dll"]
