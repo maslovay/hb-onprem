@@ -206,8 +206,8 @@ namespace UserOperations.Services
                 jsonToReturn["DiagramEmployeeWorked"] = diagramEmployeeWorked;
                 jsonToReturn["ClientTime"] = clientTime;
                 jsonToReturn["ClientDay"] = clientDay;
-                jsonToReturn["dialogueUserDate"] = dialogueUserDate;
-                jsonToReturn["dialogueDeviceDate"] = dialogueDeviceDate;
+                jsonToReturn["DialogueUserDate"] = dialogueUserDate;
+                jsonToReturn["DialogueDeviceDate"] = dialogueDeviceDate;
                 jsonToReturn["PausesAmount"] = pausesAmount;
                 jsonToReturn["PausesShare"] = pausesShareInSession;
                 jsonToReturn["PausesInMinutes"] = pausesInMinutes;

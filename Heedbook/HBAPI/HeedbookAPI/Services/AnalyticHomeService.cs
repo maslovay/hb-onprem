@@ -174,10 +174,9 @@ namespace UserOperations.Services
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
                 var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(prevBeg, begTime, companyIds, new List<Guid?>(), deviceIds, false, dialoguesOld);
-                var viewsOld = slideShowSessionsInDialoguesOld.Where(x => x.Campaign == null || !x.Campaign.IsSplash).Count();
 
                 var slideShowSessionsInDialoguesCur = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, new List<Guid?>(), deviceIds, false, dialoguesCur);
-                var viewsCur = slideShowSessionsInDialoguesCur.Where(x => x.Campaign == null || !x.Campaign.IsSplash).Count();
+                var viewsCur = slideShowSessionsInDialoguesCur.Count();
 
                 var result = new NewDashboardInfo()
                 {
@@ -197,7 +196,7 @@ namespace UserOperations.Services
                     CrossIndexDelta = -_utils.CrossIndex(dialoguesOld),
 
                     AdvCount = viewsCur,
-                    AdvCountDelta = viewsCur - viewsOld,
+                    AdvCountDelta = viewsCur - slideShowSessionsInDialoguesOld.Count(),
                     AnswerCount = (await GetAnswersAsync(begTime, endTime, companyIds, new List<Guid?>(), deviceIds)).Count(),
                     AnswerCountDelta = - (await GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid?>(), deviceIds)).Count(),
 
@@ -222,7 +221,6 @@ namespace UserOperations.Services
                 result.LoadIndexDelta += result.LoadIndex;
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.AnswerCountDelta += result.AnswerCount;
-                result.AdvCountDelta += result.AdvCount;
                 result.ClientsCountDelta += result.ClientsCount;
                 return result;
         }

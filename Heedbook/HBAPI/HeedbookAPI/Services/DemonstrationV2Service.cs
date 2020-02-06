@@ -43,7 +43,7 @@ namespace UserOperations.Services
                         .Where(x => x.CampaignContentId == stat.CampaignContentId)
                         .Select(x => x.Content.RawHTML).FirstOrDefault();
 
-                    stat.IsPoll = html.Contains("PollAnswer") ? true : false;
+                    stat.IsPoll = html.Contains("answerText") ? true : false;
                 }
                 stat.SlideShowSessionId = Guid.NewGuid();
                 stat.ApplicationUserId = userId;
