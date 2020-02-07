@@ -62,20 +62,22 @@ namespace UserOperations.Services
                 var contentInfo = new //ContentTotalInfo
                 {
                     ContentsAmount = slideShowSessionsAll.Where(p => !p.IsPoll).Count(),
-                    ContentsInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentOneInfo
+                    ContentsInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentFullOneInfo
                     {
                         Content = x.Key2.ToString(),
-                        AmountOne = x.Result.Count(),
+                        AmountViews = x.Result.Count(),
                         ContentType = x.Key1,
                         ContentName = x.Result.FirstOrDefault().ContentName,
+                        FtpLink = _fileRef.GetFileLink(_containerName, x.Key2 + ".png", default) + $"?{x.Result.FirstOrDefault().ContentUpdateDate}",
                         EmotionAttention = EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList())
                     })
-                    .Union(contentsShownGroup.Where(x => x.Key2 == null).Select(x => new ContentOneInfo
+                    .Union(contentsShownGroup.Where(x => x.Key2 == null).Select(x => new ContentFullOneInfo
                     {
-                        Content = x.Key3,
-                        AmountOne = x.Result.Count(),
+                        Content = null,
+                        AmountViews = x.Result.Count(),
                         ContentType = x.Key1,
                         EmotionAttention = EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList()),
+                        ExternalLink = x.Key3.ToString(),
                     }
                     )).ToList()
                 };
@@ -85,7 +87,8 @@ namespace UserOperations.Services
                     {
                         Key1 = key.ContentType,
                         Key2 = key.ContentId,
-                        Result = group.ToList()
+                        Result = group.ToList(),
+                        FtpLink = _fileRef.GetFileLink(_containerName, key.ContentId + ".png", default) + $"?{group.FirstOrDefault().ContentUpdateDate}",
                     });
                 var answers = await GetAnswersInOneDialogueAsync(slideShowSessionsAll, dialogue.BegTime, dialogue.EndTime, dialogue.ApplicationUserId, (Guid)dialogue.DeviceId);
                   
@@ -100,7 +103,8 @@ namespace UserOperations.Services
                                     .Select(r => r.CampaignContentId).Contains(p.CampaignContentId))
                                 .Select(p => new { p.Answer, p.Time }),
                             EmotionAttention = EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList()),
-                        })
+                            x.FtpLink
+                    })
                     .ToList();
 
                 var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
