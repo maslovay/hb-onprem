@@ -54,8 +54,8 @@ namespace UserOperations.Controllers
         [HttpPut]
         [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "set device code, type, name, status", Description = "")]
-        [SwaggerResponse(200, "Saved", typeof(string))]
-        public async Task<string> DeviceUpdate([FromBody] PutDevice device)
+        [SwaggerResponse(200, "Saved", typeof(Device))]
+        public async Task<Device> DeviceUpdate([FromBody] PutDevice device)
             => await _deviceService.Update(device);
 
         [HttpDelete]

@@ -143,7 +143,7 @@ namespace UserOperations.Services
             return newDevice;
         }
 
-        public async Task<string> Update(PutDevice device)
+        public async Task<Device> Update(PutDevice device)
         {
             Guid companyId;
             try
@@ -165,7 +165,7 @@ namespace UserOperations.Services
             deviceEntity.Name = device.Name ?? deviceEntity.Name;
             deviceEntity.StatusId = device.StatusId != 0? device.StatusId : deviceEntity.StatusId;
             await _repository.SaveAsync();
-            return "Saved";
+            return deviceEntity;
         }
 
         public async Task<string> Delete(Guid deviceId)
