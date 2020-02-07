@@ -6,6 +6,7 @@ namespace UserOperations.Models.AnalyticModels
         public double? WorkloadDynamics;
         public int? DialoguesCount;
         public double? DialoguesNumberAvgPerEmployee;
+        public double? DialoguesNumberAvgPerDevice;
         public double? AvgWorkingTime;
         public double? AvgDurationDialogue;
         public double? DialoguesNumberAvgPerDayOffice;

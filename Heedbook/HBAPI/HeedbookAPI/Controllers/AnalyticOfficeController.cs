@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using Microsoft.AspNetCore.Authorization;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -20,8 +21,12 @@ namespace UserOperations.Controllers
         {
             _analyticOfficeProvider = analyticOfficeProvider;
         }
-
+        //
         [HttpGet("Efficiency")]
+        [SwaggerOperation(Summary = "page: /workload",
+            Description = "DialoguesNumberAvgPerEmployee - include only dialogues with UserId not null")]
+        [SwaggerResponse(400, "Exception message")]
+        [SwaggerResponse(200, "Key-Value")]
         public string Efficiency([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,

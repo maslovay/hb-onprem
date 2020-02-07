@@ -59,9 +59,11 @@ namespace UserOperations.Services
                 var satisfactionIndex = _analyticOfficeUtils.SatisfactionIndex(dialoguesCur);
                 var loadIndex = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1));
                 var employeeCount = _analyticOfficeUtils.EmployeeCount(dialoguesCur);
-             //   result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
+                var deviceCount = _analyticOfficeUtils.DeviceCount(dialoguesCur);
+            //   result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
-                result.DialoguesNumberAvgPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
+                result.DialoguesNumberAvgPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.Where( p => p.ApplicationUserId != null).GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
+                result.DialoguesNumberAvgPerDevice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
                 result.DialoguesNumberAvgPerDayOffice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() : 0;
 
                 var diagramDialogDurationPause = sessionCur

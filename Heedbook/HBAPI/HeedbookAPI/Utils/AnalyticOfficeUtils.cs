@@ -87,7 +87,12 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
         }
         public int EmployeeCount(List<DialogueInfo> dialogues)
         {
-            return dialogues.Any() ? dialogues.Select(p => p.ApplicationUserId).Distinct().Count() : 0;
+            return dialogues.Any() ? dialogues.Where(p => p.ApplicationUserId != null).Select(p => p.ApplicationUserId).Distinct().Count() : 0;
+        }
+
+        public int DeviceCount(List<DialogueInfo> dialogues)
+        {
+            return dialogues.Any() ? dialogues.Select(p => p.DeviceId).Distinct().Count() : 0;
         }
         public double? DialogueAveragePause(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
