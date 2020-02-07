@@ -25,12 +25,13 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Campaign")]
-        [SwaggerOperation(Summary = "Return campaigns with content", Description = "Return all campaigns for loggined company with content relations")]
+        [SwaggerOperation(Summary = "Return campaigns with content", Description = "Return all campaigns for loggined company with content relations. isActual= true for devices to get only active for today")]
         [SwaggerResponse(200, "Campaigns list", typeof(List<CampaignGetModel>))]
         public List<Campaign> CampaignGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds ) => 
-            _campaignContentService.CampaignGet( companyIds, corporationIds);
+                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                [FromQuery(Name = "isActual")] bool isActual = false) => 
+            _campaignContentService.CampaignGet( companyIds, corporationIds, isActual);
 
 
         [HttpPost("Campaign")]

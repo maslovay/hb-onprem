@@ -49,21 +49,26 @@ namespace UserOperations.Services
             }
         }
 
-        public List<Campaign> CampaignGet( List<Guid> companyIds, List<Guid> corporationIds )
+        public List<Campaign> CampaignGet( List<Guid> companyIds, List<Guid> corporationIds, bool isActual )
         {
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-            var statusInactiveId =  GetStatusId("Inactive");
-            var campaigns = GetCampaignForCompanys(companyIds, statusInactiveId);
+            var statusActiveId =  GetStatusId("Active");
+            List<Campaign> campaigns = null;
+            if (isActual == true)
+                campaigns = GetCampaignForDevices(companyIds, statusActiveId);
+            else
+                campaigns = GetCampaignForCompanys(companyIds, statusActiveId);
+              
 
             var result = campaigns
                 .Select(p =>
                     {
                         p.CampaignContents = p.CampaignContents.Where(x => p.CampaignContents != null
                                 && p.CampaignContents.Count != 0
-                                && x.StatusId != statusInactiveId)
+                                && x.StatusId == statusActiveId)
                             .ToList();
                         return p;
                     })
@@ -337,7 +342,18 @@ namespace UserOperations.Services
             var campaigns = _repository.GetAsQueryable<Campaign>()
                 .Include(x => x.CampaignContents)
                 .Where(x => companyIds.Contains(x.CompanyId)
-                    && x.StatusId != statusId).ToList();
+                    && x.StatusId == statusId).ToList();
+            return campaigns;
+        }
+        private List<Campaign> GetCampaignForDevices(List<Guid> companyIds, int statusId)
+        {
+            var curDate = DateTime.Now;
+            var campaigns = _repository.GetAsQueryable<Campaign>()
+                .Include(x => x.CampaignContents)
+                .Where(x => companyIds.Contains(x.CompanyId)
+                    && x.StatusId == statusId
+                    && x.BegDate <= curDate
+                    && x.EndDate >= curDate).ToList();
             return campaigns;
         }
         private Campaign GetCampaign(Guid campaignId)
