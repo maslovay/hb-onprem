@@ -27,11 +27,6 @@ namespace HBData.Models
         public Guid? PhraseTypeId { get; set; }
         public PhraseType PhraseType { get; set; }
 
-        ///// <summary>
-        /////    phase of sale to which the phrase refers
-        ///// </summary>
-        //public Guid? SalesStageId { get; set; }
-        //public SalesStage SalesStage { get; set; }
 
         /// <summary>
         ///     Phrase language
@@ -54,10 +49,10 @@ namespace HBData.Models
         /// </summary>
         public Boolean IsTemplate { get; set; }
 
-        [JsonIgnore]
         /// <summary>
         ///     Links
         /// </summary>
-        public ICollection<PhraseCompany> PhraseCompany { get; set; }
+        [JsonIgnore] public ICollection<PhraseCompany> PhraseCompany { get; set; }
+        [JsonIgnore] public ICollection<SalesStagePhrase> SalesStagePhrases { get; set; }
     }
 }

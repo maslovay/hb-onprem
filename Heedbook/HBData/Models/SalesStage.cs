@@ -1,7 +1,7 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
 
 namespace HBData.Models
 {
@@ -27,20 +27,8 @@ namespace HBData.Models
         public string Name { get; set; }
 
         /// <summary>
-        ///    if the stage is specific to an individual company, then fill out this field
+        ///     Links
         /// </summary>
-        public Guid? CompanyId { get; set; }
-        public Company Company { get; set; }
-
-        /// <summary>
-        ///    if the stage is specific to an individual corporation, then fill out this field
-        /// </summary>
-        public Guid? CorporationId { get; set; }
-        public Corporation Corporation { get; set; }
-        //[JsonIgnore]
-        ///// <summary>
-        /////     Links
-        ///// </summary>
-        //public ICollection<Phrase> Phrases { get; set; }
+        [JsonIgnore] public ICollection<SalesStagePhrase> SalesStagePhrases { get; set; }
     }
 }
