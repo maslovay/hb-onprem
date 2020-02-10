@@ -156,7 +156,8 @@ namespace UserOperations.Services
                      .Select(r => new 
                                     {
                                         UserId = (Guid)r.Key,
-                                        ClientCount = r.Count()
+                                        ClientCount = r.Count(),
+                                        r.FirstOrDefault()?.FullName
                                     }).OrderBy(r => r.UserId).ToArray()
                  }).ToArray();
 
@@ -171,7 +172,8 @@ namespace UserOperations.Services
                      .Select(r => new
                      {
                          DeviceId = r.Key,
-                         ClientCount = r.Count()
+                         ClientCount = r.Count(),
+                         r.FirstOrDefault()?.DeviceName,
                      }).OrderBy(r => r.DeviceId).ToArray()
                  }).ToArray();
             //---end new block
@@ -266,6 +268,7 @@ namespace UserOperations.Services
                     DialogueId = p.DialogueId,
                     ApplicationUserId = p.ApplicationUserId,
                     DeviceId = p.DeviceId,
+                    DeviceName = p.Device.Name,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     FullName = p.ApplicationUser.FullName,

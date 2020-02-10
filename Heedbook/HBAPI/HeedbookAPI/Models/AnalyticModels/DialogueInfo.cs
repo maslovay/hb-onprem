@@ -14,6 +14,7 @@ namespace UserOperations.Models.AnalyticModels
         public DateTime BegTime;
         public DateTime EndTime;
         public string FullName;
+        public string DeviceName;
         public int CrossCount;
         public int AlertCount;
         public double? SatisfactionScore;
