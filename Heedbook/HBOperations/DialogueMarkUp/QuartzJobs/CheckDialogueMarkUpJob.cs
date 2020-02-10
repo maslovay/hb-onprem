@@ -52,8 +52,8 @@ namespace DialogueMarkUp.QuartzJobs
                 var endTime = DateTime.UtcNow.AddMinutes(-30);
                 var frameAttributes = _context.FrameAttributes
                     .Include(p => p.FileFrame)
-                    .Where(p => p.FileFrame.StatusNNId == 6 
-                        && p.FileFrame.Time > begMarkUpTime
+                    .Where(p => 
+                        p.FileFrame.Time > begMarkUpTime
                         && p.FileFrame.Time < endTime 
                         && p.FileFrame.FaceLength > 0)
                     .OrderBy(p => p.FileFrame.Time)
@@ -227,6 +227,9 @@ namespace DialogueMarkUp.QuartzJobs
                         foreach (var updatedMarkUp in updatedMarkUps)
                         {   
                             var dialogueId = Guid.NewGuid();
+                            if(dialogueIntersectionMoreThan80Percent(applicationUserId, updatedMarkUp.BegTime, updatedMarkUp.EndTime))
+                                continue;
+
                             var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
                                 updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
                             log.Info($"Create dialogue --- {dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
@@ -273,7 +276,36 @@ namespace DialogueMarkUp.QuartzJobs
                 _publisher.Publish(personDetection);
             }
         }
+        private bool dialogueIntersectionMoreThan80Percent(Guid applicationUserId, DateTime begTime, DateTime endTime)
+        {
+            var dialogues = _context.Dialogues.Where(p => p.ApplicationUserId == applicationUserId
+                    && (p.StatusId == 3 || p.StatusId == 6))
+                .ToList();
 
+            if(dialogues == null || dialogues.Count == 0)
+                return false;
+            var intersectDialogues = dialogues.Where(p =>
+                    ((p.BegTime <= begTime
+                        && p.EndTime > begTime
+                        && p.EndTime <= endTime) 
+                    || (p.BegTime < endTime
+                        && p.BegTime > begTime
+                        && p.EndTime >= endTime)
+                    || (p.BegTime >= begTime
+                        && p.EndTime <= endTime)
+                    || (p.BegTime < begTime
+                        && p.EndTime > endTime)));
+            
+            var moreThan80PersentIntersectDialogues = intersectDialogues.Sum(p => 
+                    (MinTime(endTime, p.EndTime).Subtract(MaxTime(begTime,p.BegTime)).TotalSeconds))
+                > endTime.Subtract(begTime).TotalSeconds * 0.8;
+            
+            if(moreThan80PersentIntersectDialogues)
+                return true;
+            else
+                return false;
+        }
+        
         private List<MarkUp> UpdateMarkUp(MarkUp markUp, ElasticClient log, double persent = 0.7)
         {
             var updatedMarkUp = new List<MarkUp>();
