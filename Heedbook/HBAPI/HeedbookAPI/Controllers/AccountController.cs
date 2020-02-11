@@ -71,6 +71,12 @@ namespace UserOperations.Controllers
                         string email)
             => await _service.DeleteCompany(email);
 
+        [HttpDelete("RemoveUser")]
+        [SwaggerOperation(Summary = "Delete user, company, trial tariff - only for developers")]
+        public async Task UserDelete([FromQuery,
+                        SwaggerParameter("user email", Required = true)]
+                        string email)
+          =>  _service.DeleteUser(email);
 
         [HttpGet("[action]")]
         public void AddCompanyDictionary(string fileName)=>  _service.AddPhrasesFromExcel(fileName);

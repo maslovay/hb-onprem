@@ -113,6 +113,14 @@ namespace UserOperations.Services
         {
             _helpProvider.AddComanyPhrases(fileName);
         }
+        public void DeleteUser(string email)
+        {
+            var user = _repository.GetAsQueryable<ApplicationUser>().Include(x => x.UserRoles).FirstOrDefault(p => p.Email == email);
+
+            _repository.Delete<ApplicationUserRole>(user.UserRoles);
+            _repository.Delete<ApplicationUser>(user);
+            _repository.Save();
+        }
 
 
         //---PRIVATE---
@@ -302,5 +310,7 @@ namespace UserOperations.Services
             _repository.Delete<Company>(company);
             _repository.Save();
         }
+
+     
     }
 }
