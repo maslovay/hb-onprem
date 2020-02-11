@@ -37,26 +37,26 @@ namespace UserOperations.Utils
                         Name = "data",
                         In = "formData",
                         Type = "object",
-                        Default = JsonConvert.SerializeObject(new PostUser() { CompanyId=Guid.Empty, Email="uniqueField", Password="required", RoleId=Guid.NewGuid()}),
+                      //  Default = JsonConvert.SerializeObject(new PostUser()),
                         Description = "fill the user fields",
                         Required = true
                     });
                     operation.Consumes.Add("application/form-data");
                 }
 
-                if (context.ApiDescription.ActionDescriptor.AttributeRouteInfo.Template == "api/CampaignContent/Content")
-                {
-                    operation.Parameters.Add(new NonBodyParameter
-                    {
-                        Name = "data",
-                        In = "formData",
-                        Type = "object",
-                        Default = JsonConvert.SerializeObject(new Content() { ContentId = Guid.Empty, Duration = 0, IsTemplate = false, JSONData = "{}", Name = "", RawHTML = "" }),
-                        Description = "fill the content fields",
-                        Required = true
-                    });
-                    operation.Consumes.Add("application/form-data");
-                }
+                //if (context.ApiDescription.ActionDescriptor.AttributeRouteInfo.Template == "api/CampaignContent/Content")
+                //{
+                //    operation.Parameters.Add(new NonBodyParameter
+                //    {
+                //        Name = "data",
+                //        In = "formData",
+                //        Type = "object",
+                //        Default = JsonConvert.SerializeObject(new Content() { ContentId = Guid.Empty, Duration = 0, IsTemplate = false, JSONData = "{}", Name = "", RawHTML = "" }),
+                //        Description = "fill the content fields",
+                //        Required = true
+                //    });
+                //    operation.Consumes.Add("application/form-data");
+                //}
             }
         }
     }
