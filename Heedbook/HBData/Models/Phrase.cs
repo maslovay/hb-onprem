@@ -52,7 +52,8 @@ namespace HBData.Models
         /// <summary>
         ///     Links
         /// </summary>
-        [JsonIgnore] public ICollection<PhraseCompany> PhraseCompany { get; set; }
+        [JsonIgnore] public ICollection<PhraseCompany> PhraseCompanys { get; set; }
+        [JsonIgnore] public ICollection<DialoguePhrase> DialoguePhrases { get; set; }
         [JsonIgnore] public ICollection<SalesStagePhrase> SalesStagePhrases { get; set; }
     }
 }

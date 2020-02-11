@@ -34,7 +34,7 @@ namespace UserOperations.Controllers
     {
     //    private readonly IConfiguration _config;
     //    private readonly LoginService _loginService;
-    //    private readonly RecordsContext _context;
+        private readonly RecordsContext _context;
     //    private readonly SftpClient _sftpClient;
     //    private readonly MailSender _mailSender;
     //    private readonly RequestFilters _requestFilters;
@@ -46,7 +46,7 @@ namespace UserOperations.Controllers
         public HelpController(
             //IConfiguration config,
             //LoginService loginService,
-            //RecordsContext context,
+            RecordsContext context
             //SftpClient sftpClient,
             //MailSender mailSender,
             //RequestFilters requestFilters,
@@ -57,7 +57,7 @@ namespace UserOperations.Controllers
         {
             //_config = config;
             //_loginService = loginService;
-            //_context = context;
+            _context = context;
             //_sftpClient = sftpClient;
             //_mailSender = mailSender;
             //_requestFilters = requestFilters;
@@ -136,6 +136,44 @@ namespace UserOperations.Controllers
                 var e = ex.Message;
                 return BadRequest(ex.Message);
             }
+        }
+
+
+        [HttpGet("SalesStageAdd")]
+        public IActionResult SalesStageAdd()
+        {
+
+            List<Temp> arr = new List<Temp> {
+                 new Temp { phrase = "процентная ставка	", id = 3},
+                 new Temp { phrase = "рассмотрение заявки	", id = 3}
+            };
+            foreach (var item in arr)
+            {
+            try
+            {
+                    Guid phraseId = _context.Phrases.FirstOrDefault(x => x.PhraseText == item.phrase.TrimEnd(' ').TrimEnd('\t')).PhraseId;
+                    SalesStagePhrase ssphr = _context.SalesStagePhrases.Where(x => x.PhraseId == phraseId).FirstOrDefault();
+                    if (ssphr == null)
+                    {
+                        SalesStagePhrase ssph = new SalesStagePhrase
+                        {
+                            SalesStagePhraseId = Guid.NewGuid(),
+                            PhraseId = _context.Phrases.FirstOrDefault(x => x.PhraseText == item.phrase.TrimEnd(' ').TrimEnd('\t')).PhraseId,
+                            SalesStageId = _context.SalesStages.FirstOrDefault(x => x.SequenceNumber == item.id).SalesStageId,
+                        };
+                        _context.SalesStagePhrases.Add(ssph);
+                        _context.SaveChanges();
+                    }
+                }
+            catch{}
+            }
+            return Ok();
+        }
+
+        public class Temp
+        {
+            public int id;
+            public string phrase;
         }
     }
 }

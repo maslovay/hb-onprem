@@ -49,7 +49,7 @@ namespace UserOperations.Services
         public async Task<Phrase> GetPhraseByIdAsync(Guid phraseId)
         {
             var phrase =  await _repository.GetAsQueryable<Phrase>()
-                  .Include(x => x.PhraseCompany).FirstOrDefaultAsync(x => x.PhraseId == phraseId);
+                  .Include(x => x.PhraseCompanys).FirstOrDefaultAsync(x => x.PhraseId == phraseId);
             if (phrase == null) throw new NoFoundException("No such phrase");
             return phrase;
         }
@@ -115,7 +115,7 @@ namespace UserOperations.Services
         public async Task<string> DeleteAndSavePhraseWithPhraseCompanyAsync(Phrase phraseIncluded)
         {
             var companyIdInToken = _loginService.GetCurrentCompanyId();
-            var phrasesCompany = phraseIncluded.PhraseCompany.Where(x => x.CompanyId == companyIdInToken).ToList();
+            var phrasesCompany = phraseIncluded.PhraseCompanys.Where(x => x.CompanyId == companyIdInToken).ToList();
             _repository.Delete<PhraseCompany>(phrasesCompany);//--remove connections to phrase in library
             try
             {
@@ -138,10 +138,10 @@ namespace UserOperations.Services
         {
             //---search phrase that is in library or that is not belong to any company
             return await _repository.GetAsQueryable<Phrase>()
-                   .Include(x => x.PhraseCompany)
+                   .Include(x => x.PhraseCompanys)
                    .Where(x =>
                         x.PhraseText.ToLower() == phraseText.ToLower()
-                        && (x.IsTemplate == isTemplate || x.PhraseCompany.Count() == 0)).FirstOrDefaultAsync();
+                        && (x.IsTemplate == isTemplate || x.PhraseCompanys.Count() == 0)).FirstOrDefaultAsync();
         }
 
         private async Task<Phrase> CreateNewPhraseAsync(PhrasePost message, int languageId)
