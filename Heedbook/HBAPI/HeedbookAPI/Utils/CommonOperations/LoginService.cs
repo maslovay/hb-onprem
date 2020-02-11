@@ -278,7 +278,7 @@ namespace UserOperations.Services
         { 
            Guid.TryParse(_httpContextAccessor.HttpContext.User.Claims
                .FirstOrDefault(c => c.Type == "corporationId")?.Value, out var corporationId);
-           return corporationId;
+           return corporationId == default? null : (Guid?)corporationId;
         }
 
 

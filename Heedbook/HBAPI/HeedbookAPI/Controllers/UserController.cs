@@ -153,7 +153,7 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "New phrase", typeof(Phrase))]
         public async Task<Phrase> PhrasePost(
                     [FromBody] PhrasePost message) =>
-            await _phraseService.CreateNewPhraseAndAddToCompanyAsync(message);
+            await _phraseService.CreateNewPhrasAsync(message);
 
         [HttpPut("PhraseLib")]
         [SwaggerOperation(Summary = "Edit company phrase", Description = "Edit phrase. You can edit only your own phrase (not template from library)")]
