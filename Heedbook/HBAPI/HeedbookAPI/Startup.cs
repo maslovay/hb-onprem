@@ -90,6 +90,7 @@ namespace UserOperations
             services.AddScoped<LoginService>();
             services.AddScoped<MediaFileService>();
             services.AddScoped<PhraseService>();
+            services.AddScoped<SalesStageService>();
             services.AddScoped<SessionService>();
             services.AddScoped<SiteService>();
             services.AddScoped<TabletAppInfoService>();
