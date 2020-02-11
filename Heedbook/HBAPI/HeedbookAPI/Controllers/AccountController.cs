@@ -53,7 +53,7 @@ namespace UserOperations.Controllers
         public async Task<string> UserChangePasswordAsync(
                     [FromBody, SwaggerParameter("email required, password only with token")] AccountAuthorization message,
                     [FromHeader, SwaggerParameter("JWT token not required, if exist receive new password, if not - generate new password", Required = false)] string Authorization)
-            => await _service.ChangePassword(message);
+            => await _service.ChangePassword(message, Authorization);
 
 
         [HttpPost("ChangePasswordOnDefault")]
