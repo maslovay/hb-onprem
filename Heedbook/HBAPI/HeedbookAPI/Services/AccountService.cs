@@ -74,7 +74,7 @@ namespace UserOperations.Services
             try
             {
                 _loginService.GetDataFromToken(token, out var userClaims);
-                var userId = _loginService.GetCurrentUserId();
+                var userId = Guid.Parse(userClaims["applicationUserId"]);
                 user = GetUserIncludeCompany(userId, message);
                 user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
                 await _repository.SaveAsync();
