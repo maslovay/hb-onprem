@@ -79,29 +79,30 @@ namespace UserOperations.Services
         public async Task<Phrase> CreateNewPhrasAsync(PhrasePost message)
         {
             var languageId = _loginService.GetCurrentLanguagueId();
-            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            Guid companyIdInToken = _loginService.GetCurrentCompanyId();
             var corporationIdInToken = _loginService.GetCurrentCorporationId();
-
+            Guid? companyIdForSalesStage = null;
 
             Phrase phrase = await GetPhraseByTextAsync(message.PhraseText, true);
+            if (corporationIdInToken == null) companyIdForSalesStage = companyIdInToken;//make zero company Id to create only one connection to corporation
             if (phrase == null)
             {
-                await CreateNewPhraseAsync(message, languageId);
-                await CreateNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
-                await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, corporationIdInToken == null? (Guid?)companyIdInToken : null, corporationIdInToken);
+                phrase = await CreateNewPhraseAsync(message, languageId);
+                await CreateIfNoExistNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
+                await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, companyIdForSalesStage, corporationIdInToken);
             }
             else
             {
                 //1-phrase+company
-                await CreateNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
+                await CreateIfNoExistNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
 
                 //2-phrase+sales stage
-                var defaultSalesStageIdOfPhrase = await GetSalesStageOfPhraseByPhraseId(phrase.PhraseId);
+                var defaultSalesStageIdOfPhrase = await GetSalesStageOfPhraseByPhraseId(phrase.PhraseId, companyIdForSalesStage, corporationIdInToken);
                 if (message.SalesStageId == null && defaultSalesStageIdOfPhrase == null)
                     throw new NoDataException("what SalesStage do you want to use?");
 
                 if (message.SalesStageId == null)//nothing wishes in requst
-                    await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)defaultSalesStageIdOfPhrase, corporationIdInToken == null ? (Guid?)companyIdInToken : null, corporationIdInToken);
+                    await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)defaultSalesStageIdOfPhrase, companyIdForSalesStage, corporationIdInToken);
 
                 else if (defaultSalesStageIdOfPhrase == null || message.SalesStageId != defaultSalesStageIdOfPhrase)//no template phrase//wishes some diff sales stage
                     await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, corporationIdInToken == null ? (Guid?)companyIdInToken : null, corporationIdInToken);
@@ -116,7 +117,7 @@ namespace UserOperations.Services
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             foreach (var phraseId in phraseIds)
             {
-                await CreateNewPhraseCompanyAsync(phraseId, companyIdInToken);
+                await CreateIfNoExistNewPhraseCompanyAsync(phraseId, companyIdInToken);
             }
             await _repository.SaveAsync();
         }
@@ -156,12 +157,11 @@ namespace UserOperations.Services
 
         //---PRIVATE---
 
-        private async Task<Guid?> GetSalesStageOfPhraseByPhraseId(Guid phraseId)
+        private async Task<Guid?> GetSalesStageOfPhraseByPhraseId(Guid phraseId, Guid? companyId = null, Guid? corporationId = null)
         {
-            var salesStageId = _repository.GetAsQueryable<SalesStagePhrase>()
-                    .Where(x =>
-                    x.PhraseId == phraseId
-                    && x.CompanyId == null && x.CorporationId == null).FirstOrDefault()?.SalesStageId;
+            Guid? salesStageId = _repository.GetAsQueryable<SalesStagePhrase>()
+                    .Where(x => x.PhraseId == phraseId
+                        && x.CompanyId == companyId && x.CorporationId == corporationId).FirstOrDefault()?.SalesStageId;
             return salesStageId;
         }
 
@@ -196,8 +196,12 @@ namespace UserOperations.Services
             return phrase;
         }
 
-        private async Task CreateNewPhraseCompanyAsync(Guid phraseId, Guid companyIdInToken)
+        private async Task CreateIfNoExistNewPhraseCompanyAsync(Guid phraseId, Guid companyIdInToken)
         {
+            var existingPhraseCompany = await _repository
+                .FindOrNullOneByConditionAsync<PhraseCompany>(x => x.CompanyId == companyIdInToken
+                                                                && x.PhraseId == phraseId);
+            if (existingPhraseCompany != null) return;
             var phraseCompany = new PhraseCompany
             {
                 CompanyId = companyIdInToken,
