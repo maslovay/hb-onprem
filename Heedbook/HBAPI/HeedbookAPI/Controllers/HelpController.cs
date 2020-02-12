@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Transactions;
 using FillingSatisfactionService.Helper;
 using HBData.Repository;
+using Old.Models;
 
 namespace UserOperations.Controllers
 {
@@ -65,6 +66,29 @@ namespace UserOperations.Controllers
             //_dbOperation = dBOperations;
             //_repository = repository;
         }
+
+        [HttpGet("CopyDataFromDB")]
+        public async Task<IActionResult> CopyDataFromDB()
+        {
+            var connectionString = "User ID=test_user;Password=test_password;Host=40.69.85.202;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0;";
+
+            //var connectionString = "User ID=heedbook_user;Password=Oleg&AnnaRulyat_1975;Host=40.69.85.202;Port=5432;Database=heedbook_db;Pooling=true;Timeout=120;CommandTimeout=0;";
+            DbContextOptionsBuilder<OldRecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<OldRecordsContext>();
+            dbContextOptionsBuilder.UseNpgsql(connectionString,
+                   dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
+            var oldContext = new OldRecordsContext(dbContextOptionsBuilder.Options);
+
+            var oldAlerts = oldContext.Alerts.ToList();
+            var newAlertsId = _context.Alerts.Select(x => x.AlertId).ToList();
+            var addAlert = oldAlerts.Where(x => !newAlertsId.Contains(x.AlertId));
+            _context.Add(addAlert);
+            _context.SaveChanges();
+
+            //_context.Add(contentInBackup);
+            //_context.SaveChanges();
+            return Ok();
+        }
+
         [HttpGet("Help3")]
         public async Task<IActionResult> Help3()
         {
