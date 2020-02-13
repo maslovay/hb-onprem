@@ -46,9 +46,6 @@ namespace UserService.Controllers
                 var timeBeg = DateTime.ParseExact(begTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
                 var timeEnd = DateTime.ParseExact(endTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
 
-                System.Console.WriteLine($"applicationUserId: {userId}");
-                System.Console.WriteLine($"timeBeg: {timeBeg}");
-                System.Console.WriteLine($"timeEnd: {timeEnd}");
                 if(timeBeg == null || timeEnd == null || applicationUserId == null)
                     return BadRequest("One of the parameters is invalid!");
 
@@ -60,7 +57,7 @@ namespace UserService.Controllers
                         && p.EndTime <= timeEnd)
                     .OrderBy(p => p.BegTime)
                     .ToList();
-                System.Console.WriteLine($"dialogues.Count: {dialogues.Count}");
+                    
                 if(dialogues == null || dialogues.Count == 0)
                     return BadRequest("No exist dialogues in this range!");
                 // dialogues.ForEach(p => p.StatusId = 8);
@@ -68,9 +65,7 @@ namespace UserService.Controllers
                 var newDialogueId = Guid.NewGuid();
                 var maxBegTime = MaxTime(timeBeg, dialogues.FirstOrDefault().BegTime);
                 var minEndTime = MinTime(timeEnd, dialogues.LastOrDefault().EndTime);
-                System.Console.WriteLine($"maxBegTime: {maxBegTime}");
-                System.Console.WriteLine($"minEndTime: {minEndTime}");
-                System.Console.WriteLine($"{newDialogueId}");
+                
                 var firstDialogue = dialogues.FirstOrDefault();
                 var newDialogue = new Dialogue
                 {
@@ -85,8 +80,7 @@ namespace UserService.Controllers
                     StatusId = 6,
                     InStatistic = true
                 };
-                _context.Dialogues.Add(newDialogue);
-                
+                _context.Dialogues.Add(newDialogue);                
 
                 var dialogueVideoAssembleRun = new DialogueVideoAssembleRun
                 {
