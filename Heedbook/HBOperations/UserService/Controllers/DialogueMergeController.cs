@@ -63,7 +63,7 @@ namespace UserService.Controllers
                 System.Console.WriteLine($"dialogues.Count: {dialogues.Count}");
                 if(dialogues == null || dialogues.Count == 0)
                     return BadRequest("No exist dialogues in this range!");
-                // dialogues.ForEach(p => p.StatusId = 8);
+                dialogues.ForEach(p => p.StatusId = 8);
 
                 var newDialogueId = Guid.NewGuid();
                 var maxBegTime = MaxTime(timeBeg, dialogues.FirstOrDefault().BegTime);
