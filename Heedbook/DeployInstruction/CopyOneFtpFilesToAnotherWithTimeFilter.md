@@ -18,15 +18,15 @@ sudo chmod 777 -R .
   sudo apt-get install sshpass
 ```
 ```
-  for f in dialoguevideos clientavatars useravatars media mediacontent dialogueaudios
-  do
-    find $f/* -type f -newermt "2020-02-14 08:00:00" >> fileList.txt
-  done
+for f in dialoguevideos clientavatars useravatars media mediacontent dialogueaudios
+do
+  find $f/* -type f -newermt "2020-02-14 08:00:00" >> fileList.txt
+done
 
-  for f in $(cat ./fileList.txt)
-  do
-    sshpass -p 'kloppolk_2018' sudo scp /home/nkrokhmal/storage/$f heedbookadmin@hbftptest.westeurope.cloudapp.azure.com:/home/nkrokhmal/storagetest/$f
-  done
+for f in $(cat ./fileList.txt)
+do
+  sshpass -p 'kloppolk_2018' sudo scp /home/nkrokhmal/storage/$f heedbookadmin@hbftptest.westeurope.cloudapp.azure.com:/home/nkrokhmal/storagetest/$f
+done
 rm -rf fileList.txt
 ```
 - После выполнения команды нужно проверить появились ли новые файлы на новом ftp сервере
