@@ -75,6 +75,7 @@ namespace DialogueVideoAssembleService
                 var fileVideos = _utils.GetFileVideos(message);
                 if (!fileVideos.Any())
                 {
+                    _log.Info($"No files for message {JsonConvert.SerializeObject(message)}");
                     _log.Error("No video files");
                     return;
                 }                
