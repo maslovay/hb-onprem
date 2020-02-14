@@ -34,19 +34,19 @@ namespace UserService.Controllers
 
         [HttpPost]
         [SwaggerOperation(Description = "Method for merge some dialogues with status 3 in the range")]
-        public async Task<IActionResult> MergeDialogues([FromQuery] String applicationUserId,
+        public async Task<IActionResult> MergeDialogues([FromQuery] String Email,
             [FromQuery] String begTime,
             [FromQuery] String endTime)
         {
             try
             {  
 //                _log.Info("Function Video save info started");
-                var dateFormat = "yyyyMMddHHmmss";
-                var userId = Guid.Parse(applicationUserId);
+                var dateFormat = "dd.MM.yyyy HH:mm:ss";
+                var userId = _context.ApplicationUsers.FirstOrDefault(p => p.Email == Email).Id;
                 var timeBeg = DateTime.ParseExact(begTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
                 var timeEnd = DateTime.ParseExact(endTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
 
-                if(timeBeg == null || timeEnd == null || applicationUserId == null)
+                if(timeBeg == null || timeEnd == null || userId == null)
                     return BadRequest("One of the parameters is invalid!");
 
                 var dialogues = _context.Dialogues
@@ -60,6 +60,7 @@ namespace UserService.Controllers
                     
                 if(dialogues == null || dialogues.Count == 0)
                     return BadRequest("No exist dialogues in this range!");
+
                 dialogues.ForEach(p => p.StatusId = 8);
 
                 var newDialogueId = Guid.NewGuid();
