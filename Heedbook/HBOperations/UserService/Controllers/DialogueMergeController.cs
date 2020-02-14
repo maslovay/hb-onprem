@@ -57,7 +57,7 @@ namespace UserService.Controllers
                         && p.EndTime <= timeEnd)
                     .OrderBy(p => p.BegTime)
                     .ToList();
-
+                    
                 if(dialogues == null || dialogues.Count == 0)
                     return BadRequest("No exist dialogues in this range!");
 
@@ -66,7 +66,7 @@ namespace UserService.Controllers
                 var newDialogueId = Guid.NewGuid();
                 var maxBegTime = MaxTime(timeBeg, dialogues.FirstOrDefault().BegTime);
                 var minEndTime = MinTime(timeEnd, dialogues.LastOrDefault().EndTime);
-
+                
                 var firstDialogue = dialogues.FirstOrDefault();
                 var newDialogue = new Dialogue
                 {
@@ -81,8 +81,7 @@ namespace UserService.Controllers
                     StatusId = 6,
                     InStatistic = true
                 };
-                _context.Dialogues.Add(newDialogue);
-                
+                _context.Dialogues.Add(newDialogue);                
 
                 var dialogueVideoAssembleRun = new DialogueVideoAssembleRun
                 {
