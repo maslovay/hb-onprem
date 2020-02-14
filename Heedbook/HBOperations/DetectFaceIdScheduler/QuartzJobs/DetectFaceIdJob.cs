@@ -47,7 +47,8 @@ namespace DetectFaceIdScheduler.QuartzJobs
                     .Include(p => p.Device.Company)
                     .Where(p => 
                         p.FaceId == null && 
-                        p.FaceLength > 0)
+                        p.FaceLength > 0 &&
+                        p.Device.Company.IsExtended == false)
                     .GroupBy(p => p.DeviceId)
                     .Select(p => new {
                         DeviceId = p.Key,
