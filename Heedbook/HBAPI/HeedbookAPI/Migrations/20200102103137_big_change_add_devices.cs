@@ -11,17 +11,15 @@ namespace UserOperations.Migrations
                 name: "FK_AspNetUsers_WorkerTypes_WorkerTypeId",
                 table: "AspNetUsers");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_CampaignContentAnswers_AspNetUsers_ApplicationUserId",
-                table: "CampaignContentAnswers");
+         
 
             migrationBuilder.DropForeignKey(
                 name: "FK_Dialogues_AspNetUsers_ApplicationUserId",
                 table: "Dialogues");
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_Sessions_AspNetUsers_ApplicationUserId",
-                table: "Sessions");
+            //migrationBuilder.DropForeignKey(
+            //    name: "FK_Sessions_AspNetUsers_ApplicationUserId",
+            //    table: "Sessions");
 
             migrationBuilder.DropTable(
                 name: "LoginHistorys");
@@ -46,11 +44,11 @@ namespace UserOperations.Migrations
                 nullable: false,
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
 
-            migrationBuilder.AlterColumn<Guid>(
-                name: "ApplicationUserId",
-                table: "Sessions",
-                nullable: true,
-                oldClrType: typeof(Guid));
+            //migrationBuilder.AlterColumn<Guid>(
+            //    name: "ApplicationUserId",
+            //    table: "Sessions",
+            //    nullable: true,
+            //    oldClrType: typeof(Guid));
 
             migrationBuilder.AddColumn<Guid>(
                 name: "DeviceId",
@@ -58,11 +56,11 @@ namespace UserOperations.Migrations
                 nullable: false,
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
 
-            migrationBuilder.AlterColumn<Guid>(
-                name: "ApplicationUserId",
-                table: "Dialogues",
-                nullable: true,
-                oldClrType: typeof(Guid));
+            //migrationBuilder.AlterColumn<Guid>(
+            //    name: "ApplicationUserId",
+            //    table: "Dialogues",
+            //    nullable: true,
+            //    oldClrType: typeof(Guid));
 
             migrationBuilder.AddColumn<Guid>(
                 name: "DeviceId",
@@ -174,69 +172,69 @@ namespace UserOperations.Migrations
                 table: "Devices",
                 column: "StatusId");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Alerts_Devices_DeviceId",
-                table: "Alerts",
-                column: "DeviceId",
-                principalTable: "Devices",
-                principalColumn: "DeviceId",
-                onDelete: ReferentialAction.Cascade);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_Alerts_Devices_DeviceId",
+            //    table: "Alerts",
+            //    column: "DeviceId",
+            //    principalTable: "Devices",
+            //    principalColumn: "DeviceId",
+            //    onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_CampaignContentAnswers_AspNetUsers_ApplicationUserId",
-                table: "CampaignContentAnswers",
-                column: "ApplicationUserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_CampaignContentAnswers_AspNetUsers_ApplicationUserId",
+            //    table: "CampaignContentAnswers",
+            //    column: "ApplicationUserId",
+            //    principalTable: "AspNetUsers",
+            //    principalColumn: "Id",
+            //    onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_CampaignContentAnswers_Devices_DeviceId",
-                table: "CampaignContentAnswers",
-                column: "DeviceId",
-                principalTable: "Devices",
-                principalColumn: "DeviceId",
-                onDelete: ReferentialAction.Cascade);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_CampaignContentAnswers_Devices_DeviceId",
+            //    table: "CampaignContentAnswers",
+            //    column: "DeviceId",
+            //    principalTable: "Devices",
+            //    principalColumn: "DeviceId",
+            //    onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Dialogues_AspNetUsers_ApplicationUserId",
-                table: "Dialogues",
-                column: "ApplicationUserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_Dialogues_AspNetUsers_ApplicationUserId",
+            //    table: "Dialogues",
+            //    column: "ApplicationUserId",
+            //    principalTable: "AspNetUsers",
+            //    principalColumn: "Id",
+            //    onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Dialogues_Devices_DeviceId",
-                table: "Dialogues",
-                column: "DeviceId",
-                principalTable: "Devices",
-                principalColumn: "DeviceId",
-                onDelete: ReferentialAction.Cascade);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_Dialogues_Devices_DeviceId",
+            //    table: "Dialogues",
+            //    column: "DeviceId",
+            //    principalTable: "Devices",
+            //    principalColumn: "DeviceId",
+            //    onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Sessions_AspNetUsers_ApplicationUserId",
-                table: "Sessions",
-                column: "ApplicationUserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_Sessions_AspNetUsers_ApplicationUserId",
+            //    table: "Sessions",
+            //    column: "ApplicationUserId",
+            //    principalTable: "AspNetUsers",
+            //    principalColumn: "Id",
+            //    onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Sessions_Devices_DeviceId",
-                table: "Sessions",
-                column: "DeviceId",
-                principalTable: "Devices",
-                principalColumn: "DeviceId",
-                onDelete: ReferentialAction.Cascade);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_Sessions_Devices_DeviceId",
+            //    table: "Sessions",
+            //    column: "DeviceId",
+            //    principalTable: "Devices",
+            //    principalColumn: "DeviceId",
+            //    onDelete: ReferentialAction.Cascade);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_SlideShowSessions_Devices_DeviceId",
-                table: "SlideShowSessions",
-                column: "DeviceId",
-                principalTable: "Devices",
-                principalColumn: "DeviceId",
-                onDelete: ReferentialAction.Cascade);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_SlideShowSessions_Devices_DeviceId",
+            //    table: "SlideShowSessions",
+            //    column: "DeviceId",
+            //    principalTable: "Devices",
+            //    principalColumn: "DeviceId",
+            //    onDelete: ReferentialAction.Cascade);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
