@@ -14,6 +14,7 @@ namespace UserOperations.Services
     public class AccountService
     {
         private readonly LoginService _loginService;
+        private readonly CompanyService _companyService;
         private readonly IGenericRepository _repository;
         private readonly MailSender _mailSender;
         private readonly SpreadsheetDocumentUtils _helpProvider;
@@ -21,12 +22,14 @@ namespace UserOperations.Services
 
         public AccountService(
             LoginService loginService,
+            CompanyService companyService,
             IGenericRepository repository,
             MailSender mailSender,
             SpreadsheetDocumentUtils helpProvider
         )
         {
             _loginService = loginService;
+            _companyService = companyService;
             _repository = repository;
             _mailSender = mailSender;
             _helpProvider = helpProvider;
@@ -48,6 +51,7 @@ namespace UserOperations.Services
                 await CreateCompanyTariffAndTransaction(company);
                 await AddContentAndCampaign(company);
             }
+            await AddWorkingTime(company.CompanyId, message);
             await _repository.SaveAsync();
             try
             {
@@ -55,6 +59,8 @@ namespace UserOperations.Services
             }
             catch { }
         }
+
+       
 
         public string GenerateToken(AccountAuthorization message)
         {
@@ -74,7 +80,7 @@ namespace UserOperations.Services
             try
             {
                 _loginService.GetDataFromToken(token, out var userClaims);
-                var userId = _loginService.GetCurrentUserId();
+                var userId = Guid.Parse(userClaims["applicationUserId"]);
                 user = GetUserIncludeCompany(userId, message);
                 user.PasswordHash = _loginService.GeneratePasswordHash(message.Password);
                 await _repository.SaveAsync();
@@ -185,7 +191,7 @@ namespace UserOperations.Services
             return tariffs.Count();
         }
         private async Task CreateCompanyTariffAndTransaction(Company company)
-        {            
+        {
             var tariff = new Tariff
             {
                 TariffId = Guid.NewGuid(),
@@ -217,7 +223,28 @@ namespace UserOperations.Services
             _repository.Create<Tariff>(tariff);
             _repository.Create<HBData.Models.Transaction>(transaction);
         }
-     
+        private async Task AddWorkingTime(Guid companyId, UserRegister mess)
+        {
+            await AddOneWorkingTimeAsync(companyId, mess.MondayBeg, mess.MondayEnd, 1);
+            await AddOneWorkingTimeAsync(companyId, mess.TuesdayBeg, mess.TuesdayEnd, 2);
+            await AddOneWorkingTimeAsync(companyId, mess.WednesdayBeg, mess.WednesdayEnd, 3);
+            await AddOneWorkingTimeAsync(companyId, mess.ThursdayBeg, mess.ThursdayEnd, 4);
+            await AddOneWorkingTimeAsync(companyId, mess.FridayBeg, mess.FridayEnd, 5);
+            await AddOneWorkingTimeAsync(companyId, mess.SaturdayBeg, mess.SaturdayEnd, 6);
+            await AddOneWorkingTimeAsync(companyId, mess.SundayBeg, mess.SundayEnd, 7);
+        }
+
+        private async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day)
+        {
+            WorkingTime time = new WorkingTime
+            {
+                CompanyId = companyId,
+                Day = day,
+                BegTime = beg,
+                EndTime = end
+            };
+            await _repository.CreateAsync<WorkingTime>(time);
+        }
         private async Task AddContentAndCampaign(Company company)
         {
             Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
@@ -283,9 +310,10 @@ namespace UserOperations.Services
             var campaigns = _repository.GetWithInclude<Campaign>(x => x.CompanyId == company.CompanyId, p => p.CampaignContents).ToList();
             var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
             var phrases = _repository.GetAsQueryable<PhraseCompany>().Where(x => x.CompanyId == company.CompanyId).ToList();
-            
-         
-         
+            var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => x.CompanyId == company.CompanyId).ToList();
+
+
+
             if (phrases != null && phrases.Count() != 0)
                 _repository.Delete<PhraseCompany>(phrases);
             if (campaignContents.Count() != 0)
@@ -299,6 +327,7 @@ namespace UserOperations.Services
             _repository.Delete<HBData.Models.Transaction>(transactions);
             _repository.Delete<ApplicationUser>(users);
             _repository.Delete<Tariff>(tariff);
+            _repository.Delete<WorkingTime>(workingTimes);
             _repository.Delete<Company>(company);
             _repository.Save();
         }

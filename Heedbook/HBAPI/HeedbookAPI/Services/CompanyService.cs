@@ -35,18 +35,18 @@ namespace UserOperations.Services
         }
         
 
-        public async Task<IEnumerable<Company>> GetCompaniesForAdminAsync()
+        public IEnumerable<Company> GetCompaniesForAdmin()
         {
-            var companies =  await _repository.FindByConditionAsync<Company>(p => p.StatusId == activeStatus || p.StatusId == disabledStatus);
+            var companies =  _repository.GetWithInclude<Company>(p => p.StatusId == activeStatus || p.StatusId == disabledStatus, p=>p.WorkingTimes);
             return companies ?? new List<Company>();
         }
 
-        public async Task<IEnumerable<Company>> GetCompaniesForSupervisorAsync(Guid? corporationId)
+        public IEnumerable<Company> GetCompaniesForSupervisorAsync(Guid? corporationId)
         {
             if (corporationId == null || corporationId == Guid.Empty) return new List<Company>();
-            var companies = await _repository.FindByConditionAsync<Company>(p => 
+            var companies = _repository.GetWithInclude<Company>(p => 
                         p.CorporationId == corporationId 
-                        && (p.StatusId == activeStatus || p.StatusId == disabledStatus));
+                        && (p.StatusId == activeStatus || p.StatusId == disabledStatus), p=> p.WorkingTimes);
             return companies ?? new List<Company>();
         }
 
@@ -59,6 +59,7 @@ namespace UserOperations.Services
         {
             var roleInToken = _loginService.GetCurrentRoleName();
             var entity = await GetCompanyByIdAsync(companyInParams.CompanyId);
+            
 
             _requestFilters.IsCompanyBelongToUser(companyInParams.CompanyId);
 
@@ -67,6 +68,19 @@ namespace UserOperations.Services
                 var val = p.GetValue(companyInParams, null);
                 if (val != null && val.ToString() != Guid.Empty.ToString())
                     p.SetValue(entity, p.GetValue(companyInParams, null), null);
+            }
+
+            var workingTimes = companyInParams.WorkingTimes;
+            foreach (var time in workingTimes)
+            {
+                var timeEntity = await _repository
+                        .FindOrNullOneByConditionAsync<WorkingTime>(x => x.Day == time.Day && x.CompanyId == time.CompanyId);
+                foreach (var p in typeof(WorkingTime).GetProperties())
+                {
+                    var val = p.GetValue(time, null);
+                    if (val != null && val.ToString() != Guid.Empty.ToString())
+                        p.SetValue(timeEntity, p.GetValue(time, null), null);
+                }
             }
             await _repository.SaveAsync();
             return entity;
@@ -78,10 +92,34 @@ namespace UserOperations.Services
             company.StatusId = activeStatus;
             company.CorporationId = corporationId;
             _repository.Create<Company>(company);
+            await AddDefaultWorkingTime(company.CompanyId);
             await _repository.SaveAsync();
             return company;
         }
 
         //---PRIVATE---
+
+        public async Task AddDefaultWorkingTime(Guid companyId)
+        {
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1,1,1,10,0,0), new DateTime(1,1,1, 19, 0, 0), 1);
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1,1,1,10,0,0), new DateTime(1,1,1, 19, 0, 0), 2);
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1,1,1,10,0,0), new DateTime(1,1,1, 19, 0, 0), 3);
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1,1,1,10,0,0), new DateTime(1,1,1, 19, 0, 0), 4);
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
+            await AddOneWorkingTimeAsync(companyId, null, null, 6);
+            await AddOneWorkingTimeAsync(companyId, null, null, 7);
+        }
+
+        private async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day)
+        {
+            WorkingTime time = new WorkingTime
+            {
+                CompanyId = companyId,
+                Day = day,
+                BegTime = beg,
+                EndTime = end
+            };
+            await _repository.CreateAsync<WorkingTime>(time);
+        }
     }
 }
