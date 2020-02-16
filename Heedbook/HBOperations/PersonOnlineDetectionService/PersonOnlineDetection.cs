@@ -55,7 +55,7 @@ namespace PersonOnlineDetectionService
             {
                 var begTime = DateTime.Now.AddDays(-30);
                 var lastClientsInfo = _context.Clients
-                    .Where(p => p.CompanyId == message.CompanyId && p.LastDate >= begTime)
+                    .Where(p => p.CompanyId == message.CompanyId && p.LastDate >= begTime && p.FaceDescriptor.Any())
                     .ToList();
                 // var lastClientsInfo = _context.ClientNotes
                     // .Include(p => p.Client)
@@ -85,13 +85,13 @@ namespace PersonOnlineDetectionService
                     lastClientsInfo.Where(p => p.ClientId == clientId).ToList().ForEach(p => p.LastDate = curTime);
                     _context.SaveChanges();
                     System.Console.WriteLine("Last time updated");
-                    // await _createAvatar.DeleteFileAsync(message.Path);
+                    await _createAvatar.DeleteFileAsync(message.Path);
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
 
                     System.Console.WriteLine(result);
                 }
-
+                System.Console.WriteLine("Function finished");
                 _log.Info("Function finished");
             }
             catch (Exception e)

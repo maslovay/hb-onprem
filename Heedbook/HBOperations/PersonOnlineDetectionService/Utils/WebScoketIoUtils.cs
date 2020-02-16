@@ -17,8 +17,6 @@ namespace PersonOnlineDetectionService.Utils
 
             var args = $"websocketio.py --room {room} --companyId {companyId} --tabletId {tabletId} --role {role} --clientId {clientId}";
             var output = cmd.runCMD("python3", args);
-            
-            System.Console.WriteLine(output);
             return output;
 
         }
