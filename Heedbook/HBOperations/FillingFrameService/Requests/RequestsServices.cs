@@ -53,12 +53,14 @@ namespace  FillingFrameService.Requests
             else
             {
                 System.Console.WriteLine(frames.Count());
-                System.Console.WriteLine(JsonConvert.SerializeObject(frames));
+                System.Console.WriteLine(JsonConvert.SerializeObject(frames.Select(p => 
+                    JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)).ToList());
                 fileAvatar = frames
                     .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)
                     .FirstOrDefault();
                 // .ForEach(p => p.Value= JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value));
             }
+            System.Console.WriteLine(JsonConvert.SerializeObject(fileAvatar));
             return fileAvatar;
         }
 
