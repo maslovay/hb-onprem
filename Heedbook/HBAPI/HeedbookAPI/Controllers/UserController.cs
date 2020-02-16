@@ -89,9 +89,9 @@ namespace UserOperations.Controllers
         {
                 var roleInToken = _loginService.GetCurrentRoleName();
                 if (roleInToken == "Admin")
-                    return await _companyService.GetCompaniesForAdminAsync();
+                    return _companyService.GetCompaniesForAdmin();
                 if (roleInToken == "Supervisor") // only for corporations
-                    return await _companyService.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
+                    return _companyService.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
                 throw new AccessException("Not allowed access(role)");
         }
 

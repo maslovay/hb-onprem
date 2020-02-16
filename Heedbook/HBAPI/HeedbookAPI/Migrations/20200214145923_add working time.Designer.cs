@@ -3,15 +3,17 @@ using System;
 using HBData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace UserOperations.Migrations
 {
     [DbContext(typeof(RecordsContext))]
-    partial class RecordsContextModelSnapshot : ModelSnapshot
+    [Migration("20200214145923_add working time")]
+    partial class addworkingtime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1465,15 +1467,18 @@ namespace UserOperations.Migrations
 
             modelBuilder.Entity("HBData.Models.WorkingTime", b =>
                 {
-                    b.Property<int>("Day");
-
-                    b.Property<Guid>("CompanyId");
+                    b.Property<Guid>("WorkingTimeId")
+                        .ValueGeneratedOnAdd();
 
                     b.Property<DateTime?>("BegTime");
 
+                    b.Property<Guid>("CompanyId");
+
+                    b.Property<int>("Day");
+
                     b.Property<DateTime?>("EndTime");
 
-                    b.HasKey("Day", "CompanyId");
+                    b.HasKey("WorkingTimeId");
 
                     b.HasIndex("CompanyId");
 
@@ -2054,7 +2059,7 @@ namespace UserOperations.Migrations
             modelBuilder.Entity("HBData.Models.WorkingTime", b =>
                 {
                     b.HasOne("HBData.Models.Company", "Company")
-                        .WithMany("WorkingTimes")
+                        .WithMany("WorkingTime")
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

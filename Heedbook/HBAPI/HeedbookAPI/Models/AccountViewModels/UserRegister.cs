@@ -21,7 +21,28 @@ namespace UserOperations.AccountModels
         public Guid CompanyIndustryId; 
         public Guid? CorporationId;
         public string Role;
-        public string TimeZoneName;
         public bool? IsExtended;
+
+        //---working hours
+        public DateTime? MondayBeg;
+        public DateTime? MondayEnd;
+
+        public DateTime? TuesdayBeg;
+        public DateTime? TuesdayEnd;
+
+        public DateTime? WednesdayBeg;
+        public DateTime? WednesdayEnd;
+
+        public DateTime? ThursdayBeg;
+        public DateTime? ThursdayEnd;
+
+        public DateTime? FridayBeg;
+        public DateTime? FridayEnd;
+
+        public DateTime? SaturdayBeg;
+        public DateTime? SaturdayEnd;
+
+        public DateTime? SundayBeg;
+        public DateTime? SundayEnd;
     }
 }
