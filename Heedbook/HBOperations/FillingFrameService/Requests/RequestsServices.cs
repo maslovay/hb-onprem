@@ -52,12 +52,18 @@ namespace  FillingFrameService.Requests
             }
             else
             {
-                System.Console.WriteLine(frames.Count());
-                System.Console.WriteLine(JsonConvert.SerializeObject(frames.Select(p => 
-                    JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)).ToList());
-                fileAvatar = frames
-                    .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)
-                    .FirstOrDefault();
+                try
+                {
+                    fileAvatar = frames
+                        .Where(p => p.FrameAttribute.FirstOrDefault().Value != null)
+                        .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)
+                        .FirstOrDefault();
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine($"Exeption occured  {e}");
+                    fileAvatar = frames.FirstOrDefault();
+                }
                 // .ForEach(p => p.Value= JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value));
             }
             System.Console.WriteLine(JsonConvert.SerializeObject(fileAvatar));
