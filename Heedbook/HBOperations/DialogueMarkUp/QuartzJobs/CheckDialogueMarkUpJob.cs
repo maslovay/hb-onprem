@@ -257,7 +257,8 @@ namespace DialogueMarkUp.QuartzJobs
                                 ApplicationUserId = updatedMarkUp.ApplicationUserId,
                                 DialogueId = dialogueId,
                                 BeginTime = updatedMarkUp.BegTime,
-                                EndTime = updatedMarkUp.EndTime
+                                EndTime = updatedMarkUp.EndTime,
+                                DeviceId = updatedMarkUp.DeviceId
                             });
                             dialogueCreationList.Add(new DialogueCreationRun {
                                 DeviceId = updatedMarkUp.DeviceId,

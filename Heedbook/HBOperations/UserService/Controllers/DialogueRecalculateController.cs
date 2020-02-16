@@ -186,7 +186,8 @@ namespace UserService.Controllers
                         ApplicationUserId = dialogue.ApplicationUserId,
                         DialogueId = dialogue.DialogueId,
                         BeginTime = dialogue.BegTime,
-                        EndTime = dialogue.EndTime
+                        EndTime = dialogue.EndTime,
+                        DeviceId = dialogue.DeviceId
                     };
                     _notificationPublisher.Publish(@event);
                 } 
