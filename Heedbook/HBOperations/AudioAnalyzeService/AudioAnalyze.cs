@@ -14,7 +14,7 @@ namespace AudioAnalyzeService
 {
     public class AudioAnalyze
     {
-        private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
+        // private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
@@ -22,7 +22,7 @@ namespace AudioAnalyzeService
         private readonly SftpClient _sftpclient;
         public AudioAnalyze(
             IServiceScopeFactory factory,
-            AsrHttpClient.AsrHttpClient asrHttpClient,
+            // AsrHttpClient.AsrHttpClient asrHttpClient,
             ElasticClientFactory elasticClientFactory,
             GoogleConnector googleConnector,
             SftpClient sftpclient
@@ -32,7 +32,7 @@ namespace AudioAnalyzeService
             {
                 // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
                 _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
-                _asrHttpClient = asrHttpClient;
+                // _asrHttpClient = asrHttpClient;
                 _elasticClientFactory = elasticClientFactory;
                 _googleConnector = googleConnector;
                 _sftpclient = sftpclient;
@@ -119,7 +119,7 @@ namespace AudioAnalyzeService
                         _context.SaveChanges();
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
                         {
-                            await _asrHttpClient.StartAudioRecognize(dialogueId);
+                            // await _asrHttpClient.StartAudioRecognize(dialogueId);
                         }
                         _log.Info("Started recognize audio");
                     }
