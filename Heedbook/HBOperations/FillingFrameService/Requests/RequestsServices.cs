@@ -45,11 +45,14 @@ namespace  FillingFrameService.Requests
             FileFrame fileAvatar;
             if ( !string.IsNullOrWhiteSpace(message.AvatarFileName) && isExtended)
             {
+                System.Console.WriteLine(message.AvatarFileName);
+                System.Console.WriteLine(isExtended);
                 fileAvatar = frames.Where(item => item.FileName == message.AvatarFileName).FirstOrDefault();
                 if (fileAvatar == null) fileAvatar = frames.Where(p => p.FrameAttribute.Any()).FirstOrDefault();
             }
             else
             {
+                System.Console.WriteLine(frames.Count());
                 fileAvatar = frames
                     .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)
                     .FirstOrDefault();
