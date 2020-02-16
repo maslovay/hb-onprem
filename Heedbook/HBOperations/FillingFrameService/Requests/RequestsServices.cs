@@ -34,7 +34,7 @@ namespace  FillingFrameService.Requests
                 .Include(p => p.FrameAttribute)
                 .Include(p => p.FrameEmotion)
                 .Where(item =>
-                    item.ApplicationUserId == message.ApplicationUserId
+                    item.DeviceId == message.DeviceId
                     && item.Time >= message.BeginTime
                     && item.Time <= message.EndTime)
                 .ToList();
