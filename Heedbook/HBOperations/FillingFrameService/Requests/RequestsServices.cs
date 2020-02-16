@@ -53,6 +53,7 @@ namespace  FillingFrameService.Requests
             else
             {
                 System.Console.WriteLine(frames.Count());
+                System.Console.WriteLine(JsonConvert.SerializeObject(frames));
                 fileAvatar = frames
                     .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)
                     .FirstOrDefault();
