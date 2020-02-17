@@ -48,13 +48,13 @@
 	sudo vim /etc/fstab
 ```
 откроется конфигурация, добавим еще одну строку и заполним ее:
-
+```
 	# CLOUD_IMG: This file was created/modified by the Cloud Image build process
 	UUID=3756934c-31d3-413c-8df9-5b7c7b1a4451       /        ext4   defaults,discard        0 0
 	UUID=B38E-A2BF  /boot/efi       vfat    defaults,discard        0 0
 	/dev/disk/cloud/azure_resource-part1    /mnt    auto    defaults,nofail,x-systemd.requires=cloud-init.service,comment=cloudconfig       0       2
 	/dev/sdc1	/home/nkrokhmal/storage 	auto 	defaults		0	0
-
+```
 Так как мы расширяли папку storage, то указали именно его во втором столбце.
 
 - Для сохранения данных в из папки storage, переименуем его в storage1 выполнив команду:
