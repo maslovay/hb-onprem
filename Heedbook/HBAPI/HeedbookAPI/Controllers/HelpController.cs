@@ -156,8 +156,8 @@ namespace UserOperations.Controllers
 
 
             //-4--CAMPAIGN---
-            var old1 = oldContext.Campaigns.Where(x => x.CreationDate >= date).Select(x => x.CampaignId).ToList();
-            var new1 = _context.Campaigns.Where(x => x.CreationDate >= date).Select(x => x.CampaignId).ToList();
+            var old1 = oldContext.Campaigns.Select(x => x.CampaignId).ToList();
+            var new1 = _context.Campaigns.Select(x => x.CampaignId).ToList();
             var toAddIds1 = old1.Except(new1).ToList();
             List<Old.Models.Campaign> toAdd1 = oldContext.Campaigns.Where(x => toAddIds1.Contains(x.CampaignId)).ToList();
             str = JsonConvert.SerializeObject(toAdd1);
@@ -171,8 +171,8 @@ namespace UserOperations.Controllers
             catch { }
 
             //-5--CONTENT---
-            var old2 = oldContext.Contents.Where(x => x.CreationDate >= date).Select(x => x.ContentId).ToList();
-            var new2 = _context.Contents.Where(x => x.CreationDate >= date).Select(x => x.ContentId).ToList();
+            var old2 = oldContext.Contents.Select(x => x.ContentId).ToList();
+            var new2 = _context.Contents.Select(x => x.ContentId).ToList();
             var toAddIds2 = old2.Except(new2).ToList();
             List<Old.Models.Content> toAdd2 = oldContext.Contents.Where(x => toAddIds2.Contains(x.ContentId)).ToList();
             str = JsonConvert.SerializeObject(toAdd2);
@@ -199,7 +199,7 @@ namespace UserOperations.Controllers
                 _context.SaveChanges();
                 result["campaign content"] = toAdd3_.Count();
             }
-            catch { }
+            catch (Exception ex){ var mes = ex.Message; }
 
             //-7--CAMPAIGN CONTENT answers---
             var old4 = oldContext.CampaignContentAnswers.Where(x => x.Time >= date).Select(x => x.CampaignContentAnswerId).ToList();
@@ -222,7 +222,7 @@ namespace UserOperations.Controllers
                 _context.SaveChanges();
                 result["campaign content answers"] = toAdd4.Count();
             }
-            catch { }
+            catch (Exception ex) { var mes = ex.Message; }
 
             //-8--Client---
             var old5 = oldContext.Clients.Select(x => x.ClientId).ToList();
@@ -237,7 +237,7 @@ namespace UserOperations.Controllers
                 _context.SaveChanges();
                 result["Client"] = toAdd5_.Count();
             }
-            catch { }
+            catch (Exception ex) { var mes = ex.Message; }
 
             //-9--Client Note---
             var old6 = oldContext.ClientNotes.Where(x => x.CreationDate >= date).Select(x => x.ClientNoteId).ToList();
@@ -252,7 +252,7 @@ namespace UserOperations.Controllers
                 _context.SaveChanges();
                 result["Client note"] = toAdd6_.Count();
             }
-            catch { }
+            catch (Exception ex) { var mes = ex.Message; }
 
             //-10--Dialogues---
             var old7 = oldContext.Dialogues.Select(x => x.DialogueId).ToList();
