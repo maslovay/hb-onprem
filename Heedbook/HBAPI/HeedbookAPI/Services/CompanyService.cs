@@ -2,7 +2,9 @@
 using HBData.Repository;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using UserOperations.Controllers;
 using UserOperations.Utils;
 
 namespace UserOperations.Services
@@ -29,11 +31,12 @@ namespace UserOperations.Services
         }
 
         //---COMPANY----
-        public async Task<Company> GetCompanyByIdAsync(Guid companyId)
+        public Company GetCompanyByIdAsync(Guid companyId)
         {
-            return await _repository.FindOrExceptionOneByConditionAsync<Company>(p => p.CompanyId == companyId);
+            var company =  _repository.GetWithIncludeOne<Company>(p => p.CompanyId == companyId, p => p.WorkingTimes);
+            if (company == null) throw new NoFoundException("No such company");
+            return company;
         }
-        
 
         public IEnumerable<Company> GetCompaniesForAdmin()
         {
@@ -55,35 +58,24 @@ namespace UserOperations.Services
             return await _repository.FindAllAsync<Corporation>();
         }
 
-        public async Task<Company> UpdateCompanAsync(Company companyInParams)
+        public async Task<Company> UpdateCompanAsync(List<WorkingTime> times)
         {
             var roleInToken = _loginService.GetCurrentRoleName();
-            var entity = await GetCompanyByIdAsync(companyInParams.CompanyId);
+            var companyId = _loginService.GetCurrentCompanyId();
+            var company = GetCompanyByIdAsync(companyId);
             
 
-            _requestFilters.IsCompanyBelongToUser(companyInParams.CompanyId);
+            //_requestFilters.IsCompanyBelongToUser(companyInParams.CompanyId);
 
-            foreach (var p in typeof(Company).GetProperties())
+            var workingTimes = company.WorkingTimes.ToList();
+            foreach (var time in times)
             {
-                var val = p.GetValue(companyInParams, null);
-                if (val != null && val.ToString() != Guid.Empty.ToString())
-                    p.SetValue(entity, p.GetValue(companyInParams, null), null);
-            }
-
-            var workingTimes = companyInParams.WorkingTimes;
-            foreach (var time in workingTimes)
-            {
-                var timeEntity = await _repository
-                        .FindOrNullOneByConditionAsync<WorkingTime>(x => x.Day == time.Day && x.CompanyId == time.CompanyId);
-                foreach (var p in typeof(WorkingTime).GetProperties())
-                {
-                    var val = p.GetValue(time, null);
-                    if (val != null && val.ToString() != Guid.Empty.ToString())
-                        p.SetValue(timeEntity, p.GetValue(time, null), null);
-                }
+                var timeEntity = workingTimes.Where(x => x.Day == time.Day).FirstOrDefault();
+                timeEntity.BegTime = time.BegTime;
+                timeEntity.EndTime = time.EndTime;
             }
             await _repository.SaveAsync();
-            return entity;
+            return GetCompanyByIdAsync(companyId);
         }
 
         public async Task<Company> AddNewCompanyAsync(Company company, Guid? corporationId = null)
