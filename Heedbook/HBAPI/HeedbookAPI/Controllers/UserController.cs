@@ -83,7 +83,7 @@ namespace UserOperations.Controllers
         //---COMPANY---
 
         [HttpGet("Companies")]
-        [SwaggerOperation(Summary = "All corporations companies or loggined company", Description = "Return all companies for admin,  companies in loggined corporation for supervisor (or company for manager)")]
+        [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for admin,  companies in loggined corporation for supervisor")]
         [SwaggerResponse(200, "Companies", typeof(List<Company>))]
         public async Task<IEnumerable<Company>> CompaniesGet()
         {
@@ -92,8 +92,16 @@ namespace UserOperations.Controllers
                     return _companyService.GetCompaniesForAdmin();
                 if (roleInToken == "Supervisor") // only for corporations
                     return _companyService.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
+            return null;
+        }
+
+        [HttpGet("Company")]
+        [SwaggerOperation(Summary = "loggined company", Description = "Return company for manager)")]
+        [SwaggerResponse(200, "Company", typeof(Company))]
+        public async Task<Company> CompanyGet()
+        {
             var companyId = _loginService.GetCurrentCompanyId();
-            return new List<Company> { _companyService.GetCompanyByIdAsync(companyId) };
+            return _companyService.GetCompanyByIdAsync(companyId);
         }
 
         [HttpPost("Company")]
