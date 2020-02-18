@@ -189,8 +189,8 @@ namespace UserOperations.Services
                     SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
                     SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
 
-                    LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
-                    LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                    LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
+                    LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
 
                     CrossIndex = _utils.CrossIndex(dialoguesCur),
                     CrossIndexDelta = -_utils.CrossIndex(dialoguesOld),

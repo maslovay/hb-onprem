@@ -90,7 +90,7 @@ namespace UserOperations.Services
                         Result = group.ToList(),
                         FtpLink = _fileRef.GetFileLink(_containerName, key.ContentId + ".png", default) + $"?{group.FirstOrDefault().ContentUpdateDate}",
                     });
-                var answers = await GetAnswersInOneDialogueAsync(slideShowSessionsAll, dialogue.BegTime, dialogue.EndTime, dialogue.ApplicationUserId, (Guid)dialogue.DeviceId);
+                var answers = await GetAnswersInOneDialogueAsync(slideShowSessionsAll, dialogue.BegTime, dialogue.EndTime, dialogue.DeviceId);
                   
                 var answersByContent = pollAmount.Where(x => x.Key2 != null)
                     .Select(x => new
@@ -238,7 +238,7 @@ namespace UserOperations.Services
             var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
                 .Where(p => p.BegTime >= dialogue.BegTime
                     && p.BegTime <= dialogue.EndTime
-                    && p.ApplicationUserId == dialogue.ApplicationUserId)
+                    && p.DeviceId == dialogue.DeviceId)
                 .Select(p =>
                     new SlideShowInfo
                     {
@@ -351,7 +351,7 @@ namespace UserOperations.Services
                         ApplicationUserId = (Guid)p.ApplicationUserId,
                         DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                && x.DeviceId == p.DeviceId)
                             .DialogueId
                     })
                 .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
@@ -360,8 +360,7 @@ namespace UserOperations.Services
         }
 
         private async Task<List<CampaignContentAnswer>> GetAnswersInOneDialogueAsync(List<SlideShowInfo> slideShowInfos, 
-            DateTime begTime, DateTime endTime, 
-            Guid? applicationUserId, Guid deviceId)
+            DateTime begTime, DateTime endTime, Guid deviceId)
         {
             var answers = await _repository.GetAsQueryable<CampaignContentAnswer>()
                 .Where(p => slideShowInfos
@@ -370,7 +369,7 @@ namespace UserOperations.Services
                     .Contains(p.CampaignContentId)
                     && p.Time >= begTime
                     && p.Time <= endTime
-                    && p.ApplicationUserId == applicationUserId)
+                    && p.DeviceId == deviceId)
                 .ToListAsyncSafe();
             return answers;
         }
@@ -400,7 +399,7 @@ namespace UserOperations.Services
             {
                 var slideShowSessionForAnswer = slideShowSessionsAll.Where(x => x.BegTime <= answ.Time
                         && x.EndTime >= answ.Time
-                        && x.ApplicationUserId == answ.ApplicationUserId)
+                        && x.DeviceId == answ.DeviceId)
                     .FirstOrDefault();
                 var dialogueId = slideShowSessionForAnswer != null ? slideShowSessionForAnswer.DialogueId : null;
 

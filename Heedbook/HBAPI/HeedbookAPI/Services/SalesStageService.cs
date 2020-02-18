@@ -45,17 +45,9 @@ namespace UserOperations.Services
                     .Where(c => c.CorporationId == corporationId).Include(x => x.Phrase).Include(x => x.SalesStage).ToList();
             else
                 salesStagePhrase = _repository.GetAsQueryable<SalesStagePhrase>()
-                  .Where(c => c.CompanyId == companyId).Include(x => x.Phrase).Include(x => x.SalesStage).ToList();
+                  .Where(c => c.CompanyId == companyId).Include(x => x.Phrase).Include(x => x.SalesStage).ToList();         
 
-            var salesStagePhrasesTemplates = _repository.GetAsQueryable<SalesStagePhrase>()
-                  .Where(c => c.CompanyId == null && c.CorporationId == null 
-                  && ! (salesStagePhrase.Select(x => x.PhraseId)).Contains(c.PhraseId))
-                  .Include(x => x.Phrase).Include(x => x.SalesStage).ToList();
-
-            var t = (salesStagePhrase.Union(salesStagePhrasesTemplates))
-                    .GroupBy(x => x.SalesStageId);
-
-            return (salesStagePhrase.Union(salesStagePhrasesTemplates))
+            return salesStagePhrase
                     .GroupBy(x => x.SalesStageId)
                     .Select(x => new GetSalesStage
                     {
@@ -67,10 +59,25 @@ namespace UserOperations.Services
                     .ToList();
         }
 
-
+        public async Task CreateSalesStageForNewAccount(Guid? companyId, Guid? corporationId)
+        {
+            var tempaleSalesStagePhrases = _repository.GetAsQueryable<SalesStagePhrase>().Where(x => x.CompanyId == null && x.CorporationId == null).ToList();
+            if (corporationId == null && companyId == null)
+                throw new Exception("Can't create sales stages phrases");
+            if (corporationId != null) companyId = null;
+            var newSalesStagePhrases = tempaleSalesStagePhrases.Select(x => new SalesStagePhrase
+            {
+                SalesStagePhraseId = Guid.NewGuid(),
+                CompanyId = companyId,
+                CorporationId = corporationId,
+                PhraseId = x.PhraseId,
+                SalesStageId = x.SalesStageId
+            }).ToList();
+            _repository.CreateRange<SalesStagePhrase>(newSalesStagePhrases);
+        }
 
         //---PRIVATE---
-     
+
         private int GetStatusId(string statusName)
         {
             return _repository.GetAsQueryable<Status>().FirstOrDefault(p => p.StatusName == statusName).StatusId;

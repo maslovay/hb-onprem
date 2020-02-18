@@ -15,6 +15,7 @@ namespace UserOperations.Services
     {
         private readonly LoginService _loginService;
         private readonly CompanyService _companyService;
+        private readonly SalesStageService _salesStageService;
         private readonly IGenericRepository _repository;
         private readonly MailSender _mailSender;
         private readonly SpreadsheetDocumentUtils _helpProvider;
@@ -23,6 +24,7 @@ namespace UserOperations.Services
         public AccountService(
             LoginService loginService,
             CompanyService companyService,
+            SalesStageService salesStageService,
             IGenericRepository repository,
             MailSender mailSender,
             SpreadsheetDocumentUtils helpProvider
@@ -30,6 +32,7 @@ namespace UserOperations.Services
         {
             _loginService = loginService;
             _companyService = companyService;
+            _salesStageService = salesStageService;
             _repository = repository;
             _mailSender = mailSender;
             _helpProvider = helpProvider;
@@ -52,6 +55,7 @@ namespace UserOperations.Services
                 await AddContentAndCampaign(company);
             }
             await AddWorkingTime(company.CompanyId, message);
+            await _salesStageService.CreateSalesStageForNewAccount(company.CompanyId, company.CorporationId);
             await _repository.SaveAsync();
             try
             {

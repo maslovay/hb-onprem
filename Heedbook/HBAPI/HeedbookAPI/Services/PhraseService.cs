@@ -80,11 +80,12 @@ namespace UserOperations.Services
             var languageId = _loginService.GetCurrentLanguagueId();
             Guid companyIdInToken = _loginService.GetCurrentCompanyId();
             var corporationIdInToken = _loginService.GetCurrentCorporationId();
-            Guid? companyIdForSalesStage = null;
+            Guid? companyIdForSalesStage = companyIdInToken;
 
+            //---find the existing phrase with the same text
             Phrase phrase = await GetPhraseByTextAsync(message.PhraseText, true);
-            if (corporationIdInToken == null) companyIdForSalesStage = companyIdInToken;//make zero company Id to create only one connection to corporation
-            if (phrase == null)
+            if (corporationIdInToken != null) companyIdForSalesStage = null;//make zero company Id to create only one connection to corporation
+            if (phrase == null)//--no template, no phrase
             {
                 phrase = await CreateNewPhraseAsync(message, languageId);
                 await CreateIfNoExistNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
@@ -103,8 +104,8 @@ namespace UserOperations.Services
                 if (message.SalesStageId == null)//nothing wishes in requst
                     await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)defaultSalesStageIdOfPhrase, companyIdForSalesStage, corporationIdInToken);
 
-                else if (defaultSalesStageIdOfPhrase == null || message.SalesStageId != defaultSalesStageIdOfPhrase)//no template phrase//wishes some diff sales stage
-                    await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, corporationIdInToken == null ? (Guid?)companyIdInToken : null, corporationIdInToken);
+                else if (message.SalesStageId != defaultSalesStageIdOfPhrase)//no template phrase//wishes some diff sales stage
+                    await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, companyIdForSalesStage, corporationIdInToken);
             }
 
             await _repository.SaveAsync();
@@ -137,8 +138,11 @@ namespace UserOperations.Services
         public async Task<string> DeleteAndSavePhraseWithPhraseCompanyAsync(Phrase phraseIncluded)
         {
             var companyIdInToken = _loginService.GetCurrentCompanyId();
+            var corporationIdInToken = _loginService.GetCurrentCorporationId();
             var phrasesCompany = phraseIncluded.PhraseCompanys.Where(x => x.CompanyId == companyIdInToken).ToList();
+            var phraseSalesStage = phraseIncluded.SalesStagePhrases.Where(x => x.CompanyId == companyIdInToken || x.CorporationId == corporationIdInToken).FirstOrDefault();
             _repository.Delete<PhraseCompany>(phrasesCompany);//--remove connections to phrase in library
+            _repository.Delete<SalesStagePhrase>(phraseSalesStage);//--remove connections to phrase in library
             try
             {
                 if (!phraseIncluded.IsTemplate)
@@ -155,12 +159,12 @@ namespace UserOperations.Services
 
 
         //---PRIVATE---
-
         private async Task<Guid?> GetSalesStageOfPhraseByPhraseId(Guid phraseId, Guid? companyId = null, Guid? corporationId = null)
         {
-            Guid? salesStageId = _repository.GetAsQueryable<SalesStagePhrase>()
-                    .Where(x => x.PhraseId == phraseId
-                        && x.CompanyId == companyId && x.CorporationId == corporationId).FirstOrDefault()?.SalesStageId;
+            Guid? salesStageId = (await _repository.FindOrNullOneByConditionAsync<SalesStagePhrase>
+                    (x => x.PhraseId == phraseId
+                        && ((x.CompanyId == companyId || x.CorporationId == corporationId 
+                        || (x.CompanyId == null && x.Corporation == null)))))?.SalesStageId;            
             return salesStageId;
         }
 
