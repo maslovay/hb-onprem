@@ -45,7 +45,8 @@ namespace DialogueMarkUp.QuartzJobs
             var _log = _elasticClientFactory.GetElasticClient();
             var periodTime = 5 * 60; 
             var periodFrame = 45;
-            var begMarkUpTime = DateTime.UtcNow.AddHours(-3);
+            // var begMarkUpTime = DateTime.UtcNow.AddHours(-3);
+            var begMarkUpTime = DateTime.UtcNow.AddDays(-1);
 
             try
             {
@@ -196,7 +197,7 @@ namespace DialogueMarkUp.QuartzJobs
             if (markUps != null)
             {
                 var lastTime = markUps.Max(p =>p.EndTime);
-                if (lastTime.Date < DateTime.Now.Date)
+                if (lastTime.Date < DateTime.Now.AddHours(-1).AddMinutes(-30))
                 {
                     framesUser
                         .Where(p => p.FileFrame.Time <= markUps.Last().EndTime)
