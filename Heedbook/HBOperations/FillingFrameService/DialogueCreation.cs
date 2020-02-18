@@ -56,6 +56,7 @@ namespace FillingFrameService
             try
             {
                 var isExtended = _requests.IsExtended(message);
+                var client = _requests.Client(message.ClientId);
                 var frames = _requests.FileFrames(message);
                 // var frameVideo = new FileVideo();
                 // if (!isExtended)
@@ -90,7 +91,7 @@ namespace FillingFrameService
                         _context.DialogueVisuals.AddAsync(dialogueVisual),
                         _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
                         _context.DialogueFrames.AddRangeAsync(dialogueFrames),
-                        _filling.FillingAvatarAsync(message, frames, frameVideo, isExtended, fileAvatar)
+                        _filling.FillingAvatarAsync(message, frames, frameVideo, isExtended, fileAvatar, client)
                     };
 
                     await Task.WhenAll(insertTasks);
