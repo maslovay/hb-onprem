@@ -122,8 +122,9 @@ namespace FillingFrameService.Services
             }
             else
             {
-                if (message.ClientId != null)
+                if (message.ClientId != null && await _sftpClient.IsFileExistsAsync($"clientavatars/{message.ClientId}.jpg"))
                 {
+                    
                     localPath =
                         await _sftpClient.DownloadFromFtpToLocalDiskAsync($"clientavatars/{message.ClientId}.jpg");
                     await _sftpClient.UploadAsync(localPath, "clientavatars/", $"{message.DialogueId}.jpg");

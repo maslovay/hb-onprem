@@ -79,6 +79,7 @@ namespace UserService.Controllers
                     ApplicationUserId = dialogue.ApplicationUserId,
                     DeviceId = dialogue.DeviceId,
                     DialogueId = dialogue.DialogueId,
+                    ClientId = dialogue.ClientId,
                     BeginTime = dialogue.BegTime,
                     EndTime = dialogue.EndTime
                 }; 
