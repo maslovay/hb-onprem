@@ -36,12 +36,7 @@ namespace HBMLOnlineService.Service
 
         public async Task<List<HBMLHttpClient.Model.FaceResult>> UploadFrameAndGetFaceResultAsync(string base64String, string fileName, bool description, bool emotions, bool headpose, bool attributes)
         {
-            
-            System.Console.WriteLine("request");
             var faceResult = await _client.GetFaceResultWithParams(base64String, description, emotions, headpose, attributes);
-            System.Console.WriteLine("Printing face result");
-            System.Console.WriteLine(faceResult);
-
             if (faceResult.Any())
             {
                 byte[] bytes = Convert.FromBase64String(base64String);

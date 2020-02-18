@@ -62,21 +62,20 @@ namespace PersonOnlineDetectionService
                     // .Where(p => p.Client.CompanyId == message.CompanyId && p.CreationDate >= begTime)
                     // .ToList();
 
-                System.Console.WriteLine($"Clients count {lastClientsInfo.Count()}");
                 
                 var clientId = _personDetectionUtils.FindId(message.Descriptor, lastClientsInfo);
                 if (clientId == null)
                 {
                     clientId = Guid.NewGuid();
-                    System.Console.WriteLine($"New client -- {clientId}");
+                    _log.Info($"New client -- {clientId}");
                     var client = _personDetectionUtils.CreateNewClient(message, (Guid) clientId);
-                    System.Console.WriteLine("Created client");
+                    _log.Info("Created client");
                     await _createAvatar.ExecuteAsync(message.Attributes, (Guid) clientId, message.Path);
-                    System.Console.WriteLine("Created avatar");
+                    _log.Info("Created avatar");
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
-
-                    System.Console.WriteLine(result);
+                    _log.Info("Send to webscoket");
+                    // System.Console.WriteLine(result);
                     
                 }
                 else
@@ -84,14 +83,15 @@ namespace PersonOnlineDetectionService
                     var curTime = DateTime.UtcNow;
                     lastClientsInfo.Where(p => p.ClientId == clientId).ToList().ForEach(p => p.LastDate = curTime);
                     _context.SaveChanges();
-                    System.Console.WriteLine("Last time updated");
-                    await _createAvatar.DeleteFileAsync(message.Path);
+                    // System.Console.WriteLine("Last time updated");
+                    // await _createAvatar.DeleteFileAsync(message.Path);
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
 
-                    System.Console.WriteLine(result);
+                    _log.Info("Send to webscoket");
+                    // System.Console.WriteLine(result);
                 }
-                System.Console.WriteLine("Function finished");
+
                 _log.Info("Function finished");
             }
             catch (Exception e)

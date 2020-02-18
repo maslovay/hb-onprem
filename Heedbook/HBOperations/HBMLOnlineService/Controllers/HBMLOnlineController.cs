@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using HBData;
+using HBLib;
 using HBLib.Utils;
 using HBMLHttpClient;
 using HBMLOnlineService.Service;
@@ -20,10 +21,15 @@ namespace HBMLOnlineService.Controllers
     public class HBMLOnlineService : Controller
     {
         private readonly HBMLOnlineFaceService _hbmlservice;
-        
-        public HBMLOnlineService( HBMLOnlineFaceService hbmlservice)
+        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
+
+        public HBMLOnlineService( HBMLOnlineFaceService hbmlservice,
+            ElasticClientFactory elasticClientFactory
+        )
         {
             _hbmlservice = hbmlservice;
+            _elasticClientFactory = elasticClientFactory;
         }
 
         //Descriptor=true&Emotions=true&Headpose=true&Attributes=true&DeviceId=null&CompanyId=4f318be9-7f1e-4a8b-96ec-c6ac2226cae6
@@ -39,11 +45,17 @@ namespace HBMLOnlineService.Controllers
             [FromBody] string base64String 
         )
         {
+            var _log = _elasticClientFactory.GetElasticClient();
+            _log.SetFormat("{DeviceId}");
+            _log.SetArgs(deviceId);
+
             try
             {
                 var stringFormat = "yyyyMMddHHmmss";
                 var dateTime = DateTime.UtcNow.ToString(stringFormat);
                 var filename = $"{companyId}_{deviceId}_{dateTime}.jpg";
+
+                _log.Info($"Saving file {filename}");
 
                 if(base64String != null)
                 {   
@@ -52,18 +64,20 @@ namespace HBMLOnlineService.Controllers
                     {
                         _hbmlservice.PublishMessageToRabbit(deviceId, companyId, filename, faceResults);
                     }
-                    System.Console.WriteLine("Finished");
+                    _log.Info("Function finished");
                     return Ok(JsonConvert.SerializeObject(faceResults));
                 }
                 else
                 {
-                    System.Console.WriteLine("No files found");
+                    _log.Info("No files found");
+                    _log.Info("Function finished");
                     return BadRequest("No files found");
                 }
             }
             catch (Exception e)
             {
-                System.Console.WriteLine($"Exception occured {e}");
+                // System.Console.WriteLine($"Exception occured {e}");
+                _log.Fatal("Exception occured {e}");
                 return BadRequest($"Exception occured {e}");
             }
         }
