@@ -180,8 +180,8 @@ namespace UserOperations.Services
                  }).ToArray();
             //---end new block
 
-            var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
-                            _analyticOfficeUtils.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, begTime, endTime): null;
+            var pauseInMin = (sessionCur.Count() != 0 && dialoguesUserCur.Count() != 0) ?
+                            _analyticOfficeUtils.DialogueAvgPauseListInMinutes(sessionCur, dialoguesUserCur, begTime, endTime): null;
                      
                 var sessTimeMinutes = _analyticOfficeUtils.SessionTotalHours(sessionCur, begTime, endTime)*60;
                 var pausesAmount = new{
