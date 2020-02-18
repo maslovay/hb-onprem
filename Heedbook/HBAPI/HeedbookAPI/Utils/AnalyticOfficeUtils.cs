@@ -121,7 +121,7 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
                         .Where(p => 
                         p.ApplicationUserId == ses.ApplicationUserId
                         && p.BegTime >= ses.BegTime
-                        && p.BegTime <= ses.EndTime)
+                        && p.EndTime <= ses.EndTime)
                         .OrderBy(p => p.BegTime)
                         .ToArray();
                 List<DateTime> times = new List<DateTime>();
