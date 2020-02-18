@@ -135,9 +135,9 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
 
                     for (int i = 0; i< times.Count()-1; i+=2)
                     {
-                        var pause = (times[i + 1].Subtract(times[i])).TotalMinutes;
+                        var pause = (times[i + 1].Subtract(times[i])).TotalMinutes ;
                        // pauseTotalTest2 += pause;
-                        pauses.Add(pause);
+                        pauses.Add(pause < 0? 0 : pause);
                     }
 
                    // pauseTotalTest += Min(ses.EndTime, end).Subtract(Max(ses.BegTime, beg)).TotalMinutes - dialogInSession.Sum(x => Min(x.EndTime, end).Subtract(x.BegTime).TotalMinutes);
