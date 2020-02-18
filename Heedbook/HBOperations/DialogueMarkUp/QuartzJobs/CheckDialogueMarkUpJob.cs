@@ -197,7 +197,7 @@ namespace DialogueMarkUp.QuartzJobs
             if (markUps != null)
             {
                 var lastTime = markUps.Max(p =>p.EndTime);
-                if (lastTime.Date < DateTime.Now.AddHours(-1).AddMinutes(-30))
+                if (lastTime < DateTime.Now.AddHours(-1).AddMinutes(-30))
                 {
                     framesUser
                         .Where(p => p.FileFrame.Time <= markUps.Last().EndTime)
