@@ -241,7 +241,8 @@ namespace UserOperations.Services
                             dialogueId =
                                     (Guid?)dialogues.FirstOrDefault(p => p.ApplicationUserId == x.ApplicationUserId
                                         && p.BegTime <= x.CreationDate
-                                        && p.EndTime >= x.CreationDate).DialogueId
+                                        && p.EndTime >= x.CreationDate).DialogueId,
+                            x.DeviceId
                         })
                         .OrderByDescending(x => x.CreationDate)
                         .ToList();

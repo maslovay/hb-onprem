@@ -83,7 +83,7 @@ namespace UserOperations.Controllers
         //---COMPANY---
 
         [HttpGet("Companies")]
-        [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for loggined corporation (only for role Supervisor)")]
+        [SwaggerOperation(Summary = "All corporations companies", Description = "Return all companies for admin,  companies in loggined corporation for supervisor")]
         [SwaggerResponse(200, "Companies", typeof(List<Company>))]
         public async Task<IEnumerable<Company>> CompaniesGet()
         {
@@ -92,7 +92,16 @@ namespace UserOperations.Controllers
                     return _companyService.GetCompaniesForAdmin();
                 if (roleInToken == "Supervisor") // only for corporations
                     return _companyService.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
-                throw new AccessException("Not allowed access(role)");
+            return null;
+        }
+
+        [HttpGet("Company")]
+        [SwaggerOperation(Summary = "loggined company", Description = "Return company for manager)")]
+        [SwaggerResponse(200, "Company", typeof(Company))]
+        public async Task<Company> CompanyGet()
+        {
+            var companyId = _loginService.GetCurrentCompanyId();
+            return _companyService.GetCompanyByIdAsync(companyId);
         }
 
         [HttpPost("Company")]
@@ -113,14 +122,14 @@ namespace UserOperations.Controllers
         }
 
         [HttpPut("Company")]
-        [SwaggerOperation(Summary = "Edit company", Description = "Edit company")]
-        [SwaggerResponse(200, "Edited company", typeof(Company))]
-        public async Task<Company> CompanyPut([FromBody] Company model)
+        [SwaggerOperation(Summary = "Edit company working times", Description = "Edit company working times")]
+        [SwaggerResponse(200, "Edited company", typeof(List<WorkingTime>))]
+        public async Task<Company> CompanyPut([FromBody] List<WorkingTime> times)
         {
             var roleInToken = _loginService.GetCurrentRoleName();
-            if (roleInToken != "Admin" && roleInToken != "Supervisor")
-                throw new AccessException("Not allowed access(role)");
-            return await _companyService.UpdateCompanAsync(model);
+          //  if (roleInToken != "Admin" && roleInToken != "Supervisor")
+          //      throw new AccessException("Not allowed access(role)");
+            return await _companyService.UpdateCompanAsync(times);
         }
 
         [HttpGet("Corporations")]
