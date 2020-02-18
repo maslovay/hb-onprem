@@ -71,7 +71,7 @@ namespace PersonOnlineDetectionService
                     var client = _personDetectionUtils.CreateNewClient(message, (Guid) clientId);
                     _log.Info($"Created client {JsonConvert.SerializeObject(client)}");
                     await _createAvatar.ExecuteAsync(message.Attributes, (Guid) clientId, message.Path);
-                    _log.Info("Created avatar");
+                    _log.Info($"Created avatar with name {clientId}");
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
                     _log.Info("Send to webscoket");
