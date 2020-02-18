@@ -77,17 +77,17 @@ namespace DialogueCreatorScheduler.QuartzJobs
                     var deviceClients = clients.Where(p => p.CompanyId == deviceFrames.FirstOrDefault().Device.CompanyId).ToList();
 
                     var intervals = _intervalCalc.CreateFaceIntervals(deviceFrames);
-                    _log.Info($"Creating intervals - {JsonConvert.SerializeObject(intervals)}");
+                    _log.Info($"Creating intervals for device {deviceId} - {JsonConvert.SerializeObject(intervals)}");
                     
                     var updatedIntervals = _intervalCalc.UpdateFaceIntervals(intervals);
-                    _log.Info($"Updatetd intervals - {JsonConvert.SerializeObject(updatedIntervals)}");
+                    _log.Info($"Updatetd intervals for device {deviceId} - {JsonConvert.SerializeObject(updatedIntervals)}");
 
                     var mergedIntervals = _intervalCalc.MergeFaceIntervals(updatedIntervals);
-                    _log.Info($"Merged intervals - {JsonConvert.SerializeObject(mergedIntervals)}");
+                    _log.Info($"Merged intervals for device {deviceId}- {JsonConvert.SerializeObject(mergedIntervals)}");
 
                     var dialogues = _dialogueCreator.Dialogues(mergedIntervals, ref deviceFrames, deviceClients);
                     dialogues = dialogues.Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 40).ToList();
-                    _log.Info($"Created dialogues - {JsonConvert.SerializeObject(dialogues)}");
+                    _log.Info($"Created dialogues for device {deviceId} - {JsonConvert.SerializeObject(dialogues)}");
 
                     if (dialogues.Any())
                     {
