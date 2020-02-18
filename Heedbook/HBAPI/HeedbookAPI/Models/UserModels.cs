@@ -65,7 +65,7 @@ namespace UserOperations.Models
         public string PhraseText;
         public Guid PhraseTypeId;
         public Int32? LanguageId;
-        public bool IsClient;
+        public Guid? SalesStageId;//TODO: remove ?
         public Int32? WordsSpace;
         public double? Accurancy;
         public Boolean IsTemplate;

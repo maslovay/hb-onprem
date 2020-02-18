@@ -47,22 +47,25 @@ namespace UserOperations.Services
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
-                var result = new EfficiencyDashboardInfoNew
+                var dialoguesUserCur = dialoguesCur.Where(p => p.ApplicationUserId != null).ToList();
+                var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
+
+            var result = new EfficiencyDashboardInfoNew
                 {
-                    WorkloadValueAvg = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime),
-                    WorkloadDynamics = -_analyticOfficeUtils.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                    WorkloadValueAvg = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
+                    WorkloadDynamics = -_analyticOfficeUtils.LoadIndex(sessionOld, dialoguesUserOld, prevBeg, begTime),
                     DialoguesCount = _analyticOfficeUtils.DialoguesCount(dialoguesCur),
                     AvgWorkingTime = _analyticOfficeUtils.SessionAverageHours(sessionCur, begTime, endTime),
                     AvgDurationDialogue = _analyticOfficeUtils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                    BestEmployee = _analyticOfficeUtils.BestEmployeeLoad(dialoguesCur, sessionCur, begTime, endTime),
+                    BestEmployee = _analyticOfficeUtils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
                 };
                 var satisfactionIndex = _analyticOfficeUtils.SatisfactionIndex(dialoguesCur);
-                var loadIndex = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1));
-                var employeeCount = _analyticOfficeUtils.EmployeeCount(dialoguesCur);
+                var loadIndex = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
+                var employeeCount = _analyticOfficeUtils.EmployeeCount(dialoguesUserCur);
                 var deviceCount = _analyticOfficeUtils.DeviceCount(dialoguesCur);
             //   result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
-                result.DialoguesNumberAvgPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.Where( p => p.ApplicationUserId != null).GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
+                result.DialoguesNumberAvgPerEmployee = (dialoguesUserCur.Count() != 0) ? dialoguesUserCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
                 result.DialoguesNumberAvgPerDevice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
                 result.DialoguesNumberAvgPerDayOffice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() : 0;
 
@@ -145,8 +148,7 @@ namespace UserOperations.Services
 
 
             //----new diagrams---dialogue amount by device and by employee
-            var dialogueUserDate = dialoguesCur?
-                 .Where(p => p.ApplicationUserId != null)
+            var dialogueUserDate = dialoguesUserCur?
                  .GroupBy(p => p.BegTime.Date)
                  .OrderBy(p => p.Key)
                  .Select(p => new 
@@ -178,8 +180,8 @@ namespace UserOperations.Services
                  }).ToArray();
             //---end new block
 
-            var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
-                            _analyticOfficeUtils.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, begTime, endTime): null;
+            var pauseInMin = (sessionCur.Count() != 0 && dialoguesUserCur.Count() != 0) ?
+                            _analyticOfficeUtils.DialogueAvgPauseListInMinutes(sessionCur, dialoguesUserCur, begTime, endTime): null;
                      
                 var sessTimeMinutes = _analyticOfficeUtils.SessionTotalHours(sessionCur, begTime, endTime)*60;
                 var pausesAmount = new{
