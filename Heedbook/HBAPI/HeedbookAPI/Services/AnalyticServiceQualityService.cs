@@ -191,20 +191,37 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, deviceIds);
-
-                var result = new SatisfactionStatsInfo
+                var isExtended = _loginService.GetIsExtended();
+                if (isExtended)
                 {
-                    AverageSatisfactionScore = dialogues.Average(p => p.SatisfactionScore),
-                    PeriodSatisfaction = dialogues
-                        .GroupBy(p => p.BegTime.Date)
-                        .Select(p => new SatisfactionStatsDayInfo {
-                            Date = Convert.ToDateTime(p.Key).ToString(),
-                            SatisfactionScore = p.Average(q => q.SatisfactionScore)
-                        }).ToList()
+                    var result = new SatisfactionStatsInfo
+                    {
+                        AverageSatisfactionScore = dialogues.Average(p => p.SatisfactionScore),
+                        PeriodSatisfaction = dialogues
+                            .GroupBy(p => p.BegTime.Date)
+                            .Select(p => new SatisfactionStatsDayInfo
+                            {
+                                Date = Convert.ToDateTime(p.Key).ToString(),
+                                SatisfactionScore = p.Average(q => q.SatisfactionScore)
+                            }).ToList()
+                    };
+
+                    result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                var resultForSme = new
+                {
+                    AverageSmile = dialogues.Average(p => p.SmilesShare),
+                    PeriodSmiles = dialogues
+                          .GroupBy(p => p.BegTime.Date)
+                          .Select(p => new 
+                          {
+                              Date = Convert.ToDateTime(p.Key).ToString(),
+                              SmileShare = p.Average(q => q.SmilesShare)
+                          }).OrderBy(x => x.Date).ToList()
                 };
-                
-                result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(resultForSme);
         }
 
         //---PRIVATE---
@@ -340,7 +357,8 @@ namespace UserOperations.Services
                     ApplicationUserId = p.ApplicationUserId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
-                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare)
                 })
                 .ToListAsyncSafe();
         }

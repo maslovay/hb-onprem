@@ -164,7 +164,7 @@ namespace UserOperations.Services
                            SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                            SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN,
-                           SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare)                       
+                           SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare)
                        }).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
