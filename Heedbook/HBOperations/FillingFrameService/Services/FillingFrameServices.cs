@@ -95,7 +95,7 @@ namespace FillingFrameService.Services
         }  
 
         public async System.Threading.Tasks.Task FillingAvatarAsync(DialogueCreationRun message,
-            List<FileFrame> frames, FileVideo fileVideo, bool isExtended, FileFrame fileAvatar)
+            List<FileFrame> frames, FileVideo fileVideo, bool isExtended, FileFrame fileAvatar, Client client)
         {
             
             string localPath;
@@ -122,11 +122,12 @@ namespace FillingFrameService.Services
             }
             else
             {
-                if (message.ClientId != null && await _sftpClient.IsFileExistsAsync($"clientavatars/{message.ClientId}.jpg"))
+                System.Console.WriteLine(client.Avatar);
+                if (message.ClientId != null && await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}"))
                 {
                     
                     localPath =
-                        await _sftpClient.DownloadFromFtpToLocalDiskAsync($"clientavatars/{message.ClientId}.jpg");
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync($"clientavatars/{client.Avatar}");
                     await _sftpClient.UploadAsync(localPath, "clientavatars/", $"{message.DialogueId}.jpg");
                 }
                 else

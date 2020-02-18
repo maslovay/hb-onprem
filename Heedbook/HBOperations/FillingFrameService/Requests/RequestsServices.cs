@@ -28,6 +28,13 @@ namespace  FillingFrameService.Requests
                 .FirstOrDefault().Company.IsExtended;
         }
 
+        public Client Client(Guid? clientId)
+        {
+            return _context.Clients
+                .Where(p => p.ClientId == clientId)
+                .FirstOrDefault();
+        }
+
         public List<FileFrame> FileFrames(DialogueCreationRun message)
         {
             return _context.FileFrames
