@@ -146,19 +146,19 @@ namespace UserOperations.Utils
 
         public double? WorklLoadByTimeIndex(double timeTableForDevices, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
-            return timeTableForDevices == 0 ? 0 : DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
-                         / timeTableForDevices;
+            return timeTableForDevices == 0 ? 0 : 100 *(DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
+                         / timeTableForDevices);
         }
 
         public double? WorklLoadByTimeIndex(double timeTableForDevices, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
         {
-            return timeTableForDevices == 0 ? 0 : DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
-                         / timeTableForDevices;
+            return timeTableForDevices == 0 ? 0 : 100*(DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
+                         / timeTableForDevices);
         }
         public double? WorklLoadByTimeIndex(double timeTableForDevices, List<DialogueInfoFull> dialogues)
         {
-            return timeTableForDevices == 0 ? 0 : DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList())
-                         / timeTableForDevices;
+            return timeTableForDevices == 0 ? 0 : 100 *( DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList())
+                         / timeTableForDevices);
         }
         private double? DialogueTotalDuration(List<DialogueInfo> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
         {
