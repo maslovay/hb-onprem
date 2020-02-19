@@ -235,6 +235,7 @@ namespace UserOperations.Services
 
                 result.CrossIndexDelta += result.CrossIndex;
                 result.LoadIndexDelta += result.LoadIndex;
+                result.WorkloadDynamicsWorkingTime += result.WorkloadValueAvgByWorkingTime;
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
                 result.AnswerCountDelta += result.AnswerCount;
                 result.ClientsCountDelta += result.ClientsCount;

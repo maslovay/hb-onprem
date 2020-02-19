@@ -75,7 +75,7 @@ namespace UserOperations.Services
                 var deviceCount = _utils.DeviceCount(dialoguesCur);
             //   result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
-                result.WorkloadValueAvgByWorkingTime += result.WorkloadValueAvgByWorkingTime;
+                result.WorkloadDynamicsWorkingTime += result.WorkloadValueAvgByWorkingTime;
                 result.DialoguesNumberAvgPerEmployee = (dialoguesUserCur.Count() != 0 && employeeCount != 0) ? dialoguesUserCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
                 result.DialoguesNumberAvgPerDevice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / deviceCount : 0;
                 result.DialoguesNumberAvgPerDayOffice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() : 0;
