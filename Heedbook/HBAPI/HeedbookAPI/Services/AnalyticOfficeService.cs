@@ -17,7 +17,7 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly AnalyticOfficeUtils _analyticOfficeUtils;
+        private readonly AnalyticOfficeUtils _utils;
 
         public AnalyticOfficeService(
             LoginService loginService,
@@ -29,7 +29,7 @@ namespace UserOperations.Services
             _loginService = loginService;
             _requestFilters = requestFilters;
             _repository = repository;
-            _analyticOfficeUtils = analyticOfficeUtils;
+            _utils = analyticOfficeUtils;
         }
         public async Task<string> Efficiency(string beg, string end,
                                         List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
@@ -56,22 +56,22 @@ namespace UserOperations.Services
             var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
             var result = new EfficiencyDashboardInfoNew
             {
-                WorkloadValueAvg = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
-                WorkloadDynamics = -_analyticOfficeUtils.LoadIndex(sessionOld, dialoguesUserOld, prevBeg, begTime),
-                DialoguesCount = _analyticOfficeUtils.DialoguesCount(dialoguesCur),
-                AvgWorkingTime = _analyticOfficeUtils.SessionAverageHours(sessionCur, begTime, endTime),
-                AvgDurationDialogue = _analyticOfficeUtils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                BestEmployee = _analyticOfficeUtils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
-                WorkloadValueAvgByWorkingTime = - timeTableForDevices == 0 ? 0 : _analyticOfficeUtils.DialogueTotalDuration(dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
+                WorkloadValueAvg = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
+                WorkloadDynamics = -_utils.LoadIndex(sessionOld, dialoguesUserOld, prevBeg, begTime),
+                DialoguesCount = _utils.DialoguesCount(dialoguesCur),
+                AvgWorkingTime = _utils.SessionAverageHours(sessionCur, begTime, endTime),
+                AvgDurationDialogue = _utils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
+                BestEmployee = _utils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
+                WorkloadValueAvgByWorkingTime = - timeTableForDevices == 0 ? 0 : _utils.DialogueTotalDuration(dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
                         / timeTableForDevices,
 
-                 WorkloadDynamicsWorkingTime = timeTableForDevices == 0 ? 0 : _analyticOfficeUtils.DialogueTotalDuration(dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
+                 WorkloadDynamicsWorkingTime = timeTableForDevices == 0 ? 0 : _utils.DialogueTotalDuration(dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
                         / timeTableForDevices
             };
-                var satisfactionIndex = _analyticOfficeUtils.SatisfactionIndex(dialoguesCur);
-                var loadIndex = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
-                var employeeCount = _analyticOfficeUtils.EmployeeCount(dialoguesUserCur);
-                var deviceCount = _analyticOfficeUtils.DeviceCount(dialoguesCur);
+                var satisfactionIndex = _utils.SatisfactionIndex(dialoguesCur);
+                var loadIndex = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
+                var employeeCount = _utils.EmployeeCount(dialoguesUserCur);
+                var deviceCount = _utils.DeviceCount(dialoguesCur);
             //   result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
                 result.WorkloadValueAvgByWorkingTime += result.WorkloadValueAvgByWorkingTime;
@@ -84,18 +84,18 @@ namespace UserOperations.Services
                 .Select(p => new
                 {
                     Day = p.Key.ToString(),
-                    AvgDialogue = _analyticOfficeUtils
+                    AvgDialogue = _utils
                         .DialogueAverageDuration(
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime)),
-                    AvgPause = _analyticOfficeUtils
+                    AvgPause = _utils
                         .DialogueAveragePause(
                             p.ToList(),
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime)),
-                    AvgWorkLoad  = _analyticOfficeUtils
+                    AvgWorkLoad  = _utils
                         .LoadIndex(
                             p.ToList(),
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
@@ -109,11 +109,11 @@ namespace UserOperations.Services
                 .Select(p => new
                 {
                     Day = p.Key.ToString(),
-                    EmployeeCount = _analyticOfficeUtils
+                    EmployeeCount = _utils
                         .EmployeeCount(
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList()
                            ),
-                    LoadIndex = _analyticOfficeUtils
+                    LoadIndex = _utils
                         .LoadIndex(
                             p.ToList(), 
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
@@ -191,9 +191,9 @@ namespace UserOperations.Services
             //---end new block
 
             var pauseInMin = (sessionCur.Count() != 0 && dialoguesUserCur.Count() != 0) ?
-                            _analyticOfficeUtils.DialogueAvgPauseListInMinutes(sessionCur, dialoguesUserCur, begTime, endTime): null;
+                            _utils.DialogueAvgPauseListInMinutes(sessionCur, dialoguesUserCur, begTime, endTime): null;
                      
-                var sessTimeMinutes = _analyticOfficeUtils.SessionTotalHours(sessionCur, begTime, endTime)*60;
+                var sessTimeMinutes = _utils.SessionTotalHours(sessionCur, begTime, endTime)*60;
                 var pausesAmount = new{
                     Less_10 = pauseInMin?.Where(p => p <= 10).Count(),
                     Between_11_20 = pauseInMin?.Where(p => p > 10 && p <= 20).Count(),
@@ -282,7 +282,7 @@ namespace UserOperations.Services
                         EndTime = p.EndTime,
                         FullName = p.ApplicationUser.FullName,
                         SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        IsInWorkingTime = _analyticOfficeUtils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
+                        IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
                     })
                 .ToList();
             return dialogues;
