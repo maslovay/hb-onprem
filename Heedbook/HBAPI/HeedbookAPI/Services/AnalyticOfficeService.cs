@@ -8,6 +8,7 @@ using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models.AnalyticModels;
 using System.Threading.Tasks;
+using UserOperations.Controllers;
 
 namespace UserOperations.Services
 {
@@ -61,7 +62,10 @@ namespace UserOperations.Services
                 AvgWorkingTime = _analyticOfficeUtils.SessionAverageHours(sessionCur, begTime, endTime),
                 AvgDurationDialogue = _analyticOfficeUtils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
                 BestEmployee = _analyticOfficeUtils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
-                WorkloadValueAvgByWorkingTime = timeTableForDevices == 0 ? 0 : _analyticOfficeUtils.DialogueTotalDuration(dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
+                WorkloadValueAvgByWorkingTime = - timeTableForDevices == 0 ? 0 : _analyticOfficeUtils.DialogueTotalDuration(dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
+                        / timeTableForDevices,
+
+                 WorkloadDynamicsWorkingTime = timeTableForDevices == 0 ? 0 : _analyticOfficeUtils.DialogueTotalDuration(dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
                         / timeTableForDevices
             };
                 var satisfactionIndex = _analyticOfficeUtils.SatisfactionIndex(dialoguesCur);
@@ -70,6 +74,7 @@ namespace UserOperations.Services
                 var deviceCount = _analyticOfficeUtils.DeviceCount(dialoguesCur);
             //   result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
+                result.WorkloadValueAvgByWorkingTime += result.WorkloadValueAvgByWorkingTime;
                 result.DialoguesNumberAvgPerEmployee = (dialoguesUserCur.Count() != 0 && employeeCount != 0) ? dialoguesUserCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
                 result.DialoguesNumberAvgPerDevice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / deviceCount : 0;
                 result.DialoguesNumberAvgPerDayOffice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() : 0;
@@ -308,6 +313,7 @@ namespace UserOperations.Services
         {
             var timeTable =  _repository.GetAsQueryable<WorkingTime>().Where(x => x.CompanyId == companyId)
                     .OrderBy(x => x.Day).Select(x => x.EndTime != null ? ((DateTime)x.EndTime).Subtract((DateTime)x.BegTime).TotalHours : 0).ToArray();
+            if (timeTable == null || timeTable.Count() < 7) throw new NoDataException("company has no timetable");
             return timeTable;
         }
     }  

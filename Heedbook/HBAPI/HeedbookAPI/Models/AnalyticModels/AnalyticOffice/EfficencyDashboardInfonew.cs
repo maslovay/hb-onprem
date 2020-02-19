@@ -12,5 +12,6 @@ namespace UserOperations.Models.AnalyticModels
         public double? AvgDurationDialogue;
         public double? DialoguesNumberAvgPerDayOffice;
         public Employee BestEmployee;
+        internal double? WorkloadDynamicsWorkingTime;
     }
 }
