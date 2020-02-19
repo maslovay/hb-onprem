@@ -18,18 +18,21 @@ namespace UserOperations.Services
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticOfficeUtils _utils;
+        private readonly DBOperations _dbOperations;
 
         public AnalyticOfficeService(
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,
-            AnalyticOfficeUtils analyticOfficeUtils
+            AnalyticOfficeUtils analyticOfficeUtils,
+            DBOperations dbOperations
             )
         {
             _loginService = loginService;
             _requestFilters = requestFilters;
             _repository = repository;
             _utils = analyticOfficeUtils;
+            _dbOperations = dbOperations;
         }
         public async Task<string> Efficiency(string beg, string end,
                                         List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
@@ -54,6 +57,7 @@ namespace UserOperations.Services
                 var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
 
             var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
+
             var result = new EfficiencyDashboardInfoNew
             {
                 WorkloadValueAvg = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
@@ -62,11 +66,8 @@ namespace UserOperations.Services
                 AvgWorkingTime = _utils.SessionAverageHours(sessionCur, begTime, endTime),
                 AvgDurationDialogue = _utils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
                 BestEmployee = _utils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
-                WorkloadValueAvgByWorkingTime = - timeTableForDevices == 0 ? 0 : _utils.DialogueTotalDuration(dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
-                        / timeTableForDevices,
-
-                 WorkloadDynamicsWorkingTime = timeTableForDevices == 0 ? 0 : _utils.DialogueTotalDuration(dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
-                        / timeTableForDevices
+                WorkloadValueAvgByWorkingTime = _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime),
+                WorkloadDynamicsWorkingTime = - _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
             };
                 var satisfactionIndex = _utils.SatisfactionIndex(dialoguesCur);
                 var loadIndex = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
@@ -292,7 +293,6 @@ namespace UserOperations.Services
         {
             return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
         }
-
 
         private double TimetableHours(DateTime beg, DateTime end, Guid companyId, List<Guid> deviceIds)
         {

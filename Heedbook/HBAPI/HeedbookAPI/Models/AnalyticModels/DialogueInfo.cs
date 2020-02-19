@@ -56,6 +56,7 @@ namespace UserOperations.Models.AnalyticModels
         public double? SatisfactionScoreEnd;
         public DateTime SessionBegTime;
         public DateTime SessionEndTime;
+        public bool IsInWorkingTime;
     }
 
     public class DialogueInfoWithFrames

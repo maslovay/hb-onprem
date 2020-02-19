@@ -613,22 +613,23 @@ namespace UserOperations.Controllers
             foreach (var companyId in companyIds)
             {
 
-                //await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1);
-                //await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2);
-                //await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3);
-                //await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4);
-                //await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
-                //await _compService.AddOneWorkingTimeAsync(companyId, null, null, 6);
-                try
-                {
-                    await _compService.AddOneWorkingTimeAsync(companyId, null, null, 0);
-                    _context.SaveChanges();
-                }
-                catch { }
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1);
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2);
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3);
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4);
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
+                await _compService.AddOneWorkingTimeAsync(companyId, null, null, 6);
+                await _compService.AddOneWorkingTimeAsync(companyId, null, null, 0);
+                //try
+                //{
+                //    await _compService.AddOneWorkingTimeAsync(companyId, null, null, 0);
+                //    _context.SaveChanges();
+                //}
+                //catch { }
             }
 
-            var d = _context.WorkingTimes.Where(x => x.Day == 7).ToList();
-            _context.RemoveRange(d);
+            //var d = _context.WorkingTimes.Where(x => x.Day == 7).ToList();
+            //_context.RemoveRange(d);
             _context.SaveChanges();
 
             return Ok();

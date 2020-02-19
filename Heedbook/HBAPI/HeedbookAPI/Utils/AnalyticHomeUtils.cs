@@ -241,16 +241,6 @@ namespace UserOperations.Utils.AnalyticHomeUtils
         }
 
 
-        public double? DialogueTotalDuration(List<DialogueInfo> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
-        {
-            return dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
-        }
-
-        public bool CheckIfDialogueInWorkingTime(Dialogue dialogue, WorkingTime[] times)
-        {
-            var day = times[(int)dialogue.BegTime.DayOfWeek];
-            if (day.BegTime == null || day.EndTime == null) return false;
-            return dialogue.BegTime.TimeOfDay > ((DateTime)day.BegTime).TimeOfDay && dialogue.EndTime.TimeOfDay < ((DateTime)day.EndTime).TimeOfDay;
-        }
+      
     }
 }

@@ -21,18 +21,21 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly AnalyticHomeUtils _utils;
+        private readonly DBOperations _dbOperations;
 
         public AnalyticHomeService(
             IGenericRepository repository,
             LoginService loginService,
             RequestFilters requestFilters,
-            AnalyticHomeUtils utils
+            AnalyticHomeUtils utils,
+            DBOperations dbOperations
             )
         {
             _repository = repository;
             _loginService = loginService;
             _requestFilters = requestFilters;
             _utils = utils;
+            _dbOperations = dbOperations;
         }
 
 
@@ -54,19 +57,19 @@ namespace UserOperations.Services
                 var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
                 var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
-            var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, null, deviceIds)
+            var dialogues = GetDialoguesIncluded(prevBeg, endTime, companyIds, null, deviceIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
                            ApplicationUserId = p.ApplicationUserId,
                            DeviceId = p.DeviceId,
-                           FullName = p.ApplicationUser.FullName,
+                           FullName = p.ApplicationUser?.FullName,
                            BegTime = p.BegTime,
                            EndTime = p.EndTime,
                            CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                           SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                           SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
-                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
+                           SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault()?.MeetingExpectationsTotal,
+                           SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault()?.BegMoodByNN,
+                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault()?.EndMoodByNN
                           
                        }).ToList();
 
@@ -94,8 +97,8 @@ namespace UserOperations.Services
                     SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
                     SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
 
-                    LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1)),
-                    LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                    LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
+                    LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
 
                     CrossIndex = _utils.CrossIndex(dialoguesCur),
                     CrossIndexDelta = -_utils.CrossIndex(dialoguesOld),
@@ -157,20 +160,21 @@ namespace UserOperations.Services
 
             var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
             var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToList();
-            var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, null, deviceIds)
+            var dialogues = GetDialoguesIncluded(prevBeg, endTime, companyIds, null, deviceIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
                            ApplicationUserId = p.ApplicationUserId,
-                           FullName = p.ApplicationUser.FullName,
                            BegTime = p.BegTime,
                            EndTime = p.EndTime,
                            CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                           SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                           SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
-                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN,
+                           SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault()?.MeetingExpectationsTotal,
+                           SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault()?.BegMoodByNN,
+                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault()?.EndMoodByNN,
                            SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
-                           IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
+                           DeviceId = p.DeviceId,
+                           CompanyId = p.Device.CompanyId,                           
+                           IsInWorkingTime = _dbOperations.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
                        }).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
@@ -209,11 +213,8 @@ namespace UserOperations.Services
                     SmilesShare = dialoguesCur.Average(x => x.SmilesShare),
                     SmilesShareDelta = dialoguesCur.Average(x => x.SmilesShare) - dialoguesOld.Average(x => x.SmilesShare),
 
-                    WorkloadValueAvgByWorkingTime = -timeTableForDevices == 0 ? 0 : _utils.DialogueTotalDuration(dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
-                        / timeTableForDevices,
-
-                    WorkloadDynamicsWorkingTime = timeTableForDevices == 0 ? 0 : _utils.DialogueTotalDuration(dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
-                        / timeTableForDevices
+                    WorkloadValueAvgByWorkingTime = _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime),
+                    WorkloadDynamicsWorkingTime = - _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
                 };
 
                 //---benchmarks
@@ -279,7 +280,7 @@ namespace UserOperations.Services
                 double? loadIndexIndustryAverage = null, loadIndexIndustryBenchmark = null;
 
                 var crossIndex = _utils.CrossIndex(dialoguesCur);
-                var loadIndex = _utils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1));
+                var loadIndex = _utils.LoadIndex(sessionCur, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1));
                 var dialoguesCount = _utils.DialoguesCount(dialoguesCur);
 
                 //---benchmarks
@@ -304,7 +305,7 @@ namespace UserOperations.Services
                     CrossIndexIndustryBenchmark = crossIndexIndustryBenchmark,
 
                     LoadIndex = loadIndex,
-                    LoadIndexDelta = loadIndex -_utils.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
+                    LoadIndexDelta = loadIndex -_utils.LoadIndex(sessionOld, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
 
                     LoadIndexIndustryAverage = loadIndexIndustryAverage,
                     LoadIndexIndustryBenchmark = loadIndexIndustryBenchmark
@@ -444,26 +445,49 @@ namespace UserOperations.Services
                          .ToListAsync();
             return sessions;
         }
-        private IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime, 
+        private List<Dialogue> GetDialoguesIncluded(DateTime begTime, DateTime endTime, 
                                 List<Guid> companyIds,
                                 List<Guid?> applicationUserIds = null,
                                 List<Guid> deviceIds = null)
         {
             var dialogues = _repository.GetAsQueryable<Dialogue>()
-                       .Include(p => p.ApplicationUser)
-                       .Include(p => p.DialogueClientSatisfaction)
-                       .Include(p => p.DialoguePhrase)
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.Device)
+                .Include(p => p.DialogueClientSatisfaction)
+                .Include(p => p.DialogueFrame)
+                .Include(p => p.DialoguePhrase)
+
                        .Where(p => p.BegTime >= begTime
                                && p.EndTime <= endTime
                                && p.StatusId == 3
                                && p.InStatistic == true
                                && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
-                               && (applicationUserIds == null 
-                                        || (!applicationUserIds.Any() 
+                               && (applicationUserIds == null
+                                        || (!applicationUserIds.Any()
                                                 || (p.ApplicationUserId != null && applicationUserIds.Contains(p.ApplicationUserId))))
                                && (deviceIds == null
-                                        || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))))
-                        .AsQueryable();
+                                        || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))).ToList();
+            return dialogues;
+        }
+
+        private List<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime,
+                              List<Guid> companyIds,
+                              List<Guid?> applicationUserIds = null,
+                              List<Guid> deviceIds = null)
+        {
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
+                .Include(p => p.DialoguePhrase)
+
+                       .Where(p => p.BegTime >= begTime
+                               && p.EndTime <= endTime
+                               && p.StatusId == 3
+                               && p.InStatistic == true
+                               && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
+                               && (applicationUserIds == null
+                                        || (!applicationUserIds.Any()
+                                                || (p.ApplicationUserId != null && applicationUserIds.Contains(p.ApplicationUserId))))
+                               && (deviceIds == null
+                                        || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))).ToList();
             return dialogues;
         }
         private async Task<Guid> GetCrossPhraseTypeIdAsync()
@@ -506,7 +530,7 @@ namespace UserOperations.Services
                         ApplicationUserId = (Guid)p.ApplicationUserId,
                         DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                && x.DeviceId == p.DeviceId)
                             .DialogueId
                     })
                 .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
@@ -546,19 +570,19 @@ namespace UserOperations.Services
                         DeviceId = p.DeviceId,
                         DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                  && x.DeviceId == p.DeviceId)
                             .DialogueId,
                         DialogueFrames = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                  && x.DeviceId == p.DeviceId)
                             .DialogueFrame,
                         Age = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                 && x.DeviceId == p.DeviceId)
                             .Age,
                         Gender = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                && x.DeviceId == p.DeviceId)
                             .Gender
                     })
                 .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
@@ -598,13 +622,6 @@ namespace UserOperations.Services
             return result;
         }
 
-
-        private double TimetableHoursForAllComapnies(DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
-        {
-            return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
-        }
-
-
         private double TimetableHours(DateTime beg, DateTime end, Guid companyId, List<Guid> deviceIds)
         {
             var timeTable = GetTimeTable(companyId);
@@ -618,6 +635,11 @@ namespace UserOperations.Services
                 totalHours += timeTable[(int)i.DayOfWeek];
             }
             return totalHours * devicesAmount;
+        }
+
+        private double TimetableHoursForAllComapnies(DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
+        {
+            return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
         }
 
         private double[] GetTimeTable(Guid companyId)
