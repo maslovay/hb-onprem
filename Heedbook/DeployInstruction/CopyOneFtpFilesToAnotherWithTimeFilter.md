@@ -26,6 +26,7 @@ done
 for f in $(cat ./fileList.txt)
 do
   sshpass -p 'kloppolk_2018' sudo scp /home/nkrokhmal/storage/$f nkrokhmal@heedbookftp.northeurope.cloudapp.azure.com:/home/nkrokhmal/storage/$f
+  echo "/home/nkrokhmal/storage/$f"
 done
 rm -rf fileList.txt
 ```
