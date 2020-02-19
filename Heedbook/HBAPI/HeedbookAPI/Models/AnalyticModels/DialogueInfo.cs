@@ -21,6 +21,8 @@ namespace UserOperations.Models.AnalyticModels
         public double? SatisfactionScoreBeg;
         public double? SatisfactionScoreEnd;
         public double? SmilesShare;
+
+        public bool IsInWorkingTime { get; internal set; }
     }
 
     public class DialogueInfoCompany

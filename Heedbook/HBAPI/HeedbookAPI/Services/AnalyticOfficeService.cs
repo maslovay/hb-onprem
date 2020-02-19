@@ -40,6 +40,7 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
+
                 var sessions = GetSessionsInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
@@ -51,6 +52,7 @@ namespace UserOperations.Services
                 var dialoguesUserCur = dialoguesCur.Where(p => p.ApplicationUserId != null).ToList();
                 var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
 
+             var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
             var result = new EfficiencyDashboardInfoNew
             {
                 WorkloadValueAvg = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
@@ -59,7 +61,8 @@ namespace UserOperations.Services
                 AvgWorkingTime = _analyticOfficeUtils.SessionAverageHours(sessionCur, begTime, endTime),
                 AvgDurationDialogue = _analyticOfficeUtils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
                 BestEmployee = _analyticOfficeUtils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
-                WorkloadValueAvgByWorkingTime = (await TimetableHours(begTime, endTime, companyId)) / _analyticOfficeUtils.DialogueTotalDuration(dialoguesCur, begTime, endTime)
+                WorkloadValueAvgByWorkingTime = timeTableForDevices == 0 ? 0 : _analyticOfficeUtils.DialogueTotalDuration(dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
+                        / timeTableForDevices
             };
                 var satisfactionIndex = _analyticOfficeUtils.SatisfactionIndex(dialoguesCur);
                 var loadIndex = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
@@ -231,15 +234,13 @@ namespace UserOperations.Services
         List<Guid?> applicationUserIds,
         List<Guid> deviceIds)
         {
-            var sessions = _repository.GetWithInclude<Session>(
+            var sessions = _repository.GetAsQueryable<Session>().Where(
                     p => p.BegTime >= prevBeg
                     && p.EndTime <= endTime
                     && p.StatusId == 7
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
-                    , o => o.ApplicationUser)
-                .AsQueryable()
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new SessionInfo
                 {
                     ApplicationUserId = p.ApplicationUserId,
@@ -257,46 +258,55 @@ namespace UserOperations.Services
             List<Guid?> applicationUserIds,
             List<Guid> deviceIds)
         {
-            var dialogues = _repository.GetWithInclude<Dialogue>(
+            var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToList();
+            var dialogues = _repository.GetAsQueryable<Dialogue>().Where(
                     p => p.BegTime >= prevBeg
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
-                    , p => p.ApplicationUser)
-                .AsQueryable()
-                .Select(p => new DialogueInfo
-                {
-                    DialogueId = p.DialogueId,
-                    ApplicationUserId = p.ApplicationUserId,
-                    DeviceId = p.DeviceId,
-                    DeviceName = p.Device.Name,
-                    BegTime = p.BegTime,
-                    EndTime = p.EndTime,
-                    FullName = p.ApplicationUser.FullName,
-                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
-                })
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                    .Select(p =>  new DialogueInfo
+                    {
+                        DialogueId = p.DialogueId,
+                        ApplicationUserId = p.ApplicationUserId,
+                        DeviceId = p.DeviceId,
+                        DeviceName = p.Device.Name,
+                        BegTime = p.BegTime,
+                        EndTime = p.EndTime,
+                        FullName = p.ApplicationUser.FullName,
+                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                        IsInWorkingTime = _analyticOfficeUtils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
+                    })
                 .ToList();
             return dialogues;
         }
 
-
-        private async Task<double> TimetableHours(DateTime beg, DateTime end, Guid companyId)
+        private double TimetableHoursForAllComapnies(DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
         {
-            var timeTable = await GetTimeTable(companyId);
+            return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
+        }
+
+
+        private double TimetableHours(DateTime beg, DateTime end, Guid companyId, List<Guid> deviceIds)
+        {
+            var timeTable = GetTimeTable(companyId);
+            var devicesAmount = _repository.GetAsQueryable<Device>()
+                .Where(x => x.CompanyId == companyId 
+                && (deviceIds == null || deviceIds.Count() == 0 || deviceIds.Contains(x.DeviceId)))
+                .Count();
             double totalHours = 0;
             for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
             {
                 totalHours += timeTable[(int)i.DayOfWeek];
             }
-            return totalHours;
+            return totalHours * devicesAmount;
         }
 
-        private async Task<double[]> GetTimeTable(Guid companyId)
+        private double[] GetTimeTable(Guid companyId)
         {
-            var timeTable = (await _repository.FindByConditionAsync<WorkingTime>(x => x.CompanyId == companyId))
+            var timeTable =  _repository.GetAsQueryable<WorkingTime>().Where(x => x.CompanyId == companyId)
                     .OrderBy(x => x.Day).Select(x => x.EndTime != null ? ((DateTime)x.EndTime).Subtract((DateTime)x.BegTime).TotalHours : 0).ToArray();
             return timeTable;
         }
