@@ -67,7 +67,7 @@ namespace UserOperations.Services
                 AvgDurationDialogue = _utils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
                 BestEmployee = _utils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
                 WorkloadValueAvgByWorkingTime = _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime),
-                WorkloadDynamicsWorkingTime = - _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
+                WorkloadDynamicsWorkingTime = - _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), prevBeg, begTime)
             };
                 var satisfactionIndex = _utils.SatisfactionIndex(dialoguesCur);
                 var loadIndex = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
