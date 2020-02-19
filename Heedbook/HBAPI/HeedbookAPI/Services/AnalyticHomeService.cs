@@ -11,6 +11,7 @@ using HBData.Models;
 using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Controllers;
 
 namespace UserOperations.Services
 {
@@ -53,7 +54,7 @@ namespace UserOperations.Services
                 var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
                 var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
-                var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, null, deviceIds)
+            var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, null, deviceIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
@@ -66,6 +67,7 @@ namespace UserOperations.Services
                            SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                            SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
+                          
                        }).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
@@ -152,7 +154,10 @@ namespace UserOperations.Services
                 var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
                 var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
-                var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, null, deviceIds)
+
+            var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
+            var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToList();
+            var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, null, deviceIds)
                        .Select(p => new DialogueInfo
                        {
                            DialogueId = p.DialogueId,
@@ -164,7 +169,8 @@ namespace UserOperations.Services
                            SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                            SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN,
-                           SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare)
+                           SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
+                           IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
                        }).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
@@ -202,6 +208,12 @@ namespace UserOperations.Services
 
                     SmilesShare = dialoguesCur.Average(x => x.SmilesShare),
                     SmilesShareDelta = dialoguesCur.Average(x => x.SmilesShare) - dialoguesOld.Average(x => x.SmilesShare),
+
+                    WorkloadValueAvgByWorkingTime = -timeTableForDevices == 0 ? 0 : _utils.DialogueTotalDuration(dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
+                        / timeTableForDevices,
+
+                    WorkloadDynamicsWorkingTime = timeTableForDevices == 0 ? 0 : _utils.DialogueTotalDuration(dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime)
+                        / timeTableForDevices
                 };
 
                 //---benchmarks
@@ -581,6 +593,36 @@ namespace UserOperations.Services
                                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))).ToListAsyncSafe();
             return result;
+        }
+
+
+        private double TimetableHoursForAllComapnies(DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
+        {
+            return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
+        }
+
+
+        private double TimetableHours(DateTime beg, DateTime end, Guid companyId, List<Guid> deviceIds)
+        {
+            var timeTable = GetTimeTable(companyId);
+            var devicesAmount = _repository.GetAsQueryable<Device>()
+                .Where(x => x.CompanyId == companyId
+                && (deviceIds == null || deviceIds.Count() == 0 || deviceIds.Contains(x.DeviceId)))
+                .Count();
+            double totalHours = 0;
+            for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
+            {
+                totalHours += timeTable[(int)i.DayOfWeek];
+            }
+            return totalHours * devicesAmount;
+        }
+
+        private double[] GetTimeTable(Guid companyId)
+        {
+            var timeTable = _repository.GetAsQueryable<WorkingTime>().Where(x => x.CompanyId == companyId)
+                    .OrderBy(x => x.Day).Select(x => x.EndTime != null ? ((DateTime)x.EndTime).Subtract((DateTime)x.BegTime).TotalHours : 0).ToArray();
+            if (timeTable == null || timeTable.Count() < 7) throw new NoDataException("company has no timetable");
+            return timeTable;
         }
     }
 

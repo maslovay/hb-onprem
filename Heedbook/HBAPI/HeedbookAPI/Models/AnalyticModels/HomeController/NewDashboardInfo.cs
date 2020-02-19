@@ -35,6 +35,8 @@ namespace UserOperations.Models.Get.HomeController
 
         public double? SmilesShare;
         public double? SmilesShareDelta;
+        public double? WorkloadValueAvgByWorkingTime;
+        public double? WorkloadDynamicsWorkingTime;
         //public List<BestEmployee> BestEmployees;
     }
 }

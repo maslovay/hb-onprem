@@ -53,7 +53,7 @@ namespace UserOperations.Services
                 var dialoguesUserCur = dialoguesCur.Where(p => p.ApplicationUserId != null).ToList();
                 var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
 
-             var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
+            var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
             var result = new EfficiencyDashboardInfoNew
             {
                 WorkloadValueAvg = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
