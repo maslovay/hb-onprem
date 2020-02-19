@@ -81,6 +81,10 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
         {
             return dialogues.Any() ? dialogues.Average(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
         }
+        public double? DialogueTotalDuration(List<DialogueInfo> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        {
+            return dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
+        }
         public double? SatisfactionIndex(List<DialogueInfo> dialogues)
         {
             return dialogues.Any() ? dialogues.Where(p => p.SatisfactionScore != null && p.SatisfactionScore != 0).Average(p => p.SatisfactionScore) : null;
@@ -167,5 +171,6 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
             return sessions.Any() ?
                 (double?)sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
         }
+
     }
 }

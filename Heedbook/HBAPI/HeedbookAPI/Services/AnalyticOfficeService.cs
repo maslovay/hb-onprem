@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models.AnalyticModels;
+using System.Threading.Tasks;
 
 namespace UserOperations.Services
 {
@@ -29,7 +30,7 @@ namespace UserOperations.Services
             _repository = repository;
             _analyticOfficeUtils = analyticOfficeUtils;
         }
-        public string Efficiency(string beg, string end,
+        public async Task<string> Efficiency(string beg, string end,
                                         List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
@@ -51,14 +52,15 @@ namespace UserOperations.Services
                 var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
 
             var result = new EfficiencyDashboardInfoNew
-                {
-                    WorkloadValueAvg = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
-                    WorkloadDynamics = -_analyticOfficeUtils.LoadIndex(sessionOld, dialoguesUserOld, prevBeg, begTime),
-                    DialoguesCount = _analyticOfficeUtils.DialoguesCount(dialoguesCur),
-                    AvgWorkingTime = _analyticOfficeUtils.SessionAverageHours(sessionCur, begTime, endTime),
-                    AvgDurationDialogue = _analyticOfficeUtils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                    BestEmployee = _analyticOfficeUtils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
-                };
+            {
+                WorkloadValueAvg = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
+                WorkloadDynamics = -_analyticOfficeUtils.LoadIndex(sessionOld, dialoguesUserOld, prevBeg, begTime),
+                DialoguesCount = _analyticOfficeUtils.DialoguesCount(dialoguesCur),
+                AvgWorkingTime = _analyticOfficeUtils.SessionAverageHours(sessionCur, begTime, endTime),
+                AvgDurationDialogue = _analyticOfficeUtils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
+                BestEmployee = _analyticOfficeUtils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
+                WorkloadValueAvgByWorkingTime = (await TimetableHours(begTime, endTime, companyId)) / _analyticOfficeUtils.DialogueTotalDuration(dialoguesCur, begTime, endTime)
+            };
                 var satisfactionIndex = _analyticOfficeUtils.SatisfactionIndex(dialoguesCur);
                 var loadIndex = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
                 var employeeCount = _analyticOfficeUtils.EmployeeCount(dialoguesUserCur);
@@ -280,5 +282,23 @@ namespace UserOperations.Services
             return dialogues;
         }
 
+
+        private async Task<double> TimetableHours(DateTime beg, DateTime end, Guid companyId)
+        {
+            var timeTable = await GetTimeTable(companyId);
+            double totalHours = 0;
+            for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
+            {
+                totalHours += timeTable[(int)i.DayOfWeek];
+            }
+            return totalHours;
+        }
+
+        private async Task<double[]> GetTimeTable(Guid companyId)
+        {
+            var timeTable = (await _repository.FindByConditionAsync<WorkingTime>(x => x.CompanyId == companyId))
+                    .OrderBy(x => x.Day).Select(x => x.EndTime != null ? ((DateTime)x.EndTime).Subtract((DateTime)x.BegTime).TotalHours : 0).ToArray();
+            return timeTable;
+        }
     }  
 }

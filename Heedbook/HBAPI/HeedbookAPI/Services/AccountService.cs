@@ -235,7 +235,7 @@ namespace UserOperations.Services
             await AddOneWorkingTimeAsync(companyId, mess.ThursdayBeg, mess.ThursdayEnd, 4);
             await AddOneWorkingTimeAsync(companyId, mess.FridayBeg, mess.FridayEnd, 5);
             await AddOneWorkingTimeAsync(companyId, mess.SaturdayBeg, mess.SaturdayEnd, 6);
-            await AddOneWorkingTimeAsync(companyId, mess.SundayBeg, mess.SundayEnd, 7);
+            await AddOneWorkingTimeAsync(companyId, mess.SundayBeg, mess.SundayEnd, 0);
         }
 
         private async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day)
