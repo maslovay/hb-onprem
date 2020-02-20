@@ -90,7 +90,7 @@ namespace ExtractFramesFromVideo
                 await Task.WhenAll(tasks);
 
                 _log.Info($"Processing frames {JsonConvert.SerializeObject(frames)}");
-                var existedFrames = _context.FileFrames.Where(p => p.ApplicationUserId == Guid.Parse(applicationUserId))
+                var existedFrames = _context.FileFrames.Where(p => p.DeviceId == Guid.Parse(deviceId))
                     .ToList();
                 var fileFrames = new List<FileFrame>();
                 foreach (var frame in frames)
