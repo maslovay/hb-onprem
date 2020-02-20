@@ -239,5 +239,8 @@ namespace UserOperations.Utils.AnalyticHomeUtils
                             q.Sum(r => Min(r.EndTime, end).Subtract(Max(r.BegTime, beg)).TotalHours) / q.Select(r => r.ApplicationUserId).Distinct().Count()
                         ).Average() : null;
         }
+
+
+      
     }
 }

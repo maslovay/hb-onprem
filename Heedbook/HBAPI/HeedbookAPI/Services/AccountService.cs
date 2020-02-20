@@ -15,6 +15,7 @@ namespace UserOperations.Services
     {
         private readonly LoginService _loginService;
         private readonly CompanyService _companyService;
+        private readonly SalesStageService _salesStageService;
         private readonly IGenericRepository _repository;
         private readonly MailSender _mailSender;
         private readonly SpreadsheetDocumentUtils _helpProvider;
@@ -23,6 +24,7 @@ namespace UserOperations.Services
         public AccountService(
             LoginService loginService,
             CompanyService companyService,
+            SalesStageService salesStageService,
             IGenericRepository repository,
             MailSender mailSender,
             SpreadsheetDocumentUtils helpProvider
@@ -30,6 +32,7 @@ namespace UserOperations.Services
         {
             _loginService = loginService;
             _companyService = companyService;
+            _salesStageService = salesStageService;
             _repository = repository;
             _mailSender = mailSender;
             _helpProvider = helpProvider;
@@ -52,6 +55,7 @@ namespace UserOperations.Services
                 await AddContentAndCampaign(company);
             }
             await AddWorkingTime(company.CompanyId, message);
+            await _salesStageService.CreateSalesStageForNewAccount(company.CompanyId, company.CorporationId);
             await _repository.SaveAsync();
             try
             {
@@ -225,13 +229,26 @@ namespace UserOperations.Services
         }
         private async Task AddWorkingTime(Guid companyId, UserRegister mess)
         {
-            await AddOneWorkingTimeAsync(companyId, mess.MondayBeg, mess.MondayEnd, 1);
-            await AddOneWorkingTimeAsync(companyId, mess.TuesdayBeg, mess.TuesdayEnd, 2);
-            await AddOneWorkingTimeAsync(companyId, mess.WednesdayBeg, mess.WednesdayEnd, 3);
-            await AddOneWorkingTimeAsync(companyId, mess.ThursdayBeg, mess.ThursdayEnd, 4);
-            await AddOneWorkingTimeAsync(companyId, mess.FridayBeg, mess.FridayEnd, 5);
-            await AddOneWorkingTimeAsync(companyId, mess.SaturdayBeg, mess.SaturdayEnd, 6);
-            await AddOneWorkingTimeAsync(companyId, mess.SundayBeg, mess.SundayEnd, 7);
+            if(mess.MondayBeg == null)
+            {
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
+                await AddOneWorkingTimeAsync(companyId, null, null, 6);
+                await AddOneWorkingTimeAsync(companyId, null, null, 0);
+            }
+            else
+            {
+                await AddOneWorkingTimeAsync(companyId, mess.MondayBeg, mess.MondayEnd, 1);
+                await AddOneWorkingTimeAsync(companyId, mess.TuesdayBeg, mess.TuesdayEnd, 2);
+                await AddOneWorkingTimeAsync(companyId, mess.WednesdayBeg, mess.WednesdayEnd, 3);
+                await AddOneWorkingTimeAsync(companyId, mess.ThursdayBeg, mess.ThursdayEnd, 4);
+                await AddOneWorkingTimeAsync(companyId, mess.FridayBeg, mess.FridayEnd, 5);
+                await AddOneWorkingTimeAsync(companyId, mess.SaturdayBeg, mess.SaturdayEnd, 6);
+                await AddOneWorkingTimeAsync(companyId, mess.SundayBeg, mess.SundayEnd, 0);
+            }
         }
 
         private async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day)

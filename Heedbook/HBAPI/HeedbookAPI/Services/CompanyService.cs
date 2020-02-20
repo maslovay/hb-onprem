@@ -99,10 +99,10 @@ namespace UserOperations.Services
             await AddOneWorkingTimeAsync(companyId, new DateTime(1,1,1,10,0,0), new DateTime(1,1,1, 19, 0, 0), 4);
             await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
             await AddOneWorkingTimeAsync(companyId, null, null, 6);
-            await AddOneWorkingTimeAsync(companyId, null, null, 7);
+            await AddOneWorkingTimeAsync(companyId, null, null, 0);
         }
 
-        private async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day)
+        public async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day)
         {
             WorkingTime time = new WorkingTime
             {

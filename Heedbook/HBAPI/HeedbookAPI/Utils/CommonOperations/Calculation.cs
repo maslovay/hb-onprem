@@ -141,7 +141,45 @@ namespace UserOperations.Utils
             var sessionHours = sessionsUser.Count() != 0 ? Convert.ToDouble(sessionsUser.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : 0;
             var dialoguesHours = dialogues.Count() != 0 ? Convert.ToDouble(dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : 0;
             return 100 * LoadIndex( sessionHours, dialoguesHours);
-        }     
+        }
+
+
+        public double? WorklLoadByTimeIndex(double timeTableForDevices, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
+        {
+            return timeTableForDevices == 0 ? 0 : 100 *(DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
+                         / timeTableForDevices);
+        }
+
+        public double? WorklLoadByTimeIndex(double timeTableForDevices, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
+        {
+            return timeTableForDevices == 0 ? 0 : 100*(DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
+                         / timeTableForDevices);
+        }
+        public double? WorklLoadByTimeIndex(double timeTableForDevices, List<DialogueInfoFull> dialogues)
+        {
+            return timeTableForDevices == 0 ? 0 : 100 *( DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList())
+                         / timeTableForDevices);
+        }
+        private double? DialogueTotalDuration(List<DialogueInfo> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        {
+            return dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
+        }
+        private double? DialogueTotalDuration(List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
+        {
+            return dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
+        }
+
+        private double? DialogueTotalDuration(List<DialogueInfoFull> dialogues)
+        {
+            return dialogues.Any() ? dialogues.Sum(p => p.EndTime.Subtract(p.BegTime).TotalHours) : 0;
+        }
+        public bool CheckIfDialogueInWorkingTime(Dialogue dialogue, WorkingTime[] times)
+        {
+            var day = times[(int)dialogue.BegTime.DayOfWeek];
+            if (day.BegTime == null || day.EndTime == null) return false;
+            return dialogue.BegTime.TimeOfDay > ((DateTime)day.BegTime).TimeOfDay && dialogue.EndTime.TimeOfDay < ((DateTime)day.EndTime).TimeOfDay;
+        }
+
 
         //Satisfaction index calculation
         public double? SatisfactionIndex(List<DialogueInfoFull> dialogues)

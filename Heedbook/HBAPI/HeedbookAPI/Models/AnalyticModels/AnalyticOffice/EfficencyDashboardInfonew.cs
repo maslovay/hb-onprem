@@ -4,6 +4,8 @@ namespace UserOperations.Models.AnalyticModels
     {
         public double? WorkloadValueAvg;
         public double? WorkloadDynamics;
+        public double? WorkloadValueAvgByWorkingTime;
+        public double? WorkloadDynamicsWorkingTime;
         public int? DialoguesCount;
         public double? DialoguesNumberAvgPerEmployee;
         public double? DialoguesNumberAvgPerDevice;
@@ -11,5 +13,10 @@ namespace UserOperations.Models.AnalyticModels
         public double? AvgDurationDialogue;
         public double? DialoguesNumberAvgPerDayOffice;
         public Employee BestEmployee;
+        //benchmark
+        public double? LoadIndexIndustryAverage;
+        public double? LoadIndexIndustryBenchmark;
+        public double? WorkLoadByTimeIndustryAverage;
+        public double? WorkLoadByTimeIndustryBenchmark;
     }
 }
