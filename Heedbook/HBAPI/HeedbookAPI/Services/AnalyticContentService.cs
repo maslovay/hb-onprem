@@ -140,7 +140,7 @@ namespace UserOperations.Services
                 //}
                 var slideShowSessionsInDialogues = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds, false, dialogues);
                 var views = slideShowSessionsInDialogues.Count();
-                var clients = slideShowSessionsInDialogues.Select(x => x.DialogueId).Distinct().Count();
+                var clients = dialogues.Count();
                
                 var contentsShownGroup = slideShowSessionsInDialogues
                     .GroupBy(p => new { p.ContentId, p.Url }, (key, group) => new
@@ -291,19 +291,19 @@ namespace UserOperations.Services
                         ApplicationUserId = (Guid)p.ApplicationUserId,
                         DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                && x.DeviceId == p.DeviceId)
                             .DialogueId,
                         DialogueFrames = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                && x.DeviceId == p.DeviceId)
                             .DialogueFrame,
                         Age = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                && x.DeviceId == p.DeviceId)
                             .Age,
                         Gender = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
-                                && x.ApplicationUserId == p.ApplicationUserId)
+                                && x.DeviceId == p.DeviceId)
                             .Gender
                     })
                 .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))

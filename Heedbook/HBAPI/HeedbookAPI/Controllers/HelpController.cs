@@ -83,8 +83,8 @@ namespace UserOperations.Controllers
 
 
             //-1--COMPANIES---
-            var oldCompId = oldContext.Companys.Where(x => x.CreationDate >= date).Select(x => x.CompanyId).ToList();
-            var newCompId = _context.Companys.Where(x => x.CreationDate >= date).Select(x => x.CompanyId).ToList();
+            var oldCompId = oldContext.Companys.Select(x => x.CompanyId).ToList();
+            var newCompId = _context.Companys.Select(x => x.CompanyId).ToList();
             var compIdsToAdd = oldCompId.Except(newCompId).ToList();
             List<Old.Models.Company> addComp = oldContext.Companys.Where(x => compIdsToAdd.Contains(x.CompanyId)).ToList();
             var str = JsonConvert.SerializeObject(addComp);
@@ -110,6 +110,20 @@ namespace UserOperations.Controllers
                 _context.AddRange(devicesToAdd);
                 _context.SaveChanges();
                 result["devices"] = newComp.Count();
+
+                var work = compIdsToAdd.Select(x => new List<WorkingTime> {
+                    new WorkingTime { CompanyId = x, Day = 0 },
+                    new WorkingTime { CompanyId = x, Day = 1 },
+                    new WorkingTime { CompanyId = x, Day = 2 },
+                    new WorkingTime { CompanyId = x, Day = 3 },
+                    new WorkingTime { CompanyId = x, Day = 4 },
+                    new WorkingTime { CompanyId = x, Day = 5 },
+                    new WorkingTime { CompanyId = x, Day = 6 }}
+                    );
+
+                _context.AddRange(work);
+                _context.SaveChanges();
+                result["devices"] = newComp.Count();
             }
             catch { }
 
@@ -118,8 +132,8 @@ namespace UserOperations.Controllers
 
 
             //-2--USERS---
-            var oldUsersId = oldContext.ApplicationUsers.Where(x => x.CreationDate >= date).Select(x => x.Id).ToList();
-            var newUsersId = _context.ApplicationUsers.Where(x => x.CreationDate >= date).Select(x => x.Id).ToList();
+            var oldUsersId = oldContext.ApplicationUsers.Select(x => x.Id).ToList();
+            var newUsersId = _context.ApplicationUsers.Select(x => x.Id).ToList();
             var usersIdsToAdd = oldUsersId.Except(newUsersId).ToList();
             List<Old.Models.ApplicationUser> addUsers = oldContext.ApplicationUsers.Where(x => usersIdsToAdd.Contains(x.Id)).ToList();
             str = JsonConvert.SerializeObject(addUsers);
@@ -132,6 +146,20 @@ namespace UserOperations.Controllers
             }
             catch { }
 
+            //-2--ROLES---
+            var oldUR = oldContext.ApplicationUserRoles.Select(x => x.UserId).ToList();
+            var newUR = _context.ApplicationUserRoles.Select(x => x.UserId).ToList();
+            var IdsToAdd = oldUR.Except(newUR).ToList();
+            List<Old.Models.ApplicationUserRole> add1 = oldContext.ApplicationUserRoles.Where(x => IdsToAdd.Contains(x.UserId)).ToList();
+            str = JsonConvert.SerializeObject(add1);
+            List<HBData.Models.ApplicationUserRole> newadd = JsonConvert.DeserializeObject<List<HBData.Models.ApplicationUserRole>>(str);
+            try
+            {
+                _context.AddRange(newadd);
+                _context.SaveChanges();
+                result["users"] = newUsers.Count();
+            }
+            catch { }
 
             //-3--ALERTS---
             var oldAlerts = oldContext.Alerts.Where(x => x.CreationDate >= date).Select(x => x.AlertId).ToList();
