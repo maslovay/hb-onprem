@@ -94,13 +94,14 @@ namespace UserOperations.Services
                                                      List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
+                var isExtended = _loginService.GetIsExtended();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, applicationUserIds, deviceIds)
+                var dialogues = GetDialoguesAsQuryable(prevBeg, endTime, companyIds, applicationUserIds, deviceIds)
                         .Select(p => new DialogueInfo
                         {
                             DialogueId = p.DialogueId,
@@ -111,7 +112,8 @@ namespace UserOperations.Services
                             EndTime = p.EndTime,
                             SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                             SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
-                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
+                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN,
+                            SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
                         })
                         .ToList(); 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
@@ -128,9 +130,12 @@ namespace UserOperations.Services
                     BestEmployee = _analyticServiceQualityUtils.BestEmployee(dialoguesCur),
                     BestEmployeeScore = _analyticServiceQualityUtils.BestEmployeeSatisfaction(dialoguesCur),
                     BestProgressiveEmployee = _analyticServiceQualityUtils.BestProgressiveEmployee(dialogues, begTime),
-                    BestProgressiveEmployeeDelta = _analyticServiceQualityUtils.BestProgressiveEmployeeDelta(dialogues, begTime)
+                    BestProgressiveEmployeeDelta = _analyticServiceQualityUtils.BestProgressiveEmployeeDelta(dialogues, begTime),
+                    SmilesShare = dialoguesCur.Average(x => x.SmilesShare),
+                    SmilesShareDelta = - dialoguesOld.Average(x => x.SmilesShare),
                 };
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
+                result.SmilesShareDelta += result.SmilesShare;
                 return JsonConvert.SerializeObject(result);
         }
 
@@ -275,7 +280,7 @@ namespace UserOperations.Services
                 .ToListAsyncSafe();
             return dialogues;
         }
-        private IQueryable<Dialogue> GetDialoguesIncludedPhrase(
+        private IQueryable<Dialogue> GetDialoguesAsQuryable(
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,

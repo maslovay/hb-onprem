@@ -9,6 +9,7 @@ using HBData.Models;
 using UserOperations.Models.AnalyticModels;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
+using UserOperations.Models.Get.HomeController;
 
 namespace UserOperations.Services
 {
@@ -57,6 +58,7 @@ namespace UserOperations.Services
                 var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
 
             var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
+            List<Models.Get.HomeController.BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
             var result = new EfficiencyDashboardInfoNew
             {
@@ -69,7 +71,17 @@ namespace UserOperations.Services
                 WorkloadValueAvgByWorkingTime = _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime),
                 WorkloadDynamicsWorkingTime = - _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), prevBeg, begTime)
             };
-                var satisfactionIndex = _utils.SatisfactionIndex(dialoguesCur);
+
+            if (benchmarksList != null && benchmarksList.Count() != 0)
+            {
+                result.LoadIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
+                result.LoadIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark");
+
+                result.WorkLoadByTimeIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "WorkLoadByTimeIndustryAvg");
+                result.WorkLoadByTimeIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "WorkLoadByTimeIndustryBenchmark");
+            }
+
+            var satisfactionIndex = _utils.SatisfactionIndex(dialoguesCur);
                 var loadIndex = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
                 var employeeCount = _utils.EmployeeCount(dialoguesUserCur);
                 var deviceCount = _utils.DeviceCount(dialoguesCur);
@@ -316,5 +328,47 @@ namespace UserOperations.Services
             if (timeTable == null || timeTable.Count() < 7) throw new NoDataException("company has no timetable");
             return timeTable;
         }
-    }  
+
+        private async Task<IEnumerable<BenchmarkModel>> GetBenchmarksList(DateTime begTime, DateTime endTime, List<Guid> companyIds)
+        {
+            var industryIds = await GetIndustryIdsAsync(companyIds);
+            try
+            {
+                var benchmarksList = _repository.Get<Benchmark>().Where(x => x.Day >= begTime && x.Day <= endTime
+                                                             && industryIds.Contains(x.IndustryId))
+                                                              .Join(_repository.Get<BenchmarkName>(),
+                                                              bench => bench.BenchmarkNameId,
+                                                              names => names.Id,
+                                                              (bench, names) => new BenchmarkModel { Name = names.Name, Value = bench.Value });
+                return benchmarksList;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+
+        private double? GetBenchmarkIndustryAvg(List<BenchmarkModel> benchmarksList, string banchmarkName)
+        {
+            if (benchmarksList == null || benchmarksList.Count() == 0) return null;
+            return benchmarksList.Any(x => x.Name == banchmarkName) ?
+                 (double?)benchmarksList.Where(x => x.Name == banchmarkName).Average(x => x.Value) : null;
+        }
+
+        private double? GetBenchmarkIndustryMax(List<BenchmarkModel> benchmarksList, string banchmarkName)
+        {
+            if (benchmarksList == null || benchmarksList.Count() == 0) return null;
+            return benchmarksList.Any(x => x.Name == banchmarkName) ?
+                 (double?)benchmarksList.Where(x => x.Name == banchmarkName).Max(x => x.Value) : null;
+        }
+
+        private async Task<IEnumerable<Guid?>> GetIndustryIdsAsync(List<Guid> companyIds)
+        {
+            var industryIds = (await _repository.FindByConditionAsync<Company>(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)))?
+                     .Select(x => x.CompanyIndustryId).Distinct();
+            return industryIds;
+        }
+
+    }
 }

@@ -173,7 +173,7 @@ namespace UserOperations.Services
                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault()?.EndMoodByNN,
                            SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
                            DeviceId = p.DeviceId,
-                           CompanyId = p.Device.CompanyId,                           
+                           CompanyId = p.Device.CompanyId,
                            IsInWorkingTime = _dbOperations.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
                        }).ToList();
 

@@ -11,5 +11,7 @@ namespace UserOperations.Models.Get.AnalyticServiceQualityController
         public double? BestEmployeeScore;
         public string BestProgressiveEmployee;
         public double? BestProgressiveEmployeeDelta;
+        public double? SmilesShare;
+        public double? SmilesShareDelta;
     }
 }

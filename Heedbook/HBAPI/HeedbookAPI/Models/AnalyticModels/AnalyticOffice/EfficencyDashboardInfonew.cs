@@ -13,5 +13,10 @@ namespace UserOperations.Models.AnalyticModels
         public double? AvgDurationDialogue;
         public double? DialoguesNumberAvgPerDayOffice;
         public Employee BestEmployee;
+        //benchmark
+        public double? LoadIndexIndustryAverage;
+        public double? LoadIndexIndustryBenchmark;
+        public double? WorkLoadByTimeIndustryAverage;
+        public double? WorkLoadByTimeIndustryBenchmark;
     }
 }
