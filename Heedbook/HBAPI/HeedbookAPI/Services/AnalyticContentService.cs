@@ -340,7 +340,7 @@ namespace UserOperations.Services
                         EndTime = p.EndTime,
                         IsPoll = p.IsPoll,
                         Url = p.Url,
-                        ApplicationUserId = (Guid)p.ApplicationUserId,
+                        ApplicationUserId = p.ApplicationUserId,
                         DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
                                 && x.EndTime >= p.BegTime
                                 && x.DeviceId == p.DeviceId)
@@ -401,7 +401,7 @@ namespace UserOperations.Services
                     Time = answ.Time,
                     DialogueId = dialogueId,
                     ContentId = answ.CampaignContent?.ContentId,
-                    FullName = answ.ApplicationUser.FullName
+                    FullName = answ.ApplicationUser?.FullName
                 };
                 answersResult.Add(oneAnswer);
             }
