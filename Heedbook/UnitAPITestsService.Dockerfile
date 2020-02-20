@@ -1,19 +1,31 @@
 FROM microsoft/dotnet:2.2-sdk AS build-env
+
 WORKDIR /app
 COPY . .
-# Copy everything else and build
+RUN dotnet publish ./HBOperations/ApiTests -c Release -o publish
 RUN dotnet publish ./HBOperations/UnitAPITestsService -c Release -o publish
 
-# Build runtime image
-FROM microsoft/dotnet:2.2-sdk
+WORKDIR /app/HBOperations/ApiTests/
+RUN dotnet restore .; exit 0;
+RUN dotnet build
+
+WORKDIR /app/HBOperations/UnitAPITestsService/
+RUN dotnet restore .; exit 0;
+RUN dotnet build
+
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2
+
 WORKDIR /app
+COPY --from=build-env /app .
+
+COPY --from=build-env /app/HBOperations/ApiTests/publish .
 COPY --from=build-env /app/HBOperations/UnitAPITestsService/publish .
+#WORKDIR /app/HBOperations/UnitAPITestsService
 ENTRYPOINT ["dotnet", "UnitAPITestsService.dll"]
-#RUN mkdir -p /ApiTests/bin/Debug/netcoreapp2.2/
-#RUN chmod -R 777 /ApiTests/bin/Debug/netcoreapp2.2/
-#COPY /ApiTests/bin/Debug/netcoreapp2.2/ApiTests.dll .
+
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download
 RUN chmod -R 777 /opt/download
-ENV TESTCLUSTER testcluster
+ENV VSTEST_CONNECTION_TIMEOUT 90000
+ENV DOCKER_UNIT_TEST_ENVIRONMENT TRUE
