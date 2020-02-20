@@ -183,9 +183,8 @@ namespace UserOperations.Services
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
-                var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(prevBeg, begTime, companyIds, new List<Guid?>(), deviceIds, false, dialoguesOld);
-
-                var slideShowSessionsInDialoguesCur = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, new List<Guid?>(), deviceIds, false, dialoguesCur);
+                var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(prevBeg, begTime, companyIds, deviceIds, false, dialoguesOld);
+                var slideShowSessionsInDialoguesCur = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds,deviceIds, false, dialoguesCur);
                 var viewsCur = slideShowSessionsInDialoguesCur.Count();
 
                 var result = new NewDashboardInfo()
@@ -503,7 +502,6 @@ namespace UserOperations.Services
           DateTime begTime,
           DateTime endTime,
           List<Guid> companyIds,
-          List<Guid?> applicationUserIds,
           List<Guid> deviceIds,
           bool isPool,
           List<DialogueInfo> dialogues
@@ -514,7 +512,6 @@ namespace UserOperations.Services
                     && p.BegTime >= begTime
                     && p.BegTime <= endTime
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
-                    && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     && p.CampaignContent != null)
                 .Select(p =>

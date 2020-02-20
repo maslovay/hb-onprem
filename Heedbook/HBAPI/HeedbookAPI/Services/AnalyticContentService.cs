@@ -267,21 +267,13 @@ namespace UserOperations.Services
            List<DialogueInfoWithFrames> dialogues
            )
         {
-            var test = (_repository.GetAsQueryable<SlideShowSession>()
-               .Where(p => p.IsPoll == isPool
-                   && p.BegTime >= begTime
-                   && p.BegTime <= endTime
-                   && (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId))
-                   && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
-                   && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
-                   && p.CampaignContent != null)).Count();
-
             var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
                 .Where(p => p.IsPoll == isPool
                     && p.BegTime >= begTime
                     && p.BegTime <= endTime
                     && (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId))
-                    && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
+                    && (!applicationUserIds.Any() 
+                            || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId)))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                     && p.CampaignContent != null)
                 .Select(p =>

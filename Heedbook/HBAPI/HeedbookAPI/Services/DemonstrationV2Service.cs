@@ -29,11 +29,11 @@ namespace UserOperations.Services
                     stat.IsPoll = false;
                 else
                 {
-                    var html = _repository.GetAsQueryable<CampaignContent>()
+                    var json = _repository.GetAsQueryable<CampaignContent>()
                         .Where(x => x.CampaignContentId == stat.CampaignContentId)
-                        .Select(x => x.Content.RawHTML).FirstOrDefault();
+                        .Select(x => x.Content.JSONData).FirstOrDefault();
 
-                    stat.IsPoll = html.Contains("answerText") ? true : false;
+                    stat.IsPoll = json.Contains("answerText") ? true : false;
                 }
                 stat.SlideShowSessionId = Guid.NewGuid();
                 await _repository.CreateAsync<SlideShowSession>(stat);
