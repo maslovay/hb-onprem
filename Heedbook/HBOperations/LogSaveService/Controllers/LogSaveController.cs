@@ -16,7 +16,7 @@ namespace LogSave.Controllers
     public class LogSaveController : Controller
     {
         private readonly RecordsContext _context;
-        public LogSaveController(RecordsContext context, SftpClient sftpClient)
+        public LogSaveController(RecordsContext context)
         {
             _context = context;
         }
