@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using UserOperations.AccountModels;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Providers;
 using UserOperations.Services;
 using UserOperations.Utils;
 
@@ -21,7 +22,7 @@ namespace ApiTests
         protected Mock<IConfiguration> configMock;
         protected Mock<DBOperations> dbOperationMock;
         protected Mock<RequestFilters> filterMock;
-        protected Mock<SpreadsheetDocumentUtils> helpProvider;
+        protected Mock<HelpProvider> helpProvider;
         protected Mock<MailSender> mailSenderMock;
         protected Mock<LoginService> moqILoginService;
         protected Mock<IGenericRepository> repositoryMock;
@@ -42,7 +43,7 @@ namespace ApiTests
             configMock = new Mock<IConfiguration>();
             dbOperationMock = new Mock<DBOperations>();
             filterMock = new Mock<RequestFilters>(MockBehavior.Loose);
-            helpProvider = new Mock<SpreadsheetDocumentUtils>();
+            helpProvider = new Mock<HelpProvider>();
             mailSenderMock = new Mock<MailSender>();
             moqILoginService = new Mock<LoginService>();
             repositoryMock = new Mock<IGenericRepository>();
@@ -63,9 +64,9 @@ namespace ApiTests
         }
         public void Setup()
         {
-            BaseInit();
-            InitData();
-            InitServices();
+            // BaseInit();
+            // InitData();
+            // InitServices();
         }
 
         public void InitMockILoginService()
@@ -88,86 +89,86 @@ namespace ApiTests
         }
         public void InitMockIMailSender()
         {
-            mailSenderMock.Setup(p => p.SendRegisterEmail(new HBData.Models.ApplicationUser()))
-                .Returns(Task.FromResult(0));
-            mailSenderMock.Setup(p => p.SendPasswordChangeEmail(new HBData.Models.ApplicationUser(), "password"))
-                .Returns(Task.FromResult(0));
+            // mailSenderMock.Setup(p => p.SendRegisterEmail(new HBData.Models.ApplicationUser()))
+            //     .Returns(Task.FromResult(0));
+            // mailSenderMock.Setup(p => p.SendPasswordChangeEmail(new HBData.Models.ApplicationUser(), "password"))
+            //     .Returns(Task.FromResult(0));
         }
         public void InitMockAccountService()
         {
         }
         public void InitMockIHelpProvider()
         {
-           // helpProvider.Setup(p => p.AddComanyPhrases());
-            helpProvider.Setup(p => p.CreatePoolAnswersSheet(It.IsAny<List<AnswerInfo>>(), It.IsAny<string>()))
-                .Returns(new MemoryStream());
+        //    // helpProvider.Setup(p => p.AddComanyPhrases());
+        //     helpProvider.Setup(p => p.CreatePoolAnswersSheet(It.IsAny<List<AnswerInfo>>(), It.IsAny<string>()))
+        //         .Returns(new MemoryStream());
         }
         public void InitMockIRequestFiltersProvider()
         {
-            var list = new List<Guid>(){};
-            filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
-            filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
-                .Returns(new DateTime(2019, 10, 30));
-            filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
-                .Returns(new DateTime(2019, 11, 01));
+            // var list = new List<Guid>(){};
+            // filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            // filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
+            //     .Returns(new DateTime(2019, 10, 30));
+            // filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
+            //     .Returns(new DateTime(2019, 11, 01));
         }
         public void InitMockIDBOperations()
         {
-            dbOperationMock.Setup(p => p.LoadIndex(
-                    It.IsAny<List<SessionInfo>>(),
-                    It.IsAny<List<DialogueInfoFull>>(), 
-                    It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>()))
-                .Returns(0.5d);
-            dbOperationMock.Setup(p => p.DialoguesCount(
-                    It.IsAny<List<DialogueInfoFull>>(),
-                    It.IsAny<Guid>(),
-                    It.IsAny<DateTime>()))
-                .Returns(3);
-            dbOperationMock.Setup(p => p.SessionAverageHours(
-                    It.IsAny<List<SessionInfo>>(),                    
-                    It.IsAny<DateTime>(),
-                    It.IsAny<DateTime>()))
-                .Returns(5d);
-            dbOperationMock.Setup(p => p.DialogueAverageDuration(
-                    It.IsAny<List<DialogueInfoFull>>(),                    
-                    It.IsAny<DateTime>(),
-                    It.IsAny<DateTime>()))
-                .Returns(5d);
-            dbOperationMock.Setup(p => p.BestEmployeeLoad(
-                    It.IsAny<List<DialogueInfoFull>>(),
-                    It.IsAny<List<SessionInfo>>(), 
-                    It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>()))
-                .Returns(new Employee());
-            dbOperationMock.Setup(p => p.SatisfactionIndex(
-                    It.IsAny<List<DialogueInfoFull>>()))
-                .Returns(60d);
-            dbOperationMock.Setup(p => p.EmployeeCount(
-                    It.IsAny<List<DialogueInfoFull>>()))
-                .Returns(3);
-            dbOperationMock.Setup(p => p.DialogueAveragePause(
-                    It.IsAny<List<SessionInfo>>(),
-                    It.IsAny<List<DialogueInfoFull>>(), 
-                    It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>()))
-                .Returns(20d);
-            dbOperationMock.Setup(p => p.DialogueAvgPauseListInMinutes(
-                    It.IsAny<List<SessionInfo>>(),
-                    It.IsAny<List<DialogueInfoFull>>(), 
-                    It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>()))
-                .Returns(new List<double>(){});
-            dbOperationMock.Setup(p => p.SessionTotalHours(
-                    It.IsAny<List<SessionInfo>>(),
-                    It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>()))
-                .Returns(9d);
-            dbOperationMock.Setup(p => p.DialogueSumDuration(
-                    It.IsAny<List<DialogueInfoFull>>(),
-                    It.IsAny<DateTime>(), 
-                    It.IsAny<DateTime>()))
-                .Returns(100d);
+            //dbOperationMock.Setup(p => p.LoadIndex(
+            //        It.IsAny<List<SessionInfoFull>>(),
+            //        It.IsAny<List<DialogueInfoFull>>(), 
+            //        It.IsAny<DateTime>(), 
+            //        It.IsAny<DateTime>()))
+            //    .Returns(0.5d);
+            //dbOperationMock.Setup(p => p.DialoguesCount(
+            //        It.IsAny<List<DialogueInfoFull>>(),
+            //        It.IsAny<Guid>(),
+            //        It.IsAny<DateTime>()))
+            //    .Returns(3);
+            //dbOperationMock.Setup(p => p.SessionAverageHours(
+            //        It.IsAny<List<SessionInfoFull>>(),                    
+            //        It.IsAny<DateTime>(),
+            //        It.IsAny<DateTime>()))
+            //    .Returns(5d);
+            //dbOperationMock.Setup(p => p.DialogueAverageDuration(
+            //        It.IsAny<List<DialogueInfoFull>>(),                    
+            //        It.IsAny<DateTime>(),
+            //        It.IsAny<DateTime>()))
+            //    .Returns(5d);
+            //dbOperationMock.Setup(p => p.BestEmployeeLoad(
+            //        It.IsAny<List<DialogueInfoFull>>(),
+            //        It.IsAny<List<SessionInfoFull>>(), 
+            //        It.IsAny<DateTime>(), 
+            //        It.IsAny<DateTime>()))
+            //    .Returns(new Employee());
+            //dbOperationMock.Setup(p => p.SatisfactionIndex(
+            //        It.IsAny<List<DialogueInfoFull>>()))
+            //    .Returns(60d);
+            //dbOperationMock.Setup(p => p.EmployeeCount(
+            //        It.IsAny<List<DialogueInfoFull>>()))
+            //    .Returns(3);
+            //dbOperationMock.Setup(p => p.DialogueAveragePause(
+            //        It.IsAny<List<SessionInfoFull>>(),
+            //        It.IsAny<List<DialogueInfoFull>>(), 
+            //        It.IsAny<DateTime>(), 
+            //        It.IsAny<DateTime>()))
+            //    .Returns(20d);
+            //dbOperationMock.Setup(p => p.DialogueAvgPauseListInMinutes(
+            //        It.IsAny<List<SessionInfoFull>>(),
+            //        It.IsAny<List<DialogueInfoFull>>(), 
+            //        It.IsAny<DateTime>(), 
+            //        It.IsAny<DateTime>()))
+            //    .Returns(new List<double>(){});
+            //dbOperationMock.Setup(p => p.SessionTotalHours(
+            //        It.IsAny<List<SessionInfoFull>>(),
+            //        It.IsAny<DateTime>(), 
+            //        It.IsAny<DateTime>()))
+            //    .Returns(9d);
+            //dbOperationMock.Setup(p => p.DialogueSumDuration(
+            //        It.IsAny<List<DialogueInfoFull>>(),
+            //        It.IsAny<DateTime>(), 
+            //        It.IsAny<DateTime>()))
+            //    .Returns(100d);
         }
         public void Dispose()
         {

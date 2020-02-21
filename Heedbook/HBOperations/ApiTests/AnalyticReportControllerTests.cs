@@ -5,6 +5,7 @@ using UserOperations.Controllers;
 using UserOperations.AccountModels;
 using HBData.Models.AccountViewModels;
 using Microsoft.AspNetCore.Mvc;
+using UserOperations.Providers;
 using System.Linq.Expressions;
 using System;
 using HBData.Models;
@@ -58,6 +59,7 @@ namespace ApiTests
             //Assert.That(okResult.Value != null);
             //var deserialized = JsonConvert.DeserializeObject<List<SessionInfo>>(okResult.Value.ToString());
             //Assert.That(deserialized != null);
+            // Assert.IsTrue(false);
         }
         [Test]
         public void ReportUserPartialTest()
