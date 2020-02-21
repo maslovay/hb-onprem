@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HBData.Models
 {
@@ -14,6 +13,7 @@ namespace HBData.Models
         ///     Id
         /// </summary>
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid SalesStagePhraseId { get; set; }
         /// <summary>
         ///    if the stage is specific to an individual company, then fill out this field

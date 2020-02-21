@@ -285,8 +285,8 @@ namespace UserOperations.Controllers
             //-10--Dialogues---
             var old7 = oldContext.Dialogues.Select(x => x.DialogueId).ToList();
             var new7 = _context.Dialogues.Select(x => x.DialogueId).ToList();
-            var toAddIdsDevices = old7.Except(new7).ToList();
-            List<Old.Models.Dialogue> toAddOld7 = oldContext.Dialogues.Where(x => toAddIdsDevices.Contains(x.DialogueId)).ToList();
+            var toAddIdsDialogues = old7.Except(new7).ToList();
+            List<Old.Models.Dialogue> toAddOld7 = oldContext.Dialogues.Where(x => toAddIdsDialogues.Contains(x.DialogueId)).ToList();
 
             List<HBData.Models.Dialogue> toAdd7 = toAddOld7.Select(x => new HBData.Models.Dialogue
             {
@@ -394,7 +394,7 @@ namespace UserOperations.Controllers
             catch { }
 
             //-15--DialogueAudio---
-            var toAddIds15 = oldContext.DialogueAudios.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialogueAudioId).ToList();
+            var toAddIds15 = oldContext.DialogueAudios.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueAudioId).ToList();
             List<Old.Models.DialogueAudio> toAddOld15 = oldContext.DialogueAudios.Where(x => toAddIds15.Contains(x.DialogueAudioId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld15);
             List<HBData.Models.DialogueAudio> toAdd15_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueAudio>>(str);
@@ -407,7 +407,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-16--DialogueClientProfiles---
-            var toAddIds16 = oldContext.DialogueClientProfiles.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialogueClientProfileId).ToList();
+            var toAddIds16 = oldContext.DialogueClientProfiles.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueClientProfileId).ToList();
             List<Old.Models.DialogueClientProfile> toAddOld16 = oldContext.DialogueClientProfiles.Where(x => toAddIds16.Contains(x.DialogueClientProfileId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld16);
             List<HBData.Models.DialogueClientProfile> toAdd16_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueClientProfile>>(str);
@@ -420,7 +420,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-17--DialogueClientSatisfactions---
-            var toAddIds17 = oldContext.DialogueClientSatisfactions.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialogueClientSatisfactionId).ToList();
+            var toAddIds17 = oldContext.DialogueClientSatisfactions.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueClientSatisfactionId).ToList();
             List<Old.Models.DialogueClientSatisfaction> toAddOld17
                 = oldContext.DialogueClientSatisfactions.Where(x => toAddIds17.Contains(x.DialogueClientSatisfactionId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld17);
@@ -434,7 +434,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-18--DialogueFrames---
-            var toAddIds18 = oldContext.DialogueFrames.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialogueFrameId).ToList();
+            var toAddIds18 = oldContext.DialogueFrames.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueFrameId).ToList();
             List<Old.Models.DialogueFrame> toAddOld18
                 = oldContext.DialogueFrames.Where(x => toAddIds18.Contains(x.DialogueFrameId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld18);
@@ -448,7 +448,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-19--DialogueHint---
-            var toAddIds19 = oldContext.DialogueHints.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialogueHintId).ToList();
+            var toAddIds19 = oldContext.DialogueHints.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueHintId).ToList();
             List<Old.Models.DialogueHint> toAddOld19
                 = oldContext.DialogueHints.Where(x => toAddIds19.Contains(x.DialogueHintId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld19);
@@ -462,7 +462,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-20--DialogueInterval---
-            var toAddIds20 = oldContext.DialogueIntervals.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialogueIntervalId).ToList();
+            var toAddIds20 = oldContext.DialogueIntervals.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueIntervalId).ToList();
             List<Old.Models.DialogueInterval> toAddOld20
                 = oldContext.DialogueIntervals.Where(x => toAddIds20.Contains(x.DialogueIntervalId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld20);
@@ -476,7 +476,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-21--DialoguePhraseCounts---
-            var toAddIds21 = oldContext.DialoguePhraseCounts.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialoguePhraseCountId).ToList();
+            var toAddIds21 = oldContext.DialoguePhraseCounts.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialoguePhraseCountId).ToList();
             List<Old.Models.DialoguePhraseCount> toAddOld21
                 = oldContext.DialoguePhraseCounts.Where(x => toAddIds21.Contains(x.DialoguePhraseCountId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld21);
@@ -490,7 +490,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-22--DialoguePhrases---
-            var toAddIds22 = oldContext.DialoguePhrases.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialoguePhraseId).ToList();
+            var toAddIds22 = oldContext.DialoguePhrases.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialoguePhraseId).ToList();
             List<Old.Models.DialoguePhrase> toAddOld22
                 = oldContext.DialoguePhrases.Where(x => toAddIds22.Contains(x.DialoguePhraseId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld22);
@@ -504,7 +504,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-23--DialogueSpeech---
-            var toAddIds23 = oldContext.DialogueSpeechs.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialogueSpeechId).ToList();
+            var toAddIds23 = oldContext.DialogueSpeechs.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueSpeechId).ToList();
             List<Old.Models.DialogueSpeech> toAddOld23
                 = oldContext.DialogueSpeechs.Where(x => toAddIds23.Contains(x.DialogueSpeechId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld23);
@@ -518,7 +518,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-24--DialogueVisuals---
-            var toAddIds24 = oldContext.DialogueVisuals.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialogueVisualId).ToList();
+            var toAddIds24 = oldContext.DialogueVisuals.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueVisualId).ToList();
             List<Old.Models.DialogueVisual> toAddOld24
                 = oldContext.DialogueVisuals.Where(x => toAddIds24.Contains(x.DialogueVisualId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld24);
@@ -532,7 +532,7 @@ namespace UserOperations.Controllers
             catch (Exception ex) { var e = ex.Message; }
 
             //-25--DialogueWord---
-            var toAddIds25 = oldContext.DialogueWords.Where(x => toAddIdsDevices.Contains((Guid)x.DialogueId)).Select(x => x.DialogueWordId).ToList();
+            var toAddIds25 = oldContext.DialogueWords.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueWordId).ToList();
             List<Old.Models.DialogueWord> toAddOld25
                 = oldContext.DialogueWords.Where(x => toAddIds25.Contains(x.DialogueWordId)).ToList();
             str = JsonConvert.SerializeObject(toAddOld25);
@@ -544,6 +544,21 @@ namespace UserOperations.Controllers
                 result["DialogueWord"] = toAdd25_.Count();
             }
             catch (Exception ex) { var e = ex.Message; }
+
+            //-26--Bech-- -
+            var old26 = oldContext.Benchmarks.Select(x => x.Id).ToList();
+            var new26 = _context.Benchmarks.Select(x => x.Id).ToList();
+            var toAddIds26 = old26.Except(new26).ToList();
+            List<Old.Models.Benchmark> toAdd26 = oldContext.Benchmarks.Where(x => toAddIds26.Contains(x.Id)).ToList();
+            str = JsonConvert.SerializeObject(toAdd26);
+            List<HBData.Models.Benchmark> toAdd26_ = JsonConvert.DeserializeObject<List<HBData.Models.Benchmark>>(str);
+            try
+            {
+                _context.AddRange(toAdd26_);
+                _context.SaveChanges();
+                result["Benchmark"] = toAdd26_.Count();
+            }
+            catch (Exception ex) { var mes = ex.Message; }
 
             return Ok(result);
         }
@@ -563,6 +578,53 @@ namespace UserOperations.Controllers
             }
             _context.SaveChanges();
       
+            return Ok();
+        }
+
+        [HttpGet("SalesStageCreate")]
+        public async Task<IActionResult> SalesStageCreate()
+        {
+            var companyIds = _context.Companys.Where(x => x.CorporationId == null && !x.SalesStagePhrases.Any()).Select(x => x.CompanyId).ToList();
+            var ssPhrases = _context.SalesStagePhrases.Where(x => x.CompanyId == null && x.CorporationId == null).ToList();
+            try
+            {
+                foreach (var companyId in companyIds)
+                {
+                    if (!_context.SalesStagePhrases.Any(x => x.CompanyId == companyId))
+                    {
+                        var ssPh = ssPhrases.Select(x => new SalesStagePhrase
+                        {
+                            CompanyId = companyId,
+                            PhraseId = x.PhraseId,
+                            SalesStageId = x.SalesStageId//,
+                          //  SalesStagePhraseId = Guid.NewGuid()
+                        }).ToList();
+                        _context.AddRange(ssPh);
+                        _context.SaveChanges();
+                    }
+
+                }
+
+                var corporationIds = _context.Companys.Where(x => x.CorporationId != null && !x.SalesStagePhrases.Any()).Select(x => x.CorporationId).ToList();
+                foreach (var corporationId in corporationIds)
+                {
+                    if (!_context.SalesStagePhrases.Any(x => x.CorporationId == corporationId))
+                    {
+                        var ssPh = ssPhrases.Select(x => new SalesStagePhrase
+                        {
+                            CorporationId = corporationId,
+                            PhraseId = x.PhraseId,
+                            SalesStageId = x.SalesStageId//,
+                          //  SalesStagePhraseId = Guid.NewGuid()
+                        }).ToList();
+                        _context.AddRange(ssPh);
+                        _context.SaveChanges();
+                    }
+
+                }
+            }
+            catch (Exception ex) { var m = ex.Message; }
+
             return Ok();
         }
 
@@ -668,108 +730,108 @@ namespace UserOperations.Controllers
         public IActionResult SalesStageAdd()
         {
             List<Temp> arr = new List<Temp> {
-//                 new Temp { phrase = "Здравствуйте	", id = 1},
-//new Temp { phrase = "Будем рады видеть вас снова	", id = 7},
-//new Temp { phrase = "До свидания ", id = 7},
-//new Temp { phrase = "Добро пожаловать    ", id = 1},
-//new Temp { phrase = "Как я могу к вам обращаться ", id = 1},
-//new Temp { phrase = "Меня зовут  ", id = 1},
-//new Temp { phrase = "Могу ли еще чем-то помочь   ", id = 6},
-//new Temp { phrase = "Чем могу вам помочь ", id = 1},
-//new Temp { phrase = "Буду рад помочь	", id = 1},
-//new Temp { phrase = "Ваше обращение ценно    ", id = 2},
-//new Temp { phrase = "Выясню это для вас  ", id = 2},
-//new Temp { phrase = "Извините за ожидание	", id = 1},
-//new Temp { phrase = "Обязательно разберемся  ", id = 2},
-//new Temp { phrase = "Обязательно решу вопрос	", id = 2},
-//new Temp { phrase = "Позвольте предложить    ", id = 3},
-//new Temp { phrase = "Присаживайтесь	", id = 1},
-//new Temp { phrase = "Располагайтесь	", id = 1},
-//new Temp { phrase = "Сделаю все что смогу    ", id = 1},
-//new Temp { phrase = "Угощайтесь	", id = 1},
-//new Temp { phrase = "Акция	", id = 3},
-//new Temp { phrase = "Бонусы	", id = 3},
-//new Temp { phrase = "Доставка	", id = 3},
-//new Temp { phrase = "Инвестиции	", id = 3},
-//new Temp { phrase = "Интернет-банк	", id = 3},
-//new Temp { phrase = "Ипотека	", id = 3},
-//new Temp { phrase = "Контракт	", id = 3},
-//new Temp { phrase = "Кредит	", id = 3},
-//new Temp { phrase = "Кредитная карта ", id = 3},
-//new Temp { phrase = "Личный менеджер ", id = 5},
-//new Temp { phrase = "Мобильный банк  ", id = 5},
-//new Temp { phrase = "Овердрафт	", id = 5},
-//new Temp { phrase = "Ограниченное предложение    ", id = 4},
-//new Temp { phrase = "Пакет услуг ", id = 4},
-//new Temp { phrase = "Прибыль	", id = 5},
-//new Temp { phrase = "Процент на остаток	", id = 5},
-//new Temp { phrase = "Сбережения	", id = 5},
-//new Temp { phrase = "СМС оповещение  ", id = 5},
-//new Temp { phrase = "Специальное предложение ", id = 4},
-//new Temp { phrase = "Страхование	", id = 3},
-//new Temp { phrase = "Счет	", id = 3},
-//new Temp { phrase = "Тариф	", id = 3},
-//new Temp { phrase = "Эксклюзив	", id = 4},
-//new Temp { phrase = "актуален ли для вас ", id = 4},
-//new Temp { phrase = "улучшение жилищных условий	", id = 3},
-//new Temp { phrase = "благодарю за обращение	", id = 2},
-//new Temp { phrase = "для обсуждения условий и следующих шагов    ", id = 6},
-//new Temp { phrase = "бесплатно подключается  ", id = 4},
-//new Temp { phrase = "широкая линейка кредитных продуктов ", id = 3},
-//new Temp { phrase = "задать вам несколько вопросов   ", id = 2},
-//new Temp { phrase = "планируете приобрести   ", id = 2},
-//new Temp { phrase = "планируете потратить средства	", id = 2},
-//new Temp { phrase = "какая сумма вас интересует  ", id = 2},
-//new Temp { phrase = "семейный бюджет ", id = 3},
-//new Temp { phrase = "спасибо, что обратились в наш банк!	", id = 1},
-//new Temp { phrase = "всего доброго, до свидания!	", id = 7},
-//new Temp { phrase = "улучшить условия кредитования	", id = 4},
-//new Temp { phrase = "рад вам помочь	", id = 6},
-//new Temp { phrase = "важно укреплять наши отношения  ", id = 4},
-//new Temp { phrase = "создавать комфортные условия	", id = 4},
-//new Temp { phrase = "интересное сотрудничество   ", id = 4},
-//new Temp { phrase = "позвольте я задам	", id = 4},
-//new Temp { phrase = "хотите оформить ", id = 2},
-//new Temp { phrase = "могу я уточнить	", id = 4},
-//new Temp { phrase = "приятного вам дня	", id = 7},
-//new Temp { phrase = "доброе утро ", id = 1},
-//new Temp { phrase = "добрый день ", id = 1},
-//new Temp { phrase = "добрый вечер    ", id = 1},
-//new Temp { phrase = "как я могу к вам обращаться ", id = 1},
-//new Temp { phrase = "что вас интересует	", id = 2},
-//new Temp { phrase = "не выходя из дома   ", id = 3},
-//new Temp { phrase = "по льготным тарифам	", id = 3},
-//new Temp { phrase = "совершенно бесплатно    ", id = 4},
-//new Temp { phrase = "в чем причина вашего отказа	", id = 4},
-//new Temp { phrase = "позвольте задать вам несколько вопросов	", id = 2},
-//new Temp { phrase = "наиболее выгодные условия	", id = 4},
-//new Temp { phrase = "бесплатно предоставляется   ", id = 4},
-//new Temp { phrase = "одни из лучших ставок   ", id = 4},
-//new Temp { phrase = "гибкие условия по управлению    ", id = 4},
-//new Temp { phrase = "позвольте уточнить  ", id = 4},
-//new Temp { phrase = "позвольте предложить    ", id = 4},
-//new Temp { phrase = "спасибо, что обратились в наш банк	", id = 1},
-//new Temp { phrase = "всего доброго, до свидания	", id = 7},
-//new Temp { phrase = "как вам будет удобнее   ", id = 6},
-//new Temp { phrase = "хочу поблагодарить  ", id = 6},
-//new Temp { phrase = "подскажите, пожалуйста	", id = 2},
-//new Temp { phrase = "персональный менеджер   ", id = 5},
-//new Temp { phrase = "значимый клиент ", id = 4},
-//new Temp { phrase = "премиальный сервис  ", id = 5},
-//new Temp { phrase = "комфортное и персональное обслуживание  ", id = 5},
-//new Temp { phrase = "профессиональное решение    ", id = 3},
-//new Temp { phrase = "финансовые цели ", id = 3},
-//new Temp { phrase = "персональное предложение    ", id = 5},
-//new Temp { phrase = "спасибо, что уделили время	", id = 2},
-//new Temp { phrase = "рады предложить вам	", id = 5},
-//new Temp { phrase = "с помощью ипотеки	", id = 3},
-//new Temp { phrase = "ипотечный кредит    ", id = 3},
-//new Temp { phrase = "в любом отделении	", id = 6},
-//new Temp { phrase = "согласие на хранение, передачу и обработку персональных данных	", id = 6},
-//new Temp { phrase = "оплачивать счета    ", id = 5},
-//new Temp { phrase = "просматривать движения денежных средств ", id = 5},
-//new Temp { phrase = "контролировать операции ", id = 5},
-//new Temp { phrase = "полный состав семьи	", id = 5}
+                 new Temp { phrase = "Здравствуйте	", id = 1},
+new Temp { phrase = "Будем рады видеть вас снова	", id = 7},
+new Temp { phrase = "До свидания ", id = 7},
+new Temp { phrase = "Добро пожаловать    ", id = 1},
+new Temp { phrase = "Как я могу к вам обращаться ", id = 1},
+new Temp { phrase = "Меня зовут  ", id = 1},
+new Temp { phrase = "Могу ли еще чем-то помочь   ", id = 6},
+new Temp { phrase = "Чем могу вам помочь ", id = 1},
+new Temp { phrase = "Буду рад помочь	", id = 1},
+new Temp { phrase = "Ваше обращение ценно    ", id = 2},
+new Temp { phrase = "Выясню это для вас  ", id = 2},
+new Temp { phrase = "Извините за ожидание	", id = 1},
+new Temp { phrase = "Обязательно разберемся  ", id = 2},
+new Temp { phrase = "Обязательно решу вопрос	", id = 2},
+new Temp { phrase = "Позвольте предложить    ", id = 3},
+new Temp { phrase = "Присаживайтесь	", id = 1},
+new Temp { phrase = "Располагайтесь	", id = 1},
+new Temp { phrase = "Сделаю все что смогу    ", id = 1},
+new Temp { phrase = "Угощайтесь	", id = 1},
+new Temp { phrase = "Акция	", id = 3},
+new Temp { phrase = "Бонусы	", id = 3},
+new Temp { phrase = "Доставка	", id = 3},
+new Temp { phrase = "Инвестиции	", id = 3},
+new Temp { phrase = "Интернет-банк	", id = 3},
+new Temp { phrase = "Ипотека	", id = 3},
+new Temp { phrase = "Контракт	", id = 3},
+new Temp { phrase = "Кредит	", id = 3},
+new Temp { phrase = "Кредитная карта ", id = 3},
+new Temp { phrase = "Личный менеджер ", id = 5},
+new Temp { phrase = "Мобильный банк  ", id = 5},
+new Temp { phrase = "Овердрафт	", id = 5},
+new Temp { phrase = "Ограниченное предложение    ", id = 4},
+new Temp { phrase = "Пакет услуг ", id = 4},
+new Temp { phrase = "Прибыль	", id = 5},
+new Temp { phrase = "Процент на остаток	", id = 5},
+new Temp { phrase = "Сбережения	", id = 5},
+new Temp { phrase = "СМС оповещение  ", id = 5},
+new Temp { phrase = "Специальное предложение ", id = 4},
+new Temp { phrase = "Страхование	", id = 3},
+new Temp { phrase = "Счет	", id = 3},
+new Temp { phrase = "Тариф	", id = 3},
+new Temp { phrase = "Эксклюзив	", id = 4},
+new Temp { phrase = "актуален ли для вас ", id = 4},
+new Temp { phrase = "улучшение жилищных условий	", id = 3},
+new Temp { phrase = "благодарю за обращение	", id = 2},
+new Temp { phrase = "для обсуждения условий и следующих шагов    ", id = 6},
+new Temp { phrase = "бесплатно подключается  ", id = 4},
+new Temp { phrase = "широкая линейка кредитных продуктов ", id = 3},
+new Temp { phrase = "задать вам несколько вопросов   ", id = 2},
+new Temp { phrase = "планируете приобрести   ", id = 2},
+new Temp { phrase = "планируете потратить средства	", id = 2},
+new Temp { phrase = "какая сумма вас интересует  ", id = 2},
+new Temp { phrase = "семейный бюджет ", id = 3},
+new Temp { phrase = "спасибо, что обратились в наш банк!	", id = 1},
+new Temp { phrase = "всего доброго, до свидания!	", id = 7},
+new Temp { phrase = "улучшить условия кредитования	", id = 4},
+new Temp { phrase = "рад вам помочь	", id = 6},
+new Temp { phrase = "важно укреплять наши отношения  ", id = 4},
+new Temp { phrase = "создавать комфортные условия	", id = 4},
+new Temp { phrase = "интересное сотрудничество   ", id = 4},
+new Temp { phrase = "позвольте я задам	", id = 4},
+new Temp { phrase = "хотите оформить ", id = 2},
+new Temp { phrase = "могу я уточнить	", id = 4},
+new Temp { phrase = "приятного вам дня	", id = 7},
+new Temp { phrase = "доброе утро ", id = 1},
+new Temp { phrase = "добрый день ", id = 1},
+new Temp { phrase = "добрый вечер    ", id = 1},
+new Temp { phrase = "как я могу к вам обращаться ", id = 1},
+new Temp { phrase = "что вас интересует	", id = 2},
+new Temp { phrase = "не выходя из дома   ", id = 3},
+new Temp { phrase = "по льготным тарифам	", id = 3},
+new Temp { phrase = "совершенно бесплатно    ", id = 4},
+new Temp { phrase = "в чем причина вашего отказа	", id = 4},
+new Temp { phrase = "позвольте задать вам несколько вопросов	", id = 2},
+new Temp { phrase = "наиболее выгодные условия	", id = 4},
+new Temp { phrase = "бесплатно предоставляется   ", id = 4},
+new Temp { phrase = "одни из лучших ставок   ", id = 4},
+new Temp { phrase = "гибкие условия по управлению    ", id = 4},
+new Temp { phrase = "позвольте уточнить  ", id = 4},
+new Temp { phrase = "позвольте предложить    ", id = 4},
+new Temp { phrase = "спасибо, что обратились в наш банк	", id = 1},
+new Temp { phrase = "всего доброго, до свидания	", id = 7},
+new Temp { phrase = "как вам будет удобнее   ", id = 6},
+new Temp { phrase = "хочу поблагодарить  ", id = 6},
+new Temp { phrase = "подскажите, пожалуйста	", id = 2},
+new Temp { phrase = "персональный менеджер   ", id = 5},
+new Temp { phrase = "значимый клиент ", id = 4},
+new Temp { phrase = "премиальный сервис  ", id = 5},
+new Temp { phrase = "комфортное и персональное обслуживание  ", id = 5},
+new Temp { phrase = "профессиональное решение    ", id = 3},
+new Temp { phrase = "финансовые цели ", id = 3},
+new Temp { phrase = "персональное предложение    ", id = 5},
+new Temp { phrase = "спасибо, что уделили время	", id = 2},
+new Temp { phrase = "рады предложить вам	", id = 5},
+new Temp { phrase = "с помощью ипотеки	", id = 3},
+new Temp { phrase = "ипотечный кредит    ", id = 3},
+new Temp { phrase = "в любом отделении	", id = 6},
+new Temp { phrase = "согласие на хранение, передачу и обработку персональных данных	", id = 6},
+new Temp { phrase = "оплачивать счета    ", id = 5},
+new Temp { phrase = "просматривать движения денежных средств ", id = 5},
+new Temp { phrase = "контролировать операции ", id = 5},
+new Temp { phrase = "полный состав семьи	", id = 5},
 
 new Temp { phrase = "погашать кредит ", id = 3},
 new Temp { phrase = "положительная кредитная история	", id = 2},

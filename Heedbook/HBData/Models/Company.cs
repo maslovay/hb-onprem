@@ -79,5 +79,6 @@ namespace HBData.Models
         ///     Company schedule
         /// </summary>
         public ICollection<WorkingTime> WorkingTimes { get; set; }
+        public ICollection<SalesStagePhrase> SalesStagePhrases { get; set; }
     }
 }

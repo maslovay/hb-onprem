@@ -166,7 +166,7 @@ namespace UserOperations.Services
                        SalesStageSequenceNumber = x.SequenceNumber,
                        SalesStageName = x.Name,
                        IsScored = phraseIds.Intersect(x.SalesStagePhrases
-                                        .Where(s => s.CompanyId == companyId || s.CorporationId == corporationId)
+                                        .Where(s => s.CompanyId == companyId || (corporationId!= null && s.CorporationId == corporationId))
                                         .Select(s => s.PhraseId)).Any()
                    }).ToList();
 

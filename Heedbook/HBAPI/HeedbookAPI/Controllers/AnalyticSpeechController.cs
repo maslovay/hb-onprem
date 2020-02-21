@@ -97,5 +97,23 @@ namespace UserOperations.Controllers
                 deviceIds,
                 phraseIds,
                 phraseTypeIds);
+
+        [HttpGet("PhraseSalesStageCount")]
+        public string PhraseSalesStageCount([FromQuery(Name = "begTime")] string beg,
+                                                      [FromQuery(Name = "endTime")] string end,
+                                                      [FromQuery(Name = "corporationId")] Guid? corporationId,
+                                                      [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+                                                      [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
+                                                      [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds,
+                                                      [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
+                                                      [FromQuery(Name = "salesStageId[]")] List<Guid> salesStageIds) =>
+          _analyticSpeechService.PhraseSalesStageCount(
+              beg, end,
+              corporationId,
+              companyIds,
+              applicationUserIds,
+              deviceIds,
+              phraseIds,
+              salesStageIds);
     }
 }
