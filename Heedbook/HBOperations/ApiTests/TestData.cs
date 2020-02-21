@@ -36,11 +36,11 @@ namespace ApiTests
         /// SESSIONS
         /// </summary>
         /// <returns></returns>
-        internal static async Task<IEnumerable<SessionInfoFull>> GetSessions()
+        internal static async Task<IEnumerable<SessionInfo>> GetSessions()
         {
-            return new List<SessionInfoFull>
+            return new List<SessionInfo>
             {
-                new SessionInfoFull
+                new SessionInfo
                 {
                     ApplicationUserId = userId,
                     BegTime = new DateTime(2019,10,04, 12, 19,00),
@@ -49,7 +49,7 @@ namespace ApiTests
                     FullName = fullName,
                     IndustryId = industryId
                 },
-                  new SessionInfoFull
+                  new SessionInfo
                 {
                     ApplicationUserId = userId,
                     BegTime = new DateTime(2019,10,04, 18, 19,00),
@@ -60,7 +60,7 @@ namespace ApiTests
                 }
             };
         }
-        internal static async Task<IEnumerable<SessionInfoFull>> GetEmptySessions()
+        internal static async Task<IEnumerable<SessionInfo>> GetEmptySessions()
         {
             return null;
         }
@@ -81,7 +81,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 12, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
+                    ClientId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
                     DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     LanguageId = 2                    ,
                     DialoguePhrase = new List<DialoguePhrase>
@@ -107,7 +107,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 19, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
+                    ClientId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
                     DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                     LanguageId = 2,
                     DialoguePhrase = new List<DialoguePhrase>
@@ -187,7 +187,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 12, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
+                    ClientId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
                     DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     LanguageId = 2                    ,
                     DialogueFrame = new List<DialogueFrame>
@@ -228,7 +228,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 19, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
+                    ClientId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
                     DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                     LanguageId = 2,
                     DialogueFrame = new List<DialogueFrame>
@@ -262,13 +262,13 @@ namespace ApiTests
                     new Dialogue
                     {
                         DialogueId = Guid.NewGuid(),
-                        PersonId = Guid.NewGuid(),
+                        ClientId = Guid.NewGuid(),
                         DialogueClientProfile = new List<DialogueClientProfile>(){new DialogueClientProfile{Age = 20, Gender = "male"}}
                     },
                     new Dialogue
                     {
                         DialogueId = Guid.NewGuid(),
-                        PersonId = Guid.NewGuid(),
+                        ClientId = Guid.NewGuid(),
                         DialogueClientProfile = new List<DialogueClientProfile>(){new DialogueClientProfile{Age = 25, Gender = "female"}}
                     },
                 }
@@ -363,7 +363,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 12, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
+                    ClientId = Guid.Parse("1d1cd12c-2ea0-406e-8ec1-a544d018a1d1"),
                     DialogueId = Guid.Parse("2d2cd22c-2ea0-406e-8ec1-a544d012a2d2"),
                     LanguageId = 2                    ,
                     DialoguePhrase = new List<DialoguePhrase>
@@ -389,7 +389,7 @@ namespace ApiTests
                     CreationTime = new DateTime(2019,10,04, 19, 19,00),
                     InStatistic = true,
                     StatusId = 3,
-                    PersonId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
+                    ClientId = Guid.Parse("3d3cd13c-2ea0-406e-8ec1-a544d018a333"),
                     DialogueId = Guid.Parse("4d4cd44c-2ea0-406e-8ec1-a544d012a3d3"),
                     LanguageId = 2,
                     DialoguePhrase = new List<DialoguePhrase>
@@ -749,11 +749,9 @@ namespace ApiTests
                 NormalizedUserName = "test1@heedbook.com".ToUpper(),
                 EmpoyeeId = "123",
                 PasswordHash = "hhh",
-                WorkerTypeId = Guid.Parse("1d5cd11c-2ea0-111e-8ec1-a544d048a9d0"),
                 Dialogue = null,//GetDialoguesIncluded().ToList(),
                 UserRoles = new List<ApplicationUserRole>()
-                {new ApplicationUserRole{RoleId = Guid.Parse("8f8947da-5f76-4c6e-2222-170290c87194")}},
-                WorkerType = new WorkerType{WorkerTypeName = "Teacher"}
+                {new ApplicationUserRole{RoleId = Guid.Parse("8f8947da-5f76-4c6e-2222-170290c87194")}}
                 // new List<ApplicationUserRole> { UserRoleIncluded() },
                 //Company = Company()
             };
@@ -773,7 +771,6 @@ namespace ApiTests
                 NormalizedUserName = "test2@heedbook.com".ToUpper(),
                 EmpoyeeId = "123",
                 PasswordHash = "hhh",
-                WorkerTypeId = Guid.Parse("1d5cd11c-2ea0-111e-8ec1-a544d048a9d0"),
                 Dialogue = null,//GetDialoguesIncluded().ToList(),
                 UserRoles = null,// new List<ApplicationUserRole> { UserRoleIncluded() },
                 Company = Company1()
@@ -794,7 +791,6 @@ namespace ApiTests
                 NormalizedUserName = "test3@heedbook.com".ToUpper(),
                 EmpoyeeId = "123",
                 PasswordHash = "hhh",
-                WorkerTypeId = Guid.Parse("1d5cd11c-2ea0-111e-8ec1-a544d048a9d0"),
                 Dialogue = null,//GetDialoguesIncluded().ToList(),
                 UserRoles = null,// new List<ApplicationUserRole> { UserRoleIncluded() },
                 Company = Company2()
@@ -934,18 +930,7 @@ namespace ApiTests
                 }).AsQueryable();
             return transactions;
         }
-        internal static IQueryable<WorkerType> GetWorkerTypes()
-        {
-            var workerTypes = new TestAsyncEnumerable<WorkerType>(
-                new List<WorkerType>
-                {
-                    new WorkerType
-                    {
-                        CompanyId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae2")
-                    }
-                }).AsQueryable();
-            return workerTypes;
-        }
+    
         internal static IQueryable<PhraseCompany> GetPhraseCompanies()
         {
             var phraseCompanys = new TestAsyncEnumerable<PhraseCompany>(
@@ -958,15 +943,15 @@ namespace ApiTests
                 }).AsQueryable();
             return phraseCompanys;
         }
-        internal static IQueryable<PasswordHistory> GetPasswordHistorys()
-        {
-            var passwordHistory = new TestAsyncEnumerable<PasswordHistory>(
-                new List<PasswordHistory>
-                {
-                    new PasswordHistory{UserId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae1")}
-                }).AsQueryable();
-            return passwordHistory;
-        }
+        //internal static IQueryable<PasswordHistory> GetPasswordHistorys()
+        //{
+        //    var passwordHistory = new TestAsyncEnumerable<PasswordHistory>(
+        //        new List<PasswordHistory>
+        //        {
+        //            new PasswordHistory{UserId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae1")}
+        //        }).AsQueryable();
+        //    return passwordHistory;
+        //}
         internal static List<Guid> GetGuids()
         {
             return new List<Guid>() { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
@@ -1042,7 +1027,6 @@ namespace ApiTests
             var user1 = new ApplicationUser
             {
                 Id = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f171f"),
-                WorkerTypeId = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f1710"),
                 FullName = "MakarovMakar",
                 CompanyId = Guid.Parse("154d371a-acbc-48a0-9731-ab1d9a1f1710"),
                 UserRoles = new List<ApplicationUserRole>{new ApplicationUserRole{RoleId = Guid.Parse("b54d371a-1111-48a0-9731-ab1d9a1f171a")}}
@@ -1050,7 +1034,6 @@ namespace ApiTests
             var user2 = new ApplicationUser
             {
                 Id = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f171a"),
-                WorkerTypeId = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f1711"),
                 FullName = "MakarovIvan",
                 CompanyId = Guid.Parse("154d371a-acbc-48a0-9731-ab1d9a1f1710"),
                 UserRoles = new List<ApplicationUserRole>{new ApplicationUserRole{RoleId = Guid.Parse("b54d371a-2222-48a0-9731-ab1d9a1f171a")}}
@@ -1058,7 +1041,6 @@ namespace ApiTests
             var user3 = new ApplicationUser
             {
                 Id = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f171b"),
-                WorkerTypeId = Guid.Parse("b54d371a-acbc-48a0-9731-ab1d9a1f1712"),
                 FullName = "MakarovRoman",
                 CompanyId = Guid.Parse("154d371a-acbc-48a0-9731-ab1d9a1f1710"),
                 UserRoles = new List<ApplicationUserRole>{new ApplicationUserRole{RoleId = Guid.Parse("b54d371a-3333-48a0-9731-ab1d9a1f171a")}}

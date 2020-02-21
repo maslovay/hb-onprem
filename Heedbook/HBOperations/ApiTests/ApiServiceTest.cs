@@ -10,7 +10,6 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using UserOperations.AccountModels;
 using UserOperations.Models.AnalyticModels;
-using UserOperations.Providers;
 using UserOperations.Services;
 using UserOperations.Utils;
 
@@ -22,7 +21,6 @@ namespace ApiTests
         protected Mock<IConfiguration> configMock;
         protected Mock<DBOperations> dbOperationMock;
         protected Mock<RequestFilters> filterMock;
-        protected Mock<HelpProvider> helpProvider;
         protected Mock<MailSender> mailSenderMock;
         protected Mock<LoginService> moqILoginService;
         protected Mock<IGenericRepository> repositoryMock;
@@ -43,7 +41,6 @@ namespace ApiTests
             configMock = new Mock<IConfiguration>();
             dbOperationMock = new Mock<DBOperations>();
             filterMock = new Mock<RequestFilters>(MockBehavior.Loose);
-            helpProvider = new Mock<HelpProvider>();
             mailSenderMock = new Mock<MailSender>();
             moqILoginService = new Mock<LoginService>();
             repositoryMock = new Mock<IGenericRepository>();
