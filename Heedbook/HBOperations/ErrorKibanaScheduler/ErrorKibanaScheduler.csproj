@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
+    <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
   </ItemGroup>
 
 </Project>

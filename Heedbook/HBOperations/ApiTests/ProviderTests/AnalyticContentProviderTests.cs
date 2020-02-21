@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
+using UserOperations.Providers;
 using HBData.Models;
 using System.Linq;
 using UserOperations.Models.AnalyticModels;

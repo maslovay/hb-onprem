@@ -6,38 +6,58 @@ using HBLib;
 using HBLib.Utils;
 using Quartz;
 using Elasticsearch.Net;
-using Microsoft.Azure.KeyVault.Models;
 using Nest;
 using Nest.JsonNetSerializer;
 using ElasticClient = Nest.ElasticClient;
-using Field = Nest.Field;
-
+using RabbitMqEventBus.Events;
+using RabbitMqEventBus;
 
 namespace ErrorKibanaScheduler.QuartzJob
 {
     public class KibanaErrorJob : IJob
     {
         private ElasticClientFactory _elasticClientFactory;
-        private MessengerClient _client;
+        private readonly MessengerClient _client;
         private UriPathOnKibana _path;
+        private readonly INotificationPublisher _publisher;
 
-        public KibanaErrorJob(ElasticClientFactory elasticClientFactory,
-            MessengerClient client,UriPathOnKibana path)
+        public KibanaErrorJob(
+            ElasticClientFactory elasticClientFactory,
+            MessengerClient client,
+            UriPathOnKibana path, 
+            INotificationPublisher publisher)
         {
             _path = path;
             _elasticClientFactory = elasticClientFactory;
             _client = client;
+            _publisher = publisher;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             var _log = _elasticClientFactory.GetElasticClient();
-            _log.Info("Try to connect");
             var pool = new SingleNodeConnectionPool(new Uri($"{_path.UriPath}"));
-            var settings = new ConnectionSettings(pool, sourceSerializer: JsonNetSerializer.Default);
+            var settings = new ConnectionSettings(pool, sourceSerializer: JsonNetSerializer.Default).DefaultIndex("*");
             var client = new ElasticClient(settings);
+            _log.Info("Try to connect");
             try
             {
+                int periodHours = 12;
+                var period = DateTime.UtcNow.AddHours(-periodHours);
+
+                var test = client.Search<SearchSetting>(source => source
+                  .Source(s => s
+                      .Includes(i => i
+                          .Fields(f => f.FunctionName,
+                              f => f.OriginalFormat,
+                              f => f.Timestamp,
+                              f => f.FunctionName,
+                              f => f.InvocationId,
+                              f => f.LogLevel)))
+                  .Take(10000));
+                _log.Info("test");
+                _log.Info("test: "+test.ToString());
+
                 var searchRequest = client.Search<SearchSetting>(source => source
                     .Source(s => s
                         .Includes(i => i
@@ -48,7 +68,7 @@ namespace ErrorKibanaScheduler.QuartzJob
                                 f => f.InvocationId,
                                 f => f.LogLevel)))
                     .Take(10000)
-                    .Index($"logstash-{DateTime.Today:yyyy.MM.dd}")
+                   // .Index($"logstash-{DateTime.Today:yyyy.MM.dd}")
                     .Sort(x => x.Descending(a => a.Timestamp))
                     .Query(q => q
                         .Bool(m => m       
@@ -61,47 +81,82 @@ namespace ErrorKibanaScheduler.QuartzJob
                                         .Field(fd => fd.LogLevel)
                                         .Query("Error")))) && q.DateRange(r=>r
                                     .Field(fd=>fd.Timestamp)
-                                    .GreaterThanOrEquals(DateTime.UtcNow.AddHours(-4)))));
+                                    .GreaterThanOrEquals(period))));
+                List<SearchSetting> documents = searchRequest.Documents.OrderByDescending(x => x.Timestamp).ToList();
+                _log.Info(documents.Count().ToString());
 
-                var documents = searchRequest.Documents.ToList();
-                var alarm = new TelegramMessage()
+                var alarm = new MessengerMessageRun()
                 {
-                    logText = "<b>8000 or more error</b>"
+                    logText = "<b>8000 or more error</b>",
+                    ChannelName = "LogSender"
+                    //ChannelName = "ApiTester"
                 };
                 if (documents.Count >= 8000)
                 {
-                    _client.PostMessage(alarm);
+                    _publisher.Publish(alarm);
                 }
                 
                 var dmp = new TextCompare();
+                System.Console.WriteLine($"documents count: {documents.Count}");
 
+                for (int i = 0; i < documents.Count(); i++)
+                {
+                    documents[i].OriginalFormat = dmp.ReplaceGuids(documents[i].OriginalFormat);
+                    documents[i].OriginalFormat = dmp.ReplaceForMainError(documents[i].OriginalFormat);
+                }
+
+                ///---remove the same OriginalFormats of errors
                 for (var i = 0; i < documents.Count; i++)
                 {
-                    var count = 1;
                     for (int j = documents.Count - 1; j > i; j--)
                     {
-                        var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[j].OriginalFormat);
-                        if (percentageMatch >= 80)
+                        var percentageMatch = dmp.CompareText(documents[i].OriginalFormat, documents[i].FunctionName, documents[j].OriginalFormat, documents[j].FunctionName);
+                        if (percentageMatch >= 90)
                         {
-                            count += 1;
+                            documents[i].Count++;
                             documents.RemoveAt(j);
                         }
                     }
+                }
 
-                    var message = new TelegramMessage()
+            
+
+                var groupingByName = documents.GroupBy(x => x.FunctionName);
+
+
+                var localRusTimeStart = period.AddHours(4);
+                var localRusTimeEnd = DateTime.UtcNow.AddHours(4);
+
+                var errMsg = $"<b>PERIOD: {localRusTimeStart.ToString()} - {localRusTimeEnd.ToString()}</b>";
+                var head = new MessengerMessageRun()
+                {
+                    logText = errMsg,
+                    ChannelName = "LogSender"
+                };
+                _publisher.Publish(head);
+
+                foreach (var function in groupingByName)
+                {
+
+                    var link = @"https://heedbookslave.northeurope.cloudapp.azure.com/app/kibana#/discover?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:'"+ localRusTimeStart + @"',mode:absolute,to:'"+ localRusTimeEnd +@"'))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',key:LogLevel,negate:!t,params:(query:Information,type:phrase),type:phrase,value:Information),query:(match:(LogLevel:(query:Information,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',key:FunctionName,negate:!f,params:(query:"+function.Key+ @",type:phrase),type:phrase,value:" + function.Key + @"),query:(match:(FunctionName:(query:" + function.Key + @",type:phrase))))),index:'88ccd450-3ded-11ea-88c0-3d466fc761fa',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))";
+                    var aLink = $"<a href=\"{link}\">{function.Key} </a>";
+
+                    errMsg = String.Concat(function.Select(x => 
+                                  $"<b>{x.LogLevel}({x.Count}): </b> { x.OriginalFormat.ToString() } (last error: {x.Timestamp.AddHours(3).ToLongTimeString()})\n\n"));
+                    var message = new MessengerMessageRun()
                     {
                         logText =
-                            $"<b>FunctionName:</b>{documents[i].FunctionName} \r\n<b>LogLevel:</b> {documents[i].LogLevel} \r\n<b>Count:</b> {count} \r\n<b>ErrorHead:</b> {String.Concat(documents[i].OriginalFormat.Take(200))} \r\n<b>InvocationId:</b> {documents[i].InvocationId}"
+                          $"<b>{aLink}</b> \r Count: {function.Sum(x => x.Count)} \r\n{errMsg} \r\n",
+                        ChannelName = "LogSender"
                     };
-                    _client.PostMessage(message);
+                    _publisher.Publish(message);
                 }
             }
             catch (Exception e)
             {
+                System.Console.WriteLine($"Exception: \n{e}");
                 _log.Fatal($"{e}");
             }
-
-            _log.Info("Function finished");
         }
     }
 }
