@@ -488,9 +488,11 @@ namespace UserOperations.Services
                         SequenceNumber=  k.FirstOrDefault().SalesStage.SequenceNumber
                     }).ToList();
 
+            var dialogueCount = 0;
             foreach (var item in phrasesSalesStages)
             {
-                item.PercentageOfExecution = item.Count / dialogueIds.Count();
+                dialogueCount = dialogueIds.Count();
+                item.PercentageOfExecution = dialogueCount == 0 ? 0 : (double)item.Count / dialogueCount;
             }
             return phrasesSalesStages;
         }
