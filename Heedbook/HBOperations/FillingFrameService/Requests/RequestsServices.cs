@@ -54,14 +54,14 @@ namespace  FillingFrameService.Requests
             if ( !string.IsNullOrWhiteSpace(message.AvatarFileName) && isExtended)
             {
                 fileAvatar = frames.Where(item => item.FileName == message.AvatarFileName).FirstOrDefault();
-                if (fileAvatar == null) fileAvatar = frames.Where(p => p.FrameAttribute.Any()).FirstOrDefault();
+                if (fileAvatar == null) fileAvatar = frames.Where(p => p.FrameAttribute.Any() && p.FileExist).FirstOrDefault();
             }
             else
             {
                 try
                 {
                     fileAvatar = frames
-                        .Where(p => p.FrameAttribute.FirstOrDefault().Value != null)
+                        .Where(p => p.FrameAttribute.FirstOrDefault().Value != null && p.FileExist)
                         .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)
                         .FirstOrDefault();
                 }
