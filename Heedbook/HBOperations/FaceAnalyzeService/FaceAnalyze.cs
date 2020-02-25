@@ -76,6 +76,9 @@ namespace FaceAnalyzeService
                         FrameAttribute frameAttribute = null;
                         if (fileFrame != null && faceResult.Any())
                         {
+                            fileFrame.FaceLength = faceLength;
+                            fileFrame.IsFacePresent = true;
+
                             try
                             {
                                 frameEmotion = new FrameEmotion
@@ -115,11 +118,9 @@ namespace FaceAnalyzeService
                                 throw new Exception(e.Message);
                             }
 
-                            fileFrame.FaceLength = faceLength;
-                            fileFrame.IsFacePresent = true;
-
                             if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
-                            _context.FrameEmotions.Add(frameEmotion);
+                            if (frameEmotion != null) _context.FrameEmotions.Add(frameEmotion);
+                            
                             lock (_context)
                             {
                                 _context.SaveChanges();
