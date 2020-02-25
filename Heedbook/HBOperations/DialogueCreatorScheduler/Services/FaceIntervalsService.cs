@@ -130,5 +130,20 @@ namespace DialogueCreatorScheduler.Services
 
             return result;
         }
+
+        public List<FaceInterval> UpdateLastDate(List<FaceInterval> intervals, List<FileVideo> videos)
+        {
+            foreach (var interval in intervals)
+            {
+                var lastVideo = videos.Where(p => p.BegTime <= interval.EndTime 
+                    && p.EndTime >= interval.EndTime ).FirstOrDefault();
+                if (lastVideo != null)
+                {
+                    var endTime = interval.EndTime.AddSeconds(15);
+                    interval.EndTime = (endTime > lastVideo.EndTime) ? lastVideo.EndTime :  interval.EndTime.AddSeconds(15);
+                }
+            }
+            return intervals;
+        }
     }
 }

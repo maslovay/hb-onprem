@@ -60,6 +60,13 @@ namespace DialogueCreatorScheduler.QuartzJobs
                         ) 
                     .ToList();
 
+                var videos = _context.FileVideos
+                    .Include(p => p.Device)
+                    .Include(p => p.Device.Company)
+                    .Where(p => !p.Device.Company.IsExtended &&
+                        p.BegTime >= fileFrames.Min(q => q.Time))
+                    .ToList();
+
                 var clients = _context.Clients
                     .Where(p => fileFrames.Select(q => q.Device.CompanyId).Contains( p.CompanyId))
                     .ToList();
@@ -67,13 +74,13 @@ namespace DialogueCreatorScheduler.QuartzJobs
                 var devideIds = fileFrames.Select(p => p.DeviceId).Distinct();
                 foreach(var deviceId in devideIds)
                 {
-                    
                     _log.Info($"Processing device - {deviceId}");
                     var deviceFrames = fileFrames
                         .Where(p => p.DeviceId == deviceId)
                         .OrderBy(p => p.Time)
                         .ToList();
-
+                    
+                    var deviceVideos = videos.Where(p => p.DeviceId == deviceId).ToList(); 
                     var deviceClients = clients.Where(p => p.CompanyId == deviceFrames.FirstOrDefault().Device.CompanyId).ToList();
 
                     var intervals = _intervalCalc.CreateFaceIntervals(deviceFrames);
@@ -85,7 +92,11 @@ namespace DialogueCreatorScheduler.QuartzJobs
                     var mergedIntervals = _intervalCalc.MergeFaceIntervals(updatedIntervals);
                     _log.Info($"Merged intervals for device {deviceId}- {JsonConvert.SerializeObject(mergedIntervals)}");
 
-                    var dialogues = _dialogueCreator.Dialogues(mergedIntervals, ref deviceFrames, deviceClients);
+                    var updatedDatesIntervals = _intervalCalc.UpdateLastDate(mergedIntervals, deviceVideos);
+                    _log.Info($"Updated last date {deviceId} - {JsonConvert.SerializeObject(updatedDatesIntervals)}");
+
+
+                    var dialogues = _dialogueCreator.Dialogues(updatedDatesIntervals, ref deviceFrames, deviceClients);
                     dialogues = dialogues.Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 40).ToList();
                     _log.Info($"Created dialogues for device {deviceId} - {JsonConvert.SerializeObject(dialogues)}");
 
