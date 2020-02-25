@@ -135,12 +135,14 @@ namespace DialogueCreatorScheduler.Services
         {
             foreach (var interval in intervals)
             {
-                var lastVideo = videos.Where(p => p.BegTime <= interval.EndTime 
-                    && p.EndTime >= interval.EndTime ).FirstOrDefault();
+                var lastVideo = videos.Where(p => 
+                    p.BegTime <= interval.EndTime &&
+                    p.EndTime >= interval.EndTime ).FirstOrDefault();
+                
                 if (lastVideo != null)
                 {
                     var endTime = interval.EndTime.AddSeconds(15);
-                    interval.EndTime = (endTime > lastVideo.EndTime) ? lastVideo.EndTime :  interval.EndTime.AddSeconds(15);
+                    interval.EndTime = (endTime > lastVideo.EndTime) ? lastVideo.EndTime :  endTime;
                 }
             }
             return intervals;

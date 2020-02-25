@@ -48,6 +48,8 @@ namespace QuartzExtensions.Jobs
                         .Include(p => p.DialogueInterval)
                         .Include(p => p.DialogueVisual)
                         .Include(p => p.DialogueClientProfile)
+                        .Include(p => p.Device)
+                        .Include(p => p.Device.Company)
                         .Where(item => item.StatusId == 6)
                         .OrderBy(p => p.BegTime)
                         .ToList();
@@ -63,11 +65,13 @@ namespace QuartzExtensions.Jobs
                     foreach (var dialogue in dialogues)
                     {
 
-                        if (dialogue.DialogueAudio.Any() &&
+                        if ((dialogue.Device.Company.IsExtended && dialogue.DialogueAudio.Any() &&
                             dialogue.DialogueInterval.Any() &&
                             dialogue.DialogueVisual.Any() &&
                             dialogue.DialogueClientProfile.Any() &&
-                            dialogue.DialogueFrame.Any())
+                            dialogue.DialogueFrame.Any()) || (!dialogue.Device.Company.IsExtended &&  dialogue.DialogueVisual.Any() &&
+                            dialogue.DialogueClientProfile.Any() &&
+                            dialogue.DialogueFrame.Any()))
                         {
                             
                             if (CheckDialogue(dialogue))
@@ -76,11 +80,14 @@ namespace QuartzExtensions.Jobs
                                 {
                                     _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
                                     dialogue.StatusId = 3;
-                                    var @event = new FillingSatisfactionRun
+                                    if (dialogue.Device.Company.IsExtended)
                                     {
-                                        DialogueId = dialogue.DialogueId
-                                    };
-                                    _notificationPublisher.Publish(@event);
+                                        var @event = new FillingSatisfactionRun
+                                        {
+                                            DialogueId = dialogue.DialogueId
+                                        };
+                                        _notificationPublisher.Publish(@event);
+                                    }
                                 }
                                 else
                                 {
@@ -100,13 +107,24 @@ namespace QuartzExtensions.Jobs
                             {
                                 _log.Error($"Error dialogue. Dialogue id {dialogue.DialogueId}");
                                 dialogue.StatusId = 8;
-                                var comment = "";
-                                comment += !dialogue.DialogueAudio.Any() ? "DialogueAudio is unfilled ," : "";
-                                comment += !dialogue.DialogueInterval.Any() ? "DialogueInterval is unfilled ," : "";
-                                comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
-                                comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
-                                comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
-                                dialogue.Comment = comment;
+                                if (dialogue.Device.Company.IsExtended)
+                                {
+                                    var comment = "";
+                                    comment += !dialogue.DialogueAudio.Any() ? "DialogueAudio is unfilled ," : "";
+                                    comment += !dialogue.DialogueInterval.Any() ? "DialogueInterval is unfilled ," : "";
+                                    comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
+                                    comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
+                                    comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
+                                    dialogue.Comment = comment;
+                                }
+                                else
+                                {
+                                    var comment = "";
+                                    comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
+                                    comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
+                                    comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
+                                    dialogue.Comment = comment;
+                                }
                             }
                             else
                             {
@@ -126,7 +144,7 @@ namespace QuartzExtensions.Jobs
 
         private bool CheckDialogue(Dialogue dialogue)
         {
-            var dialogues = _context.Dialogues.Where(p => p.ApplicationUserId == dialogue.ApplicationUserId && 
+            var dialogues = _context.Dialogues.Where(p => p.DeviceId == dialogue.DeviceId && 
                 p.BegTime == dialogue.BegTime &&
                 p.EndTime == dialogue.EndTime &&
                 p.StatusId == 3 ).Count();
@@ -139,7 +157,7 @@ namespace QuartzExtensions.Jobs
 
         private bool CheckDialogueIntersection(Dialogue dialogue)
         {
-            var dialogues = _context.Dialogues.Where(p => p.ApplicationUserId == dialogue.ApplicationUserId && 
+            var dialogues = _context.Dialogues.Where(p => p.DeviceId == dialogue.DeviceId && 
                 p.BegTime <= dialogue.BegTime &&
                 p.EndTime >= dialogue.BegTime &&
                 p.StatusId == 3 );
