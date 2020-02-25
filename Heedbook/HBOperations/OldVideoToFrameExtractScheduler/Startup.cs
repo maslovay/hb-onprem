@@ -1,23 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using CloneFtpOnAzure.Extension;
+﻿using OldVideoToFrameExtract.Extensions;
+using Configurations;
+using OldVideoToFrameExtract.Settings;
 using HBData;
+using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
+using Notifications.Base;
+using RabbitMqEventBus.Base;
 
-namespace CloneFtpOnAzure
+
+namespace OldVideoToFrameExtract
 {
     public class Startup
     {
@@ -32,38 +33,41 @@ namespace CloneFtpOnAzure
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
+            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+
+            var schedulerSettings = new OldVideoToFrameExtractSettings()
+            {
+                Period = Configuration.GetSection(nameof(OldVideoToFrameExtract)).GetValue<int>("Period")
+            };
+            
             services.AddDbContext<RecordsContext>
             (options =>
             {
                 var connectionString = Configuration.GetConnectionString("DefaultConnection");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
-            });
-            services.AddFtpFileOnQuartzJob();
+            }, ServiceLifetime.Scoped);
+            
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
-            services.AddSingleton<BlobController>();
-            services.Configure<StorageAccInfo>(Configuration.GetSection(nameof(StorageAccInfo)));
-            services.AddSingleton(provider=> provider.GetRequiredService<IOptions<StorageAccInfo>>().Value);
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            
+            services.AddRabbitMqEventBus(Configuration);
+
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddSingleton<SftpClient>();
+            services.AddMarkUpQuartz(schedulerSettings);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
+            var service = app.ApplicationServices.GetRequiredService<INotificationService>();
             if (env.IsDevelopment())
-            {
                 app.UseDeveloperExceptionPage();
-            }
             else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-            }
+
             scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
                 app.ApplicationServices.GetService<ITrigger>());
             app.UseHttpsRedirection();
