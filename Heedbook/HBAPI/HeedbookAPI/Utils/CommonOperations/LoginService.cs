@@ -13,6 +13,7 @@ using System.Security.Cryptography;
 using HBLib.Utils;
 using HBLib;
 using Microsoft.AspNetCore.Http;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Services
 {
@@ -20,22 +21,22 @@ namespace UserOperations.Services
     {
         private readonly IConfiguration _config;
         private readonly IGenericRepository _repository;
-      //  private readonly SftpClient _sftpClient;
-      //  private readonly SftpSettings _sftpSettings;
+        private readonly FileRefUtils _fileRef;
+        //  private readonly SftpSettings _sftpSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private const int PASSWORDS_TO_SAVE = 5;
         private const int ATTEMPT_TO_FAIL_LOG_IN = 5;
 
         public LoginService(
             IConfiguration config, 
-            IGenericRepository repository, 
-         //   SftpClient sftpClient, 
+            IGenericRepository repository,
+            FileRefUtils fileRef, 
          //   SftpSettings sftpSettings, 
             IHttpContextAccessor httpContextAccessor)
         {
             _config = config;
             _repository = repository;
-         //   _sftpClient = sftpClient;
+            _fileRef = fileRef;
          //   _sftpSettings = sftpSettings;
             _httpContextAccessor = httpContextAccessor;
         }
@@ -302,17 +303,13 @@ namespace UserOperations.Services
         {
             if(String.IsNullOrEmpty(avatarPath))
                 return false;
-            //TODO::uncomment
-            // var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");
-            // task.Wait();
-            // bool exist = task.Result;
-            return true;// exist;
+            return true;
         }
 
         public string GetAvatar(string avatarPath)
         {
             if (AvatarExist(avatarPath))
-                return $"{_config["FileRefPath:url"]}useravatars/{avatarPath}";
+                return _fileRef.GetFileLink("useravatars", avatarPath, default);
             return "";
         }
         public bool IsAdmin()
