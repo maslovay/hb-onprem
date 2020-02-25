@@ -4,12 +4,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
-using UserOperations.CommonModels;
+using UserOperations.Models;
 using UserOperations.Utils;
 using System.Reflection;
 using System.Net;
 using HBData.Repository;
 using UserOperations.Controllers;
+using HBLib.Utils;
+using UserOperations.Utils.CommonOperations;
+using Newtonsoft.Json;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace UserOperations.Services
 {
@@ -18,11 +23,17 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
+        private readonly SftpClient _sftpClient;
+        private readonly FileRefUtils _fileRef;
+
+        private const string _containerName = "screenshots";
 
         public CampaignContentService(
             LoginService loginService,
             RequestFilters requestFilters,
-            IGenericRepository repository
+            IGenericRepository repository,
+            SftpClient sftpClient,
+            FileRefUtils fileRef
             )
         {
             try
@@ -30,27 +41,34 @@ namespace UserOperations.Services
                 _loginService = loginService;
                 _requestFilters = requestFilters;
                 _repository = repository;
+                _sftpClient = sftpClient;
+                _fileRef = fileRef;
             }
             catch (Exception e)
             {
             }
         }
 
-        public List<Campaign> CampaignGet( List<Guid> companyIds, List<Guid> corporationIds )
+        public List<Campaign> CampaignGet( List<Guid> companyIds, List<Guid> corporationIds, bool isActual )
         {
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-            var statusInactiveId =  GetStatusId("Inactive");
-            var campaigns = GetCampaignForCompanys(companyIds, statusInactiveId);
+            var statusActiveId =  GetStatusId("Active");
+            List<Campaign> campaigns = null;
+            if (isActual == true)
+                campaigns = GetCampaignForDevices(companyIds, statusActiveId);
+            else
+                campaigns = GetCampaignForCompanys(companyIds, statusActiveId);
+              
 
             var result = campaigns
                 .Select(p =>
                     {
                         p.CampaignContents = p.CampaignContents.Where(x => p.CampaignContents != null
                                 && p.CampaignContents.Count != 0
-                                && x.StatusId != statusInactiveId)
+                                && x.StatusId == statusActiveId)
                             .ToList();
                         return p;
                     })
@@ -68,13 +86,13 @@ namespace UserOperations.Services
             campaign.CreationDate = DateTime.UtcNow;
             campaign.StatusId = activeStatus;
             campaign.CampaignContents = new List<CampaignContent>();
-            AddInBase<Campaign>(campaign);
+            Add<Campaign>(campaign);
             SaveChanges();
             foreach (var campCont in model.CampaignContents)
             {
                 campCont.CampaignId = campaign.CampaignId;
                 campCont.StatusId = activeStatus;
-                AddInBase<CampaignContent>(campCont);
+                Add<CampaignContent>(campCont);
             }
             SaveChanges();
             return campaign;
@@ -117,7 +135,7 @@ namespace UserOperations.Services
                             {
                                 p.CampaignId = campaignEntity.CampaignId;
                                 p.StatusId = activeStatusId;
-                                AddInBase<CampaignContent>(p);
+                                Add<CampaignContent>(p);
                                 return p;
                             }).ToList();
                 }
@@ -125,6 +143,7 @@ namespace UserOperations.Services
                 campaignEntity.CampaignContents = campaignEntity.CampaignContents.Where(x => x.StatusId != inactiveStatusId).ToList();
                 return campaignEntity;
         }
+
         public string CampaignDelete( Guid campaignId )
         {
             var roleInToken = _loginService.GetCurrentRoleName();
@@ -158,23 +177,22 @@ namespace UserOperations.Services
             return "No such campaign";
         }
 
-        public async Task<List<Content>> ContentGet( List<Guid> companyIds, List<Guid> corporationIds, bool? inactive )
+        public async Task<object> ContentGet( List<Guid> companyIds, List<Guid> corporationIds, bool inactive, bool screenshot)
         {
                 var roleInToken = _loginService.GetCurrentRoleName();
                 var companyIdInToken = _loginService.GetCurrentCompanyId();
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
-
-                var activeStatusId = GetStatusId("Active");
-                List<Content> contents;
-                if (inactive == false)
-                    contents = GetContentsWithActiveStatusId(activeStatusId, companyIds);
-                else
-                    contents = GetContentsWithTemplateIsTrue(companyIds);
-                return contents;
+                if (screenshot == true)
+                {
+                    var contentsWithScreen = GetContentsByStatusIdWithUrls(inactive, companyIds);
+                    return contentsWithScreen;
+                }
+                    var contents = GetContentsByStatusId(inactive, companyIds);
+                    return contents;
         }
 
         public async Task<object> ContentPaginatedGet( List<Guid> companyIds, List<Guid> corporationIds,
-                                 bool? inactive, int limit = 10, int page = 0,
+                                 bool inactive, int limit = 10, int page = 0,
                                  string orderBy = "Name", string orderDirection = "desc")
         {
                 var roleInToken = _loginService.GetCurrentRoleName();
@@ -182,12 +200,7 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
 
                 var activeStatusId = GetStatusId("Active");
-                List<Content> contents;
-                if(inactive == false)
-                    contents = GetContentsWithActiveStatusId(activeStatusId, companyIds);
-                else
-                    contents = GetContentsWithTemplateIsTrue(companyIds);
-
+                List<Content> contents = GetContentsByStatusId(inactive, companyIds);
                 if(contents.Count == 0) return contents;
 
                 ////---PAGINATION---
@@ -208,29 +221,46 @@ namespace UserOperations.Services
                 }
         }
 
-        public async Task<Content> ContentPost( Content content )
+        public async Task<ContentWithScreenshotModel> ContentPost(IFormCollection formData)
         {
             var roleInToken = _loginService.GetCurrentRoleName();
             var companyIdInToken = _loginService.GetCurrentCompanyId();
+
+            if (formData.Files.Count == 0) throw new NoDataException();
+            var contentDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
+            Content content = JsonConvert.DeserializeObject<Content>(contentDataJson);
 
             if (!content.IsTemplate) content.CompanyId = companyIdInToken; // only for not templates we create content for partiqular company/ Templates have no any compane relations
             content.CreationDate = DateTime.UtcNow;
             content.UpdateDate = DateTime.UtcNow;
             content.StatusId = GetStatusId("Active");
-            AddInBase<Content>(content);
+            Add<Content>(content);
             SaveChanges();
-            return content;
+
+            if (formData.Files.Count != 0)
+            {
+                FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                string screenshot = content.ContentId + ".png";
+                await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{screenshot}"));
+                var memoryStream = formData.Files[0].OpenReadStream();
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", screenshot, true);
+                return new ContentWithScreenshotModel(content, _fileRef.GetFileLink(_containerName, screenshot, default));
+            }
+            return new ContentWithScreenshotModel(content, null);
         }
 
-        public async Task<Content> ContentPut( Content content )
+        public async Task<ContentWithScreenshotModel> ContentPut(IFormCollection formData)
         {
             var roleInToken = _loginService.GetCurrentRoleName();
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             var corporationIdInToken = _loginService.GetCurrentCorporationId();
 
-            _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, content.CompanyId, roleInToken);
-
+            var contentDataJson = formData.FirstOrDefault(x => x.Key == "data").Value.ToString();
+            Content content = JsonConvert.DeserializeObject<Content>(contentDataJson);
             var contentEntity = GetContent(content.ContentId);
+            _requestFilters.IsCompanyBelongToUser(corporationIdInToken, companyIdInToken, contentEntity.CompanyId, roleInToken);
+
+            
             foreach (var p in typeof(Content).GetProperties())
             {
                 if (p.GetValue(content, null) != null && p.GetValue(content, null).ToString() != Guid.Empty.ToString())
@@ -238,7 +268,17 @@ namespace UserOperations.Services
             }
             contentEntity.UpdateDate = DateTime.UtcNow;
             await SaveChangesAsync();
-            return contentEntity;
+
+            string screenshot = content.ContentId + ".png";
+
+            if (formData.Files.Count != 0)
+            {
+                FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{screenshot}"));
+                var memoryStream = formData.Files[0].OpenReadStream();
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", screenshot, true);
+            }
+            return new ContentWithScreenshotModel(contentEntity, _fileRef.GetFileLink(_containerName, screenshot, default));
         }
 
         public async Task<string> ContentDelete( Guid contentId )
@@ -267,11 +307,14 @@ namespace UserOperations.Services
                 RemoveRange<CampaignContent>(links);
                 RemoveEntity(content);
                 SaveChanges();
+                //TODO::uncomment
+                await _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{content.ContentId+".png"}");
             }
             catch
             {
                 return "Set inactive";
             }
+
             return "Removed";
         }
 
@@ -299,7 +342,18 @@ namespace UserOperations.Services
             var campaigns = _repository.GetAsQueryable<Campaign>()
                 .Include(x => x.CampaignContents)
                 .Where(x => companyIds.Contains(x.CompanyId)
-                    && x.StatusId != statusId).ToList();
+                    && x.StatusId == statusId).ToList();
+            return campaigns;
+        }
+        private List<Campaign> GetCampaignForDevices(List<Guid> companyIds, int statusId)
+        {
+            var curDate = DateTime.Now;
+            var campaigns = _repository.GetAsQueryable<Campaign>()
+                .Include(x => x.CampaignContents)
+                .Where(x => companyIds.Contains(x.CompanyId)
+                    && x.StatusId == statusId
+                    && x.BegDate <= curDate
+                    && x.EndDate >= curDate).ToList();
             return campaigns;
         }
         private Campaign GetCampaign(Guid campaignId)
@@ -310,9 +364,9 @@ namespace UserOperations.Services
                 .FirstOrDefault();
             return campaignEntity;
         }
-        private void AddInBase<T>(T campaign) where T : class
+        private void Add<T>(T entity) where T : class
         {
-            _repository.Create<T>(campaign);
+            _repository.Create<T>(entity);
         }
         private void SaveChanges()
         {
@@ -326,21 +380,40 @@ namespace UserOperations.Services
         {
             _repository.Delete<T>(entity);
         }
-        private List<Content> GetContentsWithActiveStatusId(int activeStatusId, List<Guid> companyIds)
+        private List<Content> GetContentsByStatusId(bool Inactive, List<Guid> companyIds)
         {
-            var contents = _repository.GetAsQueryable<Content>()
-                .Where(x => x.StatusId == activeStatusId
-                    && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
-                .ToList();
-            return contents;
-        }
-        private List<Content> GetContentsWithTemplateIsTrue(List<Guid> companyIds)
-        {
-            var contents = _repository.GetAsQueryable<Content>()
+            var activeStatusId = GetStatusId("Active");
+            if (Inactive == false)
+            {
+                return _repository.GetAsQueryable<Content>()
+                   .Where(x => x.StatusId == activeStatusId
+                       && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
+                   .ToList();
+            }
+            return _repository.GetAsQueryable<Content>()
                 .Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))
                 .ToList();
-            return contents;
         }
+
+        private List<ContentWithScreenshotModel> GetContentsByStatusIdWithUrls(bool Inactive, List<Guid> companyIds)
+        {
+            var activeStatusId = GetStatusId("Active");
+            if (Inactive == false)
+            {
+                return  _repository.GetAsQueryable<Content>()
+                .Where(x => x.StatusId == activeStatusId
+                    && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
+                .ToList()
+                .Select(x => new ContentWithScreenshotModel(x, _fileRef.GetFileLink(_containerName, x.ContentId.ToString() + ".png", default)))
+                .ToList();
+            }
+            return _repository.GetAsQueryable<Content>()
+                .Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))
+                .ToList()
+                .Select(x => new ContentWithScreenshotModel(x, _fileRef.GetFileLink(_containerName, x.ContentId.ToString() + ".png", default)))
+                .ToList();
+        }
+
         private Content GetContent(Guid contentId)
         {
             var contentEntity = _repository.GetAsQueryable<Content>()

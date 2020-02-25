@@ -36,10 +36,16 @@ namespace UserOperations.Controllers
                                                         [FromQuery(Name = "endAge")] int endAge = 100 ) 
             => await _clientService.GetAll( beg, end, genders, companyIds, begAge, endAge);
 
+        [HttpGet]
+        [SwaggerOperation(Summary = "one client by id", Description = "with dialogue ids and client notes")]
+        [SwaggerResponse(200, "Client", typeof(GetClient))]
+        public async Task<GetClient> ClientGet([FromQuery(Name = "clientId")] Guid clientId)
+         => await _clientService.Get(clientId);
+
         [HttpPut]
         [SwaggerOperation(Summary = "set client email, name, phone", Description = "")]
-        [SwaggerResponse(200, "Saved", typeof(string))]
-        public async Task<string> ClientUpdate([FromBody] PutClient client)
+        [SwaggerResponse(200, "Client", typeof(Client))]
+        public async Task<Client> ClientUpdate([FromBody] PutClient client)
          => await _clientService.Update(client);
 
         [HttpDelete]
@@ -52,17 +58,17 @@ namespace UserOperations.Controllers
         [HttpGet("Clientnote")]
         [SwaggerOperation(Summary = "list of client's notes", Description = "for one client")]
         [SwaggerResponse(200, "ClientNotes[]", typeof(List<ClientNote>))]
-        public async Task<ICollection<ClientNote>> ClientNotesGet([FromQuery(Name = "clientId")] Guid clientId)
+        public async Task<ICollection<GetClientNote>> ClientNotesGet([FromQuery(Name = "clientId")] Guid clientId)
            => await _clientNoteService.GetAll(clientId);
 
         [HttpPost("Clientnote")]
         [SwaggerOperation(Summary = "add new note for client", Description = "")]
-        [SwaggerResponse(200, "Saved", typeof(string))]
+        [SwaggerResponse(200, "ClientNote", typeof(ClientNote))]
         public async Task<ClientNote> ClientNotesCreate([FromBody] PostClientNote clientNote)
         => await _clientNoteService.Create(clientNote);
 
         [HttpPut("Clientnote")]
-        [SwaggerOperation(Summary = "change text of note or tags", Description = "")]
+        [SwaggerOperation(Summary = "change text of note", Description = "")]
         [SwaggerResponse(200, "ClientNote", typeof(ClientNote))]
         public async Task<ClientNote> ClientNotesUpdate([FromBody] PutClientNote clientNote)
          => await _clientNoteService.Update(clientNote);

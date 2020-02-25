@@ -16,6 +16,7 @@ using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using Renci.SshNet.Common;
 using DialogueVideoAssembleService.Utils;
+using Microsoft.EntityFrameworkCore;
 
 namespace DialogueVideoAssembleService
 {
@@ -60,21 +61,26 @@ namespace DialogueVideoAssembleService
             _log.SetFormat("{DialogueId}");
             _log.SetArgs(message.DialogueId);
 
-            System.Console.WriteLine("Function started");
-
             try
             {
+                var isExtended = _context.Dialogues
+                    .Include(p => p.Device)
+                    .Include(p => p.Device.Company)
+                    .Where(p => p.DialogueId == message.DialogueId)
+                    .Select(p => p.Device.Company.IsExtended)
+                    .FirstOrDefault();
+
                 var cmd = new CMDWithOutput();
 
                 var fileVideos = _utils.GetFileVideos(message);
                 if (!fileVideos.Any())
                 {
+                    _log.Info($"No files for message {JsonConvert.SerializeObject(message)}");
                     _log.Error("No video files");
                     return;
                 }                
                 
                 var fileFrames = _utils.GetFileFrame(message);                
-                if (!fileFrames.Any()) _log.Error("No frame files");
 
                 var dialogue = _context.Dialogues.FirstOrDefault(p => p.DialogueId == message.DialogueId);
                 if (dialogue == null) 
@@ -85,7 +91,7 @@ namespace DialogueVideoAssembleService
                 var dialogueDuration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds;
 
                 var videosDuration = _utils.GetTotalVideoDuration(fileVideos, message);
-                if (Convert.ToInt16(dialogueDuration) - Convert.ToInt16(videosDuration) > 1000)
+                if (Convert.ToInt32(dialogueDuration) - Convert.ToInt32(videosDuration) > 2000)
                 {
                     var comment = $"Too many holes in dialogue {dialogue.DialogueId}, Dialogue duration {dialogueDuration}s, Videos duration - {videosDuration}s";
                     _log.Error(comment);
@@ -96,7 +102,7 @@ namespace DialogueVideoAssembleService
                 }
                 
                 var pathClient = new PathClient();
-                var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));      
+                var sessionDir = Path.GetFullPath(pathClient.GenLocalDir(pathClient.GenSessionId()));
                 System.Console.WriteLine(sessionDir);          
                 
                 var frameCommands = new List<FFMpegWrapper.FFmpegCommand>();
@@ -104,7 +110,7 @@ namespace DialogueVideoAssembleService
                 _utils.BuildFFmpegCommands(message, fileVideos, fileFrames, sessionDir, ref videoMergeCommands, ref frameCommands);    
                 
                 _log.Info("Downloading all files");
-                await _utils.DownloadFilesLocalyAsync(videoMergeCommands, _sftpClient, _sftpSettings, _log, sessionDir);                   
+                await _utils.DownloadFilesLocalyAsync(videoMergeCommands, _sftpClient, _sftpSettings, _log, sessionDir, isExtended);                   
                 _log.Info("Running commands for frames");
                 _utils.RunFrameFFmpegCommands(frameCommands, cmd, _wrapper, _log, sessionDir);
 
@@ -124,7 +130,10 @@ namespace DialogueVideoAssembleService
                 await _sftpClient.UploadAsync(outputFn, "dialoguevideos", $"{message.DialogueId}{extension}");
 
                 _log.Info("Send message to video to sound");
-                _utils.SendMessageToVideoToSound(message, extension, _notificationPublisher);
+                if (isExtended)
+                {
+                    _utils.SendMessageToVideoToSound(message, extension, _notificationPublisher);
+                }
                 
                 _log.Info("Delete all local files");
                 Directory.Delete(sessionDir, true);

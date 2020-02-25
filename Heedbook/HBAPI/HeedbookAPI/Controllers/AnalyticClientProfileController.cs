@@ -28,16 +28,16 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "GenderAgeStructureResult", typeof(List<GenderAgeStructureResult>))]
         public async Task<string> EfficiencyDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds) 
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds)
             => await _analyticClientProfileService.EfficiencyDashboard(
                 beg,
                 end,
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds);
+                deviceIds);
     }
 }

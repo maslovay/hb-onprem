@@ -18,9 +18,6 @@ namespace HBData.Models
 
         /// <summary>
         ///     Person face id
-        /// </summary>
-        public Guid? PersonId {get;set;}
-        /// <summary>
         ///     Reference on the table with clients (unique client in one company) = Person face id
         /// </summary>
         public Guid? ClientId { get; set; }
@@ -47,12 +44,16 @@ namespace HBData.Models
         public DateTime EndTime { get; set; }
 
         /// <summary>
+        ///     Device id
+        /// </summary>
+        public Guid DeviceId { get; set; }//!!!required
+        [JsonIgnore] public Device Device { get; set; }
+
+        /// <summary>
         ///     Dialogue's author
         /// </summary>
-        public Guid ApplicationUserId { get; set; }
-
-       [JsonIgnore] 
-        public ApplicationUser ApplicationUser { get; set; }
+        public Guid? ApplicationUserId { get; set; }
+        [JsonIgnore] public ApplicationUser ApplicationUser { get; set; }
 
         /// <summary>
         ///     Dilaogue language

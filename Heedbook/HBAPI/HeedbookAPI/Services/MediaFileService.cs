@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using HBLib.Utils;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Services
 {
@@ -14,16 +14,19 @@ namespace UserOperations.Services
     {
         private readonly LoginService _loginService;
         private readonly SftpClient _sftpClient;
+        private readonly FileRefUtils _fileRef;
         private readonly string _containerName;
       
 
         public MediaFileService(
             LoginService loginService,
-            SftpClient sftpClient
+            SftpClient sftpClient,
+            FileRefUtils fileRef
             )
         {
             _loginService = loginService;
             _sftpClient = sftpClient;
+            _fileRef = fileRef;
             _containerName = "media";
         }
 
@@ -38,23 +41,23 @@ namespace UserOperations.Services
 
             if (fileName != null)
             {
-                var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fileName, (DateTime)expirationDate);
+                var result = _fileRef.GetFileLink(containerName + "/" + companyId, fileName, (DateTime)expirationDate);
                 return result;
             }
             else
             {
                 await _sftpClient.CreateIfDirNoExistsAsync(_containerName + "/" + companyId);
-                var files = await _sftpClient.GetFileNames(_containerName+"/"+companyId);  
-                List<object> result = new List<object>();        
-                foreach(var file in files)         
+                var files = await _sftpClient.GetFileNames(_containerName+"/"+companyId);
+                List<string> result = new List<string>();
+                foreach (var file in files)
                 {
-                    result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
+                    result.Add(_fileRef.GetFileLink(containerName + "/" + companyId, file, (DateTime)expirationDate));
                 }
                 return result;
             }            
         }
       
-        public async Task<object> FilePost([FromForm] IFormCollection formData)
+        public async Task<List<string>> FilePost([FromForm] IFormCollection formData)
         {
             // _log.Info("MediaFile/File POST started");                 
             var companyId = _loginService.GetCurrentCompanyId();
@@ -74,15 +77,15 @@ namespace UserOperations.Services
             }
             await Task.WhenAll(tasks);
 
-            List<object> result = new List<object>();   
+            List<string> result = new List<string>();
             foreach (var file in fileNames)
             {
-                result.Add( _sftpClient.GetFileLink(containerName + "/" + companyId, file, default(DateTime)));
+                result.Add( _fileRef.GetFileLink(containerName + "/" + companyId, file, default));
             }
             // _log.Info("MediaFile/File POST finished"); 
-            return result;            
+            return result;
         }
-        public async Task<object> FilePut([FromForm] IFormCollection formData)
+        public async Task<string> FilePut([FromForm] IFormCollection formData)
         {
                 // _log.Info("MediaFile/File PUT started");                 
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -99,9 +102,9 @@ namespace UserOperations.Services
                 // var result = new { 
                 //     path =  await _sftpClient.GetFileUrl($"{containerName}/{companyId}/{fn}"), 
                 //     ext = Path.GetExtension(fileName.Trim('.'))};
-                var result = _sftpClient.GetFileLink(containerName + "/" + companyId, fn, default(DateTime));
+                var result = _fileRef.GetFileLink(containerName + "/" + companyId, fn, default);
                 // _log.Info("MediaFile/File PUT finished"); 
-                return result;            
+                return result;
         }
         public async Task<object> FileDelete(
                 [FromQuery] string containerName = null, 

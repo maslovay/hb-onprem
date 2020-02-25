@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using HBData.Models.AccountViewModels;
 using UserOperations.AccountModels;
-using UserOperations.Providers;
+using UserOperations.Services;
 
 namespace UserOperations.Controllers
 {

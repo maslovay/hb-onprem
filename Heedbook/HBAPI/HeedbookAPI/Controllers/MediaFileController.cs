@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using UserOperations.Services;
+using HBData;
+using HBLib.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -21,14 +25,14 @@ namespace UserOperations.Controllers
             MediaFileService mediaFileService
             )
         {
-            _mediaFileService = mediaFileService;
+            _mediaFileService = mediaFileService;      
         }
 
         [HttpGet("File")]
         [SwaggerOperation(Description = "Return all files from sftp. If no parameters are passed return files from 'media', for loggined company")]
         [SwaggerResponse(400, "No such file / Exception message", typeof(string))]
         [SwaggerResponse(200, "File exist")]
-        public async Task<object> FileGet(   
+        public async Task<object> FileGet(
                 [FromQuery(Name= "containerName")] string containerName = null, 
                 [FromQuery(Name = "fileName")] string fileName = null,
                 [FromQuery(Name = "expirationDate")]  DateTime? expirationDate = null) =>

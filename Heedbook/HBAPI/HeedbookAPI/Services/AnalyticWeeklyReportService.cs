@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
-using UserOperations.Models.Get.AnalyticWeeklyReportController;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Utils;
 using HBData.Models;
 using UserOperations.Utils.AnalyticWeeklyReportController;
 using HBData.Repository;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Services
 {
@@ -19,7 +19,6 @@ namespace UserOperations.Services
         private readonly AnalyticWeeklyReportUtils _analyticWeeklyReportUtils;
 
         public AnalyticWeeklyReportService(
-            IConfiguration config,
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,

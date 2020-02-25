@@ -23,7 +23,7 @@ namespace UserService.Controllers
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
-//        private readonly ElasticClient _log;
+        //private readonly ElasticClient _log;
 
 
         public VideoSaveInfoController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient /*, ElasticClient log*/)
@@ -31,34 +31,42 @@ namespace UserService.Controllers
             _handler = handler;
             _context = context;
             _sftpClient = sftpClient;
-//            _log = log;
+           // _log = log;
 
         }
 
         [HttpGet]
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
-        public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId,
+        public async Task<IActionResult> VideoSave(
+            [FromQuery] Guid deviceId,
             [FromQuery] String begTime,
             [FromQuery] Double? duration,
+            [FromQuery] string applicationUserId,
             [FromQuery] String endTime = null)
         {
             try
-            {   
-//                _log.Info("Function Video save info started");
+            {
                 duration = duration == null ? 15 : duration;
-                var languageId = _context.ApplicationUsers
-                                         .Include(p => p.Company)
-                                         .Include(p => p.Company.Language)
-                                         .Where(p => p.Id == applicationUserId)
-                                         .First().Company.Language.LanguageId;
-
+                var languageId = _context.Devices
+                                         .Where(p => p.DeviceId == deviceId)
+                                         .Select( x => x.Company.Language.LanguageId).First();
+                var isExtended = _context.Devices
+                    .Include(p => p.Company)
+                    .Where(p => p.DeviceId == deviceId).FirstOrDefault().Company.IsExtended;
+                            
+                Guid? userId = null;
+                try
+                {
+                    userId = Guid.Parse(applicationUserId);
+                }
+                catch {}
                 var stringFormat = "yyyyMMddHHmmss";
                 var timeBeg = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
                 var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): timeBeg.AddSeconds((double)duration);
-                var fileName = $"{applicationUserId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
+                var fileName = $"{userId?? Guid.Empty}_{deviceId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
 
                 var videoIntersectVideosAny = _context.FileVideos
-                    .Where(p => p.ApplicationUserId == applicationUserId
+                    .Where(p => p.DeviceId == deviceId
                     && ((p.BegTime <= timeBeg
                             && p.EndTime > timeBeg
                             && p.EndTime < timeEnd) 
@@ -70,44 +78,28 @@ namespace UserService.Controllers
                         || (p.BegTime < timeBeg
                             && p.EndTime > timeEnd)))
                     .Any();
-                var videoFile = new FileVideo();
-                if(videoIntersectVideosAny)
+                var videoFile = new FileVideo
                 {
-                    videoFile = new FileVideo
-                    {
-                        ApplicationUserId = applicationUserId,
-                        BegTime = timeBeg,
-                        CreationTime = DateTime.UtcNow,
-                        Duration = duration,
-                        EndTime = timeEnd,
-                        FileContainer = "videos",
-                        FileExist = await _sftpClient.IsFileExistsAsync($"videos/{fileName}"),
-                        FileName = fileName,
-                        FileVideoId = Guid.NewGuid(),
-                        StatusId = 8
-                    };
-                }
-                else
+                    ApplicationUserId = userId,
+                    DeviceId = deviceId,
+                    BegTime = timeBeg,
+                    CreationTime = DateTime.UtcNow,
+                    Duration = duration,
+                    EndTime = timeEnd,
+                    FileContainer = "videos",
+                    FileExist = await _sftpClient.IsFileExistsAsync($"videos/{fileName}"),
+                    FileName = fileName,
+                    FileVideoId = Guid.NewGuid(),
+                    StatusId = 6
+                };
+                if (videoIntersectVideosAny)
                 {
-                    videoFile = new FileVideo
-                    {
-                        ApplicationUserId = applicationUserId,
-                        BegTime = timeBeg,
-                        CreationTime = DateTime.UtcNow,
-                        Duration = duration,
-                        EndTime = timeEnd,
-                        FileContainer = "videos",
-                        FileExist = await _sftpClient.IsFileExistsAsync($"videos/{fileName}"),
-                        FileName = fileName,
-                        FileVideoId = Guid.NewGuid(),
-                        StatusId = 6
-                    };
-                }
-                
+                    videoFile.StatusId = 8;
+                }    
                 _context.FileVideos.Add(videoFile);
                 _context.SaveChanges();
 
-                if (videoFile.FileExist)
+                if (videoFile.FileExist && isExtended)
                 {
                     var message = new FramesFromVideoRun();
                     message.Path = $"videos/{fileName}";

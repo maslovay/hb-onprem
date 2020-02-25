@@ -11,29 +11,32 @@ using HBData.Models;
 using HBData.Repository;
 using System.Security.Cryptography;
 using HBLib.Utils;
+using HBLib;
 using Microsoft.AspNetCore.Http;
 
 namespace UserOperations.Services
 {
     public class LoginService
     {
-        private readonly IGenericRepository _repository;
         private readonly IConfiguration _config;
-        private readonly SftpClient _sftpClient;
+        private readonly IGenericRepository _repository;
+      //  private readonly SftpClient _sftpClient;
+      //  private readonly SftpSettings _sftpSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private const int PASSWORDS_TO_SAVE = 5;
         private const int ATTEMPT_TO_FAIL_LOG_IN = 5;
 
         public LoginService(
-            IGenericRepository repository, 
             IConfiguration config, 
-            SftpClient sftpClient, 
-            IHttpContextAccessor httpContextAccessor
-            )
+            IGenericRepository repository, 
+         //   SftpClient sftpClient, 
+         //   SftpSettings sftpSettings, 
+            IHttpContextAccessor httpContextAccessor)
         {
-            _repository = repository;
             _config = config;
-            _sftpClient = sftpClient;
+            _repository = repository;
+         //   _sftpClient = sftpClient;
+         //   _sftpSettings = sftpSettings;
             _httpContextAccessor = httpContextAccessor;
         }
         public string GeneratePasswordHash(string password)
@@ -50,6 +53,13 @@ namespace UserOperations.Services
             login = login.ToUpper();
             password = GeneratePasswordHash(password);
             return _repository.GetAsQueryable<ApplicationUser>().Count(p => p.NormalizedEmail == login && p.PasswordHash == password) == 1;
+        }
+
+        public bool CheckDeviceLogin(string deviceName, string code)
+        {
+            if (code == null || deviceName == null) return false;
+            code = GeneratePasswordHash(code);
+            return _repository.GetAsQueryable<Device>().Count(p => p.Name.ToUpper() == deviceName.ToUpper() && p.Code == code) == 1;
         }
 
         public string CreateTokenForUser(ApplicationUser user)
@@ -74,7 +84,8 @@ namespace UserOperations.Services
                         new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
                         new Claim("fullName", user.FullName),
-                        new Claim("avatar", AvatarExist(user.Avatar) ? $"{_config["FileRefPath:url"]}/useravatars/{user.Avatar}":""),
+                        new Claim("avatar", GetAvatar(user.Avatar)),
+                        new Claim("isExtended", user.Company.IsExtended.ToString())
                     };
 
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
@@ -83,18 +94,16 @@ namespace UserOperations.Services
                     var token = new JwtSecurityToken(_config["Tokens:Issuer"],
                         _config["Tokens:Issuer"],
                         claims,
-                        expires: DateTime.Now.AddDays(31),
+                        expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
                         signingCredentials: creds);
 
                     var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
-
                     return tokenenc;
                 }
                 else
                 {
                     return "User inactive";
                 }
-
             }
             catch (Exception e)
             {
@@ -102,32 +111,37 @@ namespace UserOperations.Services
             }
         }
 
-        // <summary>
-        /// Parse JWT token 
-        /// </summary>
-        /// <param name="token">JWT token in request</param>
-        /// <returns></returns>
-        public Dictionary<string, string> GetDataFromToken(string token, string sign = null)
+        public string CreateTokenForDevice(Device device)
         {
-            if (sign == "" || sign == null)
-                sign = _config["Tokens:Key"];
             try
             {
-
-                var pureToken = token.Split(' ')[1];
-                if (CheckToken(pureToken, sign))
+                var claims = new[]
                 {
-                    var jwt = new JwtSecurityToken(pureToken);
-                    Dictionary<string, string> claims;
-                    claims = jwt.Payload.ToDictionary(key => key.Key.ToString(), value => value.Value.ToString());
-                    return claims;
-                }
-                else
-                    return null;
+                    new Claim(JwtRegisteredClaimNames.Sub, device.Name),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim("deviceId", device.DeviceId.ToString()),
+                    new Claim("deviceName", device.Name),
+                    new Claim("companyId", device.CompanyId.ToString()),
+                    new Claim("corporationId", device.Company.CorporationId.ToString()),
+                    new Claim("languageCode", device.Company.LanguageId.ToString()),
+                    new Claim("isExtended", device.Company.IsExtended.ToString())
+                };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken(_config["Tokens:Issuer"],
+                    _config["Tokens:Issuer"],
+                    claims,
+                    expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
+                    signingCredentials: creds);
+
+                var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
+                return tokenenc;
             }
             catch (Exception e)
             {
-                return null;
+                return $"Device not exist or internal error {e}";
             }
         }
 
@@ -141,9 +155,6 @@ namespace UserOperations.Services
             claims = null;
             if (sign == "" || sign == null)
                 sign = _config["Tokens:Key"];
-            try
-            {
-
                 var pureToken = token.Split(' ')[1];
                 if (CheckToken(pureToken, sign))
                 {
@@ -153,11 +164,6 @@ namespace UserOperations.Services
                 }
                 else
                     return false;
-            }
-            catch (Exception e)
-            {
-                return false;
-            }
         }
 
         /// <summary>
@@ -264,6 +270,8 @@ namespace UserOperations.Services
             }
             return pass;
         }
+        public bool GetIsExtended()
+        => Boolean.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "isExtended")?.Value);
         public Guid GetCurrentCompanyId()
            => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "companyId")?.Value);
         public Guid? GetCurrentCorporationId()
@@ -274,22 +282,38 @@ namespace UserOperations.Services
         }
 
 
-        public Guid GetCurrentUserId()
-            => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "applicationUserId")?.Value);
+        public Guid GetCurrentUserId() =>
+            Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "applicationUserId")?.Value);
 
+        public Int32 GetCurrentLanguagueId()
+           => Int32.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "languageCode")?.Value);
+
+        public Guid? GetCurrentDeviceId()
+        { 
+            Guid.TryParse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "deviceId")?.Value, out var deviceId);
+            return (deviceId == Guid.Empty || deviceId == null) ? null : (Guid?)deviceId;
+        }
         public string GetCurrentRoleName()
         {
            return _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value;
         }
-      
+
         private bool AvatarExist(string avatarPath)
         {
             if(String.IsNullOrEmpty(avatarPath))
                 return false;
-            var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");
-            task.Wait();
-            bool exist = task.Result;
-            return exist;
+            //TODO::uncomment
+            // var task = _sftpClient.IsFileExistsAsync($"useravatars/{avatarPath}");
+            // task.Wait();
+            // bool exist = task.Result;
+            return true;// exist;
+        }
+
+        public string GetAvatar(string avatarPath)
+        {
+            if (AvatarExist(avatarPath))
+                return $"{_config["FileRefPath:url"]}useravatars/{avatarPath}";
+            return "";
         }
         public bool IsAdmin()
         {

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UserOperations.Models.Get.AnalyticOfficeController;
+using HBData.Models;
+using Microsoft.Extensions.Configuration;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Utils.AnalyticOfficeUtils
 {
@@ -10,7 +12,8 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
         public Employee BestEmployeeLoad(List<DialogueInfo> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end)
         {
             return dialogues.Any() ? dialogues
-                .GroupBy(p => p.ApplicationUserId)
+                .Where(p => p.ApplicationUserId != null)
+                .GroupBy(p => (Guid)p.ApplicationUserId)
                 .Select(p => new Employee
                 {
                     BestEmployeeId = p.First().ApplicationUserId,
@@ -79,13 +82,29 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
         {
             return dialogues.Any() ? dialogues.Average(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
         }
+        public double? DialogueTotalDuration(List<DialogueInfo> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        {
+            return dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
+        }
+
+        public bool CheckIfDialogueInWorkingTime(Dialogue  dialogue, WorkingTime [] times)
+        {
+            var day = times[(int)dialogue.BegTime.DayOfWeek];
+            if (day.BegTime == null || day.EndTime == null) return false;
+            return dialogue.BegTime.TimeOfDay > ((DateTime)day.BegTime).TimeOfDay && dialogue.EndTime.TimeOfDay < ((DateTime)day.EndTime).TimeOfDay;
+        }
         public double? SatisfactionIndex(List<DialogueInfo> dialogues)
         {
             return dialogues.Any() ? dialogues.Where(p => p.SatisfactionScore != null && p.SatisfactionScore != 0).Average(p => p.SatisfactionScore) : null;
         }
         public int EmployeeCount(List<DialogueInfo> dialogues)
         {
-            return dialogues.Any() ? dialogues.Select(p => p.ApplicationUserId).Distinct().Count() : 0;
+            return dialogues.Any() ? dialogues.Where(p => p.ApplicationUserId != null).Select(p => p.ApplicationUserId).Distinct().Count() : 0;
+        }
+
+        public int DeviceCount(List<DialogueInfo> dialogues)
+        {
+            return dialogues.Any() ? dialogues.Select(p => p.DeviceId).Distinct().Count() : 0;
         }
         public double? DialogueAveragePause(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
@@ -114,7 +133,7 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
                         .Where(p => 
                         p.ApplicationUserId == ses.ApplicationUserId
                         && p.BegTime >= ses.BegTime
-                        && p.BegTime <= ses.EndTime)
+                        && p.EndTime <= ses.EndTime)
                         .OrderBy(p => p.BegTime)
                         .ToArray();
                 List<DateTime> times = new List<DateTime>();
@@ -128,9 +147,9 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
 
                     for (int i = 0; i< times.Count()-1; i+=2)
                     {
-                        var pause = (times[i + 1].Subtract(times[i])).TotalMinutes;
+                        var pause = (times[i + 1].Subtract(times[i])).TotalMinutes ;
                        // pauseTotalTest2 += pause;
-                        pauses.Add(pause);
+                        pauses.Add(pause < 0? 0 : pause);
                     }
 
                    // pauseTotalTest += Min(ses.EndTime, end).Subtract(Max(ses.BegTime, beg)).TotalMinutes - dialogInSession.Sum(x => Min(x.EndTime, end).Subtract(x.BegTime).TotalMinutes);
@@ -160,5 +179,6 @@ namespace UserOperations.Utils.AnalyticOfficeUtils
             return sessions.Any() ?
                 (double?)sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
         }
+
     }
 }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
@@ -27,7 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\HBData\HBData.csproj" />
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
-    <!--<ProjectReference Include="..\..\HBML\HBMLHttpClient\HBMLHttpClient.csproj" />-->
+    <ProjectReference Include="..\..\HBML\HBMLHttpClient\HBMLHttpClient.csproj" />
     <ProjectReference Include="..\..\HBOperations\Common\Common.csproj" />
     <ProjectReference Include="..\..\HBOperations\FillingSatisfactionService\FillingSatisfactionService.csproj" />
   </ItemGroup>
@@ -44,5 +44,8 @@
     <None Include="Utils\CommonOperations\email.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\OldDbContext\" />
   </ItemGroup>
 </Project>

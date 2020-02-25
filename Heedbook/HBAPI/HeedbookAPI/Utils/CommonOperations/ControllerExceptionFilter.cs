@@ -6,6 +6,7 @@ namespace UserOperations.Controllers
 {
     public class ControllerExceptionFilter : ExceptionFilterAttribute
     {
+
         public override void OnException(ExceptionContext context)
         {
             var code = 400;
@@ -16,6 +17,10 @@ namespace UserOperations.Controllers
                 case AccessException access:
                     code = 403; break;//Forbidden
                 case NoFoundException notFound:
+                    code = 400; break;
+                case NotUniqueException notUnique:
+                    code = 400; break;
+                case NoDataException noData:
                     code = 400; break;
                 default:
                     code = 400; break;
@@ -38,5 +43,17 @@ namespace UserOperations.Controllers
     public class AccessException : Exception
     {
         public AccessException(string message, Exception innerException = null) : base(message, innerException) { }
+    }
+
+    public class NotUniqueException : Exception
+    {
+        public NotUniqueException(string message, Exception innerException = null) : base(message, innerException) { }
+        public NotUniqueException(Exception innerException = null) : base("Not unique", innerException) { }
+    }
+
+    public class NoDataException : Exception
+    {
+        public NoDataException(string message, Exception innerException = null) : base(message, innerException) { }
+        public NoDataException(Exception innerException = null) : base("No data", innerException) { }
     }
 }

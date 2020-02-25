@@ -6,30 +6,26 @@ using System.Threading.Tasks;
 using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models;
-using UserOperations.Controllers;
 
 namespace UserOperations.Services
 {
     public class ClientNoteService 
     {
         private readonly LoginService _loginService;
-        private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
 
         public ClientNoteService(
             LoginService loginService,
-            DBOperations dbOperation,
             RequestFilters requestFilters,
             IGenericRepository repository
             )
         {
             _loginService = loginService;
-            _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _repository = repository;
         }
-        public async Task<ICollection<ClientNote>> GetAll(Guid clientId)
+        public async Task<ICollection<GetClientNote>> GetAll(Guid clientId)
         {
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
@@ -39,7 +35,9 @@ namespace UserOperations.Services
             _requestFilters.IsCompanyBelongToUser(corporationId, companyId, clientEntity.CompanyId, role);
 
             return _repository.GetAsQueryable<ClientNote>()
-                .Where(c => c.ClientId == clientId).ToList();
+                .Where(c => c.ClientId == clientId)
+                .Select(c => new GetClientNote(c, c.ApplicationUser))
+                .ToList();
         }
 
         public async Task<ClientNote> Create(PostClientNote clientNote)
@@ -47,7 +45,12 @@ namespace UserOperations.Services
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
             var corporationId = _loginService.GetCurrentCorporationId();
-            var userId = _loginService.GetCurrentUserId();
+            Guid? userId = null;
+            try
+            {
+                userId = _loginService.GetCurrentUserId();
+            }
+            catch { }
 
             Guid clientCompanyId = _repository.GetAsQueryable<Client>()
                         .Where(x => x.ClientId == clientNote.ClientId)
@@ -60,7 +63,6 @@ namespace UserOperations.Services
                 ApplicationUserId = userId,
                 ClientId = clientNote.ClientId,
                 CreationDate = DateTime.UtcNow,
-                Tags = clientNote.Tags,
                 Text = clientNote.Text
             };
 

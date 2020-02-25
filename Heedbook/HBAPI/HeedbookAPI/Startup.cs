@@ -14,9 +14,7 @@ using UserOperations.Services;
 using HBLib.Utils;
 using HBLib;
 using UserOperations.Utils;
-using UserOperations.Services.Scheduler;
 using Quartz;
-using UserOperations.Providers;
 using UserOperations.Utils.AnalyticHomeUtils;
 using UserOperations.Utils.AnalyticContentUtils;
 using UserOperations.Utils.AnalyticOfficeUtils;
@@ -29,6 +27,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations
 {
@@ -67,17 +66,10 @@ namespace UserOperations
                 p.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<RecordsContext>();
-            services.AddScoped<LoginService>();
             services.AddScoped<MailSender>();
-            services.AddScoped<AnalyticCommonProvider>();
-            services.AddScoped<HelpProvider>();
-            services.AddScoped<PhraseProvider>();
-            services.AddScoped<IUserProvider, UserProvider>();
 
             services.AddScoped<AccountService>();
             services.AddScoped<AnalyticClientProfileService>();
-            services.AddScoped<ClientService>();
-            services.AddScoped<ClientNoteService>();
             services.AddScoped<AnalyticContentService>();
             services.AddScoped<AnalyticHomeService>();
             services.AddScoped<AnalyticOfficeService>();
@@ -88,12 +80,21 @@ namespace UserOperations
             services.AddScoped<AnalyticWeeklyReportService>();
             services.AddScoped<CampaignContentService>();
             services.AddScoped<CatalogueService>();
-            services.AddScoped<DemonstrationService>();
-            services.AddScoped<MediaFileService>();
-            services.AddScoped<SessionService>();
+            services.AddScoped<ClientNoteService>();
+            services.AddScoped<ClientService>();
+            services.AddScoped<CompanyService>();
             services.AddScoped<DemonstrationV2Service>();
+            services.AddScoped<DeviceService>();
+            services.AddScoped<DialogueService>();
+            services.AddScoped<FillingFileFrameService>();
+            services.AddScoped<LoginService>();
+            services.AddScoped<MediaFileService>();
+            services.AddScoped<PhraseService>();
+            services.AddScoped<SalesStageService>();
+            services.AddScoped<SessionService>();
             services.AddScoped<SiteService>();
             services.AddScoped<TabletAppInfoService>();
+            services.AddScoped<UserService>();
 
             services.AddScoped<AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
@@ -103,6 +104,8 @@ namespace UserOperations
             services.AddScoped<AnalyticServiceQualityUtils>();
             services.AddScoped<AnalyticSpeechUtils>();
             services.AddScoped<AnalyticWeeklyReportUtils>();
+            services.AddScoped<FileRefUtils>();
+            services.AddScoped<SpreadsheetDocumentUtils>();
 
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -121,6 +124,7 @@ namespace UserOperations
                     Type = "object",
                     Properties = new Dictionary<string, Schema> {
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
+                            {"deviceId", new Schema{Type = "string", Format = "uuid"}},
                             {"begTime", new Schema{Type = "string", Format = "date-time"}},
                             {"endTime", new Schema{Type = "string", Format = "date-time"}},
                             {"contentType", new Schema{Type = "string"}},
@@ -133,6 +137,7 @@ namespace UserOperations
                     Type = "object",
                     Properties = new Dictionary<string, Schema> {
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
+                            {"deviceId", new Schema{Type = "string", Format = "uuid"}},
                             {"answer", new Schema{Type = "string"}},
                             {"time", new Schema{Type = "string", Format = "date-time"}}
                         }
@@ -187,12 +192,10 @@ namespace UserOperations
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
                 };
             });
-
-            services.AddBenchmarkFillQuartzJob(); //-----------
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseSwagger(c =>
             {
@@ -206,9 +209,6 @@ namespace UserOperations
             });
             app.UseAuthentication();
             app.UseMvc();
-
-            scheduler.ScheduleJob(app.ApplicationServices.GetService<IJobDetail>(),
-             app.ApplicationServices.GetService<ITrigger>());
 
             // add seed
            // BenchmarkRunner.Run<TestRepository>();

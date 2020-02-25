@@ -42,7 +42,7 @@ namespace UnitAPITestsService.Tasks
                 var message = new MessengerMessageRun
                 {
                     logText = report,
-                    ChannelName = "IntegrationTester"
+                    ChannelName = "ApiTester"
                 };
                 System.Console.WriteLine($"{JsonConvert.SerializeObject(message)}");
                 _publisher.Publish(message);

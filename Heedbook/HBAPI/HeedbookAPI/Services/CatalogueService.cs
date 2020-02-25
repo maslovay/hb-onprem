@@ -8,16 +8,13 @@ namespace UserOperations.Services
 {
     public class CatalogueService
     {
-        private readonly LoginService _loginService;
         private readonly IGenericRepository _repository;
 
 
         public CatalogueService(
-            LoginService loginService,
             IGenericRepository repository
             )
         {
-            _loginService = loginService;
             _repository = repository;
         }
         public IEnumerable<Country> CountrysGet()
@@ -29,17 +26,9 @@ namespace UserOperations.Services
         {
             return _repository.GetAsQueryable<ApplicationRole>().ToList();
         }
-        public IEnumerable<object> WorkerTypeGet()
+        public IEnumerable<object> DeviceTypeGet()
         {
-            try
-            {
-                var companyId = _loginService.GetCurrentCompanyId();
-                return _repository.GetAsQueryable<WorkerType>().Where(p => p.CompanyId == companyId).Select(p => new { p.WorkerTypeId, p.WorkerTypeName }).ToList();
-            }
-            catch
-            {
-                throw new UnauthorizedAccessException();
-            }
+            return _repository.GetAsQueryable<DeviceType>().ToList();
         }
         public IEnumerable<CompanyIndustry> IndustryGet()
         {

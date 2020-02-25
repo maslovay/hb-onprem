@@ -8,27 +8,33 @@ using HBData.Models;
 using UserOperations.Models;
 using UserOperations.Controllers;
 using Microsoft.EntityFrameworkCore;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Services
 {
     public class ClientService 
     {
         private readonly LoginService _loginService;
-        private readonly DBOperations _dbOperation;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
+        private readonly FileRefUtils _fileRef;
+
+        private readonly string _containerName;
+        private readonly int activeStatus = 3;
 
         public ClientService(
             LoginService loginService,
-            DBOperations dbOperation,
             RequestFilters requestFilters,
-            IGenericRepository repository
+            IGenericRepository repository,
+            FileRefUtils fileRef
             )
         {
             _loginService = loginService;
-            _dbOperation = dbOperation;
             _requestFilters = requestFilters;
             _repository = repository;
+            _fileRef = fileRef;
+
+            _containerName = "clientavatars";
         }
         public async Task<List<GetClient>> GetAll( string beg, string end, List<string> genders, List<Guid> companyIds, int begAge, int endAge)
         {
@@ -42,13 +48,13 @@ namespace UserOperations.Services
                 .Where(c => 
                     (c.Age >= begAge)
                     &&  (c.Age <= endAge)
-                    && c.Dialogues.Any(d => d.BegTime >= begTime && d.EndTime <= endTime)
+                    && c.Dialogues.Any(d => (d.BegTime >= begTime && d.EndTime <= endTime) && d.StatusId == activeStatus)
                     && (!genders.Any() || genders.Contains(c.Gender))
                     && (!companyIds.Any() ||companyIds.Contains(c.CompanyId)))
                 .Select( c => new GetClient () {
                     ClientId = c.ClientId,
                     Age = c.Age,
-                    Avatar = c.Avatar,
+                    Avatar = c.Avatar != null ? _fileRef.GetFileLink(_containerName, c.Avatar, default) : null,
                     CompanyId = c.CompanyId,
                     CorporationId = c.CorporationId,
                     Email = c.Email,
@@ -56,14 +62,40 @@ namespace UserOperations.Services
                     Gender = c.Gender,
                     Phone = c.Phone,
                     StatusId = c.StatusId,
-                    ClientNotes = c.ClientNotes,
-                    DialogueIds =  c.Dialogues.Where(d => d.BegTime >= begTime && d.EndTime <= endTime).Select(d => d.DialogueId)
+                    ClientNotes = c.ClientNotes.Select(x => new GetClientNote(x, x.ApplicationUser)),
+                    DialogueIds =  c.Dialogues.Where(d => (d.BegTime >= begTime && d.EndTime <= endTime) && d.StatusId == activeStatus).Select(d => d.DialogueId)
                 });
             return data.ToList();
             }
-        
 
-        public async Task<string> Update(PutClient client)
+        public async Task<GetClient> Get(Guid clientId)
+        {
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
+
+            var data = _repository.GetAsQueryable<Client>()
+                .Where( c => c.ClientId == clientId)
+                .Select(c => new GetClient()
+                {
+                    ClientId = c.ClientId,
+                    Age = c.Age,
+                    Avatar = c.Avatar != null ? _fileRef.GetFileLink(_containerName, c.Avatar, default) : null,
+                    CompanyId = c.CompanyId,
+                    CorporationId = c.CorporationId,
+                    Email = c.Email,
+                    Name = c.Name,
+                    Gender = c.Gender,
+                    Phone = c.Phone,
+                    StatusId = c.StatusId,
+                    ClientNotes = c.ClientNotes.Select(x => new GetClientNote(x, x.ApplicationUser)),
+                    DialogueIds = c.Dialogues.Where(x => x.StatusId == activeStatus).Select(d => d.DialogueId)
+                })
+                .FirstOrDefault();
+            return data;
+        }
+
+
+        public async Task<Client> Update(PutClient client)
         {
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
@@ -82,7 +114,7 @@ namespace UserOperations.Services
             }
             _repository.Update<Client>(clientEntity);
             await _repository.SaveAsync();
-            return "Saved";
+            return clientEntity;
         }
 
         public async Task<string> Delete(Guid clientId)

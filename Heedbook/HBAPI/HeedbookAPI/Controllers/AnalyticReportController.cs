@@ -23,46 +23,46 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("ActiveEmployee")]
-        public string ReportActiveEmployee([FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+        public string ReportActiveEmployee([FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds) => 
+                                                         [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) => 
         _analyticReportService.ReportActiveEmployee(
             applicationUserIds,
             companyIds,
             corporationIds,
-            workerTypeIds);
+            deviceIds);
 
         [HttpGet("UserPartial")]
         public string ReportUserPartial([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds) =>
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
         _analyticReportService.ReportUserPartial(
             beg,
             end,
             applicationUserIds,
             companyIds,
             corporationIds,
-            workerTypeIds);
+            deviceIds);
 
 
         [HttpGet("UserFull")]
         public string ReportUserFull([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds ) =>
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
         _analyticReportService.ReportUserFull(
             beg,
             end,
             applicationUserIds,
             companyIds,
             corporationIds,
-            workerTypeIds);
+            deviceIds);
         
     }    
 }

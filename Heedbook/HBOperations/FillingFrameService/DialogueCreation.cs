@@ -8,6 +8,7 @@ using FillingFrameService.Exceptions;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
+using HBMLHttpClient.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using RabbitMqEventBus.Events;
@@ -15,7 +16,8 @@ using Renci.SshNet.Common;
 using HBLib;
 using HBData;
 using Microsoft.EntityFrameworkCore;
-using HBLib.Model;
+using FillingFrameService.Services;
+using FillingFrameService.Requests;
 
 namespace FillingFrameService
 {
@@ -25,15 +27,21 @@ namespace FillingFrameService
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly FillingFrameServices _filling;
+        private readonly RequestsService _requests;
 
 
         public DialogueCreation(IServiceScopeFactory factory,
             SftpClient client,
+            FillingFrameServices filling,
+            RequestsService requests,
             ElasticClientFactory elasticClientFactory)
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _sftpClient = client;
+            _filling = filling;
             _elasticClientFactory = elasticClientFactory;
+            _requests = requests;
         }
 
         public async Task Run(DialogueCreationRun message)
@@ -43,17 +51,18 @@ namespace FillingFrameService
             _log.SetArgs(message.DialogueId);
             _log.Info("Function started");
 
+            _log.Info($"Processing message {JsonConvert.SerializeObject(message)}");
+
             try
             {
-                var frames =
-                    _context.FileFrames
-                        .Include(p => p.FrameAttribute)
-                        .Include(p => p.FrameEmotion)
-                        .Where(item =>
-                            item.ApplicationUserId == message.ApplicationUserId
-                            && item.Time >= message.BeginTime
-                            && item.Time <= message.EndTime)
-                        .ToList();
+                var isExtended = _requests.IsExtended(message);
+                var client = _requests.Client(message.ClientId);
+                var frames = _requests.FileFrames(message);
+                // var frameVideo = new FileVideo();
+                // if (!isExtended)
+                // {
+                //     frameVideo = _requests.FileVideo(message);
+                // }
 
                 var emotions = frames.Where(p => p.FrameEmotion.Any())
                     .Select(p => p.FrameEmotion.First())
@@ -65,97 +74,26 @@ namespace FillingFrameService
 
                 if (emotions.Any() && attributes.Any())
                 {
-                    var dialogueFrames = emotions.Select(item => new DialogueFrame
+                    var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended);
+                    _log.Info($"Avatar is {JsonConvert.SerializeObject(fileAvatar)}");
+                    var frameVideo = new FileVideo();
+                    if (!isExtended)
                     {
-                        DialogueId = message.DialogueId,
-                        AngerShare = item.AngerShare,
-                        FearShare = item.FearShare,
-                        DisgustShare = item.DisgustShare,
-                        ContemptShare = item.ContemptShare,
-                        NeutralShare = item.NeutralShare,
-                        SadnessShare = item.SadnessShare,
-                        SurpriseShare = item.SurpriseShare,
-                        HappinessShare = item.HappinessShare,
-                        YawShare = item.YawShare,
-                        Time = item.FileFrame.Time
-                    })
-                        .ToList();
-
-                    string gender; 
-                    if (message.Gender == null)
-                    {
-                        var genderMaleCount = attributes.Count(item => item.Gender == "Male");
-                        var genderFemaleCount = attributes.Count(item => item.Gender == "Female");
-                        gender = genderMaleCount > genderFemaleCount ? "male" : "female";
-                    }
-                    else
-                    {
-                        gender = message.Gender.ToLower();
+                        frameVideo = _requests.FileVideo(message, fileAvatar);
                     }
 
-                    var dialogueClientProfile = new DialogueClientProfile
-                    {
-                        DialogueId = message.DialogueId,
-                        Gender = gender,
-                        Age = attributes.Average(item => item.Age),
-                        Avatar = $"{message.DialogueId}.jpg"
-                    };
-
-                    var yawShare = emotions.Average(item => item.YawShare);
-                    yawShare = Math.Abs((double) yawShare);
-
-                    var dialogueVisual = new DialogueVisual
-                    {
-                        DialogueId = message.DialogueId,
-                        AngerShare = emotions.Average(item => item.AngerShare),
-                        FearShare = emotions.Average(item => item.FearShare),
-                        DisgustShare = emotions.Average(item => item.DisgustShare),
-                        ContemptShare = emotions.Average(item => item.ContemptShare),
-                        NeutralShare = emotions.Average(item => item.NeutralShare),
-                        SadnessShare = emotions.Average(item => item.SadnessShare),
-                        SurpriseShare = emotions.Average(item => item.SurpriseShare),
-                        HappinessShare = emotions.Average(item => item.HappinessShare),
-                        AttentionShare = 10 * (10 - Math.Min((double)yawShare, 10) / 1.4)
-                    };
+                    var dialogueFrames = _filling.FillingDialogueFrame(message, emotions);
+                    var dialogueClientProfile = _filling.FillingDialogueClientProfile(message, attributes);
+                    var dialogueVisual = _filling.FiilingDialogueVisuals(message, emotions);
 
                     var insertTasks = new List<Task>
                     {
                         _context.DialogueVisuals.AddAsync(dialogueVisual),
                         _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
-                        _context.DialogueFrames.AddRangeAsync(dialogueFrames)
-                        // _repository.CreateAsync(dialogueVisual),
-                        // _repository.CreateAsync(dialogueClientProfile),
-                        // _repository.BulkInsertAsync(dialogueFrames)
+                        _context.DialogueFrames.AddRangeAsync(dialogueFrames),
+                        _filling.FillingAvatarAsync(message, frames, frameVideo, isExtended, fileAvatar, client)
                     };
 
-                    FrameAttribute attribute;
-                    if (!string.IsNullOrWhiteSpace(message.AvatarFileName) )
-                    {
-                        attribute = frames.Where(item => item.FileName == message.AvatarFileName).Select(p => p.FrameAttribute.FirstOrDefault()).FirstOrDefault();
-                        if (attribute == null) attribute = attributes.First();
-                    }
-                    else
-                    {
-                        attribute = attributes.First();
-                    }
-
-                    _log.Info($"Avatar file name is {attribute.FileFrame.FileName}");
-                    var localPath =
-                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + attribute.FileFrame.FileName);
-
-                    var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(attribute.Value);
-                    var rectangle = new Rectangle
-                    {
-                        Height = faceRectangle.Height,
-                        Width = faceRectangle.Width,
-                        X = faceRectangle.Top,
-                        Y = faceRectangle.Left
-                    };
-
-                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
-                    stream.Seek(0, SeekOrigin.Begin);
-                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
-                    stream.Close();
                     await Task.WhenAll(insertTasks);
                     _context.SaveChanges();
                     _log.Info("Function finished");

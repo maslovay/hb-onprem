@@ -141,7 +141,8 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
         public double WorkloadTotal(List<VWeeklyUserReport> dialogues, List<VSessionUserWeeklyReport> sessions)
         {
             if (sessions == null || sessions.Count() == 0) return 0;
-            return dialogues.Sum(p => p.DialogueHours) / sessions.Sum(p => p.SessionsHours) ?? 0;
+            var workload = dialogues.Sum(p => p.DialogueHours) / sessions.Sum(p => p.SessionsHours) ?? 0;
+            return workload > 1 ? 1 : workload;
         }
         public Dictionary<DateTime, double> AvgWorkloadPerDay(List<VWeeklyUserReport> dialogues, List<VSessionUserWeeklyReport> sessions)//---for one user
         {
@@ -159,7 +160,8 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
             Dictionary<DateTime, double> result = new Dictionary<DateTime, double>();
             for (var day = begTime; day <= endTime; day = day.AddDays(1))
             {
-                result.Add(day.Date, workload.FirstOrDefault(x => x.Day.Date == day.Date) != null ? workload.FirstOrDefault(x => x.Day.Date == day.Date).Workload : 0);
+                var workloadPerDay = workload.FirstOrDefault(x => x.Day.Date == day.Date) != null ? workload.FirstOrDefault(x => x.Day.Date == day.Date).Workload : 0;
+                result.Add(day.Date, workloadPerDay > 100 ? 100 : workloadPerDay);
             }
             return result;
         }

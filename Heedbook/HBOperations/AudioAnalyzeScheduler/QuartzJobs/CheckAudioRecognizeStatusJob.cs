@@ -1,4 +1,5 @@
-﻿using AudioAnalyzeScheduler.Model;
+﻿using AsrHttpClient;
+using AudioAnalyzeScheduler.Model;
 using HBData;
 using HBData.Models;
 using HBLib;
@@ -42,7 +43,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            System.Console.WriteLine("Function AudioAnalyzeScheduler started");
             using (var scope = _factory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();

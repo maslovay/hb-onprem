@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UserOperations.Utils;
-using UserOperations.Models.Get.AnalyticOfficeController;
 using UserOperations.Utils.AnalyticOfficeUtils;
 using Newtonsoft.Json;
-using Microsoft.Extensions.Configuration;
 using HBData.Repository;
 using HBData.Models;
+using UserOperations.Models.AnalyticModels;
+using System.Threading.Tasks;
+using UserOperations.Controllers;
+using UserOperations.Models.Get.HomeController;
 
 namespace UserOperations.Services
 {
@@ -16,53 +18,78 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly AnalyticOfficeUtils _analyticOfficeUtils;
+        private readonly AnalyticOfficeUtils _utils;
+        private readonly DBOperations _dbOperations;
 
         public AnalyticOfficeService(
             LoginService loginService,
             RequestFilters requestFilters,
             IGenericRepository repository,
-            AnalyticOfficeUtils analyticOfficeUtils
+            AnalyticOfficeUtils analyticOfficeUtils,
+            DBOperations dbOperations
             )
         {
             _loginService = loginService;
             _requestFilters = requestFilters;
             _repository = repository;
-            _analyticOfficeUtils = analyticOfficeUtils;
+            _utils = analyticOfficeUtils;
+            _dbOperations = dbOperations;
         }
-        public string Efficiency(string beg, string end,
-                                        List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds)
+        public async Task<string> Efficiency(string beg, string end,
+                                        List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);   
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var sessions = GetSessionsInfo(prevBeg, endTime, companyIds, applicationUserIds, workerTypeIds);
+
+                var sessions = GetSessionsInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
 
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
-                var dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, workerTypeIds);
+                List<DialogueInfo> dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
                 var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
-                var result = new EfficiencyDashboardInfoNew
-                {
-                    WorkloadValueAvg = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime),
-                    WorkloadDynamics = -_analyticOfficeUtils.LoadIndex(sessionOld, dialoguesOld, prevBeg, begTime),
-                    DialoguesCount = _analyticOfficeUtils.DialoguesCount(dialoguesCur),
-                    AvgWorkingTime = _analyticOfficeUtils.SessionAverageHours(sessionCur, begTime, endTime),
-                    AvgDurationDialogue = _analyticOfficeUtils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                    BestEmployee = _analyticOfficeUtils.BestEmployeeLoad(dialoguesCur, sessionCur, begTime, endTime),
-                };
-                var satisfactionIndex = _analyticOfficeUtils.SatisfactionIndex(dialoguesCur);
-                var loadIndex = _analyticOfficeUtils.LoadIndex(sessionCur, dialoguesCur, begTime, endTime.AddDays(1));
-                var employeeCount = _analyticOfficeUtils.EmployeeCount(dialoguesCur);
-             //   result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
+                var dialoguesUserCur = dialoguesCur.Where(p => p.ApplicationUserId != null).ToList();
+                var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
+
+            var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
+            List<Models.Get.HomeController.BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
+
+            var result = new EfficiencyDashboardInfoNew
+            {
+                WorkloadValueAvg = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
+                WorkloadDynamics = -_utils.LoadIndex(sessionOld, dialoguesUserOld, prevBeg, begTime),
+                DialoguesCount = _utils.DialoguesCount(dialoguesCur),
+                AvgWorkingTime = _utils.SessionAverageHours(sessionCur, begTime, endTime),
+                AvgDurationDialogue = _utils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
+                BestEmployee = _utils.BestEmployeeLoad(dialoguesUserCur, sessionCur, begTime, endTime),
+                WorkloadValueAvgByWorkingTime = _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesCur.Where(x => x.IsInWorkingTime).ToList(), begTime, endTime),
+                WorkloadDynamicsWorkingTime = - _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesOld.Where(x => x.IsInWorkingTime).ToList(), prevBeg, begTime)
+            };
+
+            if (benchmarksList != null && benchmarksList.Count() != 0)
+            {
+                result.LoadIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
+                result.LoadIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark");
+
+                result.WorkLoadByTimeIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "WorkLoadByTimeIndustryAvg");
+                result.WorkLoadByTimeIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "WorkLoadByTimeIndustryBenchmark");
+            }
+
+            var satisfactionIndex = _utils.SatisfactionIndex(dialoguesCur);
+                var loadIndex = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
+                var employeeCount = _utils.EmployeeCount(dialoguesUserCur);
+                var deviceCount = _utils.DeviceCount(dialoguesCur);
+            //   result.CorrelationLoadSatisfaction = satisfactionIndex != 0?  loadIndex / satisfactionIndex : 0;
                 result.WorkloadDynamics += result.WorkloadValueAvg;
-                result.DialoguesNumberAvgPerEmployee = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
+                result.WorkloadDynamicsWorkingTime += result.WorkloadValueAvgByWorkingTime;
+                result.DialoguesNumberAvgPerEmployee = (dialoguesUserCur.Count() != 0 && employeeCount != 0) ? dialoguesUserCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
+                result.DialoguesNumberAvgPerDevice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / deviceCount : 0;
                 result.DialoguesNumberAvgPerDayOffice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() : 0;
 
                 var diagramDialogDurationPause = sessionCur
@@ -70,18 +97,18 @@ namespace UserOperations.Services
                 .Select(p => new
                 {
                     Day = p.Key.ToString(),
-                    AvgDialogue = _analyticOfficeUtils
+                    AvgDialogue = _utils
                         .DialogueAverageDuration(
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime)),
-                    AvgPause = _analyticOfficeUtils
+                    AvgPause = _utils
                         .DialogueAveragePause(
                             p.ToList(),
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime)),
-                    AvgWorkLoad  = _analyticOfficeUtils
+                    AvgWorkLoad  = _utils
                         .LoadIndex(
                             p.ToList(),
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
@@ -95,16 +122,16 @@ namespace UserOperations.Services
                 .Select(p => new
                 {
                     Day = p.Key.ToString(),
-                    EmployeeCount = _analyticOfficeUtils
+                    EmployeeCount = _utils
                         .EmployeeCount(
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList()
                            ),
-                    LoadIndex = _analyticOfficeUtils
+                    LoadIndex = _utils
                         .LoadIndex(
-                            p.ToList(),
+                            p.ToList(), 
                             dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
                             p.Min(s => s.BegTime),
-                            p.Max(s => s.EndTime))                  
+                            p.Max(s => s.EndTime))
                 }).ToList();
 
                 var diagramEmployeeWorked = employeeWorked.Select(
@@ -116,30 +143,70 @@ namespace UserOperations.Services
                     }
                 );
 
-                 var clientTime = dialoguesCur
-                    .GroupBy(p => p.BegTime.Hour)
-                    .Select(p => new EfficiencyLoadClientTimeInfo
-                    {
-                        Time = $"{p.Key}:00",
-                        ClientCount = p.GroupBy(q => q.BegTime.Date)
-                            .Select(q => new { DialoguesCount = q.Select(r => r.DialogueId).Distinct().Count() })
-                            .Average(q => q.DialoguesCount)
-                    }).ToList();
+                var clientTime = dialoguesCur
+                   .GroupBy(p => p.BegTime.Hour)
+                   .Select(p => new EfficiencyLoadClientTimeInfo
+                   {
+                       Time = $"{p.Key}:00",
+                       ClientCount = p.GroupBy(q => q.BegTime.Date)
+                       .Average(q => q.Count())
+                   }).ToList();
 
+                var days = new List<string> {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
                 var clientDay = dialoguesCur?
                     .GroupBy(p => p.BegTime.DayOfWeek)
                     .Select(p => new EfficiencyLoadClientDayInfo
                     {
                         Day = p.Key.ToString(),
                         ClientCount = p.GroupBy(q => q.BegTime.Date)
-                            .Select(q => new { DialoguesCount = q.Select(r => r.DialogueId).Distinct().Count() })
-                            .Average(q => q.DialoguesCount)
+                            .Average(q => q.Count())
                     }).ToList();
+                var zeroDays = days.Where(x => !clientDay.Select(p => p.Day).Contains(x))
+                        .Select(p => new EfficiencyLoadClientDayInfo
+                        {
+                            Day = p,
+                            ClientCount = 0
+                        });
+                clientDay = clientDay.Union(zeroDays).ToList();
 
-                var pauseInMin = (sessionCur.Count() != 0 && dialoguesCur.Count() != 0) ?
-                            _analyticOfficeUtils.DialogueAvgPauseListInMinutes(sessionCur, dialoguesCur, begTime, endTime): null;
+
+            //----new diagrams---dialogue amount by device and by employee
+            var dialogueUserDate = dialoguesUserCur?
+                 .GroupBy(p => p.BegTime.Date)
+                 .OrderBy(p => p.Key)
+                 .Select(p => new 
+                 {
+                     Day = p.Key.ToShortDateString(),
+                     DialoguesUsers = p.GroupBy(r => r.ApplicationUserId)
+                     .Select(r => new 
+                                    {
+                                        UserId = (Guid)r.Key,
+                                        ClientCount = r.Count(),
+                                        r.FirstOrDefault()?.FullName
+                                    }).OrderBy(r => r.UserId).ToArray()
+                 }).ToArray();
+
+
+            var dialogueDeviceDate = dialoguesCur?
+                 .GroupBy(p => p.BegTime.Date)
+                 .OrderBy(p => p.Key)
+                 .Select(p => new
+                 {
+                     Day = p.Key.ToShortDateString(),
+                     DialoguesDevices = p.GroupBy(r => r.DeviceId)
+                     .Select(r => new
+                     {
+                         DeviceId = r.Key,
+                         ClientCount = r.Count(),
+                         r.FirstOrDefault()?.DeviceName,
+                     }).OrderBy(r => r.DeviceId).ToArray()
+                 }).ToArray();
+            //---end new block
+
+            var pauseInMin = (sessionCur.Count() != 0 && dialoguesUserCur.Count() != 0) ?
+                            _utils.DialogueAvgPauseListInMinutes(sessionCur, dialoguesUserCur, begTime, endTime): null;
                      
-                var sessTimeMinutes = _analyticOfficeUtils.SessionTotalHours(sessionCur, begTime, endTime)*60;
+                var sessTimeMinutes = _utils.SessionTotalHours(sessionCur, begTime, endTime)*60;
                 var pausesAmount = new{
                     Less_10 = pauseInMin?.Where(p => p <= 10).Count(),
                     Between_11_20 = pauseInMin?.Where(p => p > 10 && p <= 20).Count(),
@@ -168,6 +235,8 @@ namespace UserOperations.Services
                 jsonToReturn["DiagramEmployeeWorked"] = diagramEmployeeWorked;
                 jsonToReturn["ClientTime"] = clientTime;
                 jsonToReturn["ClientDay"] = clientDay;
+                jsonToReturn["DialogueUserDate"] = dialogueUserDate;
+                jsonToReturn["DialogueDeviceDate"] = dialogueDeviceDate;
                 jsonToReturn["PausesAmount"] = pausesAmount;
                 jsonToReturn["PausesShare"] = pausesShareInSession;
                 jsonToReturn["PausesInMinutes"] = pausesInMinutes;
@@ -180,21 +249,20 @@ namespace UserOperations.Services
         DateTime prevBeg,
         DateTime endTime,
         List<Guid> companyIds,
-        List<Guid> applicationUserIds,
-        List<Guid> workerTypeIds)
+        List<Guid?> applicationUserIds,
+        List<Guid> deviceIds)
         {
-            var sessions = _repository.GetWithInclude<Session>(
+            var sessions = _repository.GetAsQueryable<Session>().Where(
                     p => p.BegTime >= prevBeg
                     && p.EndTime <= endTime
                     && p.StatusId == 7
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                    , o => o.ApplicationUser)
-                .AsQueryable()
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new SessionInfo
                 {
                     ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime
                 })
@@ -205,31 +273,102 @@ namespace UserOperations.Services
             DateTime prevBeg,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds)
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds)
         {
-            var dialogues = _repository.GetWithInclude<Dialogue>(
+            var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToList();
+            var dialogues = _repository.GetAsQueryable<Dialogue>().Where(
                     p => p.BegTime >= prevBeg
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                    , p => p.ApplicationUser)
-                .AsQueryable()
-                .Select(p => new DialogueInfo
-                {
-                    DialogueId = p.DialogueId,
-                    ApplicationUserId = p.ApplicationUserId,
-                    BegTime = p.BegTime,
-                    EndTime = p.EndTime,
-                    FullName = p.ApplicationUser.FullName,
-                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
-                })
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                    .Select(p =>  new DialogueInfo
+                    {
+                        DialogueId = p.DialogueId,
+                        ApplicationUserId = p.ApplicationUserId,
+                        DeviceId = p.DeviceId,
+                        DeviceName = p.Device.Name,
+                        BegTime = p.BegTime,
+                        EndTime = p.EndTime,
+                        FullName = p.ApplicationUser.FullName,
+                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                        IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
+                    })
                 .ToList();
             return dialogues;
         }
 
-    }  
+        private double TimetableHoursForAllComapnies(DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
+        {
+            return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
+        }
+
+        private double TimetableHours(DateTime beg, DateTime end, Guid companyId, List<Guid> deviceIds)
+        {
+            var timeTable = GetTimeTable(companyId);
+            var devicesAmount = _repository.GetAsQueryable<Device>()
+                .Where(x => x.CompanyId == companyId 
+                && (deviceIds == null || deviceIds.Count() == 0 || deviceIds.Contains(x.DeviceId)))
+                .Count();
+            double totalHours = 0;
+            for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
+            {
+                totalHours += timeTable[(int)i.DayOfWeek];
+            }
+            return totalHours * devicesAmount;
+        }
+
+        private double[] GetTimeTable(Guid companyId)
+        {
+            var timeTable =  _repository.GetAsQueryable<WorkingTime>().Where(x => x.CompanyId == companyId)
+                    .OrderBy(x => x.Day).Select(x => x.EndTime != null ? ((DateTime)x.EndTime).Subtract((DateTime)x.BegTime).TotalHours : 0).ToArray();
+            if (timeTable == null || timeTable.Count() < 7) throw new NoDataException("company has no timetable");
+            return timeTable;
+        }
+
+        private async Task<IEnumerable<BenchmarkModel>> GetBenchmarksList(DateTime begTime, DateTime endTime, List<Guid> companyIds)
+        {
+            var industryIds = await GetIndustryIdsAsync(companyIds);
+            try
+            {
+                var benchmarksList = _repository.Get<Benchmark>().Where(x => x.Day >= begTime && x.Day <= endTime
+                                                             && industryIds.Contains(x.IndustryId))
+                                                              .Join(_repository.Get<BenchmarkName>(),
+                                                              bench => bench.BenchmarkNameId,
+                                                              names => names.Id,
+                                                              (bench, names) => new BenchmarkModel { Name = names.Name, Value = bench.Value });
+                return benchmarksList;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+
+        private double? GetBenchmarkIndustryAvg(List<BenchmarkModel> benchmarksList, string banchmarkName)
+        {
+            if (benchmarksList == null || benchmarksList.Count() == 0) return null;
+            return benchmarksList.Any(x => x.Name == banchmarkName) ?
+                 (double?)benchmarksList.Where(x => x.Name == banchmarkName).Average(x => x.Value) : null;
+        }
+
+        private double? GetBenchmarkIndustryMax(List<BenchmarkModel> benchmarksList, string banchmarkName)
+        {
+            if (benchmarksList == null || benchmarksList.Count() == 0) return null;
+            return benchmarksList.Any(x => x.Name == banchmarkName) ?
+                 (double?)benchmarksList.Where(x => x.Name == banchmarkName).Max(x => x.Value) : null;
+        }
+
+        private async Task<IEnumerable<Guid?>> GetIndustryIdsAsync(List<Guid> companyIds)
+        {
+            var industryIds = (await _repository.FindByConditionAsync<Company>(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)))?
+                     .Select(x => x.CompanyIndustryId).Distinct();
+            return industryIds;
+        }
+
+    }
 }

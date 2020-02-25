@@ -145,13 +145,12 @@ namespace RabbitMqEventBus
                 }
                 catch (Exception e)
                 {
-                    System.Console.WriteLine($"Exception:\n{e}");
                     var encodingString = Encoding.UTF8.GetString(ea?.Body ?? new byte[0]);
                     var @event = (IntegrationEvent)JsonConvert.DeserializeObject(encodingString,
                         _subsManager.GetEventTypeByName(ea.RoutingKey));
                     Console.WriteLine(@event.RetryCount);
                     @event.RetryCount += 1;
-                    Console.WriteLine("exception occured in rabbitmq event bus, retry count is: " + @event.RetryCount);
+                    Console.WriteLine($"Exception occured in rabbitmq event bus {e}, retry count is: " + @event.RetryCount);
                     channel.BasicAck(ea.DeliveryTag, false);
                     Publish(@event);
                 }

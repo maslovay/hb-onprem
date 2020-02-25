@@ -50,6 +50,10 @@ namespace HBData.Models
         /// link to the photo of the client’s profile picture, photo from the first dialogue of this client
         /// </summary>
         public string Avatar { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime LastDate { get; set; }
 
         /// <summary>
         /// Client status id (active, inactive...)

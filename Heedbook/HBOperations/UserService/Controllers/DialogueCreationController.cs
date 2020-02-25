@@ -37,6 +37,7 @@ namespace UserService.Controllers
             {
                 DialogueId = message.DialogueId,
                 ApplicationUserId = message.ApplicationUserId,
+                DeviceId = message.DeviceId,
                 BegTime = message.BeginTime,
                 EndTime = message.EndTime,
                 CreationTime = DateTime.UtcNow,

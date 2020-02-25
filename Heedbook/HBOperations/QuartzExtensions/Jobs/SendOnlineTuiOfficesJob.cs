@@ -82,15 +82,15 @@ namespace QuartzExtensions.Jobs
         {           
             var offices = _context.Sessions
             .Include(p=>p.ApplicationUser)
-            .Include(p=>p.ApplicationUser.Company)
+            .Include(p=>p.Device.Company)
             .Where(p=>p.StatusId == 6
-                &&tuiOfficeGuids.Contains(p.ApplicationUser.CompanyId))
-            .GroupBy(p => p.ApplicationUser.CompanyId)
+                &&tuiOfficeGuids.Contains(p.Device.CompanyId))
+            .GroupBy(p => p.Device.CompanyId)
             .Select(p=> new CompanyInformation
                 {
                     CompanyId = p.Key,
-                    CompanyName = p.First().ApplicationUser.Company.CompanyName,
-                    ApplicationUserName = p.First().ApplicationUser.FullName
+                    CompanyName = p.First().Device.Company.CompanyName,
+                    ApplicationUserName = p.First().ApplicationUser!=null? p.First().ApplicationUser.FullName : null
                 })
             .ToList();            
             return offices;            

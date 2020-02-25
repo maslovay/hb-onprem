@@ -64,8 +64,7 @@ namespace UserOperations.Controllers
         {            
             var dialogues = _context.Dialogues
                 .Include(p => p.ApplicationUser)
-                .Include(p => p.ApplicationUser.Company)
-                .Include(p => p.ApplicationUser.WorkerType)
+                .Include(p => p.Device.Company)
                 .Include(p => p.DialogueAudio)
                 .Include(p => p.Language)
                 .Include(p => p.DialogueClientSatisfaction)
@@ -76,16 +75,14 @@ namespace UserOperations.Controllers
                 .Include(p => p.DialogueVisual)
                 .Include(p => p.DialoguePhrase)
                 .Include(p => p.DialogueWord)
-
                 .Where(p => p.BegTime > beginTime
-                    && companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && companyIds.Contains((Guid)p.Device.CompanyId))
                 .Select(p => new DialogueReportModel
                     {
                         CompanyName = p.ApplicationUser.Company.CompanyName,
-                        CompanyId = (Guid)p.ApplicationUser.CompanyId,
+                        CompanyId = p.Device.CompanyId,
                         DialogueId = p.DialogueId,
-                        EmployeeEmployeeId = p.ApplicationUserId,
-                        EmployeeWorkerTypeName = p.ApplicationUser.WorkerType.WorkerTypeName,
+                        ApplicationUserId = p.ApplicationUserId,
                         BeginTime = p.BegTime,
                         EndTime = p.EndTime,
                         InStatistic = p.InStatistic,
@@ -115,8 +112,7 @@ namespace UserOperations.Controllers
                         SpeechesSpeechSpeed = p.DialogueSpeech.Average(s => s.SpeechSpeed).ToString(),
                         PhrasesPhraseText = JsonConvert.SerializeObject(p.DialoguePhrase.Select(s => new 
                                 {
-                                    phraseText = s.Phrase.PhraseText,
-                                    s.Phrase.IsClient
+                                    phraseText = s.Phrase.PhraseText
                                 })),
                         WordsWord = JsonConvert.SerializeObject(p.DialogueWord.Select(s => new
                                 {
@@ -193,8 +189,8 @@ namespace UserOperations.Controllers
                     tempRow.Append(
                         ConstructCell(dr.CompanyId.ToString(), CellValues.String),
                         ConstructCell(dr.DialogueId.ToString(), CellValues.String),
-                        ConstructCell(dr.EmployeeEmployeeId.ToString(), CellValues.String),
-                        ConstructCell(dr.EmployeeWorkerTypeName, CellValues.String),                    
+                        ConstructCell(dr.ApplicationUserId.ToString(), CellValues.String),
+                        ConstructCell(dr.EmployeeWorkerTypeName, CellValues.String),
                         ConstructCell(dr.BeginTime.ToString(), CellValues.String),
                         ConstructCell(dr.EndTime.ToString(), CellValues.String),
                         ConstructCell(dr.InStatistic.ToString(), CellValues.String),
@@ -246,8 +242,8 @@ namespace UserOperations.Controllers
         public string CompanyName {get; set;}
         public Guid CompanyId {get; set;}
         public Guid DialogueId { get; set; }
-        public Guid EmployeeEmployeeId { get; set; }
-        public string EmployeeWorkerTypeName { get; set; }                   
+        public Guid? ApplicationUserId { get; set; }
+        public string EmployeeWorkerTypeName { get; set; }
         public DateTime BeginTime { get; set; }
         public DateTime EndTime { get; set; }
         public bool InStatistic { get; set; }

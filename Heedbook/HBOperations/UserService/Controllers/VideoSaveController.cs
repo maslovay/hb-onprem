@@ -36,10 +36,11 @@ namespace UserService.Controllers
 
         [HttpPost]
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
-        public async Task<IActionResult> VideoSave([FromQuery] Guid applicationUserId,
+        public async Task<IActionResult> VideoSave([FromQuery] Guid deviceId,
             [FromQuery] String begTime,
             [FromQuery] Double? duration,
-            [FromForm] IFormCollection formData)
+            [FromForm] IFormCollection formData,
+            [FromQuery] Guid? applicationUserId = null)
         {
             try
             {  
@@ -47,15 +48,15 @@ namespace UserService.Controllers
                 duration = duration == null ? 15 : duration;
                 var file = formData.Files.FirstOrDefault();
                 //if (memoryStream == null)   return BadRequest("No video file or file is empty");
-                var languageId = _context.ApplicationUsers
+                var languageId = _context.Devices
                                          .Include(p => p.Company)
                                          .Include(p => p.Company.Language)
-                                         .Where(p => p.Id == applicationUserId)
+                                         .Where(p => p.DeviceId == deviceId)
                                          .First().Company.Language.LanguageId;
 
                 var stringFormat = "yyyyMMddHHmmss";
                 var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
-                var fileName = $"{applicationUserId}_{time.ToString(stringFormat)}_{languageId}.mkv";
+                var fileName = $"{applicationUserId?? Guid.Empty}_{time.ToString(stringFormat)}_{languageId}.mkv";
                 if(file != null)
                 {   
                     var memoryStream = file.OpenReadStream();
@@ -64,6 +65,7 @@ namespace UserService.Controllers
 
                 var videoFile = new FileVideo();
                 videoFile.ApplicationUserId = applicationUserId;
+                videoFile.DeviceId = deviceId;
                 videoFile.BegTime = time;
                 videoFile.CreationTime = DateTime.UtcNow;
                 videoFile.Duration = duration;

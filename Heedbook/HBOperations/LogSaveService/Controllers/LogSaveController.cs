@@ -16,11 +16,9 @@ namespace LogSave.Controllers
     public class LogSaveController : Controller
     {
         private readonly RecordsContext _context;
-        private readonly SftpClient _sftpClient;
-        public LogSaveController(RecordsContext context, SftpClient sftpClient)
+        public LogSaveController(RecordsContext context)
         {
             _context = context;
-            _sftpClient = sftpClient;
         }
         [HttpPost]
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]

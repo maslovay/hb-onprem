@@ -9,6 +9,7 @@ using UserOperations.Utils.AnalyticServiceQualityUtils;
 using HBData.Repository;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Services
 {
@@ -33,20 +34,20 @@ namespace UserOperations.Services
         }
 
         public async Task<string> ServiceQualityComponents( string beg, string end, 
-                                                        List<Guid> applicationUserIds, List<Guid> companyIds,
-                                                        List<Guid> corporationIds, List<Guid> workerTypeIds )
+                                                        List<Guid?> applicationUserIds, List<Guid> companyIds,
+                                                        List<Guid> corporationIds, List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var phraseTypes = await GetComponentsPhraseInfo();
                 var loyaltyTypeId = phraseTypes.First(p => p.PhraseTypeText == "Loyalty").PhraseTypeId;
 
                 //Dialogues info
-                var dialogues = await GetComponentsDialogueInfo(begTime, endTime, companyIds, applicationUserIds, workerTypeIds,loyaltyTypeId);
+                var dialogues = await GetComponentsDialogueInfo(begTime, endTime, companyIds, applicationUserIds, deviceIds, loyaltyTypeId);
                 //Result
                 var result = new ComponentsSatisfactionInfo
                 {
@@ -89,27 +90,30 @@ namespace UserOperations.Services
         }
 
         public string ServiceQualityDashboard( string beg, string end, 
-                                                     List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
-                                                     List<Guid> workerTypeIds )
+                                                     List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                                     List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
+                var isExtended = _loginService.GetIsExtended();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, workerTypeIds, applicationUserIds)
+                var dialogues = GetDialoguesAsQuryable(prevBeg, endTime, companyIds, applicationUserIds, deviceIds)
                         .Select(p => new DialogueInfo
                         {
                             DialogueId = p.DialogueId,
                             ApplicationUserId = p.ApplicationUserId,
+                            DeviceId = p.DeviceId,
                             FullName = p.ApplicationUser.FullName,
                             BegTime = p.BegTime,
                             EndTime = p.EndTime,
                             SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                             SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
-                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
+                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN,
+                            SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
                         })
                         .ToList(); 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
@@ -126,15 +130,18 @@ namespace UserOperations.Services
                     BestEmployee = _analyticServiceQualityUtils.BestEmployee(dialoguesCur),
                     BestEmployeeScore = _analyticServiceQualityUtils.BestEmployeeSatisfaction(dialoguesCur),
                     BestProgressiveEmployee = _analyticServiceQualityUtils.BestProgressiveEmployee(dialogues, begTime),
-                    BestProgressiveEmployeeDelta = _analyticServiceQualityUtils.BestProgressiveEmployeeDelta(dialogues, begTime)
+                    BestProgressiveEmployeeDelta = _analyticServiceQualityUtils.BestProgressiveEmployeeDelta(dialogues, begTime),
+                    SmilesShare = dialoguesCur.Average(x => x.SmilesShare),
+                    SmilesShareDelta = - dialoguesOld.Average(x => x.SmilesShare),
                 };
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
+                result.SmilesShareDelta += result.SmilesShare;
                 return JsonConvert.SerializeObject(result);
         }
 
         public async Task<string> ServiceQualityRating( string beg, string end, 
-                                                         List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
-                                                         List<Guid> workerTypeIds )
+                                                         List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                                         List<Guid> deviceIds )
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -152,8 +159,8 @@ namespace UserOperations.Services
                     begTime, 
                     endTime, 
                     companyIds, 
-                    applicationUserIds, 
-                    workerTypeIds, 
+                    applicationUserIds,
+                    deviceIds, 
                     typeIdLoyalty);
 
                 var result = await dialogues
@@ -179,8 +186,8 @@ namespace UserOperations.Services
         }
 
         public async Task<string> ServiceQualitySatisfactionStats( string beg, string end,
-                                                    List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
-                                                    List<Guid> workerTypeIds )
+                                                    List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                                    List<Guid> deviceIds )
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -188,21 +195,38 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, workerTypeIds);
-
-                var result = new SatisfactionStatsInfo
+                var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, deviceIds);
+                var isExtended = _loginService.GetIsExtended();
+                if (isExtended)
                 {
-                    AverageSatisfactionScore = dialogues.Average(p => p.SatisfactionScore),
-                    PeriodSatisfaction = dialogues
-                        .GroupBy(p => p.BegTime.Date)
-                        .Select(p => new SatisfactionStatsDayInfo {
-                            Date = Convert.ToDateTime(p.Key).ToString(),
-                            SatisfactionScore = p.Average(q => q.SatisfactionScore)
-                        }).ToList()
+                    var result = new SatisfactionStatsInfo
+                    {
+                        AverageSatisfactionScore = dialogues.Average(p => p.SatisfactionScore),
+                        PeriodSatisfaction = dialogues
+                            .GroupBy(p => p.BegTime.Date)
+                            .Select(p => new SatisfactionStatsDayInfo
+                            {
+                                Date = Convert.ToDateTime(p.Key).ToString(),
+                                SatisfactionScore = p.Average(q => q.SatisfactionScore)
+                            }).ToList()
+                    };
+
+                    result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                var resultForSme = new
+                {
+                    AverageSmile = dialogues.Average(p => p.SmilesShare),
+                    PeriodSmiles = dialogues
+                          .GroupBy(p => p.BegTime.Date)
+                          .Select(p => new 
+                          {
+                              Date = Convert.ToDateTime(p.Key).ToString(),
+                              SmileShare = p.Average(q => q.SmilesShare)
+                          }).OrderBy(x => x.Date).ToList()
                 };
-                
-                result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(resultForSme);
         }
 
         //---PRIVATE---
@@ -220,8 +244,8 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds,
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds,
             Guid loyaltyTypeId)
         {
             var dialogues = await _repository.GetAsQueryable<Dialogue>()
@@ -229,9 +253,9 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new ComponentsDialogueInfo
                 {
                     DialogueId = p.DialogueId,
@@ -256,21 +280,21 @@ namespace UserOperations.Services
                 .ToListAsyncSafe();
             return dialogues;
         }
-        private IQueryable<Dialogue> GetDialoguesIncludedPhrase(
+        private IQueryable<Dialogue> GetDialoguesAsQuryable(
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> workerTypeIds,
-            List<Guid> applicationUserIds = null)
+            List<Guid?> applicationUserIds = null,
+            List<Guid> deviceIds = null)
         {
             var dialogues = _repository.GetAsQueryable<Dialogue>()
                 .Where(p => p.BegTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                    && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
+                    && (applicationUserIds == null || (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId)))
+                    && (deviceIds == null || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))))
                 .AsQueryable();
             return dialogues;
         }
@@ -283,8 +307,8 @@ namespace UserOperations.Services
         DateTime begTime,
         DateTime endTime,
         List<Guid> companyIds,
-        List<Guid> applicationUserIds,
-        List<Guid> workerTypeIds,
+        List<Guid?> applicationUserIds,
+        List<Guid> deviceIds,
         Guid typeIdLoyalty)
         {
             return _repository.GetAsQueryable<Dialogue>()
@@ -292,13 +316,15 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
+                    && p.ApplicationUserId != null)
                 .Select(p => new RatingDialogueInfo
                 {
                     DialogueId = p.DialogueId,
-                    ApplicationUserId = p.ApplicationUserId.ToString(),
+                    ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
                     FullName = p.ApplicationUser.FullName,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
@@ -319,24 +345,25 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds)
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds)
         {
             return await _repository.GetAsQueryable<Dialogue>()
                 .Where(p => p.BegTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
                     ApplicationUserId = p.ApplicationUserId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
-                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare)
                 })
                 .ToListAsyncSafe();
         }

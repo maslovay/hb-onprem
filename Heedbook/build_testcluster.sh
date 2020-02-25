@@ -24,12 +24,11 @@ docker build -t hbtestregistry.azurecr.io/dialoguesrecalculatescheduler:latestte
 docker build -t hbtestregistry.azurecr.io/senduseranalyticreportscheduler:latesttest -f tmp/SendUserAnalyticReportScheduler.Dockerfile .&&
 docker build -t hbtestregistry.azurecr.io/referencecontroller:latesttest -f tmp/ReferenceController.Dockerfile .&&
 docker build -t hbtestregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest -f DialogueAndSessionsNestedScheduler.Dockerfile . &&
-docker build -t hbtestregistry.azurecr.io/oldvideotoframeextractscheduler:latest -f OldVideoToFrameExtractScheduler.Dockerfile . &&
+docker build -t hbtestregistry.azurecr.io/oldvideotoframecutsheduler:latest -f OldVideoToFrameCutSheduler.Dockerfile . &&
 docker build -t hbtestregistry.azurecr.io/logsaveservice:latest -f LogSaveService.Dockerfile . &&
 docker build -t hbtestregistry.azurecr.io/messengerreporterservice:latest -f MessengerReporterService.Dockerfile . &&
 docker build -t hbtestregistry.azurecr.io/cloneftponazureservice:latest -f CloneFtpOnAzureService.Dockerfile . &&
-docker build -t hbtestregistry.azurecr.io/deleteoldlogsonelasticscheduler:latest -f DeleteOldLogsOnElasticScheduler.Dockerfile . &&
-docker build -t hbtestregistry.azurecr.io/integrationapitestsservice:latest -f IntegrationAPITestsService.Dockerfile .
+docker build -t hbtestregistry.azurecr.io/deleteoldlogsonelasticscheduler:latest -f DeleteOldLogsOnElasticScheduler.Dockerfile .
 
 
 docker push hbtestregistry.azurecr.io/faceanalyzeservice:latesttest &&
@@ -54,11 +53,10 @@ docker push hbtestregistry.azurecr.io/dialoguesrecalculatescheduler:latesttest &
 docker push hbtestregistry.azurecr.io/senduseranalyticreportscheduler:latesttest &&
 docker push hbtestregistry.azurecr.io/referencecontroller:latesttest &&
 docker push hbtestregistry.azurecr.io/dialogueandsessionsnestedscheduler:latest &&
-docker push hbtestregistry.azurecr.io/oldvideotoframeextractscheduler:latest &&
+docker push hbtestregistry.azurecr.io/oldvideotoframecutsheduler:latest &&
 docker push hbtestregistry.azurecr.io/logsaveservice:latest &&
 docker push hbtestregistry.azurecr.io/messengerreporterservice:latest &&
 docker push hbtestregistry.azurecr.io/cloneftponazureservice:latest &&
-docker push hbtestregistry.azurecr.io/deleteoldlogsonelasticscheduler:latest &&
-docker push hbtestregistry.azurecr.io/integrationapitestsservice:latest
+docker push hbtestregistry.azurecr.io/deleteoldlogsonelasticscheduler:latest
 
 rm -rf tmp

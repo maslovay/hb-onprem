@@ -3,12 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Models.Session;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using UserOperations.Models;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [AllowAnonymous]
+    [ControllerExceptionFilter]
     public class SessionController : Controller
     {
         private readonly SessionService _sessionService;
@@ -21,24 +24,26 @@ namespace UserOperations.Controllers
         }
 
         [HttpPost("SessionStatus")]
-        [SwaggerOperation(Description = "This method can open or close session for applicationuser")]
+        [SwaggerOperation(Description = "This method can open-close session for applicationUser or Device. Device token required")]
         [SwaggerResponse(400, "Wrong action / Exception occured", typeof(string))]
-        [SwaggerResponse(200, "Session succesfuly opened or closed")]
-        public async Task<Response> SessionStatus([FromBody] SessionParams data) =>
-            await _sessionService.SessionStatus(data);
+        [SwaggerResponse(200, "Session succesfuly opened-closed")]
+        public Response SessionStatus([FromBody] SessionParams data) =>
+           _sessionService.SessionStatus(data);
+
+   
         
         [HttpGet("SessionStatus")]
-        [SwaggerOperation(Description = "Returns begin time and StatusId for last Session")]
+        [SwaggerOperation(Description = "Returns begin time and StatusId for last Session (for device or for user on device). DeviceId required in params. Device or user token required")]
         [SwaggerResponse(400, "Exception occured", typeof(string))]
         [SwaggerResponse(200, "Last session exist")]
-        public object SessionStatus([FromQuery] Guid applicationUserId) =>
-             _sessionService.SessionStatus(applicationUserId);
+        public object SessionStatus([FromQuery] Guid? deviceId, [FromQuery] Guid? applicationUserId) =>
+            _sessionService.SessionStatus(deviceId, applicationUserId);
         
         [HttpPost("AlertNotSmile")]
         [SwaggerOperation(Description = "Save \"Client Does not smile\" alert in base")]
         [SwaggerResponse(400, "Exception occured", typeof(string))]
         [SwaggerResponse(200, "Alert saved")]
-        public async Task<string> AlertNotSmile([FromBody] Guid applicationUserId) =>
-            await _sessionService.AlertNotSmile(applicationUserId);
+        public string AlertNotSmile([FromBody] AlertModel alertModel) =>
+            _sessionService.AlertNotSmile(alertModel);
     }
 }

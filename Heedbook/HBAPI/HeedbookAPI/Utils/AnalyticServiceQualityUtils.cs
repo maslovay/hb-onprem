@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UserOperations.Models.AnalyticModels;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
 
 namespace UserOperations.Utils.AnalyticServiceQualityUtils
@@ -80,7 +81,7 @@ namespace UserOperations.Utils.AnalyticServiceQualityUtils
                 .FirstOrDefault()
                 .SatisfactionScoreDelta : 0;
         }
-        public double? LoyaltyIndex(IGrouping<string, RatingDialogueInfo> dialogues)
+        public double? LoyaltyIndex(IGrouping<Guid?, RatingDialogueInfo> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var loyaltyDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.LoyaltyCount, 1)) : 0;

@@ -1,4 +1,5 @@
-﻿using DialogueMarkUp.Extensions;
+﻿using AsrHttpClient;
+using DialogueMarkUp.Extensions;
 using Configurations;
 using DialogueMarkUp.Settings;
 using HBData;
@@ -16,7 +17,7 @@ using Microsoft.Extensions.Options;
 using Quartz;
 using Notifications.Base;
 using RabbitMqEventBus.Base;
-using HBLib.Model;
+
 
 namespace DialogueMarkUp
 {
@@ -52,7 +53,7 @@ namespace DialogueMarkUp
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
-            services.AddSingleton<AsrHttpClient>();
+            services.AddSingleton<AsrHttpClient.AsrHttpClient>();
             services.AddSingleton<SftpClient>();
             services.AddRabbitMqEventBus(Configuration);
 

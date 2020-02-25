@@ -1,3 +1,4 @@
+using AsrHttpClient;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Model;
@@ -22,7 +23,7 @@ namespace DialogueMarkUp.QuartzJobs
 {
     public class CheckDialogueMarkUpJob : IJob
     {
-        private readonly ElasticClient _log;
+        //private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly INotificationPublisher _publisher;
         private readonly ElasticClientFactory _elasticClientFactory;
@@ -44,7 +45,7 @@ namespace DialogueMarkUp.QuartzJobs
         {
             var _log = _elasticClientFactory.GetElasticClient();
             var periodTime = 5 * 60; 
-            var periodFrame = 45;
+            var periodFrame = 30;
             var begMarkUpTime = DateTime.UtcNow.AddHours(-3);
 
             try
@@ -52,53 +53,69 @@ namespace DialogueMarkUp.QuartzJobs
                 var endTime = DateTime.UtcNow.AddMinutes(-30);
                 var frameAttributes = _context.FrameAttributes
                     .Include(p => p.FileFrame)
+                    .Include(p => p.FileFrame.Device)
+                    .Include(p => p.FileFrame.Device.Company)
                     .Where(p => 
-                        p.FileFrame.Time > begMarkUpTime
-                        && p.FileFrame.Time < endTime 
-                        && p.FileFrame.FaceLength > 0)
+                        p.FileFrame.Time > begMarkUpTime && 
+                        p.FileFrame.Time < endTime  && 
+                        p.FileFrame.FaceLength > 0 && 
+                        p.FileFrame.Device.Company.IsExtended)
                     .OrderBy(p => p.FileFrame.Time)
                     .GroupBy(p => p.FileFrame.FileName)
                     .Select(p => p.FirstOrDefault())
                     .ToList();
-                frameAttributes = frameAttributes.Where(p => JsonConvert.DeserializeObject<Value>(p.Value).Height > 135 && 
-                    JsonConvert.DeserializeObject<Value>(p.Value).Height > 135).ToList();
-                System.Console.WriteLine(frameAttributes.Count());
-                var appUsers = frameAttributes.Where(p => p.FileFrame.StatusNNId == 6).Select(p => p.FileFrame.ApplicationUserId).Distinct().ToList();
-                
-                var minTime = frameAttributes.Min(p => p.FileFrame.Time);
-                var videos = _context.FileVideos.Where(p => appUsers.Contains(p.ApplicationUserId) && p.EndTime >= minTime).ToList();
-                
-                foreach (var applicationUserId in appUsers)
+
+                _log.Info($"Total frames -- {frameAttributes.Count()}");
+
+                if(frameAttributes.Count() == 0)
                 {
-                    _log.Info($"Processing application user id --{applicationUserId}");
-                    var framesUser = frameAttributes
-                        .Where(p => p.FileFrame.ApplicationUserId == applicationUserId)
+                    _log.Info($"CheckDialogueMarkUpJob stopped. FrameAttributes COUNT 0");
+                    return;
+                }
+                // frameAttributes = frameAttributes.Where(p => JsonConvert.DeserializeObject<Value>(p.Value).Height > 135 && 
+                    // JsonConvert.DeserializeObject<Value>(p.Value).Height > 135).ToList();
+                System.Console.WriteLine(frameAttributes.Count());
+                //var appUsers = frameAttributes.Where(p => p.FileFrame.ApplicationUserId != null).Select(p => p.FileFrame.ApplicationUserId).Distinct().ToList();
+                var deviceIds = frameAttributes.Select(p => p.FileFrame.DeviceId).Distinct().ToList();
+
+                var minTime = frameAttributes.Min(p => p.FileFrame.Time);
+                //var videos = _context.FileVideos.Where(p => appUsers.Contains(p.ApplicationUserId) && p.EndTime >= minTime).ToList();
+                var fileVideos = _context.FileVideos.Where(p => deviceIds.Contains(p.DeviceId) && p.EndTime >= minTime).ToList();
+
+                foreach (var deviceId in deviceIds)
+                {
+                    _log.Info($"Processing device id --{deviceId}");
+                    var framesDevice = frameAttributes
+                        .Where(p => p.FileFrame.DeviceId == deviceId)
                         .OrderBy(p => p.FileFrame.Time)
                         .ToList();
-                    var videosUser = videos.Where(p => p.ApplicationUserId == applicationUserId).ToList();
+                    var videosDevice = fileVideos.Where(p => p.DeviceId == deviceId).ToList();
 
-                    framesUser = FindAllFaceId(framesUser, periodFrame, periodTime);
-                    // framesUser = UpdateFrameAttributes(framesUser, videosUser);
-                    
-                    var videoFacesUser = CreateVideoFaces(framesUser, videosUser);
-                    _context.AddRange(videoFacesUser.Select(p => new VideoFace{
+                    framesDevice = FindAllFaceId(framesDevice, periodFrame, periodTime);
+                   
+                    _log.Info($"videosDevice COUNT {videosDevice.Count()}");
+                    _log.Info($"framesDevice COUNT {framesDevice.Count()}");
+
+                    var videoFacesDevice = CreateVideoFaces(framesDevice, videosDevice);
+                    _context.AddRange(videoFacesDevice.Select(p => new VideoFace{
                         VideoFaceId = Guid.NewGuid(),
                         FileVideoId = p.Video.FileVideoId,
                         FaceId = JsonConvert.SerializeObject(p.FaceIds)
                     }));
 
-                    var markUps = framesUser.GroupBy(p => p.FileFrame.FaceId)
+                    var markUps = framesDevice.GroupBy(p => p.FileFrame.FaceId)
                         .Where(p => p.Where(q => JsonConvert.DeserializeObject<Value>(q.Value).Height > 135 
-                          &&  JsonConvert.DeserializeObject<Value>(q.Value).Height > 135).Count() >= 5)
+                          &&  JsonConvert.DeserializeObject<Value>(q.Value).Height > 135).Count() >= 4)
                         .Select(x => new MarkUp {
-                            ApplicationUserId = applicationUserId,
+                            ApplicationUserId = x.FirstOrDefault()?.FileFrame?.ApplicationUserId,
+                            DeviceId = deviceId,
                             FaceId = x.Key,
                             BegTime = x.Min(q => q.FileFrame.Time),
                             EndTime = x.Max(q => q.FileFrame.Time),
                             FileNames = x.OrderBy(p => p.FileFrame.Time).Select(q => q.FileFrame).ToList(),
                             Descriptor = x.First().Descriptor,
                             Gender = x.First().Gender,
-                            Videos = videoFacesUser.Where(q => q.FaceIds.Contains(x.Key))
+                            Videos = videoFacesDevice.Where(q => q.FaceIds.Contains(x.Key))
                                 .Select(q => q.Video)
                                 .OrderBy(q => q.BegTime)
                                 .ToList()
@@ -106,22 +123,51 @@ namespace DialogueMarkUp.QuartzJobs
                         .Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 10)
                         .OrderBy(p => p.EndTime)
                         .ToList();
+
                     markUps.ForEach(p => p.EndTime = MinTime(MaxTime(p.EndTime, p.Videos.Max(q => q.EndTime)), p.EndTime.AddSeconds(30)));
+
                     if (markUps.Any()) 
                     {
                         _log.Info($"Creating dialogue for markup {JsonConvert.SerializeObject(markUps.Select(p => new {p.BegTime, p.EndTime}))}");
-                        CreateMarkUp(markUps, framesUser, applicationUserId, _log);
-                        
+                        CreateMarkUp(markUps, framesDevice, deviceId, _log);
                     }
                 }
                 _context.SaveChanges();
-                _log.Info("Function DialogueMarkUp finished");                
+                _log.Info("Function DialogueMarkUp finished");
             }
             catch (Exception e)
             {
                 _log.Fatal($"Exception while executing DialogueMarkUp occured {e}");
                 throw;
             }
+        }
+
+        public List<FrameAttribute> GetFrameVideo(FileVideo video, List<FrameAttribute> frames)
+        {
+            return frames.Where(p => 
+                p.FileFrame.DeviceId == video.DeviceId && 
+                p.FileFrame.Time <= video.EndTime &&
+                p.FileFrame.Time >= video.BegTime).ToList();
+        }
+
+        public List<VideoFaceLocal> CreateVideoFaces(List<FrameAttribute> frames, List<FileVideo> videos)
+        {
+            var videoFaces = new List<VideoFaceLocal>();
+            foreach (var video in videos)
+            {
+                videoFaces.Add(new VideoFaceLocal{
+                    Video = video,
+                    FaceIds = GetFrameVideo(video, frames).Select(p => p.FileFrame.FaceId).ToList()
+                });
+            }
+            videoFaces = videoFaces.Where(p => p.FaceIds.Any()).ToList();
+            return videoFaces;
+        }
+
+        public class VideoFaceLocal
+        {
+            public FileVideo Video;
+            public List<Guid?> FaceIds;
         }
 
         public DateTime MaxTime(DateTime dt1, DateTime dt2)
@@ -134,15 +180,7 @@ namespace DialogueMarkUp.QuartzJobs
         {
             if (dt1 > dt2) return dt2;
             return dt1;
-        }
-
-        public List<FrameAttribute> GetFrameVideo(FileVideo video, List<FrameAttribute> frames)
-        {
-            return frames.Where(p => 
-                p.FileFrame.ApplicationUserId == video.ApplicationUserId && 
-                p.FileFrame.Time <= video.EndTime &&
-                p.FileFrame.Time >= video.BegTime).ToList();
-        }
+        } 
 
         private List<FrameAttribute> UpdateFrameAttributes(List<FrameAttribute> frameAttributes, List<FileVideo> videos)
         {
@@ -168,35 +206,18 @@ namespace DialogueMarkUp.QuartzJobs
             return frameAttributes;
         }
 
-        public List<VideoFaceLocal> CreateVideoFaces(List<FrameAttribute> frames, List<FileVideo> videos)
+        private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid deviceId, ElasticClient log)
         {
-            var videoFaces = new List<VideoFaceLocal>();
-            foreach (var video in videos)
-            {
-                videoFaces.Add(new VideoFaceLocal{
-                    Video = video,
-                    FaceIds = GetFrameVideo(video, frames).Select(p => p.FileFrame.FaceId).ToList()
-                });
-            }
-            videoFaces = videoFaces.Where(p => p.FaceIds.Any()).ToList();
-            return videoFaces;
-        }
+            log.Info($"CreateMarkUp markUps: {markUps.Count()}");
+            log.Info($"CreateMarkUp framesUser count: {framesUser.Count()}");
 
-        public class VideoFaceLocal
-        {
-            public FileVideo Video;
-            public List<Guid?> FaceIds;
-        } 
-
-        private void CreateMarkUp(List<MarkUp> markUps, List<FrameAttribute> framesUser, Guid applicationUserId, ElasticClient log)
-        {
             var dialogueCreationList = new List<DialogueCreationRun>();
             var dialogueVideoAssembleList = new List<DialogueVideoAssembleRun>();
             int markUpCount;
             if (markUps != null)
             {
                 var lastTime = markUps.Max(p =>p.EndTime);
-                if (lastTime < DateTime.Now.AddMinutes(-90))
+                if (lastTime.Date < DateTime.Now.AddMinutes(-90))
                 {
                     framesUser
                         .Where(p => p.FileFrame.Time <= markUps.Last().EndTime)
@@ -227,26 +248,26 @@ namespace DialogueMarkUp.QuartzJobs
                         foreach (var updatedMarkUp in updatedMarkUps)
                         {   
                             var dialogueId = Guid.NewGuid();
-                            if(dialogueIntersectionMoreThan80Percent(applicationUserId, updatedMarkUp.BegTime, updatedMarkUp.EndTime))
-                                continue;
-
-                            var dialogue = _classCreator.CreateDialogueClass(dialogueId, applicationUserId, updatedMarkUp.BegTime, 
+                            log.Info($"Prepared dialogue - {JsonConvert.SerializeObject(updatedMarkUp)}");
+                            var dialogue = _classCreator.CreateDialogueClass(dialogueId, updatedMarkUp.ApplicationUserId, updatedMarkUp.DeviceId, updatedMarkUp.BegTime, 
                                 updatedMarkUp.EndTime, updatedMarkUp.Descriptor);
                             log.Info($"Create dialogue --- {dialogue.BegTime}, {dialogue.EndTime}, {dialogue.DialogueId}");
                             dialogues.Add(dialogue);
 
-                            var markUpNew = _classCreator.CreateMarkUpClass(applicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
+                            var markUpNew = _classCreator.CreateMarkUpClass(updatedMarkUp.ApplicationUserId, updatedMarkUp.BegTime,  updatedMarkUp.EndTime);
                             _context.DialogueMarkups.Add(markUpNew);
 
                             dialogueVideoAssembleList.Add( new DialogueVideoAssembleRun
                             {
-                                ApplicationUserId = applicationUserId,
+                                ApplicationUserId = updatedMarkUp.ApplicationUserId,
                                 DialogueId = dialogueId,
                                 BeginTime = updatedMarkUp.BegTime,
-                                EndTime = updatedMarkUp.EndTime
+                                EndTime = updatedMarkUp.EndTime,
+                                DeviceId = updatedMarkUp.DeviceId
                             });
                             dialogueCreationList.Add(new DialogueCreationRun {
-                                ApplicationUserId = applicationUserId,
+                                DeviceId = updatedMarkUp.DeviceId,
+                                ApplicationUserId = updatedMarkUp.ApplicationUserId,
                                 DialogueId = dialogueId,
                                 BeginTime = updatedMarkUp.BegTime,
                                 EndTime = updatedMarkUp.EndTime,
@@ -271,41 +292,13 @@ namespace DialogueMarkUp.QuartzJobs
                 }
 
                 var personDetection = new PersonDetectionRun{
-                    ApplicationUserIds = dialogues.Select(p => p.ApplicationUserId).Distinct().ToList()
+                    DeviceIds = dialogues.Select(p => p.DeviceId).Distinct().ToList()
                 };
+                log.Info($"Run personDetection for {dialogues.Count()} dialogues");
                 _publisher.Publish(personDetection);
             }
         }
-        private bool dialogueIntersectionMoreThan80Percent(Guid applicationUserId, DateTime begTime, DateTime endTime)
-        {
-            var dialogues = _context.Dialogues.Where(p => p.ApplicationUserId == applicationUserId
-                    && (p.StatusId == 3 || p.StatusId == 6))
-                .ToList();
 
-            if(dialogues == null || dialogues.Count == 0)
-                return false;
-            var intersectDialogues = dialogues.Where(p =>
-                    ((p.BegTime <= begTime
-                        && p.EndTime > begTime
-                        && p.EndTime <= endTime) 
-                    || (p.BegTime < endTime
-                        && p.BegTime > begTime
-                        && p.EndTime >= endTime)
-                    || (p.BegTime >= begTime
-                        && p.EndTime <= endTime)
-                    || (p.BegTime < begTime
-                        && p.EndTime > endTime)));
-            
-            var moreThan80PersentIntersectDialogues = intersectDialogues.Sum(p => 
-                    (MinTime(endTime, p.EndTime).Subtract(MaxTime(begTime,p.BegTime)).TotalSeconds))
-                > endTime.Subtract(begTime).TotalSeconds * 0.8;
-            
-            if(moreThan80PersentIntersectDialogues)
-                return true;
-            else
-                return false;
-        }
-        
         private List<MarkUp> UpdateMarkUp(MarkUp markUp, ElasticClient log, double persent = 0.7)
         {
             var updatedMarkUp = new List<MarkUp>();
@@ -336,15 +329,18 @@ namespace DialogueMarkUp.QuartzJobs
                             takeVideos = j - i + 1;
                         }
                     }
-                    var markUpTmp = new MarkUp();
-                    markUpTmp.ApplicationUserId = markUp.ApplicationUserId;
-                    markUpTmp.FaceId = markUp.FaceId;
-                    markUpTmp.BegTime = videos[i].BegTime;
-                    markUpTmp.EndTime = videos[i + takeVideos - 1].EndTime;
-                    markUpTmp.FileNames = markUp.FileNames.Where(p => p.Time >= videos[i].BegTime && p.Time <= videos[i + takeVideos -1].EndTime).ToList();
-                    markUpTmp.Descriptor = markUp.Descriptor;
-                    markUpTmp.Gender = markUp.Gender;
-                    markUpTmp.Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList();
+                    var markUpTmp = new MarkUp
+                    {
+                        ApplicationUserId = markUp.ApplicationUserId,
+                        DeviceId = markUp.DeviceId,
+                        FaceId = markUp.FaceId,
+                        BegTime = videos[i].BegTime,
+                        EndTime = videos[i + takeVideos - 1].EndTime,
+                        FileNames = markUp.FileNames.Where(p => p.Time >= videos[i].BegTime && p.Time <= videos[i + takeVideos - 1].EndTime).ToList(),
+                        Descriptor = markUp.Descriptor,
+                        Gender = markUp.Gender,
+                        Videos = markUp.Videos.Skip(i).Take(takeVideos).ToList()
+                    };
                     updatedMarkUp.Add(markUpTmp);
                     log.Info($"Current dialogue duration -- {currentVideoDuration}, current video duration {videos[i + takeVideos -1].EndTime.Subtract(videos[i].BegTime)}, Index value - {i},  ");
                     i += takeVideos;
@@ -366,8 +362,8 @@ namespace DialogueMarkUp.QuartzJobs
             return frameAttribute;
         }
         
-        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double threshold = 0.36)
-        {   
+        private Guid? FindFaceId(List<FrameAttribute> frameAttribute, int periodTime, double threshold = 0.4)
+        {
             var frameCompare = frameAttribute.Last();
             if (frameCompare.FileFrame.FaceId != null) 
             {

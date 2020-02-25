@@ -5,8 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using HBData.Models;
 using UserOperations.Services;
 using Swashbuckle.AspNetCore.Annotations;
-using UserOperations.CommonModels;
+using UserOperations.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace UserOperations.Controllers
 {
@@ -24,12 +25,13 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Campaign")]
-        [SwaggerOperation(Summary = "Return campaigns with content", Description = "Return all campaigns for loggined company with content relations")]
+        [SwaggerOperation(Summary = "Return campaigns with content", Description = "Return all campaigns for loggined company with content relations. isActual= true for devices to get only active for today")]
         [SwaggerResponse(200, "Campaigns list", typeof(List<CampaignGetModel>))]
         public List<Campaign> CampaignGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds ) => 
-            _campaignContentService.CampaignGet( companyIds, corporationIds);
+                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                [FromQuery(Name = "isActual")] bool isActual = false) => 
+            _campaignContentService.CampaignGet( companyIds, corporationIds, isActual);
 
 
         [HttpPost("Campaign")]
@@ -58,12 +60,13 @@ namespace UserOperations.Controllers
 
         [HttpGet("Content")]
         [SwaggerOperation(Summary = "Get all content", Description = "Get all content for loggined company with screenshot url links")]
-        [SwaggerResponse(200, "Content list", typeof(List<Content>))]
-        public async Task<List<Content>> ContentGet(
+        [SwaggerResponse(200, "Content list", typeof(List<ContentWithScreenshotModel>))]
+        public async Task<object> ContentGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                [FromQuery(Name = "inActive")] bool? inActive ) =>
-            await _campaignContentService.ContentGet( companyIds, corporationIds, inActive );
+                                [FromQuery(Name = "inActive")] bool inactive = false,
+                                [FromQuery(Name = "screenshot")] bool screenshot = false) =>
+            await _campaignContentService.ContentGet( companyIds, corporationIds, inactive, screenshot);
         
 
         [HttpGet("ContentPaginated")]
@@ -72,7 +75,7 @@ namespace UserOperations.Controllers
         public async Task<object> ContentPaginatedGet(
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                [FromQuery(Name = "inActive")] bool? inActive,
+                                [FromQuery(Name = "inActive")] bool inactive = false,
                                 [FromQuery(Name = "limit")] int limit = 10,
                                 [FromQuery(Name = "page")] int page = 0,
                                 [FromQuery(Name = "orderBy")] string orderBy = "Name",
@@ -80,7 +83,7 @@ namespace UserOperations.Controllers
             await _campaignContentService.ContentPaginatedGet(
                 companyIds,
                 corporationIds,
-                inActive,
+                inactive,
                 limit,
                 page,
                 orderBy,
@@ -89,16 +92,21 @@ namespace UserOperations.Controllers
 
         [HttpPost("Content")]
         [SwaggerOperation(Summary = "Save new content", Description = "Create new content")]
-        [SwaggerResponse(200, "New content", typeof(Content))]
-        public async Task<Content> ContentPost( [FromBody] Content content ) =>
-            await _campaignContentService.ContentPost( content );
+        [SwaggerResponse(200, "New content", typeof(ContentWithScreenshotModel))]
+       
+        public async Task<ContentWithScreenshotModel> ContentPost([FromForm,
+                            SwaggerParameter("json content in FormData with key 'data' + file screenshot")]
+                            IFormCollection formData) =>
+            await _campaignContentService.ContentPost(formData);
 
 
         [HttpPut("Content")]
         [SwaggerOperation(Summary = "Edit content", Description = "Edit existing content")]
-        [SwaggerResponse(200, "Edited content", typeof(Content))]
-        public async Task<Content> ContentPut( [FromBody] Content content) =>
-            await _campaignContentService.ContentPut( content );
+        [SwaggerResponse(200, "Edited content", typeof(ContentWithScreenshotModel))]
+        public async Task<ContentWithScreenshotModel> ContentPut([FromForm,
+                            SwaggerParameter("json content in FormData with key 'data' + file screenshot")]
+                            IFormCollection formData) =>
+            await _campaignContentService.ContentPut(formData);
 
 
         [HttpDelete("Content")]

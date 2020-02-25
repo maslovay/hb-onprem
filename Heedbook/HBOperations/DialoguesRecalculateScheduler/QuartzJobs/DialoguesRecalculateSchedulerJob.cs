@@ -66,7 +66,7 @@ namespace DialoguesRecalculateScheduler.QuartzJobs
                         .Include(p => p.DialogueClientProfile)
                         .Include(p => p.DialogueFrame)
                         .Where(d => d.StatusId == 8 
-                                    && d.CreationTime >= DateTime.Today.AddDays(-_settings.CheckDeepnessInDays)
+                                    && d.BegTime >= DateTime.Today.AddDays(-_settings.CheckDeepnessInDays)
                                     && !d.Comment.ToLower().Contains("too many holes in dialogue"))
                         .ToArray();
 

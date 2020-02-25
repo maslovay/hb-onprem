@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using Microsoft.AspNetCore.Authorization;
+using Swashbuckle.AspNetCore.Annotations;
+using System.Threading.Tasks;
 
 namespace UserOperations.Controllers
 {
@@ -20,22 +22,26 @@ namespace UserOperations.Controllers
         {
             _analyticOfficeProvider = analyticOfficeProvider;
         }
-
+        //
         [HttpGet("Efficiency")]
-        public string Efficiency([FromQuery(Name = "begTime")] string beg,
+        [SwaggerOperation(Summary = "page: /workload",
+            Description = "DialoguesNumberAvgPerEmployee - include only dialogues with UserId not null")]
+        [SwaggerResponse(400, "Exception message")]
+        [SwaggerResponse(200, "Key-Value")]
+        public async Task<string> Efficiency([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization) =>
-            _analyticOfficeProvider.Efficiency(
+                                                         [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                       ) =>
+            await _analyticOfficeProvider.Efficiency(
                 beg,
                 end,
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds
+                deviceIds
             );
            
         

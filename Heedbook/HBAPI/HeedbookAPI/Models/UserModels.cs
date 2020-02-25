@@ -16,7 +16,6 @@ namespace UserOperations.Models
         public Guid? RoleId;
         [Required]
         public string Password;
-        public Guid? WorkerTypeId;
         public Guid? CompanyId;
     }
     public class CompanyModel
@@ -39,7 +38,6 @@ namespace UserOperations.Models
         public Guid? CompanyId { get; set; }
         public Int32? StatusId { get; set; }
         public string OneSignalId { get; set; }
-        public Guid? WorkerTypeId { get; set; }
         public ApplicationRole Role { get; set; }
         public Guid? RoleId { get; set; }
         public UserModel()
@@ -57,7 +55,6 @@ namespace UserOperations.Models
             CompanyId = user.CompanyId;
             StatusId = user.StatusId;
             OneSignalId = user.OneSignalId;
-            WorkerTypeId = user.WorkerTypeId;
             Role = user.UserRoles.FirstOrDefault()?.Role ?? role;
             RoleId = user.UserRoles.FirstOrDefault()?.RoleId;
         }
@@ -68,7 +65,7 @@ namespace UserOperations.Models
         public string PhraseText;
         public Guid PhraseTypeId;
         public Int32? LanguageId;
-        public bool IsClient;
+        public Guid? SalesStageId;//TODO: remove ?
         public Int32? WordsSpace;
         public double? Accurancy;
         public Boolean IsTemplate;

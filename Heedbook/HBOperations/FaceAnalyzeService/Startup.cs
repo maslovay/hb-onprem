@@ -4,6 +4,7 @@ using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using HBMLHttpClient;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;

@@ -74,6 +74,7 @@ namespace UserService.Controllers
                     ClientId = firstDialogue.ClientId,
                     PersonFaceDescriptor = firstDialogue.PersonFaceDescriptor,
                     CreationTime = DateTime.UtcNow,
+		    DeviceId = firstDialogue.DeviceId,
                     BegTime = maxBegTime,
                     EndTime = minEndTime,
                     ApplicationUserId = userId,
@@ -87,6 +88,7 @@ namespace UserService.Controllers
                 {
                     ApplicationUserId = userId,
                     DialogueId = newDialogueId,
+		    DeviceId = newDialogue.DeviceId,
                     BeginTime = maxBegTime,
                     EndTime = minEndTime
                 };
@@ -94,6 +96,7 @@ namespace UserService.Controllers
                 {
                     ApplicationUserId = userId,
                     DialogueId = newDialogueId,
+		    DeviceId = firstDialogue.DeviceId,
                     BeginTime = maxBegTime,
                     EndTime = minEndTime
                 };

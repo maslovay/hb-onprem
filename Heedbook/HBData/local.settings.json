@@ -1,7 +1,7 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "PostgreSQLConnectionString": "User ID=test_user;Password=test_password;Host=40.69.85.181;Port=5432;Database=test_db;Pooling=true;KeepAlive=25"
+    "PostgreSQLConnectionString": "User ID=heedbook_user;Password=Oleg&AnnaRulyat_1975;Host=40.87.153.4;Port=5432;Database=heedbook_db;Pooling=true;KeepAlive=25"
   },
   "ConnectionStrings": {}
 }

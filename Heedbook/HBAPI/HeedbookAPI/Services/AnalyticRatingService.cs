@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HBData;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Utils;
 using UserOperations.Models.Get.AnalyticRatingController;
@@ -9,6 +10,7 @@ using HBData.Repository;
 using System.Threading.Tasks;
 using HBData.Models;
 using Newtonsoft.Json;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Services
 {
@@ -34,7 +36,7 @@ namespace UserOperations.Services
 
 
         public async Task<string> RatingProgress( string beg,  string end, 
-                                             List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds)
+                                             List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -46,11 +48,11 @@ namespace UserOperations.Services
 
                 var sessions = await GetSessions(
                     begTime, endTime,
-                    companyIds, applicationUserIds, workerTypeIds);
+                    companyIds, applicationUserIds, deviceIds);
 
                 var dialogues = await GetDialogues(
                     begTime, endTime,
-                    companyIds, applicationUserIds, workerTypeIds, typeIdCross);
+                    companyIds, applicationUserIds, deviceIds, typeIdCross);
 
                 var results = dialogues
                     .GroupBy(p => p.ApplicationUserId)
@@ -75,7 +77,7 @@ namespace UserOperations.Services
 
 
         public async Task<string> RatingUsers( string beg, string end, 
-                                          List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds )
+                                          List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -86,13 +88,13 @@ namespace UserOperations.Services
 
                 var sessions = await GetSessions(
                     begTime, endTime,
-                    companyIds, applicationUserIds, workerTypeIds);
+                    companyIds, applicationUserIds, deviceIds);
 
                 var typeIdCross = await GetCrossPhraseTypeId();
 
                 var dialogues = await GetDialogues(
                     begTime, endTime,
-                    companyIds, applicationUserIds, workerTypeIds, typeIdCross
+                    companyIds, applicationUserIds, deviceIds, typeIdCross
                 );
 
                 var result = dialogues
@@ -124,8 +126,11 @@ namespace UserOperations.Services
         }  
 
 
-        public async Task<string> RatingOffices( string beg, string end, 
-                                                                 List<Guid> companyIds, List<Guid> corporationIds, List<Guid> workerTypeIds )
+        public async Task<string> RatingOffices( 
+                            string beg, string end, 
+                            List<Guid> companyIds, 
+                            List<Guid> corporationIds, 
+                            List<Guid> deviceIds )
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -138,14 +143,14 @@ namespace UserOperations.Services
                     begTime,
                     endTime,
                     companyIds,
-                    workerTypeIds
+                    deviceIds
                 );
 
                 var typeIdCross = await GetCrossPhraseTypeId();
 
                 var dialogues = await GetDialogueInfoCompanys(
                     begTime, endTime,
-                    companyIds, workerTypeIds, typeIdCross
+                    companyIds, deviceIds, typeIdCross
                 );
 
                 var result = dialogues
@@ -180,23 +185,25 @@ namespace UserOperations.Services
         private async Task<List<SessionInfo>> GetSessions(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds)
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds)
         {
             var sessions = await _repository.GetAsQueryable<Session>()
                 .Where(p => p.BegTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 7
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
+                    && p.ApplicationUserId != null)
                 .Select(p => new SessionInfo
                 {
                     ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
-                    FullName = p.ApplicationUser.FullName,
-                    CompanyId = p.ApplicationUser.CompanyId
+                    FullName = p.ApplicationUser != null? p.ApplicationUser.FullName : null,
+                    CompanyId = p.Device.CompanyId
                 })
                 .ToListAsync();
             return sessions;
@@ -204,8 +211,8 @@ namespace UserOperations.Services
         private async Task<List<DialogueInfo>> GetDialogues(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds,
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds,
             Guid typeIdCross)
         {
             var dialogues = await _repository.GetAsQueryable<Dialogue>()
@@ -213,47 +220,50 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
+                    && p.ApplicationUserId != null)
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
-                    CompanyId = p.ApplicationUser.CompanyId,
+                    CompanyId = p.Device.CompanyId,
+                    DeviceId = p.DeviceId,
                     ApplicationUserId = p.ApplicationUserId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                    FullName = p.ApplicationUser.FullName,
+                    FullName = p.ApplicationUser != null? p.ApplicationUser.FullName : null,
                     CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
                 })
                 .ToListAsync();
             return dialogues;
         }
-        private async Task<List<SessionInfoCompany>> GetSessionInfoCompanys(
+        private async Task<List<SessionInfo>> GetSessionInfoCompanys(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> workerTypeIds)
+            List<Guid> deviceIds)
         {
             var sessions = await _repository.GetAsQueryable<Session>()
                 .Where(p => p.BegTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 7
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                .Select(p => new SessionInfoCompany
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                .Select(p => new SessionInfo
                 {
-                    CompanyId = (Guid)p.ApplicationUser.CompanyId,
+                    CompanyId = p.Device.CompanyId,
+                    DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime
                 })
                 .ToListAsync();
             return sessions;
         }
-        private async Task<List<DialogueInfoCompany>> GetDialogueInfoCompanys(
+        private async Task<List<DialogueInfo>> GetDialogueInfoCompanys(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> workerTypeIds,
+            List<Guid> deviceIds,
             Guid typeIdCross)
         {
             var dialogues = await _repository.GetAsQueryable<Dialogue>()
@@ -261,16 +271,17 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                .Select(p => new DialogueInfoCompany
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
-                    CompanyId = (Guid)p.ApplicationUser.CompanyId,
+                    DeviceId = p.DeviceId,
+                    CompanyId = p.Device.CompanyId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                    FullName = p.ApplicationUser.Company.CompanyName,
+                    FullName = p.Device.Company.CompanyName,
                     CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
                 })
                 .ToListAsync();

@@ -7,6 +7,7 @@ using UserOperations.Utils;
 using UserOperations.Models.Get.AnalyticSpeechController;
 using UserOperations.Utils.AnalyticSpeechController;
 using HBData.Repository;
+using UserOperations.Models.AnalyticModels;
 
 namespace UserOperations.Services
 {
@@ -32,8 +33,8 @@ namespace UserOperations.Services
         }
 
         public string SpeechEmployeeRating( string beg, string end, 
-                                            List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
-                                            List<Guid> workerTypeIds
+                                            List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                            List<Guid> deviceIds
                                                         // List<Guid> phraseIds, List<Guid> phraseTypeIds
                                             )
         {
@@ -51,7 +52,7 @@ namespace UserOperations.Services
                     endTime,
                     companyIds,
                     applicationUserIds,
-                    workerTypeIds,
+                    deviceIds,
                     typeIdCross,
                     typeIdAlert);
               
@@ -68,8 +69,8 @@ namespace UserOperations.Services
         }
 
         public string SpeechPhraseTable( string beg, string end, 
-                                         List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
-                                         List<Guid> workerTypeIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
+                                         List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                         List<Guid> deviceIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
@@ -84,15 +85,15 @@ namespace UserOperations.Services
                     endTime,
                     companyIds,
                     applicationUserIds,
-                    workerTypeIds);
+                    deviceIds);
 
-                var dialoguesTotal = dialogueIds.Count();               
+                var dialoguesTotal = dialogueIds.Count();
                
                 // GET ALL PHRASES INFORMATION
                 var phrasesInfo = GetPhraseInfo(
                     dialogueIds,
                     phraseIds,
-                    phraseTypeIds);    
+                    phraseTypeIds);
 
                 var result = phrasesInfo
                     .GroupBy(p => p.PhraseText.ToLower())
@@ -113,21 +114,21 @@ namespace UserOperations.Services
         }
 
         public SpeechPhraseTotalInfo SpeechPhraseTypeCount( string beg, string end, 
-                                             List<Guid> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
-                                             List<Guid> workerTypeIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
+                                             List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
+                                             List<Guid> deviceIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
         {
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var dialogueIds = GetDialogueIds(
                     begTime,
                     endTime,
                     companyIds,
                     applicationUserIds,
-                    workerTypeIds);
+                    deviceIds);
                 // CREATE PARAMETERS
                 var totalInfo = new SpeechPhraseTotalInfo();
 
@@ -199,8 +200,8 @@ namespace UserOperations.Services
                 return totalInfo;
         }
 
-        public string SpeechWordCloud( string beg, string end, List<Guid> applicationUserIds, List<Guid> companyIds,
-                                       List<Guid> corporationIds, List<Guid> workerTypeIds, List<Guid> phraseIds,
+        public string SpeechWordCloud( string beg, string end, List<Guid?> applicationUserIds, List<Guid> companyIds,
+                                       List<Guid> corporationIds, List<Guid> deviceIds, List<Guid> phraseIds,
                                        List<Guid> phraseTypeIds )
         {
                 var role = _loginService.GetCurrentRoleName();
@@ -214,7 +215,7 @@ namespace UserOperations.Services
                     endTime,
                     companyIds,
                     applicationUserIds,
-                    workerTypeIds);
+                    deviceIds);
 
                 var phrases = DialoguePhrasesInfoAsQueryable(
                     dialogueIds,
@@ -230,6 +231,44 @@ namespace UserOperations.Services
         }
 
 
+        public string PhraseSalesStageCount(string beg, string end, 
+                                        Guid? corporationId,
+                                        List<Guid> companyIds, List<Guid?> applicationUserIds, 
+                                        List<Guid> deviceIds, List<Guid> phraseIds,
+                                        List<Guid> salesStageIds)
+        {
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
+            var begTime = _requestFilters.GetBegDate(beg);
+            var endTime = _requestFilters.GetEndDate(end);
+
+            if (corporationId == null && companyIds.Any())
+            {
+                corporationId = _repository.GetAsQueryable<Company>()
+                       .Where(x => x.CompanyId == companyIds.First()).Select(x => x.CorporationId).FirstOrDefault();
+            }
+
+            if (corporationId != null)
+            {
+                var companyInCorporatioIds = _repository.GetAsQueryable<Corporation>()
+                       .Where(x => x.Id == corporationId).SelectMany(x => x.Companies.Select(p => p.CompanyId)).ToList();
+                companyIds = companyIds.Intersect(companyInCorporatioIds).ToList();
+                var resultForCorp = SalesStagePhraseForCorporation(
+                        begTime, endTime, 
+                        corporationId, companyIds, applicationUserIds,
+                        deviceIds, phraseIds, salesStageIds);
+                return JsonConvert.SerializeObject(resultForCorp);
+            }
+
+            var result = SalesStagePhraseForOneCompany(
+                        begTime, endTime,
+                        applicationUserIds, companyId,
+                        deviceIds, phraseIds, salesStageIds);
+            return JsonConvert.SerializeObject(result);
+        }
+
+
+        //---PRIVATE---
         private Guid GetCrossTypeId()
         {
             var typeIdCross = _repository.GetAsQueryable<PhraseType>()
@@ -248,8 +287,8 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds,
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds,
             Guid typeIdCross,
             Guid typeIdAlert)
         {
@@ -258,13 +297,15 @@ namespace UserOperations.Services
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
+                    && p.ApplicationUserId != null)
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
                     ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
@@ -287,17 +328,18 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> applicationUserIds,
-            List<Guid> workerTypeIds)
+            List<Guid?> applicationUserIds,
+            List<Guid> deviceIds)
         {
             var dialogueIds = _repository.GetAsQueryable<Dialogue>()
                 .Where(p => p.EndTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 3
-                    && p.InStatistic == true)
-                .Where(p => (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && p.InStatistic == true
+                    && p.ApplicationUserId != null)
+                .Where(p => (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                    && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => p.DialogueId).ToList();
             return dialogueIds;
         }
@@ -369,6 +411,100 @@ namespace UserOperations.Services
                 })
                 .AsQueryable();
             return phrases;
+        }
+
+
+        private List<SalesStagePhraseModel> SalesStagePhraseForCorporation(
+                    DateTime begTime,
+                    DateTime endTime, 
+                    Guid? corporationId,
+                    List<Guid> companyIds,
+                    List<Guid?> applicationUserIds, 
+                    List<Guid> deviceIds, 
+                    List<Guid> phraseIds,
+                    List<Guid> salesStageIds
+     )
+        {
+            var dialogueIds = companyIds.Count()==0? new List<Guid>() : GetDialogueIds(begTime, endTime, companyIds, applicationUserIds, deviceIds);
+
+            var phrases = _repository.GetAsQueryable<DialoguePhrase>()
+                    .Where(p => p.PhraseId != null
+                    && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
+                    && (!dialogueIds.Any() || dialogueIds.Contains((Guid)p.DialogueId)))
+                    .ToList();
+
+            var phrasesSalesStages = _repository.GetAsQueryable<SalesStagePhrase>()
+                    .Where(x =>
+                    (!salesStageIds.Any() || salesStageIds.Contains((Guid)x.SalesStageId))
+                    && (x.CorporationId == corporationId))
+                    .GroupBy(x => x.SalesStageId)
+                    .Select(k => new SalesStagePhraseModel
+                    {
+                        Count = CountPhrasesAmount(phrases, k, phraseIds),
+                        SalesStageId = k.Key,
+                        SalesStageName = k.FirstOrDefault().SalesStage.Name,
+                        SequenceNumber = k.FirstOrDefault().SalesStage.SequenceNumber
+                    }).ToList();
+
+            var dialogueCount = 0;
+            foreach (var item in phrasesSalesStages)
+            {
+                dialogueCount = dialogueIds.Count();
+                item.PercentageOfExecution = dialogueCount == 0? 0: (double)item.Count / dialogueCount;
+            }
+            return phrasesSalesStages;
+        }
+
+    private List<SalesStagePhraseModel> SalesStagePhraseForOneCompany(
+                DateTime begTime,
+                DateTime endTime,
+                List<Guid?> applicationUserIds,
+                Guid companyId,
+                List<Guid> deviceIds,
+                List<Guid> phraseIds,
+                List<Guid> salesStageIds
+ )
+    {
+            var corporationId = _repository.GetAsQueryable<Company>()
+              .Where(x => x.CompanyId == companyId).Select(x => x.CorporationId).FirstOrDefault();
+            var dialogueIds = GetDialogueIds(begTime, endTime, new List<Guid> { companyId }, applicationUserIds, deviceIds);
+
+            var phrases = _repository.GetAsQueryable<DialoguePhrase>()
+                    .Where(p => p.PhraseId != null
+                    && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
+                    && (!dialogueIds.Any() || dialogueIds.Contains((Guid)p.DialogueId)))
+                    .ToList();
+
+            var phrasesSalesStages = _repository.GetAsQueryable<SalesStagePhrase>()
+                    .Where(x =>
+                    (!salesStageIds.Any() || salesStageIds.Contains((Guid)x.SalesStageId))
+                    && (x.CompanyId == companyId || (corporationId != null && x.CorporationId == corporationId)))
+                    .GroupBy(x => x.SalesStageId)
+                    .Select(k => new SalesStagePhraseModel
+                    {
+                        Count = CountPhrasesAmount( phrases, k, phraseIds),
+                        SalesStageId = k.Key,
+                        SalesStageName = k.FirstOrDefault().SalesStage.Name,
+                        SequenceNumber=  k.FirstOrDefault().SalesStage.SequenceNumber
+                    }).ToList();
+
+            var dialogueCount = 0;
+            foreach (var item in phrasesSalesStages)
+            {
+                dialogueCount = dialogueIds.Count();
+                item.PercentageOfExecution = dialogueCount == 0 ? 0 : (double)item.Count / dialogueCount;
+            }
+            return phrasesSalesStages;
+        }
+
+        private int CountPhrasesAmount(List<DialoguePhrase> dialoguePhr, IGrouping<Guid, SalesStagePhrase> ssPhr, List<Guid> phraseIds)
+        {
+            var count = dialoguePhr
+                                  .Where(p => ssPhr.Select(s => s.PhraseId)
+                                  .Contains((Guid)p.PhraseId)
+                                  )
+                                  .Select(p => p.DialogueId).Distinct().Count();
+            return count;
         }
     }
 }

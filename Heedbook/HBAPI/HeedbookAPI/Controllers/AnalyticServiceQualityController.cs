@@ -25,68 +25,68 @@ namespace UserOperations.Controllers
         [HttpGet("Components")]
         public async Task<string> ServiceQualityComponents([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization) => 
+                                                         [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                       ) => 
             await _analyticServiceQualityService.ServiceQualityComponents(
                 beg,
                 end,
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds);
+                deviceIds);
         
 
         [HttpGet("Dashboard")]
         public string ServiceQualityDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization) => 
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                        ) => 
             _analyticServiceQualityService.ServiceQualityDashboard(
                 beg,
                 end,
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds);
+                deviceIds);
         
 
         [HttpGet("Rating")]
         public async Task<string> ServiceQualityRating([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization) =>
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                        ) =>
             await _analyticServiceQualityService.ServiceQualityRating(
                 beg,
                 end,
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds);
+                deviceIds);
         
 
         [HttpGet("SatisfactionStats")]
         public async Task<string> ServiceQualitySatisfactionStats([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization) =>
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds
+                                                       ) =>
             await _analyticServiceQualityService.ServiceQualitySatisfactionStats(
                 beg,
                 end,
                 applicationUserIds,
                 companyIds,
                 corporationIds,
-                workerTypeIds);
+                deviceIds);
     }
 }

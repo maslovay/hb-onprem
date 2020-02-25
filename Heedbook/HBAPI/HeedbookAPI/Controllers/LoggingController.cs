@@ -8,9 +8,11 @@ namespace UserOperations.Controllers
     [ApiController]
     public class LoggingController : ControllerBase
     {
+      //  private readonly ElasticSettings _settings;
 
-        public LoggingController()
+        public LoggingController(/*ElasticSettings settings*/)
         {
+          //  _settings = new ElasticSettings {Host = settings.Host, Port = settings.Port};
         }
 
         /// <summary>
