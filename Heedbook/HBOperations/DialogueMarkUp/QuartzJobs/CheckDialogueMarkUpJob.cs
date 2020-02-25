@@ -46,6 +46,7 @@ namespace DialogueMarkUp.QuartzJobs
             var _log = _elasticClientFactory.GetElasticClient();
             var periodTime = 5 * 60; 
             var periodFrame = 30;
+            var begMarkUpTime = DateTime.UtcNow.AddHours(-3);
 
             try
             {
@@ -54,7 +55,11 @@ namespace DialogueMarkUp.QuartzJobs
                     .Include(p => p.FileFrame)
                     .Include(p => p.FileFrame.Device)
                     .Include(p => p.FileFrame.Device.Company)
-                    .Where(p => p.FileFrame.StatusNNId == 6 && p.FileFrame.Time < endTime && p.FileFrame.FaceLength > 0 && p.FileFrame.Device.Company.IsExtended)
+                    .Where(p => 
+                        p.FileFrame.Time > begMarkUpTime && 
+                        p.FileFrame.Time < endTime  && 
+                        p.FileFrame.FaceLength > 0 && 
+                        p.FileFrame.Device.Company.IsExtended)
                     .OrderBy(p => p.FileFrame.Time)
                     .GroupBy(p => p.FileFrame.FileName)
                     .Select(p => p.FirstOrDefault())
@@ -212,7 +217,7 @@ namespace DialogueMarkUp.QuartzJobs
             if (markUps != null)
             {
                 var lastTime = markUps.Max(p =>p.EndTime);
-                if (lastTime.Date < DateTime.Now.Date)
+                if (lastTime.Date < DateTime.Now.AddMinutes(-90))
                 {
                     framesUser
                         .Where(p => p.FileFrame.Time <= markUps.Last().EndTime)
