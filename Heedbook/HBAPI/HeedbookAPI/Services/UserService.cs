@@ -1,6 +1,7 @@
 ﻿using HBData;
 using HBData.Models;
 using HBData.Repository;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -22,7 +23,7 @@ namespace UserOperations.Services
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
-       // private readonly SftpClient _sftpClient;
+        private readonly SftpClient _sftpClient;
         private readonly FileRefUtils _fileRef;
         private readonly MailSender _mailSender;
         private readonly string _containerName;
@@ -34,14 +35,14 @@ namespace UserOperations.Services
             IGenericRepository repository, 
             LoginService loginService,
             IConfiguration config,
-          //  SftpClient sftpClient,
+            SftpClient sftpClient,
             FileRefUtils fileRef,
             RequestFilters requestFilters,
             MailSender mailSender)
         {
             _repository = repository;
             _loginService = loginService;
-          //  _sftpClient = sftpClient;
+            _sftpClient = sftpClient;
             _fileRef = fileRef;
             _requestFilters = requestFilters;
             _mailSender = mailSender;
@@ -114,15 +115,15 @@ namespace UserOperations.Services
 
             //---save avatar---
             string avatarUrl = null;
-            //if (formData.Files.Count != 0)
-            //{
-            //    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-            //    var fn = user.Id + fileInfo.Extension;
-            //    user.Avatar = fn;
-            //    var memoryStream = formData.Files[0].OpenReadStream();
-            //    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
-            //    avatarUrl = _fileRef.GetFileLink(_containerName, fn, default);
-            //}
+            if (formData.Files.Count != 0)
+            {
+                FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                var fn = user.Id + fileInfo.Extension;
+                user.Avatar = fn;
+                var memoryStream = formData.Files[0].OpenReadStream();
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
+                avatarUrl = _fileRef.GetFileLink(_containerName, fn, default);
+            }
             var userForEmail = await GetUserWithRoleAndCompanyByIdAsync(user.Id);
             try
             {
@@ -169,15 +170,15 @@ namespace UserOperations.Services
             }
 
             string avatarUrl = null;
-            //if (formData.Files.Count != 0)
-            //{
-            //    await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
-            //    FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
-            //    var fn = user.Id + fileInfo.Extension;
-            //    var memoryStream = formData.Files[0].OpenReadStream();
-            //    await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
-            //    user.Avatar = fn;
-            //}
+            if (formData.Files.Count != 0)
+            {
+                await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{_containerName}/{user.Id}"));
+                FileInfo fileInfo = new FileInfo(formData.Files[0].FileName);
+                var fn = user.Id + fileInfo.Extension;
+                var memoryStream = formData.Files[0].OpenReadStream();
+                await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", fn, true);
+                user.Avatar = fn;
+            }
             if (user.Avatar != null)
             {
                 avatarUrl = _fileRef.GetFileLink(_containerName, user.Avatar, default);
