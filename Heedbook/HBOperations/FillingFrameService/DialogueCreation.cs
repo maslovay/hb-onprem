@@ -58,6 +58,8 @@ namespace FillingFrameService
                 var isExtended = _requests.IsExtended(message);
                 var client = _requests.Client(message.ClientId);
                 var frames = _requests.FileFrames(message);
+                _log.Info($"Total frames is {frames.Count()}");
+               
                 // var frameVideo = new FileVideo();
                 // if (!isExtended)
                 // {
@@ -74,7 +76,7 @@ namespace FillingFrameService
 
                 if (emotions.Any() && attributes.Any())
                 {
-                    var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended);
+                    var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended, _log);
                     _log.Info($"Avatar is {JsonConvert.SerializeObject(fileAvatar)}");
                     var frameVideo = new FileVideo();
                     if (!isExtended)
@@ -91,7 +93,7 @@ namespace FillingFrameService
                         _context.DialogueVisuals.AddAsync(dialogueVisual),
                         _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
                         _context.DialogueFrames.AddRangeAsync(dialogueFrames),
-                        _filling.FillingAvatarAsync(message, frames, frameVideo, isExtended, fileAvatar, client)
+                        _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client)
                     };
 
                     await Task.WhenAll(insertTasks);

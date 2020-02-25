@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using HBData;
 using HBData.Models;
+using HBLib.Utils;
 using HBMLHttpClient.Model;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -48,7 +49,7 @@ namespace  FillingFrameService.Requests
                 .ToList();
         }
 
-        public FileFrame FindFileAvatar(DialogueCreationRun message, List<FileFrame> frames, bool isExtended)
+        public FileFrame FindFileAvatar(DialogueCreationRun message, List<FileFrame> frames, bool isExtended, ElasticClient log)
         {
             FileFrame fileAvatar;
             if ( !string.IsNullOrWhiteSpace(message.AvatarFileName) && isExtended)
@@ -67,7 +68,7 @@ namespace  FillingFrameService.Requests
                 }
                 catch (Exception e)
                 {
-                    System.Console.WriteLine($"Exeption occured  {e}");
+                    log.Error($"Exeption occured  {e}");
                     fileAvatar = frames.FirstOrDefault();
                 }
                 // .ForEach(p => p.Value= JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value));
