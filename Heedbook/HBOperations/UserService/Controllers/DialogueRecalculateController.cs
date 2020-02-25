@@ -175,6 +175,7 @@ namespace UserService.Controllers
                             BeginTime = dialogue.BegTime,
                             EndTime = dialogue.EndTime,
                             ClientId = dialogue.ClientId
+                            
                         };
                         _notificationPublisher.Publish(@event);
                     }                     
