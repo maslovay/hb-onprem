@@ -61,6 +61,7 @@ namespace  FillingFrameService.Requests
             {
                 try
                 {
+                    log.Info($"Example of frame is {JsonConvert.SerializeObject(frames.FirstOrDefault())}");
                     fileAvatar = frames
                         .Where(p => p.FrameAttribute.FirstOrDefault().Value != null && p.FileExist)
                         .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)

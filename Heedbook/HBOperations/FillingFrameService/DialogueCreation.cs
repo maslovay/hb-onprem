@@ -78,11 +78,11 @@ namespace FillingFrameService
                 {
                     var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended, _log);
                     _log.Info($"Avatar is {JsonConvert.SerializeObject(fileAvatar)}");
-                    var frameVideo = new FileVideo();
-                    if (!isExtended)
-                    {
-                        frameVideo = _requests.FileVideo(message, fileAvatar);
-                    }
+                    // var frameVideo = new FileVideo();
+                    // if (!isExtended)
+                    // {
+                    //     frameVideo = _requests.FileVideo(message, fileAvatar);
+                    // }
 
                     var dialogueFrames = _filling.FillingDialogueFrame(message, emotions);
                     var dialogueClientProfile = _filling.FillingDialogueClientProfile(message, attributes);
