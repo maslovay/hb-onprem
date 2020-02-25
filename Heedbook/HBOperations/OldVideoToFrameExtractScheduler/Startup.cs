@@ -1,6 +1,6 @@
-﻿using OldVideoToFrameCut.Extensions;
+﻿using OldVideoToFrameExtract.Extensions;
 using Configurations;
-using OldVideoToFrameCut.Settings;
+using OldVideoToFrameExtract.Settings;
 using HBData;
 using HBData.Repository;
 using HBLib;
@@ -18,7 +18,7 @@ using Notifications.Base;
 using RabbitMqEventBus.Base;
 
 
-namespace OldVideoToFrameCut
+namespace OldVideoToFrameExtract
 {
     public class Startup
     {
@@ -35,9 +35,9 @@ namespace OldVideoToFrameCut
             services.AddOptions();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
 
-            var schedulerSettings = new OldVideoToFrameCutSettings()
+            var schedulerSettings = new OldVideoToFrameExtractSettings()
             {
-                Period = Configuration.GetSection(nameof(OldVideoToFrameCut)).GetValue<int>("Period")
+                Period = Configuration.GetSection(nameof(OldVideoToFrameExtract)).GetValue<int>("Period")
             };
             
             services.AddDbContext<RecordsContext>
