@@ -19,9 +19,9 @@ using System.Text;
 using System.Net;
 using Notifications.Base;
 
-namespace OldVideoToFrameCut.QuartzJobs
+namespace OldVideoToFrameExtract.QuartzJobs
 {
-    public class OldVideoToFrameCutJob : IJob
+    public class OldVideoToFrameExtractJob : IJob
     {
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
@@ -29,7 +29,7 @@ namespace OldVideoToFrameCut.QuartzJobs
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly INotificationHandler _handler;
 
-        public OldVideoToFrameCutJob(IServiceScopeFactory factory,
+        public OldVideoToFrameExtractJob(IServiceScopeFactory factory,
             INotificationPublisher publisher,
             ElasticClientFactory elasticClientFactory,
             INotificationHandler handler
