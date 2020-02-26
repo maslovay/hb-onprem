@@ -134,6 +134,7 @@ namespace DialogueCreatorScheduler.Services
 
         public List<FaceInterval> UpdateLastDate(List<FaceInterval> intervals, List<FileVideo> videos, ElasticClient log)
         {
+            intervals = intervals.Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > _dialogueSettings.MinDialogueDuration).ToList();
             foreach (var interval in intervals)
             {
                 var lastVideo = videos.Where(p => 
