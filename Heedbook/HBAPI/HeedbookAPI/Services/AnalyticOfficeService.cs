@@ -57,7 +57,7 @@ namespace UserOperations.Services
                 var dialoguesUserCur = dialoguesCur.Where(p => p.ApplicationUserId != null).ToList();
                 var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
 
-            var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
+            var timeTableForDevices = TimetableHoursForAllComapnies(role, begTime, endTime, companyIds, deviceIds);
             List<Models.Get.HomeController.BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
             var result = new EfficiencyDashboardInfoNew
@@ -301,8 +301,9 @@ namespace UserOperations.Services
             return dialogues;
         }
 
-        private double TimetableHoursForAllComapnies(DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
+        private double TimetableHoursForAllComapnies(string role, DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
         {
+            if (role == "Admin") return 0;
             return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
         }
 
