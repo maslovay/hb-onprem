@@ -24,20 +24,21 @@ namespace FillingFrameService
     public class DialogueCreation
     {
         //private readonly ElasticClient _log;
-        private readonly RecordsContext _context;
+        // private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly FillingFrameServices _filling;
         private readonly RequestsService _requests;
 
 
-        public DialogueCreation(IServiceScopeFactory factory,
+        public DialogueCreation(
+            // IServiceScopeFactory factory,
             SftpClient client,
             FillingFrameServices filling,
             RequestsService requests,
             ElasticClientFactory elasticClientFactory)
         {
-            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
+            // _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _sftpClient = client;
             _filling = filling;
             _elasticClientFactory = elasticClientFactory;
@@ -90,14 +91,18 @@ namespace FillingFrameService
 
                     var insertTasks = new List<Task>
                     {
-                        _context.DialogueVisuals.AddAsync(dialogueVisual),
-                        _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
-                        _context.DialogueFrames.AddRangeAsync(dialogueFrames),
+                        _requests.AddFramesAsync(dialogueFrames),
+                        _requests.AddVisualsAsync(dialogueVisual),
+                        _requests.AddClientProfileAsync(dialogueClientProfile),
+                        // _context.DialogueVisuals.AddAsync(dialogueVisual),
+                        // _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
+                        // _context.DialogueFrames.AddRangeAsync(dialogueFrames),
                         _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client)
                     };
 
                     await Task.WhenAll(insertTasks);
-                    _context.SaveChanges();
+                    // _context.SaveChanges();
+                    _requests.SaveChanges();
                     _log.Info("Function finished");
                 }
             }
