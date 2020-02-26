@@ -89,6 +89,7 @@ namespace FillingFrameService
                     var dialogueClientProfile = _filling.FillingDialogueClientProfile(message, attributes);
                     var dialogueVisual = _filling.FiilingDialogueVisuals(message, emotions);
 
+                    _log.Info($"Client - {JsonConvert.SerializeObject(client)}");
                     var insertTasks = new List<Task>
                     {
                         _requests.AddFramesAsync(dialogueFrames),
@@ -97,7 +98,7 @@ namespace FillingFrameService
                         // _context.DialogueVisuals.AddAsync(dialogueVisual),
                         // _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
                         // _context.DialogueFrames.AddRangeAsync(dialogueFrames),
-                        _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client)
+                        _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client, _log)
                     };
 
                     await Task.WhenAll(insertTasks);

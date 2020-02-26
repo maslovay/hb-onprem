@@ -99,7 +99,7 @@ namespace FillingFrameService.Services
         }  
 
         public async System.Threading.Tasks.Task FillingAvatarAsync(DialogueCreationRun message,
-            List<FileFrame> frames,  bool isExtended, FileFrame fileAvatar, Client client)
+            List<FileFrame> frames,  bool isExtended, FileFrame fileAvatar, Client client, ElasticClient log)
         {
             
             string localPath;
@@ -126,16 +126,17 @@ namespace FillingFrameService.Services
             }
             else
             {
-                System.Console.WriteLine(client.Avatar);
+                log.Info(client.Avatar);
                 if (message.ClientId != null && await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}"))
                 {
-                    
+                    log.Info($"Rename client avatar {client.Avatar} as dialogue avatar {message.DialogueId}.jpg");
                     localPath =
                         await _sftpClient.DownloadFromFtpToLocalDiskAsync($"clientavatars/{client.Avatar}");
                     await _sftpClient.UploadAsync(localPath, "clientavatars/", $"{message.DialogueId}.jpg");
                 }
                 else
                 {
+                    log.Info("Extracting client avatar from video");
                     var fileVideo = _requests.FileVideo(message, fileAvatar);
                     var dt = fileAvatar.Time;
                     var seconds = dt.Subtract(fileVideo.BegTime).TotalSeconds;
