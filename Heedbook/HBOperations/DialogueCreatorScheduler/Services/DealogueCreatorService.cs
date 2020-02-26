@@ -54,22 +54,28 @@ namespace DialogueCreatorScheduler.Services
                 {
                     if (intervals[i].EndTime <= DateTime.UtcNow.AddHours(-3))
                     {
-                         var clientId = _det.FindId(frames.Where(p => p.FrameAttribute.Any() && p.FaceId == intervals[i].FaceId ).First(), 
-                        clients);
-                        var curFrame = frames.Where(p => p.Time >= intervals[i].BegTime && p.Time <= intervals[i].BegTime).First();
-                        dialogues.Add(new Dialogue{
-                            DialogueId = Guid.NewGuid(),
-                            BegTime = intervals[i].BegTime,
-                            EndTime = intervals[i].EndTime,
-                            CreationTime = DateTime.UtcNow,
-                            DeviceId = curFrame.DeviceId,
-                            ApplicationUserId = curFrame.ApplicationUserId,
-                            StatusId = 6,
-                            LanguageId = 1,
-                            InStatistic = true,
-                            ClientId = clientId
-                        });
-                        updateTime = intervals[i].EndTime;
+                        var frameExample = frames.Where(p => p.FrameAttribute.Any() && p.FaceId == intervals[i].FaceId ).FirstOrDefault();
+                        if (frameExample != null)
+                        {
+                            var clientId = _det.FindId(frameExample, clients);
+                            var curFrame = frames.Where(p => p.Time >= intervals[i].BegTime && p.Time <= intervals[i].BegTime).FirstOrDefault();
+                            if (curFrame != null)
+                            {
+                                dialogues.Add(new Dialogue{
+                                    DialogueId = Guid.NewGuid(),
+                                    BegTime = intervals[i].BegTime,
+                                    EndTime = intervals[i].EndTime,
+                                    CreationTime = DateTime.UtcNow,
+                                    DeviceId = curFrame.DeviceId,
+                                    ApplicationUserId = curFrame.ApplicationUserId,
+                                    StatusId = 6,
+                                    LanguageId = 1,
+                                    InStatistic = true,
+                                    ClientId = clientId
+                                });
+                                updateTime = intervals[i].EndTime;
+                            }
+                        }
                     } 
                 }
             }

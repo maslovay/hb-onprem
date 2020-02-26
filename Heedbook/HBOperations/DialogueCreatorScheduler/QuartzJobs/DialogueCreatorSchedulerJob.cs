@@ -92,7 +92,7 @@ namespace DialogueCreatorScheduler.QuartzJobs
                     var mergedIntervals = _intervalCalc.MergeFaceIntervals(updatedIntervals);
                     _log.Info($"Merged intervals for device {deviceId}- {JsonConvert.SerializeObject(mergedIntervals)}");
 
-                    var updatedDatesIntervals = _intervalCalc.UpdateLastDate(mergedIntervals, deviceVideos);
+                    var updatedDatesIntervals = _intervalCalc.UpdateLastDate(mergedIntervals, deviceVideos, _log);
                     _log.Info($"Updated last date {deviceId} - {JsonConvert.SerializeObject(updatedDatesIntervals)}");
 
 
