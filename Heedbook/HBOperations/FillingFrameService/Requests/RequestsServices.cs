@@ -86,6 +86,26 @@ namespace  FillingFrameService.Requests
                     p.BegTime <= fileAvatar.Time && p.EndTime >= fileAvatar.Time
                     ).FirstOrDefault();
         }
+
+        public async System.Threading.Tasks.Task AddVisualsAsync(DialogueVisual visuals)
+        {
+            await _context.DialogueVisuals.AddAsync(visuals);
+        }
+
+        public async System.Threading.Tasks.Task AddFramesAsync(List<DialogueFrame> frames)
+        {
+            await _context.DialogueFrames.AddRangeAsync(frames);
+        }
+
+        public async System.Threading.Tasks.Task AddClientProfileAsync(DialogueClientProfile profile)
+        {
+            await _context.DialogueClientProfiles.AddAsync(profile);
+        }
+
+        public void SaveChanges()
+        {
+            _context.SaveChanges();
+        }
     }
 
 
