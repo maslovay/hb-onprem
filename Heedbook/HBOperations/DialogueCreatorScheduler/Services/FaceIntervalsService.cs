@@ -139,11 +139,7 @@ namespace DialogueCreatorScheduler.Services
                     p.BegTime <= interval.EndTime &&
                     p.EndTime >= interval.EndTime ).FirstOrDefault();
                 
-                if (lastVideo != null)
-                {
-                    var endTime = interval.EndTime.AddSeconds(15);
-                    interval.EndTime = (endTime > lastVideo.EndTime) ? lastVideo.EndTime :  endTime;
-                }
+                interval.EndTime = lastVideo.EndTime;
             }
             return intervals;
         }
