@@ -70,6 +70,7 @@ namespace UserOperations.Services
             var workingTimes = company.WorkingTimes.ToList();
             foreach (var time in times)
             {
+                if (time.BegTime == null ^ time.EndTime == null) continue;
                 var timeEntity = workingTimes.Where(x => x.Day == time.Day).FirstOrDefault();
                 timeEntity.BegTime = time.BegTime;
                 timeEntity.EndTime = time.EndTime;
