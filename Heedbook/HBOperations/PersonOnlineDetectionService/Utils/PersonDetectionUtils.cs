@@ -22,7 +22,7 @@ namespace PersonOnlineDetectionService.Utils
             _context = context;
         }
 
-        public Guid? FindId(string descriptor, List<Client> clients, double threshold=0.3)
+        public Guid? FindId(string descriptor, List<Client> clients, double threshold=0.4)
         {
             if (!clients.Any()) return null;
             foreach(var client in clients.Distinct())
