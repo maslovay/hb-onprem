@@ -157,7 +157,7 @@ namespace UserOperations.Services
                     Views = views - splashViews,
                     Clients = clients,
                     SplashViews = splashViews,
-                    ContentFullInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentFullOneInfo
+                    ContentFullInfo = contentsShownGroup.Where(x => x.Key1 == null).Select(x => new ContentFullOneInfo
                     {
                         ExternalLink = x.Key2.ToString(),
                         AmountViews = x.Result.Where(p =>  p.DialogueId != null && p.DialogueId != default(Guid)).Count(),
@@ -167,7 +167,7 @@ namespace UserOperations.Services
                         Female = x.Result.Where(p => p.Gender.ToLower() == "female").Count(),
                         ContentType = "url"
                     })
-                    .Union(contentsShownGroup.Where(x => x.Key2 == null).Select(x => new ContentFullOneInfo
+                    .Union(contentsShownGroup.Where(x => x.Key1 != null).Select(x => new ContentFullOneInfo
                     {
                         Content = x.Key1.ToString(),
                         AmountViews = x.Result.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),//TODO,

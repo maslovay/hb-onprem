@@ -158,7 +158,7 @@ namespace UserOperations.Services
                 var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
 
-            var timeTableForDevices = TimetableHoursForAllComapnies(begTime, endTime, companyIds, deviceIds);
+            var timeTableForDevices = TimetableHoursForAllComapnies(role, begTime, endTime, companyIds, deviceIds);
             var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToList();
             var dialogues = GetDialoguesIncluded(prevBeg, endTime, companyIds, null, deviceIds)
                        .Select(p => new DialogueInfo
@@ -635,8 +635,9 @@ namespace UserOperations.Services
             return totalHours * devicesAmount;
         }
 
-        private double TimetableHoursForAllComapnies(DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
+        private double TimetableHoursForAllComapnies(string role, DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
         {
+            if (role == "Admin") return 0;
             return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
         }
 
