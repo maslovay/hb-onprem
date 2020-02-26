@@ -131,7 +131,7 @@ namespace UserService.Controllers
                 _handler.EventRaised(dialogueVideoAssembleRun);
                 _handler.EventRaised(dialogueCreationRun);
 
-                //_context.SaveChanges();
+                _context.SaveChanges();
                 return Ok();
             }
             catch (Exception e)
