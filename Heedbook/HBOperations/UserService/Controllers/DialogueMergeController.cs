@@ -36,7 +36,7 @@ namespace UserService.Controllers
         [HttpPost]
         [SwaggerOperation(Description = "Method for merge some dialogues with status 3 in the range")]
         public async Task<IActionResult> MergeDialogues([FromQuery] String Email,
-            [FromQuery] String DeviceId,
+            [FromQuery] String DeviceCode,
             [FromQuery] String begTime,
             [FromQuery] String endTime)
         {
@@ -48,10 +48,9 @@ namespace UserService.Controllers
                 Guid? userId = null;
                 if(Email != null)
                     userId = _context.ApplicationUsers.FirstOrDefault(p => p.Email == Email).Id;
-
                 Guid? deviceId = null;
-                if(DeviceId != null) 
-                    deviceId = Guid.Parse(DeviceId);
+                if(DeviceCode != null) 
+                    deviceId = _context.Devices.FirstOrDefault(p => p.Code==DeviceCode).DeviceId;
 
                 var timeBeg = DateTime.ParseExact(begTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
                 var timeEnd = DateTime.ParseExact(endTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
@@ -127,7 +126,6 @@ namespace UserService.Controllers
                     BeginTime = maxBegTime,
                     EndTime = minEndTime
                 };
-                
                 _handler.EventRaised(dialogueVideoAssembleRun);
                 _handler.EventRaised(dialogueCreationRun);
 
