@@ -24,7 +24,7 @@ namespace OldVideoToFrameExtract.Extensions
                 return TriggerBuilder.Create()
                                      .WithIdentity("OldVideoToFrameExtract.trigger", "Dialogues")
                                      .StartNow()
-                                     .WithCronSchedule("0 00 5 * * ?", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())  
+                                     //.WithCronSchedule("0 00 5 * * ?", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())  
                                      .Build();
             });
 

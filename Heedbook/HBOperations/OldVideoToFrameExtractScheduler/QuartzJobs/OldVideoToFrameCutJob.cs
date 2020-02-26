@@ -44,13 +44,13 @@ namespace OldVideoToFrameExtract.QuartzJobs
         }
 
         public async Task Execute(IJobExecutionContext context)
-        {   
+        {
             var frames = _context.FileFrames
-                .Where(p => p.Time.Date >= DateTime.Now.AddDays(-27).Date
+                .Where(p => p.Time.Date >= DateTime.Now.AddDays(-7).Date
                     && p.Time.Date <= DateTime.Now.AddDays(-2))                
                 .ToList();
             var videos = _context.FileVideos
-                .Where(p => p.BegTime.Date >= DateTime.Now.AddDays(-27).Date
+                .Where(p => p.BegTime.Date >= DateTime.Now.AddDays(-7).Date
                     && p.EndTime.Date <= DateTime.Now.AddDays(-2))
                 .ToList();
             
