@@ -8,7 +8,14 @@ namespace DetectFaceIdScheduler.Utils
     {
         public double VectorNorm(List<double> vector)
         {
-            return Math.Sqrt(vector.Sum(p => Math.Pow(p, 2) ));
+            if (vector != null)
+            {
+                return Math.Sqrt(vector.Sum(p => Math.Pow(p, 2) ));
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public double? VectorMult(List<double> vector1, List<double> vector2)
@@ -38,7 +45,16 @@ namespace DetectFaceIdScheduler.Utils
 
         public double? Cos(List<double> vector1, List<double> vector2)
         {
-            return VectorMult(vector1, vector2) / VectorNorm(vector1) / VectorNorm(vector2);
+            if (vector1 != null && vector2 != null)
+            {
+                var norm1 = VectorNorm(vector1);
+                var norm2 = VectorNorm(vector2);
+                return (norm1 != 0 && norm2 != 0) ? VectorMult(vector1, vector2) / VectorNorm(vector1) / VectorNorm(vector2) : 0;
+            }
+            else
+            {
+                return 0;
+            }
         }
     }
 }
