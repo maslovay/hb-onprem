@@ -246,6 +246,7 @@ namespace UserOperations.Services
                         p.ApplicationUserId,
                         p.BegTime,
                         p.EndTime,
+                        p.DeviceId
                     }).ToList();
 
             var alerts = _repository.GetAsQueryable<Alert>()
@@ -262,7 +263,7 @@ namespace UserOperations.Services
                             x.ApplicationUserId,
                             x.CreationDate,
                             dialogueId =
-                                    (Guid?)dialogues.FirstOrDefault(p => p.ApplicationUserId == x.ApplicationUserId
+                                    (Guid?)dialogues.FirstOrDefault(p => p.DeviceId == x.DeviceId
                                         && p.BegTime <= x.CreationDate
                                         && p.EndTime >= x.CreationDate).DialogueId,
                             x.DeviceId
