@@ -13,13 +13,27 @@ namespace DetectFaceIdScheduler.Utils
 
         public double? VectorMult(List<double> vector1, List<double> vector2)
         {
-            if (vector1.Count() != vector2.Count()) return null;
-            var result = 0.0;
-            for (int i =0; i < vector1.Count(); i++)
-            {   
-                result += vector1[i] * vector2[i];
+            try
+            {
+                if (vector1 != null && vector2 != null)
+                {
+                    if (vector1.Count() != vector2.Count()) return null;
+                    var result = 0.0;
+                    for (int i =0; i < vector1.Count(); i++)
+                    {   
+                        result += vector1[i] * vector2[i];
+                    }
+                    return result;
+                }
+                else
+                {
+                    return null;
+                }
             }
-            return result;
+            catch 
+            {
+                return null;
+            }
         }
 
         public double? Cos(List<double> vector1, List<double> vector2)
