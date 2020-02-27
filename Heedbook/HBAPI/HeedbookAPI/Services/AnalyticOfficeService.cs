@@ -96,31 +96,45 @@ namespace UserOperations.Services
                 result.DialoguesNumberAvgPerDevice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / deviceCount : 0;
                 result.DialoguesNumberAvgPerDayOffice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() : 0;
 
-                //var diagramDialogDurationPause = sessionCur
-                //.GroupBy(p => p.BegTime.Date)
-                //.Select(p => new
-                //{
-                //    Day = p.Key.ToString(),
-                //    AvgDialogue = _utils
-                //        .DialogueAverageDuration(
-                //            dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
-                //            p.Min(s => s.BegTime),
-                //            p.Max(s => s.EndTime)),
-                //    AvgPause = _utils
-                //        .DialogueAveragePause(
-                //            p.ToList(),
-                //            dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
-                //            p.Min(s => s.BegTime),
-                //            p.Max(s => s.EndTime)),
-                //    AvgWorkLoad  = _utils
-                //        .LoadIndex(
-                //            p.ToList(),
-                //            dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
-                //            p.Min(s => s.BegTime),
-                //            p.Max(s => s.EndTime))                      
-                //}).ToList();
 
-                var optimalLoad = 0.7;
+            var diagramDialogDurationPause = sessionCur
+             .GroupBy(p => p.BegTime.Date)
+             .Select(p => new
+             {
+                 Day = p.Key.ToString(),
+                 AvgDialogue = _utils
+                     .DialogueAverageDuration(
+                         dialoguesDevicesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
+                         p.Min(s => s.BegTime),
+                         p.Max(s => s.EndTime)),
+                 AvgPause = 0,
+                 AvgWorkLoad = 0
+             }).ToList();
+            //var diagramDialogDurationPause = sessionCur
+            //    .GroupBy(p => p.BegTime.Date)
+            //    .Select(p => new
+            //    {
+            //        Day = p.Key.ToString(),
+            //        AvgDialogue = _utils
+            //            .DialogueAverageDuration(
+            //                dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
+            //                p.Min(s => s.BegTime),
+            //                p.Max(s => s.EndTime)),
+            //        AvgPause = _utils
+            //            .DialogueAveragePause(
+            //                p.ToList(),
+            //                dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
+            //                p.Min(s => s.BegTime),
+            //                p.Max(s => s.EndTime)),
+            //        AvgWorkLoad = _utils
+            //            .LoadIndex(
+            //                p.ToList(),
+            //                dialoguesCur.Where(x => x.BegTime >= p.Min(s => s.BegTime) && x.EndTime < p.Max(s => s.EndTime)).ToList(),
+            //                p.Min(s => s.BegTime),
+            //                p.Max(s => s.EndTime))
+            //    }).ToList();
+
+            var optimalLoad = 0.7;
                 var employeeWorked = sessionCur
                 .GroupBy(p => p.BegTime.Date)
                 .Select(p => new
