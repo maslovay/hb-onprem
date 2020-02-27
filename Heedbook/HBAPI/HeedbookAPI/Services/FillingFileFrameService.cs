@@ -36,13 +36,10 @@ namespace UserOperations.Services
 
             foreach (var frameWithMaxArea  in framesWithMaxArea)
             {
-                if(frameWithMaxArea.Age == null 
-                    || frameWithMaxArea.Gender == null 
-                    || frameWithMaxArea.Yaw == null 
+                if(frameWithMaxArea.Yaw == null 
                     || frameWithMaxArea.Smile == null || Double.IsNaN((double)frameWithMaxArea.Smile)
                     || frameWithMaxArea.DeviceId == null 
-                    || frameWithMaxArea.Time == null
-                    || frameWithMaxArea.Descriptor == null)
+                    || frameWithMaxArea.Time == null)
                     throw new Exception("One of the fields of the frame with max Area is empty");
                 var applicationUserId = frameWithMaxArea?.ApplicationUserId == null ? Guid.Empty : frameWithMaxArea?.ApplicationUserId;
                 var fileFrame = new FileFrame
