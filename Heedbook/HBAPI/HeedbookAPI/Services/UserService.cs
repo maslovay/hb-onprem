@@ -377,9 +377,12 @@ namespace UserOperations.Services
 
         private async Task DeleteUserWithRolesAsync(ApplicationUser user)
         {
-            if (user.UserRoles != null && user.UserRoles.Count() != 0)
+            try
+            {
                 _repository.Delete<ApplicationUserRole>(user.UserRoles);
-            _repository.Delete<ApplicationUser>(user);
+                _repository.Delete<ApplicationUser>(user);
+            }
+            catch { }
         }
 
         private async Task<List<Guid>> GetAllowedRolesAsync(string roleInToken)
