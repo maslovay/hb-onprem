@@ -144,10 +144,18 @@ namespace UserOperations.Utils
         }
 
 
+        public double? WorklLoadByTimeIndex(List<double> timeTableForDevices, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
+        {
+            var totalWorkHours = timeTableForDevices.Sum() / 60;
+            if (totalWorkHours == 0) return 0;
+            return 100 *(DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
+                         / totalWorkHours);
+        }
+
         public double? WorklLoadByTimeIndex(double timeTableForDevices, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
-            return timeTableForDevices == 0 ? 0 : 100 *(DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
-                         / timeTableForDevices);
+            return timeTableForDevices == 0 ? 0 : 100 * (DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
+                          / timeTableForDevices);
         }
 
         public double? WorklLoadByTimeIndex(double timeTableForDevices, List<DialogueInfoFull> dialogues, DateTime beg, DateTime end)
