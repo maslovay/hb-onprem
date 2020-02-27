@@ -45,7 +45,7 @@ namespace PersonDetectionService
                 var begTime = DateTime.Now.AddMonths(-1);
                 var companyIds = _context.Devices.Where(x => message.DeviceIds.Contains(x.DeviceId)).Select(x => x.CompanyId).Distinct().ToList();
 
-                //---dialogues for users in company or for devices in company
+                //---dialogues for devices in company
                 var dialogues = _context.Dialogues
                     .Where(p => ( companyIds.Contains(p.Device.CompanyId)) && p.BegTime >= begTime)
                     .OrderBy(p => p.BegTime)
