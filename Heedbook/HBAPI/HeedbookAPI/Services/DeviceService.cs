@@ -51,7 +51,7 @@ namespace UserOperations.Services
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, null, role, companyId);
 
             var data = _repository.GetAsQueryable<Device>()
-                .Where(c => (!companyIds.Any() || companyIds.Contains(c.CompanyId)));
+                .Where(c => (!companyIds.Any() || companyIds.Contains(c.CompanyId) && c.StatusId != GetStatusId("Disabled")));
             return data.ToList();
         }
 
@@ -178,7 +178,7 @@ namespace UserOperations.Services
 
             if (_repository.GetAsQueryable<Dialogue>().Any(x => x.DeviceId == deviceId))
             {
-                deviceEntity.StatusId = GetStatusId("Inactive");
+                deviceEntity.StatusId = GetStatusId("Disabled");
                 await _repository.SaveAsync();
                 return "Set inactive";
             }
