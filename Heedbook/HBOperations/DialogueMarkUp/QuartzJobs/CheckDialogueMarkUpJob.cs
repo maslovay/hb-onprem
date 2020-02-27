@@ -74,7 +74,6 @@ namespace DialogueMarkUp.QuartzJobs
                 }
                 // frameAttributes = frameAttributes.Where(p => JsonConvert.DeserializeObject<Value>(p.Value).Height > 135 && 
                     // JsonConvert.DeserializeObject<Value>(p.Value).Height > 135).ToList();
-                System.Console.WriteLine(frameAttributes.Count());
                 //var appUsers = frameAttributes.Where(p => p.FileFrame.ApplicationUserId != null).Select(p => p.FileFrame.ApplicationUserId).Distinct().ToList();
                 var deviceIds = frameAttributes.Select(p => p.FileFrame.DeviceId).Distinct().ToList();
 
@@ -92,11 +91,9 @@ namespace DialogueMarkUp.QuartzJobs
                     var videosDevice = fileVideos.Where(p => p.DeviceId == deviceId).ToList();
 
                     framesDevice = FindAllFaceId(framesDevice, periodFrame, periodTime);
-                   
-                    _log.Info($"videosDevice COUNT {videosDevice.Count()}");
-                    _log.Info($"framesDevice COUNT {framesDevice.Count()}");
 
                     var videoFacesDevice = CreateVideoFaces(framesDevice, videosDevice);
+                    
                     _context.AddRange(videoFacesDevice.Select(p => new VideoFace{
                         VideoFaceId = Guid.NewGuid(),
                         FileVideoId = p.Video.FileVideoId,
@@ -217,7 +214,7 @@ namespace DialogueMarkUp.QuartzJobs
             if (markUps != null)
             {
                 var lastTime = markUps.Max(p =>p.EndTime);
-                if (lastTime.Date < DateTime.Now.AddMinutes(-90))
+                if (lastTime.Date < DateTime.Now.AddMinutes(-200))
                 {
                     framesUser
                         .Where(p => p.FileFrame.Time <= markUps.Last().EndTime)
