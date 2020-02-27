@@ -27,7 +27,7 @@ namespace UserOperations.Services
                 
             var device = _repository.GetWithIncludeOne<Device>(p => p.DeviceId == frames.FirstOrDefault().DeviceId, o => o.Company);
                 
-            if(device.Company.IsExtended == true)
+            if(device.Company.IsExtended)
                 return null;
 
             var fileFrames = new List<FileFrame>();
