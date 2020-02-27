@@ -78,11 +78,23 @@ namespace UserOperations.Services
         public async Task<Phrase> CreateNewPhrasAsync(PhrasePost message)
         {
             var languageId = _loginService.GetCurrentLanguagueId();
-            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            Guid companyIdInToken = _loginService.GetCurrentCompanyId();
+            var corporationIdInToken = _loginService.GetCurrentCorporationId();
+            Guid? companyIdForSalesStage = companyIdInToken;
 
-            Phrase phrase = await GetLibraryPhraseByTextAsync(message.PhraseText, true);
-            phrase = phrase?? await CreateNewPhraseAsync(message, languageId);
-            await CreateNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
+            //---find the existing phrase with the same text
+            Phrase phrase = await GetPhraseByTextAsync(message.PhraseText, true);
+            if (corporationIdInToken != null) companyIdForSalesStage = null;//make zero company Id to create only one connection to corporation
+            if (phrase == null)//--no template, no phrase
+            {
+                phrase = await CreateNewPhraseAsync(message, languageId);
+                await CreateIfNoExistNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
+                await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, companyIdForSalesStage, corporationIdInToken);
+            }
+            else
+            {
+                //1-phrase+company
+                await CreateIfNoExistNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
 
                 //2-phrase+sales stage
                 var defaultSalesStageIdOfPhrase = await GetSalesStageOfPhraseByPhraseId(phrase.PhraseId, companyIdForSalesStage, corporationIdInToken);
@@ -151,19 +163,24 @@ namespace UserOperations.Services
         {
             Guid? salesStageId = (await _repository.FindOrNullOneByConditionAsync<SalesStagePhrase>
                     (x => x.PhraseId == phraseId
-                        && ((x.CompanyId == companyId || x.CorporationId == corporationId 
-                        || (x.CompanyId == null && x.Corporation == null)))))?.SalesStageId;            
+                        && ((x.CompanyId == companyId || x.CorporationId == corporationId
+                        || (x.CompanyId == null && x.Corporation == null)))))?.SalesStageId;
             return salesStageId;
         }
 
-        private async Task<Phrase> GetLibraryPhraseByTextAsync(string phraseText, bool isTemplate)
+        private async Task<Phrase> GetPhraseByTextAsync(string phraseText, bool isTemplate)
         {
-            //---search phrase that is in library or that is not belong to any company
-            return await _repository.GetAsQueryable<Phrase>()
+            //---search phrase first - that is in library, second - any phrase with the same text
+            var phrase = await _repository.GetAsQueryable<Phrase>()
                    .Include(x => x.PhraseCompanys)
                    .Where(x =>
                         x.PhraseText.ToLower() == phraseText.ToLower()
-                        && (x.IsTemplate == isTemplate || x.PhraseCompanys.Count() == 0)).FirstOrDefaultAsync();
+                        && x.IsTemplate == isTemplate).FirstOrDefaultAsync();
+            if (phrase == null)
+                phrase = await _repository.GetAsQueryable<Phrase>()
+                   .Include(x => x.PhraseCompanys)
+                   .Where(x => x.PhraseText.ToLower() == phraseText.ToLower()).FirstOrDefaultAsync();
+            return phrase;
         }
 
         private async Task<Phrase> CreateNewPhraseAsync(PhrasePost message, int languageId)

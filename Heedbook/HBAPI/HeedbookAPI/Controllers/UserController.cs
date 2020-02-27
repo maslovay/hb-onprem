@@ -46,11 +46,11 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Users with role", typeof(List<UserModel>))]
         public async Task<IEnumerable<UserModel>> UserGet()
         {
-                if (_loginService.GetCurrentDeviceId() != null)
-                    return  await _userService.GetUsersForDeviceAsync();
-                return  await _userService.GetUsers();
+            if (_loginService.GetCurrentDeviceId() != null)
+                return await _userService.GetUsersForDeviceAsync();
+            return await _userService.GetUsers();
 
-                
+
         }
 
 
@@ -76,7 +76,7 @@ namespace UserOperations.Controllers
 
         [HttpDelete("User")]
         [SwaggerOperation(Summary = "Delete or make disabled", Description = "Delete user by Id if he hasn't any relations in DB or make status Disabled")]
-        public async Task<string> UserDelete( [FromQuery] Guid applicationUserId) =>
+        public async Task<string> UserDelete([FromQuery] Guid applicationUserId) =>
                 await _userService.DeleteUserWithAvatarAsync(applicationUserId);
 
 
@@ -87,11 +87,11 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Companies", typeof(List<Company>))]
         public async Task<IEnumerable<Company>> CompaniesGet()
         {
-                var roleInToken = _loginService.GetCurrentRoleName();
-                if (roleInToken == "Admin")
-                    return _companyService.GetCompaniesForAdmin();
-                if (roleInToken == "Supervisor") // only for corporations
-                    return _companyService.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
+            var roleInToken = _loginService.GetCurrentRoleName();
+            if (roleInToken == "Admin")
+                return _companyService.GetCompaniesForAdmin();
+            if (roleInToken == "Supervisor") // only for corporations
+                return _companyService.GetCompaniesForSupervisorAsync(_loginService.GetCurrentCorporationId());
             return null;
         }
 
@@ -107,18 +107,18 @@ namespace UserOperations.Controllers
         [HttpPost("Company")]
         [SwaggerOperation(Description = "Create new company for corporation")]
         [SwaggerResponse(200, "Company", typeof(Company))]
-        public async Task<Company> CompanysPostAsync( [FromBody] Company model)
+        public async Task<Company> CompanysPostAsync([FromBody] Company model)
         {
-                var roleInToken = _loginService.GetCurrentRoleName();
+            var roleInToken = _loginService.GetCurrentRoleName();
 
-                if (roleInToken == "Admin")
-                    return await _companyService.AddNewCompanyAsync(model, model.CorporationId);
-                if (roleInToken == "Supervisor")
-                {
-                    var corporatioIdInToken = _loginService.GetCurrentCorporationId();
-                    return await _companyService.AddNewCompanyAsync(model, corporatioIdInToken);
-                }
-                throw new AccessException("Not allowed access(role)");
+            if (roleInToken == "Admin")
+                return await _companyService.AddNewCompanyAsync(model, model.CorporationId);
+            if (roleInToken == "Supervisor")
+            {
+                var corporatioIdInToken = _loginService.GetCurrentCorporationId();
+                return await _companyService.AddNewCompanyAsync(model, corporatioIdInToken);
+            }
+            throw new AccessException("Not allowed access(role)");
         }
 
         [HttpPut("Company")]
@@ -127,8 +127,8 @@ namespace UserOperations.Controllers
         public async Task<Company> CompanyPut([FromBody] List<WorkingTime> times)
         {
             var roleInToken = _loginService.GetCurrentRoleName();
-          //  if (roleInToken != "Admin" && roleInToken != "Supervisor")
-          //      throw new AccessException("Not allowed access(role)");
+            //  if (roleInToken != "Admin" && roleInToken != "Supervisor")
+            //      throw new AccessException("Not allowed access(role)");
             return await _companyService.UpdateCompanAsync(times);
         }
 
@@ -151,9 +151,9 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "Library phrase collection", typeof(List<Phrase>))]
         public async Task<IActionResult> PhraseGet()
         {
-                var phraseIds = await _phraseService.GetPhraseIdsByCompanyIdAsync(true);
-                var phrases = await _phraseService.GetPhrasesNotBelongToCompanyByIdsAsync(phraseIds, true);
-                return Ok(phrases);
+            var phraseIds = await _phraseService.GetPhraseIdsByCompanyIdAsync(true);
+            var phrases = await _phraseService.GetPhrasesNotBelongToCompanyByIdsAsync(phraseIds, true);
+            return Ok(phrases);
         }
 
         [HttpPost("PhraseLib")]
@@ -162,7 +162,7 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "New phrase", typeof(Phrase))]
         public async Task<Phrase> PhrasePost(
                     [FromBody] PhrasePost message) =>
-            await _phraseService.CreateNewPhraseAndAddToCompanyAsync(message);
+             await _phraseService.CreateNewPhrasAsync(message);
 
         [HttpPut("PhraseLib")]
         [SwaggerOperation(Summary = "Edit company phrase", Description = "Edit phrase. You can edit only your own phrase (not template from library)")]
@@ -178,8 +178,8 @@ namespace UserOperations.Controllers
         public async Task<string> PhraseDelete(
                     [FromQuery(Name = "phraseId"), SwaggerParameter("phraseId Guid", Required = true)] Guid phraseId)
         {
-                var phrase = await _phraseService.GetPhraseByIdAsync(phraseId);
-                return await _phraseService.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase);
+            var phrase = await _phraseService.GetPhraseByIdAsync(phraseId);
+            return await _phraseService.DeleteAndSavePhraseWithPhraseCompanyAsync(phrase);
         }
 
         [HttpGet("CompanyPhrase")]
@@ -209,9 +209,9 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
                                                 [FromQuery(Name = "inStatistic")] bool? inStatistic) =>
-             await _dialogueService.GetAllDialogues(beg, end, applicationUserIds, deviceIds, companyIds, 
+             await _dialogueService.GetAllDialogues(beg, end, applicationUserIds, deviceIds, companyIds,
                                                         corporationIds, phraseIds, phraseTypeIds, inStatistic);
-        
+
 
         [HttpGet("DialoguePaginated")]
         [SwaggerOperation(Description =
@@ -224,16 +224,16 @@ namespace UserOperations.Controllers
                                            [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                            [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                            [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
-                                           
+
                                            [FromQuery(Name = "inStatistic")] bool? inStatistic,
                                            [FromQuery(Name = "limit")] int limit = 10,
                                            [FromQuery(Name = "page")] int page = 0,
                                            [FromQuery(Name = "orderBy")] string orderBy = "BegTime",
                                            [FromQuery(Name = "orderDirection")] string orderDirection = "desc") =>
             await _dialogueService.GetAllDialoguesPaginated(beg, end, applicationUserIds, deviceIds, companyIds,
-                                                        corporationIds, phraseIds, phraseTypeIds, inStatistic, 
+                                                        corporationIds, phraseIds, phraseTypeIds, inStatistic,
                                                         limit, page, orderBy, orderDirection);
-    
+
 
         [HttpGet("DialogueInclude")]
         [SwaggerOperation(Description = "Return dialogue with relative data by filters")]
@@ -271,6 +271,6 @@ namespace UserOperations.Controllers
         public async Task SendVideo(
                     [FromForm, SwaggerParameter("json message with key 'data' in FormData")] IFormCollection formData)
               => await _userService.SendVideoMessageToManager(formData);
-        
+
     }
 }
