@@ -23,30 +23,19 @@ namespace UserOperations.Services
 
         public async Task FlushStats( List<SlideShowSession> stats)
         {
-            Guid? userId = null;
-            try//---check is it user token authorization
-            {
-                userId = _loginService.GetCurrentUserId();
-            }
-            catch
-            {
-                userId = null;
-            }
-
             foreach (SlideShowSession stat in stats)
             {
                 if(stat.ContentType == "url")//"url" "media" "content"
                     stat.IsPoll = false;
                 else
                 {
-                    var html = _repository.GetAsQueryable<CampaignContent>()
+                    var json = _repository.GetAsQueryable<CampaignContent>()
                         .Where(x => x.CampaignContentId == stat.CampaignContentId)
-                        .Select(x => x.Content.RawHTML).FirstOrDefault();
+                        .Select(x => x.Content.JSONData).FirstOrDefault();
 
-                    stat.IsPoll = html.Contains("answerText") ? true : false;
+                    stat.IsPoll = json.Contains("answerText") ? true : false;
                 }
                 stat.SlideShowSessionId = Guid.NewGuid();
-                stat.ApplicationUserId = userId;
                 await _repository.CreateAsync<SlideShowSession>(stat);
                 await _repository.SaveAsync();
             }
@@ -55,15 +44,6 @@ namespace UserOperations.Services
         public async Task<string> PollAnswer( CampaignContentAnswer answer)
         {
             answer.CampaignContentAnswerId = Guid.NewGuid();
-            try
-            {
-                answer.ApplicationUserId = _loginService.GetCurrentUserId();
-            }
-            catch
-            {
-                answer.ApplicationUserId = null;
-            }
-            //answer.Time = DateTime.UtcNow;
             await _repository.CreateAsync<CampaignContentAnswer>(answer);
             await _repository.SaveAsync();
             return "Saved";

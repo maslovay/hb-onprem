@@ -94,13 +94,14 @@ namespace UserOperations.Services
                                                      List<Guid> deviceIds)
         {
                 var role = _loginService.GetCurrentRoleName();
+                var isExtended = _loginService.GetIsExtended();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, applicationUserIds, deviceIds)
+                var dialogues = GetDialoguesAsQuryable(prevBeg, endTime, companyIds, applicationUserIds, deviceIds)
                         .Select(p => new DialogueInfo
                         {
                             DialogueId = p.DialogueId,
@@ -111,7 +112,8 @@ namespace UserOperations.Services
                             EndTime = p.EndTime,
                             SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                             SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
-                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN
+                            SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN,
+                            SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
                         })
                         .ToList(); 
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
@@ -128,9 +130,12 @@ namespace UserOperations.Services
                     BestEmployee = _analyticServiceQualityUtils.BestEmployee(dialoguesCur),
                     BestEmployeeScore = _analyticServiceQualityUtils.BestEmployeeSatisfaction(dialoguesCur),
                     BestProgressiveEmployee = _analyticServiceQualityUtils.BestProgressiveEmployee(dialogues, begTime),
-                    BestProgressiveEmployeeDelta = _analyticServiceQualityUtils.BestProgressiveEmployeeDelta(dialogues, begTime)
+                    BestProgressiveEmployeeDelta = _analyticServiceQualityUtils.BestProgressiveEmployeeDelta(dialogues, begTime),
+                    SmilesShare = dialoguesCur.Average(x => x.SmilesShare),
+                    SmilesShareDelta = - dialoguesOld.Average(x => x.SmilesShare),
                 };
                 result.SatisfactionIndexDelta += result.SatisfactionIndex;
+                result.SmilesShareDelta += result.SmilesShare;
                 return JsonConvert.SerializeObject(result);
         }
 
@@ -191,20 +196,37 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
                 var dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, deviceIds);
-
-                var result = new SatisfactionStatsInfo
+                var isExtended = _loginService.GetIsExtended();
+                if (isExtended)
                 {
-                    AverageSatisfactionScore = dialogues.Average(p => p.SatisfactionScore),
-                    PeriodSatisfaction = dialogues
-                        .GroupBy(p => p.BegTime.Date)
-                        .Select(p => new SatisfactionStatsDayInfo {
-                            Date = Convert.ToDateTime(p.Key).ToString(),
-                            SatisfactionScore = p.Average(q => q.SatisfactionScore)
-                        }).ToList()
+                    var result = new SatisfactionStatsInfo
+                    {
+                        AverageSatisfactionScore = dialogues.Average(p => p.SatisfactionScore),
+                        PeriodSatisfaction = dialogues
+                            .GroupBy(p => p.BegTime.Date)
+                            .Select(p => new SatisfactionStatsDayInfo
+                            {
+                                Date = Convert.ToDateTime(p.Key).ToString(),
+                                SatisfactionScore = p.Average(q => q.SatisfactionScore)
+                            }).ToList()
+                    };
+
+                    result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                var resultForSme = new
+                {
+                    AverageSmile = dialogues.Average(p => p.SmilesShare),
+                    PeriodSmiles = dialogues
+                          .GroupBy(p => p.BegTime.Date)
+                          .Select(p => new 
+                          {
+                              Date = Convert.ToDateTime(p.Key).ToString(),
+                              SmileShare = p.Average(q => q.SmilesShare)
+                          }).OrderBy(x => x.Date).ToList()
                 };
-                
-                result.PeriodSatisfaction = result.PeriodSatisfaction.OrderBy(p => p.Date).ToList();
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(resultForSme);
         }
 
         //---PRIVATE---
@@ -258,7 +280,7 @@ namespace UserOperations.Services
                 .ToListAsyncSafe();
             return dialogues;
         }
-        private IQueryable<Dialogue> GetDialoguesIncludedPhrase(
+        private IQueryable<Dialogue> GetDialoguesAsQuryable(
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
@@ -340,7 +362,8 @@ namespace UserOperations.Services
                     ApplicationUserId = p.ApplicationUserId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
-                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare)
                 })
                 .ToListAsyncSafe();
         }

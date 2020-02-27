@@ -19,7 +19,7 @@ namespace HBData
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // optionsBuilder.UseNpgsql("User ID=test_user;Password=test_password;Host=104.40.181.96;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0");
+            // optionsBuilder.UseNpgsql("User ID=heedbook_user;Password=Oleg&AnnaRulyat_1975;Host=40.87.153.4;Port=5432;Database=heedbook_db;Pooling=true;Timeout=120;CommandTimeout=0");
         }
 
 
@@ -74,6 +74,8 @@ namespace HBData
                     ;
                 userRole.ToTable("AspNetUserRoles");
             });
+
+            builder.Entity<WorkingTime>().HasKey(a => new {a.Day, a.CompanyId });
         }
         
         
@@ -128,11 +130,14 @@ namespace HBData
 
         public DbSet<Benchmark> Benchmarks { get; set; }
         public DbSet<BenchmarkName> BenchmarkNames { get; set; }
-        //---DEVICES AND SALES STAGE (NEW) ---
+
+        //---(NEW) ---
         public DbSet<Device> Devices { get; set; }
         public DbSet<DeviceType> DeviceTypes { get; set; }
         public DbSet<SalesStage> SalesStages { get; set; }
         public DbSet<SalesStagePhrase> SalesStagePhrases { get; set; }
+        public DbSet<WorkingTime> WorkingTimes { get; set; }
+
         //---VIES
         public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
         public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }

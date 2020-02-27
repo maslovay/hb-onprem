@@ -55,28 +55,27 @@ namespace PersonOnlineDetectionService
             {
                 var begTime = DateTime.Now.AddDays(-30);
                 var lastClientsInfo = _context.Clients
-                    .Where(p => p.CompanyId == message.CompanyId && p.LastDate >= begTime)
+                    .Where(p => p.CompanyId == message.CompanyId && p.LastDate >= begTime && p.FaceDescriptor.Any())
                     .ToList();
                 // var lastClientsInfo = _context.ClientNotes
                     // .Include(p => p.Client)
                     // .Where(p => p.Client.CompanyId == message.CompanyId && p.CreationDate >= begTime)
                     // .ToList();
 
-                System.Console.WriteLine($"Clients count {lastClientsInfo.Count()}");
                 
                 var clientId = _personDetectionUtils.FindId(message.Descriptor, lastClientsInfo);
                 if (clientId == null)
                 {
                     clientId = Guid.NewGuid();
-                    System.Console.WriteLine($"New client -- {clientId}");
+                    _log.Info($"New client -- {clientId}");
                     var client = _personDetectionUtils.CreateNewClient(message, (Guid) clientId);
-                    System.Console.WriteLine("Created client");
+                    _log.Info($"Created client {JsonConvert.SerializeObject(client)}");
                     await _createAvatar.ExecuteAsync(message.Attributes, (Guid) clientId, message.Path);
-                    System.Console.WriteLine("Created avatar");
+                    _log.Info($"Created avatar with name {clientId}");
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
-
-                    System.Console.WriteLine(result);
+                    _log.Info("Send to webscoket");
+                    // System.Console.WriteLine(result);
                     
                 }
                 else
@@ -84,12 +83,13 @@ namespace PersonOnlineDetectionService
                     var curTime = DateTime.UtcNow;
                     lastClientsInfo.Where(p => p.ClientId == clientId).ToList().ForEach(p => p.LastDate = curTime);
                     _context.SaveChanges();
-                    System.Console.WriteLine("Last time updated");
+                    // System.Console.WriteLine("Last time updated");
                     // await _createAvatar.DeleteFileAsync(message.Path);
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
 
-                    System.Console.WriteLine(result);
+                    _log.Info("Send to webscoket");
+                    // System.Console.WriteLine(result);
                 }
 
                 _log.Info("Function finished");

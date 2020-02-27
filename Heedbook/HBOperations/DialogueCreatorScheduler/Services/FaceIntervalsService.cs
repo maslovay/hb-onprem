@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DialogueCreatorScheduler.Models;
 using HBData.Models;
+using HBLib.Utils;
 using Newtonsoft.Json;
 
 namespace DialogueCreatorScheduler.Services  
@@ -129,6 +130,24 @@ namespace DialogueCreatorScheduler.Services
             }
 
             return result;
+        }
+
+        public List<FaceInterval> UpdateLastDate(List<FaceInterval> intervals, List<FileVideo> videos, ElasticClient log)
+        {
+            intervals = intervals.Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > _dialogueSettings.MinDialogueDuration).ToList();
+            foreach (var interval in intervals)
+            {
+                var lastVideo = videos.Where(p => 
+                    p.BegTime <= interval.EndTime &&
+                    p.EndTime >= interval.EndTime ).FirstOrDefault();
+
+                log.Info($"Last video {JsonConvert.SerializeObject(lastVideo)} for interval {JsonConvert.SerializeObject(interval)}");
+                if (lastVideo != null)
+                {
+                    interval.EndTime = lastVideo.EndTime;
+                }
+            }
+            return intervals;
         }
     }
 }

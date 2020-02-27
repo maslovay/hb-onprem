@@ -45,4 +45,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\OldDbContext\" />
+  </ItemGroup>
 </Project>

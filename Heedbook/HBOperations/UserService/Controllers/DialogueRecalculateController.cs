@@ -79,6 +79,7 @@ namespace UserService.Controllers
                     ApplicationUserId = dialogue.ApplicationUserId,
                     DeviceId = dialogue.DeviceId,
                     DialogueId = dialogue.DialogueId,
+                    ClientId = dialogue.ClientId,
                     BeginTime = dialogue.BegTime,
                     EndTime = dialogue.EndTime
                 }; 
@@ -172,7 +173,9 @@ namespace UserService.Controllers
                             DeviceId = dialogue.DeviceId,
                             DialogueId = dialogue.DialogueId,
                             BeginTime = dialogue.BegTime,
-                            EndTime = dialogue.EndTime
+                            EndTime = dialogue.EndTime,
+                            ClientId = dialogue.ClientId
+                            
                         };
                         _notificationPublisher.Publish(@event);
                     }                     
@@ -186,7 +189,9 @@ namespace UserService.Controllers
                         ApplicationUserId = dialogue.ApplicationUserId,
                         DialogueId = dialogue.DialogueId,
                         BeginTime = dialogue.BegTime,
-                        EndTime = dialogue.EndTime
+                        EndTime = dialogue.EndTime,
+                        DeviceId = dialogue.DeviceId
+                        
                     };
                     _notificationPublisher.Publish(@event);
                 } 

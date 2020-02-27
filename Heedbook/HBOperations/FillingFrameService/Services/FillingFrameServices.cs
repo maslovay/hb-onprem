@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using FillingFrameService.Requests;
 using HBData.Models;
 using HBLib;
 using HBLib.Utils;
@@ -17,14 +18,17 @@ namespace FillingFrameService.Services
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly FFMpegWrapper _wrapper;
+        private readonly RequestsService _requests;
 
         public FillingFrameServices(SftpClient sftpClient,
             SftpSettings sftpSettings,
+            RequestsService requests,
             FFMpegWrapper wrapper)
         {
             _sftpClient = sftpClient;
             _sftpSettings = sftpSettings;
             _wrapper = wrapper;
+            _requests = requests;
         }
 
         public List<DialogueFrame> FillingDialogueFrame(DialogueCreationRun message, List<FrameEmotion> emotions)
@@ -95,7 +99,7 @@ namespace FillingFrameService.Services
         }  
 
         public async System.Threading.Tasks.Task FillingAvatarAsync(DialogueCreationRun message,
-            List<FileFrame> frames, FileVideo fileVideo, bool isExtended, FileFrame fileAvatar)
+            List<FileFrame> frames,  bool isExtended, FileFrame fileAvatar, Client client, ElasticClient log)
         {
             
             string localPath;
@@ -122,14 +126,18 @@ namespace FillingFrameService.Services
             }
             else
             {
-                if (message.ClientId != null)
+                log.Info(client.Avatar);
+                if (message.ClientId != null && await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}"))
                 {
+                    log.Info($"Rename client avatar {client.Avatar} as dialogue avatar {message.DialogueId}.jpg");
                     localPath =
-                        await _sftpClient.DownloadFromFtpToLocalDiskAsync($"clientavatars/{message.ClientId}.jpg");
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync($"clientavatars/{client.Avatar}");
                     await _sftpClient.UploadAsync(localPath, "clientavatars/", $"{message.DialogueId}.jpg");
                 }
                 else
                 {
+                    log.Info("Extracting client avatar from video");
+                    var fileVideo = _requests.FileVideo(message, fileAvatar);
                     var dt = fileAvatar.Time;
                     var seconds = dt.Subtract(fileVideo.BegTime).TotalSeconds;
                     System.Console.WriteLine($"Seconds - {seconds}, FileVideo - {fileVideo.FileName}");

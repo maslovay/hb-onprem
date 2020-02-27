@@ -7,9 +7,9 @@ namespace UserOperations.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_FileFrames_AspNetUsers_ApplicationUserId",
-                table: "FileFrames");
+            //migrationBuilder.DropForeignKey(
+            //    name: "FK_FileFrames_AspNetUsers_ApplicationUserId",
+            //    table: "FileFrames");
 
             migrationBuilder.DropForeignKey(
                 name: "FK_FileVideos_AspNetUsers_ApplicationUserId",
@@ -57,13 +57,13 @@ namespace UserOperations.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_FileFrames_Devices_DeviceId",
-                table: "FileFrames",
-                column: "DeviceId",
-                principalTable: "Devices",
-                principalColumn: "DeviceId",
-                onDelete: ReferentialAction.Cascade);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_FileFrames_Devices_DeviceId",
+            //    table: "FileFrames",
+            //    column: "DeviceId",
+            //    principalTable: "Devices",
+            //    principalColumn: "DeviceId",
+            //    onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_FileVideos_AspNetUsers_ApplicationUserId",
@@ -73,13 +73,13 @@ namespace UserOperations.Migrations
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_FileVideos_Devices_DeviceId",
-                table: "FileVideos",
-                column: "DeviceId",
-                principalTable: "Devices",
-                principalColumn: "DeviceId",
-                onDelete: ReferentialAction.Cascade);
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_FileVideos_Devices_DeviceId",
+            //    table: "FileVideos",
+            //    column: "DeviceId",
+            //    principalTable: "Devices",
+            //    principalColumn: "DeviceId",
+            //    onDelete: ReferentialAction.Cascade);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

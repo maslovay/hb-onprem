@@ -74,5 +74,11 @@ namespace HBData.Models
         /// </summary>
         public Guid? CorporationId { get; set; }
         [JsonIgnore] public Corporation Corporation { get; set; }
+
+        /// <summary>
+        ///     Company schedule
+        /// </summary>
+        public ICollection<WorkingTime> WorkingTimes { get; set; }
+        public ICollection<SalesStagePhrase> SalesStagePhrases { get; set; }
     }
 }

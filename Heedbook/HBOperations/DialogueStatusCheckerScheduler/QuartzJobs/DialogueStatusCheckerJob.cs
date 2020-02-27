@@ -51,6 +51,7 @@ namespace QuartzExtensions.Jobs
                         .Include(p => p.Device)
                         .Include(p => p.Device.Company)
                         .Where(item => item.StatusId == 6)
+                        .OrderBy(p => p.BegTime)
                         .ToList();
                     System.Console.WriteLine($"{dialogues.Count()}");
 
@@ -72,15 +73,32 @@ namespace QuartzExtensions.Jobs
                             dialogue.DialogueClientProfile.Any() &&
                             dialogue.DialogueFrame.Any()))
                         {
-                            _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
-                            dialogue.StatusId = 3;
-                            if (dialogue.Device.Company.IsExtended)
+                            
+                            if (CheckDialogue(dialogue))
                             {
-                                var @event = new FillingSatisfactionRun
+                                if (CheckDialogueIntersection(dialogue))
                                 {
-                                    DialogueId = dialogue.DialogueId
-                                };
-                                _notificationPublisher.Publish(@event);
+                                    _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
+                                    dialogue.StatusId = 3;
+                                    if (dialogue.Device.Company.IsExtended)
+                                    {
+                                        var @event = new FillingSatisfactionRun
+                                        {
+                                            DialogueId = dialogue.DialogueId
+                                        };
+                                        _notificationPublisher.Publish(@event);
+                                    }
+                                }
+                                else
+                                {
+                                    dialogue.StatusId = 8;
+                                    dialogue.Comment = "Huge intersection";
+                                }
+                            }
+                            else
+                            {
+                                dialogue.StatusId = 8;
+                                dialogue.Comment = "Dialogue exist";
                             }
                         }
                         else
@@ -122,6 +140,46 @@ namespace QuartzExtensions.Jobs
                     _log.Fatal($"Exception occured {e}");
                 }
             }
+        }
+
+        private bool CheckDialogue(Dialogue dialogue)
+        {
+            var dialogues = _context.Dialogues.Where(p => p.DeviceId == dialogue.DeviceId && 
+                p.BegTime == dialogue.BegTime &&
+                p.EndTime == dialogue.EndTime &&
+                p.StatusId == 3 ).Count();
+            if (dialogues == 0) 
+                return true;
+            else
+                return false; 
+
+        }
+
+        private bool CheckDialogueIntersection(Dialogue dialogue)
+        {
+            var dialogues = _context.Dialogues.Where(p => p.DeviceId == dialogue.DeviceId && 
+                p.BegTime <= dialogue.BegTime &&
+                p.EndTime >= dialogue.BegTime &&
+                p.StatusId == 3 );
+            
+            if (dialogues.Sum(p => MinTime(p.EndTime, dialogue.EndTime).Subtract(dialogue.BegTime).TotalSeconds) > 
+                dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds * 0.8) 
+                return false;
+            else
+                return true; 
+
+        }
+
+        private DateTime MinTime(DateTime dt1, DateTime dt2)
+        {
+            if (dt1 > dt2) return dt2;
+            return dt1;
+        }
+
+        private DateTime MaxTime(DateTime dt1, DateTime dt2)
+        {
+            if (dt1 > dt2) return dt1;
+            return dt2;
         }
 
         // public async Task Execute(IJobExecutionContext context)

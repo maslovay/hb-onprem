@@ -49,9 +49,9 @@ namespace AudioAnalyzeService
                 provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
-            services.AddTransient(provider => provider.GetService<IOptions<AsrSettings>>().Value);
-            services.AddTransient<AsrHttpClient.AsrHttpClient>();
+            // services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
+            // services.AddTransient(provider => provider.GetService<IOptions<AsrSettings>>().Value);
+            // services.AddTransient<AsrHttpClient.AsrHttpClient>();
             services.AddTransient<AudioAnalyze>();
 
             services.AddTransient<AudioAnalyzeRunHandler>();

@@ -751,7 +751,7 @@ namespace ApiTests
                 PasswordHash = "hhh",
                 Dialogue = null,//GetDialoguesIncluded().ToList(),
                 UserRoles = new List<ApplicationUserRole>()
-                {new ApplicationUserRole{RoleId = Guid.Parse("8f8947da-5f76-4c6e-2222-170290c87194")}},
+                {new ApplicationUserRole{RoleId = Guid.Parse("8f8947da-5f76-4c6e-2222-170290c87194")}}
                 // new List<ApplicationUserRole> { UserRoleIncluded() },
                 //Company = Company()
             };
@@ -930,7 +930,7 @@ namespace ApiTests
                 }).AsQueryable();
             return transactions;
         }
-       
+    
         internal static IQueryable<PhraseCompany> GetPhraseCompanies()
         {
             var phraseCompanys = new TestAsyncEnumerable<PhraseCompany>(
@@ -943,7 +943,15 @@ namespace ApiTests
                 }).AsQueryable();
             return phraseCompanys;
         }
-    
+        //internal static IQueryable<PasswordHistory> GetPasswordHistorys()
+        //{
+        //    var passwordHistory = new TestAsyncEnumerable<PasswordHistory>(
+        //        new List<PasswordHistory>
+        //        {
+        //            new PasswordHistory{UserId = new Guid("14f335c2-c64f-42cc-8ca3-dadd6a623ae1")}
+        //        }).AsQueryable();
+        //    return passwordHistory;
+        //}
         internal static List<Guid> GetGuids()
         {
             return new List<Guid>() { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };

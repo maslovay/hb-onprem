@@ -231,6 +231,44 @@ namespace UserOperations.Services
         }
 
 
+        public string PhraseSalesStageCount(string beg, string end, 
+                                        Guid? corporationId,
+                                        List<Guid> companyIds, List<Guid?> applicationUserIds, 
+                                        List<Guid> deviceIds, List<Guid> phraseIds,
+                                        List<Guid> salesStageIds)
+        {
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
+            var begTime = _requestFilters.GetBegDate(beg);
+            var endTime = _requestFilters.GetEndDate(end);
+
+            if (corporationId == null && companyIds.Any())
+            {
+                corporationId = _repository.GetAsQueryable<Company>()
+                       .Where(x => x.CompanyId == companyIds.First()).Select(x => x.CorporationId).FirstOrDefault();
+            }
+
+            if (corporationId != null)
+            {
+                var companyInCorporatioIds = _repository.GetAsQueryable<Corporation>()
+                       .Where(x => x.Id == corporationId).SelectMany(x => x.Companies.Select(p => p.CompanyId)).ToList();
+                companyIds = companyIds.Intersect(companyInCorporatioIds).ToList();
+                var resultForCorp = SalesStagePhraseForCorporation(
+                        begTime, endTime, 
+                        corporationId, companyIds, applicationUserIds,
+                        deviceIds, phraseIds, salesStageIds);
+                return JsonConvert.SerializeObject(resultForCorp);
+            }
+
+            var result = SalesStagePhraseForOneCompany(
+                        begTime, endTime,
+                        applicationUserIds, companyId,
+                        deviceIds, phraseIds, salesStageIds);
+            return JsonConvert.SerializeObject(result);
+        }
+
+
+        //---PRIVATE---
         private Guid GetCrossTypeId()
         {
             var typeIdCross = _repository.GetAsQueryable<PhraseType>()
@@ -373,6 +411,100 @@ namespace UserOperations.Services
                 })
                 .AsQueryable();
             return phrases;
+        }
+
+
+        private List<SalesStagePhraseModel> SalesStagePhraseForCorporation(
+                    DateTime begTime,
+                    DateTime endTime, 
+                    Guid? corporationId,
+                    List<Guid> companyIds,
+                    List<Guid?> applicationUserIds, 
+                    List<Guid> deviceIds, 
+                    List<Guid> phraseIds,
+                    List<Guid> salesStageIds
+     )
+        {
+            var dialogueIds = companyIds.Count()==0? new List<Guid>() : GetDialogueIds(begTime, endTime, companyIds, applicationUserIds, deviceIds);
+
+            var phrases = _repository.GetAsQueryable<DialoguePhrase>()
+                    .Where(p => p.PhraseId != null
+                    && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
+                    && (!dialogueIds.Any() || dialogueIds.Contains((Guid)p.DialogueId)))
+                    .ToList();
+
+            var phrasesSalesStages = _repository.GetAsQueryable<SalesStagePhrase>()
+                    .Where(x =>
+                    (!salesStageIds.Any() || salesStageIds.Contains((Guid)x.SalesStageId))
+                    && (x.CorporationId == corporationId))
+                    .GroupBy(x => x.SalesStageId)
+                    .Select(k => new SalesStagePhraseModel
+                    {
+                        Count = CountPhrasesAmount(phrases, k, phraseIds),
+                        SalesStageId = k.Key,
+                        SalesStageName = k.FirstOrDefault().SalesStage.Name,
+                        SequenceNumber = k.FirstOrDefault().SalesStage.SequenceNumber
+                    }).ToList();
+
+            var dialogueCount = 0;
+            foreach (var item in phrasesSalesStages)
+            {
+                dialogueCount = dialogueIds.Count();
+                item.PercentageOfExecution = dialogueCount == 0? 0: (double)item.Count / dialogueCount;
+            }
+            return phrasesSalesStages;
+        }
+
+    private List<SalesStagePhraseModel> SalesStagePhraseForOneCompany(
+                DateTime begTime,
+                DateTime endTime,
+                List<Guid?> applicationUserIds,
+                Guid companyId,
+                List<Guid> deviceIds,
+                List<Guid> phraseIds,
+                List<Guid> salesStageIds
+ )
+    {
+            var corporationId = _repository.GetAsQueryable<Company>()
+              .Where(x => x.CompanyId == companyId).Select(x => x.CorporationId).FirstOrDefault();
+            var dialogueIds = GetDialogueIds(begTime, endTime, new List<Guid> { companyId }, applicationUserIds, deviceIds);
+
+            var phrases = _repository.GetAsQueryable<DialoguePhrase>()
+                    .Where(p => p.PhraseId != null
+                    && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
+                    && (!dialogueIds.Any() || dialogueIds.Contains((Guid)p.DialogueId)))
+                    .ToList();
+
+            var phrasesSalesStages = _repository.GetAsQueryable<SalesStagePhrase>()
+                    .Where(x =>
+                    (!salesStageIds.Any() || salesStageIds.Contains((Guid)x.SalesStageId))
+                    && (x.CompanyId == companyId || (corporationId != null && x.CorporationId == corporationId)))
+                    .GroupBy(x => x.SalesStageId)
+                    .Select(k => new SalesStagePhraseModel
+                    {
+                        Count = CountPhrasesAmount( phrases, k, phraseIds),
+                        SalesStageId = k.Key,
+                        SalesStageName = k.FirstOrDefault().SalesStage.Name,
+                        SequenceNumber=  k.FirstOrDefault().SalesStage.SequenceNumber
+                    }).ToList();
+
+            var dialogueCount = 0;
+            foreach (var item in phrasesSalesStages)
+            {
+                dialogueCount = dialogueIds.Count();
+                item.PercentageOfExecution = dialogueCount == 0 ? 0 : (double)item.Count / dialogueCount;
+            }
+            return phrasesSalesStages;
+        }
+
+        private int CountPhrasesAmount(List<DialoguePhrase> dialoguePhr, IGrouping<Guid, SalesStagePhrase> ssPhr, List<Guid> phraseIds)
+        {
+            var count = dialoguePhr
+                                  .Where(p => ssPhr.Select(s => s.PhraseId)
+                                  .Contains((Guid)p.PhraseId)
+                                  )
+                                  .Select(p => p.DialogueId).Distinct().Count();
+            return count;
         }
     }
 }

@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models;
-using UserOperations.Services;
 
 namespace UserOperations.Services
 {
@@ -27,11 +26,11 @@ namespace UserOperations.Services
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             var languageId = _loginService.GetCurrentLanguagueId();
             return await _repository.GetAsQueryable<PhraseCompany>()
-                   .Where( x =>
-                       x.CompanyId == companyIdInToken &&
-                       x.Phrase.IsTemplate == isTemplate &&
-                       x.Phrase.PhraseText != null &&
-                       x.Phrase.LanguageId == languageId)
+                   .Where(x =>
+                      x.CompanyId == companyIdInToken &&
+                      x.Phrase.IsTemplate == isTemplate &&
+                      x.Phrase.PhraseText != null &&
+                      x.Phrase.LanguageId == languageId)
                    .Select(x => x.Phrase.PhraseId).ToListAsync();
         }
 
@@ -39,16 +38,16 @@ namespace UserOperations.Services
         {
             var languageId = _loginService.GetCurrentLanguagueId();
             return await _repository.GetAsQueryable<Phrase>()
-                   .Where( x => 
-                        x.IsTemplate == true &&
-                        x.PhraseText != null &&
-                        !phraseIds.Contains(x.PhraseId) &&
-                        x.LanguageId == languageId).ToListAsync();
+                   .Where(x =>
+                       x.IsTemplate == true &&
+                       x.PhraseText != null &&
+                       !phraseIds.Contains(x.PhraseId) &&
+                       x.LanguageId == languageId).ToListAsync();
         }
-       
+
         public async Task<Phrase> GetPhraseByIdAsync(Guid phraseId)
         {
-            var phrase =  await _repository.GetAsQueryable<Phrase>()
+            var phrase = await _repository.GetAsQueryable<Phrase>()
                   .Include(x => x.PhraseCompanys).FirstOrDefaultAsync(x => x.PhraseId == phraseId);
             if (phrase == null) throw new NoFoundException("No such phrase");
             return phrase;
@@ -66,7 +65,7 @@ namespace UserOperations.Services
                     .FirstOrDefaultAsync();
         }
 
-        public async Task<List<Phrase>> GetPhrasesInCompanyByIdsAsync (List<Guid> companyIds)
+        public async Task<List<Phrase>> GetPhrasesInCompanyByIdsAsync(List<Guid> companyIds)
         {
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             companyIds = !companyIds.Any() ? new List<Guid> { companyIdInToken } : companyIds;
@@ -79,22 +78,11 @@ namespace UserOperations.Services
         public async Task<Phrase> CreateNewPhrasAsync(PhrasePost message)
         {
             var languageId = _loginService.GetCurrentLanguagueId();
-            Guid companyIdInToken = _loginService.GetCurrentCompanyId();
-            var corporationIdInToken = _loginService.GetCurrentCorporationId();
-            Guid? companyIdForSalesStage = null;
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
 
-            Phrase phrase = await GetPhraseByTextAsync(message.PhraseText, true);
-            if (corporationIdInToken == null) companyIdForSalesStage = companyIdInToken;//make zero company Id to create only one connection to corporation
-            if (phrase == null)
-            {
-                phrase = await CreateNewPhraseAsync(message, languageId);
-                await CreateIfNoExistNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
-                await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, companyIdForSalesStage, corporationIdInToken);
-            }
-            else
-            {
-                //1-phrase+company
-                await CreateIfNoExistNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
+            Phrase phrase = await GetLibraryPhraseByTextAsync(message.PhraseText, true);
+            phrase = phrase?? await CreateNewPhraseAsync(message, languageId);
+            await CreateNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
 
                 //2-phrase+sales stage
                 var defaultSalesStageIdOfPhrase = await GetSalesStageOfPhraseByPhraseId(phrase.PhraseId, companyIdForSalesStage, corporationIdInToken);
@@ -104,8 +92,8 @@ namespace UserOperations.Services
                 if (message.SalesStageId == null)//nothing wishes in requst
                     await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)defaultSalesStageIdOfPhrase, companyIdForSalesStage, corporationIdInToken);
 
-                else if (defaultSalesStageIdOfPhrase == null || message.SalesStageId != defaultSalesStageIdOfPhrase)//no template phrase//wishes some diff sales stage
-                    await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, corporationIdInToken == null ? (Guid?)companyIdInToken : null, corporationIdInToken);
+                else if (message.SalesStageId != defaultSalesStageIdOfPhrase)//no template phrase//wishes some diff sales stage
+                    await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, companyIdForSalesStage, corporationIdInToken);
             }
 
             await _repository.SaveAsync();
@@ -138,8 +126,11 @@ namespace UserOperations.Services
         public async Task<string> DeleteAndSavePhraseWithPhraseCompanyAsync(Phrase phraseIncluded)
         {
             var companyIdInToken = _loginService.GetCurrentCompanyId();
+            var corporationIdInToken = _loginService.GetCurrentCorporationId();
             var phrasesCompany = phraseIncluded.PhraseCompanys.Where(x => x.CompanyId == companyIdInToken).ToList();
+            var phraseSalesStage = phraseIncluded.SalesStagePhrases.Where(x => x.CompanyId == companyIdInToken || x.CorporationId == corporationIdInToken).FirstOrDefault();
             _repository.Delete<PhraseCompany>(phrasesCompany);//--remove connections to phrase in library
+            _repository.Delete<SalesStagePhrase>(phraseSalesStage);//--remove connections to phrase in library
             try
             {
                 if (!phraseIncluded.IsTemplate)
@@ -156,28 +147,23 @@ namespace UserOperations.Services
 
 
         //---PRIVATE---
-
         private async Task<Guid?> GetSalesStageOfPhraseByPhraseId(Guid phraseId, Guid? companyId = null, Guid? corporationId = null)
         {
-            Guid? salesStageId = _repository.GetAsQueryable<SalesStagePhrase>()
-                    .Where(x => x.PhraseId == phraseId
-                        && x.CompanyId == companyId && x.CorporationId == corporationId).FirstOrDefault()?.SalesStageId;
+            Guid? salesStageId = (await _repository.FindOrNullOneByConditionAsync<SalesStagePhrase>
+                    (x => x.PhraseId == phraseId
+                        && ((x.CompanyId == companyId || x.CorporationId == corporationId 
+                        || (x.CompanyId == null && x.Corporation == null)))))?.SalesStageId;            
             return salesStageId;
         }
 
-        private async Task<Phrase> GetPhraseByTextAsync(string phraseText, bool isTemplate)
+        private async Task<Phrase> GetLibraryPhraseByTextAsync(string phraseText, bool isTemplate)
         {
-            //---search phrase first - that is in library, second - any phrase with the same text
-            var phrase =  await _repository.GetAsQueryable<Phrase>()
+            //---search phrase that is in library or that is not belong to any company
+            return await _repository.GetAsQueryable<Phrase>()
                    .Include(x => x.PhraseCompanys)
                    .Where(x =>
                         x.PhraseText.ToLower() == phraseText.ToLower()
-                        && x.IsTemplate == isTemplate).FirstOrDefaultAsync();
-            if(phrase == null)
-                phrase = await _repository.GetAsQueryable<Phrase>()
-                   .Include(x => x.PhraseCompanys)
-                   .Where(x => x.PhraseText.ToLower() == phraseText.ToLower()).FirstOrDefaultAsync();
-            return phrase;
+                        && (x.IsTemplate == isTemplate || x.PhraseCompanys.Count() == 0)).FirstOrDefaultAsync();
         }
 
         private async Task<Phrase> CreateNewPhraseAsync(PhrasePost message, int languageId)

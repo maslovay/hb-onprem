@@ -21,7 +21,12 @@ docker build -t heedbookcontainerregistrytest.azurecr.io/dialoguesrecalculatesch
 docker build -t heedbookcontainerregistrytest.azurecr.io/senduseranalyticreportscheduler:latest -f SendUserAnalyticReportScheduler.Dockerfile . &&
 docker build -t heedbookcontainerregistrytest.azurecr.io/dialogueandsessionsnestedscheduler:latest -f DialogueAndSessionsNestedScheduler.Dockerfile . &&
 docker build -t heedbookcontainerregistrytest.azurecr.io/oldvideotoframecutsheduler:latest -f OldVideoToFrameCutSheduler.Dockerfile . &&
-docker build -t heedbookcontainerregistrytest.azurecr.io/logsaveservice:latest -f LogSaveService.Dockerfile .
+docker build -t heedbookcontainerregistrytest.azurecr.io/logsaveservice:latest -f LogSaveService.Dockerfile . &&
+docker build -t heedbookcontainerregistrytest.azurecr.io/messengerreporterservice:latest -f MessengerReporterService.Dockerfile . &&
+docker build -t heedbookcontainerregistrytest.azurecr.io/cloneftponazureservice:latest -f CloneFtpOnAzureService.Dockerfile . &&
+docker build -t heedbookcontainerregistrytest.azurecr.io/deleteoldlogsonelasticscheduler:latest -f DeleteOldLogsOnElasticScheduler.Dockerfile . &&
+docker build -t heedbookcontainerregistrytest.azurecr.io/unitapitestsservice:latest -f UnitAPITestsService.Dockerfile .
+
 
 docker push heedbookcontainerregistrytest.azurecr.io/faceanalyzeservice:latest &&
 docker push heedbookcontainerregistrytest.azurecr.io/userservice:latest && 
@@ -45,4 +50,8 @@ docker push heedbookcontainerregistrytest.azurecr.io/dialoguesrecalculateschedul
 docker push heedbookcontainerregistrytest.azurecr.io/senduseranalyticreportscheduler:latest &&
 docker push heedbookcontainerregistrytest.azurecr.io/dialogueandsessionsnestedscheduler:latest &&
 docker push heedbookcontainerregistrytest.azurecr.io/oldvideotoframecutsheduler:latest &&
-docker push heedbookcontainerregistrytest.azurecr.io/logsaveservice:latest
+docker push heedbookcontainerregistrytest.azurecr.io/logsaveservice:latest &&
+docker push heedbookcontainerregistry.azurecr.io/messengerreporterservice:latest &&
+docker push heedbookcontainerregistry.azurecr.io/cloneftponazureservice:latest &&
+docker push heedbookcontainerregistry.azurecr.io/deleteoldlogsonelasticscheduler:latest &&
+docker push heedbookcontainerregistry.azurecr.io/unitapitestsservice:latest

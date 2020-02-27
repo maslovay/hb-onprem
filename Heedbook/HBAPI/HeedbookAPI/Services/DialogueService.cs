@@ -146,6 +146,8 @@ namespace UserOperations.Services
 
             var begTime = DateTime.UtcNow.AddDays(-30);
             var companyId = dialogue.Device.CompanyId;
+            var corporationId = _repository.GetAsQueryable<Company>().Where(x => x.CompanyId == companyId)
+                            .Select(x => x.CorporationId).FirstOrDefault();
             var avgDialogueTime = 0.0;
 
             avgDialogueTime = _repository.GetAsQueryable<Dialogue>().Where(p =>
@@ -154,6 +156,26 @@ namespace UserOperations.Services
                     p.Device.CompanyId == companyId)
                 .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
 
+            var phraseIds = dialogue.DialoguePhrase.Where(x => x.PhraseId != null).Select(x => (Guid)x.PhraseId).ToList();
+
+            var salesStages = _repository.GetAsQueryable<SalesStage>()
+               .Select(x =>
+                   new
+                   {
+                       SalesStagesId = x.SalesStageId,
+                       SalesStageSequenceNumber = x.SequenceNumber,
+                       SalesStageName = x.Name,
+                       IsScored = phraseIds.Intersect(x.SalesStagePhrases
+                                        .Where(s => s.CompanyId == companyId || (corporationId!= null && s.CorporationId == corporationId))
+                                        .Select(s => s.PhraseId)).Any()
+                   }).ToList();
+
+
+                //• SalesStagesId, Guid(Id этапа продажи, к() которому относится фраза) 
+                //• SalesStageSequenceNumber, Int(порядковый номер этапа продажи) 
+                //• isScored, bool(1 –если одна и более фраз, относящихся к этапу присутствует диалоге, 0 –в других случаях) 
+                //• SalesStageName, String(название этапа продажи, к которому относится фраза)
+
             var jsonDialogue = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(dialogue));
 
             jsonDialogue["DeviceName"] = dialogue.Device.Name;
@@ -161,6 +183,7 @@ namespace UserOperations.Services
             jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _fileRef.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
             jsonDialogue["Video"] = dialogue == null ? null : _fileRef.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
             jsonDialogue["DialogueAvgDurationLastMonth"] = avgDialogueTime;
+            jsonDialogue["SalesStages"] = salesStages;
 
             return jsonDialogue;
         }
@@ -223,6 +246,7 @@ namespace UserOperations.Services
                         p.ApplicationUserId,
                         p.BegTime,
                         p.EndTime,
+                        p.DeviceId
                     }).ToList();
 
             var alerts = _repository.GetAsQueryable<Alert>()
@@ -239,9 +263,10 @@ namespace UserOperations.Services
                             x.ApplicationUserId,
                             x.CreationDate,
                             dialogueId =
-                                    (Guid?)dialogues.FirstOrDefault(p => p.ApplicationUserId == x.ApplicationUserId
+                                    (Guid?)dialogues.FirstOrDefault(p => p.DeviceId == x.DeviceId
                                         && p.BegTime <= x.CreationDate
-                                        && p.EndTime >= x.CreationDate).DialogueId
+                                        && p.EndTime >= x.CreationDate).DialogueId,
+                            x.DeviceId
                         })
                         .OrderByDescending(x => x.CreationDate)
                         .ToList();

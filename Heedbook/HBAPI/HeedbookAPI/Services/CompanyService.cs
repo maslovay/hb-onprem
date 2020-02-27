@@ -2,7 +2,9 @@
 using HBData.Repository;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using UserOperations.Controllers;
 using UserOperations.Utils;
 
 namespace UserOperations.Services
@@ -29,24 +31,25 @@ namespace UserOperations.Services
         }
 
         //---COMPANY----
-        public async Task<Company> GetCompanyByIdAsync(Guid companyId)
+        public Company GetCompanyByIdAsync(Guid companyId)
         {
-            return await _repository.FindOrExceptionOneByConditionAsync<Company>(p => p.CompanyId == companyId);
+            var company =  _repository.GetWithIncludeOne<Company>(p => p.CompanyId == companyId, p => p.WorkingTimes);
+            if (company == null) throw new NoFoundException("No such company");
+            return company;
         }
-        
 
-        public async Task<IEnumerable<Company>> GetCompaniesForAdminAsync()
+        public IEnumerable<Company> GetCompaniesForAdmin()
         {
-            var companies =  await _repository.FindByConditionAsync<Company>(p => p.StatusId == activeStatus || p.StatusId == disabledStatus);
+            var companies =  _repository.GetWithInclude<Company>(p => p.StatusId == activeStatus || p.StatusId == disabledStatus, p=>p.WorkingTimes);
             return companies ?? new List<Company>();
         }
 
-        public async Task<IEnumerable<Company>> GetCompaniesForSupervisorAsync(Guid? corporationId)
+        public IEnumerable<Company> GetCompaniesForSupervisorAsync(Guid? corporationId)
         {
             if (corporationId == null || corporationId == Guid.Empty) return new List<Company>();
-            var companies = await _repository.FindByConditionAsync<Company>(p => 
+            var companies = _repository.GetWithInclude<Company>(p => 
                         p.CorporationId == corporationId 
-                        && (p.StatusId == activeStatus || p.StatusId == disabledStatus));
+                        && (p.StatusId == activeStatus || p.StatusId == disabledStatus), p=> p.WorkingTimes);
             return companies ?? new List<Company>();
         }
 
@@ -55,21 +58,25 @@ namespace UserOperations.Services
             return await _repository.FindAllAsync<Corporation>();
         }
 
-        public async Task<Company> UpdateCompanAsync(Company companyInParams)
+        public async Task<Company> UpdateCompanAsync(List<WorkingTime> times)
         {
             var roleInToken = _loginService.GetCurrentRoleName();
-            var entity = await GetCompanyByIdAsync(companyInParams.CompanyId);
+            var companyId = _loginService.GetCurrentCompanyId();
+            var company = GetCompanyByIdAsync(companyId);
+            
 
-            _requestFilters.IsCompanyBelongToUser(companyInParams.CompanyId);
+            //_requestFilters.IsCompanyBelongToUser(companyInParams.CompanyId);
 
-            foreach (var p in typeof(Company).GetProperties())
+            var workingTimes = company.WorkingTimes.ToList();
+            foreach (var time in times)
             {
-                var val = p.GetValue(companyInParams, null);
-                if (val != null && val.ToString() != Guid.Empty.ToString())
-                    p.SetValue(entity, p.GetValue(companyInParams, null), null);
+                if (time.BegTime == null ^ time.EndTime == null) continue;
+                var timeEntity = workingTimes.Where(x => x.Day == time.Day).FirstOrDefault();
+                timeEntity.BegTime = time.BegTime;
+                timeEntity.EndTime = time.EndTime;
             }
             await _repository.SaveAsync();
-            return entity;
+            return GetCompanyByIdAsync(companyId);
         }
 
         public async Task<Company> AddNewCompanyAsync(Company company, Guid? corporationId = null)
@@ -78,10 +85,34 @@ namespace UserOperations.Services
             company.StatusId = activeStatus;
             company.CorporationId = corporationId;
             _repository.Create<Company>(company);
+            await AddDefaultWorkingTime(company.CompanyId);
             await _repository.SaveAsync();
             return company;
         }
 
         //---PRIVATE---
+
+        public async Task AddDefaultWorkingTime(Guid companyId)
+        {
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1,1,1,10,0,0), new DateTime(1,1,1, 19, 0, 0), 1);
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1,1,1,10,0,0), new DateTime(1,1,1, 19, 0, 0), 2);
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1,1,1,10,0,0), new DateTime(1,1,1, 19, 0, 0), 3);
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1,1,1,10,0,0), new DateTime(1,1,1, 19, 0, 0), 4);
+            await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
+            await AddOneWorkingTimeAsync(companyId, null, null, 6);
+            await AddOneWorkingTimeAsync(companyId, null, null, 0);
+        }
+
+        public async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day)
+        {
+            WorkingTime time = new WorkingTime
+            {
+                CompanyId = companyId,
+                Day = day,
+                BegTime = beg,
+                EndTime = end
+            };
+            await _repository.CreateAsync<WorkingTime>(time);
+        }
     }
 }

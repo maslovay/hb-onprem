@@ -42,12 +42,12 @@ namespace PersonDetectionService
             _log.SetArgs(JsonConvert.SerializeObject(message.DeviceIds));
             try
             {
-                var begTime = DateTime.Now.AddYears(-1);
+                var begTime = DateTime.Now.AddMonths(-1);
                 var companyIds = _context.Devices.Where(x => message.DeviceIds.Contains(x.DeviceId)).Select(x => x.CompanyId).Distinct().ToList();
 
-                //---dialogues for users in company or for devices in company
+                //---dialogues for devices in company
                 var dialogues = _context.Dialogues
-                    .Where(p => ( companyIds.Contains(p.Device.CompanyId)) && !String.IsNullOrEmpty(p.PersonFaceDescriptor) && p.BegTime >= begTime)
+                    .Where(p => ( companyIds.Contains(p.Device.CompanyId)) && p.BegTime >= begTime)
                     .OrderBy(p => p.BegTime)
                     .ToList();
                 
@@ -126,7 +126,8 @@ namespace PersonDetectionService
                     Age = (int)dialogueClientProfile?.Age,
                     Avatar = dialogueClientProfile?.Avatar,
                     Gender = dialogueClientProfile?.Gender,
-                    StatusId = activeStatusId
+                    StatusId = activeStatusId,
+                    LastDate = curDialogue.EndTime
                 };
             curDialogue.ClientId = client.ClientId;
             _context.Clients.Add(client);

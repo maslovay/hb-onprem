@@ -1463,6 +1463,23 @@ namespace UserOperations.Migrations
                     b.ToTable("VideoFaces");
                 });
 
+            modelBuilder.Entity("HBData.Models.WorkingTime", b =>
+                {
+                    b.Property<int>("Day");
+
+                    b.Property<Guid>("CompanyId");
+
+                    b.Property<DateTime?>("BegTime");
+
+                    b.Property<DateTime?>("EndTime");
+
+                    b.HasKey("Day", "CompanyId");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("WorkingTimes");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.Property<int>("Id")
@@ -1794,7 +1811,7 @@ namespace UserOperations.Migrations
                         .HasForeignKey("DialogueId");
 
                     b.HasOne("HBData.Models.Phrase", "Phrase")
-                        .WithMany()
+                        .WithMany("DialoguePhrases")
                         .HasForeignKey("PhraseId");
 
                     b.HasOne("HBData.Models.PhraseType", "PhraseType")
@@ -1946,7 +1963,7 @@ namespace UserOperations.Migrations
                         .HasForeignKey("CompanyId");
 
                     b.HasOne("HBData.Models.Phrase", "Phrase")
-                        .WithMany("PhraseCompany")
+                        .WithMany("PhraseCompanys")
                         .HasForeignKey("PhraseId");
                 });
 
@@ -2031,6 +2048,14 @@ namespace UserOperations.Migrations
                     b.HasOne("HBData.Models.FileVideo", "FileVideo")
                         .WithMany()
                         .HasForeignKey("FileVideoId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("HBData.Models.WorkingTime", b =>
+                {
+                    b.HasOne("HBData.Models.Company", "Company")
+                        .WithMany("WorkingTimes")
+                        .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

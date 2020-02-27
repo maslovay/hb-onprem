@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Transactions;
 using FillingSatisfactionService.Helper;
 using HBData.Repository;
+using Old.Models;
 
 namespace UserOperations.Controllers
 {
@@ -32,21 +33,23 @@ namespace UserOperations.Controllers
     [ApiController]
     public class HelpController : Controller
     {
-    //    private readonly IConfiguration _config;
-    //    private readonly LoginService _loginService;
+        //    private readonly IConfiguration _config;
+        private readonly CompanyService _compService;
         private readonly RecordsContext _context;
-    //    private readonly SftpClient _sftpClient;
-    //    private readonly MailSender _mailSender;
-    //    private readonly RequestFilters _requestFilters;
-    //    private readonly SftpSettings _sftpSettings;
-    //    private readonly DBOperations _dbOperation;
-    //    private readonly IGenericRepository _repository;
+        //    private readonly SftpClient _sftpClient;
+        //    private readonly MailSender _mailSender;
+        //    private readonly RequestFilters _requestFilters;
+        //    private readonly SftpSettings _sftpSettings;
+        //    private readonly DBOperations _dbOperation;
+        //    private readonly IGenericRepository _repository;
+      //  private readonly DescriptorCalculations _calc;
 
 
         public HelpController(
-            //IConfiguration config,
+            CompanyService compService,
             //LoginService loginService,
             RecordsContext context
+          //   DescriptorCalculations calc
             //SftpClient sftpClient,
             //MailSender mailSender,
             //RequestFilters requestFilters,
@@ -55,9 +58,10 @@ namespace UserOperations.Controllers
             //IGenericRepository repository
             )
         {
-            //_config = config;
+            _compService = compService;
             //_loginService = loginService;
             _context = context;
+         //   _calc = calc;
             //_sftpClient = sftpClient;
             //_mailSender = mailSender;
             //_requestFilters = requestFilters;
@@ -65,115 +69,791 @@ namespace UserOperations.Controllers
             //_dbOperation = dBOperations;
             //_repository = repository;
         }
-        [HttpGet("Help3")]
-        public async Task<IActionResult> Help3()
-        {
-            //var connectionString = "User ID = postgres; Password = annushka123; Host = 127.0.0.1; Port = 5432; Database = onprem_backup; Pooling = true; Timeout = 120; CommandTimeout = 0";
 
+        [HttpGet("CopyDataFromDB")]
+        public async Task<IActionResult> CopyDataFromDB()
+        {
+            var date = DateTime.Now.AddDays(-3);
             var connectionString = "User ID=test_user;Password=test_password;Host=40.69.85.202;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0;";
-            DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
+
+            //var connectionString = "User ID=heedbook_user;Password=Oleg&AnnaRulyat_1975;Host=40.69.85.202;Port=5432;Database=heedbook_db;Pooling=true;Timeout=120;CommandTimeout=0;";
+            DbContextOptionsBuilder<OldRecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<OldRecordsContext>();
             dbContextOptionsBuilder.UseNpgsql(connectionString,
                    dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
-            var localContext = new RecordsContext(dbContextOptionsBuilder.Options);
-            Guid contentPrototypeId = new Guid("07565966-7db2-49a7-87d4-1345c729a6cb");
-            //var c = localContext.Contents.ToList();
-            var contentInBackup = localContext.Contents.FirstOrDefault(x => x.ContentId == contentPrototypeId);
+            var oldContext = new OldRecordsContext(dbContextOptionsBuilder.Options);
 
-            contentInBackup.CreationDate = DateTime.Now;
-            contentInBackup.UpdateDate = DateTime.Now;
-            contentInBackup.CompanyId = null;
-            //_context.Add(contentInBackup);
-            //_context.SaveChanges();
+            Dictionary<string, int> result = new Dictionary<string, int>();
+
+
+            //-1--COMPANIES---
+            var oldCompId = oldContext.Companys.Select(x => x.CompanyId).ToList();
+            var newCompId = _context.Companys.Select(x => x.CompanyId).ToList();
+            var compIdsToAdd = oldCompId.Except(newCompId).ToList();
+            List<Old.Models.Company> addComp = oldContext.Companys.Where(x => compIdsToAdd.Contains(x.CompanyId)).ToList();
+            var str = JsonConvert.SerializeObject(addComp);
+            List<HBData.Models.Company> newComp = JsonConvert.DeserializeObject<List<HBData.Models.Company>>(str);
+            var devType = _context.DeviceTypes.FirstOrDefault().DeviceTypeId;
+
+            try
+            {
+                _context.AddRange(newComp);
+                _context.SaveChanges();
+                result["companys"] = newComp.Count();
+
+                var devicesToAdd = compIdsToAdd.Select(x => new Device
+                {
+                    DeviceId = Guid.NewGuid(),
+                    CompanyId = x,
+                    Code = "AAAAAA",
+                    DeviceTypeId = devType,
+                    Name = "TEMP DEVICE",
+                    StatusId = 3
+                });
+
+                _context.AddRange(devicesToAdd);
+                _context.SaveChanges();
+                result["devices"] = newComp.Count();
+
+                var work = compIdsToAdd.Select(x => new List<WorkingTime> {
+                    new WorkingTime { CompanyId = x, Day = 0 },
+                    new WorkingTime { CompanyId = x, Day = 1 },
+                    new WorkingTime { CompanyId = x, Day = 2 },
+                    new WorkingTime { CompanyId = x, Day = 3 },
+                    new WorkingTime { CompanyId = x, Day = 4 },
+                    new WorkingTime { CompanyId = x, Day = 5 },
+                    new WorkingTime { CompanyId = x, Day = 6 }}
+                    );
+
+                _context.AddRange(work);
+                _context.SaveChanges();
+                result["devices"] = newComp.Count();
+            }
+            catch { }
+
+            var devices = _context.Devices.Include(x => x.Company.ApplicationUser)
+            .Select(x => new { x.DeviceId, applicationUserIds = x.Company.ApplicationUser.Select(p => p.Id).ToList() }).ToList();
+
+
+            //-2--USERS---
+            var oldUsersId = oldContext.ApplicationUsers.Select(x => x.Id).ToList();
+            var newUsersId = _context.ApplicationUsers.Select(x => x.Id).ToList();
+            var usersIdsToAdd = oldUsersId.Except(newUsersId).ToList();
+            List<Old.Models.ApplicationUser> addUsers = oldContext.ApplicationUsers.Where(x => usersIdsToAdd.Contains(x.Id)).ToList();
+            str = JsonConvert.SerializeObject(addUsers);
+            List<HBData.Models.ApplicationUser> newUsers = JsonConvert.DeserializeObject<List<HBData.Models.ApplicationUser>>(str);
+            try
+            {
+                _context.AddRange(newUsers);
+                _context.SaveChanges();
+                result["users"] = newUsers.Count();
+            }
+            catch { }
+
+            //-2--ROLES---
+            var oldUR = oldContext.ApplicationUserRoles.Select(x => x.UserId).ToList();
+            var newUR = _context.ApplicationUserRoles.Select(x => x.UserId).ToList();
+            var IdsToAdd = oldUR.Except(newUR).ToList();
+            List<Old.Models.ApplicationUserRole> add1 = oldContext.ApplicationUserRoles.Where(x => IdsToAdd.Contains(x.UserId)).ToList();
+            str = JsonConvert.SerializeObject(add1);
+            List<HBData.Models.ApplicationUserRole> newadd = JsonConvert.DeserializeObject<List<HBData.Models.ApplicationUserRole>>(str);
+            try
+            {
+                _context.AddRange(newadd);
+                _context.SaveChanges();
+                result["users"] = newUsers.Count();
+            }
+            catch { }
+
+            //-3--ALERTS---
+            var oldAlerts = oldContext.Alerts.Where(x => x.CreationDate >= date).Select(x => x.AlertId).ToList();
+            var newAlertsId = _context.Alerts.Where(x => x.CreationDate >= date).Select(x => x.AlertId).ToList();
+            var alertsIdsToAdd = oldAlerts.Except(newAlertsId).ToList();
+            List<Old.Models.Alert> addAlerts = oldContext.Alerts.Where(x => alertsIdsToAdd.Contains(x.AlertId)).ToList();
+            List<HBData.Models.Alert> newAlerts = addAlerts.Select(x => new HBData.Models.Alert
+            {
+                AlertId = x.AlertId,
+                AlertTypeId = x.AlertTypeId,
+                ApplicationUserId = x.ApplicationUserId,
+                CreationDate = x.CreationDate,
+                DeviceId = Guid.Empty
+            }).ToList();
+            try
+            {
+                _context.AddRange(newAlerts);
+                _context.SaveChanges();
+                result["alert"] = newAlerts.Count();
+            }
+            catch { }
+
+
+            //-4--CAMPAIGN---
+            var old1 = oldContext.Campaigns.Select(x => x.CampaignId).ToList();
+            var new1 = _context.Campaigns.Select(x => x.CampaignId).ToList();
+            var toAddIds1 = old1.Except(new1).ToList();
+            List<Old.Models.Campaign> toAdd1 = oldContext.Campaigns.Where(x => toAddIds1.Contains(x.CampaignId)).ToList();
+            str = JsonConvert.SerializeObject(toAdd1);
+            List<HBData.Models.Campaign> toAdd1_ = JsonConvert.DeserializeObject<List<HBData.Models.Campaign>>(str);
+            try
+            {
+                _context.AddRange(toAdd1_);
+                _context.SaveChanges();
+                result["campaign"] = toAdd1_.Count();
+            }
+            catch { }
+
+            //-5--CONTENT---
+            var old2 = oldContext.Contents.Select(x => x.ContentId).ToList();
+            var new2 = _context.Contents.Select(x => x.ContentId).ToList();
+            var toAddIds2 = old2.Except(new2).ToList();
+            List<Old.Models.Content> toAdd2 = oldContext.Contents.Where(x => toAddIds2.Contains(x.ContentId)).ToList();
+            str = JsonConvert.SerializeObject(toAdd2);
+            List<HBData.Models.Content> toAdd2_ = JsonConvert.DeserializeObject<List<HBData.Models.Content>>(str);
+            try
+            {
+                _context.AddRange(toAdd2_);
+                _context.SaveChanges();
+                result["content"] = toAdd2_.Count();
+            }
+            catch { }
+
+
+            //-6--CAMPAIGN CONTENT---
+            var old3 = oldContext.CampaignContents.Select(x => x.CampaignContentId).ToList();
+            var new3 = _context.CampaignContents.Select(x => x.CampaignContentId).ToList();
+            var toAddIds3 = old3.Except(new3).ToList();
+            List<Old.Models.CampaignContent> toAdd3 = oldContext.CampaignContents.Where(x => toAddIds3.Contains(x.CampaignContentId)).ToList();
+            str = JsonConvert.SerializeObject(toAdd3);
+            List<HBData.Models.CampaignContent> toAdd3_ = JsonConvert.DeserializeObject<List<HBData.Models.CampaignContent>>(str);
+            try
+            {
+                _context.AddRange(toAdd3_);
+                _context.SaveChanges();
+                result["campaign content"] = toAdd3_.Count();
+            }
+            catch (Exception ex) { var mes = ex.Message; }
+
+            //-7--CAMPAIGN CONTENT answers---
+            var old4 = oldContext.CampaignContentAnswers.Where(x => x.Time >= date).Select(x => x.CampaignContentAnswerId).ToList();
+            var new4 = _context.CampaignContentAnswers.Where(x => x.Time >= date).Select(x => x.CampaignContentAnswerId).ToList();
+            var toAddIds4 = old4.Except(new4).ToList();
+            List<Old.Models.CampaignContentAnswer> toAddOld4 = oldContext.CampaignContentAnswers.Where(x => toAddIds4.Contains(x.CampaignContentAnswerId)).ToList();
+
+            List<HBData.Models.CampaignContentAnswer> toAdd4 = toAddOld4.Select(x => new HBData.Models.CampaignContentAnswer
+            {
+                Answer = x.Answer,
+                ApplicationUserId = x.ApplicationUserId,
+                CampaignContentAnswerId = x.CampaignContentAnswerId,
+                CampaignContentId = x.CampaignContentId,
+                Time = x.Time,
+                DeviceId = devices.Where(p => p.applicationUserIds.Contains(x.ApplicationUserId)).FirstOrDefault().DeviceId
+            }).ToList();
+            try
+            {
+                _context.AddRange(toAdd4);
+                _context.SaveChanges();
+                result["campaign content answers"] = toAdd4.Count();
+            }
+            catch (Exception ex) { var mes = ex.Message; }
+
+            //-8--Client---
+            var old5 = oldContext.Clients.Select(x => x.ClientId).ToList();
+            var new5 = _context.Clients.Select(x => x.ClientId).ToList();
+            var toAddIds5 = old5.Except(new5).ToList();
+            List<Old.Models.Client> toAdd5 = oldContext.Clients.Where(x => toAddIds5.Contains(x.ClientId)).ToList();
+            str = JsonConvert.SerializeObject(toAdd5);
+            List<HBData.Models.Client> toAdd5_ = JsonConvert.DeserializeObject<List<HBData.Models.Client>>(str);
+            try
+            {
+                _context.AddRange(toAdd5_);
+                _context.SaveChanges();
+                result["Client"] = toAdd5_.Count();
+            }
+            catch (Exception ex) { var mes = ex.Message; }
+
+            //-9--Client Note---
+            var old6 = oldContext.ClientNotes.Where(x => x.CreationDate >= date).Select(x => x.ClientNoteId).ToList();
+            var new6 = _context.ClientNotes.Where(x => x.CreationDate >= date).Select(x => x.ClientNoteId).ToList();
+            var toAddIds6 = old6.Except(new6).ToList();
+            List<Old.Models.ClientNote> toAdd6 = oldContext.ClientNotes.Where(x => toAddIds6.Contains(x.ClientNoteId)).ToList();
+            str = JsonConvert.SerializeObject(toAdd6);
+            List<HBData.Models.ClientNote> toAdd6_ = JsonConvert.DeserializeObject<List<HBData.Models.ClientNote>>(str);
+            try
+            {
+                _context.AddRange(toAdd6_);
+                _context.SaveChanges();
+                result["Client note"] = toAdd6_.Count();
+            }
+            catch (Exception ex) { var mes = ex.Message; }
+
+            //-10--Dialogues---
+            var old7 = oldContext.Dialogues.Select(x => x.DialogueId).ToList();
+            var new7 = _context.Dialogues.Select(x => x.DialogueId).ToList();
+            var toAddIdsDialogues = old7.Except(new7).ToList();
+            List<Old.Models.Dialogue> toAddOld7 = oldContext.Dialogues.Where(x => toAddIdsDialogues.Contains(x.DialogueId)).ToList();
+
+            List<HBData.Models.Dialogue> toAdd7 = toAddOld7.Select(x => new HBData.Models.Dialogue
+            {
+                DialogueId = x.DialogueId,
+                ApplicationUserId = x.ApplicationUserId,
+                BegTime = x.BegTime,
+                ClientId = x.ClientId,
+                Comment = x.Comment,
+                CreationTime = x.CreationTime,
+                EndTime = x.EndTime,
+                InStatistic = x.InStatistic,
+                StatusId = x.StatusId,
+                LanguageId = x.LanguageId,
+                PersonFaceDescriptor = x.PersonFaceDescriptor,
+                DeviceId = devices.Where(p => p.applicationUserIds.Contains(x.ApplicationUserId)).FirstOrDefault().DeviceId
+            }).ToList();
+            try
+            {
+                _context.AddRange(toAdd7);
+                _context.SaveChanges();
+                result["Dialogue"] = toAdd7.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-11--Phrase---
+            var old8 = oldContext.Phrases.Select(x => x.PhraseId).ToList();
+            var new8 = _context.Phrases.Select(x => x.PhraseId).ToList();
+            var toAddIds8 = old8.Except(new8).ToList();
+            List<Old.Models.Phrase> toAddOld8 = oldContext.Phrases.Where(x => toAddIds8.Contains(x.PhraseId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld8);
+            List<HBData.Models.Phrase> toAdd8_ = JsonConvert.DeserializeObject<List<HBData.Models.Phrase>>(str);
+            try
+            {
+                _context.AddRange(toAdd8_);
+                _context.SaveChanges();
+                result["Phrase"] = toAdd8_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-12--PhraseCompany---
+            var old9 = oldContext.PhraseCompanys.Select(x => x.PhraseCompanyId).ToList();
+            var new9 = _context.PhraseCompanys.Select(x => x.PhraseCompanyId).ToList();
+            var toAddIds9 = old9.Except(new9).ToList();
+            List<Old.Models.PhraseCompany> toAddOld9 = oldContext.PhraseCompanys.Where(x => toAddIds9.Contains(x.PhraseCompanyId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld9);
+            List<HBData.Models.PhraseCompany> toAdd9_ = JsonConvert.DeserializeObject<List<HBData.Models.PhraseCompany>>(str);
+            try
+            {
+                _context.AddRange(toAdd9_);
+                _context.SaveChanges();
+                result["PhraseCompany"] = toAdd9_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+
+            //-13--Session---
+            var old10 = oldContext.Sessions.Where(x => x.BegTime >= date).Select(x => x.SessionId).ToList();
+            var new10 = _context.Sessions.Where(x => x.BegTime >= date).Select(x => x.SessionId).ToList();
+            var toAddIds10 = old10.Except(new10).ToList();
+            List<Old.Models.Session> toAddOld10 = oldContext.Sessions.Where(x => toAddIds10.Contains(x.SessionId)).ToList();
+
+            List<HBData.Models.Session> toAdd10 = toAddOld10.Select(x => new HBData.Models.Session
+            {
+                SessionId = x.SessionId,
+                ApplicationUserId = x.ApplicationUserId,
+                BegTime = x.BegTime,
+                EndTime = x.EndTime,
+                StatusId = x.StatusId,
+                IsDesktop = x.IsDesktop,
+                DeviceId = devices.Where(p => p.applicationUserIds.Contains(x.ApplicationUserId)).FirstOrDefault().DeviceId
+            }).ToList();
+            try
+            {
+                _context.AddRange(toAdd10);
+                _context.SaveChanges();
+                result["Session"] = toAdd10.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+
+            //-14--SLIDE SHOW SESSION---
+            var old11 = oldContext.SlideShowSessions.Where(x => x.BegTime >= date).Select(x => x.SlideShowSessionId).ToList();
+            var new11 = _context.SlideShowSessions.Where(x => x.BegTime >= date).Select(x => x.SlideShowSessionId).ToList();
+            var toAddIds11 = old11.Except(new11).ToList();
+            List<Old.Models.SlideShowSession> toAddOld11 = oldContext.SlideShowSessions.Where(x => toAddIds11.Contains(x.SlideShowSessionId)).ToList();
+
+            List<HBData.Models.SlideShowSession> toAdd11 = toAddOld11.Select(x => new HBData.Models.SlideShowSession
+            {
+                BegTime = x.BegTime,
+                ContentType = x.ContentType,
+                EndTime = x.EndTime,
+                IsPoll = x.IsPoll,
+                SlideShowSessionId = x.SlideShowSessionId,
+                Url = x.Url,
+                ApplicationUserId = x.ApplicationUserId,
+                CampaignContentId = x.CampaignContentId,
+                DeviceId = devices.Where(p => p.applicationUserIds.Contains((Guid)x.ApplicationUserId)).FirstOrDefault().DeviceId
+            }).ToList();
+            try
+            {
+                _context.AddRange(toAdd11);
+                _context.SaveChanges();
+                result["SlideShowSession"] = toAdd11.Count();
+            }
+            catch { }
+
+            //-15--DialogueAudio---
+            var toAddIds15 = oldContext.DialogueAudios.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueAudioId).ToList();
+            List<Old.Models.DialogueAudio> toAddOld15 = oldContext.DialogueAudios.Where(x => toAddIds15.Contains(x.DialogueAudioId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld15);
+            List<HBData.Models.DialogueAudio> toAdd15_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueAudio>>(str);
+            try
+            {
+                _context.AddRange(toAdd15_);
+                _context.SaveChanges();
+                result["DialogueAudio"] = toAdd15_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-16--DialogueClientProfiles---
+            var toAddIds16 = oldContext.DialogueClientProfiles.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueClientProfileId).ToList();
+            List<Old.Models.DialogueClientProfile> toAddOld16 = oldContext.DialogueClientProfiles.Where(x => toAddIds16.Contains(x.DialogueClientProfileId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld16);
+            List<HBData.Models.DialogueClientProfile> toAdd16_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueClientProfile>>(str);
+            try
+            {
+                _context.AddRange(toAdd16_);
+                _context.SaveChanges();
+                result["DialogueClientProfiles"] = toAdd16_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-17--DialogueClientSatisfactions---
+            var toAddIds17 = oldContext.DialogueClientSatisfactions.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueClientSatisfactionId).ToList();
+            List<Old.Models.DialogueClientSatisfaction> toAddOld17
+                = oldContext.DialogueClientSatisfactions.Where(x => toAddIds17.Contains(x.DialogueClientSatisfactionId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld17);
+            List<HBData.Models.DialogueClientSatisfaction> toAdd17_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueClientSatisfaction>>(str);
+            try
+            {
+                _context.AddRange(toAdd17_);
+                _context.SaveChanges();
+                result["DialogueClientSatisfactions"] = toAdd17_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-18--DialogueFrames---
+            var toAddIds18 = oldContext.DialogueFrames.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueFrameId).ToList();
+            List<Old.Models.DialogueFrame> toAddOld18
+                = oldContext.DialogueFrames.Where(x => toAddIds18.Contains(x.DialogueFrameId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld18);
+            List<HBData.Models.DialogueFrame> toAdd18_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueFrame>>(str);
+            try
+            {
+                _context.AddRange(toAdd18_);
+                _context.SaveChanges();
+                result["DialogueFrames"] = toAdd18_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-19--DialogueHint---
+            var toAddIds19 = oldContext.DialogueHints.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueHintId).ToList();
+            List<Old.Models.DialogueHint> toAddOld19
+                = oldContext.DialogueHints.Where(x => toAddIds19.Contains(x.DialogueHintId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld19);
+            List<HBData.Models.DialogueHint> toAdd19_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueHint>>(str);
+            try
+            {
+                _context.AddRange(toAdd19_);
+                _context.SaveChanges();
+                result["DialogueHint"] = toAdd19_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-20--DialogueInterval---
+            var toAddIds20 = oldContext.DialogueIntervals.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueIntervalId).ToList();
+            List<Old.Models.DialogueInterval> toAddOld20
+                = oldContext.DialogueIntervals.Where(x => toAddIds20.Contains(x.DialogueIntervalId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld20);
+            List<HBData.Models.DialogueInterval> toAdd20_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueInterval>>(str);
+            try
+            {
+                _context.AddRange(toAdd20_);
+                _context.SaveChanges();
+                result["DialogueInterval"] = toAdd20_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-21--DialoguePhraseCounts---
+            var toAddIds21 = oldContext.DialoguePhraseCounts.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialoguePhraseCountId).ToList();
+            List<Old.Models.DialoguePhraseCount> toAddOld21
+                = oldContext.DialoguePhraseCounts.Where(x => toAddIds21.Contains(x.DialoguePhraseCountId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld21);
+            List<HBData.Models.DialoguePhraseCount> toAdd21_ = JsonConvert.DeserializeObject<List<HBData.Models.DialoguePhraseCount>>(str);
+            try
+            {
+                _context.AddRange(toAdd21_);
+                _context.SaveChanges();
+                result["DialoguePhraseCounts"] = toAdd21_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-22--DialoguePhrases---
+            var toAddIds22 = oldContext.DialoguePhrases.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialoguePhraseId).ToList();
+            List<Old.Models.DialoguePhrase> toAddOld22
+                = oldContext.DialoguePhrases.Where(x => toAddIds22.Contains(x.DialoguePhraseId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld22);
+            List<HBData.Models.DialoguePhrase> toAdd22_ = JsonConvert.DeserializeObject<List<HBData.Models.DialoguePhrase>>(str);
+            try
+            {
+                _context.AddRange(toAdd22_);
+                _context.SaveChanges();
+                result["DialoguePhrases"] = toAdd22_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-23--DialogueSpeech---
+            var toAddIds23 = oldContext.DialogueSpeechs.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueSpeechId).ToList();
+            List<Old.Models.DialogueSpeech> toAddOld23
+                = oldContext.DialogueSpeechs.Where(x => toAddIds23.Contains(x.DialogueSpeechId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld23);
+            List<HBData.Models.DialogueSpeech> toAdd23_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueSpeech>>(str);
+            try
+            {
+                _context.AddRange(toAdd23_);
+                _context.SaveChanges();
+                result["DialogueSpeech"] = toAdd23_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-24--DialogueVisuals---
+            var toAddIds24 = oldContext.DialogueVisuals.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueVisualId).ToList();
+            List<Old.Models.DialogueVisual> toAddOld24
+                = oldContext.DialogueVisuals.Where(x => toAddIds24.Contains(x.DialogueVisualId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld24);
+            List<HBData.Models.DialogueVisual> toAdd24_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueVisual>>(str);
+            try
+            {
+                _context.AddRange(toAdd24_);
+                _context.SaveChanges();
+                result["DialogueVisuals"] = toAdd24_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-25--DialogueWord---
+            var toAddIds25 = oldContext.DialogueWords.Where(x => toAddIdsDialogues.Contains((Guid)x.DialogueId)).Select(x => x.DialogueWordId).ToList();
+            List<Old.Models.DialogueWord> toAddOld25
+                = oldContext.DialogueWords.Where(x => toAddIds25.Contains(x.DialogueWordId)).ToList();
+            str = JsonConvert.SerializeObject(toAddOld25);
+            List<HBData.Models.DialogueWord> toAdd25_ = JsonConvert.DeserializeObject<List<HBData.Models.DialogueWord>>(str);
+            try
+            {
+                _context.AddRange(toAdd25_);
+                _context.SaveChanges();
+                result["DialogueWord"] = toAdd25_.Count();
+            }
+            catch (Exception ex) { var e = ex.Message; }
+
+            //-26--Bech-- -
+            var old26 = oldContext.Benchmarks.Select(x => x.Id).ToList();
+            var new26 = _context.Benchmarks.Select(x => x.Id).ToList();
+            var toAddIds26 = old26.Except(new26).ToList();
+            List<Old.Models.Benchmark> toAdd26 = oldContext.Benchmarks.Where(x => toAddIds26.Contains(x.Id)).ToList();
+            str = JsonConvert.SerializeObject(toAdd26);
+            List<HBData.Models.Benchmark> toAdd26_ = JsonConvert.DeserializeObject<List<HBData.Models.Benchmark>>(str);
+            try
+            {
+                _context.AddRange(toAdd26_);
+                _context.SaveChanges();
+                result["Benchmark"] = toAdd26_.Count();
+            }
+            catch (Exception ex) { var mes = ex.Message; }
+
+            return Ok(result);
+        }
+
+        [HttpGet("DevicesCreate")]
+        public async Task<IActionResult> DevicesCreate(int skip, int take)
+        {
+            var userid = _context.SlideShowSessions.Where(x => x.DeviceId == Guid.Empty).OrderByDescending(x => x.BegTime).Skip(skip).Take(take).ToList();
+
+            var devices = _context.Devices.Include(x => x.Company.ApplicationUser)
+                .Select(x => new { x.DeviceId, applicationUserIds = x.Company.ApplicationUser.Select(p => p.Id).ToList() }).ToList();
+
+            foreach (var item in userid)
+            {
+                item.DeviceId = devices.Where(x => x.applicationUserIds.Contains((Guid)item.ApplicationUserId)).FirstOrDefault().DeviceId;
+
+            }
+            _context.SaveChanges();
+
             return Ok();
         }
 
-        [HttpGet("Help4")]
-        public async Task<IActionResult> MoveDialogues()
+        [HttpGet("SalesStageCreate")]
+        public async Task<IActionResult> SalesStageCreate()
         {
-            //var connectionString = "User ID = postgres; Password = annushka123; Host = 127.0.0.1; Port = 5432; Database = onprem_backup; Pooling = true; Timeout = 120; CommandTimeout = 0";
-
-            var connectionString = "User ID=test_user;Password=test_password;Host=40.69.85.202;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0;";
-            DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
-            dbContextOptionsBuilder.UseNpgsql(connectionString,
-                   dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
-            var localContext = new RecordsContext(dbContextOptionsBuilder.Options);
-
+            var companyIds = _context.Companys.Where(x => x.CorporationId == null && !x.SalesStagePhrases.Any()).Select(x => x.CompanyId).ToList();
+            var ssPhrases = _context.SalesStagePhrases.Where(x => x.CompanyId == null && x.CorporationId == null).ToList();
             try
             {
-                var dialogueIds = new string[]
+                foreach (var companyId in companyIds)
                 {
-                    "31db5a99-1966-45f9-8675-d2197210f340",
-                    "cd08dbd3-6819-4322-99bf-80199f141ab8",
-                    "c8c4de56-b032-4f02-8b8a-6c650e6ba5bd",
-                    "5052b6b9-d6d7-4be4-83a0-74ade80d16da",
-                    "ce894397-8933-4a90-ad25-335c1752d807",
-                    "ca6aadff-e00d-4ba0-aae1-08ea0bfeee59",
-                    "c6fc6a8a-8198-4154-b97e-f1596af2b100",
-                    "57d811e4-a9bc-4ec2-ba74-3244162d4580",
-                    "58dfb7e2-4fa3-4fca-b8a4-31265170c95c",
-                    "30419a61-e5b5-4a82-ac3a-c8c841ce2dd3",
-                    "477bb5ca-fd81-44cf-a981-bbdbf906b303"
-                };
+                    if (!_context.SalesStagePhrases.Any(x => x.CompanyId == companyId))
+                    {
+                        var ssPh = ssPhrases.Select(x => new SalesStagePhrase
+                        {
+                            CompanyId = companyId,
+                            PhraseId = x.PhraseId,
+                            SalesStageId = x.SalesStageId//,
+                                                         //  SalesStagePhraseId = Guid.NewGuid()
+                        }).ToList();
+                        _context.AddRange(ssPh);
+                        _context.SaveChanges();
+                    }
 
-                var phrases = localContext.Phrases.ToList();
-                //_context.AddRange(phrases);
-                //_context.SaveChanges();
-                var dialogueAudios = localContext.DialoguePhrases.Where(x => dialogueIds.Contains(x.DialogueId.ToString())).ToList();
-                var dialogueAudios1 = localContext.DialogueSpeechs.Where(x => dialogueIds.Contains(x.DialogueId.ToString())).ToList();
-                var dialogueAudios2 = localContext.DialogueVisuals.Where(x => dialogueIds.Contains(x.DialogueId.ToString())).ToList();
-                var dialogueAudios3 = localContext.DialogueWords.Where(x => dialogueIds.Contains(x.DialogueId.ToString())).ToList();
+                }
 
+                var corporationIds = _context.Companys.Where(x => x.CorporationId != null && !x.SalesStagePhrases.Any()).Select(x => x.CorporationId).ToList();
+                foreach (var corporationId in corporationIds)
+                {
+                    if (!_context.SalesStagePhrases.Any(x => x.CorporationId == corporationId))
+                    {
+                        var ssPh = ssPhrases.Select(x => new SalesStagePhrase
+                        {
+                            CorporationId = corporationId,
+                            PhraseId = x.PhraseId,
+                            SalesStageId = x.SalesStageId//,
+                                                         //  SalesStagePhraseId = Guid.NewGuid()
+                        }).ToList();
+                        _context.AddRange(ssPh);
+                        _context.SaveChanges();
+                    }
 
-                //_context.AddRange(dialogueAudios);
-                //_context.AddRange(dialogueAudios1);
-                //_context.AddRange(dialogueAudios2);
-                //_context.AddRange(dialogueAudios3);
-                //_context.SaveChanges();
-                return Ok();
+                }
             }
-            catch(Exception ex)
-            {
-                var e = ex.Message;
-                return BadRequest(ex.Message);
-            }
+            catch (Exception ex) { var m = ex.Message; }
+
+            return Ok();
         }
 
-
-        [HttpGet("SalesStageAdd")]
-        public IActionResult SalesStageAdd()
+        [HttpGet("PhraseClear")]
+        public async Task<IActionResult> PhraseClear()
         {
+            var phrases = _context.Phrases.Include(x => x.PhraseCompanys).Include(x => x.DialoguePhrases).GroupBy(x => x.PhraseText).ToList();
 
-            List<Temp> arr = new List<Temp> {
-                 new Temp { phrase = "процентная ставка	", id = 3},
-                 new Temp { phrase = "рассмотрение заявки	", id = 3}
-            };
-            foreach (var item in arr)
+            foreach (var group in phrases)
             {
-            try
-            {
-                    Guid phraseId = _context.Phrases.FirstOrDefault(x => x.PhraseText == item.phrase.TrimEnd(' ').TrimEnd('\t')).PhraseId;
-                    SalesStagePhrase ssphr = _context.SalesStagePhrases.Where(x => x.PhraseId == phraseId).FirstOrDefault();
-                    if (ssphr == null)
+                if (group.Count() > 1)
+                {
+                    var templ = group.Where(x => x.IsTemplate == true).FirstOrDefault();
+                    if (templ != null)
                     {
-                        SalesStagePhrase ssph = new SalesStagePhrase
+                        var phs = group.Where(x => x.IsTemplate == false).ToList();
+                        foreach (var ph in phs)
                         {
-                            SalesStagePhraseId = Guid.NewGuid(),
-                            PhraseId = _context.Phrases.FirstOrDefault(x => x.PhraseText == item.phrase.TrimEnd(' ').TrimEnd('\t')).PhraseId,
-                            SalesStageId = _context.SalesStages.FirstOrDefault(x => x.SequenceNumber == item.id).SalesStageId,
-                        };
-                        _context.SalesStagePhrases.Add(ssph);
+                            var phraseComp = _context.PhraseCompanys.Where(x => x.PhraseId == ph.PhraseId).ToList();
+                            var dialogPhrases = _context.DialoguePhrases.Where(x => x.PhraseId == ph.PhraseId).ToList();
+                            foreach (var phCom in phraseComp)
+                            {
+                                phCom.PhraseId = templ.PhraseId;
+                            }
+
+                            foreach (var phD in dialogPhrases)
+                            {
+                                phD.PhraseId = templ.PhraseId;
+                            }
+                        }
+                        _context.RemoveRange(phs);
+                        _context.SaveChanges();
+                    }
+                    else
+                    {
+                        var a = group.Where(x => x.DialoguePhrases.Count() > 0).FirstOrDefault();
+                        if (a == null)
+                            a = group.Where(x => x.PhraseCompanys.Count() > 0).FirstOrDefault();
+                        if (a == null)
+                        {
+                            _context.RemoveRange(group);
+                            _context.SaveChanges();
+                            continue;
+                        }
+                        var phs = group.Where(x => x.PhraseId != a.PhraseId).ToList();
+                        foreach (var ph in phs)
+                        {
+                            var phraseComp = ph.PhraseCompanys.ToList();
+                            var dialogPhrases = ph.DialoguePhrases.ToList();
+                            foreach (var phCom in phraseComp)
+                            {
+                                phCom.PhraseId = a.PhraseId;
+                            }
+
+                            foreach (var phD in dialogPhrases)
+                            {
+                                phD.PhraseId = a.PhraseId;
+                            }
+                        }
+                        _context.RemoveRange(phs);
                         _context.SaveChanges();
                     }
                 }
-            catch{}
             }
+
+            _context.SaveChanges();
+
             return Ok();
         }
 
-        public class Temp
+        [HttpGet("WorkingTimeFill")]
+        public async Task<IActionResult> WorkingTimeFill()
         {
-            public int id;
-            public string phrase;
+            var companyIds = _context.Companys.Select(x => x.CompanyId).ToList();
+            foreach (var companyId in companyIds)
+            {
+
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1);
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2);
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3);
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4);
+                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
+                await _compService.AddOneWorkingTimeAsync(companyId, null, null, 6);
+                await _compService.AddOneWorkingTimeAsync(companyId, null, null, 0);
+                //try
+                //{
+                //    await _compService.AddOneWorkingTimeAsync(companyId, null, null, 0);
+                //    _context.SaveChanges();
+                //}
+                //catch { }
+            }
+
+            //var d = _context.WorkingTimes.Where(x => x.Day == 7).ToList();
+            //_context.RemoveRange(d);
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
+
+        [HttpGet("PersDet")]
+        public async Task PersDet(Guid devId)
+        {
+            try
+            {
+                var begTime = DateTime.Now.AddYears(-1);
+                var companyIds = _context.Devices.Where(x => x.DeviceId == devId).Select(x => x.CompanyId).Distinct().ToList();
+
+                //---dialogues for devices in company
+                var dialogues = _context.Dialogues
+                    .Where(p => (companyIds.Contains(p.Device.CompanyId)) && !String.IsNullOrEmpty(p.PersonFaceDescriptor) && p.BegTime >= begTime)
+                    .OrderBy(p => p.BegTime)
+                    .ToList();
+
+                foreach (var curDialogue in dialogues.Where(p => p.ClientId == null).ToList())
+                {
+                    var dialoguesProceeded = dialogues
+                        .Where(p => p.ClientId != null && p.DeviceId == curDialogue.DeviceId)
+                        .ToList();
+                    var clientId = FindId(curDialogue, dialoguesProceeded);
+                    try
+                    {
+                        CreateNewClient(curDialogue, clientId);
+                    }
+                    catch (Exception ex)
+                    {
+                        var m = ex.Message;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                var m = e.Message;
+            }
+        }
+
+        private Guid? FindId(HBData.Models.Dialogue curDialogue, List<HBData.Models.Dialogue> dialogues, double threshold = 0.42)
+        {
+            if (!dialogues.Any()) return Guid.NewGuid();
+            foreach (var dialogue in dialogues)
+            {
+                var cosResult = Cos(curDialogue.PersonFaceDescriptor, dialogue.PersonFaceDescriptor);
+                System.Console.WriteLine($"Cos distance is -- {cosResult}");
+                if (cosResult > threshold)
+                    return dialogue.ClientId;
+            }
+            return Guid.NewGuid();
+        }
+
+        private Guid? CreateNewClient(HBData.Models.Dialogue curDialogue, Guid? clientId)
+        {
+            HBData.Models.Company company = _context.Devices
+                      .Where(x => x.DeviceId == curDialogue.DeviceId).Select(x => x.Company).FirstOrDefault();
+            var findClient = _context.Clients
+                        .Where(x => x.ClientId == clientId).FirstOrDefault();
+            if (findClient != null)
+            {
+                findClient.LastDate = DateTime.UtcNow;
+                curDialogue.ClientId = findClient.ClientId;
+                _context.SaveChanges();
+                return findClient.ClientId;
+            }
+
+            var dialogueClientProfile = _context.DialogueClientProfiles
+                            .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
+            if (dialogueClientProfile == null) return null;
+            if (dialogueClientProfile.Age == null || dialogueClientProfile.Gender == null) return null;
+
+            var activeStatusId = _context.Statuss
+                            .Where(x => x.StatusName == "Active")
+                            .Select(x => x.StatusId)
+                            .FirstOrDefault();
+
+            double[] faceDescr = new double[0];
+            try
+            {
+                faceDescr = JsonConvert.DeserializeObject<double[]>(curDialogue.PersonFaceDescriptor);
+            }
+            catch { }
+            HBData.Models.Client client = new HBData.Models.Client
+            {
+                ClientId = (Guid)clientId,
+                CompanyId = (Guid)company?.CompanyId,
+                CorporationId = company?.CorporationId,
+                FaceDescriptor = faceDescr,
+                Age = (int)dialogueClientProfile?.Age,
+                Avatar = dialogueClientProfile?.Avatar,
+                Gender = dialogueClientProfile?.Gender,
+                StatusId = activeStatusId
+            };
+            curDialogue.ClientId = client.ClientId;
+            _context.Clients.Add(client);
+            _context.SaveChanges();
+            return client.ClientId;
+        }
+
+        private double VectorNorm(List<double> vector)
+        {
+            return Math.Sqrt(vector.Sum(p => Math.Pow(p, 2)));
+        }
+
+        private double? VectorMult(List<double> vector1, List<double> vector2)
+        {
+            if (vector1.Count() != vector2.Count()) return null;
+            var result = 0.0;
+            for (int i = 0; i < vector1.Count(); i++)
+            {
+                result += vector1[i] * vector2[i];
+            }
+            return result;
+        }
+
+        private double? Cos(List<double> vector1, List<double> vector2)
+        {
+            return VectorMult(vector1, vector2) / VectorNorm(vector1) / VectorNorm(vector2);
+        }
+
+        private double? Cos(string vector1, string vector2)
+        {
+            var v1 = JsonConvert.DeserializeObject<List<double>>(vector1);
+            var v2 = JsonConvert.DeserializeObject<List<double>>(vector2);
+            return Cos(v1, v2);
         }
     }
 }
+
+
+
+
