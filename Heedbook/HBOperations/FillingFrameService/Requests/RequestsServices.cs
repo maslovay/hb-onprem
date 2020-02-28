@@ -51,7 +51,7 @@ namespace  FillingFrameService.Requests
                 .ToList();
         }
 
-        public FileFrame FindFileAvatar(DialogueCreationRun message, List<FileFrame> frames, bool isExtended, ElasticClient log)
+        public FileFrame FindFileAvatar(DialogueCreationRun message, List<FileFrame> frames, bool isExtended)
         {
             FileFrame fileAvatar;
             if ( !string.IsNullOrWhiteSpace(message.AvatarFileName) && isExtended)
@@ -61,23 +61,8 @@ namespace  FillingFrameService.Requests
             }
             else
             {
-                try
-                {
-                    log.Info($"Example of frame is {JsonConvert.SerializeObject(frames.FirstOrDefault())}");
-                    // fileAvatar = frames
-                    //     .Where(p => p.FrameAttribute.FirstOrDefault().Value != null && p.FileExist)
-                    //     .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)
-                    //     .FirstOrDefault();
-                    fileAvatar = frames.FirstOrDefault();
-                }
-                catch (Exception e)
-                {
-                    log.Error($"Exeption occured  {e}");
-                    fileAvatar = frames.FirstOrDefault();
-                }
-                // .ForEach(p => p.Value= JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value));
+                fileAvatar = frames.FirstOrDefault();
             }
-            System.Console.WriteLine(JsonConvert.SerializeObject(fileAvatar));
             return fileAvatar;
         }
 
@@ -102,6 +87,26 @@ namespace  FillingFrameService.Requests
         public async System.Threading.Tasks.Task AddClientProfileAsync(DialogueClientProfile profile)
         {
             await _context.DialogueClientProfiles.AddAsync(profile);
+        }
+
+        public async System.Threading.Tasks.Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
+         public void AddVisuals(DialogueVisual visuals)
+        {
+            _context.DialogueVisuals.Add(visuals);
+        }
+
+        public void AddFrames(List<DialogueFrame> frames)
+        {
+            _context.DialogueFrames.AddRange(frames);
+        }
+
+        public void AddClientProfile(DialogueClientProfile profile)
+        {
+            _context.DialogueClientProfiles.Add(profile);
         }
 
         public void SaveChanges()
