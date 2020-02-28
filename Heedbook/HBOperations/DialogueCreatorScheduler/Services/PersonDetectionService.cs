@@ -20,7 +20,7 @@ namespace DialogueCreatorScheduler.Services
         }
 
 
-        public Guid? FindId(FileFrame fileFrame, List<Client> clients, double threshold=0.38)
+        public Guid? FindId(FileFrame fileFrame, List<Client> clients, double threshold=0.4)
         {
             if (!clients.Any()) return null;
             foreach(var client in clients.Distinct())
