@@ -18,17 +18,17 @@ namespace FillingFrameService.Services
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly FFMpegWrapper _wrapper;
-        private readonly RequestsService _requests;
+        // private readonly RequestsService _requests;
 
         public FillingFrameServices(SftpClient sftpClient,
             SftpSettings sftpSettings,
-            RequestsService requests,
+            // RequestsService requests,
             FFMpegWrapper wrapper)
         {
             _sftpClient = sftpClient;
             _sftpSettings = sftpSettings;
             _wrapper = wrapper;
-            _requests = requests;
+            // _requests = requests;
         }
 
         public List<DialogueFrame> FillingDialogueFrame(DialogueCreationRun message, List<FrameEmotion> emotions)
@@ -99,7 +99,7 @@ namespace FillingFrameService.Services
         }  
 
         public async System.Threading.Tasks.Task FillingAvatarAsync(DialogueCreationRun message,
-            List<FileFrame> frames,  bool isExtended, FileFrame fileAvatar, Client client, ElasticClient log)
+            List<FileFrame> frames,  bool isExtended, FileFrame fileAvatar, Client client, FileVideo fileVideo, ElasticClient log)
         {
             
             string localPath;
@@ -137,7 +137,7 @@ namespace FillingFrameService.Services
                 else
                 {
                     log.Info("Extracting client avatar from video");
-                    var fileVideo = _requests.FileVideo(message, fileAvatar);
+                    // var fileVideo = _requests.FileVideo(message, fileAvatar);
                     var dt = fileAvatar.Time;
                     var seconds = dt.Subtract(fileVideo.BegTime).TotalSeconds;
                     System.Console.WriteLine($"Seconds - {seconds}, FileVideo - {fileVideo.FileName}");
