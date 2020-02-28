@@ -23,10 +23,12 @@ namespace  FillingFrameService.Requests
 
         public bool IsExtended(DialogueCreationRun message)
         {
-            return _context.Devices
+            var device = _context.Devices
                 .Include(p => p.Company)
                 .Where(p => p.DeviceId == message.DeviceId)
-                .FirstOrDefault().Company.IsExtended;
+                .FirstOrDefault();
+
+            return (device != null) ? device.Company.IsExtended : false;
         }
 
         public Client Client(Guid? clientId)
