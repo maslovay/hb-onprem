@@ -21,7 +21,7 @@ namespace CloneFtpOnAzureService.Extension
                 return TriggerBuilder.Create()
                     .WithIdentity("FtpJob.trigger", "FtpFile")
                     .StartNow()
-                    .WithSimpleSchedule(s => s.WithIntervalInHours(24).RepeatForever())
+                    .WithCronSchedule("0 0 21 * * ?")
                     .Build();
             });
 
