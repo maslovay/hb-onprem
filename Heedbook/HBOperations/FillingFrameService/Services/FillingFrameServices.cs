@@ -126,8 +126,9 @@ namespace FillingFrameService.Services
             }
             else
             {
-                log.Info(client.Avatar);
-                if (message.ClientId != null && await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}"))
+                var fileExist = await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}");
+                log.Info($"Client avatar - {client.Avatar}, file exist - {fileExist}");
+                if (message.ClientId != null)
                 {
                     log.Info($"Rename client avatar {client.Avatar} as dialogue avatar {message.DialogueId}.jpg");
                     localPath =
