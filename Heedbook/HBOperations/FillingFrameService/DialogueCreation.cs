@@ -73,7 +73,7 @@ namespace FillingFrameService
 
                 if (emotions.Any() && attributes.Any())
                 {
-                    var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended, _log);
+                    var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended);
                     if (!isExtended && message.ClientId == null && ! await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}")) 
                     {
                         frameVideo = _requests.FileVideo(message, fileAvatar);
@@ -85,16 +85,19 @@ namespace FillingFrameService
                     var dialogueVisual = _filling.FiilingDialogueVisuals(message, emotions);
 
                     _log.Info($"Client - {JsonConvert.SerializeObject(client)}");
-                    var insertTasks = new List<Task>
-                    {
-                        _requests.AddFramesAsync(dialogueFrames),
-                        _requests.AddVisualsAsync(dialogueVisual),
-                        _requests.AddClientProfileAsync(dialogueClientProfile),
-                        _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client, frameVideo, _log)
-                    };
+                    // var insertTasks = new List<Task>
+                    // {
+                    //     _requests.AddFramesAsync(dialogueFrames),
+                    //     _requests.AddVisualsAsync(dialogueVisual),
+                    //     _requests.AddClientProfileAsync(dialogueClientProfile),
+                    //     _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client, frameVideo, _log)
+                    // };
 
-                    await Task.WhenAll(insertTasks);
-                    // _context.SaveChanges();
+                    // await Task.WhenAll(insertTasks);
+                    _requests.AddFrames(dialogueFrames);
+                    _requests.AddVisuals(dialogueVisual);
+                    _requests.AddClientProfile(dialogueClientProfile);
+                    await _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client, frameVideo, _log);
                     _requests.SaveChanges();
                     _log.Info("Function finished");
                 }
