@@ -58,7 +58,7 @@ namespace OldVideoToFrameExtract.QuartzJobs
             var counter =0;
             foreach(var v in videos)
             {
-                var videoHaveFrames = frames.Where(f => f.ApplicationUserId == v.ApplicationUserId
+                var videoHaveFrames = frames.Where(f => f.DeviceId == v.DeviceId
                         && f.Time >= v.BegTime
                         && f.Time <= v.EndTime)
                     .ToList()
