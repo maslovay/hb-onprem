@@ -20,6 +20,8 @@ namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [ControllerExceptionFilter]
     public class CompanyReportController : Controller
     {
         private readonly RecordsContext _context;
@@ -35,16 +37,15 @@ namespace UserOperations.Controllers
         }
    
 
-        [AllowAnonymous]
         [HttpGet("GetReport")]
-        [SwaggerOperation(Summary = "Report about dialogues", Description = "For not loggined users")]        
+        [SwaggerOperation(Summary = "Report about dialogues", Description = "Requires any user token")]
         [SwaggerResponse(200, "Report constructed")]
         public FileResult GetReport([FromQuery(Name = "begTime")] string beg,
             [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds)
         {
+            _loginService.GetCurrentUserId();
             var stringFormat = "yyyyMMddHHmmss";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
-            System.Console.WriteLine($"{begTime}");
 
             companyIds = companyIds.Any() ? companyIds : _context.Companys.Where(p => p.StatusId == 3).Select(p=>p.CompanyId).ToList();
 

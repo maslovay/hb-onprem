@@ -208,9 +208,10 @@ namespace UserOperations.Controllers
                                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                                 [FromQuery(Name = "phraseId[]")] List<Guid> phraseIds,
                                                 [FromQuery(Name = "phraseTypeId[]")] List<Guid> phraseTypeIds,
-                                                [FromQuery(Name = "inStatistic")] bool? inStatistic) =>
+                                                [FromQuery(Name = "inStatistic")] bool? inStatistic,
+                                                [FromQuery(Name = "clientId")] Guid? clientId = null) =>
              await _dialogueService.GetAllDialogues(beg, end, applicationUserIds, deviceIds, companyIds, 
-                                                        corporationIds, phraseIds, phraseTypeIds, inStatistic);
+                                                        corporationIds, phraseIds, phraseTypeIds, clientId, inStatistic);
         
 
         [HttpGet("DialoguePaginated")]
@@ -229,9 +230,11 @@ namespace UserOperations.Controllers
                                            [FromQuery(Name = "limit")] int limit = 10,
                                            [FromQuery(Name = "page")] int page = 0,
                                            [FromQuery(Name = "orderBy")] string orderBy = "BegTime",
-                                           [FromQuery(Name = "orderDirection")] string orderDirection = "desc") =>
+                                           [FromQuery(Name = "orderDirection")] string orderDirection = "desc",
+
+                                            [FromQuery(Name = "clientId")] Guid? clientId = null) =>
             await _dialogueService.GetAllDialoguesPaginated(beg, end, applicationUserIds, deviceIds, companyIds,
-                                                        corporationIds, phraseIds, phraseTypeIds, inStatistic, 
+                                                        corporationIds, phraseIds, phraseTypeIds, clientId, inStatistic, 
                                                         limit, page, orderBy, orderDirection);
     
 
