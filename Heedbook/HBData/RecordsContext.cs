@@ -132,6 +132,7 @@ namespace HBData
         public DbSet<BenchmarkName> BenchmarkNames { get; set; }
 
         //---(NEW) ---
+        public DbSet<ClientSession> ClientSessions { get; set; }
         public DbSet<Device> Devices { get; set; }
         public DbSet<DeviceType> DeviceTypes { get; set; }
         public DbSet<SalesStage> SalesStages { get; set; }
