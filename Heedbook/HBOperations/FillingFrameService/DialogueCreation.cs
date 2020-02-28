@@ -60,6 +60,7 @@ namespace FillingFrameService
                 var client = _requests.Client(message.ClientId);
                 var frames = _requests.FileFrames(message);
                 _log.Info($"Total frames is {frames.Count()}");
+                _log.Info($"Client is {JsonConvert.SerializeObject(client)}");
                
                 var frameVideo = new FileVideo();
 
@@ -74,9 +75,12 @@ namespace FillingFrameService
                 if (emotions.Any() && attributes.Any())
                 {
                     var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended);
-                    if (!isExtended && message.ClientId == null && ! await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}")) 
+                    if (client == null)
                     {
-                        frameVideo = _requests.FileVideo(message, fileAvatar);
+                        if (!isExtended && message.ClientId == null && !await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}")) 
+                        {
+                            frameVideo = _requests.FileVideo(message, fileAvatar);
+                        }
                     }
                     _log.Info($"Avatar is {JsonConvert.SerializeObject(fileAvatar)}");
 
@@ -98,7 +102,7 @@ namespace FillingFrameService
                     _requests.AddVisuals(dialogueVisual);
                     _requests.AddClientProfile(dialogueClientProfile);
                     await _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client, frameVideo, _log);
-                    _requests.SaveChanges();
+                    // _requests.SaveChanges();
                     _log.Info("Function finished");
                 }
             }

@@ -97,16 +97,19 @@ namespace  FillingFrameService.Requests
          public void AddVisuals(DialogueVisual visuals)
         {
             _context.DialogueVisuals.Add(visuals);
+            _context.SaveChanges();
         }
 
         public void AddFrames(List<DialogueFrame> frames)
         {
             _context.DialogueFrames.AddRange(frames);
+            _context.SaveChanges();
         }
 
         public void AddClientProfile(DialogueClientProfile profile)
         {
             _context.DialogueClientProfiles.Add(profile);
+            _context.SaveChanges();
         }
 
         public void SaveChanges()
