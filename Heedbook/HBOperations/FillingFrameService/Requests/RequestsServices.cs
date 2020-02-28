@@ -111,7 +111,10 @@ namespace  FillingFrameService.Requests
 
         public void SaveChanges()
         {
-            _context.SaveChanges();
+            lock(_context)
+            {
+                _context.SaveChanges();
+            }
         }
     }
 
