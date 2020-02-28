@@ -55,6 +55,7 @@ namespace UserOperations.Services
                                                              List<Guid> deviceIds, List<Guid> companyIds,
                                                              List<Guid> corporationIds, List<Guid> phraseIds,
                                                              List<Guid> phraseTypeIds,
+                                                             Guid? clientId,
                                                              bool? inStatistic)
         {
             var begTime = _requestFilters.GetBegDate(beg);
@@ -72,7 +73,8 @@ namespace UserOperations.Services
                 (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains(p.DeviceId))) &&
                 (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId)) &&
                 (!phraseIds.Any() || p.DialoguePhrase.Any(q => phraseIds.Contains((Guid)q.PhraseId))) &&
-                (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId)))
+                (!phraseTypeIds.Any() || p.DialoguePhrase.Any(q => phraseTypeIds.Contains((Guid)q.PhraseTypeId))) &&
+                (clientId == null || p.ClientId == clientId)
             )
             .Select(p => new DialogueGetModel
             {
@@ -99,13 +101,14 @@ namespace UserOperations.Services
                                                           List<Guid> deviceIds, List<Guid> companyIds,
                                                           List<Guid> corporationIds, List<Guid> phraseIds,
                                                           List<Guid> phraseTypeIds,
+                                                          Guid? clientId,
                                                           bool? inStatistic,
                                                           int limit = 10, int page = 0,
                                                           string orderBy = "BegTime", string orderDirection = "desc")
         {
 
             var dialogues = await GetAllDialogues(beg, end, applicationUserIds, deviceIds, companyIds,
-                                                        corporationIds, phraseIds, phraseTypeIds, inStatistic);
+                                                        corporationIds, phraseIds, phraseTypeIds, clientId, inStatistic);
             if (dialogues.Count() == 0) return "";
 
             ////---PAGINATION---
