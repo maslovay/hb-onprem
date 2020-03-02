@@ -1,0 +1,8 @@
+.idea/
+venv/
+db.sqlite3
+static/
+config.json
+tmp/
+*.pyc
+l_openvino_toolkit/
