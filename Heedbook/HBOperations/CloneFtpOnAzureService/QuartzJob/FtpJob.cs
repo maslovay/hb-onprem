@@ -48,7 +48,7 @@ namespace CloneFtpOnAzureService
                     var dialogues = _context.Dialogues
                         .Where(d => d.Status.StatusId == 3 &&
                                     //d.CreationTime >= DateTime.UtcNow.AddHours(-24)
-                                    d.CreationTime.Date>=new DateTime(2020, 02, 26).Date
+                                    d.CreationTime.Date>=new DateTime(2020, 02, 27).Date
                                     )
                         .Select(s => s.DialogueId)
                         .ToList();
@@ -61,10 +61,10 @@ namespace CloneFtpOnAzureService
                     };
                     System.Console.WriteLine("Try to download and upload");
                     System.Console.WriteLine($"dialogues count: {dialogues.Count}");
-                    var counter = 0;
+                    
                     foreach (var dialogue in dialogues)
                     {
-                        System.Console.WriteLine($"{counter}");
+                        System.Console.WriteLine(dialogue);
                         foreach (var (key, value) in dict)
                         {
                             var fileName = dialogue + value;
@@ -72,7 +72,6 @@ namespace CloneFtpOnAzureService
                             var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
                             tasks.Add(_blobClient.UploadFileStreamToBlob(key, fileName, stream));
                         }
-                        counter++;
                     }
                     
                     await Task.WhenAll(tasks);
