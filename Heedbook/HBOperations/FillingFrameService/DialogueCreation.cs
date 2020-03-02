@@ -60,12 +60,9 @@ namespace FillingFrameService
                 var client = _requests.Client(message.ClientId);
                 var frames = _requests.FileFrames(message);
                 _log.Info($"Total frames is {frames.Count()}");
+                _log.Info($"Client is {JsonConvert.SerializeObject(client)}");
                
-                // var frameVideo = new FileVideo();
-                // if (!isExtended)
-                // {
-                //     frameVideo = _requests.FileVideo(message);
-                // }
+                var frameVideo = new FileVideo();
 
                 var emotions = frames.Where(p => p.FrameEmotion.Any())
                     .Select(p => p.FrameEmotion.First())
@@ -77,33 +74,35 @@ namespace FillingFrameService
 
                 if (emotions.Any() && attributes.Any())
                 {
-                    var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended, _log);
+                    var fileAvatar = _requests.FindFileAvatar(message, frames, isExtended);
+                    if (client == null)
+                    {
+                        if (!isExtended && message.ClientId == null && !await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}")) 
+                        {
+                            frameVideo = _requests.FileVideo(message, fileAvatar);
+                        }
+                    }
                     _log.Info($"Avatar is {JsonConvert.SerializeObject(fileAvatar)}");
-                    // var frameVideo = new FileVideo();
-                    // if (!isExtended)
-                    // {
-                    //     frameVideo = _requests.FileVideo(message, fileAvatar);
-                    // }
 
                     var dialogueFrames = _filling.FillingDialogueFrame(message, emotions);
                     var dialogueClientProfile = _filling.FillingDialogueClientProfile(message, attributes);
                     var dialogueVisual = _filling.FiilingDialogueVisuals(message, emotions);
 
                     _log.Info($"Client - {JsonConvert.SerializeObject(client)}");
-                    var insertTasks = new List<Task>
-                    {
-                        _requests.AddFramesAsync(dialogueFrames),
-                        _requests.AddVisualsAsync(dialogueVisual),
-                        _requests.AddClientProfileAsync(dialogueClientProfile),
-                        // _context.DialogueVisuals.AddAsync(dialogueVisual),
-                        // _context.DialogueClientProfiles.AddAsync(dialogueClientProfile),
-                        // _context.DialogueFrames.AddRangeAsync(dialogueFrames),
-                        _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client, _log)
-                    };
+                    // var insertTasks = new List<Task>
+                    // {
+                    //     _requests.AddFramesAsync(dialogueFrames),
+                    //     _requests.AddVisualsAsync(dialogueVisual),
+                    //     _requests.AddClientProfileAsync(dialogueClientProfile),
+                    //     _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client, frameVideo, _log)
+                    // };
 
-                    await Task.WhenAll(insertTasks);
-                    // _context.SaveChanges();
-                    _requests.SaveChanges();
+                    // await Task.WhenAll(insertTasks);
+                    _requests.AddFrames(dialogueFrames);
+                    _requests.AddVisuals(dialogueVisual);
+                    _requests.AddClientProfile(dialogueClientProfile);
+                    await _filling.FillingAvatarAsync(message, frames, isExtended, fileAvatar, client, frameVideo, _log);
+                    // _requests.SaveChanges();
                     _log.Info("Function finished");
                 }
             }

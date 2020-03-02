@@ -9,7 +9,7 @@ using UserOperations.Services;
 namespace UserOperations.Controllers
 {
     [ControllerExceptionFilter]
-    [AllowAnonymous]
+   // [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : Controller
@@ -57,6 +57,7 @@ namespace UserOperations.Controllers
 
 
         [HttpPost("ChangePasswordOnDefault")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "For own use", Description = "Change password for user on Test_User12345")]
         [SwaggerResponse(400, "No such user / Exception message", typeof(string))]
         [SwaggerResponse(200, "Password changed")]
@@ -65,6 +66,7 @@ namespace UserOperations.Controllers
 
 
         [HttpDelete("Remove")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "Delete user, company, trial tariff - only for developers")]
         public async Task<string> AccountDelete([FromQuery,
                         SwaggerParameter("user email", Required = true)]
@@ -73,6 +75,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("[action]")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         public void AddCompanyDictionary(string fileName)=>  _service.AddPhrasesFromExcel(fileName);
     }
 }

@@ -13,7 +13,7 @@ namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
+  //  [AllowAnonymous]
     [ControllerExceptionFilter]
     public class DeviceController : Controller
     {
