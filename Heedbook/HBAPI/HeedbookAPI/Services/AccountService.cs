@@ -362,6 +362,7 @@ namespace UserOperations.Services
             _repository.Save();
         }
 
-     
+
+        public async Task<string> CreateEmptyToken() => _loginService.CreateTokenEmpty();
     }
 }

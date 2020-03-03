@@ -83,5 +83,9 @@ namespace UserOperations.Controllers
         [HttpGet("[action]")]
         [Authorize(AuthenticationSchemes = "Bearer")]
         public void AddCompanyDictionary(string fileName)=>  _service.AddPhrasesFromExcel(fileName);
+
+
+        [HttpPost("EmptyToken")]
+        public async Task<string> EmptyToken()=>await _service.CreateEmptyToken();
     }
 }

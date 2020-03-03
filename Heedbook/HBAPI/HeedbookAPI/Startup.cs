@@ -136,6 +136,7 @@ namespace UserOperations
                 {
                     Type = "object",
                     Properties = new Dictionary<string, Schema> {
+                            {"applicationUserId", new Schema{Type = "string", Format = "uuid"}},
                             {"campaignContentId", new Schema{Type = "string", Format = "uuid"}},
                             {"deviceId", new Schema{Type = "string", Format = "uuid"}},
                             {"answer", new Schema{Type = "string"}},
