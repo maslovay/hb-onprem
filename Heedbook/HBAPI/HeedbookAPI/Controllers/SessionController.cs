@@ -10,7 +10,7 @@ namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ControllerExceptionFilter]
     public class SessionController : Controller
     {
