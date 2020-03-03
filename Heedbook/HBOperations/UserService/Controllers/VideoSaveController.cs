@@ -25,15 +25,17 @@ namespace UserService.Controllers
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
-//        private readonly ElasticClient _log;
+        private readonly CheckTokenService _service;
+        //        private readonly ElasticClient _log;
 
 
-        public VideoSaveController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient/*, ElasticClient log*/)
+        public VideoSaveController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient, CheckTokenService service/*, ElasticClient log*/)
         {
             _handler = handler;
             _context = context;
             _sftpClient = sftpClient;
-//            _log = log;
+            _service = service;
+            //            _log = log;
         }
 
         [HttpPost]
@@ -44,6 +46,7 @@ namespace UserService.Controllers
             [FromForm] IFormCollection formData,
             [FromQuery] Guid? applicationUserId = null)
         {
+            _service.CheckIsUserAdmin();
             try
             {  
 //                _log.Info("Function Video save info started");

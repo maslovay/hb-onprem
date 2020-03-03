@@ -25,14 +25,16 @@ namespace UserService.Controllers
     {
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
-//        private readonly ElasticClient _log;
+        private readonly CheckTokenService _service;
+        //        private readonly ElasticClient _log;
 
 
-        public DialogueMergeController(INotificationHandler handler, RecordsContext context/*, ElasticClient log*/)
+        public DialogueMergeController(INotificationHandler handler, RecordsContext context, CheckTokenService service/*, ElasticClient log*/)
         {
             _handler = handler;
             _context = context;
-//            _log = log;
+            _service = service;
+            //            _log = log;
         }
 
         [HttpPost]
@@ -42,6 +44,7 @@ namespace UserService.Controllers
             [FromQuery] String begTime,
             [FromQuery] String endTime)
         {
+            _service.CheckIsUserAdmin();
             try
             {  
 //                _log.Info("Function Video save info started");

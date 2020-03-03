@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RabbitMqEventBus;
@@ -18,18 +19,23 @@ namespace UserService.Controllers
     {
         private readonly IGenericRepository _genericRepository;
         private readonly INotificationPublisher _publisher;
+        private readonly CheckTokenService _service;
 
-        public DialogueCreationController(INotificationPublisher publisher,
-            IGenericRepository genericRepository)
+        public DialogueCreationController(
+            INotificationPublisher publisher,
+            IGenericRepository genericRepository, 
+            CheckTokenService service)
         {
             _publisher = publisher;
             _genericRepository = genericRepository;
+            _service = service;
         }
 
         [HttpPost("dialogueCreation")]
         [SwaggerOperation(Description = "Dialogue creation. Merge videos and frames in one video.")]
         public async Task DialogueCreation([FromBody] DialogueCreationRun message)
         {
+            _service.CheckIsUserAdmin();
             var languageId = _genericRepository.GetWithInclude<ApplicationUser>(p =>
                                                         p.Id == message.ApplicationUserId,
                                                     link => link.Company)
@@ -66,6 +72,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Changes InStatistic field for a dialog.")]
         public async Task ChangeInStatistic(Guid dialogueId, bool inStatistic)
         {
+            _service.CheckIsUserAdmin();
             var dialog = _genericRepository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
 
             if (dialog == default(Dialogue))

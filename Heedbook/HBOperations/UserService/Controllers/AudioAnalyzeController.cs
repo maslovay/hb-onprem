@@ -1,3 +1,4 @@
+using HBLib.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Notifications.Base;
@@ -12,16 +13,19 @@ namespace UserService.Controllers
     public class AudioAnalyzeController : Controller
     {
         private readonly INotificationHandler _handler;
+        private readonly CheckTokenService _service;
 
-        public AudioAnalyzeController(INotificationHandler handler)
+        public AudioAnalyzeController(INotificationHandler handler, CheckTokenService service)
         {
             _handler = handler;
+            _service = service;
         }
 
         [HttpPost("audio-analyze")]
         [SwaggerOperation(Description = "Speech recognition for audio file in message")]
         public void AudioAnalyze([FromBody] AudioAnalyzeRun message)
         {
+            _service.CheckIsUserAdmin();
             _handler.EventRaised(message);
         }
 
@@ -29,6 +33,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Tone analyze for audio file in message")]
         public void ToneAnalyze([FromBody] ToneAnalyzeRun toneAnalyzeRun)
         {
+            _service.CheckIsUserAdmin();
             _handler.EventRaised(toneAnalyzeRun);
         }
     }

@@ -36,12 +36,13 @@ namespace UserService.Controllers
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly INotificationPublisher _notificationPublisher;
-        
+        private readonly CheckTokenService _service;
+
 
         public DialogueRecalculateController(INotificationHandler handler, RecordsContext context, 
                                                /* ElasticClient log,*/ SftpClient sftpClient, 
                                                 INotificationPublisher notificationPublisher,
-                                                SftpSettings sftpSettings, IGenericRepository repository)
+                                                SftpSettings sftpSettings, IGenericRepository repository, CheckTokenService service)
         {
             _handler = handler;
             _context = context;
@@ -50,12 +51,14 @@ namespace UserService.Controllers
             _notificationPublisher = notificationPublisher;
             _sftpSettings = sftpSettings;
             _repository = repository;
+            _service = service;
         }
 
         [HttpGet]
         [SwaggerOperation(Description = "Recalculate dialogue")]
         public async Task<IActionResult> DialogueRecalculation([FromQuery] Guid dialogueId)
         {
+            _service.CheckIsUserAdmin();
             try
             {
 //                _log.Info("Function Dialogue recalculation started");
@@ -106,8 +109,9 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Re assemble dialogue")]
         public async Task<IActionResult> CheckRelatedDialogueData(Guid dialogueId)
         {
-//            _log.SetFormat("{DialogueId}");
-//            _log.SetArgs(dialogueId);
+            _service.CheckIsUserAdmin();
+            //            _log.SetFormat("{DialogueId}");
+            //            _log.SetArgs(dialogueId);
             var result = "";
             try
             {           
@@ -219,6 +223,7 @@ namespace UserService.Controllers
         [HttpGet("[action]")]
         public void RecalcPositiveShare()
         {
+            _service.CheckIsUserAdmin();
             var result = 0.0;
 
             var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-5)

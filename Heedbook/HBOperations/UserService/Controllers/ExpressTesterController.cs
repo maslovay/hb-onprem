@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -17,15 +18,18 @@ namespace UserService.Controllers
     [ApiController]
     public class ExpressTesterController : ControllerBase
     {
-        private readonly INotificationPublisher _publisher; 
-        public ExpressTesterController(INotificationPublisher publisher)
+        private readonly INotificationPublisher _publisher;
+        private readonly CheckTokenService _service;
+        public ExpressTesterController(INotificationPublisher publisher, CheckTokenService service)
         {
             _publisher = publisher;
+            _service = service;
         }      
         
         [HttpPost("[action]")]
         public void PublishUnitTestResults([FromBody]PublishUnitTestResultsModel model)
         {
+            _service.CheckIsUserAdmin();
             PublishUnitTestResults(model.TrxTextBase64);
         }
         private void PublishUnitTestResults(string textBase64)

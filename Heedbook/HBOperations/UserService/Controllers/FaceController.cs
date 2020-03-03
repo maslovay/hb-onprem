@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using HBLib.Utils;
 using HBMLHttpClient;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,11 +21,13 @@ namespace UserService.Controllers
     {
         private readonly INotificationHandler _handler;
         private readonly HbMlHttpClient _client;
+        private readonly CheckTokenService _service;
 
-        public FaceController(INotificationHandler handler, HbMlHttpClient client)
+        public FaceController(INotificationHandler handler, HbMlHttpClient client, CheckTokenService service)
         {
             _handler = handler;
             _client = client ?? throw new ArgumentNullException(nameof(client));
+            _service = service;
         }
 
         [HttpPost]
@@ -32,6 +35,7 @@ namespace UserService.Controllers
             "Analyze frame. Detect faces and calculate emotions and face attributes such as gender and age")]
         public async Task FaceAnalyzeRun([FromBody] FaceAnalyzeRun message)
         {
+            _service.CheckIsUserAdmin();
             _handler.EventRaised(message);
         }
 
@@ -39,6 +43,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Analyze frame. Detect face, return gender and age")]
         public async Task<IActionResult> FrameAnalyze([FromBody] string imageBase64)
         {
+            _service.CheckIsUserAdmin();
             try
             {            
                 var faceResult = await _client.GetFaceResult(imageBase64); 

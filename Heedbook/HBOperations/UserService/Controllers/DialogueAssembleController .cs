@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,20 +22,24 @@ namespace UserService.Controllers
         private readonly IGenericRepository _genericRepository;
         private readonly INotificationPublisher _publisher;
         private readonly RecordsContext _context;
+        private readonly CheckTokenService _service;
 
         public DialogueAssembleController(INotificationPublisher publisher,
             IGenericRepository genericRepository,
-            RecordsContext context)
+            RecordsContext context, 
+            CheckTokenService service)
         {
             _publisher = publisher;
             _genericRepository = genericRepository;
             _context = context;
+            _service = service;
         }
 
         [HttpPost("DialogueAssemble")]
         [SwaggerOperation(Description = "Dialogue creation. Assemble videos and frames in one video.")]
         public async Task DialogueAssemble([FromBody] DialogueCreationRun message)
         {
+            _service.CheckIsUserAdmin();
             var user = _context.ApplicationUsers.Include(p=>p.Company)
                 .FirstOrDefault(p => p.Id == message.ApplicationUserId);
             int? languageId;
@@ -85,6 +90,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Changes InStatistic field for a dialog.")]
         public async Task ChangeInStatistic(Guid dialogueId, bool inStatistic)
         {
+            _service.CheckIsUserAdmin();
             var dialog = _genericRepository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
 
             if (dialog == default(Dialogue))

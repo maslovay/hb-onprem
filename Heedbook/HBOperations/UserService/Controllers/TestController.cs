@@ -41,11 +41,12 @@ namespace UserService.Controllers
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly FFMpegWrapper _wrapper;
-        
+        private readonly CheckTokenService _service;
+
         public TestController(RecordsContext context, IGenericRepository repository,
             SftpSettings sftpSettings,
             FFMpegWrapper wrapper,
-            INotificationHandler handler, SftpClient sftpClient)
+            INotificationHandler handler, SftpClient sftpClient, CheckTokenService service)
         {
             _context = context;
             _repository = repository;
@@ -53,11 +54,13 @@ namespace UserService.Controllers
             _sftpClient = sftpClient;
             _sftpSettings = sftpSettings;
             _wrapper = wrapper;
+            _service = service;
         }
 
         [HttpPost("[action]")]
         public async Task CreateAvatar(string fileName)
         {
+            _service.CheckIsUserAdmin();
             var frame = _context.FileFrames
                 .Include(p => p.FrameAttribute)
                 .Where(p => p.FileName == fileName)
@@ -92,11 +95,10 @@ namespace UserService.Controllers
 
         }
 
-        
-        
         [HttpGet("[action]/{timelInHours}")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> CheckIfAnyAssembledDialogues( int timelInHours )
         {
+            _service.CheckIsUserAdmin();
             var dialogs = _repository.GetWithInclude<Dialogue>(
                 d => d.EndTime >= DateTime.Now.AddHours(-timelInHours)
                      && d.EndTime < DateTime.Now
@@ -107,11 +109,11 @@ namespace UserService.Controllers
 
             return NotFound($"NO assembled dialogues present for last {timelInHours} hours!!!");
         }
-        
 
         [HttpGet("[action]")]
         public async Task<ObjectResult> RecognizedWords(Guid dialogueId)
         {
+            _service.CheckIsUserAdmin();
             try
             {
                 var dialogue = _repository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
@@ -160,6 +162,7 @@ namespace UserService.Controllers
         [HttpGet("[action]")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> GetLast20ProcessedDialogues()
         {
+            _service.CheckIsUserAdmin();
             var dialogs = _repository.GetWithInclude<Dialogue>(
                     d => d.EndTime >= DateTime.Now.AddDays(-1) && d.EndTime < DateTime.Now && d.StatusId == 3,
                     d => d.DialogueSpeech,
@@ -176,6 +179,7 @@ namespace UserService.Controllers
         [HttpPost("[action]")]
         public async Task Test1(DialogueCreationRun message)
         {
+            _service.CheckIsUserAdmin();
             var frameIds =
                 _repository.Get<FileFrame>().Where(item =>
                         item.ApplicationUserId == message.ApplicationUserId
@@ -201,7 +205,8 @@ namespace UserService.Controllers
        [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
        public async Task<IActionResult> Test()
        {
-           try
+            _service.CheckIsUserAdmin();
+            try
            {
                //var applicationUserId = "010039d5-895b-47ad-bd38-eb28685ab9aa";
                var begTime = DateTime.Now.AddDays(-3);
@@ -245,7 +250,8 @@ namespace UserService.Controllers
        [HttpGet("[action]")]
        public async Task ResendVideosForFraming(string fileNamesString)
        {
-           var names = fileNamesString.Split(',');
+            _service.CheckIsUserAdmin();
+            var names = fileNamesString.Split(',');
 
            int i = 0;
 
@@ -261,6 +267,7 @@ namespace UserService.Controllers
        [HttpGet("[action]")]
        public async Task ResendVideoForFraming(string fileName)
        {
+            _service.CheckIsUserAdmin();
             var message = new FramesFromVideoRun
             {
                 Path = $"videos/{fileName}"
@@ -268,10 +275,12 @@ namespace UserService.Controllers
             Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
            _handler.EventRaised(message);
        }
-       [HttpGet("[action]")]
+
+        [HttpGet("[action]")]
        public async Task AddCompanyDictionary(string fileName)
        {
-           AddCpomanyPhrases();
+            _service.CheckIsUserAdmin();
+            AddCpomanyPhrases();
        }
        
        private void AddCpomanyPhrases()
