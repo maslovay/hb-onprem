@@ -7,6 +7,7 @@ using HBLib;
 using HBLib.Utils;
 using HBMLHttpClient;
 using HBMLOnlineService.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -17,6 +18,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace HBMLOnlineService.Controllers
 {
     [Route("face")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class HBMLOnlineService : Controller
     {

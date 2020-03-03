@@ -119,6 +119,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SessionCloseSchedule", "Ses
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BenchmarkScheduler", "BenchmarkScheduler\BenchmarkScheduler.csproj", "{5E1FC119-CC4C-444B-AD1E-403C4E949628}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HBMLOnlineService", "HBMLOnlineService\HBMLOnlineService.csproj", "{98DD6DA9-2915-4712-88A3-89CB3E575E55}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -325,6 +327,10 @@ Global
 		{5E1FC119-CC4C-444B-AD1E-403C4E949628}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5E1FC119-CC4C-444B-AD1E-403C4E949628}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5E1FC119-CC4C-444B-AD1E-403C4E949628}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98DD6DA9-2915-4712-88A3-89CB3E575E55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98DD6DA9-2915-4712-88A3-89CB3E575E55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98DD6DA9-2915-4712-88A3-89CB3E575E55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98DD6DA9-2915-4712-88A3-89CB3E575E55}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -379,6 +385,7 @@ Global
 		{663F0DA3-45FF-4B32-B3C7-F33784A5FF11} = {4907EB71-619F-4BFD-B9EC-6BBA2C45BB7E}
 		{904418EA-F360-4CC7-9C0A-FDDE1088B421} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
 		{5E1FC119-CC4C-444B-AD1E-403C4E949628} = {66602303-8E1D-459C-AE59-57E1C8B6AC1A}
+		{98DD6DA9-2915-4712-88A3-89CB3E575E55} = {F9312081-26B8-4651-ABC9-A32914105EBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4AC1F4A-C1FC-4A51-8AA5-82BB922D27C7}
