@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
@@ -30,8 +31,8 @@ namespace UserService.Controllers
         {
             var bytes = Convert.FromBase64String(textBase64);
             var text = Encoding.UTF8.GetString(Convert.FromBase64String(textBase64));
-            if ( text[0] == 65279 )
-                text = text.Remove(0, 1);
+            // if ( text[0] == 65279 )
+            //     text = text.Remove(0, 1);
 
             // var trxDoc = XDocument.Parse(text);
 
@@ -91,8 +92,9 @@ namespace UserService.Controllers
             var message = new MessengerMessageRun()
             {
                 logText = text,
-                ChannelName = "ApiTester",
+                ChannelName = "IntegrationTester",
             };
+            System.Console.WriteLine($"{JsonConvert.SerializeObject(message)}");
             _publisher.Publish(message);            
         }
     }
