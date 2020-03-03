@@ -16,12 +16,12 @@ namespace DetectFaceIdExtendedScheduler.Extensions
                 ServiceLifetime.Singleton));
             services.AddSingleton<IJobFactory, ScheduledJobFactory>();
             services.AddSingleton(provider => JobBuilder.Create<DetectFaceIdJob>()
-                                                        .WithIdentity("DetectFaceIdExtended.job", "Dialogues")
+                                                        .WithIdentity("DetectFaceIdExtended.job", "DialoguesExtended")
                                                         .Build());
             services.AddSingleton(provider =>
             {
                 return TriggerBuilder.Create()
-                                     .WithIdentity("DetectFaceIdExtended.trigger", "Dialogues")
+                                     .WithIdentity("DetectFaceIdExtended.trigger", "DialoguesExtended")
                                      .StartNow()
                                      .WithSimpleSchedule(s => s.WithIntervalInSeconds(settings.Period).RepeatForever())
                                      .Build();
