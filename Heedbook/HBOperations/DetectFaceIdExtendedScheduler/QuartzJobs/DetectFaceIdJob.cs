@@ -41,12 +41,14 @@ namespace DetectFaceIdExtendedScheduler.QuartzJobs
             var _log = _elasticClientFactory.GetElasticClient();
             try
             {
+                var begTime = DateTime.UtcNow.AddDays(-5);
                 var fileFramesEdges = _context.FileFrames
                     .Include(p => p.Device)
                     .Include(p => p.Device.Company)
                     .Where(p => 
                         p.FaceId == null && 
                         p.FaceLength > 0 &&
+                        p.Time > begTime &&
                         p.Device.Company.IsExtended)
                     .GroupBy(p => p.DeviceId)
                     .Select(p => new {
@@ -97,11 +99,11 @@ namespace DetectFaceIdExtendedScheduler.QuartzJobs
 
                     System.Console.WriteLine(JsonConvert.SerializeObject(framesProceed.Select(p => p.FileFrame.FaceId).Distinct()));
 
-                    // _context.SaveChanges();
+                    _context.SaveChanges();
 
                 }
                 System.Console.WriteLine("Finished");
-                // _context.SaveChanges();
+                _context.SaveChanges();
                 _log.Info("Function finished");
             }
             catch (Exception e)
