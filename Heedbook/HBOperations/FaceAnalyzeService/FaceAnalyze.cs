@@ -119,13 +119,21 @@ namespace FaceAnalyzeService
                                 throw new Exception(e.Message);
                             }
 
-                            if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
-                            if (frameEmotion != null) _context.FrameEmotions.Add(frameEmotion);
-                            
-                            lock (_context)
+                            if (frameAttribute != null) 
                             {
+                                _context.FrameAttributes.Add(frameAttribute);
                                 _context.SaveChanges();
                             }
+                            if (frameEmotion != null) 
+                            {
+                                _context.FrameEmotions.Add(frameEmotion);
+                                _context.SaveChanges();
+                            }
+                            
+                            // lock (_context)
+                            // {
+                            //     _context.SaveChanges();
+                            // }
                         }
                     }
                     else
