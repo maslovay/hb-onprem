@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using RabbitMqEventBus;
@@ -12,6 +13,7 @@ using RabbitMqEventBus.Events;
 namespace UserService.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class ExpressTesterController : ControllerBase
     {

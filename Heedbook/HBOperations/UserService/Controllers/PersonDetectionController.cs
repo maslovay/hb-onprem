@@ -8,10 +8,12 @@ using HBData.Models;
 using HBData.Repository;
 using System;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class PersonDetectionController : ControllerBase
     {

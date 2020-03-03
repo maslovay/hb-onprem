@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
 using Swashbuckle.AspNetCore.Annotations;
@@ -6,6 +7,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class VideoToSoundController : Controller
     {

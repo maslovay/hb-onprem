@@ -26,10 +26,12 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using HBLib;
 using HBMLHttpClient.Model;
 using System.Drawing;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class TestController : Controller
     {

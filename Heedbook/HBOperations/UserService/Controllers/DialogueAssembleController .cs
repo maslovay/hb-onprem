@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RabbitMqEventBus;
@@ -13,6 +14,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class DialogueAssembleController : Controller
     {
