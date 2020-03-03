@@ -9,11 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using System;
-using DetectFaceIdScheduler.Models;
-using DetectFaceIdScheduler.Services;
-using DetectFaceIdScheduler.Settings;
+using DetectFaceIdExtendedScheduler.Models;
+using DetectFaceIdExtendedScheduler.Services;
+using DetectFaceIdExtendedScheduler.Settings;
 
-namespace DetectFaceIdScheduler.QuartzJobs
+namespace DetectFaceIdExtendedScheduler.QuartzJobs
 {
     public class DetectFaceIdJob : IJob
     {
@@ -23,7 +23,8 @@ namespace DetectFaceIdScheduler.QuartzJobs
         private readonly DetectFaceIdService _detect;
         private readonly DetectFaceIdSettings _settings;
 
-        public DetectFaceIdJob(IServiceScopeFactory factory,
+        public DetectFaceIdJob(
+            IServiceScopeFactory factory,
             ElasticClientFactory elasticClientFactory,
             DetectFaceIdService detect,
             DetectFaceIdSettings settings
@@ -40,17 +41,13 @@ namespace DetectFaceIdScheduler.QuartzJobs
             var _log = _elasticClientFactory.GetElasticClient();
             try
             {
-                // Get first not marked FileFrame
-                // System.Console.WriteLine("1");
-                var begTime = DateTime.UtcNow.AddDays(-5);
                 var fileFramesEdges = _context.FileFrames
                     .Include(p => p.Device)
                     .Include(p => p.Device.Company)
                     .Where(p => 
                         p.FaceId == null && 
                         p.FaceLength > 0 &&
-                        p.Time > begTime &&
-                        p.Device.Company.IsExtended == false)
+                        p.Device.Company.IsExtended)
                     .GroupBy(p => p.DeviceId)
                     .Select(p => new {
                         DeviceId = p.Key,
@@ -62,6 +59,7 @@ namespace DetectFaceIdScheduler.QuartzJobs
 
                 foreach (var fileFramesEdge in fileFramesEdges)
                 {
+                    System.Console.WriteLine($"Processing device id {fileFramesEdge.DeviceId}");
                     _log.Info($"Proceecing {fileFramesEdge.DeviceId}");
 
                     var frameAttributes = _context.FrameAttributes
@@ -74,6 +72,14 @@ namespace DetectFaceIdScheduler.QuartzJobs
 
                     System.Console.WriteLine(frameAttributes.Count());
 
+                    var fileVideos = _context.FileVideos
+                        .Where(p => p.DeviceId == fileFramesEdge.DeviceId &&
+                            p.BegTime >= fileFramesEdge.MinTime)
+                        .OrderBy(p => p.BegTime)
+                        .ToList();
+
+                    System.Console.WriteLine(fileVideos.Count());
+
                     _log.Info($"Total frames -- {frameAttributes.Count()}");
 
                     frameAttributes.Where(p => 
@@ -85,10 +91,13 @@ namespace DetectFaceIdScheduler.QuartzJobs
 
                     framesProceed = _detect.DetectFaceIds(framesProceed);
                     _log.Info($"Frames device count - {framesProceed.Count()}");
+                    System.Console.WriteLine($"Frames device count - {framesProceed.Count()}");
+
+                    framesProceed = _detect.UpdateFaceIds(framesProceed, fileVideos);
 
                     System.Console.WriteLine(JsonConvert.SerializeObject(framesProceed.Select(p => p.FileFrame.FaceId).Distinct()));
 
-                    _context.SaveChanges();
+                    // _context.SaveChanges();
 
                 }
                 System.Console.WriteLine("Finished");

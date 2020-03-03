@@ -49,14 +49,15 @@ namespace DialogueCreatorScheduler.QuartzJobs
             
             try
             {
+                var begTime = DateTime.UtcNow.AddDays(-5);
                 var fileFrames = _context.FileFrames
                     .Include(p => p.FrameAttribute)
                     .Include(p => p.Device)
                     .Include(p => p.Device.Company)
                     .Where(p => p.StatusNNId == 6 && 
+                        p.Time > begTime &&
                         p.FaceId != null && 
-                        p.FaceId != Guid.Empty &&
-                        !p.Device.Company.IsExtended 
+                        p.FaceId != Guid.Empty 
                         ) 
                     .ToList();
 
@@ -98,6 +99,7 @@ namespace DialogueCreatorScheduler.QuartzJobs
 
                     var dialogues = _dialogueCreator.Dialogues(updatedDatesIntervals, ref deviceFrames, deviceClients);
                     dialogues = dialogues.Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 40).ToList();
+                    dialogues.ForEach(p => p.EndTime = p.EndTime.AddSeconds(15));
                     _log.Info($"Created dialogues for device {deviceId} - {JsonConvert.SerializeObject(dialogues)}");
 
                     if (dialogues.Any())
