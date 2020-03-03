@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 
 namespace UserService
 {
@@ -69,6 +70,7 @@ namespace UserService
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<CheckTokenService>();
+            services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddSwaggerGen(c =>
             {
