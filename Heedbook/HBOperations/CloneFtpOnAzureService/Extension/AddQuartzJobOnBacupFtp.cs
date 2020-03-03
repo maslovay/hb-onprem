@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
@@ -21,7 +22,8 @@ namespace CloneFtpOnAzureService.Extension
                 return TriggerBuilder.Create()
                     .WithIdentity("FtpJob.trigger", "FtpFile")
                     .StartNow()
-                    .WithSimpleSchedule(s => s.WithIntervalInHours(24).RepeatForever())
+                    .WithSimpleSchedule(p => p.WithIntervalInHours(10).RepeatForever())
+                    //.WithCronSchedule("0 0 21 * * ?", p => p.InTimeZone(TimeZoneInfo.Utc))
                     .Build();
             });
 

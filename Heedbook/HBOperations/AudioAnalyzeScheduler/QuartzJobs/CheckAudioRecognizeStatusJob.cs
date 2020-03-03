@@ -52,8 +52,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     var audiosReq = _context.FileAudioDialogues
                                          .Include(p => p.Dialogue)
-                                         .Include(p => p.Dialogue.ApplicationUser)
-                                         .Include(p => p.Dialogue.ApplicationUser.Company)
+                                         .Include(p => p.Dialogue.Device)
+                                         .Include(p => p.Dialogue.Device.Company)
                                          .Where(p => p.StatusId == 6);
                     //  .ToList();
                     await _googleConnector.CheckApiKey();
@@ -163,7 +163,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
                         if (recognized.Any())
                         {
-                            var languageId = (int) audio.Dialogue.ApplicationUser.Company.LanguageId;
+                            var languageId = (int) audio.Dialogue.Device.Company.LanguageId;
                             var speechSpeed = GetSpeechSpeed(recognized, languageId, _log);
                             _log.Info($"Speech speed: {speechSpeed}");
 

@@ -26,11 +26,12 @@ namespace FaceAnalyzeService
             SftpClient sftpClient,
             IServiceScopeFactory factory,
             HbMlHttpClient client,
-            ElasticClientFactory elasticClientFactory
+            ElasticClientFactory elasticClientFactory,
+            RecordsContext context
             )
         {
             _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
-            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
+            _context = context;
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _elasticClientFactory = elasticClientFactory;
         }

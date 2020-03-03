@@ -186,7 +186,7 @@ namespace DialoguesRecalculateScheduler.QuartzJobs
                 }
                 catch (Exception e)
                 {
-                    _log.Fatal("Exception occured {e}");
+                    _log.Fatal($"Exception occured {e}");
                 }
             }
         }

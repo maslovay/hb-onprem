@@ -102,6 +102,7 @@ namespace UserOperations.Services
 
         public async Task<string> ChangePasswordOnDefault(string email)
         {
+            _loginService.GetCurrentUserId();
             var user = GetUserIncludeCompany(email);
             user.PasswordHash = _loginService.GeneratePasswordHash("Test_User12345");
             await _repository.SaveAsync();
@@ -110,6 +111,7 @@ namespace UserOperations.Services
 
         public async Task<string> DeleteCompany(string email)//for own use
         {
+            _loginService.GetCurrentUserId();
             using (var transactionScope = new TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
                        { IsolationLevel = IsolationLevel.Serializable }))
             {
@@ -121,6 +123,7 @@ namespace UserOperations.Services
 
         public void AddPhrasesFromExcel(string fileName)//for own use
         {
+            _loginService.GetCurrentUserId();
             _helpProvider.AddComanyPhrases(fileName);
         }
         public void DeleteUser(string email)
@@ -321,10 +324,9 @@ namespace UserOperations.Services
         }
         private void RemoveAccountWithSave(string email)
         {
-            var usersAll = _repository.GetAsQueryable<ApplicationUser>().ToList();
             var user = _repository.GetAsQueryable<ApplicationUser>().FirstOrDefault(p => p.Email == email);
             var company = _repository.GetAsQueryable<Company>().FirstOrDefault(x => x.CompanyId == user.CompanyId);
-            var users = _repository.GetWithInclude<ApplicationUser>(x => x.CompanyId == company.CompanyId, o => o.UserRoles).ToList();            
+            var users = _repository.GetWithInclude<ApplicationUser>(x => x.CompanyId == company.CompanyId, o => o.UserRoles).ToList();
             var tariff = _repository.GetAsQueryable<Tariff>().FirstOrDefault(x => x.CompanyId == company.CompanyId);
             
             var taskTransactions = _repository.GetAsQueryable<HBData.Models.Transaction>().Where(x => x.TariffId == tariff.TariffId).ToListAsync();
@@ -336,6 +338,7 @@ namespace UserOperations.Services
             var campaignContents = campaigns.SelectMany(x => x.CampaignContents).ToList();
             var phrases = _repository.GetAsQueryable<PhraseCompany>().Where(x => x.CompanyId == company.CompanyId).ToList();
             var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => x.CompanyId == company.CompanyId).ToList();
+            var salesStages = _repository.GetAsQueryable<SalesStagePhrase>().Where(x => x.CompanyId == company.CompanyId).ToList();
 
 
 
@@ -353,6 +356,8 @@ namespace UserOperations.Services
             _repository.Delete<ApplicationUser>(users);
             _repository.Delete<Tariff>(tariff);
             _repository.Delete<WorkingTime>(workingTimes);
+            _repository.Delete<SalesStagePhrase>(salesStages);
+
             _repository.Delete<Company>(company);
             _repository.Save();
         }

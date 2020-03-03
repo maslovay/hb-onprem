@@ -50,7 +50,10 @@ namespace OldVideoToFrameExtract.QuartzJobs
                     && p.Time.Date <= DateTime.Now.AddDays(-2))                
                 .ToList();
             var videos = _context.FileVideos
-                .Where(p => p.BegTime.Date >= DateTime.Now.AddDays(-7).Date
+                .Include(p => p.Device)
+                .Include(p => p.Device.Company)
+                .Where(p => p.Device.Company.IsExtended
+                    && p.BegTime.Date >= DateTime.Now.AddDays(-7).Date
                     && p.EndTime.Date <= DateTime.Now.AddDays(-2))
                 .ToList();
             
@@ -58,7 +61,7 @@ namespace OldVideoToFrameExtract.QuartzJobs
             var counter =0;
             foreach(var v in videos)
             {
-                var videoHaveFrames = frames.Where(f => f.ApplicationUserId == v.ApplicationUserId
+                var videoHaveFrames = frames.Where(f => f.DeviceId == v.DeviceId
                         && f.Time >= v.BegTime
                         && f.Time <= v.EndTime)
                     .ToList()

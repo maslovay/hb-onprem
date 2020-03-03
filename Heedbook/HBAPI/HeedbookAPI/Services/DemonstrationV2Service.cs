@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
+using UserOperations.Models;
 
 namespace UserOperations.Services
 {
@@ -41,10 +42,18 @@ namespace UserOperations.Services
             }
         }
 
-        public async Task<string> PollAnswer( CampaignContentAnswer answer)
+        public async Task<string> PollAnswer( CampaignContentAnswerModel answer)
         {
-            answer.CampaignContentAnswerId = Guid.NewGuid();
-            await _repository.CreateAsync<CampaignContentAnswer>(answer);
+            CampaignContentAnswer entity = new CampaignContentAnswer
+            {
+                CampaignContentAnswerId = Guid.NewGuid(),
+                Answer = answer.Answer ?? answer.AnswerText,
+                ApplicationUserId = answer.ApplicationUserId,
+                CampaignContentId = answer.CampaignContentId,
+                DeviceId = answer.DeviceId,
+                Time = answer.Time
+            };
+            await _repository.CreateAsync<CampaignContentAnswer>(entity);
             await _repository.SaveAsync();
             return "Saved";
         }
