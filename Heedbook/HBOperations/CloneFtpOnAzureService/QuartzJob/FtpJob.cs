@@ -48,7 +48,7 @@ namespace CloneFtpOnAzureService
                     var dialogues = _context.Dialogues
                         .Where(d => d.Status.StatusId == 3 &&
                                     //d.CreationTime >= DateTime.UtcNow.AddHours(-24)
-                                    d.CreationTime.Date>=new DateTime(2020, 02, 27).Date
+                                    d.CreationTime.Date >= new DateTime(2020, 02, 27).Date
                                     )
                         .Select(s => s.DialogueId)
                         .ToList();
