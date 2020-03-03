@@ -1,0 +1,9 @@
+[Unit]
+Description=Express Api Tester for HbOnprem
+
+[Service]
+ExecStart=LAUNCHERPATH
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,24 @@
+version: '2'
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/hbml_service
+      - ./deploy/nginx:/etc/nginx/conf.d
+    depends_on:
+      - hbml
+  hbml:
+    image: hbcontainerregistry.azurecr.io/hbml_service:v2
+    build: .
+    container_name: hbml
+    volumes:
+      - .:/hbml_service
+    expose:
+      - "8000"
+    environment:
+      - DEBUG
+      - ALLOWED_HOSTS
+      - OPENVINO_FACEAPI_CONFIG
