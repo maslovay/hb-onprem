@@ -30,7 +30,7 @@ namespace HBLib.Utils
             var userId = GetCurrentUserId();
             var roleName = _context.ApplicationUserRoles.Where(x => x.UserId == userId).Select(x => x.Role.Name).FirstOrDefault();
             if (!(roleName.ToUpper() == "ADMIN" && IsAdmin()))
-                throw new UnauthorizedAccessException();
+                throw new Exception("Requires admin role");
         }
 
         private Guid GetCurrentUserId() =>
