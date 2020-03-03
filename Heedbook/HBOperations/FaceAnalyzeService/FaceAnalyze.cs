@@ -26,11 +26,12 @@ namespace FaceAnalyzeService
             SftpClient sftpClient,
             IServiceScopeFactory factory,
             HbMlHttpClient client,
-            ElasticClientFactory elasticClientFactory
+            ElasticClientFactory elasticClientFactory,
+            RecordsContext context
             )
         {
             _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
-            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
+            _context = context;
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _elasticClientFactory = elasticClientFactory;
         }
@@ -76,6 +77,9 @@ namespace FaceAnalyzeService
                         FrameAttribute frameAttribute = null;
                         if (fileFrame != null && faceResult.Any())
                         {
+                            fileFrame.FaceLength = faceLength;
+                            fileFrame.IsFacePresent = true;
+
                             try
                             {
                                 frameEmotion = new FrameEmotion
@@ -115,11 +119,9 @@ namespace FaceAnalyzeService
                                 throw new Exception(e.Message);
                             }
 
-                            fileFrame.FaceLength = faceLength;
-                            fileFrame.IsFacePresent = true;
-
                             if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
-                            _context.FrameEmotions.Add(frameEmotion);
+                            if (frameEmotion != null) _context.FrameEmotions.Add(frameEmotion);
+                            
                             lock (_context)
                             {
                                 _context.SaveChanges();

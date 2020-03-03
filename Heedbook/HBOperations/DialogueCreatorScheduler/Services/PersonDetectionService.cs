@@ -19,7 +19,6 @@ namespace DialogueCreatorScheduler.Services
             _calc = calc;
         }
 
-
         public Guid? FindId(FileFrame fileFrame, List<Client> clients, double threshold=0.38)
         {
             if (!clients.Any()) return null;

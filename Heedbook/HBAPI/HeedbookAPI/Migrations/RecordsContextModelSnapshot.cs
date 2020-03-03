@@ -354,6 +354,24 @@ namespace UserOperations.Migrations
                     b.ToTable("ClientNotes");
                 });
 
+            modelBuilder.Entity("HBData.Models.ClientSession", b =>
+                {
+                    b.Property<Guid>("ClientSessionId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("ClientId");
+
+                    b.Property<string>("FileName");
+
+                    b.Property<DateTime>("Time");
+
+                    b.HasKey("ClientSessionId");
+
+                    b.HasIndex("ClientId");
+
+                    b.ToTable("ClientSessions");
+                });
+
             modelBuilder.Entity("HBData.Models.Company", b =>
                 {
                     b.Property<Guid>("CompanyId")
@@ -1676,6 +1694,14 @@ namespace UserOperations.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("HBData.Models.ClientSession", b =>
+                {
+                    b.HasOne("HBData.Models.Client", "Client")
+                        .WithMany()
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("HBData.Models.Company", b =>
                 {
                     b.HasOne("HBData.Models.CompanyIndustry", "CompanyIndustry")
@@ -1970,7 +1996,7 @@ namespace UserOperations.Migrations
             modelBuilder.Entity("HBData.Models.SalesStagePhrase", b =>
                 {
                     b.HasOne("HBData.Models.Company", "Company")
-                        .WithMany()
+                        .WithMany("SalesStagePhrases")
                         .HasForeignKey("CompanyId");
 
                     b.HasOne("HBData.Models.Corporation", "Corporation")

@@ -24,21 +24,22 @@ namespace UserOperations.Services
                 .GroupBy(p => p.Time)
                 .Select(p => p.OrderByDescending(q => q.FaceArea).First())
                 .ToList();
-            
+                
+            var device = _repository.GetWithIncludeOne<Device>(p => p.DeviceId == frames.FirstOrDefault().DeviceId, o => o.Company);
+                
+            if(device.Company.IsExtended)
+                return null;
+
             var fileFrames = new List<FileFrame>();
             var frameAttributes = new List<FrameAttribute>();
             var frameEmotions = new List<FrameEmotion>();
 
             foreach (var frameWithMaxArea  in framesWithMaxArea)
             {
-
-                if(frameWithMaxArea.Age == null 
-                    || frameWithMaxArea.Gender == null 
-                    || frameWithMaxArea.Yaw == null 
+                if(frameWithMaxArea.Yaw == null 
                     || frameWithMaxArea.Smile == null || Double.IsNaN((double)frameWithMaxArea.Smile)
                     || frameWithMaxArea.DeviceId == null 
-                    || frameWithMaxArea.Time == null
-                    || frameWithMaxArea.Descriptor == null)
+                    || frameWithMaxArea.Time == null)
                     throw new Exception("One of the fields of the frame with max Area is empty");
                 var applicationUserId = frameWithMaxArea?.ApplicationUserId == null ? Guid.Empty : frameWithMaxArea?.ApplicationUserId;
                 var fileFrame = new FileFrame

@@ -24,7 +24,7 @@ sed -i "s/testcluster/true/" tmp/DialoguesRecalculateScheduler.Dockerfile
 sed -i "s/testcluster/true/" tmp/SendUserAnalyticReportScheduler.Dockerfile 
 sed -i "s/testcluster/true/" tmp/ReferenceController.Dockerfile 
 sed -i "s/testcluster/true/" tmp/DialogueAndSessionsNestedScheduler.Dockerfile
-sed -i "s/testcluster/true/" tmp/OldVideoToFrameCutSheduler.Dockerfile
+sed -i "s/testcluster/true/" tmp/OldVideoToFrameExtractSheduler.Dockerfile
 sed -i "s/testcluster/true/" tmp/LogSaveService.Dockerfile
 sed -i "s/testcluster/true/" tmp/MessengerReporterService.Dockerfile
 sed -i "s/testcluster/true/" tmp/CloneFtpOnAzureService.Dockerfile

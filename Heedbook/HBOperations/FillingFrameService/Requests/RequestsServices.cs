@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using HBData;
 using HBData.Models;
+using HBLib.Utils;
 using HBMLHttpClient.Model;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -22,10 +23,12 @@ namespace  FillingFrameService.Requests
 
         public bool IsExtended(DialogueCreationRun message)
         {
-            return _context.Devices
+            var device = _context.Devices
                 .Include(p => p.Company)
                 .Where(p => p.DeviceId == message.DeviceId)
-                .FirstOrDefault().Company.IsExtended;
+                .FirstOrDefault();
+
+            return (device != null) ? device.Company.IsExtended : false;
         }
 
         public Client Client(Guid? clientId)
@@ -58,21 +61,8 @@ namespace  FillingFrameService.Requests
             }
             else
             {
-                try
-                {
-                    fileAvatar = frames
-                        .Where(p => p.FrameAttribute.FirstOrDefault().Value != null && p.FileExist)
-                        .OrderByDescending(p => JsonConvert.DeserializeObject<FaceRectangle>(p.FrameAttribute.FirstOrDefault().Value).Height)
-                        .FirstOrDefault();
-                }
-                catch (Exception e)
-                {
-                    System.Console.WriteLine($"Exeption occured  {e}");
-                    fileAvatar = frames.FirstOrDefault();
-                }
-                // .ForEach(p => p.Value= JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value));
+                fileAvatar = frames.FirstOrDefault();
             }
-            System.Console.WriteLine(JsonConvert.SerializeObject(fileAvatar));
             return fileAvatar;
         }
 
@@ -82,6 +72,52 @@ namespace  FillingFrameService.Requests
                 .Where(p => p.DeviceId == message.DeviceId &&
                     p.BegTime <= fileAvatar.Time && p.EndTime >= fileAvatar.Time
                     ).FirstOrDefault();
+        }
+
+        public async System.Threading.Tasks.Task AddVisualsAsync(DialogueVisual visuals)
+        {
+            await _context.DialogueVisuals.AddAsync(visuals);
+        }
+
+        public async System.Threading.Tasks.Task AddFramesAsync(List<DialogueFrame> frames)
+        {
+            await _context.DialogueFrames.AddRangeAsync(frames);
+        }
+
+        public async System.Threading.Tasks.Task AddClientProfileAsync(DialogueClientProfile profile)
+        {
+            await _context.DialogueClientProfiles.AddAsync(profile);
+        }
+
+        public async System.Threading.Tasks.Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
+         public void AddVisuals(DialogueVisual visuals)
+        {
+            _context.DialogueVisuals.Add(visuals);
+            _context.SaveChanges();
+        }
+
+        public void AddFrames(List<DialogueFrame> frames)
+        {
+            _context.DialogueFrames.AddRange(frames);
+            _context.SaveChanges();
+        }
+
+        public void AddClientProfile(DialogueClientProfile profile)
+        {
+            _context.DialogueClientProfiles.Add(profile);
+            _context.SaveChanges();
+        }
+
+        public void SaveChanges()
+        {
+            lock(_context)
+            {
+                _context.SaveChanges();
+            }
         }
     }
 

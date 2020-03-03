@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -35,6 +36,7 @@ namespace UserService.Controllers
         [HttpPost]
         [SwaggerOperation(Description = "Method for merge some dialogues with status 3 in the range")]
         public async Task<IActionResult> MergeDialogues([FromQuery] String Email,
+            [FromQuery] String DeviceCode,
             [FromQuery] String begTime,
             [FromQuery] String endTime)
         {
@@ -42,14 +44,24 @@ namespace UserService.Controllers
             {  
 //                _log.Info("Function Video save info started");
                 var dateFormat = "dd.MM.yyyy HH:mm:ss";
-                var userId = _context.ApplicationUsers.FirstOrDefault(p => p.Email == Email).Id;
+
+                Guid? userId = null;
+                if(Email != null)
+                    userId = _context.ApplicationUsers.FirstOrDefault(p => p.Email == Email).Id;
+                Guid? deviceId = null;
+                if(DeviceCode != null) 
+                    deviceId = _context.Devices.FirstOrDefault(p => p.Code==DeviceCode).DeviceId;
+
                 var timeBeg = DateTime.ParseExact(begTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
                 var timeEnd = DateTime.ParseExact(endTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
 
-                if(timeBeg == null || timeEnd == null || userId == null)
+                if(timeBeg == null || timeEnd == null || (userId == null && deviceId == null))
                     return BadRequest("One of the parameters is invalid!");
 
-                var dialogues = _context.Dialogues
+                List<Dialogue> dialogues = new List<Dialogue>();
+                if(userId != null)
+                {
+                    dialogues = _context.Dialogues
                     .Include(p => p.Client)
                     .Where(p => p.ApplicationUserId == userId
                         && p.StatusId == 3
@@ -57,6 +69,20 @@ namespace UserService.Controllers
                         && p.EndTime <= timeEnd)
                     .OrderBy(p => p.BegTime)
                     .ToList();
+                }
+                else if(deviceId != null)
+                {
+                    dialogues = _context.Dialogues
+                    .Include(p => p.Client)
+                    .Where(p => p.DeviceId == deviceId
+                        && p.StatusId == 3
+                        && p.BegTime >= timeBeg
+                        && p.EndTime <= timeEnd)
+                    .OrderBy(p => p.BegTime)
+                    .ToList();
+                }
+                else 
+                    return BadRequest("userId and deviceId is invalid!");
                     
                 if(dialogues == null || dialogues.Count == 0)
                     return BadRequest("No exist dialogues in this range!");
@@ -65,7 +91,7 @@ namespace UserService.Controllers
 
                 var newDialogueId = Guid.NewGuid();
                 var maxBegTime = MaxTime(timeBeg, dialogues.FirstOrDefault().BegTime);
-                var minEndTime = MinTime(timeEnd, dialogues.LastOrDefault().EndTime);
+                var minEndTime = MinTime(timeEnd, dialogues.OrderBy(p => p.EndTime).LastOrDefault().EndTime);
                 
                 var firstDialogue = dialogues.FirstOrDefault();
                 var newDialogue = new Dialogue
@@ -74,7 +100,7 @@ namespace UserService.Controllers
                     ClientId = firstDialogue.ClientId,
                     PersonFaceDescriptor = firstDialogue.PersonFaceDescriptor,
                     CreationTime = DateTime.UtcNow,
-		    DeviceId = firstDialogue.DeviceId,
+		            DeviceId = firstDialogue.DeviceId,
                     BegTime = maxBegTime,
                     EndTime = minEndTime,
                     ApplicationUserId = userId,
@@ -88,7 +114,7 @@ namespace UserService.Controllers
                 {
                     ApplicationUserId = userId,
                     DialogueId = newDialogueId,
-		    DeviceId = newDialogue.DeviceId,
+		            DeviceId = newDialogue.DeviceId,
                     BeginTime = maxBegTime,
                     EndTime = minEndTime
                 };
@@ -96,11 +122,10 @@ namespace UserService.Controllers
                 {
                     ApplicationUserId = userId,
                     DialogueId = newDialogueId,
-		    DeviceId = firstDialogue.DeviceId,
+		            DeviceId = firstDialogue.DeviceId,
                     BeginTime = maxBegTime,
                     EndTime = minEndTime
                 };
-
                 _handler.EventRaised(dialogueVideoAssembleRun);
                 _handler.EventRaised(dialogueCreationRun);
 

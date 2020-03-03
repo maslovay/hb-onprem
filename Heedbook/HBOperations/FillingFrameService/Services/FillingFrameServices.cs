@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using FillingFrameService.Requests;
 using HBData.Models;
 using HBLib;
 using HBLib.Utils;
@@ -95,7 +96,7 @@ namespace FillingFrameService.Services
         }  
 
         public async System.Threading.Tasks.Task FillingAvatarAsync(DialogueCreationRun message,
-            List<FileFrame> frames, FileVideo fileVideo, bool isExtended, FileFrame fileAvatar, Client client)
+            List<FileFrame> frames,  bool isExtended, FileFrame fileAvatar, Client client, FileVideo fileVideo, ElasticClient log)
         {
             
             string localPath;
@@ -122,16 +123,18 @@ namespace FillingFrameService.Services
             }
             else
             {
-                System.Console.WriteLine(client.Avatar);
-                if (message.ClientId != null && await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}"))
+                var fileExist = await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}");
+                log.Info($"Client avatar - {client.Avatar}, file exist - {fileExist}");
+                if (message.ClientId != null)
                 {
-                    
+                    log.Info($"Rename client avatar {client.Avatar} as dialogue avatar {message.DialogueId}.jpg");
                     localPath =
                         await _sftpClient.DownloadFromFtpToLocalDiskAsync($"clientavatars/{client.Avatar}");
                     await _sftpClient.UploadAsync(localPath, "clientavatars/", $"{message.DialogueId}.jpg");
                 }
                 else
                 {
+                    log.Info("Extracting client avatar from video");
                     var dt = fileAvatar.Time;
                     var seconds = dt.Subtract(fileVideo.BegTime).TotalSeconds;
                     System.Console.WriteLine($"Seconds - {seconds}, FileVideo - {fileVideo.FileName}");
