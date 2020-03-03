@@ -5,6 +5,7 @@ using UserOperations.Services;
 using UserOperations.Models;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Collections.Generic;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {

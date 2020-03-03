@@ -27,10 +27,11 @@ namespace UserService.Controllers
         }      
         
         [HttpPost("[action]")]
-        public void PublishUnitTestResults([FromBody]PublishUnitTestResultsModel model)
+        public IActionResult PublishUnitTestResults([FromBody]PublishUnitTestResultsModel model)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             PublishUnitTestResults(model.TrxTextBase64);
+            return Ok();
         }
         private void PublishUnitTestResults(string textBase64)
         {

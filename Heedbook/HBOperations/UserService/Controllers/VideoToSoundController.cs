@@ -23,10 +23,11 @@ namespace UserService.Controllers
 
         [HttpPost]
         [SwaggerOperation(Description = "Extract audio from video")]
-        public void VideoToSound([FromBody] VideoToSoundRun message)
+        public IActionResult VideoToSound([FromBody] VideoToSoundRun message)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
+            return Ok();
         }
     }
 }

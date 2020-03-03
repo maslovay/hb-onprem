@@ -33,17 +33,18 @@ namespace UserService.Controllers
         [HttpPost]
         [SwaggerOperation(Description =
             "Analyze frame. Detect faces and calculate emotions and face attributes such as gender and age")]
-        public async Task FaceAnalyzeRun([FromBody] FaceAnalyzeRun message)
+        public async Task<IActionResult> FaceAnalyzeRun([FromBody] FaceAnalyzeRun message)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
+            return Ok();
         }
 
         [HttpPost("[action]")]
         [SwaggerOperation(Description = "Analyze frame. Detect face, return gender and age")]
         public async Task<IActionResult> FrameAnalyze([FromBody] string imageBase64)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {            
                 var faceResult = await _client.GetFaceResult(imageBase64); 

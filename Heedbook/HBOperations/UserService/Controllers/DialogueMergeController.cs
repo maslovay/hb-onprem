@@ -44,7 +44,7 @@ namespace UserService.Controllers
             [FromQuery] String begTime,
             [FromQuery] String endTime)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {  
 //                _log.Info("Function Video save info started");

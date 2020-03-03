@@ -58,7 +58,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Recalculate dialogue")]
         public async Task<IActionResult> DialogueRecalculation([FromQuery] Guid dialogueId)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {
 //                _log.Info("Function Dialogue recalculation started");
@@ -109,7 +109,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Re assemble dialogue")]
         public async Task<IActionResult> CheckRelatedDialogueData(Guid dialogueId)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             //            _log.SetFormat("{DialogueId}");
             //            _log.SetArgs(dialogueId);
             var result = "";
@@ -221,9 +221,9 @@ namespace UserService.Controllers
         }
         
         [HttpGet("[action]")]
-        public void RecalcPositiveShare()
+        public IActionResult RecalcPositiveShare()
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var result = 0.0;
 
             var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-5)
@@ -285,6 +285,7 @@ namespace UserService.Controllers
 
                 _repository.Save();
             }
+            return Ok();
         }
     }
 }

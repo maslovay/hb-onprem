@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models;
+using UserOperations.Utils;
 
 namespace UserOperations.Services
 {

@@ -1,12 +1,5 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Text;
-using HBData.Repository;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Http;
 using HBData;
 
@@ -25,12 +18,13 @@ namespace HBLib.Utils
             _context = context;
         }
 
-        public void CheckIsUserAdmin()
+        public bool CheckIsUserAdmin()
         {
             var userId = GetCurrentUserId();
             var roleName = _context.ApplicationUserRoles.Where(x => x.UserId == userId).Select(x => x.Role.Name).FirstOrDefault();
-            if (!(roleName.ToUpper() == "ADMIN" && IsAdmin()))
-                throw new Exception("Requires admin role");
+            if (roleName.ToUpper() == "ADMIN" && IsAdmin())
+                return true;
+            return false;
         }
 
         private Guid GetCurrentUserId() =>

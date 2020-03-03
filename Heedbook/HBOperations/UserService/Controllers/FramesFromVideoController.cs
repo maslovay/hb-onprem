@@ -24,10 +24,11 @@ namespace UserService.Controllers
 
         [HttpPost]
         [SwaggerOperation(Description = "Extract frames from video each 3 seconds")]
-        public async Task CutVideoToFrames([FromBody] FramesFromVideoRun message)
+        public async Task<IActionResult> CutVideoToFrames([FromBody] FramesFromVideoRun message)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _publisher.Publish(message);
+            return Ok();
         }
     }
 }

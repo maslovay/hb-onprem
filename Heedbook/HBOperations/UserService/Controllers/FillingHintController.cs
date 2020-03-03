@@ -24,10 +24,11 @@ namespace UserService.Controllers
 
         [HttpPost]
         [SwaggerOperation(Description = "Detect hints based on dialogue scores")]
-        public async Task FillingHintRun([FromBody] FillingHintsRun message)
+        public async Task<IActionResult> FillingHintRun([FromBody] FillingHintsRun message)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
+            return Ok();
         }
     }
 }

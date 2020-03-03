@@ -23,18 +23,20 @@ namespace UserService.Controllers
 
         [HttpPost("audio-analyze")]
         [SwaggerOperation(Description = "Speech recognition for audio file in message")]
-        public void AudioAnalyze([FromBody] AudioAnalyzeRun message)
+        public IActionResult AudioAnalyze([FromBody] AudioAnalyzeRun message)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
+            return Ok();
         }
 
         [HttpPost("tone-analyze")]
         [SwaggerOperation(Description = "Tone analyze for audio file in message")]
-        public void ToneAnalyze([FromBody] ToneAnalyzeRun toneAnalyzeRun)
+        public IActionResult ToneAnalyze([FromBody] ToneAnalyzeRun toneAnalyzeRun)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(toneAnalyzeRun);
+            return Ok();
         }
     }
 }

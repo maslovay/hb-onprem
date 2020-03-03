@@ -24,10 +24,11 @@ namespace UserService.Controllers
 
         [HttpPost]
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
-        public async Task FillingSatisfactionRun([FromBody] FillingSatisfactionRun message)
+        public async Task<IActionResult> FillingSatisfactionRun([FromBody] FillingSatisfactionRun message)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
+            return Ok();
         }
     }
 }

@@ -46,7 +46,7 @@ namespace UserService.Controllers
             [FromForm] IFormCollection formData,
             [FromQuery] Guid? applicationUserId = null)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {  
 //                _log.Info("Function Video save info started");

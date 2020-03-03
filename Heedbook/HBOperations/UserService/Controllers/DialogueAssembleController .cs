@@ -37,9 +37,9 @@ namespace UserService.Controllers
 
         [HttpPost("DialogueAssemble")]
         [SwaggerOperation(Description = "Dialogue creation. Assemble videos and frames in one video.")]
-        public async Task DialogueAssemble([FromBody] DialogueCreationRun message)
+        public async Task<IActionResult> DialogueAssemble([FromBody] DialogueCreationRun message)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var user = _context.ApplicationUsers.Include(p=>p.Company)
                 .FirstOrDefault(p => p.Id == message.ApplicationUserId);
             int? languageId;
@@ -83,14 +83,15 @@ namespace UserService.Controllers
             _publisher.Publish(dialogueVideoMerge);
             _publisher.Publish(message);
             Console.WriteLine("finished");
+            return Ok();
         }
         
         
         [HttpPut("changeInStatistic")]
         [SwaggerOperation(Description = "Changes InStatistic field for a dialog.")]
-        public async Task ChangeInStatistic(Guid dialogueId, bool inStatistic)
+        public async Task<IActionResult> ChangeInStatistic(Guid dialogueId, bool inStatistic)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var dialog = _genericRepository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
 
             if (dialog == default(Dialogue))
@@ -100,6 +101,7 @@ namespace UserService.Controllers
 
             _genericRepository.Update(dialog);
             await _genericRepository.SaveAsync();
+            return Ok();
         }
     }
 }

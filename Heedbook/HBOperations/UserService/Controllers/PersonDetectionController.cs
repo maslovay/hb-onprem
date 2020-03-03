@@ -30,17 +30,18 @@ namespace UserService.Controllers
 
         [HttpPost("PersonDetectionRun")]
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
-        public async Task PersonDetectionRun([FromBody] PersonDetectionRun message)
+        public async Task<IActionResult> PersonDetectionRun([FromBody] PersonDetectionRun message)
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
+            return Ok();
         }
 
         [HttpPost("PersonDetectionAllUsersRun")]
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
-        public async Task PersonDetectionAllDevicesRun()
+        public async Task<IActionResult> PersonDetectionAllDevicesRun()
         {
-            _service.CheckIsUserAdmin();
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var begTime = DateTime.UtcNow.AddDays(-30);
             var devices = _context.Dialogues.Where(p => p.BegTime > begTime)
                 .Select(p => p.DeviceId)
@@ -50,6 +51,7 @@ namespace UserService.Controllers
                 DeviceIds = devices
             };
             _handler.EventRaised(message);
+            return Ok();
         }
     }
 }
