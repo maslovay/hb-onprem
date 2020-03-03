@@ -87,7 +87,7 @@ namespace UserService.Controllers
             var message = new MessengerMessageRun()
             {
                 logText = messageText,
-                ChannelName = "ApiTester",
+                ChannelName = "IntegrationTester",
             };
             
             System.Console.WriteLine($"{JsonConvert.SerializeObject(message)}");
