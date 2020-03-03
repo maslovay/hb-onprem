@@ -97,7 +97,7 @@ namespace DetectFaceIdExtendedScheduler.QuartzJobs
 
                     System.Console.WriteLine(JsonConvert.SerializeObject(framesProceed.Select(p => p.FileFrame.FaceId).Distinct()));
 
-                    // _context.SaveChanges();
+                    _context.SaveChanges();
 
                 }
                 System.Console.WriteLine("Finished");
