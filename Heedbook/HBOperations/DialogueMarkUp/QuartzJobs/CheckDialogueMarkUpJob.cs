@@ -46,7 +46,8 @@ namespace DialogueMarkUp.QuartzJobs
             var _log = _elasticClientFactory.GetElasticClient();
             var periodTime = 5 * 60; 
             var periodFrame = 30;
-            var begMarkUpTime = DateTime.UtcNow.AddHours(-3);
+            // var begMarkUpTime = DateTime.UtcNow.AddHours(-3);
+            var begMarkUpTime = new DateTime(2020, 03, 03, 0, 0, 1);
 
             try
             {
