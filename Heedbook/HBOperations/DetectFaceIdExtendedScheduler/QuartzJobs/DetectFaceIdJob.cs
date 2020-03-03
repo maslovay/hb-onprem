@@ -41,6 +41,7 @@ namespace DetectFaceIdExtendedScheduler.QuartzJobs
             var _log = _elasticClientFactory.GetElasticClient();
             try
             {
+                System.Console.WriteLine("Funtion extended started");
                 var begTime = DateTime.UtcNow.AddDays(-5);
                 var fileFramesEdges = _context.FileFrames
                     .Include(p => p.Device)
