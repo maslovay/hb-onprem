@@ -31,4 +31,4 @@ WORKDIR /app/HBOperations/AudioAnalyzeSchedulerTests/
 RUN dotnet restore .; exit 0;
 
 RUN rm TestResults/*.trx; exit 0;
-RUN dotnet test --logger "trx;LogFileName=results.trx"; base64 TestResults/results.trx > TestResults/results_base64 ; curl -X POST "http://hbonpremalarmserver.canadacentral.cloudapp.azure.com/api/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxTextBase64\" : \"$(cat TestResults/results_base64)\" }";
+RUN dotnet test --logger:"trx;LogFileName=results.trx" ; base64 TestResults/results*.trx > TestResults/results_base64 ; curl -X POST "https://heedbookapi.northeurope.cloudapp.azure.com/user/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxTextBase64\" : \"$(cat /app/HBOperations/AudioAnalyzeSchedulerTests/TestResults/results_base64)\" }";
