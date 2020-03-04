@@ -49,7 +49,9 @@ namespace CloneFtpOnAzureService
                         .Where(d => d.Status.StatusId == 3 &&
                                     //d.CreationTime >= DateTime.UtcNow.AddHours(-24)
                                     d.CreationTime.Date >= new DateTime(2020, 02, 27).Date
+                                    && d.CreationTime.Date < DateTime.Now.Date
                                     )
+                        .OrderBy(p => p.CreationTime)
                         .Select(s => s.DialogueId)
                         .ToList();
                     var tasks = new List<Task>();
@@ -61,21 +63,26 @@ namespace CloneFtpOnAzureService
                     };
                     System.Console.WriteLine("Try to download and upload");
                     System.Console.WriteLine($"dialogues count: {dialogues.Count}");
-                    
+                    var counter = 0;
                     foreach (var dialogue in dialogues)
-                    {
-                        System.Console.WriteLine(dialogue);
+                    {   
+                        counter++;                     
                         foreach (var (key, value) in dict)
                         {
                             var fileName = dialogue + value;
                             var filePath = key + "/" + fileName;
-                            var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
-                            tasks.Add(_blobClient.UploadFileStreamToBlob(key, fileName, stream));
+                            var thisFileExist = await _sftpClient.IsFileExistsAsync(filePath);
+                            System.Console.WriteLine($"{counter}:{dialogues.Count} {fileName} {thisFileExist}");
+                            if(thisFileExist)
+                            {
+                                var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
+                                tasks.Add(_blobClient.UploadFileStreamToBlob(key, fileName, stream));
+                            }                            
                         }
                     }
-                    
                     await Task.WhenAll(tasks);
                     System.Console.WriteLine("Download and Upload finished");
+                    _log.Info($"Downloaded and Uploaded {dialogues.Count} dialogues data");
                 }
                 catch (Exception e)
                 {
