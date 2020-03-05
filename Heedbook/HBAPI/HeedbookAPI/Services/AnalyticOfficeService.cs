@@ -182,10 +182,18 @@ namespace UserOperations.Services
             //---end new block
 
             var pauseInMin = DialogueAvgPauseListInMinutes(workingTimes, dialoguesDevicesCur, begTime, endTime, role, companyIds);
+
             if (pauseInMin == null) pauseInMin = timeTableForDevices;
-
-
                 var sessTimeMinutes = timeTableForDevices.Sum();
+            ///----fix difference!!!!
+            var totalDialogueDur = dialoguesDevicesCur.Sum(x => x.EndTime.Subtract(x.BegTime).TotalMinutes);
+            var fract =  (sessTimeMinutes - totalDialogueDur)/ pauseInMin.Sum() ;
+            if (Math.Abs(fract - 1) > 0.01)
+            {
+                pauseInMin = pauseInMin.Select(x => x * fract).ToList();
+            }
+
+
                 var pausesAmount = new{
                     Less_10 = pauseInMin?.Where(p => p <= 10).Count(),
                     Between_11_20 = pauseInMin?.Where(p => p > 10 && p <= 20).Count(),
@@ -208,7 +216,7 @@ namespace UserOperations.Services
                     Load = pauseInMin != null? sessTimeMinutes - Math.Round((double)pauseInMin?.Sum(), 2) : sessTimeMinutes
                 };
 
-            var dur = dialoguesDevicesCur.Sum(x => x.EndTime.Subtract(x.BegTime).TotalMinutes);
+           
   
                 var jsonToReturn = new Dictionary<string, object>();
                 jsonToReturn["Workload"] = result;
@@ -392,10 +400,8 @@ namespace UserOperations.Services
             int active = 3;
             List<double> pauses = new List<double>();
             if (!timeTable.Any() || !dialogues.Any()) return null;
-
             if (role == "Admin") return pauses;
 
-            if (!timeTable.Any()) return null;
             foreach (var companyId in companyIds)
             {
                 var devices = _repository.GetAsQueryable<Device>().Where(x => x.CompanyId == companyId && x.StatusId == active).Select(x => x.DeviceId).ToList();
@@ -449,60 +455,7 @@ namespace UserOperations.Services
                     }
                 }
                 }
-        
-
          return pauses;
-         //   return times;
-
-
-
-            //foreach (var dialogue in dialogues.GroupBy(x => x.DeviceId))
-            //{
-                //for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
-                //{
-                //    try
-                //    {
-                //        var endDay = i.AddDays(1);
-                //        var workingHours = timeTable.Where(x => x.CompanyId == dialogue.First().CompanyId).ToArray()[(int)i.DayOfWeek];
-                //        if (workingHours.BegTime == null) continue;
-
-
-                //        var dialogInDay = dialogue
-                //              .Where(p => p.BegTime >= i && p.EndTime <= endDay)
-                //              .OrderBy(p => p.BegTime).ToArray();
-
-                //        List<DateTime> times = new List<DateTime>();
-                //        var timeStartWorkingDay = i.AddHours(((DateTime)workingHours.BegTime).Hour).AddMinutes(((DateTime)workingHours.BegTime).Minute);
-                //        var timeEndWorkingDay = i.AddHours(((DateTime)workingHours.EndTime).Hour).AddMinutes(((DateTime)workingHours.EndTime).Minute);
-                //        if (!dialogInDay.Any())
-                //        {
-                //            pauses.Add(timeEndWorkingDay.Subtract(timeStartWorkingDay).TotalMinutes);
-                //            continue;
-                //        }
-
-
-                //        times.Add(timeStartWorkingDay);
-                //        for (var j = 0; j < dialogInDay.Count(); j++)
-                //        {
-                //            if (j == 0 || dialogInDay[j].BegTime >= dialogInDay[j - 1].EndTime)
-                //            {
-                //                times.Add(dialogInDay[j].BegTime);
-                //                times.Add(dialogInDay[j].EndTime);
-                //            }
-                //        }
-                //        times.Add(timeEndWorkingDay);
-
-                //        for (int j = 0; j < times.Count() - 1; j += 2)
-                //        {
-                //            var pause = (times[j + 1].Subtract(times[j])).TotalMinutes;
-                //            pauses.Add(pause < 0 ? 0 : pause);
-                //        }
-                //    }
-                //    catch { }
-                //}
-            //}
-
-           
         }
 
     }
