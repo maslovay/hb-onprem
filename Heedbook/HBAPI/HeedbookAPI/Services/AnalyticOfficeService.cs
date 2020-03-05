@@ -198,7 +198,7 @@ namespace UserOperations.Services
                     Between_11_20 = sessTimeMinutes != 0 && pauseInMin != null ? 100 * pauseInMin.Where(p => p > 10 && p <= 20).Sum() / sessTimeMinutes : 0,
                     Between_21_60 = sessTimeMinutes != 0 && pauseInMin != null ? 100 * pauseInMin.Where(p => p > 20 && p <= 60).Sum() / sessTimeMinutes : 0,
                     More_60 = sessTimeMinutes != 0 && pauseInMin != null ? 100 * pauseInMin.Where(p => p > 60).Sum() / sessTimeMinutes : 0,
-                    Load =  sessTimeMinutes != 0 && pauseInMin != null ? 100 * Math.Round((double)(sessTimeMinutes - pauseInMin.Sum()) / sessTimeMinutes, 2) : 0
+                    Load =  sessTimeMinutes != 0 && pauseInMin != null ? Math.Round(100 * (double)(sessTimeMinutes - pauseInMin.Sum()) / sessTimeMinutes, 2) : 0
                 };
                  var pausesInMinutes = new{
                     Less_10 = pauseInMin?.Where(p => p <= 10).Sum(),
@@ -207,6 +207,8 @@ namespace UserOperations.Services
                     More_60 = pauseInMin?.Where(p => p > 60).Sum(),
                     Load = pauseInMin != null? sessTimeMinutes - Math.Round((double)pauseInMin?.Sum(), 2) : sessTimeMinutes
                 };
+
+            var dur = dialoguesDevicesCur.Sum(x => x.EndTime.Subtract(x.BegTime).TotalMinutes);
   
                 var jsonToReturn = new Dictionary<string, object>();
                 jsonToReturn["Workload"] = result;
@@ -427,6 +429,11 @@ namespace UserOperations.Services
                                 if (j == 0 || dialogInDay[j].BegTime >= dialogInDay[j - 1].EndTime)
                                 {
                                     times.Add(dialogInDay[j].BegTime);
+                                    times.Add(dialogInDay[j].EndTime);
+                                }
+                                else
+                                {
+                                    times.Remove(times.Last());
                                     times.Add(dialogInDay[j].EndTime);
                                 }
                             }
