@@ -18,6 +18,7 @@ namespace CloneFtpOnAzureService
     {
         private SftpClient _sftpClient;
         private BlobSettings _blobSettings;
+        private SftpSettings _sftpSetting;
         private BlobClient _blobClient;
         private readonly ElasticClientFactory _elasticClientFactory;        
         private RecordsContext _context;
@@ -27,13 +28,15 @@ namespace CloneFtpOnAzureService
             SftpClient sftpClient,
             BlobSettings blobSettings,
             BlobClient blobClient,
-            ElasticClientFactory elasticClientFactory)
+            ElasticClientFactory elasticClientFactory,
+            SftpSettings sftpSetting)
         {
             _scopeFactory = scopeFactory;
             _elasticClientFactory = elasticClientFactory;
             _blobSettings = blobSettings;
             _blobClient = blobClient;
             _sftpClient = sftpClient;
+            _sftpSetting = sftpSetting;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -46,18 +49,16 @@ namespace CloneFtpOnAzureService
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
 
                     var dialogues = _context.Dialogues
-                        .Where(d => d.Status.StatusId == 3 &&
-                                    //d.CreationTime >= DateTime.UtcNow.AddHours(-24)
-                                    d.CreationTime.Date >= new DateTime(2020, 02, 27).Date
-                                    && d.CreationTime.Date < DateTime.Now.Date
-                                    )
+                        .Where(d => d.Status.StatusId == 3 
+                            // && d.CreationTime >= DateTime.UtcNow.AddHours(-24))
+                            && d.CreationTime >= new DateTime(2020, 02, 27, 0, 0, 1))
                         .OrderBy(p => p.CreationTime)
                         .Select(s => s.DialogueId)
                         .ToList();
                     var tasks = new List<Task>();
                     var dict = new Dictionary<String, String>()
                     {
-                        {_blobSettings.AvatarName, ".jpg"},
+                        //{_blobSettings.AvatarName, ".jpg"},
                         {_blobSettings.VideoName, ".mkv"},
                         {_blobSettings.AudioName, ".wav"}
                     };
@@ -77,10 +78,32 @@ namespace CloneFtpOnAzureService
                             {
                                 var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
                                 tasks.Add(_blobClient.UploadFileStreamToBlob(key, fileName, stream));
-                            }                            
+                                _log.Info($"{fileName} sended on blobstorage");
+                            }                                                   
                         }
                     }
                     await Task.WhenAll(tasks);
+
+                    //ClientAvatars backup
+                    var clientAvatars = await _sftpClient.GetAllFilesData(_sftpSetting.DestinationPath, _blobSettings.AvatarName);    
+                                    
+                    // var clientAvatarsForLastDay = clientAvatars.Where(p => p.date >= DateTime.Now.AddHours(-24))
+                        // .OrderBy(p => p.date)                        
+                        // .ToList();
+                    var clientAvatarsForLastDay = clientAvatars.Where(p => p.date >= new DateTime(2020, 02, 27, 0, 0, 1))
+                        .OrderBy(p => p.date)
+                        .ToList();
+
+                    System.Console.WriteLine($"clientavatars count: {clientAvatarsForLastDay.Count}");
+                    foreach(var image in clientAvatarsForLastDay)
+                    {
+                        System.Console.WriteLine(image.name);
+                        var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(image.url);
+                        tasks.Add(_blobClient.UploadFileStreamToBlob(_blobSettings.AvatarName, image.name, stream));
+                        _log.Info($"{image.name} sended on blobstorage");
+                    }
+                    await Task.WhenAll(tasks);
+
                     System.Console.WriteLine("Download and Upload finished");
                     _log.Info($"Downloaded and Uploaded {dialogues.Count} dialogues data");
                 }

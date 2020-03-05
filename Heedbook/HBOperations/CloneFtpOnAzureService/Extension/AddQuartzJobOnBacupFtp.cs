@@ -22,7 +22,8 @@ namespace CloneFtpOnAzureService.Extension
                 return TriggerBuilder.Create()
                     .WithIdentity("FtpJob.trigger", "FtpFile")
                     .StartNow()
-                    .WithCronSchedule("0 0 21 * * ?", p => p.InTimeZone(TimeZoneInfo.Utc))
+                    //.WithSimpleSchedule(p => p.WithIntervalInHours(30).RepeatForever())
+                    .WithCronSchedule("0 0 20 * * ?", p => p.InTimeZone(TimeZoneInfo.Utc))
                     .Build();
             });
 
