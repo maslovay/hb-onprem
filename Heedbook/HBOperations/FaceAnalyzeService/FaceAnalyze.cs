@@ -121,6 +121,7 @@ namespace FaceAnalyzeService
 
                         if (frameAttribute != null) 
                         {
+                            _log.Info($"Saving frame attributes {JsonConvert.SerializeObject(frameAttribute)}");
                             _context.FrameAttributes.Add(frameAttribute);
                             lock (_context)
                             {
@@ -129,6 +130,7 @@ namespace FaceAnalyzeService
                         }
                         if (frameEmotion != null) 
                         {
+                            _log.Info($"Saving frame emotions {JsonConvert.SerializeObject(frameEmotion)}");
                             _context.FrameEmotions.Add(frameEmotion);
                             lock (_context)
                             {
