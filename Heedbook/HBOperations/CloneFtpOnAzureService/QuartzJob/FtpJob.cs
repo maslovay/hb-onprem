@@ -77,12 +77,13 @@ namespace CloneFtpOnAzureService
                             if(thisFileExist)
                             {
                                 var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(filePath);
-                                tasks.Add(_blobClient.UploadFileStreamToBlob(key, fileName, stream));
+                                // tasks.Add(_blobClient.UploadFileStreamToBlob(key, fileName, stream));
+                                _blobClient.UploadFileStreamToBlob(key, fileName, stream).Wait();
                                 _log.Info($"{fileName} sended on blobstorage");
                             }                                                   
                         }
                     }
-                    await Task.WhenAll(tasks);
+                    //await Task.WhenAll(tasks);
 
                     //ClientAvatars backup
                     var clientAvatars = await _sftpClient.GetAllFilesData(_sftpSetting.DestinationPath, _blobSettings.AvatarName);    
@@ -99,10 +100,11 @@ namespace CloneFtpOnAzureService
                     {
                         System.Console.WriteLine(image.name);
                         var stream =  await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(image.url);
-                        tasks.Add(_blobClient.UploadFileStreamToBlob(_blobSettings.AvatarName, image.name, stream));
+                        // tasks.Add(_blobClient.UploadFileStreamToBlob(_blobSettings.AvatarName, image.name, stream));
+                        _blobClient.UploadFileStreamToBlob(_blobSettings.AvatarName, image.name, stream).Wait();
                         _log.Info($"{image.name} sended on blobstorage");
                     }
-                    await Task.WhenAll(tasks);
+                    //await Task.WhenAll(tasks);
 
                     System.Console.WriteLine("Download and Upload finished");
                     _log.Info($"Downloaded and Uploaded {dialogues.Count} dialogues data");

@@ -23,7 +23,7 @@ namespace CloneFtpOnAzureService.Extension
                     .WithIdentity("FtpJob.trigger", "FtpFile")
                     .StartNow()
                     //.WithSimpleSchedule(p => p.WithIntervalInHours(30).RepeatForever())
-                    .WithCronSchedule("0 0 20 * * ?", p => p.InTimeZone(TimeZoneInfo.Utc))
+                    .WithCronSchedule("0 0 21 * * ?", p => p.InTimeZone(TimeZoneInfo.Utc))
                     .Build();
             });
 
