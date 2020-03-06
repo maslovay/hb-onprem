@@ -48,7 +48,7 @@ namespace UserService.Controllers
             try
             {  
 //                _log.Info("Function Video save info started");
-                var dateFormat = "dd.MM.yyyy HH:mm:ss";
+                var dateFormat = "HH:mm:ss dd.MM.yyyy";
 
                 Guid? userId = null;
                 if(Email != null)
