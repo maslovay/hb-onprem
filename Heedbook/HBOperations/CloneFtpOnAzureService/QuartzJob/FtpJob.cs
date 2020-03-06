@@ -50,8 +50,7 @@ namespace CloneFtpOnAzureService
 
                     var dialogues = _context.Dialogues
                         .Where(d => d.Status.StatusId == 3 
-                            // && d.CreationTime >= DateTime.UtcNow.AddHours(-24))
-                            && d.CreationTime >= new DateTime(2020, 02, 27, 0, 0, 1))
+                            && d.CreationTime >= DateTime.UtcNow.AddHours(-24))
                         .OrderBy(p => p.CreationTime)
                         .Select(s => s.DialogueId)
                         .ToList();
@@ -85,15 +84,11 @@ namespace CloneFtpOnAzureService
                     }
                     //await Task.WhenAll(tasks);
 
-                    //ClientAvatars backup
                     var clientAvatars = await _sftpClient.GetAllFilesData(_sftpSetting.DestinationPath, _blobSettings.AvatarName);    
                                     
-                    // var clientAvatarsForLastDay = clientAvatars.Where(p => p.date >= DateTime.Now.AddHours(-24))
-                        // .OrderBy(p => p.date)                        
-                        // .ToList();
-                    var clientAvatarsForLastDay = clientAvatars.Where(p => p.date >= new DateTime(2020, 02, 27, 0, 0, 1))
-                        .OrderBy(p => p.date)
-                        .ToList();
+                    var clientAvatarsForLastDay = clientAvatars.Where(p => p.date >= DateTime.Now.AddHours(-24))
+                        .OrderBy(p => p.date)                        
+                        .ToList();                    
 
                     System.Console.WriteLine($"clientavatars count: {clientAvatarsForLastDay.Count}");
                     foreach(var image in clientAvatarsForLastDay)
