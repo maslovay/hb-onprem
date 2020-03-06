@@ -188,7 +188,7 @@ namespace UserOperations.Services
             ///----fix difference!!!!
             var totalDialogueDur = dialoguesDevicesCur.Sum(x => x.EndTime.Subtract(x.BegTime).TotalMinutes);
             var fract =  (sessTimeMinutes - totalDialogueDur)/ pauseInMin.Sum() ;
-            if (Math.Abs(fract - 1) > 0.01)
+            if (Math.Abs(fract - 1) > 0.001)
             {
                 pauseInMin = pauseInMin.Select(x => x * fract).ToList();
             }
