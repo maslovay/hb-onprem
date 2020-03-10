@@ -88,6 +88,11 @@ namespace QuartzExtensions.Jobs
                                         };
                                         _notificationPublisher.Publish(@event);
                                     }
+                                    var @eventFillSlideShowDialogue = new FillSlideShowDialogueRun
+                                    {
+                                        DialogueId = dialogue.DialogueId
+                                    };
+                                    _notificationPublisher.Publish(@eventFillSlideShowDialogue);
                                 }
                                 else
                                 {
