@@ -157,6 +157,10 @@ namespace UserOperations
                 });
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.Configure<URLSettings>(Configuration.GetSection(nameof(URLSettings)));
+            services.AddSingleton(provider => provider.GetRequiredService<IOptions<URLSettings>>().Value);
+
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
