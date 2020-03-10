@@ -354,6 +354,71 @@ namespace UserOperations.Controllers
             var v2 = JsonConvert.DeserializeObject<List<double>>(vector2);
             return Cos(v1, v2);
         }
+
+        [HttpGet("CopyDataFromDB")]
+        public async Task<IActionResult> CopyDataFromDB()
+        {
+            var date = DateTime.Now.AddDays(-3);
+            var connectionString = "User ID=test_user;Password=test_password;Host=40.69.85.202;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0;";
+
+            //var connectionString = "User ID=heedbook_user;Password=Oleg&AnnaRulyat_1975;Host=40.69.85.202;Port=5432;Database=heedbook_db;Pooling=true;Timeout=120;CommandTimeout=0;";
+            DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
+            dbContextOptionsBuilder.UseNpgsql(connectionString,
+                   dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
+            var oldContext = new RecordsContext(dbContextOptionsBuilder.Options);
+
+            Dictionary<string, int> result = new Dictionary<string, int>();
+
+
+            //-1--COMPANIES---
+            var oldCompId = oldContext.Companys.Select(x => x.CompanyId).ToList();
+            var newCompId = _context.Companys.Select(x => x.CompanyId).ToList();
+            var compIdsToAdd = oldCompId.Except(newCompId).ToList();
+            List<Company> addComp = oldContext.Companys.Where(x => compIdsToAdd.Contains(x.CompanyId)).ToList();
+            var devType = _context.DeviceTypes.FirstOrDefault().DeviceTypeId;
+
+            try
+            {
+                _context.AddRange(addComp);
+                _context.SaveChanges();
+                result["companys"] = addComp.Count();
+
+                var devicesToAdd = compIdsToAdd.Select(x => new Device
+                {
+                    DeviceId = Guid.NewGuid(),
+                    CompanyId = x,
+                    Code = "AAAAAA",
+                    DeviceTypeId = devType,
+                    Name = "TEMP DEVICE",
+                    StatusId = 3
+                });
+
+                _context.AddRange(devicesToAdd);
+                _context.SaveChanges();
+                result["devices"] = devicesToAdd.Count();
+
+                var work = compIdsToAdd.Select(x => new List<WorkingTime> {
+                    new WorkingTime { CompanyId = x, Day = 0 },
+                    new WorkingTime { CompanyId = x, Day = 1 },
+                    new WorkingTime { CompanyId = x, Day = 2 },
+                    new WorkingTime { CompanyId = x, Day = 3 },
+                    new WorkingTime { CompanyId = x, Day = 4 },
+                    new WorkingTime { CompanyId = x, Day = 5 },
+                    new WorkingTime { CompanyId = x, Day = 6 }}
+                    );
+
+                _context.AddRange(work);
+                _context.SaveChanges();
+                result["devices"] = work.Count();
+            }
+            catch { }
+
+            var devices = _context.Devices.Include(x => x.Company.ApplicationUser)
+            .Select(x => new { x.DeviceId, applicationUserIds = x.Company.ApplicationUser.Select(p => p.Id).ToList() }).ToList();
+
+            return Ok(result);
+        }
+
     }
 }
 
