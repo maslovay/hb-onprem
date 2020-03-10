@@ -69,7 +69,7 @@ namespace AudioAnalyseScheduler.Tests
             }
             catch (Exception ex)
             {
-                
+                System.Console.WriteLine(ex);
             }
        }
         
@@ -185,8 +185,9 @@ namespace AudioAnalyseScheduler.Tests
                 Console.WriteLine($"GetPosShare text: {posShareStrg.ToString()}");
                 Console.WriteLine($"Source text: {key}");
                 Console.WriteLine($"Pos/neg: {value}");
+                System.Console.WriteLine($"{JsonConvert.SerializeObject(posShareStrg)}");
                 result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
-
+                System.Console.WriteLine($"result: {result}");
                 if (value == "positive")
                     Assert.GreaterOrEqual(result, 0.5);
                 else

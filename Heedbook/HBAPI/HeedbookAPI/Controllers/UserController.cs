@@ -49,8 +49,6 @@ namespace UserOperations.Controllers
                 if (_loginService.GetCurrentDeviceId() != null)
                     return  await _userService.GetUsersForDeviceAsync();
                 return  await _userService.GetUsers();
-
-                
         }
 
 

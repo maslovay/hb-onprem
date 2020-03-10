@@ -64,6 +64,7 @@ namespace HBMLOnlineService.Controllers
                     var faceResults = await _hbmlservice.UploadFrameAndGetFaceResultAsync(base64String, filename, description, emotions, headpose, attributes);
                     if (faceResults.Any())
                     {
+                        faceResults = faceResults.OrderByDescending(p => p.Rectangle.Height * p.Rectangle.Width).ToList();
                         _hbmlservice.PublishMessageToRabbit(deviceId, companyId, filename, faceResults);
                     }
                     _log.Info("Function finished");

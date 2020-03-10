@@ -54,6 +54,18 @@ namespace PersonOnlineDetectionService.Utils
             return client;
         }
 
+        public void CreateClientSession(Guid clientId, string fileName)
+        {
+            var clientSession = new ClientSession{
+                ClientSessionId = Guid.NewGuid(),
+                ClientId = clientId,
+                FileName = fileName,
+                Time = DateTime.UtcNow
+            };
+            _context.ClientSessions.Add(clientSession);
+            _context.SaveChanges();
+        }
+
 
     }
 }
