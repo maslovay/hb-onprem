@@ -69,7 +69,7 @@ namespace UserOperations.Services
                                 LoadHours = _analyticRatingUtils.SessionAverageHours(sessions, p.Key, q.Key),
                                 WorkingHours = _analyticRatingUtils.DialogueSumDuration(q),
                                 DialogueDuration = _analyticRatingUtils.DialogueAverageDuration(q),
-                                CrossInProcents = _analyticRatingUtils.CrossIndex(p)
+                                CrossInProcents = _analyticRatingUtils.CrossIndex(q)
                             }).ToList()
                     }).ToList();
                 return JsonConvert.SerializeObject(results);
