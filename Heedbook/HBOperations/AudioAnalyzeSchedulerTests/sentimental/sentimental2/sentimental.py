@@ -24,6 +24,8 @@ class Sentimental(object):
             self.load_neagations(negations_filename)
 
         self.__negation_skip = {'a', 'an', 'so', 'too'}
+        print("word_list: ", len(self.word_list))
+        print("negations: ", len(self.negations))
 
     @staticmethod
     def __to_arg_list(obj):
@@ -71,7 +73,9 @@ class Sentimental(object):
             stemmed_token = self.stemmer.stem(token)
             if stemmed_token in self.word_list and not is_prefixed_by_negation:
                 score = self.word_list[stemmed_token]
-
+                print("token ", token)
+                print("stemmedtoken ", stemmed_token)
+                print("score ", score)
                 score_type = 'negative' if score < 0 else 'positive'
                 scores[score_type] += score
                 words[score_type].append(stemmed_token)

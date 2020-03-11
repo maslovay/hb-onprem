@@ -5,6 +5,19 @@ RUN apt-get update -y
 RUN apt-get install python3 python3-pip git -y
 RUN pip3 install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
 RUN pip3 install nltk
+RUN apt-get install nano
+
+RUN apt-get update && apt-get install -y locales
+
+# Locale
+RUN sed -i -e \
+  's/# ru_RU.UTF-8 UTF-8/ru_RU.UTF-8 UTF-8/' /etc/locale.gen \
+   && locale-gen
+
+ENV LANG ru_RU.UTF-8
+ENV LANGUAGE ru_RU:ru
+ENV LC_LANG ru_RU.UTF-8
+ENV LC_ALL ru_RU.UTF-8
 
 COPY . .
 
@@ -24,10 +37,12 @@ RUN killall -9 dotnet; exit 0;
 WORKDIR /app/HBOperations/AudioAnalyzeScheduler/
 RUN dotnet restore .; exit 0;
 RUN dotnet build . -c Release
-RUN cp ./sentimental/GetPositiveShare.py ./bin/Release/netcoreapp2.2/; exit 0;
+#RUN cp ./sentimental/GetPositiveShare.py ./bin/Release/netcoreapp2.2/; exit 0;
 RUN ../../rabbit_test_start.sh 
 
 WORKDIR /app/HBOperations/AudioAnalyzeSchedulerTests/
+RUN cp ./sentimental/GetPositiveShare.py ./bin/Debug/netcoreapp2.2/; exit 0;
+
 RUN dotnet restore .; exit 0;
 
 RUN rm TestResults/*.trx; exit 0;
