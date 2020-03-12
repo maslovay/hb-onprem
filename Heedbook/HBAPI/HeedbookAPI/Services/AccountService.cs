@@ -72,7 +72,7 @@ namespace UserOperations.Services
                 if (user.StatusId != GetStatusId("Active")) throw new Exception("User not activated");
 
                 if (_loginService.CheckUserLogin(message.UserName, message.Password))
-                    return _loginService.CreateTokenForUser(user);
+                      return _loginService.CreateTokenForUser(user);
                 else
                     throw new UnauthorizedAccessException("Error in username or password");
         }

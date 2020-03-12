@@ -70,26 +70,18 @@ namespace UserOperations.Services
                 // var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
                 var roleInfo = _repository.GetAsQueryable<ApplicationUserRole>().Include(x => x.Role).Where(x => x.UserId == user.Id).FirstOrDefault();
                 var role = roleInfo.Role.Name;
-
-                if (user.StatusId == 3)
+                Claim[] claims;
+                if (role.ToLower() == "service")
                 {
-                    var claims = new[]
-                    {
-                        new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                        new Claim("applicationUserId", user.Id.ToString()),
-                        new Claim("applicationUserName", user.FullName),
-                        new Claim("companyName", user.Company.CompanyName),
-                        new Claim("companyId", user.CompanyId.ToString()),
-                        new Claim("corporationId", user.Company.CorporationId.ToString()),
-                        new Claim("languageCode", user.Company.LanguageId.ToString()),
-                        new Claim("role", role),
-                        new Claim("fullName", user.FullName),
-                        new Claim("avatar", GetAvatar(user.Avatar)),
-                        new Claim("isExtended", user.Company.IsExtended.ToString())
-                    };
+                    claims = ClaimsForWebsocket(user, role);
+                }
+                else if(user.StatusId == 3 )
+                {
+                    claims = ClaimsForUser(user, role);
+                }
+                else return "User inactive";
 
-                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
                     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
                     var token = new JwtSecurityToken(_config["Tokens:Issuer"],
@@ -99,17 +91,47 @@ namespace UserOperations.Services
                         signingCredentials: creds);
 
                     var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
-                    return tokenenc;
-                }
-                else
-                {
-                    return "User inactive";
-                }
+                return tokenenc;
+               
             }
             catch (Exception e)
             {
                 return $"User not exist or internal error {e}";
             }
+        }
+
+        private Claim[] ClaimsForUser(ApplicationUser user, string role)
+        {
+            var claims = new[]
+                   {
+                        new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                        new Claim("applicationUserId", user.Id.ToString()),
+                        new Claim("applicationUserName", user.FullName),
+                        new Claim("companyName", user.Company?.CompanyName),
+                        new Claim("companyId", user.CompanyId.ToString()),
+                        new Claim("corporationId", user.Company?.CorporationId?.ToString()),
+                        new Claim("languageCode", user.Company?.LanguageId?.ToString()),
+                        new Claim("role", role),
+                        new Claim("fullName", user.FullName),
+                        new Claim("avatar", GetAvatar(user.Avatar)),
+                        new Claim("isExtended", user.Company?.IsExtended.ToString())
+                    };
+            return claims;
+        }
+
+        private Claim[] ClaimsForWebsocket(ApplicationUser user, string role)
+        {
+            var claims = new[]
+                    {
+                        new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                        new Claim("applicationUserId", user.Id.ToString()),
+                        new Claim("applicationUserName", user.FullName),
+                        new Claim("role", role),
+                        new Claim("fullName", user.FullName),
+                    };
+            return claims;
         }
 
         public string CreateTokenForDevice(Device device)
