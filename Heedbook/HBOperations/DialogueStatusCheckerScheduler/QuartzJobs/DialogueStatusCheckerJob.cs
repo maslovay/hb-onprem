@@ -95,6 +95,7 @@ namespace QuartzExtensions.Jobs
                                         DialogueId = dialogue.DialogueId
                                     };
                                     _notificationPublisher.Publish(@eventFillSlideShowDialogue);
+                                    _log.Info($"FillSlideShowDialogueRun");
                                 }
                                 else
                                 {
