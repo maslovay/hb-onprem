@@ -25,6 +25,9 @@ using System.Drawing;
 using System.Transactions;
 using FillingSatisfactionService.Helper;
 using HBData.Repository;
+using System.Data;
+using System.Reflection;
+using System.Data.SqlClient;
 
 namespace UserOperations.Controllers
 {
@@ -32,12 +35,12 @@ namespace UserOperations.Controllers
     [ApiController]
     public class HelpController : Controller
     {
-        //    private readonly IConfiguration _config;
+        private readonly IConfiguration _config;
         private readonly CompanyService _compService;
         private readonly RecordsContext _context;
         //    private readonly SftpClient _sftpClient;
         //    private readonly MailSender _mailSender;
-        //    private readonly RequestFilters _requestFilters;
+        private readonly RequestFilters _requestFilters;
         //    private readonly SftpSettings _sftpSettings;
         //    private readonly DBOperations _dbOperation;
         //    private readonly IGenericRepository _repository;
@@ -46,24 +49,24 @@ namespace UserOperations.Controllers
 
         public HelpController(
             CompanyService compService,
-            //LoginService loginService,
-            RecordsContext context
+            IConfiguration config,
+            RecordsContext context,
           //   DescriptorCalculations calc
             //SftpClient sftpClient,
             //MailSender mailSender,
-            //RequestFilters requestFilters,
+            RequestFilters requestFilters
             //SftpSettings sftpSettings,
             //DBOperations dBOperations,
             //IGenericRepository repository
             )
         {
             _compService = compService;
-            //_loginService = loginService;
+            _config = config;
             _context = context;
          //   _calc = calc;
             //_sftpClient = sftpClient;
             //_mailSender = mailSender;
-            //_requestFilters = requestFilters;
+            _requestFilters = requestFilters;
             //_sftpSettings = sftpSettings;
             //_dbOperation = dBOperations;
             //_repository = repository;
@@ -279,6 +282,28 @@ namespace UserOperations.Controllers
             }
             return Guid.NewGuid();
         }
+
+        [HttpGet("FillDialogueIdInSlideShowSession")]
+        public void FillDialogueIdInSlideShowSession(string beg, string end)
+        {
+             var begTime = _requestFilters.GetBegDate(beg);
+             var endTime = _requestFilters.GetEndDate(end);
+            var dialogues = _context.Dialogues.Where(x => x.BegTime >= begTime && x.EndTime <= endTime && x.StatusId == 3).ToList();
+            foreach (var dialogue in dialogues)
+            {
+                var slideShowSessions = _context.SlideShowSessions
+                    .Where(x => x.BegTime >= dialogue.BegTime && x.BegTime <= dialogue.EndTime && x.DeviceId == dialogue.DeviceId).ToList();
+                slideShowSessions.Select(
+                    x => 
+                    {
+                        x.DialogueId = dialogue.DialogueId;
+                        return x;
+                    }).ToList();
+                _context.SaveChanges();
+            }
+        }
+
+
 
         private Guid? CreateNewClient(HBData.Models.Dialogue curDialogue, Guid? clientId)
         {

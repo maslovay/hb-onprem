@@ -37,7 +37,17 @@ namespace FillSlideShowDialogueService
             _log.SetFormat("{DialogueId}");
             _log.Info("Function started");
             _log.SetArgs(JsonConvert.SerializeObject(message.DialogueId));
-
+            var dialogue = _context.Dialogues.FirstOrDefault(x => x.DialogueId == message.DialogueId);
+            var slideShowSessions = _context.SlideShowSessions
+                .Where(x => x.BegTime >= dialogue.BegTime && x.BegTime <= dialogue.EndTime && x.DeviceId == dialogue.DeviceId).ToList();
+            slideShowSessions.Select(
+                x =>
+                {
+                    x.DialogueId = dialogue.DialogueId;
+                    return x;
+                }).ToList();
+            _context.SaveChanges();
+            _log.Info($"{slideShowSessions.Count()} slideShowSessions filled");
         }
     }
 }
