@@ -108,14 +108,14 @@ namespace UserOperations.Services
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim("applicationUserId", user.Id.ToString()),
                         new Claim("applicationUserName", user.FullName),
-                        new Claim("companyName", user.Company?.CompanyName),
+                        new Claim("companyName", user.Company.CompanyName),
                         new Claim("companyId", user.CompanyId.ToString()),
-                        new Claim("corporationId", user.Company?.CorporationId?.ToString()),
-                        new Claim("languageCode", user.Company?.LanguageId?.ToString()),
+                        new Claim("corporationId", user.Company.CorporationId.ToString()),
+                        new Claim("languageCode", user.Company.LanguageId.ToString()),
                         new Claim("role", role),
                         new Claim("fullName", user.FullName),
                         new Claim("avatar", GetAvatar(user.Avatar)),
-                        new Claim("isExtended", user.Company?.IsExtended.ToString())
+                        new Claim("isExtended", user.Company.IsExtended.ToString())
                     };
             return claims;
         }
