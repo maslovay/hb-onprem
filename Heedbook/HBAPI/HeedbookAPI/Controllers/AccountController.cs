@@ -6,6 +6,7 @@ using HBData.Models.AccountViewModels;
 using UserOperations.AccountModels;
 using UserOperations.Services;
 using UserOperations.Utils;
+using System.Collections.Generic;
 
 namespace UserOperations.Controllers
 {
@@ -55,6 +56,13 @@ namespace UserOperations.Controllers
                     [FromBody, SwaggerParameter("email required, password only with token")] AccountAuthorization message,
                     [FromHeader, SwaggerParameter("JWT token not required, if exist receive new password, if not - generate new password", Required = false)] string Authorization)
             => await _service.ChangePassword(message, Authorization);
+
+        [HttpPost("ValidateToken")]
+        [SwaggerOperation(Summary = "Return true or false")]
+        [SwaggerResponse(400, "The user data is invalid", typeof(string))]
+        [SwaggerResponse(200, "{\"status\": <bool>}")]
+        public async Task<Dictionary<string,bool>> ValidateToken([FromHeader, SwaggerParameter("JWT token not", Required = true)] string Authorization)
+         => await _service.ValidateToken(Authorization);
 
 
         [HttpPost("ChangePasswordOnDefault")]

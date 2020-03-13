@@ -8,6 +8,7 @@ using UserOperations.AccountModels;
 using HBData.Repository;
 using System.Transactions;
 using UserOperations.Utils;
+using System.Collections.Generic;
 
 namespace UserOperations.Services
 {
@@ -38,7 +39,19 @@ namespace UserOperations.Services
             _helpProvider = helpProvider;
         }
 
-        public async Task RegisterNewCompanyAndUser(UserRegister message)
+        public async Task<Dictionary<string, bool>> ValidateToken(string token)
+        {
+            try
+            {
+                return new Dictionary<string, bool>() { { "status", _loginService.GetDataFromToken(token, out var claims) } };
+            }
+            catch
+            {
+                return new Dictionary<string, bool>() { { "status", false } };
+            }
+        }
+
+            public async Task RegisterNewCompanyAndUser(UserRegister message)
         {
             var statusActiveId = GetStatusId("Active");
             if (await CompanyExist(message.CompanyName) || await EmailExist(message.Email))
