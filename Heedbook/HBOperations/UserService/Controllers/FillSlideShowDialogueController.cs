@@ -28,7 +28,7 @@ namespace UserService.Controllers
             _context = context;
         }
 
-        [HttpPost]
+        [HttpPost("FillSlideShowDialogue")]
         [SwaggerOperation(Description = "Fill in SlideShowSessions DialogueId")]
         public IActionResult FillSlideShowDialogue([FromBody] FillSlideShowDialogueRun message)
         {
@@ -37,7 +37,7 @@ namespace UserService.Controllers
             return Ok();
         }
 
-        [HttpPost]
+        [HttpPost("FillSlideShowDialogueAll")]
         [SwaggerOperation(Description = "Fill in SlideShowSessions DialogueId")]
         public IActionResult FillSlideShowDialoguesAll([FromQuery] string begTime)
         {
