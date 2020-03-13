@@ -159,7 +159,7 @@ namespace UserOperations.Services
 
 
             var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
-            var timeTableForDevices = WorkingDaysTimeListInMinutes(workingTimes, begTime, endTime, companyIds, role);
+            var timeTableForDevices = WorkingDaysTimeListInMinutes(workingTimes, begTime, endTime, companyIds, deviceIds, role);
             var dialogues = GetDialoguesIncluded(prevBeg, endTime, companyIds, null, deviceIds)
                        .Select(p => new DialogueInfo
                        {
@@ -578,7 +578,7 @@ namespace UserOperations.Services
             return timeEndWorkingDay.Subtract(timeStartWorkingDay).TotalMinutes;
         }
 
-        public List<double> WorkingDaysTimeListInMinutes(WorkingTime[] timeTable, DateTime beg, DateTime end, List<Guid> companyIds, string role)
+        public List<double> WorkingDaysTimeListInMinutes(WorkingTime[] timeTable, DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds, string role)
         {
             int active = 3;
             List<double> times = new List<double>();
@@ -587,7 +587,10 @@ namespace UserOperations.Services
             if (!timeTable.Any()) return null;
             foreach (var companyId in companyIds)
             {
-                var devicesAmount = _repository.GetAsQueryable<Device>().Where(x => x.CompanyId == companyId && x.StatusId == active).Count();
+                var devicesAmount = _repository
+                           .GetAsQueryable<Device>().Where(x => x.CompanyId == companyId
+                           && x.StatusId == active
+                           && (!deviceIds.Any() || deviceIds.Contains(x.DeviceId))).Count();
                 if (devicesAmount == 0) continue;
                 var timeTableForComp = GetTimeTable(companyId);
                 for (int d = 0; d < devicesAmount; d++)
