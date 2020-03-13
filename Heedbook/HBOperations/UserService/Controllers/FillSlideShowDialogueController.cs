@@ -54,7 +54,7 @@ namespace UserService.Controllers
                 };
                 _handler.EventRaised(eventFillSlideShowDialogue);
             }
-            return Ok();
+            return Ok($"runned for {dialogues.Count()} dialogues");
         }
     }
 }
