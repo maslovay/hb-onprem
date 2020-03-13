@@ -39,7 +39,7 @@ namespace UserService.Controllers
 
         [HttpPost]
         [SwaggerOperation(Description = "Fill in SlideShowSessions DialogueId")]
-        public IActionResult FillSlideShowDialoguesAll([FromHeader] string begTime)
+        public IActionResult FillSlideShowDialoguesAll([FromQuery] string begTime)
         {
             if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
 
