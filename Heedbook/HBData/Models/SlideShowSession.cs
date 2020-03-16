@@ -55,5 +55,12 @@ namespace HBData.Models
         /// </summary>
         public Guid? ApplicationUserId { get; set; }
         [JsonIgnore] public ApplicationUser ApplicationUser { get; set; }
+
+        /// <summary>
+        ///     Will fill with scheduler
+        /// </summary>
+        public Guid? DialogueId { get; set; }
+
+        public Dialogue Dialogue { get; set; }
     }
 }

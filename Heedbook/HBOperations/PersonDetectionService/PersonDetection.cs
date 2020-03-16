@@ -91,7 +91,7 @@ namespace PersonDetectionService
         {
             Company company = _context.Devices
                               .Where(x => x.DeviceId == curDialogue.DeviceId).Select(x => x.Company).FirstOrDefault();
-            var findClient = _context.Clients
+            var findClient = _context.Clients//---search only client with status 3 (record context)
                         .Where(x => x.ClientId == clientId).FirstOrDefault();
             if (findClient != null)
             {
