@@ -143,6 +143,7 @@ namespace UserOperations.Services
                                                              List<Guid> companyIds, List<Guid> corporationIds,
                                                              List<Guid> deviceIds)
         {
+                int active = 3;
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
 
@@ -159,7 +160,13 @@ namespace UserOperations.Services
 
 
             var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
-            var timeTableForDevices = WorkingDaysTimeListInMinutes(workingTimes, begTime, endTime, companyIds, deviceIds, role);
+            var devicesFiltered = _repository.GetAsQueryable<Device>()
+                                  .Where(x => companyIds.Contains(x.CompanyId)
+                                      && (!deviceIds.Any() || deviceIds.Contains(x.DeviceId))
+                                      && x.StatusId == active)
+                                  .ToList();
+            var timeTableForDevices = _dbOperations.WorkingDaysTimeListInMinutes(workingTimes, begTime, endTime, companyIds, devicesFiltered, role);
+
             var dialogues = GetDialoguesIncluded(prevBeg, endTime, companyIds, null, deviceIds)
                        .Select(p => new DialogueInfo
                        {
@@ -558,50 +565,6 @@ namespace UserOperations.Services
                                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
                                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))).ToListAsyncSafe();
             return result;
-        }
-
-        private double[] GetTimeTable(Guid companyId)
-        {
-
-            var timeTable = _repository.GetAsQueryable<WorkingTime>().Where(x => x.CompanyId == companyId)
-                    .OrderBy(x => x.Day).Select(x => CalcWorkingDayDurationMin(x.BegTime, x.EndTime)).ToArray();
-            if (timeTable == null || timeTable.Count() < 7) throw new NoDataException("company has no timetable");
-            return timeTable;
-        }
-
-        private double CalcWorkingDayDurationMin(DateTime? beg, DateTime? end)
-        {
-            if (beg == null || end == null)
-                return 0;
-            var timeStartWorkingDay = DateTime.Now.Date.AddHours(((DateTime)beg).Hour).AddMinutes(((DateTime)beg).Minute);
-            var timeEndWorkingDay = DateTime.Now.Date.AddHours(((DateTime)end).Hour).AddMinutes(((DateTime)end).Minute);
-            return timeEndWorkingDay.Subtract(timeStartWorkingDay).TotalMinutes;
-        }
-
-        public List<double> WorkingDaysTimeListInMinutes(WorkingTime[] timeTable, DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds, string role)
-        {
-            int active = 3;
-            List<double> times = new List<double>();
-            if (role == "Admin") return times;
-
-            if (!timeTable.Any()) return null;
-            foreach (var companyId in companyIds)
-            {
-                var devicesAmount = _repository
-                           .GetAsQueryable<Device>().Where(x => x.CompanyId == companyId
-                           && x.StatusId == active
-                           && (!deviceIds.Any() || deviceIds.Contains(x.DeviceId))).Count();
-                if (devicesAmount == 0) continue;
-                var timeTableForComp = GetTimeTable(companyId);
-                for (int d = 0; d < devicesAmount; d++)
-                {
-                    for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
-                    {
-                        times.Add(timeTableForComp[(int)i.DayOfWeek]);
-                    }
-                }
-            }
-            return times;
         }
     }
 

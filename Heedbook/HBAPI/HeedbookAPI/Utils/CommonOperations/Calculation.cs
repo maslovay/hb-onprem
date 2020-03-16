@@ -919,6 +919,47 @@ namespace UserOperations.Utils
                 element.ActivityType = 2;
             }
             return result;
-        }       
+        }
+
+        public List<double> WorkingDaysTimeListInMinutes(WorkingTime[] timeTable, DateTime beg, DateTime end, List<Guid> companyIds, List<Device> devices, string role)
+        {
+            int active = 3;
+            List<double> times = new List<double>();
+            if (role == "Admin") return times;
+
+            if (!timeTable.Any()) return null;
+            foreach (var companyId in companyIds)
+            {
+                var devicesAmount = devices.Where(x => x.CompanyId == companyId).Count();
+                if (devicesAmount == 0) continue;
+                var timeTableForComp = GetTimeTable(companyId, timeTable);
+                for (int d = 0; d < devicesAmount; d++)
+                {
+                    for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
+                    {
+                        times.Add(timeTableForComp[(int)i.DayOfWeek]);
+                    }
+                }
+            }
+            return times;
+        }
+
+        public double CalcWorkingDayDurationMin(DateTime? beg, DateTime? end)
+        {
+            if (beg == null || end == null)
+                return 0;
+            var timeStartWorkingDay = DateTime.Now.Date.AddHours(((DateTime)beg).Hour).AddMinutes(((DateTime)beg).Minute);
+            var timeEndWorkingDay = DateTime.Now.Date.AddHours(((DateTime)end).Hour).AddMinutes(((DateTime)end).Minute);
+            return timeEndWorkingDay.Subtract(timeStartWorkingDay).TotalMinutes;
+        }
+
+        private double[] GetTimeTable(Guid companyId, WorkingTime[] timeTable)
+        {
+
+            var times = timeTable.Where(x => x.CompanyId == companyId)
+                    .OrderBy(x => x.Day).Select(x => CalcWorkingDayDurationMin(x.BegTime, x.EndTime)).ToArray();
+            if (times == null || times.Count() < 7) throw new NoDataException("company has no timetable");
+            return times;
+        }
     }
 }
