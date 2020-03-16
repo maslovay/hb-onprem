@@ -34,8 +34,6 @@ namespace FillSlideShowDialogueService
         public async Task Run(FillSlideShowDialogueRun message)
         {
             var _log = _elasticClientFactory.GetElasticClient();
-            _log.SetFormat("{DialogueId}");
-            _log.Info("Function started");
             _log.SetArgs(JsonConvert.SerializeObject(message.DialogueId));
             var dialogue = _context.Dialogues.FirstOrDefault(x => x.DialogueId == message.DialogueId);
             var slideShowSessions = _context.SlideShowSessions

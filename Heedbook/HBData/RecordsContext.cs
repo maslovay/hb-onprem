@@ -26,6 +26,7 @@ namespace HBData
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.Entity<Client>().HasQueryFilter(m => m.StatusId == 3);
 
             builder.Entity<ApplicationUser>(i =>
             {
