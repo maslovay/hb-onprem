@@ -41,13 +41,15 @@ namespace DetectFaceIdScheduler.QuartzJobs
             try
             {
                 // Get first not marked FileFrame
-                System.Console.WriteLine("1");
+                // System.Console.WriteLine("1");
+                var begTime = DateTime.UtcNow.AddDays(-5);
                 var fileFramesEdges = _context.FileFrames
                     .Include(p => p.Device)
                     .Include(p => p.Device.Company)
                     .Where(p => 
                         p.FaceId == null && 
                         p.FaceLength > 0 &&
+                        p.Time > begTime &&
                         p.Device.Company.IsExtended == false)
                     .GroupBy(p => p.DeviceId)
                     .Select(p => new {

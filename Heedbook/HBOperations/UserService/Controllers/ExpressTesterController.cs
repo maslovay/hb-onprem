@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 
 namespace UserService.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("user/[controller]")]
     [ApiController]
     public class ExpressTesterController : ControllerBase
     {
@@ -86,8 +87,10 @@ namespace UserService.Controllers
             var message = new MessengerMessageRun()
             {
                 logText = messageText,
-                ChannelName = "ApiTester",
+                ChannelName = "IntegrationTester",
             };
+            
+            System.Console.WriteLine($"{JsonConvert.SerializeObject(message)}");
             _publisher.Publish(message);            
         }
     }

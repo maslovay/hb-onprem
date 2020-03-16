@@ -86,7 +86,14 @@ namespace UserOperations.Utils.AnalyticRatingUtils
             var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
-     
+
+        public double? CrossIndex(IGrouping<DateTime, DialogueInfo> dialogues)
+        {
+            var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
+            var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;
+            return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
+        }
+
         public double? DialogueAveragePause(List<SessionInfo> sessions, IGrouping<Guid?, DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
             var sessionHours = sessions.Where(p => p.CompanyId == dialogues.Key).Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours);

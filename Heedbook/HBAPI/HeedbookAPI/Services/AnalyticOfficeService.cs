@@ -38,6 +38,7 @@ namespace UserOperations.Services
         public async Task<string> Efficiency(string beg, string end,
                                         List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
         {
+                int active = 3;
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
@@ -45,7 +46,13 @@ namespace UserOperations.Services
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
+                var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => companyIds.Contains(x.CompanyId)).ToArray();
+                var devicesFiltered = _repository.GetAsQueryable<Device>()
+                                    .Where(x => companyIds.Contains(x.CompanyId) 
+                                        && (!deviceIds.Any() || deviceIds.Contains(x.DeviceId))
+                                        && x.StatusId == active)
+                                    .ToList();
+                var timeTableForDevices = _dbOperations.WorkingDaysTimeListInMinutes(workingTimes, begTime, endTime, companyIds, devicesFiltered, role);
 
                 var sessions = GetSessionsInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
@@ -60,7 +67,8 @@ namespace UserOperations.Services
 
                 var dialoguesDevicesCur = dialoguesCur.Where(x => x.IsInWorkingTime).ToList();
                 var dialoguesDevicesOld = dialoguesOld.Where(x => x.IsInWorkingTime).ToList();
-                var timeTableForDevices = WorkingDaysTimeListInMinutes(workingTimes, begTime, endTime, companyIds, role);
+
+
                 List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
             var result = new EfficiencyDashboardInfoNew
@@ -181,11 +189,19 @@ namespace UserOperations.Services
                  }).ToArray();
             //---end new block
 
-            var pauseInMin = DialogueAvgPauseListInMinutes(workingTimes, dialoguesDevicesCur, begTime, endTime, role, companyIds);
+            var pauseInMin = DialogueAvgPauseListInMinutes(workingTimes, dialoguesDevicesCur, begTime, endTime, role, companyIds, devicesFiltered);
+
             if (pauseInMin == null) pauseInMin = timeTableForDevices;
-
-
                 var sessTimeMinutes = timeTableForDevices.Sum();
+            ///----fix difference!!!!
+            var totalDialogueDur = dialoguesDevicesCur.Sum(x => x.EndTime.Subtract(x.BegTime).TotalMinutes);
+            var fract =  (sessTimeMinutes - totalDialogueDur)/ pauseInMin.Sum() ;
+            if (Math.Abs(fract - 1) > 0.001)
+            {
+                pauseInMin = pauseInMin.Select(x => x * fract).ToList();
+            }
+
+
                 var pausesAmount = new{
                     Less_10 = pauseInMin?.Where(p => p <= 10).Count(),
                     Between_11_20 = pauseInMin?.Where(p => p > 10 && p <= 20).Count(),
@@ -198,7 +214,7 @@ namespace UserOperations.Services
                     Between_11_20 = sessTimeMinutes != 0 && pauseInMin != null ? 100 * pauseInMin.Where(p => p > 10 && p <= 20).Sum() / sessTimeMinutes : 0,
                     Between_21_60 = sessTimeMinutes != 0 && pauseInMin != null ? 100 * pauseInMin.Where(p => p > 20 && p <= 60).Sum() / sessTimeMinutes : 0,
                     More_60 = sessTimeMinutes != 0 && pauseInMin != null ? 100 * pauseInMin.Where(p => p > 60).Sum() / sessTimeMinutes : 0,
-                    Load =  sessTimeMinutes != 0 && pauseInMin != null ? 100 * Math.Round((double)(sessTimeMinutes - pauseInMin.Sum()) / sessTimeMinutes, 2) : 0
+                    Load =  sessTimeMinutes != 0 && pauseInMin != null ? Math.Round(100 * (double)(sessTimeMinutes - pauseInMin.Sum()) / sessTimeMinutes, 2) : 0
                 };
                  var pausesInMinutes = new{
                     Less_10 = pauseInMin?.Where(p => p <= 10).Sum(),
@@ -207,6 +223,8 @@ namespace UserOperations.Services
                     More_60 = pauseInMin?.Where(p => p > 60).Sum(),
                     Load = pauseInMin != null? sessTimeMinutes - Math.Round((double)pauseInMin?.Sum(), 2) : sessTimeMinutes
                 };
+
+           
   
                 var jsonToReturn = new Dictionary<string, object>();
                 jsonToReturn["Workload"] = result;
@@ -281,45 +299,26 @@ namespace UserOperations.Services
             return dialogues;
         }
 
-        private double TimetableHoursForAllComapnies(string role, DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
-        {
-            if (role == "Admin") return 0;
-            return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
-        }
+        //private double TimetableHoursForAllComapnies(string role, DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
+        //{
+        //    if (role == "Admin") return 0;
+        //    return companyIds.Sum(x => TimetableHours(beg, end, x, deviceIds));
+        //}
 
-        private double TimetableHours(DateTime beg, DateTime end, Guid companyId, List<Guid> deviceIds)
-        {
-            int active = 3;
-            var timeTable = GetTimeTable(companyId);
-            var devicesAmount = _repository.GetAsQueryable<Device>()
-                .Where(x => x.CompanyId == companyId && x.StatusId == active
-                && (deviceIds == null || deviceIds.Count() == 0 || deviceIds.Contains(x.DeviceId)))
-                .Count();
-            double totalHours = 0;
-            for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
-            {
-                totalHours += timeTable[(int)i.DayOfWeek];
-            }
-            return totalHours * devicesAmount;
-        }
-
-        private double[] GetTimeTable(Guid companyId)
-        {
-
-            var timeTable =  _repository.GetAsQueryable<WorkingTime>().Where(x => x.CompanyId == companyId)
-                    .OrderBy(x => x.Day).Select(x => CalcWorkingDayDurationMin(x.BegTime, x.EndTime)).ToArray();
-            if (timeTable == null || timeTable.Count() < 7) throw new NoDataException("company has no timetable");
-            return timeTable;
-        }
-
-        private double CalcWorkingDayDurationMin(DateTime? beg, DateTime? end)
-        {
-            if (beg == null || end == null)
-                return 0;
-            var timeStartWorkingDay = DateTime.Now.Date.AddHours(((DateTime)beg).Hour).AddMinutes(((DateTime)beg).Minute);
-            var timeEndWorkingDay = DateTime.Now.Date.AddHours(((DateTime)end).Hour).AddMinutes(((DateTime)end).Minute);
-            return timeEndWorkingDay.Subtract(timeStartWorkingDay).TotalMinutes;
-        }
+        //private double TimetableHours(DateTime beg, DateTime end, Guid companyId, List<Guid> devices)
+        //{
+        //    int active = 3;
+        //    var timeTable = GetTimeTable(companyId);
+        //    var devicesAmount = devices
+        //        .Where(x => x.CompanyId == companyId ))
+        //        .Count();
+        //    double totalHours = 0;
+        //    for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
+        //    {
+        //        totalHours += timeTable[(int)i.DayOfWeek];
+        //    }
+        //    return totalHours * devicesAmount;
+        //}
 
         private async Task<IEnumerable<BenchmarkModel>> GetBenchmarksList(DateTime begTime, DateTime endTime, List<Guid> companyIds)
         {
@@ -362,43 +361,26 @@ namespace UserOperations.Services
             return industryIds;
         }
 
-        public List<double> WorkingDaysTimeListInMinutes(WorkingTime[] timeTable, DateTime beg, DateTime end, List<Guid> companyIds, string role)
-        {
-            int active = 3;
-            List<double> times = new List<double>();
-            if (role == "Admin") return times;
+     
 
-            if (!timeTable.Any()) return null;
-                foreach (var companyId in companyIds)
-                {
-                    var devicesAmount = _repository.GetAsQueryable<Device>().Where(x => x.CompanyId == companyId && x.StatusId == active).Count();
-                    if (devicesAmount == 0) continue;
-                    var timeTableForComp = GetTimeTable(companyId);
-                    for (int d = 0; d < devicesAmount; d++)
-                    {
-                        for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
-                        {
-                                times.Add(timeTableForComp[(int)i.DayOfWeek]);
-                        }
-                    }
-                }
-                return times;
-        }
-
-        public List<double> DialogueAvgPauseListInMinutes(WorkingTime[] timeTable, List<DialogueInfo> dialogues, DateTime beg, DateTime end, string role, List<Guid> companyIds)
+        public List<double> DialogueAvgPauseListInMinutes(
+                            WorkingTime[] timeTable,
+                            List<DialogueInfo> dialogues,
+                            DateTime beg, DateTime end, 
+                            string role, 
+                            List<Guid> companyIds,
+                            List<Device> devices)
         {
             int active = 3;
             List<double> pauses = new List<double>();
             if (!timeTable.Any() || !dialogues.Any()) return null;
-
             if (role == "Admin") return pauses;
 
-            if (!timeTable.Any()) return null;
             foreach (var companyId in companyIds)
             {
-                var devices = _repository.GetAsQueryable<Device>().Where(x => x.CompanyId == companyId && x.StatusId == active).Select(x => x.DeviceId).ToList();
-                if (devices.Count() == 0) continue;
-                foreach (var devId in devices)
+                var deviceIds = devices.Where(x => x.CompanyId == companyId).Select(x => x.DeviceId).ToList();
+                if (deviceIds.Count() == 0) continue;
+                foreach (var devId in deviceIds)
                 {
                     for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
                     {
@@ -429,6 +411,11 @@ namespace UserOperations.Services
                                     times.Add(dialogInDay[j].BegTime);
                                     times.Add(dialogInDay[j].EndTime);
                                 }
+                                else
+                                {
+                                    times.Remove(times.Last());
+                                    times.Add(dialogInDay[j].EndTime);
+                                }
                             }
                             times.Add(timeEndWorkingDay);
 
@@ -442,60 +429,7 @@ namespace UserOperations.Services
                     }
                 }
                 }
-        
-
          return pauses;
-         //   return times;
-
-
-
-            //foreach (var dialogue in dialogues.GroupBy(x => x.DeviceId))
-            //{
-                //for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
-                //{
-                //    try
-                //    {
-                //        var endDay = i.AddDays(1);
-                //        var workingHours = timeTable.Where(x => x.CompanyId == dialogue.First().CompanyId).ToArray()[(int)i.DayOfWeek];
-                //        if (workingHours.BegTime == null) continue;
-
-
-                //        var dialogInDay = dialogue
-                //              .Where(p => p.BegTime >= i && p.EndTime <= endDay)
-                //              .OrderBy(p => p.BegTime).ToArray();
-
-                //        List<DateTime> times = new List<DateTime>();
-                //        var timeStartWorkingDay = i.AddHours(((DateTime)workingHours.BegTime).Hour).AddMinutes(((DateTime)workingHours.BegTime).Minute);
-                //        var timeEndWorkingDay = i.AddHours(((DateTime)workingHours.EndTime).Hour).AddMinutes(((DateTime)workingHours.EndTime).Minute);
-                //        if (!dialogInDay.Any())
-                //        {
-                //            pauses.Add(timeEndWorkingDay.Subtract(timeStartWorkingDay).TotalMinutes);
-                //            continue;
-                //        }
-
-
-                //        times.Add(timeStartWorkingDay);
-                //        for (var j = 0; j < dialogInDay.Count(); j++)
-                //        {
-                //            if (j == 0 || dialogInDay[j].BegTime >= dialogInDay[j - 1].EndTime)
-                //            {
-                //                times.Add(dialogInDay[j].BegTime);
-                //                times.Add(dialogInDay[j].EndTime);
-                //            }
-                //        }
-                //        times.Add(timeEndWorkingDay);
-
-                //        for (int j = 0; j < times.Count() - 1; j += 2)
-                //        {
-                //            var pause = (times[j + 1].Subtract(times[j])).TotalMinutes;
-                //            pauses.Add(pause < 0 ? 0 : pause);
-                //        }
-                //    }
-                //    catch { }
-                //}
-            //}
-
-           
         }
 
     }

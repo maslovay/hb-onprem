@@ -130,5 +130,7 @@ namespace HBData.Models
         /// </summary>
         public ICollection<DialogueWord> DialogueWord { get; set; }
         public ICollection<DialoguePhrase> DialoguePhrase { get; set; }
+
+        [JsonIgnore] public ICollection<SlideShowSession> SlideShowSessions { get; set; }
     }
 }

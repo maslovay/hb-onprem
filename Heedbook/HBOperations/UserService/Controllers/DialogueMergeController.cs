@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
 using HBLib.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,19 +19,22 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class DialogueMergeController : Controller
     {
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
-//        private readonly ElasticClient _log;
+        private readonly CheckTokenService _service;
+        //        private readonly ElasticClient _log;
 
 
-        public DialogueMergeController(INotificationHandler handler, RecordsContext context/*, ElasticClient log*/)
+        public DialogueMergeController(INotificationHandler handler, RecordsContext context, CheckTokenService service/*, ElasticClient log*/)
         {
             _handler = handler;
             _context = context;
-//            _log = log;
+            _service = service;
+            //            _log = log;
         }
 
         [HttpPost]
@@ -40,10 +44,11 @@ namespace UserService.Controllers
             [FromQuery] String begTime,
             [FromQuery] String endTime)
         {
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {  
 //                _log.Info("Function Video save info started");
-                var dateFormat = "dd.MM.yyyy HH:mm:ss";
+                var dateFormat = "HH:mm:ss dd.MM.yyyy";
 
                 Guid? userId = null;
                 if(Email != null)

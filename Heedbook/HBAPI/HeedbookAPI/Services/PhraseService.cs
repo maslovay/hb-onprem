@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models;
+using UserOperations.Utils;
 
 namespace UserOperations.Services
 {
@@ -163,8 +164,8 @@ namespace UserOperations.Services
         {
             Guid? salesStageId = (await _repository.FindOrNullOneByConditionAsync<SalesStagePhrase>
                     (x => x.PhraseId == phraseId
-                        && ((x.CompanyId == companyId || x.CorporationId == corporationId 
-                        || (x.CompanyId == null && x.Corporation == null)))))?.SalesStageId;            
+                        && ((x.CompanyId == companyId || x.CorporationId == corporationId
+                        || (x.CompanyId == null && x.Corporation == null)))))?.SalesStageId;
             return salesStageId;
         }
 

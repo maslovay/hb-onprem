@@ -7,6 +7,7 @@ using HBLib;
 using HBLib.Utils;
 using HBMLHttpClient;
 using HBMLOnlineService.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -17,6 +18,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace HBMLOnlineService.Controllers
 {
     [Route("face")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class HBMLOnlineService : Controller
     {
@@ -62,6 +64,7 @@ namespace HBMLOnlineService.Controllers
                     var faceResults = await _hbmlservice.UploadFrameAndGetFaceResultAsync(base64String, filename, description, emotions, headpose, attributes);
                     if (faceResults.Any())
                     {
+                        faceResults = faceResults.OrderByDescending(p => p.Rectangle.Height * p.Rectangle.Width).ToList();
                         _hbmlservice.PublishMessageToRabbit(deviceId, companyId, filename, faceResults);
                     }
                     _log.Info("Function finished");

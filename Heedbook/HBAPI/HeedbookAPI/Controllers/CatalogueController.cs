@@ -4,12 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using HBData.Models;
 using UserOperations.Services;
 using Swashbuckle.AspNetCore.Annotations;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
+   // [AllowAnonymous]
     [ControllerExceptionFilter]
     public class CatalogueController : Controller
     {        
@@ -26,11 +27,13 @@ namespace UserOperations.Controllers
             _catalogueService.CountrysGet();
         
         [HttpGet("Role")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Description = "Return all available user roles. Does not require to transfer a token")]
         public IEnumerable<ApplicationRole> RolesGet() =>
             _catalogueService.RolesGet();
 
         [HttpGet("DeviceType")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "Return device types", Description = "Return all available device types")]
         [SwaggerResponse(200, "Content", typeof(DeviceType))]
         public IEnumerable<object> DeviceTypeGet() =>
@@ -47,11 +50,13 @@ namespace UserOperations.Controllers
             _catalogueService.LanguageGet();
 
         [HttpGet("PhraseType")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Description = "Return all available phrase types. Does not require to transfer a token")]
         public IEnumerable<PhraseType> PhraseTypeGet() =>
             _catalogueService.PhraseTypeGet();
 
         [HttpGet("AlertType")]
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Description = "Return all available alert types. Does not require to transfer a token")]
         public IEnumerable<AlertType> AlertTypeGet() =>
             _catalogueService.AlertTypeGet();

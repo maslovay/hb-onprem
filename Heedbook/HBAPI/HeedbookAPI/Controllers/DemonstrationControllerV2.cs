@@ -6,6 +6,8 @@ using UserOperations.Services;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Controllers;
+using UserOperations.Models;
+using UserOperations.Utils;
 
 namespace UserOperations.ControllersV2
 {
@@ -36,7 +38,7 @@ namespace UserOperations.ControllersV2
         [SwaggerOperation(Summary = "Save answer from poll", Description = "Receive answer from device and save it connected to campaign and content. User Id take from token")]
         [SwaggerResponse(400, "Invalid data or error in DB connection", typeof(string))]
         [SwaggerResponse(200, "Saved")]
-        public async Task<string> PollAnswer([FromBody] CampaignContentAnswer answer) =>
+        public async Task<string> PollAnswer([FromBody] CampaignContentAnswerModel answer) =>
             await _demonstrationService.PollAnswer(answer);
     }   
 }

@@ -64,7 +64,7 @@ namespace UserOperations.Services
                     companyIds,
                     applicationUserIds,
                     deviceIds);
-                var dialogues = GetDialogues(
+                var dialogues = GetUserDialogues(
                     begTime, 
                     endTime, 
                     companyIds, 
@@ -217,7 +217,7 @@ namespace UserOperations.Services
             return roleId;
         }
 
-        private List<DialogueInfo> GetDialogues(
+        private List<DialogueInfo> GetUserDialogues(
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
@@ -230,6 +230,7 @@ namespace UserOperations.Services
                     && p.StatusId == 3
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
+                    && p.ApplicationUserId != null
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .Select(p => new DialogueInfo

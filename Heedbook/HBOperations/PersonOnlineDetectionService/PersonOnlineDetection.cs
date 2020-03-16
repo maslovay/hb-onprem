@@ -55,7 +55,10 @@ namespace PersonOnlineDetectionService
             {
                 var begTime = DateTime.Now.AddDays(-30);
                 var lastClientsInfo = _context.Clients
-                    .Where(p => p.CompanyId == message.CompanyId && p.LastDate >= begTime && p.FaceDescriptor.Any())
+                    .Where(p => p.CompanyId == message.CompanyId 
+                        && p.LastDate >= begTime 
+                        && p.FaceDescriptor.Any()
+                        && p.StatusId == 3)
                     .ToList();
                 // var lastClientsInfo = _context.ClientNotes
                     // .Include(p => p.Client)
@@ -75,12 +78,15 @@ namespace PersonOnlineDetectionService
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
                     _log.Info("Send to webscoket");
+                    _personDetectionUtils.CreateClientSession((Guid) clientId, $"{clientId}.jpg");
+                    _log.Info("Created client session");
                     // System.Console.WriteLine(result);
                     
                 }
                 else
                 {
                     var curTime = DateTime.UtcNow;
+                    _personDetectionUtils.CreateClientSession((Guid) clientId, message.Path);
                     lastClientsInfo.Where(p => p.ClientId == clientId).ToList().ForEach(p => p.LastDate = curTime);
                     _context.SaveChanges();
                     // System.Console.WriteLine("Last time updated");

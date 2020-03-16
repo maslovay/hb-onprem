@@ -80,7 +80,7 @@ namespace UserOperations.Services
 
                 // var companysPhrases = _analyticSpeechProvider.GetCompanyPhrases(companyIds);
                 
-                var dialogueIds = GetDialogueIds(
+                var dialogueIds = GetDialogueDeviceIds(
                     begTime,
                     endTime,
                     companyIds,
@@ -123,7 +123,7 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var dialogueIds = GetDialogueIds(
+                var dialogueIds = GetDialogueDeviceIds(
                     begTime,
                     endTime,
                     companyIds,
@@ -210,7 +210,7 @@ namespace UserOperations.Services
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
 
-                var dialogueIds = GetDialogueIds(
+                var dialogueIds = GetDialogueDeviceIds(
                     begTime,
                     endTime,
                     companyIds,
@@ -324,12 +324,31 @@ namespace UserOperations.Services
                 .ToList();
             return companysPhrases;
         }
-        private List<Guid> GetDialogueIds(
+        private List<Guid> GetDialogueDeviceIds(
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
             List<Guid?> applicationUserIds,
             List<Guid> deviceIds)
+        {
+            var dialogueIds = _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.EndTime >= begTime
+                    && p.EndTime <= endTime
+                    && p.StatusId == 3
+                    && p.InStatistic == true)
+                .Where(p => (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
+                    && (!applicationUserIds.Any() || ( p.ApplicationUserId != null && applicationUserIds.Contains(p.ApplicationUserId)))
+                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                .Select(p => p.DialogueId).ToList();
+            return dialogueIds;
+        }
+
+        private List<Guid> GetDialogueUserIds(
+          DateTime begTime,
+          DateTime endTime,
+          List<Guid> companyIds,
+          List<Guid?> applicationUserIds,
+          List<Guid> deviceIds)
         {
             var dialogueIds = _repository.GetAsQueryable<Dialogue>()
                 .Where(p => p.EndTime >= begTime
@@ -425,7 +444,7 @@ namespace UserOperations.Services
                     List<Guid> salesStageIds
      )
         {
-            var dialogueIds = companyIds.Count()==0? new List<Guid>() : GetDialogueIds(begTime, endTime, companyIds, applicationUserIds, deviceIds);
+            var dialogueIds = companyIds.Count()==0? new List<Guid>() : GetDialogueDeviceIds(begTime, endTime, companyIds, applicationUserIds, deviceIds);
 
             var phrases = _repository.GetAsQueryable<DialoguePhrase>()
                     .Where(p => p.PhraseId != null
@@ -467,7 +486,7 @@ namespace UserOperations.Services
     {
             var corporationId = _repository.GetAsQueryable<Company>()
               .Where(x => x.CompanyId == companyId).Select(x => x.CorporationId).FirstOrDefault();
-            var dialogueIds = GetDialogueIds(begTime, endTime, new List<Guid> { companyId }, applicationUserIds, deviceIds);
+            var dialogueIds = GetDialogueDeviceIds(begTime, endTime, new List<Guid> { companyId }, applicationUserIds, deviceIds);
 
             var phrases = _repository.GetAsQueryable<DialoguePhrase>()
                     .Where(p => p.PhraseId != null

@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 using FileResult = Microsoft.AspNetCore.Mvc.FileResult;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -44,6 +45,7 @@ namespace UserOperations.Controllers
             [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds)
         {
             _loginService.GetCurrentUserId();
+            _loginService.GetCurrentCompanyId();
             var stringFormat = "yyyyMMddHHmmss";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
 

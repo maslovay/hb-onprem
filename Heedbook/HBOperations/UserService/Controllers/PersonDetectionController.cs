@@ -8,33 +8,40 @@ using HBData.Models;
 using HBData.Repository;
 using System;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using HBLib.Utils;
 
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class PersonDetectionController : ControllerBase
     {
         private readonly INotificationHandler _handler;
         private readonly RecordsContext _context;
-        public PersonDetectionController(INotificationHandler handler, RecordsContext context )
+        private readonly CheckTokenService _service;
+        public PersonDetectionController(INotificationHandler handler, RecordsContext context, CheckTokenService service)
         {
             _handler = handler;
             _context = context;
+            _service = service;
         }
 
         [HttpPost("PersonDetectionRun")]
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
-        public async Task PersonDetectionRun([FromBody] PersonDetectionRun message)
+        public async Task<IActionResult> PersonDetectionRun([FromBody] PersonDetectionRun message)
         {
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
+            return Ok();
         }
 
         [HttpPost("PersonDetectionAllUsersRun")]
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
-        public async Task PersonDetectionAllDevicesRun()
+        public async Task<IActionResult> PersonDetectionAllDevicesRun()
         {
-            
+            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var begTime = DateTime.UtcNow.AddDays(-30);
             var devices = _context.Dialogues.Where(p => p.BegTime > begTime)
                 .Select(p => p.DeviceId)
@@ -44,6 +51,7 @@ namespace UserService.Controllers
                 DeviceIds = devices
             };
             _handler.EventRaised(message);
+            return Ok();
         }
     }
 }

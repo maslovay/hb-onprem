@@ -49,6 +49,8 @@ namespace Common
         
         public Guid TestUserId => Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
 
+        public Guid TestDeviceId => Guid.Parse("35719f44-11e7-4227-8d28-7772ba437a3b");
+
         private string testCompanyName = "TESTCOMPANY_89083091293392183";
 
         private string testIndustryName = "TESTINDUSTRY";
@@ -59,9 +61,7 @@ namespace Common
             Config = new ConfigurationBuilder()
                 .ConfigureBuilderForTests()
                 .Build();
-            
             _additionalInitialization = additionalInitialization;
-         
             InitServiceProvider();
             InitGeneralServices();
             InitServices();
@@ -73,17 +73,18 @@ namespace Common
 
         public async virtual Task TearDown()
         {
-            PublishResults();
+            //PublishResults();
             await CleanTestData();
         }
 
         private static void PublishResults()
         {
-            var resultsPath = Path.Combine(Environment.CurrentDirectory, "../../../TestResults", "results.trx");
-            var resultsText = File.ReadAllText(resultsPath);
+            var resultsPath = Path.Combine(Environment.CurrentDirectory, "TestResults");
+            var fileName = Directory.GetFiles(resultsPath).FirstOrDefault(p => p.Contains("results"));
+            var resultsText = File.ReadAllText(resultsPath + fileName);
 
             var wr = WebRequest.Create(
-                "http://hbonpremalarmserver.canadacentral.cloudapp.azure.com/api/ExpressTester/PublishUnitTestResults");
+                "https://heedbookapi.northeurope.cloudapp.azure.com/user/ExpressTester/PublishUnitTestResults");
             wr.ContentType = "application/json";
             wr.Method = "POST";
             
@@ -186,6 +187,20 @@ namespace Common
                 appUser.CompanyId = company.CompanyId;
                 _repository.Update(appUser);
             }
+            
+            var device = _repository.Get<Device>().FirstOrDefault(u => u.DeviceId == TestDeviceId);
+            if (device == default(Device))
+            {
+                _repository.AddOrUpdate(new Device()
+                {
+                    DeviceId = TestDeviceId,
+                    Code = "TSTDEV",
+                    Name = "TestDeviceForIntegrationTests",
+                    CompanyId = company.CompanyId,
+                    DeviceTypeId = Guid.Parse("b29a6c53-fbdf-4dba-930b-95a267e4e313"),
+                    StatusId = 3
+                });
+            }
 
             if (!_repository.Get<Dialogue>().Any())
             {
@@ -197,7 +212,8 @@ namespace Common
                     EndTime = DateTime.Now.AddMinutes(-45),
                     ApplicationUserId = TestUserId,
                     LanguageId = null,
-                    StatusId = null
+                    StatusId = null,
+                    DeviceId = device.DeviceId
                 };
                 
                 _repository.AddOrUpdate(dialog);
@@ -253,7 +269,8 @@ namespace Common
                 StatusId = null,
                 SysVersion = "",
                 InStatistic = false,
-                Comment = "test dialog!!!"
+                Comment = "test dialog!!!",
+                DeviceId = TestDeviceId
             };
 
         public DateTime GetDateTimeFromFileFrameName(string inputFilePath) =>
