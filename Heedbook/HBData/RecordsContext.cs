@@ -19,13 +19,14 @@ namespace HBData
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            // optionsBuilder.UseNpgsql("User ID=heedbook_user;Password=Oleg&AnnaRulyat_1975;Host=40.87.153.4;Port=5432;Database=heedbook_db;Pooling=true;Timeout=120;CommandTimeout=0");
+            // optionsBuilder.UseNpgsql("User ID=;Password=;Host=;Port=;Database=;Pooling=true;Timeout=120;CommandTimeout=0");
         }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.Entity<Client>().HasQueryFilter(m => m.StatusId == 3);
 
             builder.Entity<ApplicationUser>(i =>
             {

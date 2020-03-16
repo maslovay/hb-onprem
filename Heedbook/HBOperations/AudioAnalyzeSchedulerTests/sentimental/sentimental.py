@@ -71,7 +71,7 @@ class Sentimental(object):
             stemmed_token = self.stemmer.stem(token)
             if stemmed_token in self.word_list and not is_prefixed_by_negation:
                 score = self.word_list[stemmed_token]
-
+                
                 score_type = 'negative' if score < 0 else 'positive'
                 scores[score_type] += score
                 words[score_type].append(stemmed_token)

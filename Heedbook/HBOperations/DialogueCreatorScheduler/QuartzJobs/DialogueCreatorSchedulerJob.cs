@@ -69,7 +69,8 @@ namespace DialogueCreatorScheduler.QuartzJobs
                     .ToList();
 
                 var clients = _context.Clients
-                    .Where(p => fileFrames.Select(q => q.Device.CompanyId).Contains( p.CompanyId))
+                    .Where(p => fileFrames.Select(q => q.Device.CompanyId).Contains( p.CompanyId) &&
+                        p.StatusId == 3)
                     .ToList();
 
                 var devideIds = fileFrames.Select(p => p.DeviceId).Distinct();
