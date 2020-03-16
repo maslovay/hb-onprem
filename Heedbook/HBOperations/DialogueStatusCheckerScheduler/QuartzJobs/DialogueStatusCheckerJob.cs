@@ -33,14 +33,11 @@ namespace QuartzExtensions.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            System.Console.WriteLine("Function started");
             using (var scope = _scopeFactory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
-                _log.Info("Audio analyze scheduler started.");
                 try
                 {
-                    _log.Info("Function started.");
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     var dialogues = _context.Dialogues
                         .Include(p => p.DialogueFrame)
@@ -62,16 +59,21 @@ namespace QuartzExtensions.Jobs
                         return;
                     }
 
+                    _log.Info($"DialogueStatusChecker for {dialogues.Count} dialogues.");
                     foreach (var dialogue in dialogues)
                     {
 
-                        if ((dialogue.Device.Company.IsExtended && dialogue.DialogueAudio.Any() &&
-                            dialogue.DialogueInterval.Any() &&
-                            dialogue.DialogueVisual.Any() &&
-                            dialogue.DialogueClientProfile.Any() &&
-                            dialogue.DialogueFrame.Any()) || (!dialogue.Device.Company.IsExtended &&  dialogue.DialogueVisual.Any() &&
-                            dialogue.DialogueClientProfile.Any() &&
-                            dialogue.DialogueFrame.Any()))
+                        if (
+                                (dialogue.Device.Company.IsExtended && dialogue.DialogueAudio.Any() &&
+                                dialogue.DialogueInterval.Any() &&
+                                dialogue.DialogueVisual.Any() &&
+                                dialogue.DialogueClientProfile.Any() &&
+                                dialogue.DialogueFrame.Any()) 
+                                || 
+                                (!dialogue.Device.Company.IsExtended &&  dialogue.DialogueVisual.Any() &&
+                                dialogue.DialogueClientProfile.Any() &&
+                                dialogue.DialogueFrame.Any())
+                            )
                         {
                             
                             if (CheckDialogue(dialogue))
@@ -88,6 +90,12 @@ namespace QuartzExtensions.Jobs
                                         };
                                         _notificationPublisher.Publish(@event);
                                     }
+                                    var @eventFillSlideShowDialogue = new FillSlideShowDialogueRun
+                                    {
+                                        DialogueId = dialogue.DialogueId
+                                    };
+                                    _notificationPublisher.Publish(@eventFillSlideShowDialogue);
+                                    _log.Info($"FillSlideShowDialogueRun");
                                 }
                                 else
                                 {
