@@ -49,22 +49,22 @@
                                                                         <table style="background-position: left top;" width="100%" cellspacing="0" cellpadding="0">
                                                                             <tbody>
                                                                                 <tr>
-                                                                                    <td align="center"><a target="_blank"><img src="http://hbfilereference.northeurope.cloudapp.azure.com/media/dfe841c7-20e7-4f25-8e67-400b4366ce27/b5c5c2d8-7877-40dc-84f6-3fbb875f14cd.png" style="display: block;" height="150" /></a></td>
+                                                                                    <td align="center"><a target="_blank"><img src="@(Model.FileRef)/mainLogo.png" style="display: block;" height="150" /></a></td>
                                                                                 </tr>
                                                                                 <tr>
                                                                                     <td align="center" style="line-height: 0px; padding: 20px 0px 0px 0px;">
-                                                                                        <h1 style="color: #999999; font-size: 22px;"><strong>@(Model.greeting)</strong></h1><!--Вы зарегистрировались в системе Heedbook-->
+                                                                                        <h1 style="color: #999999; font-size: 22px;"><strong>@(Model.Greeting)</strong></h1><!--Вы зарегистрировались в системе Heedbook-->
                                                                                     </td>
                                                                                 </tr>
-                                                                                @if(Model.body != null)
+                                                                                @if(Model.Body != null)
                                                                                 {
                                                                                 <tr>
                                                                                     <td align="center" style="line-height: 0px; padding: 5px 0px 5px 0px;">
-                                                                                        <p style="color: #999999; font-size: 16px;"><strong>@(Model.body)</strong></p>
+                                                                                        <p style="color: #999999; font-size: 16px;"><strong>@(Model.Body)</strong></p>
                                                                                     </td>
                                                                                 </tr>
                                                                                 }
-                                                                                @if(Model.button != null)
+                                                                                @if(Model.Button != null)
                                                                                 {
                                                                                 <tr>
                                                                                     <td align="center" style="padding: 30px 0px 0px 0px;">
@@ -72,53 +72,53 @@
                                                                                             <tr>
                                                                                                 <td height="70" style="border-radius: 10px !important; border-color: rgb(61, 92, 163); background: rgb(27, 57, 109); text-align: center; font-size: 22px; font-family: sans-serif; font-weight: bold; padding: 0 70px 0 70px;">
                                                                                                     <!--ТЕКСТ И ССЫЛКА КНОПКИ-->
-                                                                                                    <a style="color: #d2d5da; text-decoration: none;" href="https://app.heedbook.com/">@(Model.button)</a>
+                                                                                                    <a style="color: #d2d5da; text-decoration: none;" href="https://my.heedbook.com/">@(Model.Button)</a>
                                                                                                 </td>
                                                                                             </tr>
                                                                                         </table>
                                                                                     </td>
                                                                                 </tr>
                                                                                 }
-                                                                                @if(Model.login != null)
+                                                                                @if(Model.Login != null)
                                                                                 {
                                                                                 <tr>
                                                                                     <td align="center" style="line-height: 0px; padding: 5px;">
-                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.login)</strong></p>
+                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.Login)</strong></p>
                                                                                     </td>
                                                                                 </tr>
                                                                                 }
-                                                                                @if(Model.pswd != null)
+                                                                                @if(Model.Pswd != null)
                                                                                 {
                                                                                 <tr>
                                                                                     <td align="center" style="line-height: 0px; padding: 5px;">
-                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.pswd)</strong></p>
+                                                                                        <p style="color: #999999; font-size: 18px;"><strong>@(Model.Pswd)</strong></p>
                                                                                     </td>
                                                                                 </tr>
                                                                                 }
                                                                                 <tr>
                                                                                     <td align="center" style="padding: 25px 0px 0px; line-height: 0px;">
                                                                                         <p style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
-                                                                                            @Model.text1
-                                                                                            <a style="color: #999999; text-decoration: none; font-weight: 800;" href="https://www.heedbook.com/"> @Model.text2</a>
-                                                                                            @Model.text3
+                                                                                            @Model.Text1
+                                                                                            <a style="color: #999999; text-decoration: none; font-weight: 800;" href="https://www.heedbook.com/"> @Model.Text2</a>
+                                                                                            @Model.Text3
                                                                                         </p>
                                                                                     </td>
                                                                                 </tr>
-                                                                                @if(Model.text4 != null)
+                                                                                @if(Model.Text4 != null)
                                                                                 {
                                                                                 <tr>
                                                                                     <td align="center" style="padding: -5px 0px 15px;  line-height: 0px;">
                                                                                         <span style="color: #999999; font-size: 18px; font-family: sans-serif; font-weight: normal;">
-                                                                                            @Model.text4
+                                                                                            @Model.Text4
                                                                                         </span>
                                                                                     </td>
                                                                                 </tr>
                                                                                 }
-                                                                                @if(Model.text5 != null)
+                                                                                @if(Model.Text5 != null)
                                                                                 {
                                                                                 <tr>
                                                                                     <td align="center" style="padding: 30px 0px 30px;">
-                                                                                        <span style="color: #999999; text-decoration: none; font-size: 18px; font-family: sans-serif;">@(Model.text5)</span>
+                                                                                        <span style="color: #999999; text-decoration: none; font-size: 18px; font-family: sans-serif;">@(Model.Text5)</span>
                                                                                         <a href="mailto:support@heedbook.com"><span style="color: #999999; text-decoration: none; font-size: 18px; font-weight: bold; font-family: sans-serif;">support@heedbook.com</span></a>
 
                                                                                     </td>
@@ -142,7 +142,7 @@
                                                                             <tbody>
                                                                                 <tr>
                                                                                     <td esd-links-color="#ffffff" align="center">
-                                                                                        <p style="font-size: 18px; font-family: sans-serif; color: rgb(27, 57, 109);">- @(Model.footer)</p>
+                                                                                        <p style="font-size: 18px; font-family: sans-serif; color: rgb(27, 57, 109);">- @(Model.Footer)</p>
                                                                                     </td>
                                                                                 </tr>
                                                                             </tbody>
@@ -199,7 +199,7 @@
                                                                                         <table cellpadding="0" cellspacing="0" width="100%">
                                                                                             <tbody>
                                                                                                 <tr>
-                                                                                                    <td align="center" class="esd-block-image es-p10"><a href="https://www.facebook.com/heedbook"><img class="adapt-img" src="http://hbfilereference.northeurope.cloudapp.azure.com/media/fbLogo.png" style="display: block;" width="45" /></a></td>
+                                                                                                    <td align="center" class="esd-block-image es-p10"><a href="https://www.facebook.com/heedbook"><img class="adapt-img" src="@(Model.FileRef)//fbLogo.png" style="display: block;" width="45" /></a></td>
                                                                                                 </tr>
                                                                                             </tbody>
                                                                                         </table>
@@ -217,7 +217,7 @@
                                                                                         <table cellpadding="0" cellspacing="0" width="100%">
                                                                                             <tbody>
                                                                                                 <tr>
-                                                                                                    <td align="center" class="esd-block-image es-p10"><a href="https://www.instagram.com/heedbook/"><img class="adapt-img" src="http://hbfilereference.northeurope.cloudapp.azure.com/media/instaLogo.png" style="display: block;" width="45" /></a></td>
+                                                                                                    <td align="center" class="esd-block-image es-p10"><a href="https://www.instagram.com/heedbook/"><img class="adapt-img" src="@(Model.FileRef)/instaLogo.png" style="display: block;" width="45" /></a></td>
                                                                                                 </tr>
                                                                                             </tbody>
                                                                                         </table>
@@ -235,7 +235,7 @@
                                                                                         <table cellpadding="0" cellspacing="0" width="100%">
                                                                                             <tbody>
                                                                                                 <tr>
-                                                                                                    <td align="center" class="esd-block-image es-p10"><a href="https://www.youtube.com/channel/UCmJ1XAToncoc8IWFoImObdQ"><img class="adapt-img" src="http://hbfilereference.northeurope.cloudapp.azure.com/media/youtubeLogo.png" style="display: block;" width="45" /></a></td>
+                                                                                                    <td align="center" class="esd-block-image es-p10"><a href="https://www.youtube.com/channel/UCmJ1XAToncoc8IWFoImObdQ"><img class="adapt-img" src="@(Model.FileRef)/youtubeLogo.png" style="display: block;" width="45" /></a></td>
                                                                                                 </tr>
                                                                                             </tbody>
                                                                                         </table>

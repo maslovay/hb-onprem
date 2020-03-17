@@ -1,83 +1,83 @@
 {
-  "registerManager": [
+  "RegisterManager": [
     {
-      "language": "1",
-      "emailSubject": "Welcome to Heedbook ",
-      "greeting": "You have signed up for Heedbook.",
-      "body": "Now you can increase your office productivity!",
-      "button": "Get started",
-      "text1": "",
-      "text2": "Here ",
-      "text3": "you can find answers to the questions ",
-      "text4": "we get asked the most about our system.",
-      "text5": "To solve other issues, send the request to",
-      "footer": "Heedbook Team"
+      "Language": "1",
+      "EmailSubject": "Welcome to Heedbook ",
+      "Greeting": "You have signed up for Heedbook.",
+      "Body": "Now you can increase your office productivity!",
+      "Button": "Get started",
+      "Text1": "",
+      "Text2": "Here ",
+      "Text3": "you can find answers to the questions ",
+      "Text4": "we get asked the most about our system.",
+      "Text5": "To solve other issues, send the request to",
+      "Footer": "Heedbook Team"
     },
     {
-      "language": "2",
-      "emailSubject": "Регистрация в системе Heedbook",
-      "greeting": "Вы зарегистрировались в системе Heedbook.",
-      "body": "Теперь можно сделать свой офис еще эффективнее.",
-      "button": "Get started",
-      "text1": "Ответы на популярные вопросы",
-      "text2": "тут",
-      "text3": "",
-      "text5": "В остальном поможет",
-      "footer": "Команда Heedbook с заботой о клиентах"
+      "Language": "2",
+      "EmailSubject": "Регистрация в системе Heedbook",
+      "Greeting": "Вы зарегистрировались в системе Heedbook.",
+      "Body": "Теперь можно сделать свой офис еще эффективнее.",
+      "Button": "Get started",
+      "Text1": "Ответы на популярные вопросы",
+      "Text2": "тут",
+      "Text3": "",
+      "Text5": "В остальном поможет",
+      "Footer": "Команда Heedbook с заботой о клиентах"
     }
   ],
-  "registerUser": [
+  "RegisterUser": [
     {
-      "language": "1",
-      "emailSubject": "Welcome to Heedbook ",
-      "greeting": "Hello, ",
-      "body": "Your manager has provided you with access to the Heedbook system.",
-      "button": "Get started",
-      "login": "Your login: ",
-      "pswd": "Your password: ",
-      "text1": "",
-      "text2": "Here ",
-      "text3": "you can find answers to the questions ",
-      "text4": "we get asked the most about our system.",
-      "text5": "To solve other issues, send the request to",
-      "footer": "Heedbook Team"
+      "Language": "1",
+      "EmailSubject": "Welcome to Heedbook ",
+      "Greeting": "Hello, ",
+      "Body": "Your manager has provided you with access to the Heedbook system.",
+      "Button": "Get started",
+      "Login": "Your login: ",
+      "Pswd": "Your password: ",
+      "Text1": "",
+      "Text2": "Here ",
+      "Text3": "you can find answers to the questions ",
+      "Text4": "we get asked the most about our system.",
+      "Text5": "To solve other issues, send the request to",
+      "Footer": "Heedbook Team"
     },
     {
-      "language": "2",
-      "emailSubject": "Регистрация в системе Heedbook",
-      "greeting": "Здравствуйте, ",
-      "body": "Ваш руководитель предоставил вам доступ к системе Heedbook.",
-      "button": "начать работу:",
-      "login": "Логин ",
-      "pswd": "Пароль: ",
-      "text1": "Ответы на популярные вопросы",
-      "text2": "тут",
-      "text3": "",
-      "text5": "В остальном поможет",
-      "footer": "Команда Heedbook с заботой о клиентах"
+      "Language": "2",
+      "EmailSubject": "Регистрация в системе Heedbook",
+      "Greeting": "Здравствуйте, ",
+      "Body": "Ваш руководитель предоставил вам доступ к системе Heedbook.",
+      "Button": "начать работу:",
+      "Login": "Логин ",
+      "Pswd": "Пароль: ",
+      "Text1": "Ответы на популярные вопросы",
+      "Text2": "тут",
+      "Text3": "",
+      "Text5": "В остальном поможет",
+      "Footer": "Команда Heedbook с заботой о клиентах"
     }
   ],
-    "passwordChange":
+    "PasswordChange":
     [
       {
-        "language": "1",
-        "emailSubject": "Password recovery",
-        "greeting": "Hello, ",
-        "pswd": "Your new password: ",
-        "text1": "Change this password in ",
-        "text2": "your account, ",
-        "text4": "it is safer than storing the password in the mail.",
-        "footer": "Heedbook Team"
+        "Language": "1",
+        "EmailSubject": "Password recovery",
+        "Greeting": "Hello, ",
+        "Pswd": "Your new password: ",
+        "Text1": "Change this password in ",
+        "Text2": "your account, ",
+        "Text4": "it is safer than storing the password in the mail.",
+        "Footer": "Heedbook Team"
       },
       {
-        "language": "2",
-        "emailSubject": "Восстановление пароля",
-        "greeting": "Здравствуйте, ",
-        "pswd": "Ваш новый пароль: ",
-        "text1": "Смените его в ",
-        "text2": " личном кабинете, ",
-        "text4": "это безопаснее, чем хранить пароль в почте.",
-        "footer": "Команда Heedbook с заботой о клиентах"
+        "Language": "2",
+        "EmailSubject": "Восстановление пароля",
+        "Greeting": "Здравствуйте, ",
+        "Pswd": "Ваш новый пароль: ",
+        "Text1": "Смените его в ",
+        "Text2": " личном кабинете, ",
+        "Text4": "это безопаснее, чем хранить пароль в почте.",
+        "Footer": "Команда Heedbook с заботой о клиентах"
       }
     ]
 }
