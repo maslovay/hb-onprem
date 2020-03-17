@@ -38,107 +38,6 @@ namespace UserOperations.Services
             _dbOperations = dbOperations;
         }
 
-
-        //public async Task<string> GetDashboard( string beg, string end,
-        //                                                List<Guid> companyIds, List<Guid> corporationIds,
-        //                                                List<Guid> deviceIds)
-        //{
-        //        var role = _loginService.GetCurrentRoleName();
-        //        var companyId = _loginService.GetCurrentCompanyId();
-
-        //        var begTime = _requestFilters.GetBegDate(beg);
-        //        var endTime = _requestFilters.GetEndDate(end);
-        //        var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
-
-        //        _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
-
-        //        var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, deviceIds);
-        //        var sessionCur = sessions?.Where(p => p.BegTime.Date >= begTime).ToList();
-        //        var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
-        //        var typeIdCross = await GetCrossPhraseTypeIdAsync();
-
-        //    var dialogues = GetDialoguesIncluded(prevBeg, endTime, companyIds, null, deviceIds)
-        //               .Select(p => new DialogueInfo
-        //               {
-        //                   DialogueId = p.DialogueId,
-        //                   ApplicationUserId = p.ApplicationUserId,
-        //                   DeviceId = p.DeviceId,
-        //                   FullName = p.ApplicationUser?.FullName,
-        //                   BegTime = p.BegTime,
-        //                   EndTime = p.EndTime,
-        //                   CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-        //                   SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault()?.MeetingExpectationsTotal,
-        //                   SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault()?.BegMoodByNN,
-        //                   SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault()?.EndMoodByNN
-                          
-        //               }).ToList();
-
-        //        ////-----------------FOR BRANCH---------------------------------------------------------------
-        //        List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
-
-        //        var dialoguesCur = (dialogues.Where(p => p.BegTime >= begTime).ToList());
-        //        var dialoguesOld = (dialogues.Where(p => p.BegTime < begTime).ToList());
-
-        //        var result = new UserOperations.Models.Get.HomeController.DashboardInfo()
-        //        {
-        //            // DialoguesCount = _dbOperation.DialoguesCount(dialoguesCur),
-        //            DialoguesCount = _utils.DialoguesCount(dialoguesCur),
-        //            DialoguesCountDelta = -_utils.DialoguesCount(dialoguesOld),
-
-        //            EmployeeCount = _utils.EmployeeCount(dialoguesCur),
-        //            EmployeeCountDelta = -_utils.EmployeeCount(dialoguesOld),
-
-        //            BestEmployee = _utils.BestEmployee(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
-        //            BestEmployeeEfficiency = _utils.BestEmployeeEfficiency(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
-        //            BestProgressiveEmployee = _utils.BestProgressiveEmployee(dialogues, begTime),
-        //            BestProgressiveEmployeeDelta = _utils.BestProgressiveEmployeeDelta(dialogues, begTime),
-
-        //            SatisfactionDialogueDelta = _utils.SatisfactionDialogueDelta(dialogues),
-        //            SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
-        //            SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
-
-        //            LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
-        //            LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
-
-        //            CrossIndex = _utils.CrossIndex(dialoguesCur),
-        //            CrossIndexDelta = -_utils.CrossIndex(dialoguesOld),
-
-        //            AvgWorkingTimeEmployees = _utils.SessionAverageHours(sessionCur, begTime, endTime),
-        //            AvgWorkingTimeEmployeesDelta = -_utils.SessionAverageHours(sessionOld, prevBeg, begTime),
-
-        //            NumberOfDialoguesPerEmployees = Convert.ToInt32(_utils.DialoguesPerUser(dialoguesCur)),
-        //            NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_utils.DialoguesPerUser(dialoguesOld)),
-
-        //            DialogueDuration = _utils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-        //            DialogueDurationDelta = -_utils.DialogueAverageDuration(dialoguesOld, prevBeg, begTime)                 
-        //        };
-
-
-        //        //---benchmarks
-        //        if (benchmarksList != null && benchmarksList.Count() != 0)
-        //        {
-        //            result.SatisfactionIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "SatisfactionIndexIndustryAvg");
-        //            result.SatisfactionIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "SatisfactionIndexIndustryBenchmark");
-
-        //            result.LoadIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
-        //            result.LoadIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark"); 
-
-        //            result.CrossIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg"); 
-        //            result.CrossIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
-        //        }           
-
-        //        result.NumberOfDialoguesPerEmployeesDelta += result.NumberOfDialoguesPerEmployees;
-        //        result.AvgWorkingTimeEmployeesDelta +=result.AvgWorkingTimeEmployees;
-        //        result.EmployeeCountDelta += result.EmployeeCount;
-        //        result.CrossIndexDelta += result.CrossIndex;
-        //        result.LoadIndexDelta += result.LoadIndex;
-        //        result.SatisfactionIndexDelta += result.SatisfactionIndex;
-        //        result.DialoguesCountDelta += result.DialoguesCount;
-        //        result.DialogueDurationDelta += result.DialogueDuration;
-        //        var json = JsonConvert.SerializeObject(result);
-        //        return json;
-        //}
-
         public async Task<NewDashboardInfo> GetNewDashboard( string beg, string end,
                                                              List<Guid> companyIds, List<Guid> corporationIds,
                                                              List<Guid> deviceIds)
@@ -174,10 +73,10 @@ namespace UserOperations.Services
                            ApplicationUserId = p.ApplicationUserId,
                            BegTime = p.BegTime,
                            EndTime = p.EndTime,
-                           CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                           SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault()?.MeetingExpectationsTotal,
-                           SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault()?.BegMoodByNN,
-                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault()?.EndMoodByNN,
+                           CrossCount = p.DialoguePhrase.Where(q => q.Phrase.PhraseTypeId == typeIdCross).Count(),
+                           SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                           SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault().BegMoodByNN,
+                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault().EndMoodByNN,
                            SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
                            DeviceId = p.DeviceId,
                            CompanyId = p.Device.CompanyId,
@@ -271,7 +170,7 @@ namespace UserOperations.Services
                              DeviceId = p.DeviceId,
                              BegTime = p.BegTime,
                              EndTime = p.EndTime,
-                             CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
+                             CrossCount = p.DialoguePhrase.Where(q => q.Phrase.PhraseTypeId == typeIdCross).Count()
                          })
                          .ToList();
 
@@ -392,7 +291,8 @@ namespace UserOperations.Services
                          .ToListAsync();
             return sessions;
         }
-        private List<Dialogue> GetDialoguesIncluded(DateTime begTime, DateTime endTime, 
+
+        private IQueryable<Dialogue> GetDialoguesIncluded(DateTime begTime, DateTime endTime, 
                                 List<Guid> companyIds,
                                 List<Guid?> applicationUserIds = null,
                                 List<Guid> deviceIds = null)
@@ -413,11 +313,11 @@ namespace UserOperations.Services
                                         || (!applicationUserIds.Any()
                                                 || (p.ApplicationUserId != null && applicationUserIds.Contains(p.ApplicationUserId))))
                                && (deviceIds == null
-                                        || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))).ToList();
+                                        || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))));
             return dialogues;
         }
 
-        private List<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime,
+        private IQueryable<Dialogue> GetDialoguesIncludedPhrase(DateTime begTime, DateTime endTime,
                               List<Guid> companyIds,
                               List<Guid?> applicationUserIds = null,
                               List<Guid> deviceIds = null)
@@ -434,7 +334,7 @@ namespace UserOperations.Services
                                         || (!applicationUserIds.Any()
                                                 || (p.ApplicationUserId != null && applicationUserIds.Contains(p.ApplicationUserId))))
                                && (deviceIds == null
-                                        || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))).ToList();
+                                        || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))));
             return dialogues;
         }
 
