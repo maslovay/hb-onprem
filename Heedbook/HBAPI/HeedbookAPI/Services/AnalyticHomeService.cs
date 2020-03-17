@@ -39,105 +39,105 @@ namespace UserOperations.Services
         }
 
 
-        public async Task<string> GetDashboard( string beg, string end,
-                                                        List<Guid> companyIds, List<Guid> corporationIds,
-                                                        List<Guid> deviceIds)
-        {
-                var role = _loginService.GetCurrentRoleName();
-                var companyId = _loginService.GetCurrentCompanyId();
+        //public async Task<string> GetDashboard( string beg, string end,
+        //                                                List<Guid> companyIds, List<Guid> corporationIds,
+        //                                                List<Guid> deviceIds)
+        //{
+        //        var role = _loginService.GetCurrentRoleName();
+        //        var companyId = _loginService.GetCurrentCompanyId();
 
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+        //        var begTime = _requestFilters.GetBegDate(beg);
+        //        var endTime = _requestFilters.GetEndDate(end);
+        //        var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+        //        _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, deviceIds);
-                var sessionCur = sessions?.Where(p => p.BegTime.Date >= begTime).ToList();
-                var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
-                var typeIdCross = await GetCrossPhraseTypeIdAsync();
+        //        var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, deviceIds);
+        //        var sessionCur = sessions?.Where(p => p.BegTime.Date >= begTime).ToList();
+        //        var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
+        //        var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
-            var dialogues = GetDialoguesIncluded(prevBeg, endTime, companyIds, null, deviceIds)
-                       .Select(p => new DialogueInfo
-                       {
-                           DialogueId = p.DialogueId,
-                           ApplicationUserId = p.ApplicationUserId,
-                           DeviceId = p.DeviceId,
-                           FullName = p.ApplicationUser?.FullName,
-                           BegTime = p.BegTime,
-                           EndTime = p.EndTime,
-                           CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
-                           SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault()?.MeetingExpectationsTotal,
-                           SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault()?.BegMoodByNN,
-                           SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault()?.EndMoodByNN
+        //    var dialogues = GetDialoguesIncluded(prevBeg, endTime, companyIds, null, deviceIds)
+        //               .Select(p => new DialogueInfo
+        //               {
+        //                   DialogueId = p.DialogueId,
+        //                   ApplicationUserId = p.ApplicationUserId,
+        //                   DeviceId = p.DeviceId,
+        //                   FullName = p.ApplicationUser?.FullName,
+        //                   BegTime = p.BegTime,
+        //                   EndTime = p.EndTime,
+        //                   CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+        //                   SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault()?.MeetingExpectationsTotal,
+        //                   SatisfactionScoreBeg = p.DialogueClientSatisfaction.FirstOrDefault()?.BegMoodByNN,
+        //                   SatisfactionScoreEnd = p.DialogueClientSatisfaction.FirstOrDefault()?.EndMoodByNN
                           
-                       }).ToList();
+        //               }).ToList();
 
-                ////-----------------FOR BRANCH---------------------------------------------------------------
-                List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
+        //        ////-----------------FOR BRANCH---------------------------------------------------------------
+        //        List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 
-                var dialoguesCur = (dialogues.Where(p => p.BegTime >= begTime).ToList());
-                var dialoguesOld = (dialogues.Where(p => p.BegTime < begTime).ToList());
+        //        var dialoguesCur = (dialogues.Where(p => p.BegTime >= begTime).ToList());
+        //        var dialoguesOld = (dialogues.Where(p => p.BegTime < begTime).ToList());
 
-                var result = new UserOperations.Models.Get.HomeController.DashboardInfo()
-                {
-                    // DialoguesCount = _dbOperation.DialoguesCount(dialoguesCur),
-                    DialoguesCount = _utils.DialoguesCount(dialoguesCur),
-                    DialoguesCountDelta = -_utils.DialoguesCount(dialoguesOld),
+        //        var result = new UserOperations.Models.Get.HomeController.DashboardInfo()
+        //        {
+        //            // DialoguesCount = _dbOperation.DialoguesCount(dialoguesCur),
+        //            DialoguesCount = _utils.DialoguesCount(dialoguesCur),
+        //            DialoguesCountDelta = -_utils.DialoguesCount(dialoguesOld),
 
-                    EmployeeCount = _utils.EmployeeCount(dialoguesCur),
-                    EmployeeCountDelta = -_utils.EmployeeCount(dialoguesOld),
+        //            EmployeeCount = _utils.EmployeeCount(dialoguesCur),
+        //            EmployeeCountDelta = -_utils.EmployeeCount(dialoguesOld),
 
-                    BestEmployee = _utils.BestEmployee(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
-                    BestEmployeeEfficiency = _utils.BestEmployeeEfficiency(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
-                    BestProgressiveEmployee = _utils.BestProgressiveEmployee(dialogues, begTime),
-                    BestProgressiveEmployeeDelta = _utils.BestProgressiveEmployeeDelta(dialogues, begTime),
+        //            BestEmployee = _utils.BestEmployee(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
+        //            BestEmployeeEfficiency = _utils.BestEmployeeEfficiency(dialoguesCur, sessionCur, begTime, endTime.AddDays(1)),
+        //            BestProgressiveEmployee = _utils.BestProgressiveEmployee(dialogues, begTime),
+        //            BestProgressiveEmployeeDelta = _utils.BestProgressiveEmployeeDelta(dialogues, begTime),
 
-                    SatisfactionDialogueDelta = _utils.SatisfactionDialogueDelta(dialogues),
-                    SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
-                    SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
+        //            SatisfactionDialogueDelta = _utils.SatisfactionDialogueDelta(dialogues),
+        //            SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
+        //            SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
 
-                    LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
-                    LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
+        //            LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
+        //            LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
 
-                    CrossIndex = _utils.CrossIndex(dialoguesCur),
-                    CrossIndexDelta = -_utils.CrossIndex(dialoguesOld),
+        //            CrossIndex = _utils.CrossIndex(dialoguesCur),
+        //            CrossIndexDelta = -_utils.CrossIndex(dialoguesOld),
 
-                    AvgWorkingTimeEmployees = _utils.SessionAverageHours(sessionCur, begTime, endTime),
-                    AvgWorkingTimeEmployeesDelta = -_utils.SessionAverageHours(sessionOld, prevBeg, begTime),
+        //            AvgWorkingTimeEmployees = _utils.SessionAverageHours(sessionCur, begTime, endTime),
+        //            AvgWorkingTimeEmployeesDelta = -_utils.SessionAverageHours(sessionOld, prevBeg, begTime),
 
-                    NumberOfDialoguesPerEmployees = Convert.ToInt32(_utils.DialoguesPerUser(dialoguesCur)),
-                    NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_utils.DialoguesPerUser(dialoguesOld)),
+        //            NumberOfDialoguesPerEmployees = Convert.ToInt32(_utils.DialoguesPerUser(dialoguesCur)),
+        //            NumberOfDialoguesPerEmployeesDelta = -Convert.ToInt32(_utils.DialoguesPerUser(dialoguesOld)),
 
-                    DialogueDuration = _utils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
-                    DialogueDurationDelta = -_utils.DialogueAverageDuration(dialoguesOld, prevBeg, begTime)                 
-                };
+        //            DialogueDuration = _utils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
+        //            DialogueDurationDelta = -_utils.DialogueAverageDuration(dialoguesOld, prevBeg, begTime)                 
+        //        };
 
 
-                //---benchmarks
-                if (benchmarksList != null && benchmarksList.Count() != 0)
-                {
-                    result.SatisfactionIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "SatisfactionIndexIndustryAvg");
-                    result.SatisfactionIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "SatisfactionIndexIndustryBenchmark");
+        //        //---benchmarks
+        //        if (benchmarksList != null && benchmarksList.Count() != 0)
+        //        {
+        //            result.SatisfactionIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "SatisfactionIndexIndustryAvg");
+        //            result.SatisfactionIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "SatisfactionIndexIndustryBenchmark");
 
-                    result.LoadIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
-                    result.LoadIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark"); 
+        //            result.LoadIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
+        //            result.LoadIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "LoadIndexIndustryBenchmark"); 
 
-                    result.CrossIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg"); 
-                    result.CrossIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
-                }           
+        //            result.CrossIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "CrossIndexIndustryAvg"); 
+        //            result.CrossIndexIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "CrossIndexIndustryBenchmark");
+        //        }           
 
-                result.NumberOfDialoguesPerEmployeesDelta += result.NumberOfDialoguesPerEmployees;
-                result.AvgWorkingTimeEmployeesDelta +=result.AvgWorkingTimeEmployees;
-                result.EmployeeCountDelta += result.EmployeeCount;
-                result.CrossIndexDelta += result.CrossIndex;
-                result.LoadIndexDelta += result.LoadIndex;
-                result.SatisfactionIndexDelta += result.SatisfactionIndex;
-                result.DialoguesCountDelta += result.DialoguesCount;
-                result.DialogueDurationDelta += result.DialogueDuration;
-                var json = JsonConvert.SerializeObject(result);
-                return json;
-        }
+        //        result.NumberOfDialoguesPerEmployeesDelta += result.NumberOfDialoguesPerEmployees;
+        //        result.AvgWorkingTimeEmployeesDelta +=result.AvgWorkingTimeEmployees;
+        //        result.EmployeeCountDelta += result.EmployeeCount;
+        //        result.CrossIndexDelta += result.CrossIndex;
+        //        result.LoadIndexDelta += result.LoadIndex;
+        //        result.SatisfactionIndexDelta += result.SatisfactionIndex;
+        //        result.DialoguesCountDelta += result.DialoguesCount;
+        //        result.DialogueDurationDelta += result.DialogueDuration;
+        //        var json = JsonConvert.SerializeObject(result);
+        //        return json;
+        //}
 
         public async Task<NewDashboardInfo> GetNewDashboard( string beg, string end,
                                                              List<Guid> companyIds, List<Guid> corporationIds,
@@ -364,13 +364,13 @@ namespace UserOperations.Services
             return industryIds;
         }
 
-        private async Task<int> GetSessionOnline(List<Guid> companyIds, List<Guid> deviceIds)
-        {
-            return await _repository.GetAsQueryable<Session>().Where(p =>
-                     p.StatusId == 6
-                     && (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId))
-                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))).CountAsync();
-        }
+        //private async Task<int> GetSessionOnline(List<Guid> companyIds, List<Guid> deviceIds)
+        //{
+        //    return await _repository.GetAsQueryable<Session>().Where(p =>
+        //             p.StatusId == 6
+        //             && (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId))
+        //             && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))).CountAsync();
+        //}
         private async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync(
                         DateTime begTime, DateTime endTime, 
                         List<Guid> companyIds,
@@ -437,6 +437,7 @@ namespace UserOperations.Services
                                         || (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))).ToList();
             return dialogues;
         }
+
         private async Task<Guid> GetCrossPhraseTypeIdAsync()
         {
             var typeIdCross = await _repository.GetAsQueryable<PhraseType>()
@@ -445,6 +446,7 @@ namespace UserOperations.Services
                     .FirstOrDefaultAsync();
             return typeIdCross;
         }
+
         private async Task<List<SlideShowInfo>> GetSlideShowWithDialogueIdFilteredByPoolAsync(
           DateTime begTime,
           DateTime endTime,

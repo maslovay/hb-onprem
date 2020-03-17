@@ -93,7 +93,7 @@ namespace UserOperations.Services
 
         public async Task SendRegisterEmail(ApplicationUser user)
         {
-            LanguageDataEmail model = await ReadLanguageModel(user, "registerManager");
+            LanguageDataEmail model = await ReadLanguageModel(user, "RegisterManager");
             model.FileRef = _fileRef.GetFileUrlFast(_containerName);
             string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
             await SendEmail(user, model.EmailSubject, htmlBody);
@@ -101,7 +101,7 @@ namespace UserOperations.Services
 
         public async Task SendUserRegisterEmail(ApplicationUser user, string password)
         {
-            LanguageDataEmail model = await ReadLanguageModel(user, "registerUser");
+            LanguageDataEmail model = await ReadLanguageModel(user, "RegisterUser");
             model.FileRef = _fileRef.GetFileUrlFast(_containerName);
             model.Greeting += user.FullName;
             model.Pswd += password;
@@ -112,7 +112,7 @@ namespace UserOperations.Services
 
         public async Task SendPasswordChangeEmail(ApplicationUser user, string password)
         {
-            LanguageDataEmail model = await ReadLanguageModel(user, "passwordChange");
+            LanguageDataEmail model = await ReadLanguageModel(user, "PasswordChange");
             model.FileRef = _fileRef.GetFileUrlFast(_containerName);
             model.Greeting += user.FullName;
             model.Pswd += password;
