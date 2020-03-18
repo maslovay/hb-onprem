@@ -23,7 +23,6 @@ using UserOperations.Models.AnalyticModels;
 using HBMLHttpClient.Model;
 using System.Drawing;
 using System.Transactions;
-using FillingSatisfactionService.Helper;
 using HBData.Repository;
 using System.Data;
 using System.Reflection;
