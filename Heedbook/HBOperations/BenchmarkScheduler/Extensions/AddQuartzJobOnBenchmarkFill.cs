@@ -3,7 +3,6 @@ using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions;
-using UserOperations.Utils;
 
 namespace BenchmarkScheduler
 {

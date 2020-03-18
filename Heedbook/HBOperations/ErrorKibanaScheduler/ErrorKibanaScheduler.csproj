@@ -16,6 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\ExpressHbApiTester\AlarmSender\AlarmSender.csproj" />
+    <ProjectReference Include="..\Configurations\Configurations.csproj" />
     <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
     <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
   </ItemGroup>

@@ -5,7 +5,6 @@ using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions.Jobs;
-using UserOperations.Services;
 
 namespace QuartzExtensions
 {
