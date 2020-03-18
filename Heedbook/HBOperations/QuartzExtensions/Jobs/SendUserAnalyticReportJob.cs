@@ -1,40 +1,18 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.IdentityModel.Tokens.Jwt;
 using HBData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
 using Quartz;
 using HBLib;
 using HBLib.Utils;
-using System.Threading;
-using System.Diagnostics;
-using System.Net.Mime;
-using RazorLight;
-using RazorLight.Razor;
-using System.IO;
-using System.Net;
-using Newtonsoft.Json;
-using System.Text;
-using UserOperations.Services;
-using UserOperations.AccountModels;
-using HBData.Models.AccountViewModels;
-using System.Security.Cryptography;
-using System.Security.Claims;
-using HBData.Models;
-using UserOperations.Models.AnalyticModels;
-using ZedGraph;
-using System.Drawing;
 using QuartzExtensions.Utils.WeeklyReport;
 
 namespace QuartzExtensions.Jobs
 {
     public class SendUserAnalyticReportJob : IJob
     {
-        private readonly LoginService _loginService;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private ElasticClient _log;
@@ -44,7 +22,6 @@ namespace QuartzExtensions.Jobs
         private WeeklyReport _weeklyReport;
 
         public SendUserAnalyticReportJob(
-            LoginService loginService,
             IServiceScopeFactory factory, 
             ElasticClientFactory elasticClientFactory,
             SmtpSettings smtpSettings,
@@ -52,7 +29,6 @@ namespace QuartzExtensions.Jobs
             AccountAuthorization autorizationData,
             WeeklyReport weeklyReport)
         {                  
-            _loginService = loginService;    
             _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();    
             _elasticClientFactory = elasticClientFactory;   
             _smtpSettings = smtpSettings;  

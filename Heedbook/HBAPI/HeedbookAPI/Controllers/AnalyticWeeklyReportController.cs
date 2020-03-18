@@ -12,6 +12,7 @@ namespace UserOperations.Controllers
     [Authorize(AuthenticationSchemes = "Bearer")]
     [ControllerExceptionFilter]
 
+    //---for Heedbook\HBOperations\QuartzExtensions\utils\WeeklyReport\WeeklyReport.cs
     public class AnalyticWeeklyReportController : Controller
     {
         private readonly AnalyticWeeklyReportService _analyticWeeklyReportService;

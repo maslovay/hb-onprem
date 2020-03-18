@@ -17,6 +17,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using FileResult = Microsoft.AspNetCore.Mvc.FileResult;
 using UserOperations.Utils;
 
+//---FOR VADIM KUZNECOV
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]

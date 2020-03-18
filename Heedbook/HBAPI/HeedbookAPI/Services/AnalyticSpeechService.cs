@@ -136,26 +136,6 @@ namespace UserOperations.Services
                     dialogueIds,
                     phraseIds,
                     phraseTypeIds);
-
-                //var employee = requestPhrase.Where(p => p.IsClient == false)
-                //    .GroupBy(p => p.PhraseType)
-                //    .Select(p => new SpeechPhrasesInfo
-                //    {
-                //        Type = p.Key,
-                //        Count = (requestPhrase.Where(q => q.IsClient == false).Select(q => q.DialogueId).Distinct().Count() != 0) ?
-                //            Math.Round(100 * Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(requestPhrase.Where(q => q.IsClient == false).Select(q => q.DialogueId).Distinct().Count())) : 0,
-                //        Colour = p.First().Colour
-                //    }).ToList();
-
-                //var client = requestPhrase.Where(p => p.IsClient == true & (p.PhraseType == "Loyalty" | p.PhraseType == "Alert"))
-                //    .GroupBy(p => p.PhraseType)
-                //    .Select(p => new SpeechPhrasesInfo
-                //    {
-                //        Type = p.Key,
-                //        Count = (requestPhrase.Where(q=> q.IsClient == true).Select(q => q.DialogueId).Distinct().Count() != 0) ? 
-                //        Math.Round(100 * Convert.ToDouble(p.Select(q => q.DialogueId).Distinct().Count()) / Convert.ToDouble(requestPhrase.Where(q => q.IsClient == true).Select(q => q.DialogueId).Distinct().Count())): 0,
-                //        Colour = p.First().Colour
-                //    }).ToList();
                    
                 var total = requestPhrase
                     .GroupBy(p => p.PhraseType)
@@ -167,25 +147,8 @@ namespace UserOperations.Services
                     }).ToList();
 
                 var types = GetPhraseTypes();
-               // var employeeType = employee.GetType();
                 foreach (var type in types)
                 {
-                    //if (employee.Where(p => p.Type == type.PhraseTypeText).Count() == 0)
-                    //    employee.Add(new SpeechPhrasesInfo
-                    //    {
-                    //        Type = type.PhraseTypeText,
-                    //        Count = 0,
-                    //        Colour = type.Colour
-                    //    });
-
-                    //if (client.Where(p => p.Type == type.PhraseTypeText).Any() && (type.PhraseTypeText == "Loyalty" | type.PhraseTypeText == "Alert"))
-                    //    client.Add(new SpeechPhrasesInfo
-                    //    {
-                    //        Type = type.PhraseTypeText,
-                    //        Count = 0,
-                    //        Colour = type.Colour
-                    //    });
-
                     if (total.Where(p => p.Type == type.PhraseTypeText).Count() == 0)
                         total.Add(new SpeechPhrasesInfo
                         {
@@ -194,8 +157,6 @@ namespace UserOperations.Services
                             Colour = type.Colour
                         });
                 }
-                //totalInfo.Client = client;
-                //totalInfo.Employee = employee;
                 totalInfo.Total = total;
                 return totalInfo;
         }
