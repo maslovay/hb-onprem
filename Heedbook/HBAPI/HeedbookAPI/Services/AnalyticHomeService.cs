@@ -92,7 +92,7 @@ namespace UserOperations.Services
                 var dialoguesDevicesCur = dialoguesCur.Where(x => x.IsInWorkingTime).ToList();
                 var dialoguesDevicesOld = dialoguesOld.Where(x => x.IsInWorkingTime).ToList();
 
-            var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(prevBeg, begTime, companyIds, deviceIds, false, dialoguesOld);
+                var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(prevBeg, begTime, companyIds, deviceIds, false, dialoguesOld);
                 var slideShowSessionsInDialoguesCur = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds,deviceIds, false, dialoguesCur);
                 var viewsCur = slideShowSessionsInDialoguesCur.Count();
 
