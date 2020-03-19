@@ -103,6 +103,24 @@ namespace HBLib.Utils
             }
         }
 
+        public async Task<bool> IsAudioStereo(String audioFn)
+        {
+            try
+            {
+                audioFn = Path.GetFullPath(audioFn);
+                var cmd = new CMDWithOutput();
+                var output = cmd.runCMD(FfPath, $"-i \"{audioFn}\"");
+                
+                return output.Contains("stereo");
+
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
+
+            }
+        }
+
         public async Task<String> GetLastFrameFromVideo(String videoFn, string frameFn)
         {
             //ffmpeg -sseof -3 -i 00000000-0000-0000-0000-000000000000_4b95777d-abe2-4987-98c6-d541f86f4894_20200123104457_1.mkv -update 1 -q:v 1 last.jpg
