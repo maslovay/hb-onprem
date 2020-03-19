@@ -293,11 +293,11 @@ namespace ApiTests
                 new DialogueInfoFull(){BegTime = new DateTime(2019, 11, 01, 18, 30, 00), EndTime = new DateTime(2019, 11, 01, 19, 00, 00), ApplicationUserId = Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607369")}
             };
         }
-        internal static IQueryable<UserOperations.Models.AnalyticModels.DialogueInfoWithFramesAndSlideShow> GetDialogueInfoWithFrames()
+        internal static IQueryable<UserOperations.Models.AnalyticModels.DialogueInfoWithFrames> GetDialogueInfoWithFrames()
         {
-            var dialogues = new List<UserOperations.Models.AnalyticModels.DialogueInfoWithFramesAndSlideShow>
+            var dialogues = new List<UserOperations.Models.AnalyticModels.DialogueInfoWithFrames>
             {
-                new UserOperations.Models.AnalyticModels.DialogueInfoWithFramesAndSlideShow
+                new UserOperations.Models.AnalyticModels.DialogueInfoWithFrames
                 {
                     ApplicationUserId = userId,
                     BegTime = begDate,
@@ -329,7 +329,7 @@ namespace ApiTests
                     }
                     },
                 },
-                  new UserOperations.Models.AnalyticModels.DialogueInfoWithFramesAndSlideShow
+                  new UserOperations.Models.AnalyticModels.DialogueInfoWithFrames
                 {
                     ApplicationUserId = userId,
                    BegTime = begDate.AddMinutes(3),

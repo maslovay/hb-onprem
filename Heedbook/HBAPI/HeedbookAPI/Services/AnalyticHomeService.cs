@@ -391,7 +391,7 @@ namespace UserOperations.Services
            List<Guid?> applicationUserIds,
            List<Guid> deviceIds,
            bool isPool,
-           List<DialogueInfoWithFramesAndSlideShow> dialogues
+           List<DialogueInfoWithFrames> dialogues
            )
         {
             var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
