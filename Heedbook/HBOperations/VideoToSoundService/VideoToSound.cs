@@ -51,6 +51,7 @@ namespace VideoToSoundService
                 {
                     if (await _wrapper.IsAudioStereo(localAudioPath))
                     {
+                        _log.Info("Processing stereo audio");
                         var localAudioPathLeft = Path.Combine(_sftpSettings.DownloadPath, dialogueId + "_left.wav");
                         var localAudioPathRight = Path.Combine(_sftpSettings.DownloadPath, dialogueId + "_right.wav");
                         await _wrapper.SplitAudioToMono(localAudioPath,localAudioPathLeft, localAudioPathRight );
@@ -88,6 +89,7 @@ namespace VideoToSoundService
                     }
                     else
                     {
+                        _log.Info("Processing mono audio");
                         await _sftpClient.UploadAsync(localAudioPath, "dialogueaudios", $"{dialogueId}.wav");
                         File.Delete(localAudioPath);
                         File.Delete(localVideoPath);
