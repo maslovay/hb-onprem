@@ -59,7 +59,7 @@ namespace UserOperations.Models.AnalyticModels
         public bool IsInWorkingTime;
     }
 
-    public class DialogueInfoWithFrames
+    public class DialogueInfoWithFramesAndSlideShow
     {
         public Guid DialogueId;
         public Guid? ApplicationUserId;
@@ -69,6 +69,7 @@ namespace UserOperations.Models.AnalyticModels
         public DateTime SessionBegTime;
         public DateTime SessionEndTime;
         public List<DialogueFrame> DialogueFrame;
+        public List<SlideShowSession> SlideShowSession;
         public double? Age;
         public string Gender;
     }

@@ -46,10 +46,10 @@ namespace UserOperations.Services
         //---FOR ONE DIALOGUE---
         public async Task<Dictionary<string, object>> ContentShows(Guid dialogueId)
         {
-            var dialogue = await GetDialogueIncludedFramesByIdAsync(dialogueId);
+            var dialogue = await GetDialogueIncludedFramesAndSlideShowsByIdAsync(dialogueId);
             if (dialogue == null) throw new NoFoundException("No such dialogue");
 
-            var slideShowSessionsAll = await GetSlideShowsForOneDialogueAsync(dialogue);
+            var slideShowSessionsAll = GetSlideShowsForOneDialogueAsync(dialogue);
 
             var contentsShownGroup = slideShowSessionsAll.Where(p => !p.IsPoll)
                 .GroupBy(p => new { p.ContentType, p.ContentId, p.Url }, (key, group) => new
@@ -90,7 +90,7 @@ namespace UserOperations.Services
                     Result = group.ToList(),
                     FtpLink = _fileRef.GetFileLink(_containerName, key.ContentId + ".png", default) + $"?{group.FirstOrDefault().ContentUpdateDate}",
                 });
-            var answers = await GetAnswersInOneDialogueAsync(slideShowSessionsAll, dialogue.BegTime, dialogue.EndTime, dialogue.DeviceId);
+            var answers = await GetAnswersInOneDialogueAsync(dialogue.BegTime, dialogue.EndTime, dialogue.DeviceId);
 
             var answersByContent = pollAmount.Where(x => x.Key2 != null)
                 .Select(x => new
@@ -128,17 +128,8 @@ namespace UserOperations.Services
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
             var dialogues = await GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds);
-            //var slideShowSessionsAll = await _analyticContentProvider.GetSlideShowFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, workerTypeIds, false);
-
-            //foreach ( var session in slideShowSessionsAll )
-            //{
-            //    var dialog = dialogues.FirstOrDefault(x => x.BegTime <= session.BegTime && x.EndTime >= session.BegTime && x.ApplicationUserId == session.ApplicationUserId);
-            //    session.DialogueId = dialog?.DialogueId;
-            //    session.DialogueFrames = dialog?.DialogueFrame;
-            //    session.Age = dialog?.Age;
-            //    session.Gender = dialog?.Gender;
-            //}
-            var slideShowSessionsInDialogues = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds, false, dialogues);
+        
+            var slideShowSessionsInDialogues = GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialogues);
             var views = slideShowSessionsInDialogues.Count();
             var clients = dialogues.Count();
 
@@ -199,11 +190,12 @@ namespace UserOperations.Services
             var endTime = _requestFilters.GetEndDate(end);
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-            List<DialogueInfo> dialogues = await GetDialogueInfos(begTime, endTime, companyIds, applicationUserIds, deviceIds);
-            List<SlideShowInfo> slideShowSessionsAll = await GetSlideShowWithDialogueIdFilteredByPoolAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds, true, dialogues);
+            var dialogues = await GetDialoguesInfoWithFramesAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds);
+            var slideShowSessionsInDialogues = GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialogues);
+
             List<AnswerInfo.AnswerOne> answers = await GetAnswersFullAsync(dialogues, begTime, endTime, companyIds, applicationUserIds, deviceIds);
-            double conversion = GetConversion(slideShowSessionsAll.Count(), answers.Count());
-            List<AnswerInfo> slideShowInfoGroupByContent = slideShowSessionsAll?
+            double conversion = GetConversion(slideShowSessionsInDialogues.Count(), answers.Count());
+            List<AnswerInfo> slideShowInfoGroupByContent = slideShowSessionsInDialogues?
                 .GroupBy(p => p.ContentId)
                 .Select(ssh => new AnswerInfo
                 {
@@ -217,8 +209,8 @@ namespace UserOperations.Services
 
             var contentInfo = new
             {
-                Views = slideShowSessionsAll.Count(),
-                Clients = slideShowSessionsAll?.Select(x => x.DialogueId).Distinct().Count(),
+                Views = slideShowSessionsInDialogues.Count(),
+                Clients = slideShowSessionsInDialogues?.Select(x => x.DialogueId).Distinct().Count(),
                 Answers = slideShowInfoGroupByContent?.Sum(x => x.AnswersAmount), //answers.Count(),//
                 Conversion = conversion,
                 ContentFullInfo = slideShowInfoGroupByContent
@@ -233,133 +225,59 @@ namespace UserOperations.Services
 
 
         //-----PRIVATE---
-        private async Task<List<SlideShowInfo>> GetSlideShowsForOneDialogueAsync(Dialogue dialogue)
+        private List<SlideShowInfo> GetSlideShowsForOneDialogueAsync(Dialogue dialogue)
         {
-            var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
-                .Where(p => p.BegTime >= dialogue.BegTime
-                    && p.BegTime <= dialogue.EndTime
-                    && p.DeviceId == dialogue.DeviceId)
+            var slideShows = dialogue.SlideShowSessions
                 .Select(p =>
                     new SlideShowInfo
                     {
                         BegTime = p.BegTime,
+                        EndTime = p.EndTime,
                         ContentId = p.CampaignContent != null ? p.CampaignContent.ContentId : null,
                         ContentName = p.CampaignContent != null ? p.CampaignContent.Content.Name : null,
                         CampaignContentId = p.CampaignContentId,
                         ContentType = p.ContentType,
-                        EndTime = p.EndTime,
                         IsPoll = p.IsPoll,
                         Url = p.Url,
                         ApplicationUserId = (Guid)p.ApplicationUserId,
-                        EmotionAttention = EmotionAttentionCalculate(p.BegTime, p.EndTime, dialogue.DialogueFrame.ToList())
+                        EmotionAttention = EmotionAttentionCalculate(dialogue.DialogueFrame.ToList())
                     })
-                .ToListAsyncSafe();
+                .ToList();
             return slideShows;
         }
 
-        private async Task<List<SlideShowInfo>> GetSlideShowWithDialogueIdFilteredByPoolAsync(
-           DateTime begTime,
-           DateTime endTime,
-           List<Guid> companyIds,
-           List<Guid?> applicationUserIds,
-           List<Guid> deviceIds,
-           bool isPool,
-           List<DialogueInfoWithFrames> dialogues
-           )
-        {
-            var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
-                .Where(p => p.IsPoll == isPool
-                    && p.BegTime >= begTime
-                    && p.BegTime <= endTime
-                    && (!companyIds.Any() || companyIds.Contains((Guid)p.Device.CompanyId))
-                    && (!applicationUserIds.Any()
-                            || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId)))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
-                    && p.CampaignContent != null)
-                .Select(p =>
-                    new SlideShowInfo
-                    {
-                        BegTime = p.BegTime,
-                        ContentId = p.CampaignContent.ContentId,
-                        Campaign = p.CampaignContent.Campaign,
-                        ContentType = p.ContentType,
-                        ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
-                        ContentUpdateDate = p.CampaignContent.Content != null ? p.CampaignContent.Content.UpdateDate.ToString() : null,
-                        EndTime = p.EndTime,
-                        IsPoll = p.IsPoll,
-                        Url = p.Url,
-                        ApplicationUserId = (Guid)p.ApplicationUserId,
-                        DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                && x.DeviceId == p.DeviceId)
-                            .DialogueId,
-                        DialogueFrames = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                && x.DeviceId == p.DeviceId)
-                            .DialogueFrame,
-                        Age = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                && x.DeviceId == p.DeviceId)
-                            .Age,
-                        Gender = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                && x.DeviceId == p.DeviceId)
-                            .Gender
-                    })
-                .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
-                .ToListAsyncSafe();
-            return slideShows;
-        }
 
-        private async Task<List<SlideShowInfo>> GetSlideShowWithDialogueIdFilteredByPoolAsync(
-          DateTime begTime,
-          DateTime endTime,
-          List<Guid> companyIds,
-          List<Guid?> applicationUserIds,
-          List<Guid> deviceIds,
+        private List<SlideShowInfo> GetSlideShowWithDialogueIdFilteredByPoolAsync(
           bool isPool,
-          List<DialogueInfo> dialogues
+          List<DialogueInfoWithFramesAndSlideShow> dialogues
           )
         {
-            var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
-                .Where(p => p.IsPoll == isPool
-                    && p.BegTime >= begTime
-                    && p.BegTime <= endTime
-                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
-                    && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
-                    && p.CampaignContent != null)
-                .Select(p =>
+            var slideShows = dialogues.SelectMany(d => d.SlideShowSession
+                    .Where(ses => ses.IsPoll == isPool
+                    && ses.CampaignContent != null))
+                .Select(ssi =>
                     new SlideShowInfo
                     {
-                        BegTime = p.BegTime,
-                        ContentId = p.CampaignContent.ContentId,
-                        Campaign = p.CampaignContent.Campaign,
-                        ContentType = p.ContentType,
-                        ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
-                        EndTime = p.EndTime,
-                        IsPoll = p.IsPoll,
-                        Url = p.Url,
-                        ApplicationUserId = p.ApplicationUserId,
-                        DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                && x.DeviceId == p.DeviceId)
-                            .DialogueId
+                        BegTime = ssi.BegTime,
+                        ContentId = ssi.CampaignContent.ContentId,
+                        Campaign = ssi.CampaignContent.Campaign,
+                        ContentType = ssi.ContentType,
+                        ContentName = ssi.CampaignContent.Content != null ? ssi.CampaignContent.Content.Name : null,
+                        EndTime = ssi.EndTime,
+                        IsPoll = ssi.IsPoll,
+                        Url = ssi.Url,
+                        ApplicationUserId = ssi.ApplicationUserId,
+                        DialogueId = ssi.DialogueId
                     })
-                .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
-                .ToListAsyncSafe();
+                .ToList();
             return slideShows;
         }
 
-        private async Task<List<CampaignContentAnswer>> GetAnswersInOneDialogueAsync(List<SlideShowInfo> slideShowInfos,
+        private async Task<List<CampaignContentAnswer>> GetAnswersInOneDialogueAsync(
             DateTime begTime, DateTime endTime, Guid deviceId)
         {
             var answers = await _repository.GetAsQueryable<CampaignContentAnswer>()
-                .Where(p => slideShowInfos
-                    .Select(x => x.CampaignContentId)
-                    .Distinct()
-                    .Contains(p.CampaignContentId)
-                    && p.Time >= begTime
+                .Where(p => p.Time >= begTime
                     && p.Time <= endTime
                     && p.DeviceId == deviceId)
                 .ToListAsyncSafe();
@@ -377,7 +295,7 @@ namespace UserOperations.Services
         }
 
         private async Task<List<AnswerInfo.AnswerOne>> GetAnswersFullAsync(
-                        List<DialogueInfo> dialogues,
+                        List<DialogueInfoWithFramesAndSlideShow> dialogues,
                         DateTime begTime, DateTime endTime,
                         List<Guid> companyIds,
                         List<Guid?> applicationUserIds,
@@ -408,17 +326,7 @@ namespace UserOperations.Services
             return answersResult;
         }
 
-        private List<SlideShowInfo> AddDialogueIdToShow(List<SlideShowInfo> slideShowSessionsAll, List<DialogueInfoWithFrames> dialogues)
-        {
-            foreach (var session in slideShowSessionsAll)
-            {
-                var dialog = dialogues.Where(x => x.BegTime <= session.BegTime && x.EndTime >= session.BegTime)
-                        .FirstOrDefault();
-                session.DialogueId = dialog?.DialogueId;
-            }
-            slideShowSessionsAll = slideShowSessionsAll.Where(x => x.DialogueId != null && x.DialogueId != default(Guid)).ToList();
-            return slideShowSessionsAll;
-        }
+     
 
 
 
@@ -483,6 +391,20 @@ namespace UserOperations.Services
             return null;
         }
 
+        private EmotionAttention EmotionAttentionCalculate(List<DialogueFrame> frames)
+        {
+            if (frames == null || frames.Count() == 0) return null;
+            //---time - advertaisment begin and end
+            ReplaseFramesNullOnZero(frames);
+            return new EmotionAttention
+            {
+                Attention = frames.Average(x => Math.Abs((decimal)x.YawShare) <= 20 ? 100 : 20),
+                Positive = frames.Average(x => x.SurpriseShare) + frames.Average(x => x.HappinessShare),
+                Negative = frames.Average(x => x.AngerShare) + frames.Average(x => x.DisgustShare) + frames.Average(x => x.FearShare) + frames.Average(x => x.SadnessShare) + frames.Average(x => x.ContemptShare),
+                Neutral = frames.Average(x => x.NeutralShare)
+            };
+        }
+
         private async Task<IEnumerable<CampaignContentAnswer>> GetAnswersAsync(
                         DateTime begTime,
                         DateTime endTime,
@@ -518,7 +440,7 @@ namespace UserOperations.Services
             }
         }
 
-        private async Task<List<DialogueInfoWithFrames>> GetDialoguesInfoWithFramesAsync(
+        private async Task<List<DialogueInfoWithFramesAndSlideShow>> GetDialoguesInfoWithFramesAsync(
             DateTime begTime,
             DateTime endTime,
             List<Guid> companyIds,
@@ -530,6 +452,7 @@ namespace UserOperations.Services
                    .Include(p => p.ApplicationUser)
                    .Include(p => p.DialogueClientSatisfaction)
                    .Include(p => p.DialogueFrame)
+                   .Include(p => p.SlideShowSessions)
                    .Where(p => p.BegTime >= begTime
                            && p.EndTime <= endTime
                            && p.StatusId == 3
@@ -537,7 +460,7 @@ namespace UserOperations.Services
                            && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                            && (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId)))
                            && (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))))
-                   .Select(p => new DialogueInfoWithFrames
+                   .Select(p => new DialogueInfoWithFramesAndSlideShow
                    {
                        DialogueId = p.DialogueId,
                        ApplicationUserId = p.ApplicationUserId,
@@ -545,6 +468,7 @@ namespace UserOperations.Services
                        BegTime = p.BegTime,
                        EndTime = p.EndTime,
                        DialogueFrame = p.DialogueFrame.ToList(),
+                       SlideShowSession = p.SlideShowSessions.ToList(),
                        Gender = p.DialogueClientProfile.Max(x => x.Gender),
                        Age = p.DialogueClientProfile.Average(x => x.Age)
                    })
@@ -552,39 +476,12 @@ namespace UserOperations.Services
             return dialogues;
         }
 
-        private async Task<List<DialogueInfo>> GetDialogueInfos(
-            DateTime begTime,
-            DateTime endTime,
-            List<Guid> companyIds,
-            List<Guid?> applicationUserIds,
-            List<Guid> deviceIds)
-        {
-            return await _repository.GetAsQueryable<Dialogue>()
-                .Include(p => p.ApplicationUser)
-                .Include(p => p.DialogueClientSatisfaction)
-                .Where(p => p.BegTime >= begTime
-                    && p.EndTime <= endTime
-                    && p.StatusId == 3
-                    && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
-                    && (!applicationUserIds.Any() || (p.ApplicationUserId != null && applicationUserIds.Contains((Guid)p.ApplicationUserId)))
-                    && (!deviceIds.Any() || (p.DeviceId != null && deviceIds.Contains((Guid)p.DeviceId))))
-                .Select(p => new DialogueInfo
-                {
-                    DialogueId = p.DialogueId,
-                    ApplicationUserId = p.ApplicationUserId,
-                    DeviceId = p.DeviceId,
-                    BegTime = p.BegTime,
-                    EndTime = p.EndTime,
-                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
-                })
-                .ToListAsyncSafe();
-        }
 
-        private async Task<Dialogue> GetDialogueIncludedFramesByIdAsync(Guid dialogueId)
+        private async Task<Dialogue> GetDialogueIncludedFramesAndSlideShowsByIdAsync(Guid dialogueId)
         {
             var dialogue = await _repository.GetAsQueryable<Dialogue>()
                 .Include(p => p.DialogueFrame)
+                .Include(p => p.SlideShowSessions)
                 .Where(p => p.DialogueId == dialogueId).FirstOrDefaultAsync();
             return dialogue;
         }
