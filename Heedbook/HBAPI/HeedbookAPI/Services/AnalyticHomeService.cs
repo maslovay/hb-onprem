@@ -375,67 +375,53 @@ namespace UserOperations.Services
                         IsPoll = p.IsPoll,
                         Url = p.Url,
                         ApplicationUserId = (Guid)p.ApplicationUserId,
-                        DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                && x.DeviceId == p.DeviceId)
-                            .DialogueId
+                        DialogueId = p.DialogueId
                     })
                 .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
                 .ToListAsyncSafe();
             return slideShows;
         }
-        private async Task<List<SlideShowInfo>> GetSlideShowWithDialogueIdFilteredByPoolAsync(
-           DateTime begTime,
-           DateTime endTime,
-           List<Guid> companyIds,
-           List<Guid?> applicationUserIds,
-           List<Guid> deviceIds,
-           bool isPool,
-           List<DialogueInfoWithFrames> dialogues
-           )
-        {
-            var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
-                .Where(p => p.IsPoll == isPool
-                    && p.BegTime >= begTime
-                    && p.BegTime <= endTime
-                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
-                    && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
-                    && p.CampaignContent != null)
-                .Select(p =>
-                    new SlideShowInfo
-                    {
-                        BegTime = p.BegTime,
-                        ContentId = p.CampaignContent.ContentId,
-                        Campaign = p.CampaignContent.Campaign,
-                        ContentType = p.ContentType,
-                        ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
-                        EndTime = p.EndTime,
-                        IsPoll = p.IsPoll,
-                        Url = p.Url,
-                        ApplicationUserId = p.ApplicationUserId,
-                        DeviceId = p.DeviceId,
-                        DialogueId = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                  && x.DeviceId == p.DeviceId)
-                            .DialogueId,
-                        DialogueFrames = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                  && x.DeviceId == p.DeviceId)
-                            .DialogueFrame,
-                        Age = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                 && x.DeviceId == p.DeviceId)
-                            .Age,
-                        Gender = dialogues.FirstOrDefault(x => x.BegTime <= p.BegTime
-                                && x.EndTime >= p.BegTime
-                                && x.DeviceId == p.DeviceId)
-                            .Gender
-                    })
-                .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
-                .ToListAsyncSafe();
-            return slideShows;
-        }
+        //private async Task<List<SlideShowInfo>> GetSlideShowWithDialogueIdFilteredByPoolAsync(
+        //   DateTime begTime,
+        //   DateTime endTime,
+        //   List<Guid> companyIds,
+        //   List<Guid?> applicationUserIds,
+        //   List<Guid> deviceIds,
+        //   bool isPool,
+        //   List<DialogueInfoWithFrames> dialogues
+        //   )
+        //{
+        //    var slideShows = await _repository.GetAsQueryable<SlideShowSession>()
+        //        .Where(p => p.IsPoll == isPool
+        //            && p.BegTime >= begTime
+        //            && p.BegTime <= endTime
+        //            && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
+        //            && (!applicationUserIds.Any() || applicationUserIds.Contains((Guid)p.ApplicationUserId))
+        //            && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))
+        //            && p.CampaignContent != null)
+        //        .Select(p =>
+        //            new SlideShowInfo
+        //            {
+        //                BegTime = p.BegTime,
+        //                ContentId = p.CampaignContent.ContentId,
+        //                Campaign = p.CampaignContent.Campaign,
+        //                ContentType = p.ContentType,
+        //                ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
+        //                EndTime = p.EndTime,
+        //                IsPoll = p.IsPoll,
+        //                Url = p.Url,
+        //                ApplicationUserId = p.ApplicationUserId,
+        //                DeviceId = p.DeviceId,
+        //                DialogueId = p.DialogueId,
+        //                DialogueFrames = p.Dialogue?.DialogueFrame.ToList(),
+        //                Age = p.Dialogue?.DialogueClientProfile.FirstOrDefault().Age,
+        //                Gender = p.Dialogue?.DialogueClientProfile.FirstOrDefault().Gender
+        //            })
+        //        .Where(x => x.DialogueId != null && x.DialogueId != default(Guid))
+        //        .ToListAsyncSafe();
+        //    return slideShows;
+        //}
+
         private async Task<List<ApplicationUser>> GetEmployees(
                     DateTime endTime, 
                     List<Guid> companyIds = null, 
