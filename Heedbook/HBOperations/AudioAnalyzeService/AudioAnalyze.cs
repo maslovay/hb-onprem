@@ -55,6 +55,7 @@ namespace AudioAnalyzeService
                 if (!String.IsNullOrWhiteSpace(path))
                 {     
                     var splitedString = path.Split('/');
+                    var containerName = splitedString[0];
                     var fileName = splitedString[1];
                     var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
                     var dialogue = _context.Dialogues
@@ -83,7 +84,7 @@ namespace AudioAnalyzeService
                             CreationTime = DateTime.UtcNow,
                             FileName = fileName,
                             StatusId = 3,
-                            FileContainer = "dialogueaudios",
+                            FileContainer = containerName,
                             BegTime = dialogue.BegTime,
                             EndTime = dialogue.EndTime,
                             Duration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds
