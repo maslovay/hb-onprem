@@ -119,7 +119,7 @@ namespace UserOperations.Utils
         }       
       
         public double? LoadIndex(List<SessionInfo> sessions, IGrouping<DateTime, DialogueInfoFull> dialogues,
-            Guid applicationUserId, DateTime? date,  DateTime beg = default(DateTime), DateTime end = default(DateTime))
+            Guid applicationUserId, DateTime? date,  DateTime beg = default, DateTime end = default)
         {
             var sessionsUser = sessions.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date);
             var sessionHours = sessionsUser.Any() ? Convert.ToDouble(sessionsUser.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : 0;
@@ -135,7 +135,7 @@ namespace UserOperations.Utils
         }
 
         public double? LoadIndex(List<SessionInfo> sessions, List<DialogueInfoFull> dialogues,
-            Guid applicationUserId, DateTime date, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+            Guid applicationUserId, DateTime date, DateTime beg = default, DateTime end = default)
         {
             var sessionsUser = sessions.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date);
             var sessionHours = sessionsUser.Count() != 0 ? Convert.ToDouble(sessionsUser.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : 0;
@@ -168,7 +168,7 @@ namespace UserOperations.Utils
             return timeTableForDevices == 0 ? 0 : 100 *( DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList())
                          / timeTableForDevices);
         }
-        private double? DialogueTotalDuration(List<DialogueInfo> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        private double? DialogueTotalDuration(List<DialogueInfo> dialogues, DateTime beg = default, DateTime end = default)
         {
             return dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
         }
@@ -364,7 +364,7 @@ namespace UserOperations.Utils
                 .GroupBy(p => p.ApplicationUserId)
                 .Select(p => new
                 {
-                    FullName = p.First().FullName,
+                    p.First().FullName,
                     EfficiencyIndex = EfficiencyIndex(sessions, p, beg, end)
                     //EfficiencyIndex
                 })
@@ -396,7 +396,7 @@ namespace UserOperations.Utils
                 .GroupBy(p => p.ApplicationUserId)
                 .Select(p => new
                 {
-                    FullName = p.First().FullName,
+                    p.First().FullName,
                     SatisfactionScore = p.Average(q => q.SatisfactionScore)
                 })
                 .OrderByDescending(p => p.SatisfactionScore)
@@ -412,7 +412,7 @@ namespace UserOperations.Utils
                 .GroupBy(p => p.ApplicationUserId)
                 .Select(p => new
                 {
-                    FullName = p.First().FullName,
+                    p.First().FullName,
                     EfficiencyIndex = EfficiencyIndex(sessions, p, beg, end)
                     //EfficiencyIndex
                 })
@@ -428,7 +428,7 @@ namespace UserOperations.Utils
                 .GroupBy(p => p.ApplicationUserId)
                 .Select(p => new
                 {
-                    FullName = p.First().FullName,
+                    p.First().FullName,
                     SatisfactionScore = p.Average(q => q.SatisfactionScore)
                 })
                 .OrderByDescending(p => p.SatisfactionScore)
@@ -443,7 +443,7 @@ namespace UserOperations.Utils
                 .GroupBy(p => p.ApplicationUserId)
                 .Select(p => new
                 {
-                    FullName = p.First().FullName,
+                    p.First().FullName,
                     SatisfactionScoreDelta = p.Where(q => q.BegTime.Date >= beg.Date).Average(q => q.SatisfactionScore) - p.Where(q => q.EndTime.Date < beg.Date).Average(q => q.SatisfactionScore)
                 })
                 .OrderByDescending(p => p.SatisfactionScoreDelta)
@@ -458,7 +458,7 @@ namespace UserOperations.Utils
                 .GroupBy(p => p.ApplicationUserId)
                 .Select(p => new
                 {
-                    FullName = p.First().FullName,
+                    p.First().FullName,
                     SatisfactionScoreDelta = p.Where(q => q.BegTime.Date >= beg.Date).Average(q => q.SatisfactionScore) - p.Where(q => q.EndTime.Date < beg.Date).Average(q => q.SatisfactionScore)
                 })
                 .OrderByDescending(p => p.SatisfactionScoreDelta)
@@ -472,7 +472,7 @@ namespace UserOperations.Utils
                 (double?)sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
         }
 
-        public double? SessionAverageHours(List<SessionInfo> sessions, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        public double? SessionAverageHours(List<SessionInfo> sessions, DateTime beg = default, DateTime end = default)
         {
             return sessions.Any() ?
                 (double?)sessions.GroupBy(p => p.BegTime.Date)
@@ -488,14 +488,14 @@ namespace UserOperations.Utils
             var sessionHours = sessions.Any() ? (double?)Convert.ToDouble(sessions.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours)) : null;
             return sessionHours;
         }
-        public double? SessionAverageHours(List<SessionInfo> sessions, Guid applicationUserId, DateTime? date, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        public double? SessionAverageHours(List<SessionInfo> sessions, Guid applicationUserId, DateTime? date, DateTime beg = default, DateTime end = default)
         {
             var sessionsUser = sessions.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date);
             return sessionsUser.Any() ? (double?)sessionsUser.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : null;
         }
 
 
-        public double? DialogueSumDuration(IGrouping<DateTime, DialogueInfoFull> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        public double? DialogueSumDuration(IGrouping<DateTime, DialogueInfoFull> dialogues, DateTime beg = default, DateTime end = default)
         {
             return dialogues.Any() ? (double?)dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : null;
         }
@@ -550,8 +550,10 @@ namespace UserOperations.Utils
                         && p.BegTime <= ses.EndTime)
                         .OrderBy(p => p.BegTime)
                         .ToArray();
-                List<DateTime> times = new List<DateTime>();
-                    times.Add(ses.BegTime);
+                    List<DateTime> times = new List<DateTime>
+                    {
+                        ses.BegTime
+                    };
                     foreach (var item in dialogInSession)
                     {
                         times.Add(item.BegTime);
@@ -597,12 +599,12 @@ namespace UserOperations.Utils
             return (sessionHours - dialoguesHours) / dialogues.Select(p => p.DialogueId).Distinct().Count();
         }
 
-        public double? DialogueAverageDuration(List<DialogueInfoFull> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        public double? DialogueAverageDuration(List<DialogueInfoFull> dialogues, DateTime beg = default, DateTime end = default)
         {
             return dialogues.Any() ? dialogues.Average(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
         }
 
-        public double? DialogueAverageDuration(IGrouping<Guid, DialogueInfoFull> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        public double? DialogueAverageDuration(IGrouping<Guid, DialogueInfoFull> dialogues, DateTime beg = default, DateTime end = default)
         {
             return dialogues.Average(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours);
         }
@@ -610,7 +612,7 @@ namespace UserOperations.Utils
         {
             return dialogues.Average(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours);
         }
-        public double? DialogueAverageDuration(IGrouping<DateTime, DialogueInfoFull> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
+        public double? DialogueAverageDuration(IGrouping<DateTime, DialogueInfoFull> dialogues, DateTime beg = default, DateTime end = default)
         {
             return dialogues.Any() ? (double?)dialogues.Average(r => Min(r.EndTime, end).Subtract(Max(r.BegTime, beg)).TotalHours) : null;
         }
@@ -870,15 +872,16 @@ namespace UserOperations.Utils
 
         public List<ReportFullDayInfo> TimeTable(List<SessionInfo> sessions, List<DialogueInfoFull> dialogues, Guid applicationUserId, DateTime date)
         {
-            var result = new List<ReportFullDayInfo>();
-
-            result.Add(new ReportFullDayInfo
+            var result = new List<ReportFullDayInfo>
             {
-                Beg = date.Date,
-                End = date.Date.AddDays(1),
-                ActivityType = 0,
-                DialogueId = null
-            });
+                new ReportFullDayInfo
+                {
+                    Beg = date.Date,
+                    End = date.Date.AddDays(1),
+                    ActivityType = 0,
+                    DialogueId = null
+                }
+            };
 
             if (sessions.Count() != 0)
             {
@@ -921,7 +924,7 @@ namespace UserOperations.Utils
             return result;
         }
 
-        public List<double> WorkingDaysTimeListInMinutes(WorkingTime[] timeTable, DateTime beg, DateTime end, List<Guid> companyIds, List<Device> devices, string role)
+        public List<double> WorkingTimeDoubleList(WorkingTime[] timeTable, DateTime beg, DateTime end, List<Guid> companyIds, List<Device> devices, string role)
         {
             int active = 3;
             List<double> times = new List<double>();
@@ -939,6 +942,23 @@ namespace UserOperations.Utils
                     {
                         times.Add(timeTableForComp[(int)i.DayOfWeek]);
                     }
+                }
+            }
+            return times;
+        }
+
+        public List<double> WorkingTimeDoubleListInMinForOneCompany(WorkingTime[] timeTable, DateTime beg, DateTime end, Guid companyId, int devicesAmount)
+        {
+            List<double> times = new List<double>();
+
+            if (!timeTable.Any()) return null;
+            if (devicesAmount == 0) return times;
+            var timeTableForComp = GetTimeTable(companyId, timeTable);
+            for (int d = 0; d < devicesAmount; d++)
+            {
+                for (var i = beg.Date; i < end.Date; i = i.AddDays(1))
+                {
+                    times.Add(timeTableForComp[(int)i.DayOfWeek]);
                 }
             }
             return times;

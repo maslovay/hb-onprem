@@ -52,7 +52,7 @@ namespace UserOperations.Services
                                         && (!deviceIds.Any() || deviceIds.Contains(x.DeviceId))
                                         && x.StatusId == active)
                                     .ToList();
-                var timeTableForDevices = _dbOperations.WorkingDaysTimeListInMinutes(workingTimes, begTime, endTime, companyIds, devicesFiltered, role);
+                var timeTableForDevices = _dbOperations.WorkingTimeDoubleList(workingTimes, begTime, endTime, companyIds, devicesFiltered, role);
 
                 var sessions = GetSessionsInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
