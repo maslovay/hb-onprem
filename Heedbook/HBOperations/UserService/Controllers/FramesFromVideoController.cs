@@ -9,7 +9,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+   // [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class FramesFromVideoController : ControllerBase
     {
@@ -26,7 +26,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Extract frames from video each 3 seconds")]
         public async Task<IActionResult> CutVideoToFrames([FromBody] FramesFromVideoRun message)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _publisher.Publish(message);
             return Ok();
         }

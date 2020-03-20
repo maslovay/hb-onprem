@@ -13,7 +13,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class DialogueCreationController : Controller
     {
@@ -35,7 +35,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Dialogue creation. Merge videos and frames in one video.")]
         public async Task<IActionResult> DialogueCreation([FromBody] DialogueCreationRun message)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var languageId = _genericRepository.GetWithInclude<ApplicationUser>(p =>
                                                         p.Id == message.ApplicationUserId,
                                                     link => link.Company)
@@ -73,7 +73,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Changes InStatistic field for a dialog.")]
         public async Task<IActionResult> ChangeInStatistic(Guid dialogueId, bool inStatistic)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var dialog = _genericRepository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
 
             if (dialog == default(Dialogue))

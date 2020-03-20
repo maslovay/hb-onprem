@@ -11,7 +11,7 @@ namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ControllerExceptionFilter]
     public class FillingFileFrameController : Controller
     {

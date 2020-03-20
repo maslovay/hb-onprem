@@ -24,7 +24,7 @@ namespace UserOperations.Services
 
         public async Task FlushStats( List<SlideShowSession> stats)
         {
-            _loginService.GetCurrentCompanyId();
+            //_loginService.GetCurrentCompanyId();
             foreach (SlideShowSession stat in stats)
             {
                 if(stat.ContentType == "url")//"url" "media" "content"
@@ -45,7 +45,7 @@ namespace UserOperations.Services
 
         public async Task<string> PollAnswer( CampaignContentAnswerModel answer)
         {
-            _loginService.GetCurrentCompanyId();
+           // _loginService.GetCurrentCompanyId();
             CampaignContentAnswer entity = new CampaignContentAnswer
             {
                 CampaignContentAnswerId = Guid.NewGuid(),

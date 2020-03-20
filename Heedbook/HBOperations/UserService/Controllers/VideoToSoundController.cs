@@ -8,7 +8,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class VideoToSoundController : Controller
     {
@@ -25,7 +25,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Extract audio from video")]
         public IActionResult VideoToSound([FromBody] VideoToSoundRun message)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
             return Ok();
         }

@@ -15,7 +15,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class DialogueAssembleController : Controller
     {
@@ -39,7 +39,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Dialogue creation. Assemble videos and frames in one video.")]
         public async Task<IActionResult> DialogueAssemble([FromBody] DialogueCreationRun message)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var user = _context.ApplicationUsers.Include(p=>p.Company)
                 .FirstOrDefault(p => p.Id == message.ApplicationUserId);
             int? languageId;
@@ -91,7 +91,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Changes InStatistic field for a dialog.")]
         public async Task<IActionResult> ChangeInStatistic(Guid dialogueId, bool inStatistic)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var dialog = _genericRepository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
 
             if (dialog == default(Dialogue))

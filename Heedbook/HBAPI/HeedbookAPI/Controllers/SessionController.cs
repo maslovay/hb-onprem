@@ -7,11 +7,14 @@ using Microsoft.AspNetCore.Authorization;
 using UserOperations.Models;
 using UserOperations.Utils;
 
+/// <summary>
+/// called from devices and by web socket
+/// </summary>
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+ //   [Authorize(AuthenticationSchemes = "Bearer")]
     [ControllerExceptionFilter]
     public class SessionController : Controller
     {

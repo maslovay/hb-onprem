@@ -14,7 +14,7 @@ using HBLib.Utils;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+   // [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class PersonDetectionController : ControllerBase
     {
@@ -32,7 +32,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
         public async Task<IActionResult> PersonDetectionRun([FromBody] PersonDetectionRun message)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
             return Ok();
         }
@@ -41,7 +41,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
         public async Task<IActionResult> PersonDetectionAllDevicesRun()
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var begTime = DateTime.UtcNow.AddDays(-30);
             var devices = _context.Dialogues.Where(p => p.BegTime > begTime)
                 .Select(p => p.DeviceId)

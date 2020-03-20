@@ -15,7 +15,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+   // [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class FaceController : ControllerBase
     {
@@ -35,7 +35,7 @@ namespace UserService.Controllers
             "Analyze frame. Detect faces and calculate emotions and face attributes such as gender and age")]
         public async Task<IActionResult> FaceAnalyzeRun([FromBody] FaceAnalyzeRun message)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
             return Ok();
         }
@@ -44,7 +44,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Analyze frame. Detect face, return gender and age")]
         public async Task<IActionResult> FrameAnalyze([FromBody] string imageBase64)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {            
                 var faceResult = await _client.GetFaceResult(imageBase64); 

@@ -22,11 +22,11 @@ namespace UserOperations.Services
         }
         public object AddCurrentTabletAppVersion([FromRoute]string version)
         {
-            if(!_loginService.IsAdmin())
-            {
-                var ex = new Exception("Requires ADMIN role!");
-                throw ex;
-            }
+            //if(!_loginService.IsAdmin())
+            //{
+            //    var ex = new Exception("Requires ADMIN role!");
+            //    throw ex;
+            //}
             
             if ( _repository.GetAsQueryable<TabletAppInfo>().Any( t => string.Equals(t.TabletAppVersion, version, StringComparison.CurrentCultureIgnoreCase) ) )
                 return new BadRequestObjectResult("This version already exists!");

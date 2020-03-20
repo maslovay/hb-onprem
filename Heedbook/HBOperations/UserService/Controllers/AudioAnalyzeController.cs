@@ -8,7 +8,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+   // [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class AudioAnalyzeController : Controller
     {
@@ -25,7 +25,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Speech recognition for audio file in message")]
         public IActionResult AudioAnalyze([FromBody] AudioAnalyzeRun message)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
             return Ok();
         }
@@ -34,7 +34,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Tone analyze for audio file in message")]
         public IActionResult ToneAnalyze([FromBody] ToneAnalyzeRun toneAnalyzeRun)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(toneAnalyzeRun);
             return Ok();
         }

@@ -9,7 +9,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class FillingSatisfactionController : ControllerBase
     {
@@ -26,7 +26,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Calculate dialogue satisfaction score")]
         public async Task<IActionResult> FillingSatisfactionRun([FromBody] FillingSatisfactionRun message)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             _handler.EventRaised(message);
             return Ok();
         }

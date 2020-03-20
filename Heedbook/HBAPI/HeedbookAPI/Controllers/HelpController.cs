@@ -232,6 +232,8 @@ namespace UserOperations.Controllers
             return Ok();
         }
 
+     
+
 
         [HttpGet("PersDet")]
         public async Task PersDet(Guid devId)
@@ -441,6 +443,9 @@ namespace UserOperations.Controllers
             return Ok(result);
         }
 
+
+
+     
     }
 }
 

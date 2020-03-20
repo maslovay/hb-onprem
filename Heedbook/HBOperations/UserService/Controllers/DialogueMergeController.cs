@@ -19,7 +19,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+   // [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class DialogueMergeController : Controller
     {
@@ -44,7 +44,7 @@ namespace UserService.Controllers
             [FromQuery] String begTime,
             [FromQuery] String endTime)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {  
 //                _log.Info("Function Video save info started");

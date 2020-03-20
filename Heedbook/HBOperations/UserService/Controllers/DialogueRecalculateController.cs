@@ -25,7 +25,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+   // [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class DialogueRecalculateController : Controller
     {
@@ -58,7 +58,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Recalculate dialogue")]
         public async Task<IActionResult> DialogueRecalculation([FromQuery] Guid dialogueId)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {
 //                _log.Info("Function Dialogue recalculation started");
@@ -109,7 +109,7 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Re assemble dialogue")]
         public async Task<IActionResult> CheckRelatedDialogueData(Guid dialogueId)
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             //            _log.SetFormat("{DialogueId}");
             //            _log.SetArgs(dialogueId);
             var result = "";
@@ -223,7 +223,7 @@ namespace UserService.Controllers
         [HttpGet("[action]")]
         public IActionResult RecalcPositiveShare()
         {
-            if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var result = 0.0;
 
             var dialogs = _repository.GetWithInclude<Dialogue>(f => f.CreationTime >= DateTime.Now.AddDays(-5)
