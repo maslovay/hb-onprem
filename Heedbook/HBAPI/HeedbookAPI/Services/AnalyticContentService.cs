@@ -131,7 +131,7 @@ namespace UserOperations.Services
             var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
 
             jsonToReturn["AnswersInfo"] = answersByContent;
-            jsonToReturn["AnswersAmount"] = pollShown.Count();
+            jsonToReturn["PollAmount"] = pollShown.Count();
             return jsonToReturn;
         }
 
