@@ -94,11 +94,11 @@ namespace UserOperations.Utils.AnalyticRatingUtils
             return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
         }
 
-        public double? DialogueAveragePause(List<double> sessionTime, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
+        public double? DialogueHourAveragePause(List<double> sessionMinTime, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
-            var sessionHours = sessionTime.Sum();
-            var dialoguesHours = dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalMinutes);
-            return (sessionHours - dialoguesHours) / dialogues.Select(p => p.DialogueId).Distinct().Count();
+            var sessionMin = sessionMinTime.Sum();
+            var dialoguesMin = dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalMinutes);
+            return (sessionMin - dialoguesMin)/ 60 / dialogues.Select(p => p.DialogueId).Distinct().Count();
         }
    
     }

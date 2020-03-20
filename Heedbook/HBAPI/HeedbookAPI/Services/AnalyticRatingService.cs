@@ -142,12 +142,6 @@ namespace UserOperations.Services
                 //var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
-                var devices = _repository.GetAsQueryable<Device>()
-                                      .Where(x => companyIds.Contains(x.CompanyId)
-                                          && x.StatusId == active)
-                                      .ToList();
-            //    var timeTableForDevices = _dbOperations.WorkingDaysTimeListInMinutes(workingTimes, begTime, endTime, companyIds, devicesFiltered, role);
-
                 var typeIdCross = await GetCrossPhraseTypeId();
 
                 var dialogues = await GetDialogueInfoCompanys(
@@ -177,7 +171,7 @@ namespace UserOperations.Services
                         DaysCount = p.Select(q => q.BegTime.Date).Distinct().Count(),
                         WorkingHoursDaily = _analyticRatingUtils.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAverageDuration = _analyticRatingUtils.DialogueAverageDuration(p, begTime, endTime),
-                        DialogueAveragePause = _analyticRatingUtils.DialogueAveragePause(
+                        DialogueAveragePause = _analyticRatingUtils.DialogueHourAveragePause(
                                  _dbOperations.WorkingTimeDoubleListInMinForOneCompany(
                                                 workingTimes,
                                                 begTime, endTime,
