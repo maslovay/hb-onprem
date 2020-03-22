@@ -43,7 +43,7 @@ WORKDIR /app/HBOperations/DialogueStatusCheckerSchedulerTests/
 RUN dotnet build
 
 #RUN ../../rabbit_test_start.sh; exit 0;
-RUN ../../rabbit_test_start.sh
+RUN ../../rabbit_test_start_dialogue_status_checker.sh
 
 #RUN service --status-all
 
