@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using System;
 
-namespace UserOperations.Controllers
+
+namespace UserOperations.Utils
 {
     public class ControllerExceptionFilter : ExceptionFilterAttribute
     {

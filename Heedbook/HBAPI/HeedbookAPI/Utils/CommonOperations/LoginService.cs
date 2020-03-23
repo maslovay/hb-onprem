@@ -28,16 +28,16 @@ namespace UserOperations.Services
         private const int ATTEMPT_TO_FAIL_LOG_IN = 5;
 
         public LoginService(
-            IConfiguration config, 
+            IConfiguration config,
             IGenericRepository repository,
-            FileRefUtils fileRef, 
-         //   SftpSettings sftpSettings, 
+            FileRefUtils fileRef,
+            //   SftpSettings sftpSettings, 
             IHttpContextAccessor httpContextAccessor)
         {
             _config = config;
             _repository = repository;
             _fileRef = fileRef;
-         //   _sftpSettings = sftpSettings;
+            //   _sftpSettings = sftpSettings;
             _httpContextAccessor = httpContextAccessor;
         }
         public string GeneratePasswordHash(string password)
@@ -50,7 +50,7 @@ namespace UserOperations.Services
 
         public bool CheckUserLogin(string login, string password)
         {
-            if(password == null || login == null) return false;
+            if (password == null || login == null) return false;
             login = login.ToUpper();
             password = GeneratePasswordHash(password);
             return _repository.GetAsQueryable<ApplicationUser>().Count(p => p.NormalizedEmail == login && p.PasswordHash == password) == 1;
@@ -70,11 +70,40 @@ namespace UserOperations.Services
                 // var roleInfo = _repository.GetWithIncludeOne<ApplicationUserRole>(p => p.UserId == user.Id, link => link.Role); 
                 var roleInfo = _repository.GetAsQueryable<ApplicationUserRole>().Include(x => x.Role).Where(x => x.UserId == user.Id).FirstOrDefault();
                 var role = roleInfo.Role.Name;
-
-                if (user.StatusId == 3)
+                Claim[] claims;
+                if (role.ToLower() == "service")
                 {
-                    var claims = new[]
-                    {
+                    claims = ClaimsForWebsocket(user, role);
+                }
+                else if(user.StatusId == 3 )
+                {
+                    claims = ClaimsForUser(user, role);
+                }
+                else return "User inactive";
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
+                    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                    var token = new JwtSecurityToken(_config["Tokens:Issuer"],
+                        _config["Tokens:Issuer"],
+                        claims,
+                        expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
+                        signingCredentials: creds);
+
+                    var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
+                return tokenenc;
+               
+            }
+            catch (Exception e)
+            {
+                return $"User not exist or internal error {e}";
+            }
+        }
+
+        private Claim[] ClaimsForUser(ApplicationUser user, string role)
+        {
+            var claims = new[]
+                   {
                         new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                         new Claim("applicationUserId", user.Id.ToString()),
@@ -88,28 +117,21 @@ namespace UserOperations.Services
                         new Claim("avatar", GetAvatar(user.Avatar)),
                         new Claim("isExtended", user.Company.IsExtended.ToString())
                     };
+            return claims;
+        }
 
-                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
-                    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-                    var token = new JwtSecurityToken(_config["Tokens:Issuer"],
-                        _config["Tokens:Issuer"],
-                        claims,
-                        expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
-                        signingCredentials: creds);
-
-                    var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
-                    return tokenenc;
-                }
-                else
-                {
-                    return "User inactive";
-                }
-            }
-            catch (Exception e)
-            {
-                return $"User not exist or internal error {e}";
-            }
+        private Claim[] ClaimsForWebsocket(ApplicationUser user, string role)
+        {
+            var claims = new[]
+                    {
+                        new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                        new Claim("applicationUserId", user.Id.ToString()),
+                        new Claim("applicationUserName", user.FullName),
+                        new Claim("role", role),
+                        new Claim("fullName", user.FullName),
+                    };
+            return claims;
         }
 
         public string CreateTokenForDevice(Device device)
@@ -156,15 +178,15 @@ namespace UserOperations.Services
             claims = null;
             if (sign == "" || sign == null)
                 sign = _config["Tokens:Key"];
-                var pureToken = token.Split(' ')[1];
-                if (CheckToken(pureToken, sign))
-                {
-                    var jwt = new JwtSecurityToken(pureToken);
-                    claims = jwt.Payload.ToDictionary(key => key.Key.ToString(), value => value.Value.ToString());
-                    return true;
-                }
-                else
-                    return false;
+            var pureToken = token.Split(' ')[1];
+            if (CheckToken(pureToken, sign))
+            {
+                var jwt = new JwtSecurityToken(pureToken);
+                claims = jwt.Payload.ToDictionary(key => key.Key.ToString(), value => value.Value.ToString());
+                return true;
+            }
+            else
+                return false;
         }
 
         /// <summary>
@@ -194,7 +216,7 @@ namespace UserOperations.Services
             return true;
         }
 
-        
+
         public bool SavePasswordHistory(Guid userId, string passwordHash)
         {
             // PasswordHistory newPswd = null;
@@ -218,7 +240,7 @@ namespace UserOperations.Services
         // make error logins counter zero(if success) or create new line in error logins
         public bool SaveErrorLoginHistory(Guid userId, string type)
         {
-           
+
             // var lastlogin = _context.LoginHistorys.Where(x => x.UserId == userId).OrderByDescending(x => x.LoginTime).FirstOrDefault(); 
             // //---if user make success login we need make counter of failed logins to zero
             // if( type == "success" )
@@ -250,15 +272,15 @@ namespace UserOperations.Services
             //     _context.SaveChanges();
             //     return false;//---user has no any attempts
             // }               
-           return true;
+            return true;
         }
-      
+
 
         // //sendgrid account settings
         // private static string sendGridApiKey = "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";
         // private static string sendGridSenderEmail = "info@wantad.club";
         // private static string sendGridSenderName = "WantAd";
-      
+
         public string GeneratePass(int x)
         {
             string pass = "";
@@ -276,10 +298,10 @@ namespace UserOperations.Services
         public Guid GetCurrentCompanyId()
            => Guid.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "companyId")?.Value);
         public Guid? GetCurrentCorporationId()
-        { 
-           Guid.TryParse(_httpContextAccessor.HttpContext.User.Claims
-               .FirstOrDefault(c => c.Type == "corporationId")?.Value, out var corporationId);
-           return corporationId;
+        {
+            Guid.TryParse(_httpContextAccessor.HttpContext.User.Claims
+                .FirstOrDefault(c => c.Type == "corporationId")?.Value, out var corporationId);
+            return corporationId == default ? null : (Guid?)corporationId;
         }
 
 
@@ -290,18 +312,18 @@ namespace UserOperations.Services
            => Int32.Parse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "languageCode")?.Value);
 
         public Guid? GetCurrentDeviceId()
-        { 
+        {
             Guid.TryParse(_httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "deviceId")?.Value, out var deviceId);
             return (deviceId == Guid.Empty || deviceId == null) ? null : (Guid?)deviceId;
         }
         public string GetCurrentRoleName()
         {
-           return _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value;
+            return _httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value;
         }
 
         private bool AvatarExist(string avatarPath)
         {
-            if(String.IsNullOrEmpty(avatarPath))
+            if (String.IsNullOrEmpty(avatarPath))
                 return false;
             return true;
         }
@@ -315,6 +337,39 @@ namespace UserOperations.Services
         public bool IsAdmin()
         {
             return GetCurrentRoleName().ToUpper() == "ADMIN" ? true : false;
+        }
+
+
+
+
+        ///remove
+        public string CreateTokenEmpty()
+        {
+            try
+            {
+                var claims = new[]
+                {
+                    new Claim(JwtRegisteredClaimNames.Sub, ""),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim("name", "empty")
+                };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken(_config["Tokens:Issuer"],
+                    _config["Tokens:Issuer"],
+                    claims,
+                    expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
+                    signingCredentials: creds);
+
+                var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
+                return tokenenc;
+            }
+            catch (Exception e)
+            {
+                return $"Device not exist or internal error {e}";
+            }
         }
     }
 }

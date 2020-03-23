@@ -20,6 +20,11 @@ using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
 using UnitTestExtensions;
 using HBMLHttpClient;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Http;
 
 namespace UserService
 {
@@ -64,6 +69,8 @@ namespace UserService
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
+            services.AddScoped<CheckTokenService>();
+            services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddSwaggerGen(c =>
             {
@@ -73,6 +80,31 @@ namespace UserService
                     Title = "User Service Api",
                     Version = "v1"
                 });
+
+                c.AddSecurityDefinition("Bearer", new ApiKeyScheme()
+                {
+                    Description = "JWT Authorization header {token}",
+                    Name = "Authorization",
+                    In = "header",
+                    Type = "apiKey"
+                });
+                c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                    {
+                        { "Bearer", new string[] { } }
+                    });
+            });
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidIssuer = Configuration["Tokens:Issuer"],
+                    ValidAudience = Configuration["Tokens:Issuer"],
+                    RequireSignedTokens = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
+                };
             });
 
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));

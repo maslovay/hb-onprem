@@ -1,14 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using UserOperations.Services;
-using HBData;
-using HBLib.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -25,7 +22,7 @@ namespace UserOperations.Controllers
             MediaFileService mediaFileService
             )
         {
-            _mediaFileService = mediaFileService;      
+            _mediaFileService = mediaFileService;
         }
 
         [HttpGet("File")]

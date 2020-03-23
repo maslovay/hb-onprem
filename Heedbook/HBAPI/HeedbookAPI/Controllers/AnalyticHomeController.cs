@@ -5,6 +5,7 @@ using UserOperations.Services;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Models.Get.HomeController;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -23,19 +24,19 @@ namespace UserOperations.Controllers
             _analyticHomeService = analyticHomeService;
         }
 
-        [HttpGet("Dashboard")]
-        public async Task<string> GetDashboard([FromQuery(Name = "begTime")] string beg,
-                                                        [FromQuery(Name = "endTime")] string end, 
-                                                        [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
-            await _analyticHomeService.GetDashboard(
-                beg,
-                end,
-                companyIds,
-                corporationIds,
-                deviceIds
-            );
+        //[HttpGet("Dashboard")]
+        //public async Task<string> GetDashboard([FromQuery(Name = "begTime")] string beg,
+        //                                                [FromQuery(Name = "endTime")] string end, 
+        //                                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
+        //                                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+        //                                                [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
+        //    await _analyticHomeService.GetDashboard(
+        //        beg,
+        //        end,
+        //        companyIds,
+        //        corporationIds,
+        //        deviceIds
+        //    );
         
 
         [HttpGet("NewDashboard")]

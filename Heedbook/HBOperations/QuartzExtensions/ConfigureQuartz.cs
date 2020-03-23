@@ -1,10 +1,10 @@
 ﻿using System;
+using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions.Jobs;
-using UserOperations.Services;
 
 namespace QuartzExtensions
 {
@@ -135,7 +135,7 @@ namespace QuartzExtensions
                                     .WithCronSchedule("0 00 7 ? * MON", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())
                                     .Build();
             });
-            services.AddSingleton<LoginService>();
+            services.AddSingleton<CheckTokenService>();
             services.AddSingleton(provider =>
             {
                 var schedulerFactory = new StdSchedulerFactory();

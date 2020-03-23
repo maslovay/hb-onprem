@@ -7,12 +7,16 @@ using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Controllers;
 using UserOperations.Models;
+using UserOperations.Utils;
 
+/// <summary>
+/// called from devices
+/// </summary>
 namespace UserOperations.ControllersV2
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ControllerExceptionFilter]
     public class DemonstrationV2Controller : Controller
     {

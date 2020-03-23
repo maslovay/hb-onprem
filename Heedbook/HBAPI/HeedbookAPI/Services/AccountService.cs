@@ -8,6 +8,7 @@ using UserOperations.AccountModels;
 using HBData.Repository;
 using System.Transactions;
 using UserOperations.Utils;
+using System.Collections.Generic;
 
 namespace UserOperations.Services
 {
@@ -38,7 +39,19 @@ namespace UserOperations.Services
             _helpProvider = helpProvider;
         }
 
-        public async Task RegisterNewCompanyAndUser(UserRegister message)
+        public async Task<Dictionary<string, bool>> ValidateToken(string token)
+        {
+            try
+            {
+                return new Dictionary<string, bool>() { { "status", _loginService.GetDataFromToken(token, out var claims) } };
+            }
+            catch
+            {
+                return new Dictionary<string, bool>() { { "status", false } };
+            }
+        }
+
+            public async Task RegisterNewCompanyAndUser(UserRegister message)
         {
             var statusActiveId = GetStatusId("Active");
             if (await CompanyExist(message.CompanyName) || await EmailExist(message.Email))
@@ -72,7 +85,7 @@ namespace UserOperations.Services
                 if (user.StatusId != GetStatusId("Active")) throw new Exception("User not activated");
 
                 if (_loginService.CheckUserLogin(message.UserName, message.Password))
-                    return _loginService.CreateTokenForUser(user);
+                      return _loginService.CreateTokenForUser(user);
                 else
                     throw new UnauthorizedAccessException("Error in username or password");
         }
@@ -125,6 +138,14 @@ namespace UserOperations.Services
         {
             _loginService.GetCurrentUserId();
             _helpProvider.AddComanyPhrases(fileName);
+        }
+        public void DeleteUser(string email)
+        {
+            var user = _repository.GetAsQueryable<ApplicationUser>().Include(x => x.UserRoles).FirstOrDefault(p => p.Email == email);
+
+            _repository.Delete<ApplicationUserRole>(user.UserRoles);
+            _repository.Delete<ApplicationUser>(user);
+            _repository.Save();
         }
 
 
@@ -353,5 +374,8 @@ namespace UserOperations.Services
             _repository.Delete<Company>(company);
             _repository.Save();
         }
+
+
+        public async Task<string> CreateEmptyToken() => _loginService.CreateTokenEmpty();
     }
 }

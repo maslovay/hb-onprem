@@ -5,6 +5,8 @@ using Swashbuckle.AspNetCore.Annotations;
 using HBData.Models.AccountViewModels;
 using UserOperations.AccountModels;
 using UserOperations.Services;
+using UserOperations.Utils;
+using System.Collections.Generic;
 
 namespace UserOperations.Controllers
 {
@@ -55,6 +57,13 @@ namespace UserOperations.Controllers
                     [FromHeader, SwaggerParameter("JWT token not required, if exist receive new password, if not - generate new password", Required = false)] string Authorization)
             => await _service.ChangePassword(message, Authorization);
 
+        [HttpPost("ValidateToken")]
+        [SwaggerOperation(Summary = "Return true or false")]
+        [SwaggerResponse(400, "The user data is invalid", typeof(string))]
+        [SwaggerResponse(200, "{\"status\": <bool>}")]
+        public async Task<Dictionary<string,bool>> ValidateToken([FromHeader, SwaggerParameter("JWT token not", Required = true)] string Authorization)
+         => await _service.ValidateToken(Authorization);
+
 
         [HttpPost("ChangePasswordOnDefault")]
         [Authorize(AuthenticationSchemes = "Bearer")]
@@ -73,9 +82,19 @@ namespace UserOperations.Controllers
                         string email)
             => await _service.DeleteCompany(email);
 
+        [HttpDelete("RemoveUser")]
+        [SwaggerOperation(Summary = "Delete user, company, trial tariff - only for developers")]
+        public async Task UserDelete([FromQuery,
+                        SwaggerParameter("user email", Required = true)]
+                        string email)
+          =>  _service.DeleteUser(email);
 
         [HttpGet("[action]")]
         [Authorize(AuthenticationSchemes = "Bearer")]
         public void AddCompanyDictionary(string fileName)=>  _service.AddPhrasesFromExcel(fileName);
+
+
+        [HttpPost("EmptyToken")]
+        public async Task<string> EmptyToken()=>await _service.CreateEmptyToken();
     }
 }

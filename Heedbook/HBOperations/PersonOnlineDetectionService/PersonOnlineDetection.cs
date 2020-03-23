@@ -55,7 +55,10 @@ namespace PersonOnlineDetectionService
             {
                 var begTime = DateTime.Now.AddDays(-30);
                 var lastClientsInfo = _context.Clients
-                    .Where(p => p.CompanyId == message.CompanyId && p.LastDate >= begTime && p.FaceDescriptor.Any())
+                    .Where(p => p.CompanyId == message.CompanyId 
+                        && p.LastDate >= begTime 
+                        && p.FaceDescriptor.Any()
+                        && p.StatusId == 3)
                     .ToList();
                 // var lastClientsInfo = _context.ClientNotes
                     // .Include(p => p.Client)

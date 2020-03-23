@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
 using HBLib.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,21 +18,24 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class VideoSaveController : Controller
     {
         private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
-//        private readonly ElasticClient _log;
+        private readonly CheckTokenService _service;
+        //        private readonly ElasticClient _log;
 
 
-        public VideoSaveController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient/*, ElasticClient log*/)
+        public VideoSaveController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient, CheckTokenService service/*, ElasticClient log*/)
         {
             _handler = handler;
             _context = context;
             _sftpClient = sftpClient;
-//            _log = log;
+            _service = service;
+            //            _log = log;
         }
 
         [HttpPost]
@@ -42,6 +46,7 @@ namespace UserService.Controllers
             [FromForm] IFormCollection formData,
             [FromQuery] Guid? applicationUserId = null)
         {
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {  
 //                _log.Info("Function Video save info started");
