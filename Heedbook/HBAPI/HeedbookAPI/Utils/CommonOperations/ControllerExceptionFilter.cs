@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UserOperations.Utils
 {
@@ -32,11 +34,10 @@ namespace UserOperations.Utils
                 {
                     Code = code,
                     Message = context.Exception.Message
-                }
-                )
-            {
-                StatusCode = code
-            };
+                })
+                {
+                    StatusCode = code
+                };
 
             base.OnException(context);
         }
@@ -46,7 +47,7 @@ namespace UserOperations.Utils
     {
         public int Code { get; set; }
         public string Message { get; set; }
-        public List<Error> Errors { get; set; }
+        public Dictionary<string, string> Errors { get; set; }
     }
 
     class Error
