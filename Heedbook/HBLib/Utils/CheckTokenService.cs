@@ -2,8 +2,6 @@ using System;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using HBData;
-<<<<<<< HEAD
-=======
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using HBData.Models;
@@ -12,7 +10,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Configuration;
->>>>>>> devices
 
 namespace HBLib.Utils
 {
@@ -20,15 +17,6 @@ namespace HBLib.Utils
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly RecordsContext _context;
-<<<<<<< HEAD
-
-        public CheckTokenService(
-            IHttpContextAccessor httpContextAccessor,
-            RecordsContext context)
-        {
-            _httpContextAccessor = httpContextAccessor;
-            _context = context;
-=======
         private readonly IConfiguration _config;
 
         public CheckTokenService(
@@ -105,7 +93,6 @@ namespace HBLib.Utils
                         new Claim("isExtended", user.Company.IsExtended.ToString())
                     };
             return claims;
->>>>>>> devices
         }
 
         public bool CheckIsUserAdmin()
