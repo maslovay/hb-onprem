@@ -25,6 +25,6 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "model added in data base")]
         public async System.Threading.Tasks.Task<object> FileFramePostAsync([FromBody, SwaggerParameter("Send frames", Required = true)] 
                                 List<FileFramePostModel> frames ) =>
-            await _fillingFileFrameService.FillingFileFrameAsync(frames);
+            _fillingFileFrameService.FillingFileFrame(frames);
     }    
 }

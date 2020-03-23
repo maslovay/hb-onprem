@@ -76,7 +76,7 @@ namespace UserOperations.Services
                     FtpLink = _fileRef.GetFileLink(_containerName, x.Key2 + ".png", default) + $"?{x.Result.FirstOrDefault().ContentUpdateDate}",
                     EmotionAttention = EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList())
                 })
-                .Union(contentsShownGroup.Where(x => x.Key2 == null) != null ? contentsShownGroup.Where(x => x.Key2 == null).Select(x => new ContentFullOneInfo
+                .Union(contentsShownGroup.Where(x => x.Key2 == null)?.Select(x => new ContentFullOneInfo
                 {
                     Content = null,
                     AmountViews = x.Result.Count(),
@@ -84,7 +84,7 @@ namespace UserOperations.Services
                     EmotionAttention = EmotionDuringAdvOneDialogue(x.Result, dialogue.DialogueFrame.ToList()),
                     ExternalLink = x.Key3.ToString(),
                 }
-                ) : null)
+                ))
                 .ToList()
             };
             List<CampaignContentAnswer> answers = await GetAnswersInOneDialogueAsync(dialogue.BegTime, dialogue.EndTime, dialogue.DeviceId);
