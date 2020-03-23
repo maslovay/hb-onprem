@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using HBLib;
 using HBLib.Utils;
@@ -82,8 +83,11 @@ namespace VideoToSoundService
                             Path = uploadPathEmp
                         };
                         _publisher.Publish(audioAnalyzeEvent);
+                        Thread.Sleep(100);
                         _publisher.Publish(toneAnalyzeEvent);
+                        Thread.Sleep(100);
                         _publisher.Publish(audioAnalyzeEmpEvent);
+                        Thread.Sleep(100);
                         _publisher.Publish(toneAnalyzeEmpEvent);
                         _log.Info("message sent to rabbit. Wait for tone analyze and audio analyze");
                     }

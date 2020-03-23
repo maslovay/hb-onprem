@@ -34,6 +34,7 @@ namespace ExtractFramesFromVideoService.Tests
         private DateTime minDate;
         private DateTime maxDate;
         public Guid TestUserId => Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
+        public Guid TestDeviceId => Guid.Parse("9b04f21f-cb1b-45db-9edb-7d5953c81114");
         private const string _testFilePattern = "testuser*.mkv";
         private Process _userServiceProcess;
         private Process _extractServiceProcess;
@@ -84,26 +85,28 @@ namespace ExtractFramesFromVideoService.Tests
                 throw new Exception("No video for testing!");
 
             videoFileName = Path.GetFileName(resourceVideos.First());
-
-            correctFileName = videoFileName.Replace("testuser", TestUserId.ToString());
-            
+            System.Console.WriteLine($"{videoFileName}");
+            var tmpFileName = videoFileName.Replace("testuser_", "");
+            correctFileName = $"{TestUserId}_{TestDeviceId}_{tmpFileName}";
+            System.Console.WriteLine($"{correctFileName}");
             if (!await _ftpClient.IsFileExistsAsync(Path.Combine("videos", correctFileName)))
                 await _ftpClient.UploadAsync(Path.Combine(rootDir, "Resources", videoFileName), "videos", correctFileName);
             
-            var videoTimestampText = videoFileName.Split(("_"))[2];
+            var videoTimestampText = videoFileName.Split(("_"))[1];
+            System.Console.WriteLine($"{videoTimestampText}");
             minDate = DateTime.ParseExact(videoTimestampText, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);
             maxDate = minDate.AddSeconds(30);
         }
 
         private void CleanDatabaseRecords()
         {
-            var fileFrames = _repository.Get<FileFrame>()
-                .Where(f => f.FileName.Contains(TestUserId.ToString()) && f.Time >= minDate && f.Time <= maxDate);
+            // var fileFrames = _repository.Get<FileFrame>()
+            //     .Where(f => f.FileName.Contains(TestUserId.ToString()) && f.Time >= minDate && f.Time <= maxDate);
 
-            foreach (var ff in fileFrames)
-                _repository.Delete(ff);
+            // foreach (var ff in fileFrames)
+            //     _repository.Delete(ff);
             
-            _repository.Save();
+            // _repository.Save();
         }
         
         [TearDown]
@@ -149,7 +152,7 @@ namespace ExtractFramesFromVideoService.Tests
             }
         }
         
-        [Test(Description = "Framing test"), Retry(3)]
+        [Test(Description = "Framing test")]
         public async Task RunTest()
         {
             var framesFromVideoRun = new FramesFromVideoRun()
@@ -158,22 +161,21 @@ namespace ExtractFramesFromVideoService.Tests
             };
 
             var json = JsonConvert.SerializeObject(framesFromVideoRun);
-
-            Thread.Sleep(3000);
             
             SendRequest(json);
 
             Thread.Sleep(20000);
 
             Assert.True(_repository.Get<FileFrame>()
-                .Any(f => f.FileName.Contains(TestUserId.ToString()) && f.Time >= minDate && f.Time <= maxDate));
+                .Any(f => f.DeviceId == TestDeviceId 
+                    && f.Time >= minDate 
+                    && f.Time <= maxDate));
 
             _ftpClient.ChangeDirectoryToDefault();
             var checkTask = _ftpClient.ListDirectoryFiles("frames", TestUserId.ToString());
             Task.WaitAll(checkTask);
             var framesOnServer = checkTask.Result;
             Assert.True(framesOnServer.Count > 0);
-
             StopServices();
         }
     }
