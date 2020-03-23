@@ -263,7 +263,8 @@ namespace UserOperations.Services
                         IsPoll = p.IsPoll,
                         Url = p.Url,
                         ApplicationUserId = (Guid)p.ApplicationUserId,
-                        EmotionAttention = EmotionAttentionCalculate(dialogue.DialogueFrame.ToList())
+                        EmotionAttention = EmotionAttentionCalculate(dialogue.DialogueFrame.ToList()),
+                        ContentUpdateDate = p.CampaignContent != null ? p.CampaignContent.Content.UpdateDate.ToString() : ""
                     })
                 .ToList();
             return slideShows;
