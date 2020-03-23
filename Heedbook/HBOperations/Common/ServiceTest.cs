@@ -23,6 +23,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using RabbitMqEventBus;
@@ -41,15 +42,15 @@ namespace Common
 
         public IServiceScopeFactory ScopeFactory { get; private set; }
 
-        private const string FileFrameWithDatePattern = @"(.*)_([0-9]*)";
+        private const string FileFrameWithDatePattern = @"(.*)_(.*)_([0-9]*)";
 
-        private const string FileVideoWithDatePattern = @"(.*)_([0-9]*)_(.*)";
+        private const string FileVideoWithDatePattern = @"(.*)_(.*)_([0-9]*)_(.*)";
         
         private Action _additionalInitialization;
         
         public Guid TestUserId => Guid.Parse("fff3cf0e-cea6-4595-9dad-654a60e8982f");
 
-        public Guid TestDeviceId => Guid.Parse("35719f44-11e7-4227-8d28-7772ba437a3b");
+        public Guid TestDeviceId => Guid.Parse("9b04f21f-cb1b-45db-9edb-7d5953c81114");
 
         private string testCompanyName = "TESTCOMPANY_89083091293392183";
 
@@ -68,7 +69,10 @@ namespace Common
             PrepareDatabase();
             
             if (prepareTestData)
-                await PrepareTestData();
+            {
+                 await PrepareTestData();
+            }
+               
         }
 
         public async virtual Task TearDown()
@@ -234,12 +238,11 @@ namespace Common
             });
 
             Services.Configure<SftpSettings>(Config.GetSection(nameof(SftpSettings)));
-            Services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            Services.AddTransient<SftpClient>();
+            Services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            Services.AddSingleton<SftpClient>();
             
-            Services.AddScoped<IGenericRepository, GenericRepository>();
+            Services.AddSingleton<IGenericRepository, GenericRepository>();
             Services.AddSingleton(Config);
-            Services.AddSingleton<TelegramSender>();
            
             _additionalInitialization?.Invoke();
             ServiceProvider = Services.BuildServiceProvider();
@@ -254,22 +257,22 @@ namespace Common
         
         protected abstract void InitServices();
 
-        protected Dialogue CreateNewTestDialog(int hourOffset = 1)
-            => CreateNewTestDialog(Guid.NewGuid(), hourOffset);
+        protected Dialogue CreateNewTestDialog(double hourOffset = 1, int statusId = 3)
+            => CreateNewTestDialog(Guid.NewGuid(), hourOffset, statusId);
 
-        protected Dialogue CreateNewTestDialog(Guid dialogId, int hourOffset = 0)
+        protected Dialogue CreateNewTestDialog(Guid dialogueId, double hourOffset = 0, int statusId = 3)
             => new Dialogue
             {
-                DialogueId = dialogId,
-                CreationTime = DateTime.Now.AddHours(-hourOffset),
-                BegTime = DateTime.Now.AddHours(-hourOffset),
+                DialogueId = dialogueId,
+                CreationTime = DateTime.Now.AddHours(hourOffset),
+                BegTime = DateTime.Now.AddHours(hourOffset).AddMinutes(-5),
                 EndTime = DateTime.Now.AddHours(hourOffset),
                 ApplicationUserId = TestUserId,
-                LanguageId = null,
-                StatusId = null,
+                LanguageId = 2,
+                StatusId = statusId,
                 SysVersion = "",
                 InStatistic = false,
-                Comment = "test dialog!!!",
+                Comment = "test dialogue!!!",
                 DeviceId = TestDeviceId
             };
 
@@ -280,13 +283,17 @@ namespace Common
 
         private DateTime GetDateTimeUsingPattern(string pattern, string inputFilePath)
         {
+            System.Console.WriteLine($"{pattern}");
+            System.Console.WriteLine($"{inputFilePath}");
             var fileName = Path.GetFileNameWithoutExtension(inputFilePath);
-
+            System.Console.WriteLine($"{inputFilePath}");
             var dateTimeRegex = new Regex(pattern);
             
             if (dateTimeRegex.IsMatch(fileName))
             {
-                var dateTimeString = dateTimeRegex.Match(inputFilePath).Groups[2].ToString();
+                System.Console.WriteLine($"file name is match Time");
+                var dateTimeString = dateTimeRegex.Match(inputFilePath).Groups[3].ToString();
+                System.Console.WriteLine($"{dateTimeString}");
                 return DateTime.ParseExact(dateTimeString, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);                
             }
             

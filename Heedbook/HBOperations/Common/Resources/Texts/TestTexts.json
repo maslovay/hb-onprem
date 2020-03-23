@@ -4,15 +4,15 @@
       "texts" :
       [
         {
-          "sentense": "Отличное утро!",
+          "sentense": "Отличное утро",
           "class": "positive"
         },
         {
-          "sentense": "Плохой день!",
+          "sentense": "Плохой день",
           "class": "negative"
         },
         {
-          "sentense": "Отличная отбивная, хороший ресторан!",
+          "sentense": "Отличная отбивная, хороший ресторан",
           "class": "positive"
         },
         {

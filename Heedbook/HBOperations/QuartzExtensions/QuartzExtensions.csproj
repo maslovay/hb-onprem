@@ -3,15 +3,14 @@
     <TargetFramework>netcoreapp2.2</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Quartz" Version="3.0.7"/>
-    <PackageReference Include="ZedGraph" Version="6.0.0-alpha0001"/>
-    <PackageReference Include="RazorLight" Version="2.0.0-beta1"/>
+    <PackageReference Include="Quartz" Version="3.0.7" />
+    <PackageReference Include="ZedGraph" Version="6.0.0-alpha0001" />
+    <PackageReference Include="RazorLight" Version="2.0.0-beta1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\HBData\HBData.csproj"/>
-    <ProjectReference Include="..\..\HBLib\HBLib.csproj"/>
-    <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj"/>
-    <ProjectReference Include="..\..\HBAPI\HeedbookAPI\UserOperations.csproj"/>
+    <ProjectReference Include="..\..\HBData\HBData.csproj" />
+    <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
+    <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
@@ -19,12 +18,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Model\**"/>
+    <Compile Remove="Model\**" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Remove="Model\**"/>
+    <EmbeddedResource Remove="Model\**" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="Model\**"/>
+    <None Remove="Model\**" />
   </ItemGroup>
 </Project>

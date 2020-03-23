@@ -2,27 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.IdentityModel.Tokens.Jwt;
 using HBData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using System.Threading;
-using System.Diagnostics;
 using System.Net.Mime;
-using RazorLight;
-using RazorLight.Razor;
 using System.IO;
 using System.Net;
 using Newtonsoft.Json;
 using System.Text;
-using HBData.Models.AccountViewModels;
-using System.Security.Cryptography;
-using System.Security.Claims;
 using HBData.Models;
 using ZedGraph;
 using System.Drawing;
-using UserOperations.Services;
 using HBLib;
 using HBLib.Utils;
 
@@ -30,30 +20,31 @@ namespace QuartzExtensions.Utils.WeeklyReport
 {
     public class WeeklyReport
     {
-        private readonly LoginService _loginService;
+        private readonly CheckTokenService _loginService;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private ElasticClient _log;
         private readonly SmtpSettings _smtpSettings;
         private readonly SmtpClient _smtpClient;
-        private readonly AccountAuthorization _autorizationData;    
+        private readonly AccountAuthorization _autorizationData;
         private string _htmlTemplate;    
         private ApplicationUser _applicationUser;
         private ViewLanguageDataReport _model;
         public string HtmlTemplate { get{return _htmlTemplate;}}
-        public WeeklyReport(LoginService loginService,
+        public WeeklyReport(
+            CheckTokenService loginService,
             IServiceScopeFactory factory, 
             ElasticClientFactory elasticClientFactory,
             SmtpSettings smtpSettings,
             SmtpClient smtpClient,
             AccountAuthorization autorizationData)
         {
-            _loginService = loginService;    
-            _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();    
-            _elasticClientFactory = elasticClientFactory;   
-            _smtpSettings = smtpSettings;  
+            _loginService = loginService;
+            _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
+            _elasticClientFactory = elasticClientFactory;
+            _smtpSettings = smtpSettings;
             _smtpClient = smtpClient;
-            _log = _elasticClientFactory.GetElasticClient();  
+            _log = _elasticClientFactory.GetElasticClient();
             _autorizationData = autorizationData;
             System.Console.WriteLine($"ctor worked");
         }
@@ -107,11 +98,11 @@ namespace QuartzExtensions.Utils.WeeklyReport
                     points = new Dictionary<DateTime, float>();
                     foreach(var avg in item.Data.avgPerDay)
                     {
-                        points.Add(avg.Key, (float)avg.Value);                    
+                        points.Add(avg.Key, (float)avg.Value);
                     }
                     
                     byte[] imageBytes = GeneratePng(points, item.Name, item.ColourData, item.ReportStyle).ToArray();
-                    item.Base64Image = Convert.ToBase64String(imageBytes);                
+                    item.Base64Image = Convert.ToBase64String(imageBytes);
                 }
 
                 var fullName = applicationUser.FullName;
@@ -120,11 +111,10 @@ namespace QuartzExtensions.Utils.WeeklyReport
                 {
                     ApplicationUserName = fullName,
                     Parameters = parameters,
-                    LanguageDataReport = languageDataReport                
+                    LanguageDataReport = languageDataReport
                 };
 
-                _htmlTemplate = await engine.CompileRenderAsync("./static/weeklyreporttemplate.cshtml", _model); 
-                //System.IO.File.WriteAllText($"./static/template.html", result);                              
+                _htmlTemplate = await engine.CompileRenderAsync("./static/weeklyreporttemplate.cshtml", _model);
             }
             catch(Exception ex)
             {
@@ -173,14 +163,11 @@ namespace QuartzExtensions.Utils.WeeklyReport
             }         
             var UserLoginChecked = _loginService.CheckUserLogin(_autorizationData.UserName, _autorizationData.Password);
             if (UserLoginChecked)
-            {            
-                _loginService.SaveErrorLoginHistory(user.Id, "success");
+            {
                 return _loginService.CreateTokenForUser(user);
             }
             else
-            {                
-                return null;                
-            }                            
+                return null;
         }
          
         public async Task SendHttpReport()
@@ -362,5 +349,12 @@ namespace QuartzExtensions.Utils.WeeklyReport
 	    public string UserName{get; set;}
         public string Password{get; set;}
         public bool Remember{get; set;}
+    }
+
+    public class AccountAuthorization
+    {
+        public String UserName { get; set; }
+
+        public String Password { get; set; }
     }
 }

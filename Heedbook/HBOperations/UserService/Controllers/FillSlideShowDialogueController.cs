@@ -12,7 +12,11 @@ using System.Linq;
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+<<<<<<< HEAD
     [Authorize(AuthenticationSchemes = "Bearer")]
+=======
+ //   [Authorize(AuthenticationSchemes = "Bearer")]
+>>>>>>> devices
     [ApiController]
     public class FillSlideShowDialogueController : Controller
     {
@@ -32,7 +36,11 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Fill in SlideShowSessions DialogueId")]
         public IActionResult FillSlideShowDialogue([FromBody] FillSlideShowDialogueRun message)
         {
+<<<<<<< HEAD
             if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+=======
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+>>>>>>> devices
             _handler.EventRaised(message);
             return Ok();
         }
@@ -41,7 +49,11 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Fill in SlideShowSessions DialogueId")]
         public IActionResult FillSlideShowDialoguesAll([FromQuery] string begTime)
         {
+<<<<<<< HEAD
             if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+=======
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+>>>>>>> devices
 
             var dateFormat = "HH:mm:ss dd.MM.yyyy";
             var timeBeg = DateTime.ParseExact(begTime, dateFormat, CultureInfo.InvariantCulture);

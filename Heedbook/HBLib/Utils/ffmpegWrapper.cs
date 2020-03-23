@@ -79,7 +79,7 @@ namespace HBLib.Utils
                 audioFn = Path.GetFullPath(audioFn);
                 var cmd = new CMDWithOutput();
                 return cmd.runCMD(FfPath,
-                    $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
+                    $@"-i {videoFn} -acodec pcm_s16le -ac 2 -ar 8000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
             }
             catch (Win32Exception ex)
             {
@@ -103,6 +103,27 @@ namespace HBLib.Utils
             }
         }
 
+<<<<<<< HEAD
+=======
+        public async Task<bool> IsAudioStereo(String audioFn)
+        {
+            try
+            {
+                audioFn = Path.GetFullPath(audioFn);
+                var cmd = new CMDWithOutput();
+                var output = cmd.runCMD(FfPath, $"-i \"{audioFn}\"");
+                
+                return output.Contains("stereo");
+
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
+
+            }
+        }
+
+>>>>>>> devices
         public async Task<String> GetLastFrameFromVideo(String videoFn, string frameFn)
         {
             //ffmpeg -sseof -3 -i 00000000-0000-0000-0000-000000000000_4b95777d-abe2-4987-98c6-d541f86f4894_20200123104457_1.mkv -update 1 -q:v 1 last.jpg

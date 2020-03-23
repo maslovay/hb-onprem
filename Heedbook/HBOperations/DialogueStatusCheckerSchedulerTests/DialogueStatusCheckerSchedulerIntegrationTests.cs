@@ -8,6 +8,7 @@ using Configurations;
 using DialogueStatusCheckerScheduler.Tests.Handlers;
 using HBData.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
@@ -28,11 +29,11 @@ namespace DialogueStatusCheckerScheduler.Tests
             await base.Setup(() =>
             {
                 Services.AddRabbitMqEventBus(Config);
-                Services.AddScoped<INotificationPublisher, NotificationPublisher>();
+                //Services.AddScoped<INotificationPublisher, NotificationPublisher>();
+                Services.AddSingleton<FillingSatisfactionRunHandler>();
                 Services.AddSingleton<StubService>();
             }, true);
-
-            _publisher = ServiceProvider.GetService<INotificationPublisher>();
+            _publisher = ServiceProvider.GetRequiredService<INotificationPublisher>();                    
             _stubService = ServiceProvider.GetService<StubService>();
             _publisher.Subscribe<FillingSatisfactionRun, FillingSatisfactionRunHandler>();
             RunServices();
@@ -45,8 +46,21 @@ namespace DialogueStatusCheckerScheduler.Tests
 #if DEBUG
             config = "Debug";
 #endif
-            _schedulerProcess = Process.Start("dotnet",
-                $"../../../../DialogueStatusCheckerScheduler/bin/{config}/netcoreapp2.2/DialogueStatusCheckerScheduler.dll --isCalledFromUnitTest true");
+            var dockerEnvironment = Environment.GetEnvironmentVariable("DOCKER_INTEGRATION_TEST_ENVIRONMENT")=="TRUE" ? true : false;
+            System.Console.WriteLine($"dockerEnvironment: {dockerEnvironment}");
+            System.Console.WriteLine($"process folder: {config}");
+            if(!dockerEnvironment)
+            {
+                _schedulerProcess = Process.Start(
+                    "dotnet",
+                    $"../../../../DialogueStatusCheckerScheduler/bin/{config}/netcoreapp2.2/DialogueStatusCheckerScheduler.dll --isCalledFromUnitTest true");
+            }
+            else
+            {
+                _schedulerProcess = Process.Start(
+                "dotnet",
+                $"/app/HBOperations/DialogueStatusCheckerScheduler/bin/{config}/netcoreapp2.2/DialogueStatusCheckerScheduler.dll --isCalledFromUnitTest true");
+            }
         }
 
         [TearDown]
@@ -70,9 +84,8 @@ namespace DialogueStatusCheckerScheduler.Tests
 
         protected override async Task PrepareTestData()
         {
-           var currentDir = Environment.CurrentDirectory;
-
-            _testDialog = CreateNewTestDialog( -2 );
+            var currentDir = Environment.CurrentDirectory;
+            _testDialog = CreateNewTestDialog( 0 , 6);
 
             var dialogueFrame =  ModelsFactory.Generate<DialogueFrame>(df => df.DialogueId = _testDialog.DialogueId);
             dialogueFrame.DialogueFrameId = Guid.NewGuid();
@@ -92,11 +105,7 @@ namespace DialogueStatusCheckerScheduler.Tests
             _repository.AddOrUpdate(dialogueVisual);
             _repository.AddOrUpdate(dialogueClientProfile);
             
-            _repository.Save();
-            
-            Console.WriteLine($"new test dialog id: {_testDialog.DialogueId}");
-
-            _repository.Save();
+            _repository.Save();            
         }
 
         protected override async Task CleanTestData()
@@ -107,11 +116,12 @@ namespace DialogueStatusCheckerScheduler.Tests
         {
         }
         
-        [Test, Retry(3)]
+        [Test]
         public void EnsureCallsFillingSatisfaction()
-        {
-            Assert.IsTrue(WaitForAFlag());
-            
+        {            
+            var flag = WaitForAFlag();
+            System.Console.WriteLine($"flag: {flag}");
+            Assert.IsTrue(flag);
             StopServices();
         }
 
@@ -120,12 +130,12 @@ namespace DialogueStatusCheckerScheduler.Tests
             int deltaMs = 2000;
             int cntr = 0;
             
-            while (cntr * deltaMs < 40000 || !_stubService.Flag)
+            while (cntr * deltaMs < 40000 && !_stubService.Flag)
             {
                 Thread.Sleep(deltaMs);
-                ++cntr;
+                cntr++;
             }
-
+            System.Console.WriteLine($"Time is over");
             return _stubService.Flag;
         }
     }

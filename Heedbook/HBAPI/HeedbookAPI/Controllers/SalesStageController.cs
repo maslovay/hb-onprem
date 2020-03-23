@@ -5,8 +5,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Services;
-using HBData.Models;
-using UserOperations.AccountModels;
+using UserOperations.Utils;
 using UserOperations.Models;
 
 namespace UserOperations.Controllers
@@ -28,6 +27,5 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "SalesStage[]", typeof(List<GetSalesStage>))]
         public async Task<ICollection<GetSalesStage>> SalesStagesGet([FromQuery(Name = "companyId")] Guid? companyId) 
             => await _salesStageService.GetAll(companyId);
-    
     }
 }

@@ -55,6 +55,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                          .Include(p => p.Dialogue.Device)
                                          .Include(p => p.Dialogue.Device.Company)
                                          .Where(p => p.StatusId == 6);
+
                     //  .ToList();
                     await _googleConnector.CheckApiKey();
                     if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
@@ -70,6 +71,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     // System.Console.WriteLine($"Audios count - {audios.Count()}");
                     foreach (var audio in audios)
                     {
+                        var isClient = (audio.FileContainer == "dialogueaudios");
                         var dialoguePhrases = new List<DialoguePhrase>();
                         var dialogueSpeeches = new List<DialogueSpeech>();
                         var dialogueWords = new List<DialogueWord>();
@@ -170,7 +172,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             var newSpeech = new DialogueSpeech
                             {
                                 DialogueId = audio.DialogueId,
-                                IsClient = true,
+                                IsClient = isClient,
                                 SpeechSpeed = speechSpeed,
                                 PositiveShare = default(Double),
                                 SilenceShare = GetSilenceShare(recognized, audio.BegTime, audio.EndTime, _log)
@@ -211,7 +213,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     DialogueId = audio.DialogueId,
                                     PhraseTypeId = key,
                                     PhraseCount = phraseCounter[key],
-                                    IsClient = true
+                                    IsClient = isClient
                                 });
                                 
                             recognized.ForEach(r =>
@@ -241,7 +243,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             dialogueWords.Add(new DialogueWord
                             {
                                 DialogueId = audio.DialogueId,
-                                IsClient = true,
+                                IsClient = isClient,
                                 Words = JsonConvert.SerializeObject(words)
                             });
                             phraseCounts.AddRange(phraseCount);
@@ -255,7 +257,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             var newSpeech = new DialogueSpeech
                             {
                                 DialogueId = audio.DialogueId,
-                                IsClient = true,
+                                IsClient = isClient,
                                 SpeechSpeed = 0,
                                 PositiveShare = default(Double),
                                 SilenceShare = 0
@@ -313,7 +315,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 var newSpeech = new DialogueSpeech
                             {
                                 DialogueId = dialogueId,
-                                IsClient = true,
+                                IsClient = isClient,
                                 SpeechSpeed = 0,
                                 PositiveShare = default(Double),
                                 SilenceShare = 0

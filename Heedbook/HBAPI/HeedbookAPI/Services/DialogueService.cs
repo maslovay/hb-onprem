@@ -151,13 +151,15 @@ namespace UserOperations.Services
             var companyId = dialogue.Device.CompanyId;
             var corporationId = _repository.GetAsQueryable<Company>().Where(x => x.CompanyId == companyId)
                             .Select(x => x.CorporationId).FirstOrDefault();
-            var avgDialogueTime = 0.0;
 
-            avgDialogueTime = _repository.GetAsQueryable<Dialogue>().Where(p =>
+            var avgDialogueTime = _repository.GetAsQueryable<Dialogue>().Where(p =>
+                    p.BegTime >= begTime &&
+                    p.StatusId == activeStatus &&
+                    p.Device.CompanyId == companyId).Count() != 0 ? _repository.GetAsQueryable<Dialogue>().Where(p =>
                     p.BegTime >= begTime &&
                     p.StatusId == activeStatus &&
                     p.Device.CompanyId == companyId)
-                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
+                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes) : 0;
 
             var phraseIds = dialogue.DialoguePhrase.Where(x => x.PhraseId != null).Select(x => (Guid)x.PhraseId).ToList();
 

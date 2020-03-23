@@ -8,6 +8,7 @@ using HBLib.Utils;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http;
 using UserOperations.Models;
+using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Services
 {
@@ -15,12 +16,16 @@ namespace UserOperations.Services
     {
         private readonly SmtpSettings _smtpSettings;
         private readonly SmtpClient _smtpClient;
-        private readonly string folder;
-        public MailSender(SmtpSettings smtpSettings, SmtpClient smtpClient)
+        private readonly FileRefUtils _fileRef;
+        private readonly string _localFolder;
+        private readonly string _containerName;
+        public MailSender(SmtpSettings smtpSettings, SmtpClient smtpClient, FileRefUtils fileRef)
         {
             _smtpSettings = smtpSettings;
             _smtpClient = smtpClient;
-            folder = @"/Utils/CommonOperations/";
+            _fileRef = fileRef;
+            _localFolder = @"/Utils/CommonOperations/";
+            _containerName = "media";
         }
 
         public void SendSimpleEmail(string email, string messageTitle, string text, string senderName = "Heedbook")
@@ -88,28 +93,31 @@ namespace UserOperations.Services
 
         public async Task SendRegisterEmail(ApplicationUser user)
         {
-            LanguageDataEmail model = await ReadLanguageModel(user, "registerManager");
+            LanguageDataEmail model = await ReadLanguageModel(user, "RegisterManager");
+            model.FileRef = _fileRef.GetFileUrlFast(_containerName);
             string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
-            await SendEmail(user, model.emailSubject, htmlBody);
+            await SendEmail(user, model.EmailSubject, htmlBody);
         }
 
         public async Task SendUserRegisterEmail(ApplicationUser user, string password)
         {
-            LanguageDataEmail model = await ReadLanguageModel(user, "registerUser");
-            model.greeting += user.FullName;
-            model.pswd += password;
-            model.login = user.Email;
+            LanguageDataEmail model = await ReadLanguageModel(user, "RegisterUser");
+            model.FileRef = _fileRef.GetFileUrlFast(_containerName);
+            model.Greeting += user.FullName;
+            model.Pswd += password;
+            model.Login = user.Email;
             string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
-            await SendEmail(user, model.emailSubject, htmlBody);
+            await SendEmail(user, model.EmailSubject, htmlBody);
         }
 
         public async Task SendPasswordChangeEmail(ApplicationUser user, string password)
         {
-            LanguageDataEmail model = await ReadLanguageModel(user, "passwordChange");
-            model.greeting += user.FullName;
-            model.pswd += password;
+            LanguageDataEmail model = await ReadLanguageModel(user, "PasswordChange");
+            model.FileRef = _fileRef.GetFileUrlFast(_containerName);
+            model.Greeting += user.FullName;
+            model.Pswd += password;
             string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
-            await SendEmail(user, model.emailSubject, htmlBody);
+            await SendEmail(user, model.EmailSubject, htmlBody);
         }     
 
         //create and email notification 
@@ -142,7 +150,7 @@ namespace UserOperations.Services
             try
             {
                 var languageId = user.Company.LanguageId;
-                string path = Path.GetFullPath("."+folder+"language_table.json");
+                string path = Path.GetFullPath("."+_localFolder+"language_table.json");
                 var languageRowJson = File.ReadAllText(path);
 
                 var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
@@ -173,10 +181,10 @@ namespace UserOperations.Services
               .UseMemoryCachingProvider()
               .Build();
 
-                string template = File.ReadAllText(fullPath + folder + "email.cshtml");
+                string template = File.ReadAllText(fullPath + _localFolder + "email.cshtml");
                 string result = await engine.CompileRenderAsync("email", template, model);
 
-                string pathTemp = fullPath + folder+ "temp.html";
+                string pathTemp = fullPath + _localFolder+ "temp.html";
                 File.WriteAllText(pathTemp, result);
                 string htmlBody = File.ReadAllText(pathTemp);
                 File.Delete(pathTemp);
@@ -190,7 +198,7 @@ namespace UserOperations.Services
 
         public async Task<string> TestReadFile1()
         {
-            string path = Path.GetFullPath("." + folder + "language_table.json");
+            string path = Path.GetFullPath("." + _localFolder + "language_table.json");
             var languageRowJson = File.ReadAllText(path);
             var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
             var registerLanguages = (List<LanguageDataEmail>)languageObject.GetType().GetProperty("passwordChange").GetValue(languageObject, null);
@@ -205,7 +213,7 @@ namespace UserOperations.Services
                 try
                 {
                     string result = await engine.CompileRenderAsync("Utils/CommonOperations/email.cshtml", model);
-                    string pathTemp = fullPath + folder + "temp.html";
+                    string pathTemp = fullPath + _localFolder + "temp.html";
                     File.WriteAllText(pathTemp, result);
                     string htmlBody = File.ReadAllText(pathTemp);
                     File.Delete(pathTemp);
@@ -225,7 +233,7 @@ namespace UserOperations.Services
 
         public async Task<string> TestReadFile2()
         {
-            string path = Path.GetFullPath("." + folder + "language_table.json");
+            string path = Path.GetFullPath("." + _localFolder + "language_table.json");
             var languageRowJson = File.ReadAllText(path);
             var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
             var registerLanguages = (List<LanguageDataEmail>)languageObject.GetType().GetProperty("passwordChange").GetValue(languageObject, null);
@@ -236,10 +244,10 @@ namespace UserOperations.Services
                   .UseMemoryCachingProvider()
                   .Build();
                 var fullPath = System.IO.Path.GetFullPath(".");
-                string template = File.ReadAllText(fullPath + folder + "email.cshtml");
+                string template = File.ReadAllText(fullPath + _localFolder + "email.cshtml");
 
                 string result = await engine.CompileRenderAsync("email", template, model);
-                string pathTemp = fullPath + folder + "temp.html";
+                string pathTemp = fullPath + _localFolder + "temp.html";
                 File.WriteAllText(pathTemp, result);
                 string htmlBody = File.ReadAllText(pathTemp);
                 File.Delete(pathTemp);
@@ -253,28 +261,29 @@ namespace UserOperations.Services
     }
         public class LanguageDataEmail
         {
-            public string language { get; set; }
-            public string emailSubject { get; set; }
-            public string greeting { get; set; }
-            public string body { get; set; }
-            public string button { get; set; }
-            public string text1 { get; set; }
-            public string text2 { get; set; }
-            public string text3 { get; set; }
-            public string text4 { get; set; }
-            public string text5 { get; set; }
-            public string footer { get; set; }
-            public string login { get; set; }
-            public string pswd { get; set; }
+            public string FileRef { get; set; }
+            public string Language { get; set; }
+            public string EmailSubject { get; set; }
+            public string Greeting { get; set; }
+            public string Body { get; set; }
+            public string Button { get; set; }
+            public string Text1 { get; set; }
+            public string Text2 { get; set; }
+            public string Text3 { get; set; }
+            public string Text4 { get; set; }
+            public string Text5 { get; set; }
+            public string Footer { get; set; }
+            public string Login { get; set; }
+            public string Pswd { get; set; }
 
     }
     public class EmailModel
         {
             //public string userEmail { get; set; }
-            public string userName { get; set; }
-            public string password { get; set; }
-            public List<LanguageDataEmail> registerManager { get; set; }
-            public List<LanguageDataEmail> registerUser { get; set; }
-            public List<LanguageDataEmail> passwordChange { get; set; }
+            public string UserName { get; set; }
+            public string Password { get; set; }
+            public List<LanguageDataEmail> RegisterManager { get; set; }
+            public List<LanguageDataEmail> RegisterUser { get; set; }
+            public List<LanguageDataEmail> PasswordChange { get; set; }
     }
 }
