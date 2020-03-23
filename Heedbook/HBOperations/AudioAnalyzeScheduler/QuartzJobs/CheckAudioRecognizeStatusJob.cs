@@ -88,7 +88,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
                                 var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
 
-                                if ((sttResults?.Response == null && differenceHour >= 1)||sttResults?.Response?.Results==null)
+                                if (((sttResults?.Response == null && differenceHour >= 1)||sttResults?.Response?.Results==null)
+                                    &&(sttResults?.Error?.Status != "NOT_FOUND"))
                                 {
                                     audio.StatusId = 8;
                                     audio.STTResult = "[]";
@@ -229,7 +230,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     });
                             });
 
-                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList(), audio.DialogueId);                            
+                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList(), audio.DialogueId, isClient);                            
                             words = words.GroupBy(item => new
                             {
                                 item.BegTime,
@@ -284,7 +285,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             }
         }
 
-        private double GetPositiveShareInText(IEnumerable<string> recognizedWords, Guid dialogueId)
+        private double GetPositiveShareInText(IEnumerable<string> recognizedWords, Guid dialogueId, bool isClient)
         {
             try
             {
