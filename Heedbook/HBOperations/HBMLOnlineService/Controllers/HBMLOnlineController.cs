@@ -18,7 +18,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace HBMLOnlineService.Controllers
 {
     [Route("face")]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class HBMLOnlineService : Controller
     {
