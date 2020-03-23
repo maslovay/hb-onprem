@@ -15,7 +15,7 @@ namespace UserOperations.Services
         {
             _repository = repository;
         }
-        public object FillingFileFrame(List<FileFramePostModel> frames)
+        public async System.Threading.Tasks.Task<object> FillingFileFrameAsync(List<FileFramePostModel> frames)
         {               
             if(frames == null || frames.Count == 0)
                 throw new Exception("List of frames is empty");
