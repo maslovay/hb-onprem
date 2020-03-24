@@ -23,8 +23,10 @@ using UserOperations.Models.AnalyticModels;
 using HBMLHttpClient.Model;
 using System.Drawing;
 using System.Transactions;
-using FillingSatisfactionService.Helper;
 using HBData.Repository;
+using System.Data;
+using System.Reflection;
+using System.Data.SqlClient;
 
 namespace UserOperations.Controllers
 {
@@ -32,12 +34,12 @@ namespace UserOperations.Controllers
     [ApiController]
     public class HelpController : Controller
     {
-        //    private readonly IConfiguration _config;
+        private readonly IConfiguration _config;
         private readonly CompanyService _compService;
         private readonly RecordsContext _context;
         //    private readonly SftpClient _sftpClient;
         //    private readonly MailSender _mailSender;
-        //    private readonly RequestFilters _requestFilters;
+        private readonly RequestFilters _requestFilters;
         //    private readonly SftpSettings _sftpSettings;
         //    private readonly DBOperations _dbOperation;
         //    private readonly IGenericRepository _repository;
@@ -46,24 +48,24 @@ namespace UserOperations.Controllers
 
         public HelpController(
             CompanyService compService,
-            //LoginService loginService,
-            RecordsContext context
+            IConfiguration config,
+            RecordsContext context,
           //   DescriptorCalculations calc
             //SftpClient sftpClient,
             //MailSender mailSender,
-            //RequestFilters requestFilters,
+            RequestFilters requestFilters
             //SftpSettings sftpSettings,
             //DBOperations dBOperations,
             //IGenericRepository repository
             )
         {
             _compService = compService;
-            //_loginService = loginService;
+            _config = config;
             _context = context;
          //   _calc = calc;
             //_sftpClient = sftpClient;
             //_mailSender = mailSender;
-            //_requestFilters = requestFilters;
+            _requestFilters = requestFilters;
             //_sftpSettings = sftpSettings;
             //_dbOperation = dBOperations;
             //_repository = repository;
@@ -230,6 +232,8 @@ namespace UserOperations.Controllers
             return Ok();
         }
 
+     
+
 
         [HttpGet("PersDet")]
         public async Task PersDet(Guid devId)
@@ -279,6 +283,28 @@ namespace UserOperations.Controllers
             }
             return Guid.NewGuid();
         }
+
+        [HttpGet("FillDialogueIdInSlideShowSession")]
+        public void FillDialogueIdInSlideShowSession(string beg, string end)
+        {
+             var begTime = _requestFilters.GetBegDate(beg);
+             var endTime = _requestFilters.GetEndDate(end);
+            var dialogues = _context.Dialogues.Where(x => x.BegTime >= begTime && x.EndTime <= endTime && x.StatusId == 3).ToList();
+            foreach (var dialogue in dialogues)
+            {
+                var slideShowSessions = _context.SlideShowSessions
+                    .Where(x => x.BegTime >= dialogue.BegTime && x.BegTime <= dialogue.EndTime && x.DeviceId == dialogue.DeviceId).ToList();
+                slideShowSessions.Select(
+                    x => 
+                    {
+                        x.DialogueId = dialogue.DialogueId;
+                        return x;
+                    }).ToList();
+                _context.SaveChanges();
+            }
+        }
+
+
 
         private Guid? CreateNewClient(HBData.Models.Dialogue curDialogue, Guid? clientId)
         {
@@ -354,6 +380,72 @@ namespace UserOperations.Controllers
             var v2 = JsonConvert.DeserializeObject<List<double>>(vector2);
             return Cos(v1, v2);
         }
+
+        [HttpGet("CopyDataFromDB")]
+        public async Task<IActionResult> CopyDataFromDB()
+        {
+            var date = DateTime.Now.AddDays(-3);
+            var connectionString = "User ID=test_user;Password=test_password;Host=40.69.85.202;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0;";
+            DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
+            dbContextOptionsBuilder.UseNpgsql(connectionString,
+                   dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
+            var oldContext = new RecordsContext(dbContextOptionsBuilder.Options);
+
+            Dictionary<string, int> result = new Dictionary<string, int>();
+
+
+            //-1--COMPANIES---
+            var oldCompId = oldContext.Companys.Select(x => x.CompanyId).ToList();
+            var newCompId = _context.Companys.Select(x => x.CompanyId).ToList();
+            var compIdsToAdd = oldCompId.Except(newCompId).ToList();
+            List<Company> addComp = oldContext.Companys.Where(x => compIdsToAdd.Contains(x.CompanyId)).ToList();
+            var devType = _context.DeviceTypes.FirstOrDefault().DeviceTypeId;
+
+            try
+            {
+                _context.AddRange(addComp);
+                _context.SaveChanges();
+                result["companys"] = addComp.Count();
+
+                var devicesToAdd = compIdsToAdd.Select(x => new Device
+                {
+                    DeviceId = Guid.NewGuid(),
+                    CompanyId = x,
+                    Code = "AAAAAA",
+                    DeviceTypeId = devType,
+                    Name = "TEMP DEVICE",
+                    StatusId = 3
+                });
+
+                _context.AddRange(devicesToAdd);
+                _context.SaveChanges();
+                result["devices"] = devicesToAdd.Count();
+
+                var work = compIdsToAdd.Select(x => new List<WorkingTime> {
+                    new WorkingTime { CompanyId = x, Day = 0 },
+                    new WorkingTime { CompanyId = x, Day = 1 },
+                    new WorkingTime { CompanyId = x, Day = 2 },
+                    new WorkingTime { CompanyId = x, Day = 3 },
+                    new WorkingTime { CompanyId = x, Day = 4 },
+                    new WorkingTime { CompanyId = x, Day = 5 },
+                    new WorkingTime { CompanyId = x, Day = 6 }}
+                    );
+
+                _context.AddRange(work);
+                _context.SaveChanges();
+                result["devices"] = work.Count();
+            }
+            catch { }
+
+            var devices = _context.Devices.Include(x => x.Company.ApplicationUser)
+            .Select(x => new { x.DeviceId, applicationUserIds = x.Company.ApplicationUser.Select(p => p.Id).ToList() }).ToList();
+
+            return Ok(result);
+        }
+
+
+
+     
     }
 }
 

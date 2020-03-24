@@ -55,6 +55,7 @@ namespace AudioAnalyzeService
                 if (!String.IsNullOrWhiteSpace(path))
                 {     
                     var splitedString = path.Split('/');
+                    var containerName = splitedString[0];
                     var fileName = splitedString[1];
                     var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
                     var dialogue = _context.Dialogues
@@ -72,7 +73,8 @@ namespace AudioAnalyzeService
                     
                     if (dialogue != null)
                     {
-                        var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId).ToList();
+                        var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId
+                            && p.FileContainer == containerName).ToList();
                         fileAudios.Where(p => p.StatusId != 6)
                             .ToList()
                             .ForEach(p => p.StatusId = 8);
@@ -83,7 +85,7 @@ namespace AudioAnalyzeService
                             CreationTime = DateTime.UtcNow,
                             FileName = fileName,
                             StatusId = 3,
-                            FileContainer = "dialogueaudios",
+                            FileContainer = containerName,
                             BegTime = dialogue.BegTime,
                             EndTime = dialogue.EndTime,
                             Duration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds

@@ -1299,6 +1299,8 @@ namespace UserOperations.Migrations
 
                     b.Property<Guid>("DeviceId");
 
+                    b.Property<Guid?>("DialogueId");
+
                     b.Property<DateTime>("EndTime");
 
                     b.Property<bool>("IsPoll");
@@ -1312,6 +1314,8 @@ namespace UserOperations.Migrations
                     b.HasIndex("CampaignContentId");
 
                     b.HasIndex("DeviceId");
+
+                    b.HasIndex("DialogueId");
 
                     b.ToTable("SlideShowSessions");
                 });
@@ -2045,6 +2049,10 @@ namespace UserOperations.Migrations
                         .WithMany("SlideShowSessions")
                         .HasForeignKey("DeviceId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("HBData.Models.Dialogue", "Dialogue")
+                        .WithMany("SlideShowSessions")
+                        .HasForeignKey("DialogueId");
                 });
 
             modelBuilder.Entity("HBData.Models.Tariff", b =>

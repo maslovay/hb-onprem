@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -11,6 +12,7 @@ namespace UserOperations.Controllers
     [Authorize(AuthenticationSchemes = "Bearer")]
     [ControllerExceptionFilter]
 
+    //---for Heedbook\HBOperations\QuartzExtensions\utils\WeeklyReport\WeeklyReport.cs
     public class AnalyticWeeklyReportController : Controller
     {
         private readonly AnalyticWeeklyReportService _analyticWeeklyReportService;

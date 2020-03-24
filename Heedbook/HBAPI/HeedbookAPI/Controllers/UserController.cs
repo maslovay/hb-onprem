@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.IO;
+using UserOperations.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Swashbuckle.AspNetCore.Annotations;
@@ -49,8 +49,6 @@ namespace UserOperations.Controllers
                 if (_loginService.GetCurrentDeviceId() != null)
                     return  await _userService.GetUsersForDeviceAsync();
                 return  await _userService.GetUsers();
-
-                
         }
 
 

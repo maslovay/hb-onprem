@@ -5,12 +5,13 @@ using UserOperations.Services;
 using UserOperations.Models;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Collections.Generic;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ControllerExceptionFilter]
     public class FillingFileFrameController : Controller
     {
@@ -22,8 +23,8 @@ namespace UserOperations.Controllers
         [HttpPost("FillingFileFrame")]
         [SwaggerOperation(Summary = "Save FileFrames from device", Description = "Create new FileFrame, FrameAttribute, FrameEmotion and save in data base")]
         [SwaggerResponse(200, "model added in data base")]
-        public object FileFramePost([FromBody, SwaggerParameter("Send frames", Required = true)] 
+        public async System.Threading.Tasks.Task<object> FileFramePostAsync([FromBody, SwaggerParameter("Send frames", Required = true)] 
                                 List<FileFramePostModel> frames ) =>
-            _fillingFileFrameService.FillingFileFrame(frames);
+            await _fillingFileFrameService.FillingFileFrameAsync(frames);
     }    
 }

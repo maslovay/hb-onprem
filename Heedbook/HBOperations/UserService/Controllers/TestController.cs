@@ -26,10 +26,12 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using HBLib;
 using HBMLHttpClient.Model;
 using System.Drawing;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class TestController : Controller
     {
@@ -39,11 +41,12 @@ namespace UserService.Controllers
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly FFMpegWrapper _wrapper;
-        
+        private readonly CheckTokenService _service;
+
         public TestController(RecordsContext context, IGenericRepository repository,
             SftpSettings sftpSettings,
             FFMpegWrapper wrapper,
-            INotificationHandler handler, SftpClient sftpClient)
+            INotificationHandler handler, SftpClient sftpClient, CheckTokenService service)
         {
             _context = context;
             _repository = repository;
@@ -51,11 +54,13 @@ namespace UserService.Controllers
             _sftpClient = sftpClient;
             _sftpSettings = sftpSettings;
             _wrapper = wrapper;
+            _service = service;
         }
 
         [HttpPost("[action]")]
-        public async Task CreateAvatar(string fileName)
+        public async Task<IActionResult> CreateAvatar(string fileName)
         {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var frame = _context.FileFrames
                 .Include(p => p.FrameAttribute)
                 .Where(p => p.FileName == fileName)
@@ -87,14 +92,13 @@ namespace UserService.Controllers
             stream.Seek(0, SeekOrigin.Begin);
             await _sftpClient.UploadAsMemoryStreamAsync(stream, "test/", $"{frame.FileName}");
             stream.Close();
-
+            return Ok();
         }
 
-        
-        
         [HttpGet("[action]/{timelInHours}")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> CheckIfAnyAssembledDialogues( int timelInHours )
         {
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var dialogs = _repository.GetWithInclude<Dialogue>(
                 d => d.EndTime >= DateTime.Now.AddHours(-timelInHours)
                      && d.EndTime < DateTime.Now
@@ -105,11 +109,11 @@ namespace UserService.Controllers
 
             return NotFound($"NO assembled dialogues present for last {timelInHours} hours!!!");
         }
-        
 
         [HttpGet("[action]")]
         public async Task<ObjectResult> RecognizedWords(Guid dialogueId)
         {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {
                 var dialogue = _repository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
@@ -158,6 +162,7 @@ namespace UserService.Controllers
         [HttpGet("[action]")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> GetLast20ProcessedDialogues()
         {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var dialogs = _repository.GetWithInclude<Dialogue>(
                     d => d.EndTime >= DateTime.Now.AddDays(-1) && d.EndTime < DateTime.Now && d.StatusId == 3,
                     d => d.DialogueSpeech,
@@ -172,8 +177,9 @@ namespace UserService.Controllers
 
         
         [HttpPost("[action]")]
-        public async Task Test1(DialogueCreationRun message)
+        public async Task<IActionResult> Test1(DialogueCreationRun message)
         {
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var frameIds =
                 _repository.Get<FileFrame>().Where(item =>
                         item.ApplicationUserId == message.ApplicationUserId
@@ -193,13 +199,15 @@ namespace UserService.Controllers
             var dt2 = DateTime.Now;
             
             Console.WriteLine($"Delta: {dt2-dt1}");
+            return Ok();
         }
 
        [HttpPost]
        [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
        public async Task<IActionResult> Test()
        {
-           try
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            try
            {
                //var applicationUserId = "010039d5-895b-47ad-bd38-eb28685ab9aa";
                var begTime = DateTime.Now.AddDays(-3);
@@ -241,9 +249,10 @@ namespace UserService.Controllers
        }
 
        [HttpGet("[action]")]
-       public async Task ResendVideosForFraming(string fileNamesString)
+       public async Task<IActionResult> ResendVideosForFraming(string fileNamesString)
        {
-           var names = fileNamesString.Split(',');
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            var names = fileNamesString.Split(',');
 
            int i = 0;
 
@@ -254,23 +263,29 @@ namespace UserService.Controllers
                ++i;
                await ResendVideoForFraming(name);
            }
-       }
+           return Ok();
+        }
        
        [HttpGet("[action]")]
-       public async Task ResendVideoForFraming(string fileName)
+       public async Task<IActionResult> ResendVideoForFraming(string fileName)
        {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var message = new FramesFromVideoRun
             {
                 Path = $"videos/{fileName}"
             };
             Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
            _handler.EventRaised(message);
-       }
-       [HttpGet("[action]")]
-       public async Task AddCompanyDictionary(string fileName)
+            return Ok();
+        }
+
+        [HttpGet("[action]")]
+       public async Task<IActionResult> AddCompanyDictionary(string fileName)
        {
-           AddCpomanyPhrases();
-       }
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            AddCpomanyPhrases();
+            return Ok();
+        }
        
        private void AddCpomanyPhrases()
         {

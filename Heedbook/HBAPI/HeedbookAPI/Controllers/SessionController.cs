@@ -5,12 +5,16 @@ using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Models.Session;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Models;
+using UserOperations.Utils;
 
+/// <summary>
+/// called from devices and by web socket
+/// </summary>
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [AllowAnonymous]
+ //   [Authorize(AuthenticationSchemes = "Bearer")]
     [ControllerExceptionFilter]
     public class SessionController : Controller
     {

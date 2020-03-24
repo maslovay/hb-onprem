@@ -19,21 +19,23 @@ namespace UserOperations.Services
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
         private readonly AnalyticRatingUtils _analyticRatingUtils;
+        private readonly DBOperations _dbOperations;
         private readonly IGenericRepository _repository;
 
         public AnalyticRatingService(
             LoginService loginService,
             RequestFilters requestFilters,
             AnalyticRatingUtils analyticRatingUtils,
-            IGenericRepository repository
+            IGenericRepository repository,
+            DBOperations dbOperations
             )
         {
             _loginService = loginService;
             _requestFilters = requestFilters;
             _analyticRatingUtils = analyticRatingUtils;
             _repository = repository;
+            _dbOperations = dbOperations;
         }
-
 
         public async Task<string> RatingProgress( string beg,  string end, 
                                              List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
@@ -129,29 +131,24 @@ namespace UserOperations.Services
         public async Task<string> RatingOffices( 
                             string beg, string end, 
                             List<Guid> companyIds, 
-                            List<Guid> corporationIds, 
-                            List<Guid> deviceIds )
+                            List<Guid> corporationIds)
         {
+                int active = 3;
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);       
+                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 //var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                var sessions = await GetSessionInfoCompanys(
-                    begTime,
-                    endTime,
-                    companyIds,
-                    deviceIds
-                );
-
+                var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
                 var typeIdCross = await GetCrossPhraseTypeId();
 
                 var dialogues = await GetDialogueInfoCompanys(
                     begTime, endTime,
-                    companyIds, deviceIds, typeIdCross
+                    companyIds, typeIdCross, workingTimes
                 );
+
 
                 var result = dialogues
                     .GroupBy(p => p.CompanyId)
@@ -160,14 +157,28 @@ namespace UserOperations.Services
                         CompanyId = p.Key.ToString(),
                         FullName = p.First().FullName,
                         SatisfactionIndex = _analyticRatingUtils.SatisfactionIndex(p),
-                        LoadIndex = _analyticRatingUtils.LoadIndex(sessions, p, begTime, endTime),
+                        LoadIndex = _dbOperations.WorklLoadByTimeIndex(
+                                _dbOperations.WorkingTimeDoubleListInMinForOneCompany(
+                                                workingTimes, 
+                                                begTime, endTime, 
+                                                (Guid)p.Key, 
+                                                p.Select(x => x.DeviceId).Count()), 
+                                p.Where(x => x.CompanyId == p.Key && x.IsInWorkingTime).ToList(), 
+                                begTime, endTime),
                         CrossIndex = _analyticRatingUtils.CrossIndex(p),
                         Recommendation = "",
                         DialoguesCount = p.Select(q => q.DialogueId).Distinct().Count(),
                         DaysCount = p.Select(q => q.BegTime.Date).Distinct().Count(),
                         WorkingHoursDaily = _analyticRatingUtils.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAverageDuration = _analyticRatingUtils.DialogueAverageDuration(p, begTime, endTime),
-                        DialogueAveragePause = _analyticRatingUtils.DialogueAveragePause(sessions, p, begTime, endTime)
+                        DialogueAveragePause = _analyticRatingUtils.DialogueHourAveragePause(
+                                 _dbOperations.WorkingTimeDoubleListInMinForOneCompany(
+                                                workingTimes,
+                                                begTime, endTime,
+                                                (Guid)p.Key,
+                                                p.Select(x => x.DeviceId).Count()), 
+                                 p.Where(x => x.CompanyId == p.Key && x.IsInWorkingTime).ToList(), 
+                                 begTime, endTime)
                     }).ToList();
                 result = result.OrderBy(p => p.EfficiencyIndex).ToList();
                 return JsonConvert.SerializeObject(result);
@@ -182,6 +193,7 @@ namespace UserOperations.Services
                     .Select(p => p.PhraseTypeId).FirstOrDefaultAsync();
             return typeIdCross;
         }
+
         private async Task<List<SessionInfo>> GetSessions(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds,
@@ -208,6 +220,7 @@ namespace UserOperations.Services
                 .ToListAsync();
             return sessions;
         }
+
         private async Task<List<DialogueInfo>> GetDialogues(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds,
@@ -239,6 +252,7 @@ namespace UserOperations.Services
                 .ToListAsync();
             return dialogues;
         }
+
         private async Task<List<SessionInfo>> GetSessionInfoCompanys(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds,
@@ -260,19 +274,19 @@ namespace UserOperations.Services
                 .ToListAsync();
             return sessions;
         }
+
         private async Task<List<DialogueInfo>> GetDialogueInfoCompanys(
             DateTime begTime, DateTime endTime,
             List<Guid> companyIds,
-            List<Guid> deviceIds,
-            Guid typeIdCross)
+            Guid typeIdCross,
+            WorkingTime [] workingTimes)
         {
             var dialogues = await _repository.GetAsQueryable<Dialogue>()
                 .Where(p => p.BegTime >= begTime
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
-                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
-                    && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+                    && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId)))
                 .Select(p => new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
@@ -282,7 +296,8 @@ namespace UserOperations.Services
                     EndTime = p.EndTime,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                     FullName = p.Device.Company.CompanyName,
-                    CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count()
+                    CrossCount = p.DialoguePhrase.Where(q => q.PhraseTypeId == typeIdCross).Count(),
+                    IsInWorkingTime = _dbOperations.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
                 })
                 .ToListAsync();
             return dialogues;

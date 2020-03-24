@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using UserOperations.Utils;
 
 namespace UserOperations.Controllers
 {
@@ -54,12 +55,10 @@ namespace UserOperations.Controllers
         public async Task<string> RatingOffices([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds ) =>
             await _analyticRatingService.RatingOffices(
                 beg, end,
-                companyIds, corporationIds, deviceIds
+                companyIds, corporationIds
             );
-                 
     }
 }
