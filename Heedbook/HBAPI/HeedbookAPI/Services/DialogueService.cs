@@ -146,6 +146,7 @@ namespace UserOperations.Services
 
             if (dialogue == null) throw new NoDataException("No such dialogue or user does not have permission for dialogue");
             dialogue.PersonFaceDescriptor = null;
+            dialogue.DialogueWord = dialogue.DialogueWord.GroupBy(p => p.IsClient).Select(p => p.FirstOrDefault()).ToList();
 
             var begTime = DateTime.UtcNow.AddDays(-30);
             var companyId = dialogue.Device.CompanyId;
