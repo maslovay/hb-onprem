@@ -80,6 +80,7 @@ namespace UserOperations.Services
                            SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
                            DeviceId = p.DeviceId,
                            CompanyId = p.Device.CompanyId,
+                           SlideShowSessions = p.SlideShowSessions,
                            IsInWorkingTime = _dbOperations.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
                        }).ToList();
 
@@ -92,8 +93,13 @@ namespace UserOperations.Services
                 var dialoguesDevicesCur = dialoguesCur.Where(x => x.IsInWorkingTime).ToList();
                 var dialoguesDevicesOld = dialoguesOld.Where(x => x.IsInWorkingTime).ToList();
 
-                var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialoguesOld.Select(x => x.DialogueId).ToList());
-                var slideShowSessionsInDialoguesCur = await GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialoguesCur.Select(x => x.DialogueId).ToList());
+                // var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialoguesOld.Select(x => x.DialogueId).ToList());
+                // var slideShowSessionsInDialoguesCur = await GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialoguesCur.Select(x => x.DialogueId).ToList());
+                var slideShowSessionsInDialoguesOld = dialogues.SelectMany(p => p.SlideShowSessions)
+                    .Where(p => p.BegTime < begTime).ToList();
+                var slideShowSessionsInDialoguesCur = dialogues.SelectMany(p => p.SlideShowSessions)
+                    .Where(p => p.BegTime >= begTime).ToList();
+                
                 var viewsCur = slideShowSessionsInDialoguesCur.Count();
 
                 var result = new NewDashboardInfo()
@@ -303,7 +309,7 @@ namespace UserOperations.Services
                 .Include(p => p.DialogueClientSatisfaction)
                 .Include(p => p.DialogueFrame)
                 .Include(p => p.DialoguePhrase)
-
+                .Include(p => p.SlideShowSessions)
                        .Where(p => p.BegTime >= begTime
                                && p.EndTime <= endTime
                                && p.StatusId == 3
