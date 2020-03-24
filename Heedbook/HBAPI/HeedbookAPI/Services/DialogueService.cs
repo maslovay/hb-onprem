@@ -159,8 +159,7 @@ namespace UserOperations.Services
                     p.BegTime >= begTime &&
                     p.StatusId == activeStatus &&
                     p.Device.CompanyId == companyId)
-                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes) : 0;
-
+                .Average(p => p.EndTime.Subtract(p.BegTime).Minutes);
             var phraseIds = dialogue.DialoguePhrase.Where(x => x.PhraseId != null).Select(x => (Guid)x.PhraseId).ToList();
 
             var salesStages = _repository.GetAsQueryable<SalesStage>()
