@@ -58,7 +58,8 @@ namespace FillingFrameService.Tests
             
             var testVideoFilename = Path.GetFileName(testVideoFilepath);
             
-            var testVideoCorrectFileName = testVideoFilename?.Replace("testid", TestUserId.ToString());
+            var tmpVideoCorrectFileName = testVideoFilename?.Replace("testid_", "");
+            var testVideoCorrectFileName = $"{TestUserId}_{TestDeviceId}_{tmpVideoCorrectFileName}";
 
             if (!(await _sftpClient.IsFileExistsAsync("videos/" + testVideoCorrectFileName)))
                 await _sftpClient.UploadAsync(testVideoFilepath, "videos/", testVideoCorrectFileName);
@@ -79,6 +80,7 @@ namespace FillingFrameService.Tests
                 BegTime = videoDateTime.AddDays(-10),
                 EndTime = videoDateTime.AddDays(10),
                 ApplicationUserId = TestUserId,
+                DeviceId = TestDeviceId,
                 LanguageId = null,
                 StatusId = null,
                 SysVersion = "",
@@ -90,8 +92,9 @@ namespace FillingFrameService.Tests
             foreach (var testFramePath in testFramesFilepath )
             {
                 var testFileFramePath = Path.GetFileName(testFramePath);
-                var testFrameCorrectFileName = testFileFramePath
-                    .Replace("testid", TestUserId.ToString());
+                var tmpFrameCorrectFileName = testFileFramePath
+                    .Replace("testid_", "");
+                var testFrameCorrectFileName = $"{TestUserId}_{TestDeviceId}_{tmpFrameCorrectFileName}";
 
                 if (!(await _sftpClient.IsFileExistsAsync("frames/" + testFrameCorrectFileName)))
                     await _sftpClient.UploadAsync(testFramePath, "frames/", testFrameCorrectFileName);
@@ -101,10 +104,12 @@ namespace FillingFrameService.Tests
                 // if frame doesn't exist => let's create it!
                 if (_repository.Get<FileFrame>().All(ff => ff.FileName != testFrameCorrectFileName))
                 {
+                    System.Console.WriteLine(1);
                     testFileFrame = new FileFrame
                     {
                         FileFrameId = Guid.NewGuid(),
                         ApplicationUserId = TestUserId,
+                        DeviceId = TestDeviceId,
                         FileExist = true,
                         FileName = testFrameCorrectFileName,
                         FileContainer = "frames",
@@ -119,6 +124,7 @@ namespace FillingFrameService.Tests
                 }
                 else
                 {
+                    System.Console.WriteLine(2);
                     testFileFrame = _repository.Get<FileFrame>().First(ff => ff.FileName == testFrameCorrectFileName);
                     
                     // clean emotions and attributes in order to create new ones
@@ -198,6 +204,7 @@ namespace FillingFrameService.Tests
             dialogCreationRunMustExist = new DialogueCreationRun()
             {
                 ApplicationUserId = TestUserId,
+                DeviceId = TestDeviceId,
                 DialogueId = TestDialogueId,
                 BeginTime = DateTime.MinValue,
                 EndTime = videoDateTime.AddHours(1),
@@ -217,59 +224,79 @@ namespace FillingFrameService.Tests
             _fillingFrameService = ServiceProvider.GetService<DialogueCreation>();
         }
 
-        [Test, Retry(3)]
-        public async Task EnsureCreatesDialogueDoesntThrowsException()
-        {
-            dialogCreationRunMustExist.DialogueId = TestDialogueId;
-            Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
-        }
+        // [Test]
+        // public async Task EnsureCreatesDialogueDoesntThrowsException()
+        // {
+        //     dialogCreationRunMustExist.DialogueId = TestDialogueId;
+        //     Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
+        // }
         
-        [Test, Retry(3)]
-        public async Task EnsureCreatesDialogueDialogueVisualRecords()
-        {
-            dialogCreationRunMustExist.DialogueId = TestDialogueId;
-            Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
-           
-            Assert.IsTrue(_repository.Get<DialogueVisual>().Any(dv => dv.DialogueId == dialogCreationRunMustExist.DialogueId));
-        }
+        // [Test]
+        // public async Task EnsureCreatesDialogueDialogueVisualRecords()
+        // {
+        //     dialogCreationRunMustExist.DialogueId = TestDialogueId;
+        //     Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
+        //     //Not Assert
+        //     Assert.IsTrue(_repository.Get<DialogueVisual>().Any(dv => dv.DialogueId == dialogCreationRunMustExist.DialogueId));
+        // }
 
-        [Test, Retry(3)]
-        public async Task EnsureCreatesDialogueClientProfileRecords()
+        // [Test]
+        // public async Task EnsureCreatesDialogueClientProfileRecords()
+        // {
+        //     dialogCreationRunMustExist.DialogueId = TestDialogueId;
+        //     Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
+        //     //NotAssert
+        //     Assert.IsTrue(_repository.Get<DialogueClientProfile>().Any(pr => pr.DialogueId == dialogCreationRunMustExist.DialogueId));
+        // }
+        
+        // [Test]
+        // public async Task EnsureCreatesDialogueFrameRecords()
+        // {
+        //     dialogCreationRunMustExist.DialogueId = TestDialogueId;
+        //     Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
+        //     var resultDialogFrames = _repository.Get<DialogueFrame>()
+        //         .Where(df => df.DialogueId == dialogCreationRunMustExist.DialogueId);
+        //     //Not assert
+        //     Assert.Greater(resultDialogFrames.Count(), 0);
+        // }
+        
+        // [Test]
+        // public async Task EnsureCreatesDialogueEmotionsRecords()
+        // {
+        //     dialogCreationRunMustExist.DialogueId = TestDialogueId;
+        //     Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
+           
+        //     var resultEmotions = _repository.Get<FrameEmotion>()
+        //         .Where(e => fileFrames.Any( ff => ff.FileFrameId == e.FileFrameId));
+        //     Assert.Greater(resultEmotions.Count(), 0);
+        // }
+
+        // [Test]
+        // public async Task EnsureCreatesAvatar()
+        // {
+        //     dialogCreationRunMustExist.DialogueId = TestDialogueId;
+        //     Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
+        //     //NotAssert            
+        //     Assert.IsTrue(await _sftpClient.IsFileExistsAsync($"clientavatars/{dialogCreationRunMustExist.DialogueId}.jpg"));
+        // }
+
+        [Test]
+        public async Task FillingFrameTests()
         {
             dialogCreationRunMustExist.DialogueId = TestDialogueId;
             Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
-        
+            //NotAssert            
+            Assert.IsTrue(_repository.Get<DialogueVisual>().Any(dv => dv.DialogueId == dialogCreationRunMustExist.DialogueId));
             Assert.IsTrue(_repository.Get<DialogueClientProfile>().Any(pr => pr.DialogueId == dialogCreationRunMustExist.DialogueId));
-        }
-        
-        [Test, Retry(3)]
-        public async Task EnsureCreatesDialogueFrameRecords()
-        {
-            dialogCreationRunMustExist.DialogueId = TestDialogueId;
-            Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
             var resultDialogFrames = _repository.Get<DialogueFrame>()
                 .Where(df => df.DialogueId == dialogCreationRunMustExist.DialogueId);
             Assert.Greater(resultDialogFrames.Count(), 0);
-        }
-        
-        [Test, Retry(3)]
-        public async Task EnsureCreatesDialogueEmotionsRecords()
-        {
-            dialogCreationRunMustExist.DialogueId = TestDialogueId;
-            Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
-           
             var resultEmotions = _repository.Get<FrameEmotion>()
                 .Where(e => fileFrames.Any( ff => ff.FileFrameId == e.FileFrameId));
             Assert.Greater(resultEmotions.Count(), 0);
-        }
-
-        [Test, Retry(3)]
-        public async Task EnsureCreatesAvatar()
-        {
-            dialogCreationRunMustExist.DialogueId = TestDialogueId;
-            Assert.DoesNotThrowAsync(() => _fillingFrameService.Run(dialogCreationRunMustExist));
             
             Assert.IsTrue(await _sftpClient.IsFileExistsAsync($"clientavatars/{dialogCreationRunMustExist.DialogueId}.jpg"));
         }
+
     }
 }
