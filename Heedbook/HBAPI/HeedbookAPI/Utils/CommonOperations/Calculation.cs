@@ -933,7 +933,7 @@ namespace UserOperations.Utils
             if (!timeTable.Any()) return null;
             foreach (var companyId in companyIds)
             {
-                var devicesAmount = devices.Where(x => x.CompanyId == companyId).Count();
+                var devicesAmount = devices.Where(x => x.CompanyId == companyId && x.StatusId == 3).Count();
                 if (devicesAmount == 0) continue;
                 var timeTableForComp = GetTimeTable(companyId, timeTable);
                 for (int d = 0; d < devicesAmount; d++)

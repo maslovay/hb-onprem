@@ -113,8 +113,8 @@ namespace UserOperations.Services
                     SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
                     SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
 
-                    LoadIndex = _utils.LoadIndex(sessionCur, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
-                    LoadIndexDelta = -_utils.LoadIndex(sessionOld, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
+                     LoadIndex = _utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
+                    LoadIndexDelta = -_utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
 
                     CrossIndex = _utils.CrossIndex(dialoguesCur),
                     CrossIndexDelta = -_utils.CrossIndex(dialoguesOld),
@@ -194,8 +194,18 @@ namespace UserOperations.Services
                 double? crossIndexIndustryAverage = null, crossIndexIndustryBenchmark = null;
                 double? loadIndexIndustryAverage = null, loadIndexIndustryBenchmark = null;
 
+                 int active = 3;
+                var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
+                System.Console.WriteLine($"workingTimes: {JsonConvert.SerializeObject(workingTimes)}");
+                var devicesFiltered = _repository.GetAsQueryable<Device>()
+                    .Where(x => companyIds.Contains(x.CompanyId)
+                        && (!deviceIds.Any() || deviceIds.Contains(x.DeviceId))
+                        && x.StatusId == active)
+                    .ToList();
+                var timeTableForDevices = _dbOperations.WorkingTimeDoubleList(workingTimes, begTime, endTime, companyIds, devicesFiltered, role);
+
                 var crossIndex = _utils.CrossIndex(dialoguesCur);
-                var loadIndex = _utils.LoadIndex(sessionCur, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1));
+                var loadIndex = _utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1));
                 var dialoguesCount = _utils.DialoguesCount(dialoguesCur);
 
                 //---benchmarks
@@ -220,7 +230,7 @@ namespace UserOperations.Services
                     CrossIndexIndustryBenchmark = crossIndexIndustryBenchmark,
 
                     LoadIndex = loadIndex,
-                    LoadIndexDelta = loadIndex -_utils.LoadIndex(sessionOld, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
+                    LoadIndexDelta = loadIndex -_utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
 
                     LoadIndexIndustryAverage = loadIndexIndustryAverage,
                     LoadIndexIndustryBenchmark = loadIndexIndustryBenchmark
