@@ -196,6 +196,13 @@ namespace UserOperations.Utils.AnalyticHomeUtils
             var dialoguesHours = dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
             return 100 * LoadIndex( sessionHours, dialoguesHours);
         }
+        public double? LoadIndexWithTimeTable(List<double> workingTimeTable, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
+        {
+            var workingTime = new TimeSpan(0, (int)workingTimeTable.Sum(), 0);
+            var sessionHours = workingTime.TotalHours;
+            var dialoguesHours = dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
+            return 100 * LoadIndex( sessionHours, dialoguesHours);
+        }
         public double? LoadIndex(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
             var sessionHours = sessions.Any() ? sessions.Sum(p =>
