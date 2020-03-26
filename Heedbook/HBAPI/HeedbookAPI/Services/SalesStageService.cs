@@ -9,6 +9,7 @@ using UserOperations.AccountModels;
 using UserOperations.Models;
 using UserOperations.Controllers;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace UserOperations.Services
 {
@@ -39,14 +40,21 @@ namespace UserOperations.Services
             var corporationId  = (await _repository.FindOrExceptionOneByConditionAsync<Company>(x => x.CompanyId == companyId)).CorporationId;
             List<SalesStagePhrase> salesStagePhrase = null;
 
-          
-            if (corporationId != null)
+            try
+            {
+                if (corporationId != null)
                 salesStagePhrase = _repository.GetAsQueryable<SalesStagePhrase>()
-                    .Where(c => c.CorporationId == corporationId).Include(x => x.Phrase).Include(x => x.SalesStage).ToList();
+                    .Include(x => x.Phrase)
+                    //.Include(x => x.Phrase.PhraseType)
+                    .Include(x => x.SalesStage)
+                    .Where(c => c.CorporationId == corporationId).ToList();
             else
                 salesStagePhrase = _repository.GetAsQueryable<SalesStagePhrase>()
-                  .Where(c => c.CompanyId == companyId).Include(x => x.Phrase).Include(x => x.SalesStage).ToList();         
-
+                    .Include(x => x.Phrase)
+                    //.Include(x => x.Phrase.PhraseType)
+                    .Include(x => x.SalesStage)
+                    .Where(c => c.CompanyId == companyId).ToList();   
+            var phraseTypes = _repository.GetAsQueryable<PhraseType>().ToList();
             return salesStagePhrase
                     .GroupBy(x => x.SalesStageId)
                     .Select(x => new GetSalesStage
@@ -54,9 +62,28 @@ namespace UserOperations.Services
                         SalesStageId = x.Key,
                         SalesStageName = x.FirstOrDefault().SalesStage.Name,
                         SalesStageNumber = x.FirstOrDefault().SalesStage.SequenceNumber,
-                        Phrases = x.Select(p => p.Phrase).ToList()
+                        Phrases = x.Select(p => 
+                            {
+                                var newPhraseType = phraseTypes.FirstOrDefault(t => t.PhraseTypeId == p.Phrase.PhraseTypeId);
+                                p.Phrase.PhraseType = new PhraseType()
+                                {
+                                    PhraseTypeId = newPhraseType.PhraseTypeId,
+                                    PhraseTypeText = newPhraseType.PhraseTypeText,
+                                    Colour = newPhraseType.Colour,
+                                    ColourSyn = newPhraseType.ColourSyn
+                                };
+                                return p.Phrase;
+                            }).ToList()
                     } )
                     .ToList();
+            }
+            catch(Exception e)
+            {
+                System.Console.WriteLine(e);
+                return null;
+            }
+
+            
         }
 
         public async Task CreateSalesStageForNewAccount(Guid? companyId, Guid? corporationId)
