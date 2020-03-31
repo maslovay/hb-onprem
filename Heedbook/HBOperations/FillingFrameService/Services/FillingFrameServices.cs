@@ -65,7 +65,7 @@ namespace FillingFrameService.Services
                 SadnessShare = emotions.Average(item => item.SadnessShare),
                 SurpriseShare = emotions.Average(item => item.SurpriseShare),
                 HappinessShare = emotions.Average(item => item.HappinessShare),
-                AttentionShare = 10 * (10 - Math.Min((double)yawShare, 10) / 1.4)
+                AttentionShare = 10 * (10 - Math.Min((double)yawShare, 40) / 5.6)
             };
             return dialogueVisual;
         }   
