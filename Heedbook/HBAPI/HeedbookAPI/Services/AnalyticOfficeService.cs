@@ -73,8 +73,8 @@ namespace UserOperations.Services
 
             var result = new EfficiencyDashboardInfoNew
             {
-                WorkloadValueAvg = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime),
-                WorkloadDynamics = -_utils.LoadIndex(sessionOld, dialoguesUserOld, prevBeg, begTime),
+                WorkloadValueAvg = _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesUserCur, begTime, endTime),
+                WorkloadDynamics = -_dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesUserOld, prevBeg, begTime),
                 DialoguesCount = _utils.DialoguesCount(dialoguesCur),
                 AvgWorkingTime = _utils.SessionAverageHours(sessionCur, begTime, endTime),
                 AvgDurationDialogue = _utils.DialogueAverageDuration(dialoguesCur, begTime, endTime),
