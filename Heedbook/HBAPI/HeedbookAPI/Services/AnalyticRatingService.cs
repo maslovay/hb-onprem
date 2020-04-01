@@ -99,18 +99,30 @@ namespace UserOperations.Services
                     companyIds, applicationUserIds, deviceIds, typeIdCross
                 );
 
+                var active = 3;
+                var workingTimes = _repository.GetAsQueryable<WorkingTime>()
+                    .Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
+                var devicesFiltered = _repository.GetAsQueryable<Device>()
+                    .Where(x => companyIds.Contains(x.CompanyId)
+                        && (!deviceIds.Any() || deviceIds.Contains(x.DeviceId))
+                        && x.StatusId == active)
+                    .ToList();
+                var timeTableForDevices = _dbOperations.WorkingTimeDoubleListForOneUserInCompanys(workingTimes, begTime, endTime, companyIds, devicesFiltered, role);
                 var result = dialogues
-                    .GroupBy(p => p.ApplicationUserId)
+                    .GroupBy(p => p.ApplicationUserId, (Key, group) => new
+                        {
+                            ApplicationUserId = Key,
+                            DialoguesInfos = group
+                        })
                     .Select(p => new RatingUserInfo
                     {
-                        FullName = p.First().FullName,
-                        SatisfactionIndex = _analyticRatingUtils.SatisfactionIndex(p),
-                        LoadIndex = _analyticRatingUtils.LoadIndex(sessions, p, begTime, endTime),
-                        CrossIndex = _analyticRatingUtils.CrossIndex(p),
-                        DialoguesCount = p.Select(q => q.DialogueId).Distinct().Count(),
-                        CompanyId = p.First().CompanyId.ToString()
+                        FullName = p.DialoguesInfos.First().FullName,
+                        SatisfactionIndex = _analyticRatingUtils.SatisfactionIndex(p.DialoguesInfos.ToList()),
+                        LoadIndex = _analyticRatingUtils.LoadIndexWithTimeTableForUser(timeTableForDevices, p.DialoguesInfos.ToList(), begTime, endTime),
+                        CrossIndex = _analyticRatingUtils.CrossIndex(p.DialoguesInfos.ToList()),
+                        DialoguesCount = p.DialoguesInfos.Select(q => q.DialogueId).Distinct().Count(),
+                        CompanyId = p.DialoguesInfos.First().CompanyId.ToString()
                     }).ToList();
-
                 var emptyUsers = sessions.GroupBy(p => p.ApplicationUserId)
                     .Where(p => !result.Select(x=>x.FullName).Contains(p.First().FullName))
                     .Select(p => new RatingUserInfo
@@ -124,7 +136,7 @@ namespace UserOperations.Services
                     }).ToList();
 
                 result = result.Union(emptyUsers).OrderByDescending(p => p.SatisfactionIndex).ToList();
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(result);            
         }  
 
 
