@@ -170,7 +170,7 @@ namespace UserOperations.Services
                 Views = views - splashViews,
                 Clients = clients,
                 SplashViews = splashViews,
-                ContentFullInfo = contentsShownGroup.Where(x => x.Key2 != null).Select(x => new ContentFullOneInfo
+                ContentFullInfo = contentsShownGroup.Where(x => x.Key2 != null && x.Key2 != "").Select(x => new ContentFullOneInfo
                 {
                     ExternalLink = x.Key2.ToString(),
                     AmountViews = x.Result.Where(p => p.DialogueId != null && p.DialogueId != default(Guid)).Count(),
