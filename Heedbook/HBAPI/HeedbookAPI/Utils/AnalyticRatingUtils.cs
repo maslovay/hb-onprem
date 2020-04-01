@@ -34,6 +34,15 @@ namespace UserOperations.Utils.AnalyticRatingUtils
             var dialoguesHours = dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
             return 100 * LoadIndex(sessionHours, dialoguesHours);
         }
+        public double? LoadIndexWithTimeTableForUser(List<CompanyTimeTable> workingTimeTable, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
+        {
+            var companyWorkingTimeTable = workingTimeTable
+                .FirstOrDefault(p => p.CompanyId == dialogues.First().CompanyId);
+            var workingTime = new TimeSpan(0, (int)companyWorkingTimeTable.TimeTable.Sum(), 0);
+            var sessionHours = workingTime.TotalHours;
+            var dialoguesHours = dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
+            return 100 * LoadIndex( sessionHours, dialoguesHours);
+        }
         public double? LoadIndex(List<SessionInfo> sessions, IGrouping<DateTime, DialogueInfo> dialogues,
             Guid? applicationUserId, DateTime? date, DateTime beg = default, DateTime end = default)
         {
@@ -80,7 +89,17 @@ namespace UserOperations.Utils.AnalyticRatingUtils
         {
             return dialogues.Any() ? dialogues.Where(p => p.SatisfactionScore != null && p.SatisfactionScore != 0).Average(p => p.SatisfactionScore) : null;
         }
+        public double? SatisfactionIndex(List<DialogueInfo> dialogues)
+        {
+            return dialogues.Any() ? dialogues.Where(p => p.SatisfactionScore != null && p.SatisfactionScore != 0).Average(p => p.SatisfactionScore) : null;
+        }
         public double? CrossIndex(IGrouping<Guid?, DialogueInfo> dialogues)
+        {
+            var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
+            var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;
+            return dialoguesCount != 0 ? 100 * Convert.ToDouble(crossDialoguesCount) / Convert.ToDouble(dialoguesCount) : 0;
+        }
+        public double? CrossIndex(List<DialogueInfo> dialogues)
         {
             var dialoguesCount = dialogues.Any() ? dialogues.Select(p => p.DialogueId).Distinct().Count() : 0;
             var crossDialoguesCount = dialogues.Any() ? dialogues.Sum(p => Math.Min(p.CrossCount, 1)) : 0;
