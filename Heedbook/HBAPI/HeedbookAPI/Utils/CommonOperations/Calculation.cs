@@ -10,6 +10,7 @@ using UserOperations.Controllers;
 using System.Reflection;
 using UserOperations.Models.Get;
 using UserOperations.Models.Get.HomeController;
+using UserOperations.Models.Get.AnalyticRatingController;
 
 namespace UserOperations.Utils
 {
@@ -943,6 +944,27 @@ namespace UserOperations.Utils
                         times.Add(timeTableForComp[(int)i.DayOfWeek]);
                     }
                 }
+            }
+            return times;
+        }
+        public List<CompanyTimeTable> WorkingTimeDoubleListForOneUserInCompanys(WorkingTime[] timeTable, DateTime beg, DateTime end, List<Guid> companyIds, List<Device> devices, string role)
+        {
+            int active = 3;
+            var times = new List<CompanyTimeTable>();
+            if (role == "Admin") return times;
+
+            if (!timeTable.Any()) return null;
+            foreach (var companyId in companyIds)
+            {
+                var devicesAmount = devices.Where(x => x.CompanyId == companyId && x.StatusId == 3).Count();
+                if (devicesAmount == 0) continue;
+                var timeTableForComp = GetTimeTable(companyId, timeTable);
+                
+                times.Add(new CompanyTimeTable()
+                    {
+                        CompanyId = companyId,
+                        TimeTable = timeTableForComp.ToList()
+                    });
             }
             return times;
         }
