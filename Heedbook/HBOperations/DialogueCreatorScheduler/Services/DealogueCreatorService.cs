@@ -44,7 +44,10 @@ namespace DialogueCreatorScheduler.Services
                                 LanguageId = 1,
                                 InStatistic = true,
                                 ClientId = clientId,
-                                Comment = frameExample.FrameAttribute.FirstOrDefault().Gender
+                                Comment = frameExample.FrameAttribute.GroupBy(p => p.Gender)
+                                    .Select(p => new {Count = p.Count(), Gender = p.Key})
+                                    .OrderByDescending(p => p.Count)
+                                    .FirstOrDefault().Gender
                             });
                             updateTime = intervals[i].EndTime;
                         }
