@@ -25,8 +25,11 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("User")]
-        public Dictionary<string, object> User([FromQuery(Name = "applicationUserId")] Guid userId) =>
-            _analyticWeeklyReportService.User( userId);
+        public Dictionary<string, object> User(
+                [FromQuery(Name = "applicationUserId")] Guid userId,
+                [FromQuery(Name = "begTime")] string beg,
+                [FromQuery(Name = "endTime")] string end) => 
+            _analyticWeeklyReportService.User(userId, beg, end);
         
     }
 }

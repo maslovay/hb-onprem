@@ -31,9 +31,11 @@ namespace UserOperations.Services
             _analyticWeeklyReportUtils = analyticWeeklyReportUtils;
         }
 
-        public Dictionary<string, object> User( Guid userId )
+        public Dictionary<string, object> User( Guid userId , string beg, string end)
         { 
-                var begTime = DateTime.Now.AddDays(-7);
+                //var begTime = DateTime.Now.AddDays(-7);
+                var begTime = _requestFilters.GetBegDate(beg);
+                var endTime = _requestFilters.GetEndDate(end);
                 var employeeRoleId = GetEmployeeRoleId();
                 var jsonToReturn = new Dictionary<string, object>();
                 var companyId = GetCompanyId(userId);
@@ -45,21 +47,21 @@ namespace UserOperations.Services
 
                 //----ALL FOR WEEK Corporation---
                 var sessionsCorporation = userIdsInCorporation != null
-                    ? GetSessionMoreThanBegTime(userIdsInCorporation, begTime) 
+                    ? GetSessionBetweenBegTimeAndEndTime(userIdsInCorporation, begTime, endTime) 
                     : null;
                 var sessionsCorporationOld = userIdsInCorporation != null
                     ? GetSessionLessThanBegTime(userIdsInCorporation, begTime) 
                     : null;
                 var dialoguesCorporation = userIdsInCorporation != null
-                    ? GetDialoguesMoreThanBegTime(userIdsInCorporation, begTime) 
+                    ? GetDialoguesBetweenBegTimeAndEndTime(userIdsInCorporation, begTime, endTime)
                     : null;
                 var dialoguesCorporationOld = userIdsInCorporation != null
                     ? GetDialoguesLessThanBegTime(userIdsInCorporation, begTime)
                     : null;
                 //----ALL FOR WEEK Company---
-                var sessionsCompany = GetSessionMoreThanBegTime(userIdsInCompany, begTime);
+                var sessionsCompany = GetSessionBetweenBegTimeAndEndTime(userIdsInCompany, begTime, endTime);
                 var sessionsCompanyOld = GetSessionLessThanBegTime(userIdsInCompany, begTime);
-                var dialoguesCompany = GetDialoguesMoreThanBegTime(userIdsInCompany, begTime);
+                var dialoguesCompany = GetDialoguesBetweenBegTimeAndEndTime(userIdsInCompany, begTime, endTime);
                 var dialoguesCompanyOld = GetDialoguesLessThanBegTime(userIdsInCompany, begTime);
                 //-----for User---
                 var userSessions = sessionsCompany.Where(p => p.AspNetUserId == userId).ToList();
@@ -74,7 +76,7 @@ namespace UserOperations.Services
                 var Satisfaction = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = _analyticWeeklyReportUtils.TotalAvg(userDialogues, "Satisfaction"),
-                    AvgPerDay = _analyticWeeklyReportUtils.AvgPerDay(userDialogues, "Satisfaction"),
+                    AvgPerDay = _analyticWeeklyReportUtils.AvgPerDay(userDialogues, "Satisfaction", begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRatingSatisfactionPlace(dialoguesCompany, userId),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRatingSatisfactionPlace(dialoguesCorporation, userId)
                 };
@@ -91,7 +93,7 @@ namespace UserOperations.Services
                 var PositiveEmotions = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = _analyticWeeklyReportUtils.TotalAvg(userDialogues, "PositiveEmotions"),
-                    AvgPerDay = _analyticWeeklyReportUtils.AvgPerDay(userDialogues, "PositiveEmotions"),
+                    AvgPerDay = _analyticWeeklyReportUtils.AvgPerDay(userDialogues, "PositiveEmotions", begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRatingPositiveEmotPlace(dialoguesCompany, userId),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRatingPositiveEmotPlace(dialoguesCorporation, userId)
                 };
@@ -108,7 +110,7 @@ namespace UserOperations.Services
                 var PositiveIntonations = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = _analyticWeeklyReportUtils.TotalAvg(userDialogues, "PositiveTone"),
-                    AvgPerDay = _analyticWeeklyReportUtils.AvgPerDay(userDialogues, "PositiveTone"),
+                    AvgPerDay = _analyticWeeklyReportUtils.AvgPerDay(userDialogues, "PositiveTone", begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRatingPositiveIntonationPlace(dialoguesCompany, userId),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRatingPositiveIntonationPlace(dialoguesCorporation, userId)
                 };
@@ -125,7 +127,7 @@ namespace UserOperations.Services
                 var SpeechEmotivity = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = _analyticWeeklyReportUtils.TotalAvg(userDialogues, "SpeekEmotions"),
-                    AvgPerDay = _analyticWeeklyReportUtils.AvgPerDay(userDialogues, "SpeekEmotions"),
+                    AvgPerDay = _analyticWeeklyReportUtils.AvgPerDay(userDialogues, "SpeekEmotions", begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRatingSpeechEmotPlace(dialoguesCompany, userId),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRatingSpeechEmotPlace(dialoguesCorporation, userId)
                 };
@@ -143,7 +145,7 @@ namespace UserOperations.Services
                 var NumberOfDialogues = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userDialogues.Sum(p => p.Dialogues),
-                    AvgPerDay = _analyticWeeklyReportUtils.AvgNumberOfDialoguesPerDay(userDialogues),
+                    AvgPerDay = _analyticWeeklyReportUtils.AvgNumberOfDialoguesPerDay(userDialogues, begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRatingDialoguesAmount(dialoguesCompany, userId),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRatingDialoguesAmount(dialoguesCorporation, userId)
                 };
@@ -160,7 +162,7 @@ namespace UserOperations.Services
                 var WorkingHours = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = userSessions.Sum(p => p.SessionsHours),
-                    AvgPerDay = _analyticWeeklyReportUtils.AvgWorkingHoursPerDay( userSessions),
+                    AvgPerDay = _analyticWeeklyReportUtils.AvgWorkingHoursPerDay( userSessions, begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRatingWorkingHours(sessionsCompany, userId),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRatingWorkingHours(sessionsCorporation, userId)
                 };
@@ -177,7 +179,7 @@ namespace UserOperations.Services
                 var AvgDialogueTime = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = TimeSpan.FromHours(_analyticWeeklyReportUtils.AvgDialogueTimeTotal(userDialogues)).TotalMinutes,
-                    AvgPerDay = _analyticWeeklyReportUtils.AvgDialogueTimePerDay(userDialogues),
+                    AvgPerDay = _analyticWeeklyReportUtils.AvgDialogueTimePerDay(userDialogues, begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRatingDialogueTime(dialoguesCompany, userId),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRatingDialogueTime(dialoguesCorporation, userId)
                 };
@@ -193,7 +195,7 @@ namespace UserOperations.Services
                 var Workload = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = 100 * _analyticWeeklyReportUtils.WorkloadTotal(userDialogues, userSessions),
-                    AvgPerDay = _analyticWeeklyReportUtils.AvgWorkloadPerDay(userDialogues, userSessions),
+                    AvgPerDay = _analyticWeeklyReportUtils.AvgWorkloadPerDay(userDialogues, userSessions, begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRatingWorkload(dialoguesCompany, sessionsCompany, userId),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRatingWorkload(dialoguesCorporation, sessionsCorporation, userId)
                 };
@@ -210,7 +212,7 @@ namespace UserOperations.Services
                 var CrossPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = _analyticWeeklyReportUtils.PhraseTotalAvg(userDialogues, "CrossDialogues"),
-                    AvgPerDay = _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "CrossDialogues"),// userDialogues.ToDictionary(x => x.Day, i => (double)i.CrossDialogues / i.Dialogues),
+                    AvgPerDay = _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "CrossDialogues", begTime),// userDialogues.ToDictionary(x => x.Day, i => (double)i.CrossDialogues / i.Dialogues),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCompany, userId, "CrossDialogues"),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCorporation, userId, "CrossDialogues")
                 };
@@ -226,7 +228,7 @@ namespace UserOperations.Services
                 var AlertPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = _analyticWeeklyReportUtils.PhraseTotalAvg(userDialogues, "AlertDialogues"),
-                    AvgPerDay =  _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "AlertDialogues"),
+                    AvgPerDay =  _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "AlertDialogues", begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCompany, userId, "AlertDialogues"),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCorporation, userId, "AlertDialogues")
                 };
@@ -242,7 +244,7 @@ namespace UserOperations.Services
                 var LoyaltyPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg =  _analyticWeeklyReportUtils.PhraseTotalAvg(userDialogues, "LoyaltyDialogues"),
-                    AvgPerDay =  _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "LoyaltyDialogues"),
+                    AvgPerDay =  _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "LoyaltyDialogues", begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCompany, userId, "LoyaltyDialogues"),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCorporation, userId, "LoyaltyDialogues")
                 };
@@ -258,7 +260,7 @@ namespace UserOperations.Services
                 var NecessaryPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg =  _analyticWeeklyReportUtils.PhraseTotalAvg(userDialogues, "NecessaryDialogues"),
-                   AvgPerDay = _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "NecessaryDialogues"),
+                   AvgPerDay = _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "NecessaryDialogues", begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCompany, userId, "NecessaryDialogues"),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCorporation, userId, "NecessaryDialogues")
                 };
@@ -274,7 +276,7 @@ namespace UserOperations.Services
                 var FillersPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = _analyticWeeklyReportUtils.PhraseTotalAvg(userDialoguesOld, "FillersDialogues"),
-                    AvgPerDay = _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "FillersDialogues"),
+                    AvgPerDay = _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "FillersDialogues", begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCompany, userId, "FillersDialogues"),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCorporation, userId, "FillersDialogues")
                 };
@@ -291,7 +293,7 @@ namespace UserOperations.Services
                 var RiskPhrase = new UserWeeklyInfo(usersInCorporation, usersInCompany)
                 {
                     TotalAvg = _analyticWeeklyReportUtils.PhraseTotalAvg(userDialoguesOld, "RiskDialogues"),
-                    AvgPerDay = _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "RiskDialogues"),
+                    AvgPerDay = _analyticWeeklyReportUtils.PhraseAvgPerDay(userDialogues, "RiskDialogues", begTime),
                     OfficeRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCompany, userId, "RiskDialogues"),
                     CorporationRating = _analyticWeeklyReportUtils.OfficeRating(dialoguesCorporation, userId, "RiskDialogues")
                 };
@@ -352,6 +354,15 @@ namespace UserOperations.Services
                 .ToList();
             return sessionCorporation;
         }
+        private List<VSessionUserWeeklyReport> GetSessionBetweenBegTimeAndEndTime(List<Guid> userIds, DateTime begTime, DateTime endTime)
+        {
+            var sessionCorporation = _repository.GetAsQueryable<VSessionUserWeeklyReport>()
+                .Where(p => userIds.Contains(p.AspNetUserId)
+                    && p.Day > begTime
+                    && p.Day < endTime)
+                .ToList();
+            return sessionCorporation;
+        }
 
         private List<VSessionUserWeeklyReport> GetSessionLessThanBegTime(List<Guid> userIds, DateTime begTime)
         {
@@ -366,6 +377,15 @@ namespace UserOperations.Services
             var dialoguesCorporation = _repository.GetAsQueryable<VWeeklyUserReport>()
                 .Where(p => userIds.Contains(p.AspNetUserId)
                     && p.Day > begTime)
+                .ToList();
+            return dialoguesCorporation;
+        }
+        private List<VWeeklyUserReport> GetDialoguesBetweenBegTimeAndEndTime(List<Guid> userIds, DateTime begTime, DateTime endTime)
+        {
+            var dialoguesCorporation = _repository.GetAsQueryable<VWeeklyUserReport>()
+                .Where(p => userIds.Contains(p.AspNetUserId)
+                    && p.Day > begTime
+                    && p.Day < endTime)
                 .ToList();
             return dialoguesCorporation;
         }
