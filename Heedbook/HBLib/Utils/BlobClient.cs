@@ -40,6 +40,10 @@ namespace HBLib.Utils
             var newBlob = container.GetBlockBlobReference(fileName);
             stream.Position = 0;
             await newBlob.UploadFromStreamAsync(stream);
-        }        
+        }      
+        public async Task<Boolean> CheckFileExist(String containerName, String fileName)
+        {
+            return await _cloudBlobClient.GetContainerReference(containerName).GetBlockBlobReference(fileName).ExistsAsync();            
+        }  
     }
 }

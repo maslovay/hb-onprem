@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using ServiceExtensions;
 
 namespace CloneFtpOnAzureService
 {
@@ -19,6 +20,7 @@ namespace CloneFtpOnAzureService
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .ConfigureBuilderDueToEnvironment(args:args, portToReassignForTests:5060)
                 .UseStartup<Startup>();
     }
 }
