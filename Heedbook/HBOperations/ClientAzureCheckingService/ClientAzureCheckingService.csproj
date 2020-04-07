@@ -23,4 +23,11 @@
     <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
     <ProjectReference Include="..\RabbitMqEventBus\RabbitMqEventBus.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="appsettings.json">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
