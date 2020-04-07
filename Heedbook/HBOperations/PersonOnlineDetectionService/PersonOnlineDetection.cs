@@ -14,6 +14,7 @@ using PersonOnlineDetectionService.Models;
 using RabbitMqEventBus.Events;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using RabbitMqEventBus;
 
 namespace PersonOnlineDetectionService
 {
@@ -25,13 +26,16 @@ namespace PersonOnlineDetectionService
         private readonly PersonDetectionUtils _personDetectionUtils;
         private readonly CreateAvatarUtils _createAvatar;
         private readonly WebSocketIoUtils _socket;
+        private readonly INotificationPublisher _publisher; 
+
 
         public PersonOnlineDetection(
             IServiceScopeFactory factory,
             ElasticClientFactory elasticClientFactory,
             PersonDetectionUtils personDetectionUtils,
             CreateAvatarUtils createAvatar,
-            WebSocketIoUtils socket
+            WebSocketIoUtils socket,
+            INotificationPublisher publisher
         )
         {
             // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
@@ -40,6 +44,7 @@ namespace PersonOnlineDetectionService
             _personDetectionUtils = personDetectionUtils;
             _socket = socket;
             _createAvatar = createAvatar;
+            _publisher = publisher;
         }
 
         public async Task Run(PersonOnlineDetectionRun message)
@@ -93,8 +98,14 @@ namespace PersonOnlineDetectionService
                     // await _createAvatar.DeleteFileAsync(message.Path);
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
-
                     _log.Info("Send to webscoket");
+
+                    var clientAzureMessage = new ClientAzureCheckingRun{
+                        Path = message.Path
+                    };
+                    _publisher.Publish(clientAzureMessage);
+
+
                     // System.Console.WriteLine(result);
                 }
 
