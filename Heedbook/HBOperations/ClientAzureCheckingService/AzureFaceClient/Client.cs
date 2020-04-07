@@ -22,19 +22,16 @@ namespace ClientAzureCheckingService
             _client.Endpoint = settings.FaceEndpoint;
         }
 
-        public async System.Threading.Tasks.Task<IList<DetectedFace>> DetectGenderAgeAsync(Stream stream)
+        public async System.Threading.Tasks.Task<IList<DetectedFace>> DetectGenderAgeAsync(String path)
         {
             IList<FaceAttributeType> faceAttributes = new FaceAttributeType[]
             {
                 FaceAttributeType.Gender, FaceAttributeType.Age
             };
-            System.Console.WriteLine($"Stream length - {stream.Length}");
-            System.Console.WriteLine($"Endpoint is - {_client.Endpoint}");
-            System.Console.WriteLine($"Token is - {JsonConvert.SerializeObject(_client.Credentials)}");
-            System.Console.WriteLine($"Token is - {JsonConvert.SerializeObject(_client.Credentials.ToString())}");
             try
             {
-                IList<DetectedFace> faceList = await _client.Face.DetectWithStreamAsync(stream, true, false, faceAttributes);
+                var url = _settings.ImageURL + path;
+                IList<DetectedFace> faceList = await _client.Face.DetectWithUrlAsync(path, true, false, faceAttributes);
                 System.Console.WriteLine(JsonConvert.SerializeObject(faceList));
                 return faceList;
             }

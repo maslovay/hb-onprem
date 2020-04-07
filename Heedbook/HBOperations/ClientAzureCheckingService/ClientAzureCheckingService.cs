@@ -13,19 +13,15 @@ namespace ClientAzureCheckingService
     public class ClientAzureChecking
     {
         private readonly RecordsContext _context;
-        private readonly SftpClient _sftpClient;
         private readonly ElasticClientFactory _elasticClientFactory;
-
         private readonly AzureClient _azureClient;
 
         public ClientAzureChecking(
-            SftpClient sftpClient,
             ElasticClientFactory elasticClientFactory,
             RecordsContext context,
             AzureClient azureClient
         )
         {
-            _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
             _context = context ?? throw new ArgumentNullException(nameof(context));;
             _azureClient = azureClient ?? throw new ArgumentNullException(nameof(azureClient));
             _elasticClientFactory = elasticClientFactory;
@@ -44,10 +40,7 @@ namespace ClientAzureCheckingService
                 var client = _context.Clients.Where(p => p.Avatar == fileName).FirstOrDefault();
                 if (client != null)
                 {
-                    _log.Info($"Download image {path} as memory stream async");
-                    var stream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(path);
-                    _log.Info($"Byte length of stream is {stream.ToArray().Count()}");
-                    var faceResult = await _azureClient.DetectGenderAgeAsync(stream);
+                    var faceResult = await _azureClient.DetectGenderAgeAsync(path);
                     _log.Info($"Result of age gender detection - {JsonConvert.SerializeObject(faceResult)}");
                     if (faceResult != null)
                     {
