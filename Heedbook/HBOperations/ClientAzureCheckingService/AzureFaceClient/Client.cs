@@ -45,7 +45,7 @@ namespace ClientAzureCheckingService
             }
             catch (Exception e)
             {
-                System.Console.WriteLine(e, "Error");
+                System.Console.WriteLine(e);
                 return null;
             }
 
