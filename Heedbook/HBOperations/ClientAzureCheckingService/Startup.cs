@@ -39,13 +39,10 @@ namespace ClientAzureCheckingService
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+           
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddScoped<ElasticClientFactory>();
-            
-            services.AddTransient<SftpClient>();
 
             services.Configure<AzureFaceClientSettings>(Configuration.GetSection(nameof(AzureFaceClientSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<AzureFaceClientSettings>>().Value);
