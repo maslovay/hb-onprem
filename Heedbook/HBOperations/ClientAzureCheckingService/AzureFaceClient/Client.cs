@@ -40,12 +40,12 @@ namespace ClientAzureCheckingService
             }
             catch (APIErrorException f)
             {
-                System.Console.WriteLine(f.Message);
+                System.Console.WriteLine(f);
                 return null;
             }
             catch (Exception e)
             {
-                System.Console.WriteLine(e.Message, "Error");
+                System.Console.WriteLine(e, "Error");
                 return null;
             }
 
