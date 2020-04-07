@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
@@ -27,10 +28,23 @@ namespace ClientAzureCheckingService
             {
                 FaceAttributeType.Gender, FaceAttributeType.Age
             };
+            try
+            {
+                IList<DetectedFace> faceList = await _client.Face.DetectWithStreamAsync(stream, true, false, faceAttributes);
+                System.Console.WriteLine(JsonConvert.SerializeObject(faceList));
+                return faceList;
+            }
+            catch (APIErrorException f)
+            {
+                System.Console.WriteLine(f.Message);
+                return null;
+            }
+            catch (Exception e)
+            {
+                System.Console.WriteLine(e.Message, "Error");
+                return null;
+            }
 
-            IList<DetectedFace> faceList = await _client.Face.DetectWithStreamAsync(stream, true, false, faceAttributes);
-            System.Console.WriteLine(JsonConvert.SerializeObject(faceList));
-            return faceList;
         }
     }
 
