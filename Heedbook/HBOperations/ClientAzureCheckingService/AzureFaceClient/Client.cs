@@ -28,6 +28,7 @@ namespace ClientAzureCheckingService
             {
                 FaceAttributeType.Gender, FaceAttributeType.Age
             };
+            System.Console.WriteLine($"Stream length - {stream.Length}");
             try
             {
                 IList<DetectedFace> faceList = await _client.Face.DetectWithStreamAsync(stream, true, false, faceAttributes);
