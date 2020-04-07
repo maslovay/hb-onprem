@@ -86,6 +86,10 @@ namespace PersonOnlineDetectionService
                     _personDetectionUtils.CreateClientSession((Guid) clientId, $"{clientId}.jpg");
                     _log.Info("Created client session");
                     // System.Console.WriteLine(result);
+                    var clientAzureMessage = new ClientAzureCheckingRun{
+                        Path = message.Path
+                    };
+                    _publisher.Publish(clientAzureMessage);
                     
                 }
                 else
@@ -99,11 +103,6 @@ namespace PersonOnlineDetectionService
                     var result = _socket.Execute(room: message.DeviceId.ToString(), companyId: message.CompanyId.ToString(),
                         tabletId: message.DeviceId.ToString(), role: "tablet", clientId: clientId.ToString());
                     _log.Info("Send to webscoket");
-
-                    var clientAzureMessage = new ClientAzureCheckingRun{
-                        Path = message.Path
-                    };
-                    _publisher.Publish(clientAzureMessage);
 
 
                     // System.Console.WriteLine(result);
