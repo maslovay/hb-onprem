@@ -44,13 +44,15 @@ namespace ClientAzureCheckingService
                 var client = _context.Clients.Where(p => p.Avatar == fileName).FirstOrDefault();
                 if (client != null)
                 {
+                    _log.Info($"Download image {path} as memory stream async");
                     var stream = await _sftpClient.DownloadFromFtpAsMemoryStreamAsync(path);
-                    var faceResult = (await _azureClient.DetectGenderAgeAsync(stream)).FirstOrDefault();
+                    _log.Info($"Byte length of stream is {stream.ToArray().Count()}");
+                    var faceResult = await _azureClient.DetectGenderAgeAsync(stream);
                     _log.Info($"Result of age gender detection - {JsonConvert.SerializeObject(faceResult)}");
                     if (faceResult != null)
                     {
-                        client.Gender = faceResult.FaceAttributes.Gender.ToString();
-                        client.Age = (int) faceResult.FaceAttributes.Age;
+                        client.Gender = faceResult.FirstOrDefault().FaceAttributes.Gender.ToString();
+                        client.Age = (int) faceResult.FirstOrDefault().FaceAttributes.Age;
                     }
                     _context.SaveChanges();
                     _log.Info("Function finished");
