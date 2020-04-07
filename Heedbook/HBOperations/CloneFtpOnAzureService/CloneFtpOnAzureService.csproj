@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\HBLib\HBLib.csproj" />
     <ProjectReference Include="..\QuartzExtensions\QuartzExtensions.csproj" />
+    <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj" />
   </ItemGroup>
 
 </Project>

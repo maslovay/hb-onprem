@@ -80,6 +80,7 @@ namespace UserOperations.Services
                            SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
                            DeviceId = p.DeviceId,
                            CompanyId = p.Device.CompanyId,
+                           SlideShowSessions = p.SlideShowSessions,
                            IsInWorkingTime = _dbOperations.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
                        }).ToList();
 
@@ -92,8 +93,13 @@ namespace UserOperations.Services
                 var dialoguesDevicesCur = dialoguesCur.Where(x => x.IsInWorkingTime).ToList();
                 var dialoguesDevicesOld = dialoguesOld.Where(x => x.IsInWorkingTime).ToList();
 
-                var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialoguesOld.Select(x => x.DialogueId).ToList());
-                var slideShowSessionsInDialoguesCur = await GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialoguesCur.Select(x => x.DialogueId).ToList());
+                // var slideShowSessionsInDialoguesOld = await GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialoguesOld.Select(x => x.DialogueId).ToList());
+                // var slideShowSessionsInDialoguesCur = await GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialoguesCur.Select(x => x.DialogueId).ToList());
+                var slideShowSessionsInDialoguesOld = dialogues.SelectMany(p => p.SlideShowSessions)
+                    .Where(p => p.BegTime < begTime).ToList();
+                var slideShowSessionsInDialoguesCur = dialogues.SelectMany(p => p.SlideShowSessions)
+                    .Where(p => p.BegTime >= begTime).ToList();
+                
                 var viewsCur = slideShowSessionsInDialoguesCur.Count();
 
                 var result = new NewDashboardInfo()
@@ -107,7 +113,7 @@ namespace UserOperations.Services
                     SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
                     SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
 
-                    LoadIndex = _utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
+                     LoadIndex = _utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
                     LoadIndexDelta = -_utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
 
                     CrossIndex = _utils.CrossIndex(dialoguesCur),
@@ -188,7 +194,7 @@ namespace UserOperations.Services
                 double? crossIndexIndustryAverage = null, crossIndexIndustryBenchmark = null;
                 double? loadIndexIndustryAverage = null, loadIndexIndustryBenchmark = null;
 
-                int active = 3;
+                 int active = 3;
                 var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
                 System.Console.WriteLine($"workingTimes: {JsonConvert.SerializeObject(workingTimes)}");
                 var devicesFiltered = _repository.GetAsQueryable<Device>()
@@ -313,7 +319,7 @@ namespace UserOperations.Services
                 .Include(p => p.DialogueClientSatisfaction)
                 .Include(p => p.DialogueFrame)
                 .Include(p => p.DialoguePhrase)
-
+                .Include(p => p.SlideShowSessions)
                        .Where(p => p.BegTime >= begTime
                                && p.EndTime <= endTime
                                && p.StatusId == 3

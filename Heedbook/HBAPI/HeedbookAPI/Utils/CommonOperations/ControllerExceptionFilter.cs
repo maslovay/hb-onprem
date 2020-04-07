@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 
 namespace UserOperations.Utils
@@ -27,13 +30,31 @@ namespace UserOperations.Utils
                     code = 400; break;
             }
 
-            context.Result = context.Result = new ObjectResult(context.Exception.Message)
-            {
-                StatusCode = code
-            };
+            context.Result = new ObjectResult(
+                new ErrorsResult
+                {
+                    Code = code,
+                    Message = context.Exception.Message
+                })
+                {
+                    StatusCode = code
+                };
 
             base.OnException(context);
         }
+    }
+
+    class ErrorsResult
+    {
+        public int Code { get; set; }
+        public string Message { get; set; }
+        public Dictionary<string, string> Errors { get; set; }
+    }
+
+    class Error
+    {
+        public string Field { get; set; }
+        public string Message { get; set; }
     }
 
     public class NoFoundException : Exception

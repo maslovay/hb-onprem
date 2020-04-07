@@ -74,7 +74,8 @@ namespace AudioAnalyzeService
                     if (dialogue != null)
                     {
                         var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId
-                            && p.FileContainer == containerName).ToList();
+                                && p.FileContainer == containerName
+                            ).ToList();
                         fileAudios.Where(p => p.StatusId != 6)
                             .ToList()
                             .ForEach(p => p.StatusId = 8);

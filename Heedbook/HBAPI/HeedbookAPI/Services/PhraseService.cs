@@ -1,6 +1,7 @@
 ﻿using HBData.Models;
 using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,7 +91,10 @@ namespace UserOperations.Services
             {
                 phrase = await CreateNewPhraseAsync(message, languageId);
                 await CreateIfNoExistNewPhraseCompanyAsync(phrase.PhraseId, companyIdInToken);
-                await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, companyIdForSalesStage, corporationIdInToken);
+                if(message.SalesStageId != null)
+                {
+                    await CreateNewSalesStagePhraseAsync(phrase.PhraseId, (Guid)message.SalesStageId, companyIdForSalesStage, corporationIdInToken);
+                }
             }
             else
             {

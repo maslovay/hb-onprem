@@ -22,6 +22,8 @@ namespace UserOperations.Models.AnalyticModels
         public double? SatisfactionScoreEnd;
         public double? SmilesShare;
 
+        public ICollection<SlideShowSession> SlideShowSessions;
+
         public bool IsInWorkingTime { get; internal set; }
     }
 
