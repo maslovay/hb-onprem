@@ -14,6 +14,7 @@ namespace ClientAzureCheckingService
     {
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
+
         private readonly AzureClient _azureClient;
 
         public ClientAzureChecking(
