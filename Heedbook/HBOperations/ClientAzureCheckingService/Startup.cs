@@ -48,7 +48,7 @@ namespace ClientAzureCheckingService
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<AzureFaceClientSettings>>().Value);
 
             services.AddScoped<ClientAzureChecking>();
-            services.AddScoped<AzureClient>();
+            services.AddSingleton<AzureClient>();
             services.AddScoped<ClientAzureCheckingRunHandler>();
 
             services.AddRabbitMqEventBus(Configuration);

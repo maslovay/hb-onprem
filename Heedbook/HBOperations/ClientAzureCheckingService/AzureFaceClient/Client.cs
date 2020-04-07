@@ -15,7 +15,7 @@ namespace ClientAzureCheckingService
 
         public AzureClient(AzureFaceClientSettings settings)
         {
-            System.Console.WriteLine(JsonConvert.SerializeObject(settings));
+            _settings = settings;
             _client = new FaceClient(
                 new ApiKeyServiceClientCredentials(settings.FaceSubscriptionKey),
                 new System.Net.Http.DelegatingHandler[] { });
@@ -31,7 +31,8 @@ namespace ClientAzureCheckingService
             try
             {
                 var url = _settings.ImageURL + path;
-                IList<DetectedFace> faceList = await _client.Face.DetectWithUrlAsync(path, true, false, faceAttributes);
+                System.Console.WriteLine(url);
+                IList<DetectedFace> faceList = await _client.Face.DetectWithUrlAsync(url, true, false, faceAttributes);
                 System.Console.WriteLine(JsonConvert.SerializeObject(faceList));
                 return faceList;
             }
