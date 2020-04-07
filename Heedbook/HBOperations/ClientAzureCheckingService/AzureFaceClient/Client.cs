@@ -29,6 +29,9 @@ namespace ClientAzureCheckingService
                 FaceAttributeType.Gender, FaceAttributeType.Age
             };
             System.Console.WriteLine($"Stream length - {stream.Length}");
+            System.Console.WriteLine($"Endpoint is - {_client.Endpoint}");
+            System.Console.WriteLine($"Token is - {JsonConvert.SerializeObject(_client.Credentials)}");
+            System.Console.WriteLine($"Token is - {JsonConvert.SerializeObject(_client.Credentials.ToString())}");
             try
             {
                 IList<DetectedFace> faceList = await _client.Face.DetectWithStreamAsync(stream, true, false, faceAttributes);
