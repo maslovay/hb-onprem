@@ -87,7 +87,7 @@ namespace PersonOnlineDetectionService
                     _log.Info("Created client session");
                     // System.Console.WriteLine(result);
                     var clientAzureMessage = new ClientAzureCheckingRun{
-                        Path = message.Path
+                        Path = $"clientavatars/{clientId}.jpg"
                     };
                     _publisher.Publish(clientAzureMessage);
                     
