@@ -1,22 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ClientAzureCheckingService.Handler;
+﻿using ClientAzureCheckingService.Handler;
 using Configurations;
 using HBData;
+using HBData.Repository;
 using HBLib;
+using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Quartz;
+using QuartzExtensions;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using Serilog;
 
 namespace ClientAzureCheckingService
 {
@@ -28,9 +27,10 @@ namespace ClientAzureCheckingService
         }
 
         public IConfiguration Configuration { get; }
-        
+
+        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
-        {   
+        {
             services.AddOptions();
             services.AddDbContext<RecordsContext>
             (options =>
@@ -38,32 +38,32 @@ namespace ClientAzureCheckingService
                 var connectionString = Configuration.GetConnectionString("DefaultConnection");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
-            }, ServiceLifetime.Scoped);
-
+            });
+            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddSingleton<ElasticClientFactory>();
+            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddScoped<ElasticClientFactory>();
+            
+            services.AddTransient<SftpClient>();
 
             services.Configure<AzureFaceClientSettings>(Configuration.GetSection(nameof(AzureFaceClientSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<AzureFaceClientSettings>>().Value);
 
-            services.AddSingleton<AzureClient>();
-            // services.AddSingleton<DialogueCreatorService>();
-            // services.AddSingleton<FaceIntervalsService>();
-            // services.AddSingleton<DialogueSavingService>();
+            services.AddScoped<ClientAzureChecking>();
+            services.AddScoped<AzureClient>();
+            services.AddScoped<ClientAzureCheckingRunHandler>();
 
             services.AddRabbitMqEventBus(Configuration);
-
+            services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
-
-        
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
-            var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            service.Subscribe<ClientAzureCheckingRun, ClientAzureCheckingRunHandler>();
+            var handlerService = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
+            handlerService.Subscribe<ClientAzureCheckingRun, ClientAzureCheckingRunHandler>();
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
             else
