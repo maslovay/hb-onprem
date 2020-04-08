@@ -48,12 +48,7 @@ namespace CloneFtpOnAzureService
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
 
-                    var dialogues = _context.Dialogues
-                        .Where(d => d.Status.StatusId == 3 
-                            && d.CreationTime >= DateTime.UtcNow.AddHours(-24))
-                        .OrderBy(p => p.CreationTime)
-                        .Select(s => s.DialogueId)
-                        .ToList();
+                    var dialogues = GetDialogueIds();                    
                     var tasks = new List<Task>();
                     var dict = new Dictionary<String, String>()
                     {
@@ -108,6 +103,30 @@ namespace CloneFtpOnAzureService
                 {
                     _log.Fatal($"{e}");
                 }
+            }
+        }
+        private List<Guid> GetDialogueIds()
+        {
+            if(Environment.GetEnvironmentVariable("DOCKER_INTEGRATION_TEST_ENVIRONMENT") == "TRUE")
+            {
+                System.Console.WriteLine($"dialogues for test");
+                return new List<Guid>()
+                {
+                    _context.Dialogues
+                    .Where(p => p.StatusId == 3)
+                    .OrderByDescending(p => p.EndTime)
+                    .FirstOrDefault().DialogueId
+                }; 
+            }                           
+            else
+            {
+                System.Console.WriteLine($"dialogues for not test");
+                return _context.Dialogues
+                    .Where(d => d.Status.StatusId == 3 
+                        && d.CreationTime >= DateTime.UtcNow.AddHours(-24))
+                    .OrderBy(p => p.CreationTime)
+                    .Select(s => s.DialogueId)
+                    .ToList();
             }
         }
     }

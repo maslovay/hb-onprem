@@ -90,9 +90,9 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     break;
                                 
                                 var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
-                                if(sttResults?.Error?.Status == "NOT_FOUND")
+                                if(sttResults?.Error?.Status != "NOT_FOUND")
                                     continue;
-                                
+                                    
                                 var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
 
                                 if (((sttResults?.Response == null && differenceHour >= 1)||sttResults?.Response?.Results==null))
