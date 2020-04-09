@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using UserOperations.Utils;
 
 namespace HBMLOnlineService
 {
@@ -81,7 +82,7 @@ namespace HBMLOnlineService
             // });
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
-
+            services.AddSingleton<ControllerExceptionFilter>();
             services.AddRabbitMqEventBus(Configuration);
            
             services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
