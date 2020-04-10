@@ -1,16 +1,24 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using HBLib;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using HBLib.Utils;
 
 namespace UserOperations.Utils
 {
     public class ControllerExceptionFilter : ExceptionFilterAttribute
     {
-
+        private ElasticClientFactory _elasticClientFactory;
+        private ElasticClient _log;
+        public ControllerExceptionFilter(){}
+        public ControllerExceptionFilter(ElasticClientFactory elasticClientFactory)
+        {
+            _elasticClientFactory = elasticClientFactory;
+            _log = _elasticClientFactory.GetElasticClient();
+        }     
         public override void OnException(ExceptionContext context)
         {
             var code = 400;
@@ -28,6 +36,12 @@ namespace UserOperations.Utils
                     code = 400; break;
                 default:
                     code = 400; break;
+            }   
+                     
+            if(_log != null)
+            {
+                _log.SetFormat("{Exception}");
+                _log.Info($"context.Exception.Message");
             }
 
             context.Result = new ObjectResult(

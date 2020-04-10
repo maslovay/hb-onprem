@@ -14,6 +14,12 @@ using RabbitMqEventBus;
 using Notifications.Base;
 using Swashbuckle.AspNetCore.Swagger;
 using HBMLOnlineService.Service;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using UserOperations.Utils;
+using Newtonsoft.Json.Serialization;
 
 namespace HBMLOnlineService
 {
@@ -43,6 +49,29 @@ namespace HBMLOnlineService
                     Title = "HBML Face Servise",
                     Version = "v1"
                 });
+                c.AddSecurityDefinition("Bearer", new ApiKeyScheme()
+                {
+                    Description = "JWT Authorization header {token}",
+                    Name = "Authorization",
+                    In = "header",
+                    Type = "apiKey"
+                });
+                c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                    {
+                        { "Bearer", new string[] { } }
+                    });
+            });
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidIssuer = Configuration["Tokens:Issuer"],
+                    ValidAudience = Configuration["Tokens:Issuer"],
+                    RequireSignedTokens = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
+                };
             });
 
             services.AddScoped<HBMLOnlineFaceService>();
@@ -54,7 +83,7 @@ namespace HBMLOnlineService
             // });
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddSingleton<ElasticClientFactory>();
-
+            services.AddSingleton<ControllerExceptionFilter>();
             services.AddRabbitMqEventBus(Configuration);
            
             services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
@@ -67,6 +96,8 @@ namespace HBMLOnlineService
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc()
+                .AddJsonOptions(options => options.SerializerSettings.ContractResolver = new DefaultContractResolver());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
