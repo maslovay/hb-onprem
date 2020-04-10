@@ -7,17 +7,23 @@ using HBLib;
 using HBLib.Utils;
 using HBMLHttpClient;
 using HBMLOnlineService.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
 using Swashbuckle.AspNetCore.Annotations;
+using UserOperations.Utils;
+using HBMLHttpClient.Model;
+using System.Collections.Generic;
 
 namespace HBMLOnlineService.Controllers
 {
     [Route("face")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
+    [ServiceFilter(typeof(ControllerExceptionFilter))]
     public class HBMLOnlineService : Controller
     {
         private readonly HBMLOnlineFaceService _hbmlservice;
@@ -35,7 +41,7 @@ namespace HBMLOnlineService.Controllers
         //Descriptor=true&Emotions=true&Headpose=true&Attributes=true&DeviceId=null&CompanyId=4f318be9-7f1e-4a8b-96ec-c6ac2226cae6
         [HttpPost("Face")]
         [SwaggerOperation(Description = "Controller analyze frames, find clients and add all information to database and storage")]
-        public async Task<IActionResult> Face(
+        public async Task<List<FaceResult>> Face(
             [FromQuery] Guid? deviceId,
             [FromQuery] Guid? companyId,
             [FromQuery] bool description,
@@ -66,20 +72,20 @@ namespace HBMLOnlineService.Controllers
                         _hbmlservice.PublishMessageToRabbit(deviceId, companyId, filename, faceResults);
                     }
                     _log.Info("Function finished");
-                    return Ok(JsonConvert.SerializeObject(faceResults));
+                    return faceResults;
                 }
                 else
                 {
                     _log.Info("No files found");
                     _log.Info("Function finished");
-                    return BadRequest("No files found");
+                    throw new NoFoundException("No files found");
                 }
             }
             catch (Exception e)
             {
                 // System.Console.WriteLine($"Exception occured {e}");
                 _log.Fatal("Exception occured {e}");
-                return BadRequest($"Exception occured {e}");
+                throw new Exception($"Exception occured {e}");
             }
         }
     }

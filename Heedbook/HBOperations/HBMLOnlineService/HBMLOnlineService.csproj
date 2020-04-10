@@ -22,5 +22,6 @@
     <ProjectReference Include="..\..\HBLib\HBLib.csproj"/>
     <ProjectReference Include="..\..\HBML\HBMLHttpClient\HBMLHttpClient.csproj" />
     <ProjectReference Include="..\ServiceExtensions\ServiceExtensions.csproj"/>
+    <ProjectReference Include="..\..\HBAPI\HeedbookAPI\UserOperations.csproj"/>
   </ItemGroup>
 </Project>
