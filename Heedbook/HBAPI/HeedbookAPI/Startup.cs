@@ -57,6 +57,7 @@ namespace UserOperations
             services.AddScoped<DBOperations>();
             services.AddScoped<DBOperationsWeeklyReport>();
             services.AddScoped<RequestFilters>();
+            services.AddScoped<ControllerExceptionFilter>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
             {
                 p.Password.RequireDigit = true;
