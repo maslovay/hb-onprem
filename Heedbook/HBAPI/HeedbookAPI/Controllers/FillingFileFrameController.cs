@@ -23,8 +23,8 @@ namespace UserOperations.Controllers
         [HttpPost("FillingFileFrame")]
         [SwaggerOperation(Summary = "Save FileFrames from device", Description = "Create new FileFrame, FrameAttribute, FrameEmotion and save in data base")]
         [SwaggerResponse(200, "model added in data base")]
-        public async System.Threading.Tasks.Task<object> FileFramePostAsync([FromBody, SwaggerParameter("Send frames", Required = true)] 
+        public async System.Threading.Tasks.Task<IActionResult> FileFramePostAsync([FromBody, SwaggerParameter("Send frames", Required = true)] 
                                 List<FileFramePostModel> frames ) =>
-            await _fillingFileFrameService.FillingFileFrameAsync(frames);
+            _fillingFileFrameService.FillingFileFrame(frames);
     }    
 }
