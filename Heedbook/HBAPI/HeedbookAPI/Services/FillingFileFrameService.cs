@@ -4,6 +4,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using HBData.Repository;
 using UserOperations.Models;
+using Microsoft.AspNetCore.Mvc;
 using HBData.Models;
 
 namespace UserOperations.Services
@@ -15,26 +16,25 @@ namespace UserOperations.Services
         {
             _repository = repository;
         }
-        public object FillingFileFrame(List<FileFramePostModel> frames)
-        {               
-            if(frames == null || frames.Count == 0)
+        public IActionResult FillingFileFrame(List<FileFramePostModel> frames)
+        {
+            if (frames == null || frames.Count == 0)
                 throw new Exception("List of frames is empty");
 
             var framesWithMaxArea = frames
                 .GroupBy(p => p.Time)
                 .Select(p => p.OrderByDescending(q => q.FaceArea).First())
                 .ToList();
-                
+
             var device = _repository.GetWithIncludeOne<Device>(p => p.DeviceId == frames.FirstOrDefault().DeviceId, o => o.Company);
-                
-            if(device.Company.IsExtended)
-                return null;
+            if (device.Company.IsExtended)
+                throw new Exception("device.Company.Extended: true");
 
             var fileFrames = new List<FileFrame>();
             var frameAttributes = new List<FrameAttribute>();
             var frameEmotions = new List<FrameEmotion>();
 
-            foreach (var frameWithMaxArea  in framesWithMaxArea)
+            foreach (var frameWithMaxArea in framesWithMaxArea)
             {
                 if(frameWithMaxArea.Yaw == null 
                     || frameWithMaxArea.Smile == null || Double.IsNaN((double)frameWithMaxArea.Smile)
@@ -68,7 +68,8 @@ namespace UserOperations.Services
                     FileFrameId = fileFrame.FileFrameId,
                     Gender = frameWithMaxArea.Gender,
                     Age = (double)frameWithMaxArea.Age,
-                    Value = JsonConvert.SerializeObject(new {
+                    Value = JsonConvert.SerializeObject(new
+                    {
                         Top = frameWithMaxArea.Top == null ? 0 : Convert.ToInt16(frameWithMaxArea.Top),
                         Width = frameWithMaxArea.FaceArea == null ? 0 : Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
                         Height = frameWithMaxArea.FaceArea == null ? 0 : Convert.ToInt32(Math.Sqrt((double)frameWithMaxArea.FaceArea)),
@@ -97,7 +98,7 @@ namespace UserOperations.Services
             _repository.CreateRange<FrameEmotion>(frameEmotions);
             System.Console.WriteLine(JsonConvert.SerializeObject(fileFrames));
             _repository.Save();
-            return "success";
+            return new OkResult();            
         }
     }
 }
