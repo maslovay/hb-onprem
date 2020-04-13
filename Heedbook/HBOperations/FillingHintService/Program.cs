@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using ServiceExtensions;
 
 namespace FillingHintService
 {
@@ -14,7 +15,8 @@ namespace FillingHintService
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
             return WebHost.CreateDefaultBuilder(args)
-                          .UseStartup<Startup>();
+                .ConfigureBuilderDueToEnvironment(args: args, portToReassignForTests: 5075)
+                .UseStartup<Startup>();
         }
     }
 }
