@@ -16,7 +16,7 @@ namespace UserOperations.Services
         {
             _repository = repository;
         }
-        public IActionResult FillingFileFrame(List<FileFramePostModel> frames)
+        public List<FileFrame> FillingFileFrame(List<FileFramePostModel> frames)
         {
             if (frames == null || frames.Count == 0)
                 throw new Exception("List of frames is empty");
@@ -98,7 +98,7 @@ namespace UserOperations.Services
             _repository.CreateRange<FrameEmotion>(frameEmotions);
             System.Console.WriteLine(JsonConvert.SerializeObject(fileFrames));
             _repository.Save();
-            return new OkResult();            
+            return fileFrames;            
         }
     }
 }
