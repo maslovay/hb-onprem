@@ -14,12 +14,14 @@ using Newtonsoft.Json;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
 using Swashbuckle.AspNetCore.Annotations;
+using UserOperations.Utils;
 
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
   //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
+    [ControllerExceptionFilter]
     public class VideoSaveInfoController : Controller
     {
         private readonly RecordsContext _context;
@@ -39,7 +41,7 @@ namespace UserService.Controllers
 
         [HttpGet]
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
-        public async Task<IActionResult> VideoSave(
+        public async Task<FileVideo> VideoSave(
             [FromQuery] Guid deviceId,
             [FromQuery] String begTime,
             [FromQuery] Double? duration,
@@ -113,12 +115,12 @@ namespace UserService.Controllers
 //                    _log.Error($"No such file videos/{fileName}");
                 }
 //                _log.Info("Function Video save info finished");
-                return Ok();
+                return videoFile;
             }
             catch (Exception e)
             {
 //                _log.Fatal($"Exception occured while executing Video save info {e}");
-                return BadRequest(e.Message);
+                throw e;
             }
         }
     }
