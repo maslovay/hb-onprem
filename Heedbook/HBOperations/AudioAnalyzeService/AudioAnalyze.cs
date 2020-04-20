@@ -99,8 +99,11 @@ namespace AudioAnalyzeService
                             var currentPath = Directory.GetCurrentDirectory();
                             var token = await _googleConnector.GetAuthorizationToken(currentPath);
                             
+                            var role = containerName == "dialogueaudios" ? "_client" : "_employee";
                             var blobGoogleDriveName =
-                                dialogueId + "_client" + Path.GetExtension(fileName);
+                                dialogueId
+                                + role
+                                + Path.GetExtension(fileName);
                             await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);
                             _log.Info("Load to disk");
                             await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
