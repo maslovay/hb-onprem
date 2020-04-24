@@ -1018,7 +1018,16 @@ namespace ApiTests
                 CorporationId = Guid.NewGuid(),
                 Email = "HornAndHoves@heedbook.com",
                 FullName = "HornAndHoves",
-                Password = "123456"
+                Password = "123456",
+                Role = "Test"
+            };
+        }
+        internal static AccountAuthorization GetAccountAuthorization()
+        {
+            return new AccountAuthorization()
+            {
+                UserName = "HornAndHoves@heedbook.com".ToUpper(),
+                Password = "Password"
             };
         }
         internal static IQueryable<Session> GetQueryableSessions()

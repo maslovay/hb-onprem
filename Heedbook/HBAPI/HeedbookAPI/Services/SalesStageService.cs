@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 
 namespace UserOperations.Services
 {
-    public class SalesStageService
+    public class SalesStageService : ISalesStageService
     {
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;

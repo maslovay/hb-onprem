@@ -9,7 +9,7 @@ using UserOperations.Utils;
 
 namespace UserOperations.Services
 {
-    public class CompanyService
+    public class CompanyService : ICompanyService
     {
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
@@ -19,7 +19,7 @@ namespace UserOperations.Services
         private readonly int disabledStatus;
 
         public CompanyService(
-            IGenericRepository repository, 
+            IGenericRepository repository,
             LoginService loginService,
             RequestFilters requestFilters)
         {

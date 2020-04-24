@@ -18,17 +18,17 @@ namespace UserOperations.Services
     public class AnalyticHomeService
     {
         private readonly IGenericRepository _repository;
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
-        private readonly AnalyticHomeUtils _utils;
-        private readonly DBOperations _dbOperations;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
+        private readonly IAnalyticHomeUtils _utils;
+        private readonly IDBOperations _dbOperations;
 
         public AnalyticHomeService(
             IGenericRepository repository,
-            LoginService loginService,
-            RequestFilters requestFilters,
-            AnalyticHomeUtils utils,
-            DBOperations dbOperations
+            ILoginService loginService,
+            IRequestFilters requestFilters,
+            IAnalyticHomeUtils utils,
+            IDBOperations dbOperations
             )
         {
             _repository = repository;
@@ -38,24 +38,24 @@ namespace UserOperations.Services
             _dbOperations = dbOperations;
         }
 
-        public async Task<NewDashboardInfo> GetNewDashboard( string beg, string end,
+        public async Task<NewDashboardInfo> GetNewDashboard(string beg, string end,
                                                              List<Guid> companyIds, List<Guid> corporationIds,
                                                              List<Guid> deviceIds)
         {
-                int active = 3;
-                var role = _loginService.GetCurrentRoleName();
-                var companyId = _loginService.GetCurrentCompanyId();
+            int active = 3;
+            var role = _loginService.GetCurrentRoleName();
+            var companyId = _loginService.GetCurrentCompanyId();
 
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
+            var begTime = _requestFilters.GetBegDate(beg);
+            var endTime = _requestFilters.GetEndDate(end);
+            var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
+            _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
-                var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, deviceIds);
-                var sessionCur = sessions?.Where(p => p.BegTime.Date >= begTime).ToList();
-                var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
-                var typeIdCross = await GetCrossPhraseTypeIdAsync();
+            var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, deviceIds);
+            var sessionCur = sessions?.Where(p => p.BegTime.Date >= begTime).ToList();
+            var sessionOld = sessions?.Where(p => p.BegTime.Date < begTime).ToList();
+            var typeIdCross = await GetCrossPhraseTypeIdAsync();
 
 
             var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
@@ -99,7 +99,7 @@ namespace UserOperations.Services
                     .Where(p => p.BegTime < begTime).ToList();
                 var slideShowSessionsInDialoguesCur = dialogues.SelectMany(p => p.SlideShowSessions)
                     .Where(p => p.BegTime >= begTime).ToList();
-                
+
                 var viewsCur = slideShowSessionsInDialoguesCur.Count();
 
                 var result = new NewDashboardInfo()
@@ -113,7 +113,7 @@ namespace UserOperations.Services
                     SatisfactionIndex = _utils.SatisfactionIndex(dialoguesCur),
                     SatisfactionIndexDelta = -_utils.SatisfactionIndex(dialoguesOld),
 
-                     LoadIndex = _utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
+                    LoadIndex = _utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesCur.Where(x => x.ApplicationUserId != null).ToList(), begTime, endTime.AddDays(1)),
                     LoadIndexDelta = -_utils.LoadIndexWithTimeTable(timeTableForDevices, dialoguesOld.Where(x => x.ApplicationUserId != null).ToList(), prevBeg, begTime),
 
                     CrossIndex = _utils.CrossIndex(dialoguesCur),
@@ -122,13 +122,13 @@ namespace UserOperations.Services
                     AdvCount = viewsCur,
                     AdvCountDelta = viewsCur - slideShowSessionsInDialoguesOld.Count(),
                     AnswerCount = (await GetAnswersAsync(begTime, endTime, companyIds, new List<Guid?>(), deviceIds)).Count(),
-                    AnswerCountDelta = - (await GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid?>(), deviceIds)).Count(),
+                    AnswerCountDelta = -(await GetAnswersAsync(prevBeg, begTime, companyIds, new List<Guid?>(), deviceIds)).Count(),
 
                     SmilesShare = dialoguesCur.Average(x => x.SmilesShare),
                     SmilesShareDelta = dialoguesCur.Average(x => x.SmilesShare) - dialoguesOld.Average(x => x.SmilesShare),
 
                     WorkloadValueAvgByWorkingTime = _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesDevicesCur, begTime, endTime),
-                    WorkloadDynamicsWorkingTime = - _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesDevicesOld, prevBeg, begTime)
+                    WorkloadDynamicsWorkingTime = -_dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesDevicesOld, prevBeg, begTime)
                 };
 
                 //---benchmarks
@@ -145,7 +145,7 @@ namespace UserOperations.Services
 
                     result.WorkLoadByTimeIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "WorkLoadByTimeIndustryAvg");
                     result.WorkLoadByTimeIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "WorkLoadByTimeIndustryBenchmark");
-            }
+                }
 
                 result.CrossIndexDelta += result.CrossIndex;
                 result.LoadIndexDelta += result.LoadIndex;
@@ -170,15 +170,15 @@ namespace UserOperations.Services
                 var typeIdCross = await GetCrossPhraseTypeIdAsync();
                 var dialogues = GetDialoguesIncludedPhrase(prevBeg, endTime, companyIds, applicationUserIds, deviceIds)
                         .Select(p => new DialogueInfo
-                         {
-                             DialogueId = p.DialogueId,
-                             ApplicationUserId = p.ApplicationUserId,
-                             DeviceId = p.DeviceId,
-                             BegTime = p.BegTime,
-                             EndTime = p.EndTime,
-                             CrossCount = p.DialoguePhrase.Where(q => q.Phrase.PhraseTypeId == typeIdCross).Count()
-                         })
-                         .ToList();
+                        {
+                            DialogueId = p.DialogueId,
+                            ApplicationUserId = p.ApplicationUserId,
+                            DeviceId = p.DeviceId,
+                            BegTime = p.BegTime,
+                            EndTime = p.EndTime,
+                            CrossCount = p.DialoguePhrase.Where(q => q.Phrase.PhraseTypeId == typeIdCross).Count()
+                        })
+                        .ToList();
 
                 var sessions = await GetSessionInfoAsync(prevBeg, endTime, companyIds, deviceIds);
 
@@ -194,7 +194,7 @@ namespace UserOperations.Services
                 double? crossIndexIndustryAverage = null, crossIndexIndustryBenchmark = null;
                 double? loadIndexIndustryAverage = null, loadIndexIndustryBenchmark = null;
 
-                 int active = 3;
+                int active = 3;
                 var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => !companyIds.Any() || companyIds.Contains(x.CompanyId)).ToArray();
                 System.Console.WriteLine($"workingTimes: {JsonConvert.SerializeObject(workingTimes)}");
                 var devicesFiltered = _repository.GetAsQueryable<Device>()
@@ -287,7 +287,7 @@ namespace UserOperations.Services
         //             && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId))).CountAsync();
         //}
         private async Task<IEnumerable<SessionInfo>> GetSessionInfoAsync(
-                        DateTime begTime, DateTime endTime, 
+                        DateTime begTime, DateTime endTime,
                         List<Guid> companyIds,
                         List<Guid> deviceIds = null)
         {
@@ -308,7 +308,7 @@ namespace UserOperations.Services
             return sessions;
         }
 
-        private IQueryable<Dialogue> GetDialoguesIncluded(DateTime begTime, DateTime endTime, 
+        private IQueryable<Dialogue> GetDialoguesIncluded(DateTime begTime, DateTime endTime,
                                 List<Guid> companyIds,
                                 List<Guid?> applicationUserIds = null,
                                 List<Guid> deviceIds = null)
@@ -390,8 +390,8 @@ namespace UserOperations.Services
             return slideShows;
         }
         private async Task<List<ApplicationUser>> GetEmployees(
-                    DateTime endTime, 
-                    List<Guid> companyIds = null, 
+                    DateTime endTime,
+                    List<Guid> companyIds = null,
                     List<Guid?> applicationUserIds = null)
         {
             var employeeRole = (await _repository.FindOrNullOneByConditionAsync<ApplicationRole>(x => x.Name == "Employee")).Id;
@@ -406,9 +406,9 @@ namespace UserOperations.Services
             return users;
         }
         private async Task<IEnumerable<CampaignContentAnswer>> GetAnswersAsync(
-                        DateTime begTime, DateTime endTime, 
-                        List<Guid> companyIds, 
-                        List<Guid?> applicationUserIds, 
+                        DateTime begTime, DateTime endTime,
+                        List<Guid> companyIds,
+                        List<Guid?> applicationUserIds,
                         List<Guid> deviceIds)
         {
             var result = await _repository.GetAsQueryable<CampaignContentAnswer>()

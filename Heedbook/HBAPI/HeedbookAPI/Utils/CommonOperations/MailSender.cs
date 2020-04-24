@@ -12,7 +12,7 @@ using UserOperations.Utils.CommonOperations;
 
 namespace UserOperations.Services
 {
-    public class MailSender
+    public class MailSender : IMailSender
     {
         private readonly SmtpSettings _smtpSettings;
         private readonly SmtpClient _smtpClient;
@@ -118,7 +118,7 @@ namespace UserOperations.Services
             model.Pswd += password;
             string htmlBody = await CreateHtmlFromTemplate(model, "email.cshtml");
             await SendEmail(user, model.EmailSubject, htmlBody);
-        }     
+        }
 
         //create and email notification 
         private async Task SendEmail(ApplicationUser user, string subject, string htmlBody)
@@ -136,21 +136,21 @@ namespace UserOperations.Services
             try
             {
                 _smtpClient.Send(mail);
-              //  _log.Info($"email Sended to {email}");
+                //  _log.Info($"email Sended to {email}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-              //  _log.Fatal($"Failed email to {email}{ex.Message}");
+                //  _log.Fatal($"Failed email to {email}{ex.Message}");
             }
-        }   
+        }
 
         private async Task<LanguageDataEmail> ReadLanguageModel(ApplicationUser user, string emailType)
         {
             try
             {
                 var languageId = user.Company.LanguageId;
-                string path = Path.GetFullPath("."+_localFolder+"language_table.json");
+                string path = Path.GetFullPath("." + _localFolder + "language_table.json");
                 var languageRowJson = File.ReadAllText(path);
 
                 var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
@@ -158,13 +158,13 @@ namespace UserOperations.Services
                 //var registerLanguages = languageObject.register;
                 if (languageId - 1 > registerLanguages.Count)
                     languageId = 1;
-                return registerLanguages[languageId == null ? 0 : (int)languageId - 1];              
+                return registerLanguages[languageId == null ? 0 : (int)languageId - 1];
             }
             catch (Exception ex)
             {
                 return null;
             }
-        }    
+        }
 
         private async Task<string> CreateHtmlFromTemplate(LanguageDataEmail model, string filename)
         {
@@ -184,7 +184,7 @@ namespace UserOperations.Services
                 string template = File.ReadAllText(fullPath + _localFolder + "email.cshtml");
                 string result = await engine.CompileRenderAsync("email", template, model);
 
-                string pathTemp = fullPath + _localFolder+ "temp.html";
+                string pathTemp = fullPath + _localFolder + "temp.html";
                 File.WriteAllText(pathTemp, result);
                 string htmlBody = File.ReadAllText(pathTemp);
                 File.Delete(pathTemp);
@@ -202,7 +202,7 @@ namespace UserOperations.Services
             var languageRowJson = File.ReadAllText(path);
             var languageObject = JsonConvert.DeserializeObject<EmailModel>(languageRowJson);
             var registerLanguages = (List<LanguageDataEmail>)languageObject.GetType().GetProperty("passwordChange").GetValue(languageObject, null);
-            LanguageDataEmail model =  registerLanguages[1];
+            LanguageDataEmail model = registerLanguages[1];
             try
             {
                 var fullPath = System.IO.Path.GetFullPath(".");
@@ -227,7 +227,7 @@ namespace UserOperations.Services
             }
             catch (Exception ex)
             {
-                return ex.Message +  ex.InnerException?.Message;
+                return ex.Message + ex.InnerException?.Message;
             }
         }
 
@@ -255,11 +255,11 @@ namespace UserOperations.Services
             }
             catch (Exception ex)
             {
-                return ex.Message +" , "+ ex.StackTrace;
+                return ex.Message + " , " + ex.StackTrace;
             }
         }
     }
-        public class LanguageDataEmail
+    public class LanguageDataEmail
         {
             public string FileRef { get; set; }
             public string Language { get; set; }

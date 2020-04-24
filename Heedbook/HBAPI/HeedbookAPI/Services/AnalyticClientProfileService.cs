@@ -13,14 +13,14 @@ namespace UserOperations.Services
 {
     public class AnalyticClientProfileService
     {
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly List<AgeBoarder> _ageBoarders;
         private readonly IGenericRepository _repository;
 
         public AnalyticClientProfileService(
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository
             )
         {
@@ -52,6 +52,7 @@ namespace UserOperations.Services
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
+                System.Console.WriteLine($"begTime: {begTime}, endTime: {endTime}");
                 var begYearTime = endTime.AddYears(-1);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
     

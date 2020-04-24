@@ -12,7 +12,7 @@ using HBData.Models;
 
 namespace UserOperations.Utils
 {
-    public class RequestFilters
+    public class RequestFilters : IRequestFilters
     {
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
@@ -41,17 +41,15 @@ namespace UserOperations.Utils
             try
             {
                 var stringFormat = "yyyyMMdd";
-            var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
-            return endTime.Date.AddDays(1);
+                var endTime = !String.IsNullOrEmpty(end) ? DateTime.ParseExact(end, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now;
+                return endTime.Date.AddDays(1);
             }
             catch
             {
                 throw new FormatException("wrong date format");
             }
-}
-
-    
-    
+        }
+        
         public bool IsCompanyBelongToUser(Guid? corporationIdInToken, Guid? companyIdInToken, Guid? companyIdInParams, string roleInToken)
         {
             var isAdmin = roleInToken == "Admin";
@@ -60,7 +58,7 @@ namespace UserOperations.Utils
 
             if (isSupervisor && IsCompanyBelongToCorporation(corporationIdInToken, companyIdInParams) == false)
                 throw new AccessException("No access");
-            if (!isSupervisor &&  (companyIdInParams == null || companyIdInParams == Guid.Empty || companyIdInToken != companyIdInParams))
+            if (!isSupervisor && (companyIdInParams == null || companyIdInParams == Guid.Empty || companyIdInToken != companyIdInParams))
                 throw new AccessException("No access");
             return true;
         }
@@ -88,13 +86,13 @@ namespace UserOperations.Utils
             CheckRolesAndChangeCompaniesInFilter(ref companyIdsInFilter, corporationIdsInFilter, roleInToken, companyIdInToken);
         }
 
-            public void CheckRolesAndChangeCompaniesInFilter(ref List<Guid> companyIdsInFilter, List<Guid> corporationIdsInFilter, string role, Guid companyIdInToken)
+        public void CheckRolesAndChangeCompaniesInFilter(ref List<Guid> companyIdsInFilter, List<Guid> corporationIdsInFilter, string role, Guid companyIdInToken)
         {
             //--- admin can view any companies in any corporation
             if (role == "Admin")
             {
                 //---take all companyIds in filter or all company ids in corporations
-                if (!companyIdsInFilter.Any() && (corporationIdsInFilter ==null || !corporationIdsInFilter.Any()))
+                if (!companyIdsInFilter.Any() && (corporationIdsInFilter == null || !corporationIdsInFilter.Any()))
                 {
                     companyIdsInFilter = _repository.GetAsQueryable<Company>()
                         //.Where(x => x.StatusId == 3)
@@ -119,8 +117,8 @@ namespace UserOperations.Utils
                             && x.CorporationId == p.Corporation.Id)
                         .Select(x => x.CompanyId))
                         .ToList();
-                    
-                    if(companyIdsInFilter.Count == 0)
+
+                    if (companyIdsInFilter.Count == 0)
                         companyIdsInFilter = new List<Guid> { companyIdInToken };
                 }
             }
@@ -134,11 +132,11 @@ namespace UserOperations.Utils
         //---PRIVATE---
         private bool IsCompanyBelongToCorporation(Guid? corporationIdInToken, Guid? companyId)
         {
-           if (corporationIdInToken == null || corporationIdInToken == Guid.Empty) return true;
-           if (companyId == null || companyId == Guid.Empty) return false;
-           var companiesInCorporation = _repository.GetAsQueryable<Company>().Where(p => p.CorporationId == corporationIdInToken)
-                        .Select(p => p.CompanyId)
-                        .ToList();
+            if (corporationIdInToken == null || corporationIdInToken == Guid.Empty) return true;
+            if (companyId == null || companyId == Guid.Empty) return false;
+            var companiesInCorporation = _repository.GetAsQueryable<Company>().Where(p => p.CorporationId == corporationIdInToken)
+                         .Select(p => p.CompanyId)
+                         .ToList();
             return companiesInCorporation.Contains((Guid)companyId);
         }
 
