@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace UserOperations.Utils
+namespace UserOperations.Utils.Interfaces
 {
     public interface IRequestFilters
     {

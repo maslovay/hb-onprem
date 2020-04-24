@@ -12,9 +12,12 @@ using Moq;
 using UserOperations.AccountModels;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Services;
+using UserOperations.Services.Interfaces;
 using UserOperations.Utils;
 using UserOperations.Utils.AnalyticHomeUtils;
+using UserOperations.Utils.AnalyticOfficeUtils;
 using UserOperations.Utils.CommonOperations;
+using UserOperations.Utils.Interfaces;
 
 namespace ApiTests
 {
@@ -34,6 +37,7 @@ namespace ApiTests
         protected Mock<IRequestFilters> requestFiltersMock;
         protected Mock<IAnalyticHomeUtils> analyticHomeUtils;
         protected Mock<IDBOperations> dBOperations;
+        protected Mock<IAnalyticOfficeUtils> analyticOfficeUtils;
 
         public void Setup()
         {
@@ -66,6 +70,7 @@ namespace ApiTests
             requestFiltersMock = new Mock<IRequestFilters>();
             analyticHomeUtils = new Mock<IAnalyticHomeUtils>();
             dBOperations = new Mock<IDBOperations>();
+            analyticOfficeUtils = new Mock<IAnalyticOfficeUtils>();
         }
         protected void InitData()
         {

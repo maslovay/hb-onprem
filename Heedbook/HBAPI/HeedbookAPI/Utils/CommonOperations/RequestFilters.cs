@@ -9,6 +9,8 @@ using UserOperations.Controllers;
 using UserOperations.Services;
 using HBData.Repository;
 using HBData.Models;
+using UserOperations.Utils.Interfaces;
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Utils
 {

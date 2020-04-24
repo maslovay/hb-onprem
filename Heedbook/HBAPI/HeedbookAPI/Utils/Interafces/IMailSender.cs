@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using UserOperations.Models;
 
-namespace UserOperations.Services
+namespace UserOperations.Services.Interfaces
 {
     public interface IMailSender
     {

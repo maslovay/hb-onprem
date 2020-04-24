@@ -10,6 +10,7 @@ using UserOperations.Controllers;
 using System.Reflection;
 using UserOperations.Models.Get;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils.AnalyticHomeUtils
 {

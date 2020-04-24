@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using UserOperations.Models.AnalyticModels;
 
-namespace UserOperations.Utils
+namespace UserOperations.Utils.Interfaces
 {
     public interface ISpreadsheetDocumentUtils
     {

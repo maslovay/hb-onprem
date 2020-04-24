@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using HBData.Models;
 using DocumentFormat.OpenXml;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils
 {

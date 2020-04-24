@@ -12,6 +12,7 @@ using UserOperations.Models.Get;
 using UserOperations.Models.Get.HomeController;
 using UserOperations.Models.Get.AnalyticRatingController;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils
 {

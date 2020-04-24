@@ -14,6 +14,7 @@ using HBLib.Utils;
 using HBLib;
 using Microsoft.AspNetCore.Http;
 using UserOperations.Utils.CommonOperations;
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Services
 {

@@ -12,6 +12,9 @@ using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Controllers;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

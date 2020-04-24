@@ -9,6 +9,8 @@ using HBData.Repository;
 using System.Transactions;
 using UserOperations.Utils;
 using System.Collections.Generic;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

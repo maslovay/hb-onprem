@@ -11,7 +11,7 @@ using System.Reflection;
 using UserOperations.Models.Get;
 using UserOperations.Models.AnalyticModels;
 
-namespace UserOperations.Utils.AnalyticHomeUtils
+namespace UserOperations.Utils.Interfaces
 {
     public interface IAnalyticHomeUtils
     {

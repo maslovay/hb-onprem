@@ -28,6 +28,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using UserOperations.Utils.CommonOperations;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations
 {
@@ -99,7 +101,7 @@ namespace UserOperations
 
             services.AddScoped<IAnalyticHomeUtils, AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
-            services.AddScoped<AnalyticOfficeUtils>();
+            services.AddScoped<IAnalyticOfficeUtils, AnalyticOfficeUtils>();
             services.AddScoped<AnalyticRatingUtils>();
             services.AddScoped<AnalyticReportUtils>();
             services.AddScoped<AnalyticServiceQualityUtils>();

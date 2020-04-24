@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using HBData.Models;
 
-namespace UserOperations.Services
+namespace UserOperations.Services.Interfaces
 {
     public interface ILoginService
     {

@@ -13,7 +13,7 @@ using UserOperations.Models.Get.HomeController;
 using UserOperations.Models.Get.AnalyticRatingController;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
 
-namespace UserOperations.Utils
+namespace UserOperations.Utils.Interfaces
 {
     public interface IDBOperations
     {

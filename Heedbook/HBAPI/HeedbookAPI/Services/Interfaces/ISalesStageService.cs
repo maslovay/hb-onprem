@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UserOperations.Models;
 
-namespace UserOperations.Services
+namespace UserOperations.Services.Interfaces
 {
     public interface ISalesStageService
     {
