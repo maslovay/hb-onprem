@@ -11,23 +11,25 @@ using System.Threading.Tasks;
 using HBData.Models;
 using Newtonsoft.Json;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class AnalyticRatingService
     {    
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
-        private readonly AnalyticRatingUtils _analyticRatingUtils;
-        private readonly DBOperations _dbOperations;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
+        private readonly IAnalyticRatingUtils _analyticRatingUtils;
+        private readonly IDBOperations _dbOperations;
         private readonly IGenericRepository _repository;
 
         public AnalyticRatingService(
-            LoginService loginService,
-            RequestFilters requestFilters,
-            AnalyticRatingUtils analyticRatingUtils,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
+            IAnalyticRatingUtils analyticRatingUtils,
             IGenericRepository repository,
-            DBOperations dbOperations
+            IDBOperations dbOperations
             )
         {
             _loginService = loginService;
