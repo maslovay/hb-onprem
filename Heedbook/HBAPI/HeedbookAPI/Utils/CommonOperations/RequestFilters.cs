@@ -15,9 +15,9 @@ namespace UserOperations.Utils
     public class RequestFilters : IRequestFilters
     {
         private readonly IGenericRepository _repository;
-        private readonly LoginService _loginService;
+        private readonly ILoginService _loginService;
 
-        public RequestFilters(IGenericRepository repository, IConfiguration config, LoginService loginService)
+        public RequestFilters(IGenericRepository repository, IConfiguration config, ILoginService loginService)
         {
             _repository = repository;
             _loginService = loginService;

@@ -54,9 +54,9 @@ namespace UserOperations
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddScoped<DBOperations>();
+            services.AddScoped<IDBOperations, DBOperations>();
             services.AddScoped<DBOperationsWeeklyReport>();
-            services.AddScoped<RequestFilters>();
+            services.AddScoped<IRequestFilters, RequestFilters>();
             services.AddScoped<ControllerExceptionFilter>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
             {
@@ -67,7 +67,7 @@ namespace UserOperations
                 p.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<RecordsContext>();
-            services.AddScoped<MailSender>();
+            services.AddScoped<IMailSender, MailSender>();
 
             services.AddScoped<AccountService>();
             services.AddScoped<AnalyticClientProfileService>();
@@ -83,21 +83,21 @@ namespace UserOperations
             services.AddScoped<CatalogueService>();
             services.AddScoped<ClientNoteService>();
             services.AddScoped<ClientService>();
-            services.AddScoped<CompanyService>();
+            services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<DemonstrationV2Service>();
             services.AddScoped<DeviceService>();
             services.AddScoped<DialogueService>();
             services.AddScoped<FillingFileFrameService>();
-            services.AddScoped<LoginService>();
+            services.AddScoped<ILoginService, LoginService>();
             services.AddScoped<MediaFileService>();
             services.AddScoped<PhraseService>();
-            services.AddScoped<SalesStageService>();
+            services.AddScoped<ISalesStageService, SalesStageService>();
             services.AddScoped<SessionService>();
             services.AddScoped<SiteService>();
             services.AddScoped<TabletAppInfoService>();
             services.AddScoped<UserService>();
 
-            services.AddScoped<AnalyticHomeUtils>();
+            services.AddScoped<IAnalyticHomeUtils, AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
             services.AddScoped<AnalyticOfficeUtils>();
             services.AddScoped<AnalyticRatingUtils>();
@@ -106,7 +106,7 @@ namespace UserOperations
             services.AddScoped<AnalyticSpeechUtils>();
             services.AddScoped<AnalyticWeeklyReportUtils>();
             services.AddScoped<FileRefUtils>();
-            services.AddScoped<SpreadsheetDocumentUtils>();
+            services.AddScoped<ISpreadsheetDocumentUtils, SpreadsheetDocumentUtils>();
 
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 

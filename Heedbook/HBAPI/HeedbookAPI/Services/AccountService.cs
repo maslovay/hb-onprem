@@ -128,9 +128,16 @@ namespace UserOperations.Services
             using (var transactionScope = new TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
                        { IsolationLevel = IsolationLevel.Serializable }))
             {
+                try{
                     RemoveAccountWithSave(email);
                     transactionScope.Complete();
                     return "Removed";
+                }
+                catch(Exception e)
+                {
+                    System.Console.WriteLine(e);
+                    return "fail";
+                }
             }
         }
 
