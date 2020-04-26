@@ -39,6 +39,7 @@ namespace ApiTests
         protected Mock<IDBOperations> dBOperations;
         protected Mock<IAnalyticOfficeUtils> analyticOfficeUtils;
         protected Mock<IAnalyticRatingUtils> analyticRatingUtils;
+        protected Mock<IAnalyticReportUtils> analyticReportUtils;
 
         public void Setup()
         {
@@ -73,6 +74,7 @@ namespace ApiTests
             dBOperations = new Mock<IDBOperations>();
             analyticOfficeUtils = new Mock<IAnalyticOfficeUtils>();
             analyticRatingUtils = new Mock<IAnalyticRatingUtils>();
+            analyticReportUtils = new Mock<IAnalyticReportUtils>();
         }
         protected void InitData()
         {

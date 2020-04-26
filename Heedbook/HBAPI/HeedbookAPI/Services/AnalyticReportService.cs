@@ -9,23 +9,25 @@ using UserOperations.Utils;
 using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class AnalyticReportService
     {
         private readonly IConfiguration _config;
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly AnalyticReportUtils _analyticReportUtils;
+        private readonly IAnalyticReportUtils _analyticReportUtils;
 
         public AnalyticReportService(
             IConfiguration config,
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository,
-            AnalyticReportUtils analyticReportUtils
+            IAnalyticReportUtils analyticReportUtils
             )
         {
             _config = config;

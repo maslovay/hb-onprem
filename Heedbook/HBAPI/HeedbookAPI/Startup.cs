@@ -103,7 +103,7 @@ namespace UserOperations
             services.AddScoped<AnalyticContentUtils>();
             services.AddScoped<IAnalyticOfficeUtils, AnalyticOfficeUtils>();
             services.AddScoped<IAnalyticRatingUtils, AnalyticRatingUtils>();
-            services.AddScoped<AnalyticReportUtils>();
+            services.AddScoped<IAnalyticReportUtils, AnalyticReportUtils>();
             services.AddScoped<AnalyticServiceQualityUtils>();
             services.AddScoped<AnalyticSpeechUtils>();
             services.AddScoped<AnalyticWeeklyReportUtils>();

@@ -14,177 +14,261 @@ using Newtonsoft.Json;
 using System.Threading;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Services;
 
 namespace ApiTests
 {public class AnalyticReportControllerTests : ApiServiceTest
     {   
-        //private Mock<IAnalyticReportProvider> analyticReportProviderMock;
+        private AnalyticReportService analyticReportService;
         [SetUp]
         public new void Setup()
         {
             base.Setup();
+            analyticReportService = new AnalyticReportService(
+                configMock.Object,
+                moqILoginService.Object,
+                requestFiltersMock.Object,
+                repositoryMock.Object,
+                analyticReportUtils.Object
+            );
         }
         [Test]
-        public async Task ReportActiveEmployeeTest()
+        public async Task ReportActiveEmployeeGetTest()
         {
             //Arrange
-            //analyticReportProviderMock = new Mock<IAnalyticReportProvider>();
-            var task = TestData.GetSessions();
-            task.Wait();
-            var sessionInfos = task.Result.ToList();
-            //analyticReportProviderMock.Setup(p => p.GetSessions(It.IsAny<List<Guid>>(), It.IsAny<List<Guid>>(), It.IsAny<List<Guid>>()))
-            //    .Returns(sessionInfos);
-            
+            var applicationUserId = Guid.NewGuid();
+            var companyId = Guid.NewGuid();
+            var deviceId = Guid.NewGuid();
+            var corporationId = Guid.NewGuid();
+            moqILoginService.Setup(p => p.GetCurrentRoleName())
+                .Returns("Supervisor");
+            moqILoginService.Setup(p => p.GetCurrentCompanyId())
+                .Returns(companyId);
+            var companyIds = new List<Guid>{companyId};
+            requestFiltersMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter(ref companyIds, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            repositoryMock.Setup(p => p.GetAsQueryable<Session>())
+                .Returns(new TestAsyncEnumerable<Session>(new List<Session>
+                {
+                    new Session()
+                    {
+                        ApplicationUserId = applicationUserId,
+                        ApplicationUser = new ApplicationUser{FullName = "TestUser"},
+                        BegTime = DateTime.Now.AddMinutes(-3),
+                        EndTime = DateTime.Now,
+                        StatusId = 6,
+                        DeviceId = deviceId,
+                        Device = new Device{DeviceId = deviceId, CompanyId = companyId}
+                    }
+                }.AsQueryable()));
 
-            //var analyticReportController = new AnalyticReportController(
-            //    configMock.Object, 
-            //    moqILoginService.Object,
-            //    dbOperationMock.Object,
-            //    filterMock.Object,
-            //    analyticReportProviderMock.Object);
             //Act
-            //var result = analyticReportController.ReportActiveEmployee(
-            //    new List<Guid>(),
-            //    new List<Guid>(),
-            //    new List<Guid>(),
-            //    new List<Guid>(),
-            //    "Bearer token"
-            //);
+            var result = analyticReportService.ReportActiveEmployee(
+                new List<Guid?>{(Guid?)applicationUserId},
+                new List<Guid>{companyId},
+                new List<Guid>{corporationId},
+                new List<Guid>{deviceId}
+            );
+            var sessions = JsonConvert.DeserializeObject<List<SessionInfo>>(result);
+
             //Assert
-            //var okResult = result as OkObjectResult;
-            //System.Console.WriteLine($"{okResult.Value.ToString()}");
-            //Assert.IsNotNull(okResult);
-            //Assert.AreEqual(200, okResult.StatusCode);
-            //Assert.That(okResult.Value != null);
-            //var deserialized = JsonConvert.DeserializeObject<List<SessionInfo>>(okResult.Value.ToString());
-            //Assert.That(deserialized != null);
-            // Assert.IsTrue(false);
+            Assert.IsFalse(result is null);
+            Assert.IsTrue(sessions.Count > 0);
         }
         [Test]
-        public void ReportUserPartialTest()
+        public void ReportUserPartialGetTest()
         {
             //Arrange
-            //analyticReportProviderMock = new Mock<IAnalyticReportProvider>();
-            //var task = TestData.GetSessions();
-            //var sessionsInfo = task.Result.ToList();
-            //var dialogueInfo = TestData.GetDialogueInfo();
-            //var users = TestData.GetUsers().ToList();
-            //analyticReportProviderMock.Setup(p => p.GetEmployeeRoleId()).Returns(Guid.Parse("b54d371a-1111-48a0-9731-ab1d9a1f171a"));
-            //var begDate = new DateTime(2019, 11, 26);
-            //var endDate = new DateTime(2019, 11, 27);
-        
-            //analyticReportProviderMock.Setup(p => p.GetSessions(
-            //    It.IsAny<DateTime>(),
-            //    It.IsAny<DateTime>(),
-            //    It.IsAny<Guid>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>()
-            //))
-            //.Returns(sessionsInfo);
-            //analyticReportProviderMock.Setup(p => p.GetDialogues(
-            //    It.IsAny<DateTime>(),
-            //    It.IsAny<DateTime>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>()
-            //))
-            //.Returns(dialogueInfo);
-            //analyticReportProviderMock.Setup(p => p.GetApplicationUsersToAdd(
-            //    It.IsAny<DateTime>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<Dictionary<string, string>>(),
-            //    It.IsAny<Guid>()
-            //))
-            //.Returns(users);
-            //var analyticReportController = new AnalyticReportController(
-            //    configMock.Object,
-            //    moqILoginService.Object,
-            //    dbOperationMock.Object,
-            //    filterMock.Object,
-            //    analyticReportProviderMock.Object
-            //);
-            //filterMock.Setup(p => p.GetBegDate(It.IsAny<string>())).Returns(begDate);
-            //filterMock.Setup(p => p.GetEndDate(It.IsAny<string>())).Returns(endDate);
-            //var refList = new List<Guid>();
-            //filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter(ref refList, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            var applicationUserId = Guid.NewGuid();
+            var companyId = Guid.NewGuid();
+            var deviceId = Guid.NewGuid();
+            var corporationId = Guid.NewGuid();
+            var roleId = Guid.NewGuid();
+            moqILoginService.Setup(p => p.GetCurrentRoleName())
+                .Returns("Supervisor");
+            moqILoginService.Setup(p => p.GetCurrentCompanyId())
+                .Returns(companyId);
+            requestFiltersMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
+                .Returns(DateTime.Now.AddDays(-6));
+            requestFiltersMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
+                .Returns(DateTime.Now);
+            var companyIds = new List<Guid>{companyId};
+            requestFiltersMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter(ref companyIds, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            repositoryMock.Setup(p => p.GetAsQueryable<Session>())
+                .Returns(new TestAsyncEnumerable<Session>(new List<Session>
+                {
+                    new Session()
+                    {
+                        ApplicationUserId = applicationUserId,
+                        ApplicationUser = new ApplicationUser{FullName = "TestUser"},
+                        BegTime = DateTime.Now.AddMinutes(-3),
+                        EndTime = DateTime.Now.AddMinutes(-1),
+                        StatusId = 7,
+                        DeviceId = deviceId,
+                        Device = new Device{DeviceId = deviceId, CompanyId = companyId}
+                    }
+                }.AsQueryable()));
+            repositoryMock.Setup(p => p.GetAsQueryable<Dialogue>())
+                .Returns(new TestAsyncEnumerable<Dialogue>(new List<Dialogue>
+                {
+                    new Dialogue()
+                    {
+                        DialogueId = Guid.NewGuid(),
+                        BegTime = DateTime.Now.AddMinutes(-3),
+                        EndTime = DateTime.Now,
+                        StatusId = 3,
+                        InStatistic = true,
+                        DeviceId = deviceId,
+                        Device = new Device(){DeviceId = deviceId, CompanyId = companyId},
+                        ApplicationUserId = applicationUserId,
+                        ApplicationUser = new ApplicationUser{FullName = "TestUser", UserRoles = new List<ApplicationUserRole>{new ApplicationUserRole{RoleId = roleId}}},
+                        DialoguePhrase = new List<DialoguePhrase>{new DialoguePhrase{}},
+                        DialogueClientSatisfaction = new List<DialogueClientSatisfaction>{new DialogueClientSatisfaction(){}},
+                        DialogueFrame = new List<DialogueFrame>{new DialogueFrame{}},
+                        SlideShowSessions = new List<SlideShowSession>{new SlideShowSession{}}
+                    }
+                }.AsQueryable()));
+            repositoryMock.Setup(p => p.GetAsQueryable<ApplicationRole>())
+                .Returns(new TestAsyncEnumerable<ApplicationRole>(new List<ApplicationRole>
+                {
+                    new ApplicationRole
+                    {
+                        Id = roleId,
+                        Name = "Employee"
+                    }
+                }.AsQueryable()));
+            repositoryMock.Setup(p => p.GetAsQueryable<ApplicationUser>())
+                .Returns(new List<ApplicationUser>
+                {
+                    new ApplicationUser
+                    {
+                        Id = applicationUserId,
+                        CreationDate = DateTime.Now.AddDays(-10),
+                        CompanyId = companyId,
+                        StatusId = 3,
+                        UserRoles = new List<ApplicationUserRole>{new ApplicationUserRole{RoleId = roleId}}
+                    }
+                }.AsQueryable());
+            analyticReportUtils.Setup(p => p.LoadIndex(It.IsAny<IGrouping<Guid?, SessionInfo>>(), It.IsAny<List<DialogueInfo>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+                .Returns(0.5d);
+            analyticReportUtils.Setup(p => p.Min(It.IsAny<double>(), It.IsAny<double>()))
+                .Returns(0.4d);
+            analyticReportUtils.Setup(p => p.MaxDouble(It.IsAny<double>(), It.IsAny<double>()))
+                .Returns(0.6d);
+            analyticReportUtils.Setup(p => p.SessionAverageHours(It.IsAny<IGrouping<DateTime, SessionInfo>>()))
+                .Returns(12.5d);
+            analyticReportUtils.Setup(p => p.DialogueSumDuration(It.IsAny<IGrouping<DateTime, SessionInfo>>(), It.IsAny<List<DialogueInfo>>(), It.IsAny<Guid>()))
+                .Returns(12.5d);
+            analyticReportUtils.Setup(p => p.DialoguesCount(It.IsAny<List<DialogueInfo>>(), It.IsAny<Guid>(), It.IsAny<DateTime>()))
+                .Returns(5);
+            //Act
+            var result = analyticReportService.ReportUserPartial(
+                TestData.beg,
+                TestData.end,
+                new List<Guid?>{(Guid?)applicationUserId},
+                new List<Guid>{companyId},
+                new List<Guid>{corporationId},
+                new List<Guid>{deviceId}
+            );
 
-            ////Act
-            //var result = analyticReportController.ReportUserPartial(
-            //    "20191127",
-            //    "20191127",
-            //    new List<Guid>(),
-            //    new List<Guid>(),
-            //    new List<Guid>(),
-            //    new List<Guid>(),
-            //    "Bearer token"
-            //);
-
-            ////Assert
-            //var okResult = result as OkObjectResult;
-            //Assert.IsNotNull(okResult);
-            //Assert.AreEqual(200, okResult.StatusCode);
-            //Assert.That(okResult.Value != null);
-            //var deserialized = JsonConvert.DeserializeObject<List<SessionInfo>>(okResult.Value.ToString());
-            //Assert.That(deserialized != null);
-            //Assert.IsTrue(deserialized.Count > 0);
+            //Assert
+            Assert.IsFalse(result is null);
+            Assert.IsTrue(result.Contains("FullName"));
         }
         [Test]
-        public void ReportUserFull()
+        public void ReportUserFullGetTest()
         {
             //Arrange
-            //var task = TestData.GetSessions();
-            //var sessionsInfo = task.Result.ToList();
-            //var dialogueInfo = TestData.GetDialogueInfo();
-            //analyticReportProviderMock.Setup(p => p.GetSessions(
-            //    It.IsAny<DateTime>(),
-            //    It.IsAny<DateTime>(),
-            //    It.IsAny<Guid>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>()
-            //))
-            //.Returns(sessionsInfo);
-            //analyticReportProviderMock.Setup(p => p.GetDialoguesWithWorkerType(
-            //    It.IsAny<DateTime>(),
-            //    It.IsAny<DateTime>(),
-            //    It.IsAny<Guid>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>(),
-            //    It.IsAny<List<Guid>>()
-            //))
-            //.Returns(dialogueInfo);
-
-            //var analyticReportController = new AnalyticReportController(
-            //    configMock.Object,
-            //    moqILoginService.Object,
-            //    dbOperationMock.Object,
-            //    filterMock.Object,
-            //    analyticReportProviderMock.Object
-            //);
+            var applicationUserId = Guid.NewGuid();
+            var companyId = Guid.NewGuid();
+            var deviceId = Guid.NewGuid();
+            var corporationId = Guid.NewGuid();
+            var companyIds = new List<Guid>{companyId};
+            var roleId = Guid.NewGuid();
+            moqILoginService.Setup(p => p.GetCurrentRoleName())
+                .Returns("Supervisor");
+            moqILoginService.Setup(p => p.GetCurrentCompanyId())
+                .Returns(companyId);
+            requestFiltersMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
+                .Returns(DateTime.Now.AddDays(-6));
+            requestFiltersMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
+                .Returns(DateTime.Now);
+            requestFiltersMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter(ref companyIds, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
+            repositoryMock.Setup(p => p.GetAsQueryable<ApplicationRole>())
+                .Returns(new TestAsyncEnumerable<ApplicationRole>(new List<ApplicationRole>
+                {
+                    new ApplicationRole
+                    {
+                        Id = roleId,
+                        Name = "Employee"
+                    }
+                }.AsQueryable()));
+            repositoryMock.Setup(p => p.GetAsQueryable<Session>())
+                .Returns(new TestAsyncEnumerable<Session>(new List<Session>
+                {
+                    new Session()
+                    {
+                        ApplicationUserId = applicationUserId,
+                        ApplicationUser = new ApplicationUser{FullName = "TestUser"},
+                        BegTime = DateTime.Now.AddMinutes(-3),
+                        EndTime = DateTime.Now.AddMinutes(-1),
+                        StatusId = 7,
+                        DeviceId = deviceId,
+                        Device = new Device{DeviceId = deviceId, CompanyId = companyId}
+                    }
+                }.AsQueryable()));
+            repositoryMock.Setup(p => p.GetAsQueryable<Dialogue>())
+                .Returns(new TestAsyncEnumerable<Dialogue>(new List<Dialogue>
+                {
+                    new Dialogue()
+                    {
+                        DialogueId = Guid.NewGuid(),
+                        BegTime = DateTime.Now.AddMinutes(-3),
+                        EndTime = DateTime.Now.AddMinutes(-1),
+                        StatusId = 3,
+                        InStatistic = true,
+                        DeviceId = deviceId,
+                        Device = new Device(){DeviceId = deviceId, CompanyId = companyId},
+                        ApplicationUserId = applicationUserId,
+                        ApplicationUser = new ApplicationUser{FullName = "TestUser", UserRoles = new List<ApplicationUserRole>{new ApplicationUserRole{RoleId = roleId}}},
+                        DialoguePhrase = new List<DialoguePhrase>{new DialoguePhrase{}},
+                        DialogueClientSatisfaction = new List<DialogueClientSatisfaction>{new DialogueClientSatisfaction(){}},
+                        DialogueFrame = new List<DialogueFrame>{new DialogueFrame{}},
+                        SlideShowSessions = new List<SlideShowSession>{new SlideShowSession{}}
+                    }
+                }.AsQueryable()));
+            analyticReportUtils.Setup(p => p.LoadIndex(It.IsAny<IGrouping<Guid?, SessionInfo>>(), It.IsAny<List<DialogueInfo>>(), It.IsAny<DateTime>(), It.IsAny<DateTime>()))
+                .Returns(0.5d);
+            analyticReportUtils.Setup(p => p.DialogueSumDuration(It.IsAny<IGrouping<DateTime, SessionInfo>>(), It.IsAny<List<DialogueInfo>>(), It.IsAny<Guid>()))
+                .Returns(12.5d);
+            analyticReportUtils.Setup(p => p.SessionAverageHours(It.IsAny<IGrouping<DateTime, SessionInfo>>()))
+                .Returns(12.5d);
+            analyticReportUtils.Setup(p => p.TimeTable(It.IsAny<List<SessionInfo>>(), It.IsAny<List<DialogueInfo>>(), It.IsAny<Guid>(), It.IsAny<DateTime>()))
+                .Returns(new List<ReportFullDayInfo>
+                    {
+                        new ReportFullDayInfo
+                        {
+                            ActivityType = 3,
+                            Beg = DateTime.Now.AddMinutes(-4),
+                            End = DateTime.Now.AddMinutes(-1),
+                            DialogueId = Guid.NewGuid()
+                        }
+                    });
             
-            ////Act
-            //var result = analyticReportController.ReportUserFull(
-            //    "20191126",
-            //    "20191127",
-            //    new List<Guid>{Guid.Parse("2c88e4b6-f5af-49ce-95db-171514607361")},
-            //    new List<Guid>{},
-            //    new List<Guid>{},
-            //    new List<Guid>{},
-            //    "Bearer Token"
-            //);
+            
+            //Act
+            var result = analyticReportService.ReportUserFull(
+                TestData.beg,
+                TestData.end,
+                new List<Guid?>{(Guid?)applicationUserId},
+                new List<Guid>{companyId},
+                new List<Guid>{corporationId},
+                new List<Guid>{deviceId});
+            System.Console.WriteLine($"result:\n{result}");
+            var obj = JsonConvert.DeserializeObject<List<ReportFullPeriodInfo>>(result);
 
-            ////Assert
-            //var okResult = result as OkObjectResult;
-            //Assert.IsNotNull(okResult);
-            //Assert.AreEqual(200, okResult.StatusCode);
-            //Assert.That(okResult.Value != null);
-            //var deserialized = JsonConvert.DeserializeObject<List<SessionInfo>>(okResult.Value.ToString());
-            //Assert.That(deserialized != null);
-            //Assert.IsTrue(deserialized.Count > 0);
+            //Assert
+            Assert.IsFalse(result is null);
+            Assert.IsTrue(obj.Count > 0);
         }
     }
 }
