@@ -106,7 +106,7 @@ namespace UserOperations
             services.AddScoped<IAnalyticReportUtils, AnalyticReportUtils>();
             services.AddScoped<IAnalyticServiceQualityUtils, AnalyticServiceQualityUtils>();
             services.AddScoped<IAnalyticSpeechUtils, AnalyticSpeechUtils>();
-            services.AddScoped<AnalyticWeeklyReportUtils>();
+            services.AddScoped<IAnalyticWeeklyReportUtils, AnalyticWeeklyReportUtils>();
             services.AddScoped<FileRefUtils>();
             services.AddScoped<ISpreadsheetDocumentUtils, SpreadsheetDocumentUtils>();
 
@@ -132,7 +132,6 @@ namespace UserOperations
                             {"endTime", new Schema{Type = "string", Format = "date-time"}},
                             {"contentType", new Schema{Type = "string"}},
                             {"url", new Schema{Type = "string"}}
-
                         }
                 });
                 c.MapType<CampaignContentAnswer>(() => new Schema

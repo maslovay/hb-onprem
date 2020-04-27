@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HBData.Models;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils.AnalyticWeeklyReportController
 {
-    public class AnalyticWeeklyReportUtils
+    public class AnalyticWeeklyReportUtils : IAnalyticWeeklyReportUtils
     {
         public double? TotalAvg(List<VWeeklyUserReport> dialogues, string property)
         {
@@ -209,7 +210,7 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
             Type dialogueType = dialogues.First().GetType();
             PropertyInfo prop = dialogueType.GetProperty(property);
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
-                .OrderByDescending(x => x.Sum(r => Convert.ToDouble(prop.GetValue(r)??0) / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
+                .OrderByDescending(x => x.Sum(r => Convert.ToDouble(prop.GetValue(r) ?? 0) / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered?.Where(x => x.UserId == userId).FirstOrDefault()?.Place ?? -1;
         }
     }

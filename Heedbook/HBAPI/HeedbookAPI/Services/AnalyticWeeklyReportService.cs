@@ -8,21 +8,23 @@ using HBData.Models;
 using UserOperations.Utils.AnalyticWeeklyReportController;
 using HBData.Repository;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class AnalyticWeeklyReportService
     {
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly AnalyticWeeklyReportUtils _analyticWeeklyReportUtils;
+        private readonly IAnalyticWeeklyReportUtils _analyticWeeklyReportUtils;
 
         public AnalyticWeeklyReportService(
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository,
-            AnalyticWeeklyReportUtils analyticWeeklyReportUtils
+            IAnalyticWeeklyReportUtils analyticWeeklyReportUtils
             )
         {
             _loginService = loginService;
