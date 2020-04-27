@@ -10,21 +10,23 @@ using HBData.Repository;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Utils.Interfaces;
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Services
 {
     public class AnalyticServiceQualityService
     {   
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly AnalyticServiceQualityUtils _analyticServiceQualityUtils;
+        private readonly IAnalyticServiceQualityUtils _analyticServiceQualityUtils;
 
         public AnalyticServiceQualityService(
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository,
-            AnalyticServiceQualityUtils analyticServiceQualityUtils
+            IAnalyticServiceQualityUtils analyticServiceQualityUtils
             )
         {
             _loginService = loginService;
@@ -78,12 +80,12 @@ namespace UserOperations.Services
                     PhraseComponent = new ComponentsPhraseTypeInfo
                     {
                         Loyalty = _analyticServiceQualityUtils.LoyaltyIndex(dialogues),
-                        CrossColour = phraseTypes.FirstOrDefault(q => q.PhraseTypeText == "Cross").Colour,
-                        NecessaryColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Necessary").Colour,
-                        LoyaltyColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Loyalty").Colour,
-                        AlertColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Alert").Colour,
-                        FillersColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Fillers").Colour,
-                        RiskColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Risk").Colour
+                        CrossColour = phraseTypes.FirstOrDefault(q => q.PhraseTypeText == "Cross")?.Colour,
+                        NecessaryColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Necessary")?.Colour,
+                        LoyaltyColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Loyalty")?.Colour,
+                        AlertColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Alert")?.Colour,
+                        FillersColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Fillers")?.Colour,
+                        RiskColour = phraseTypes.FirstOrDefault(r => r.PhraseTypeText == "Risk")?.Colour
                     }
                 };
                 return JsonConvert.SerializeObject(result);

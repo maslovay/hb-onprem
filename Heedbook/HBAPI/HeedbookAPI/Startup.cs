@@ -104,7 +104,7 @@ namespace UserOperations
             services.AddScoped<IAnalyticOfficeUtils, AnalyticOfficeUtils>();
             services.AddScoped<IAnalyticRatingUtils, AnalyticRatingUtils>();
             services.AddScoped<IAnalyticReportUtils, AnalyticReportUtils>();
-            services.AddScoped<AnalyticServiceQualityUtils>();
+            services.AddScoped<IAnalyticServiceQualityUtils, AnalyticServiceQualityUtils>();
             services.AddScoped<AnalyticSpeechUtils>();
             services.AddScoped<AnalyticWeeklyReportUtils>();
             services.AddScoped<FileRefUtils>();

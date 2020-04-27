@@ -17,7 +17,8 @@ using UserOperations.Models.AnalyticModels;
 using UserOperations.Services;
 
 namespace ApiTests
-{public class AnalyticReportControllerTests : ApiServiceTest
+{
+    public class AnalyticReportControllerTests : ApiServiceTest
     {   
         private AnalyticReportService analyticReportService;
         [SetUp]

@@ -40,6 +40,7 @@ namespace ApiTests
         protected Mock<IAnalyticOfficeUtils> analyticOfficeUtils;
         protected Mock<IAnalyticRatingUtils> analyticRatingUtils;
         protected Mock<IAnalyticReportUtils> analyticReportUtils;
+        protected Mock<IAnalyticServiceQualityUtils> analyticServiceQualityUtils;
 
         public void Setup()
         {
@@ -75,6 +76,7 @@ namespace ApiTests
             analyticOfficeUtils = new Mock<IAnalyticOfficeUtils>();
             analyticRatingUtils = new Mock<IAnalyticRatingUtils>();
             analyticReportUtils = new Mock<IAnalyticReportUtils>();
+            analyticServiceQualityUtils = new Mock<IAnalyticServiceQualityUtils>();
         }
         protected void InitData()
         {
