@@ -41,6 +41,7 @@ namespace ApiTests
         protected Mock<IAnalyticRatingUtils> analyticRatingUtils;
         protected Mock<IAnalyticReportUtils> analyticReportUtils;
         protected Mock<IAnalyticServiceQualityUtils> analyticServiceQualityUtils;
+        protected Mock<IAnalyticSpeechUtils> analyticSpeechUtils;
 
         public void Setup()
         {
@@ -77,6 +78,7 @@ namespace ApiTests
             analyticRatingUtils = new Mock<IAnalyticRatingUtils>();
             analyticReportUtils = new Mock<IAnalyticReportUtils>();
             analyticServiceQualityUtils = new Mock<IAnalyticServiceQualityUtils>();
+            analyticSpeechUtils = new Mock<IAnalyticSpeechUtils>();
         }
         protected void InitData()
         {
