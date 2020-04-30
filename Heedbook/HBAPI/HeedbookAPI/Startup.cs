@@ -28,6 +28,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using UserOperations.Utils.CommonOperations;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations
 {
@@ -54,9 +56,10 @@ namespace UserOperations
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddScoped<DBOperations>();
+            services.AddScoped<IDBOperations, DBOperations>();
             services.AddScoped<DBOperationsWeeklyReport>();
-            services.AddScoped<RequestFilters>();
+            services.AddScoped<IRequestFilters, RequestFilters>();
+            services.AddScoped<ControllerExceptionFilter>();
             services.AddIdentity<ApplicationUser, ApplicationRole>(p =>
             {
                 p.Password.RequireDigit = true;
@@ -66,7 +69,7 @@ namespace UserOperations
                 p.Password.RequiredLength = 8;
             })
             .AddEntityFrameworkStores<RecordsContext>();
-            services.AddScoped<MailSender>();
+            services.AddScoped<IMailSender, MailSender>();
 
             services.AddScoped<AccountService>();
             services.AddScoped<AnalyticClientProfileService>();
@@ -82,30 +85,30 @@ namespace UserOperations
             services.AddScoped<CatalogueService>();
             services.AddScoped<ClientNoteService>();
             services.AddScoped<ClientService>();
-            services.AddScoped<CompanyService>();
+            services.AddScoped<ICompanyService, CompanyService>();
             services.AddScoped<DemonstrationV2Service>();
             services.AddScoped<DeviceService>();
             services.AddScoped<DialogueService>();
             services.AddScoped<FillingFileFrameService>();
-            services.AddScoped<LoginService>();
+            services.AddScoped<ILoginService, LoginService>();
             services.AddScoped<MediaFileService>();
             services.AddScoped<PhraseService>();
-            services.AddScoped<SalesStageService>();
+            services.AddScoped<ISalesStageService, SalesStageService>();
             services.AddScoped<SessionService>();
             services.AddScoped<SiteService>();
             services.AddScoped<TabletAppInfoService>();
             services.AddScoped<UserService>();
 
-            services.AddScoped<AnalyticHomeUtils>();
+            services.AddScoped<IAnalyticHomeUtils, AnalyticHomeUtils>();
             services.AddScoped<AnalyticContentUtils>();
-            services.AddScoped<AnalyticOfficeUtils>();
-            services.AddScoped<AnalyticRatingUtils>();
-            services.AddScoped<AnalyticReportUtils>();
-            services.AddScoped<AnalyticServiceQualityUtils>();
-            services.AddScoped<AnalyticSpeechUtils>();
-            services.AddScoped<AnalyticWeeklyReportUtils>();
+            services.AddScoped<IAnalyticOfficeUtils, AnalyticOfficeUtils>();
+            services.AddScoped<IAnalyticRatingUtils, AnalyticRatingUtils>();
+            services.AddScoped<IAnalyticReportUtils, AnalyticReportUtils>();
+            services.AddScoped<IAnalyticServiceQualityUtils, AnalyticServiceQualityUtils>();
+            services.AddScoped<IAnalyticSpeechUtils, AnalyticSpeechUtils>();
+            services.AddScoped<IAnalyticWeeklyReportUtils, AnalyticWeeklyReportUtils>();
             services.AddScoped<FileRefUtils>();
-            services.AddScoped<SpreadsheetDocumentUtils>();
+            services.AddScoped<ISpreadsheetDocumentUtils, SpreadsheetDocumentUtils>();
 
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -129,7 +132,6 @@ namespace UserOperations
                             {"endTime", new Schema{Type = "string", Format = "date-time"}},
                             {"contentType", new Schema{Type = "string"}},
                             {"url", new Schema{Type = "string"}}
-
                         }
                 });
                 c.MapType<CampaignContentAnswer>(() => new Schema

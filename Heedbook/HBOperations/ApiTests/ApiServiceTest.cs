@@ -6,25 +6,50 @@ using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Models.AccountViewModels;
 using HBData.Repository;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using UserOperations.AccountModels;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Services;
+using UserOperations.Services.Interfaces;
 using UserOperations.Utils;
+using UserOperations.Utils.AnalyticHomeUtils;
+using UserOperations.Utils.AnalyticOfficeUtils;
+using UserOperations.Utils.CommonOperations;
+using UserOperations.Utils.Interfaces;
 
 namespace ApiTests
 {
+    delegate void CheckRolesAndChangeCompaniesInFilter(ref List<Guid> companyIds, List<Guid> corporationIds, string role, Guid token);
     public abstract class ApiServiceTest : IDisposable
     {
-        protected Mock<AccountService> accountProviderMock;
+        protected Mock<AccountService> accountServiceMock;
         protected Mock<IConfiguration> configMock;
-        protected Mock<DBOperations> dbOperationMock;
-        protected Mock<RequestFilters> filterMock;
-        protected Mock<MailSender> mailSenderMock;
-        protected Mock<LoginService> moqILoginService;
+        protected Mock<IMailSender> mailSenderMock;
+        protected Mock<ILoginService> moqILoginService;
         protected Mock<IGenericRepository> repositoryMock;
+        protected Mock<ICompanyService> companyServiceMock;
+        protected Mock<ISalesStageService> salesStageServiceMock;
+        protected Mock<ISpreadsheetDocumentUtils> spreadSheetDocumentUtils;
+        protected Mock<FileRefUtils> fileRefUtils;
+        protected Mock<HttpContextAccessor> httpContextAccessor;
+        protected Mock<IRequestFilters> requestFiltersMock;
+        protected Mock<IAnalyticHomeUtils> analyticHomeUtils;
+        protected Mock<IDBOperations> dBOperations;
+        protected Mock<IAnalyticOfficeUtils> analyticOfficeUtils;
+        protected Mock<IAnalyticRatingUtils> analyticRatingUtils;
+        protected Mock<IAnalyticReportUtils> analyticReportUtils;
+        protected Mock<IAnalyticServiceQualityUtils> analyticServiceQualityUtils;
+        protected Mock<IAnalyticSpeechUtils> analyticSpeechUtils;
+        protected Mock<IAnalyticWeeklyReportUtils> analyticWeeklyReportUtils;
 
+        public void Setup()
+        {
+            BaseInit();
+            InitData();
+            // InitServices();
+        }
         protected void BaseInit()
         {
             TestData.beg = "20191001";
@@ -37,13 +62,25 @@ namespace ApiTests
             TestData.companyIds = TestData.GetCompanyIds();
             TestData.email = $"test1@heedbook.com";
 
-            accountProviderMock = new Mock<AccountService>();
+            accountServiceMock = new Mock<AccountService>();
             configMock = new Mock<IConfiguration>();
-            dbOperationMock = new Mock<DBOperations>();
-            filterMock = new Mock<RequestFilters>(MockBehavior.Loose);
-            mailSenderMock = new Mock<MailSender>();
-            moqILoginService = new Mock<LoginService>();
+            mailSenderMock = new Mock<IMailSender>();
+            fileRefUtils = new Mock<FileRefUtils>();
+            httpContextAccessor = new Mock<HttpContextAccessor>();
             repositoryMock = new Mock<IGenericRepository>();
+            moqILoginService = new Mock<ILoginService>();
+            companyServiceMock = new Mock<ICompanyService>();
+            salesStageServiceMock = new Mock<ISalesStageService>();
+            spreadSheetDocumentUtils = new Mock<ISpreadsheetDocumentUtils>();
+            requestFiltersMock = new Mock<IRequestFilters>();
+            analyticHomeUtils = new Mock<IAnalyticHomeUtils>();
+            dBOperations = new Mock<IDBOperations>();
+            analyticOfficeUtils = new Mock<IAnalyticOfficeUtils>();
+            analyticRatingUtils = new Mock<IAnalyticRatingUtils>();
+            analyticReportUtils = new Mock<IAnalyticReportUtils>();
+            analyticServiceQualityUtils = new Mock<IAnalyticServiceQualityUtils>();
+            analyticSpeechUtils = new Mock<IAnalyticSpeechUtils>();
+            analyticWeeklyReportUtils = new Mock<IAnalyticWeeklyReportUtils>();
         }
         protected void InitData()
         {
@@ -58,30 +95,24 @@ namespace ApiTests
         protected virtual void InitServices()
         {
 
-        }
-        public void Setup()
-        {
-            // BaseInit();
-            // InitData();
-            // InitServices();
-        }
+        }       
 
         public void InitMockILoginService()
         {
-            //moqILoginService.Setup(p => p.CheckUserLogin(It.IsAny<string>(), It.IsAny<string>()))
+            // moqILoginService.Setup(p => p.CheckUserLogin(It.IsAny<string>(), It.IsAny<string>()))
             //    .Returns(true);
-            //moqILoginService.Setup(p => p.SaveErrorLoginHistory(It.IsAny<Guid>(), It.IsAny<string>()))
+            // moqILoginService.Setup(p => p.SaveErrorLoginHistory(It.IsAny<Guid>(), It.IsAny<string>()))
             //    .Returns(true);
-            //var dict = TestData.GetClaims();
-            //moqILoginService.Setup(p => p.GetDataFromToken(It.IsAny<string>(), out dict, null))
+            // var dict = TestData.GetClaims();
+            // moqILoginService.Setup(p => p.GetDataFromToken(It.IsAny<string>(), out dict, null))
             //    .Returns(true);
-            //moqILoginService.Setup(p => p.GeneratePasswordHash(It.IsAny<string>()))
+            // moqILoginService.Setup(p => p.GeneratePasswordHash(It.IsAny<string>()))
             //    .Returns("Hash");
-            //moqILoginService.Setup(p => p.SavePasswordHistory(It.IsAny<Guid>(), It.IsAny<string>()))
+            // moqILoginService.Setup(p => p.SavePasswordHistory(It.IsAny<Guid>(), It.IsAny<string>()))
             //    .Returns(true);
-            //moqILoginService.Setup(p => p.GeneratePass(6))
+            // moqILoginService.Setup(p => p.GeneratePass(6))
             //    .Returns("123456");
-            //moqILoginService.Setup(p => p.CreateTokenForUser(It.IsAny<ApplicationUser>(), It.IsAny<bool>()))
+            // moqILoginService.Setup(p => p.CreateTokenForUser(It.IsAny<ApplicationUser>()))
             //    .Returns("Token");
         }
         public void InitMockIMailSender()
@@ -111,57 +142,57 @@ namespace ApiTests
         }
         public void InitMockIDBOperations()
         {
-            //dbOperationMock.Setup(p => p.LoadIndex(
-            //        It.IsAny<List<SessionInfoFull>>(),
+            // dbOperationMock.Setup(p => p.LoadIndex(
+            //        It.IsAny<List<SessionInfo>>(),
             //        It.IsAny<List<DialogueInfoFull>>(), 
             //        It.IsAny<DateTime>(), 
             //        It.IsAny<DateTime>()))
             //    .Returns(0.5d);
-            //dbOperationMock.Setup(p => p.DialoguesCount(
+            // dbOperationMock.Setup(p => p.DialoguesCount(
             //        It.IsAny<List<DialogueInfoFull>>(),
             //        It.IsAny<Guid>(),
             //        It.IsAny<DateTime>()))
             //    .Returns(3);
-            //dbOperationMock.Setup(p => p.SessionAverageHours(
-            //        It.IsAny<List<SessionInfoFull>>(),                    
+            // dbOperationMock.Setup(p => p.SessionAverageHours(
+            //        It.IsAny<List<SessionInfo>>(),                    
             //        It.IsAny<DateTime>(),
             //        It.IsAny<DateTime>()))
             //    .Returns(5d);
-            //dbOperationMock.Setup(p => p.DialogueAverageDuration(
+            // dbOperationMock.Setup(p => p.DialogueAverageDuration(
             //        It.IsAny<List<DialogueInfoFull>>(),                    
             //        It.IsAny<DateTime>(),
             //        It.IsAny<DateTime>()))
             //    .Returns(5d);
-            //dbOperationMock.Setup(p => p.BestEmployeeLoad(
+            // dbOperationMock.Setup(p => p.BestEmployeeLoad(
             //        It.IsAny<List<DialogueInfoFull>>(),
-            //        It.IsAny<List<SessionInfoFull>>(), 
+            //        It.IsAny<List<SessionInfo>>(), 
             //        It.IsAny<DateTime>(), 
             //        It.IsAny<DateTime>()))
             //    .Returns(new Employee());
-            //dbOperationMock.Setup(p => p.SatisfactionIndex(
+            // dbOperationMock.Setup(p => p.SatisfactionIndex(
             //        It.IsAny<List<DialogueInfoFull>>()))
             //    .Returns(60d);
-            //dbOperationMock.Setup(p => p.EmployeeCount(
+            // dbOperationMock.Setup(p => p.EmployeeCount(
             //        It.IsAny<List<DialogueInfoFull>>()))
             //    .Returns(3);
-            //dbOperationMock.Setup(p => p.DialogueAveragePause(
-            //        It.IsAny<List<SessionInfoFull>>(),
+            // dbOperationMock.Setup(p => p.DialogueAveragePause(
+            //        It.IsAny<List<SessionInfo>>(),
             //        It.IsAny<List<DialogueInfoFull>>(), 
             //        It.IsAny<DateTime>(), 
             //        It.IsAny<DateTime>()))
             //    .Returns(20d);
-            //dbOperationMock.Setup(p => p.DialogueAvgPauseListInMinutes(
-            //        It.IsAny<List<SessionInfoFull>>(),
+            // dbOperationMock.Setup(p => p.DialogueAvgPauseListInMinutes(
+            //        It.IsAny<List<SessionInfo>>(),
             //        It.IsAny<List<DialogueInfoFull>>(), 
             //        It.IsAny<DateTime>(), 
             //        It.IsAny<DateTime>()))
             //    .Returns(new List<double>(){});
-            //dbOperationMock.Setup(p => p.SessionTotalHours(
-            //        It.IsAny<List<SessionInfoFull>>(),
+            // dbOperationMock.Setup(p => p.SessionTotalHours(
+            //        It.IsAny<List<SessionInfo>>(),
             //        It.IsAny<DateTime>(), 
             //        It.IsAny<DateTime>()))
             //    .Returns(9d);
-            //dbOperationMock.Setup(p => p.DialogueSumDuration(
+            // dbOperationMock.Setup(p => p.DialogueSumDuration(
             //        It.IsAny<List<DialogueInfoFull>>(),
             //        It.IsAny<DateTime>(), 
             //        It.IsAny<DateTime>()))

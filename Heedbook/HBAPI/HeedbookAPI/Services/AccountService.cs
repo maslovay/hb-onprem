@@ -9,26 +9,28 @@ using HBData.Repository;
 using System.Transactions;
 using UserOperations.Utils;
 using System.Collections.Generic;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class AccountService
     {
-        private readonly LoginService _loginService;
-        private readonly CompanyService _companyService;
-        private readonly SalesStageService _salesStageService;
+        private readonly ILoginService _loginService;
+        private readonly ICompanyService _companyService;
+        private readonly ISalesStageService _salesStageService;
         private readonly IGenericRepository _repository;
-        private readonly MailSender _mailSender;
-        private readonly SpreadsheetDocumentUtils _helpProvider;
+        private readonly IMailSender _mailSender;
+        private readonly ISpreadsheetDocumentUtils _helpProvider;
 
 
         public AccountService(
-            LoginService loginService,
-            CompanyService companyService,
-            SalesStageService salesStageService,
+            ILoginService loginService,
+            ICompanyService companyService,
+            ISalesStageService salesStageService,
             IGenericRepository repository,
-            MailSender mailSender,
-            SpreadsheetDocumentUtils helpProvider
+            IMailSender mailSender,
+            ISpreadsheetDocumentUtils helpProvider
         )
         {
             _loginService = loginService;
@@ -128,9 +130,16 @@ namespace UserOperations.Services
             using (var transactionScope = new TransactionScope(TransactionScopeOption.Suppress, new TransactionOptions()
                        { IsolationLevel = IsolationLevel.Serializable }))
             {
+                try{
                     RemoveAccountWithSave(email);
                     transactionScope.Complete();
                     return "Removed";
+                }
+                catch(Exception e)
+                {
+                    System.Console.WriteLine(e);
+                    return "fail";
+                }
             }
         }
 

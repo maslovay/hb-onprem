@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils.AnalyticServiceQualityUtils
 {
-    public class AnalyticServiceQualityUtils
+    public class AnalyticServiceQualityUtils : IAnalyticServiceQualityUtils
     {
         public double? LoyaltyIndex(List<ComponentsDialogueInfo> dialogues)
         {

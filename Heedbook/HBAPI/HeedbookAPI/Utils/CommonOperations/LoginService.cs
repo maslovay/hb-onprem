@@ -14,10 +14,11 @@ using HBLib.Utils;
 using HBLib;
 using Microsoft.AspNetCore.Http;
 using UserOperations.Utils.CommonOperations;
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Services
 {
-    public class LoginService
+    public class LoginService : ILoginService
     {
         private readonly IConfiguration _config;
         private readonly IGenericRepository _repository;
@@ -75,24 +76,24 @@ namespace UserOperations.Services
                 {
                     claims = ClaimsForWebsocket(user, role);
                 }
-                else if(user.StatusId == 3 )
+                else if (user.StatusId == 3)
                 {
                     claims = ClaimsForUser(user, role);
                 }
                 else return "User inactive";
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
-                    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-                    var token = new JwtSecurityToken(_config["Tokens:Issuer"],
-                        _config["Tokens:Issuer"],
-                        claims,
-                        expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
-                        signingCredentials: creds);
+                var token = new JwtSecurityToken(_config["Tokens:Issuer"],
+                    _config["Tokens:Issuer"],
+                    claims,
+                    expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
+                    signingCredentials: creds);
 
-                    var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
+                var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
                 return tokenenc;
-               
+
             }
             catch (Exception e)
             {

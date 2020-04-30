@@ -10,23 +10,25 @@ using UserOperations.Models.AnalyticModels;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models.Get.HomeController;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class AnalyticOfficeService
     {  
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly AnalyticOfficeUtils _utils;
-        private readonly DBOperations _dbOperations;
+        private readonly IAnalyticOfficeUtils _utils;
+        private readonly IDBOperations _dbOperations;
 
         public AnalyticOfficeService(
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository,
-            AnalyticOfficeUtils analyticOfficeUtils,
-            DBOperations dbOperations
+            IAnalyticOfficeUtils analyticOfficeUtils,
+            IDBOperations dbOperations
             )
         {
             _loginService = loginService;

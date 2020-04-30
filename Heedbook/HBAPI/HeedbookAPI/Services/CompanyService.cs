@@ -5,23 +5,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
+using UserOperations.Services.Interfaces;
 using UserOperations.Utils;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
-    public class CompanyService
+    public class CompanyService : ICompanyService
     {
         private readonly IGenericRepository _repository;
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
 
         private readonly int activeStatus;
         private readonly int disabledStatus;
 
         public CompanyService(
-            IGenericRepository repository, 
-            LoginService loginService,
-            RequestFilters requestFilters)
+            IGenericRepository repository,
+            ILoginService loginService,
+            IRequestFilters requestFilters)
         {
             _repository = repository;
             _loginService = loginService;

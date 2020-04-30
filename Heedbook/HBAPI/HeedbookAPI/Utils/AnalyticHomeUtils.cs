@@ -10,10 +10,11 @@ using UserOperations.Controllers;
 using System.Reflection;
 using UserOperations.Models.Get;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils.AnalyticHomeUtils
 {
-    public class AnalyticHomeUtils
+    public class AnalyticHomeUtils : IAnalyticHomeUtils
     {
         private readonly IConfiguration _config;
 
@@ -194,14 +195,14 @@ namespace UserOperations.Utils.AnalyticHomeUtils
             var sessionsGroup = sessions.Where(p => p.ApplicationUserId == dialogues.Key);
             var sessionHours = sessionsGroup.Any() ? sessionsGroup.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
             var dialoguesHours = dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
-            return 100 * LoadIndex( sessionHours, dialoguesHours);
+            return 100 * LoadIndex(sessionHours, dialoguesHours);
         }
         public double? LoadIndexWithTimeTable(List<double> workingTimeTable, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
             var workingTime = new TimeSpan(0, (int)workingTimeTable.Sum(), 0);
             var sessionHours = workingTime.TotalHours;
             var dialoguesHours = dialogues.Any() ? dialogues.Sum(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
-            return 100 * LoadIndex( sessionHours, dialoguesHours);
+            return 100 * LoadIndex(sessionHours, dialoguesHours);
         }
         public double? LoadIndex(List<SessionInfo> sessions, List<DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
@@ -237,17 +238,17 @@ namespace UserOperations.Utils.AnalyticHomeUtils
         public double? DialogueAverageDuration(List<DialogueInfo> dialogues, DateTime beg = default(DateTime), DateTime end = default(DateTime))
         {
             return dialogues.Any() ? dialogues.Average(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours) : 0;
-        }   
+        }
         public double? SessionAverageHours(List<SessionInfo> sessions, DateTime beg = default(DateTime), DateTime end = default(DateTime))
         {
             return sessions.Any() ?
                 (double?)sessions.GroupBy(p => p.BegTime.Date)
-                        .Select(q => 
+                        .Select(q =>
                             q.Sum(r => Min(r.EndTime, end).Subtract(Max(r.BegTime, beg)).TotalHours) / q.Select(r => r.ApplicationUserId).Distinct().Count()
                         ).Average() : null;
         }
 
 
-      
+
     }
 }

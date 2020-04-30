@@ -35,16 +35,26 @@ namespace BenchmarkScheduler
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                 //    _dbOperation = scope.ServiceProvider.GetRequiredService<DBOperations>();
-
-                    for (int i = 1; i < 6; i++)
+                    var dockerTestEnvironment = Environment.GetEnvironmentVariable("DOCKER_INTEGRATION_TEST_ENVIRONMENT")=="TRUE" ? true : false;
+                    System.Console.WriteLine($"dockerTestEnvironment: {dockerTestEnvironment}");
+                    // dockerTestEnvironment = true;
+                    if(!dockerTestEnvironment)
                     {
-                        DateTime today = DateTime.Now.AddDays(-i).Date;
-                        if (!_context.Benchmarks.Any(x => x.Day.Date == today))
+                        for (int i = 1; i < 6; i++)
                         {
-                            FillIndexesForADay(today);
-                            //  _log.Info("Calculation of benchmarks finished");
+                            DateTime today = DateTime.Now.AddDays(-i).Date;
+                            if (!_context.Benchmarks.Any(x => x.Day.Date == today))
+                            {
+                                FillIndexesForADay(today);
+                                //  _log.Info("Calculation of benchmarks finished");
+                            }
                         }
                     }
+                    else
+                    {
+                        DateTime today = DateTime.Now.AddDays(-1).Date;
+                        FillIndexesForADay(today);
+                    }                    
                 }
                 catch (Exception e)
                 {
