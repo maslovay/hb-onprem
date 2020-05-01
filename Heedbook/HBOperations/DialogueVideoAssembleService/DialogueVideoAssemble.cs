@@ -63,6 +63,14 @@ namespace DialogueVideoAssembleService
 
             try
             {
+
+                var dialogue = _context.Dialogues.FirstOrDefault(p => p.DialogueId == message.DialogueId);
+                if (dialogue == null) 
+                {
+                    _log.Error("No such dialogue in postgres db");
+                    return;
+                }
+                
                 var isExtended = _context.Dialogues
                     .Include(p => p.Device)
                     .Include(p => p.Device.Company)
@@ -75,19 +83,15 @@ namespace DialogueVideoAssembleService
                 var fileVideos = _utils.GetFileVideos(message);
                 if (!fileVideos.Any())
                 {
+                    dialogue.StatusId = 8;
+                    dialogue.Comment = "No video files";
                     _log.Info($"No files for message {JsonConvert.SerializeObject(message)}");
-                    _log.Error("No video files");
+                    _log.Fatal("No video files");
                     return;
                 }                
                 
                 var fileFrames = _utils.GetFileFrame(message);                
 
-                var dialogue = _context.Dialogues.FirstOrDefault(p => p.DialogueId == message.DialogueId);
-                if (dialogue == null) 
-                {
-                    _log.Error("No such dialogue in postgres db");
-                    return;
-                }
                 var dialogueDuration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds;
 
                 var videosDuration = _utils.GetTotalVideoDuration(fileVideos, message);
