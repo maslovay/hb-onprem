@@ -2,6 +2,7 @@
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,7 +24,7 @@ namespace UserOperations.Services
         private readonly IGenericRepository _repository;
         private readonly LoginService _loginService;
         private readonly RequestFilters _requestFilters;
-        private readonly SftpClient _sftpClient;
+        private readonly ISftpClient _sftpClient;
         private readonly FileRefUtils _fileRef;
         private readonly MailSender _mailSender;
         private readonly string _containerName;
@@ -35,7 +36,7 @@ namespace UserOperations.Services
             IGenericRepository repository, 
             LoginService loginService,
             IConfiguration config,
-            SftpClient sftpClient,
+            ISftpClient sftpClient,
             FileRefUtils fileRef,
             RequestFilters requestFilters,
             MailSender mailSender)

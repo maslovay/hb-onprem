@@ -14,7 +14,7 @@ using UserOperations.Models.Get.AnalyticSpeechController;
 namespace ApiTests
 {
     public class AnalyticWeeklyReportControllerTests : ApiServiceTest
-    {   
+    {
         private AnalyticWeeklyReportService analyticWeeklyReportService;
         [SetUp]
         public new void Setup()

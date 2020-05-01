@@ -7,20 +7,21 @@ using System.IO;
 using Microsoft.AspNetCore.Http;
 using HBLib.Utils;
 using UserOperations.Utils.CommonOperations;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class MediaFileService
     {
         private readonly LoginService _loginService;
-        private readonly SftpClient _sftpClient;
+        private readonly ISftpClient _sftpClient;
         private readonly FileRefUtils _fileRef;
         private readonly string _containerName;
       
 
         public MediaFileService(
             LoginService loginService,
-            SftpClient sftpClient,
+            ISftpClient sftpClient,
             FileRefUtils fileRef
             )
         {

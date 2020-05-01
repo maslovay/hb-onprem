@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Models.AccountViewModels;
 using HBData.Repository;
+using HBLib;
+using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -32,7 +35,7 @@ namespace ApiTests
         protected Mock<ICompanyService> companyServiceMock;
         protected Mock<ISalesStageService> salesStageServiceMock;
         protected Mock<ISpreadsheetDocumentUtils> spreadSheetDocumentUtils;
-        protected Mock<FileRefUtils> fileRefUtils;
+        protected Mock<IFileRefUtils> fileRefUtils;
         protected Mock<HttpContextAccessor> httpContextAccessor;
         protected Mock<IRequestFilters> requestFiltersMock;
         protected Mock<IAnalyticHomeUtils> analyticHomeUtils;
@@ -43,6 +46,7 @@ namespace ApiTests
         protected Mock<IAnalyticServiceQualityUtils> analyticServiceQualityUtils;
         protected Mock<IAnalyticSpeechUtils> analyticSpeechUtils;
         protected Mock<IAnalyticWeeklyReportUtils> analyticWeeklyReportUtils;
+        protected Mock<ISftpClient> sftpClient;
 
         public void Setup()
         {
@@ -65,7 +69,7 @@ namespace ApiTests
             accountServiceMock = new Mock<AccountService>();
             configMock = new Mock<IConfiguration>();
             mailSenderMock = new Mock<IMailSender>();
-            fileRefUtils = new Mock<FileRefUtils>();
+            fileRefUtils = new Mock<IFileRefUtils>();
             httpContextAccessor = new Mock<HttpContextAccessor>();
             repositoryMock = new Mock<IGenericRepository>();
             moqILoginService = new Mock<ILoginService>();
@@ -81,6 +85,7 @@ namespace ApiTests
             analyticServiceQualityUtils = new Mock<IAnalyticServiceQualityUtils>();
             analyticSpeechUtils = new Mock<IAnalyticSpeechUtils>();
             analyticWeeklyReportUtils = new Mock<IAnalyticWeeklyReportUtils>();
+            sftpClient = new Mock<ISftpClient>();
         }
         protected void InitData()
         {
