@@ -5,14 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using HBLib.Utils.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Renci.SshNet.Messages.Transport;
 using Renci.SshNet.Sftp;
 
 namespace HBLib.Utils
 {
-    public class SftpClient : IDisposable, ISftpClient
+    public class SftpClient : IDisposable
     {
         private readonly string httpFileUrl;
         private readonly Renci.SshNet.SftpClient _client;
@@ -38,7 +37,7 @@ namespace HBLib.Utils
                 }
                 catch (Exception e)
                 {
-                    _retryCount--;
+                    _retryCount-- ;
                     if (_retryCount == 0) throw;
                     Thread.Sleep(100 * _retryCount);
                 }
@@ -50,7 +49,7 @@ namespace HBLib.Utils
             ConnectToSftpAsync().Wait();
             _client.RenameFile(oldPath, newPath);
         }
-
+        
         public void Dispose()
         {
             _client.Dispose();
@@ -76,7 +75,7 @@ namespace HBLib.Utils
                 return $"http://{_sftpSettings.Host}/{path}";
             return null;
         }
-
+     
         public async Task<List<string>> GetFileNames(String directory)
         {
             await ConnectToSftpAsync();
@@ -228,8 +227,8 @@ namespace HBLib.Utils
             using (var fs = File.OpenWrite(localPath))
             {
                 try
-                {
-                    _client.DownloadFile(remotePath, fs);
+                { 
+                _client.DownloadFile(remotePath, fs);
                     //await Task.Run(() => _client.DownloadFile(remotePath, fs));
                 }
                 catch
@@ -269,7 +268,7 @@ namespace HBLib.Utils
 
             return localPath;
         }
-
+        
         /// <summary>
         ///     Check file exists on server
         /// </summary>
@@ -384,7 +383,7 @@ namespace HBLib.Utils
             if (_client.IsConnected)
                 await Task.Run(() => _client.Disconnect());
         }
-
+    
         public class FileInfoModel
         {
             public string url;

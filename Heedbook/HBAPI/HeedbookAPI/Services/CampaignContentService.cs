@@ -15,28 +15,25 @@ using UserOperations.Utils.CommonOperations;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http;
 using System.IO;
-using UserOperations.Utils.Interfaces;
-using UserOperations.Services.Interfaces;
-using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class CampaignContentService
     {
-        private readonly ILoginService _loginService;
-        private readonly IRequestFilters _requestFilters;
+        private readonly LoginService _loginService;
+        private readonly RequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly ISftpClient _sftpClient;
-        private readonly IFileRefUtils _fileRef;
+        private readonly SftpClient _sftpClient;
+        private readonly FileRefUtils _fileRef;
 
         private const string _containerName = "screenshots";
 
         public CampaignContentService(
-            ILoginService loginService,
-            IRequestFilters requestFilters,
+            LoginService loginService,
+            RequestFilters requestFilters,
             IGenericRepository repository,
-            ISftpClient sftpClient,
-            IFileRefUtils fileRef
+            SftpClient sftpClient,
+            FileRefUtils fileRef
             )
         {
             try
