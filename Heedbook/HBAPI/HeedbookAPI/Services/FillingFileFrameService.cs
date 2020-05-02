@@ -52,13 +52,12 @@ namespace UserOperations.Services
                     StatusId = 6,
                     StatusNNId = 6,
                     Time = frameWithMaxArea.Time,
-                    IsFacePresent = 
-                        // frameWithMaxArea.Age != null 
-                        // && frameWithMaxArea.Gender != null
-                        frameWithMaxArea.Yaw != null
+                    IsFacePresent = frameWithMaxArea.Age != null 
+                        && frameWithMaxArea.Gender != null
+                        && frameWithMaxArea.Yaw != null
                         && frameWithMaxArea.Smile != null
-                        && frameWithMaxArea.DeviceId != null,
-                        // && frameWithMaxArea.Descriptor != null,
+                        && frameWithMaxArea.DeviceId != null
+                        && frameWithMaxArea.Descriptor != null,
                     FaceLength = 1,
                     DeviceId = (Guid)frameWithMaxArea.DeviceId
                 };
@@ -68,7 +67,7 @@ namespace UserOperations.Services
                     FrameAttributeId = Guid.NewGuid(),
                     FileFrameId = fileFrame.FileFrameId,
                     Gender = frameWithMaxArea.Gender,
-                    Age = frameWithMaxArea.Age !=null ? (double)frameWithMaxArea.Age : 0,
+                    Age = (double)frameWithMaxArea.Age,
                     Value = JsonConvert.SerializeObject(new
                     {
                         Top = frameWithMaxArea.Top == null ? 0 : Convert.ToInt16(frameWithMaxArea.Top),
