@@ -5,13 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HBLib.Utils.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Renci.SshNet.Messages.Transport;
 using Renci.SshNet.Sftp;
 
 namespace HBLib.Utils
 {
-    public class SftpClient : IDisposable
+    public class SftpClient : IDisposable, ISftpClient
     {
         private readonly string httpFileUrl;
         private readonly Renci.SshNet.SftpClient _client;

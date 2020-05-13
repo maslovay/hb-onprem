@@ -15,17 +15,19 @@ using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models;
 using UserOperations.Services;
+using UserOperations.Services.Interfaces;
 using UserOperations.Utils;
 using UserOperations.Utils.CommonOperations;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class DialogueService
     {
         private readonly IGenericRepository _repository;
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
-        private readonly FileRefUtils _fileRef;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
+        private readonly IFileRefUtils _fileRef;
         private readonly string _containerName;
 
         private readonly int activeStatus;
@@ -33,10 +35,10 @@ namespace UserOperations.Services
 
         public DialogueService(
             IGenericRepository repository,
-            LoginService loginService,
+            ILoginService loginService,
             IConfiguration config,
-            FileRefUtils fileRef,
-            RequestFilters requestFilters)
+            IFileRefUtils fileRef,
+            IRequestFilters requestFilters)
         {
             _repository = repository;
             _loginService = loginService;

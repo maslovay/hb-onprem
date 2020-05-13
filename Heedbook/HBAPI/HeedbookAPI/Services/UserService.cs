@@ -2,6 +2,7 @@
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,19 +14,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models;
+using UserOperations.Services.Interfaces;
 using UserOperations.Utils;
 using UserOperations.Utils.CommonOperations;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class UserService
     {
         private readonly IGenericRepository _repository;
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
-        private readonly SftpClient _sftpClient;
-        private readonly FileRefUtils _fileRef;
-        private readonly MailSender _mailSender;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
+        private readonly ISftpClient _sftpClient;
+        private readonly IFileRefUtils _fileRef;
+        private readonly IMailSender _mailSender;
         private readonly string _containerName;
 
         private readonly int activeStatus;
@@ -33,12 +36,12 @@ namespace UserOperations.Services
 
         public UserService(
             IGenericRepository repository, 
-            LoginService loginService,
+            ILoginService loginService,
             IConfiguration config,
-            SftpClient sftpClient,
-            FileRefUtils fileRef,
-            RequestFilters requestFilters,
-            MailSender mailSender)
+            ISftpClient sftpClient,
+            IFileRefUtils fileRef,
+            IRequestFilters requestFilters,
+            IMailSender mailSender)
         {
             _repository = repository;
             _loginService = loginService;
@@ -130,6 +133,7 @@ namespace UserOperations.Services
                 await _mailSender.SendUserRegisterEmail(userForEmail, message.Password);
             }
             catch { }
+            System.Console.WriteLine(JsonConvert.SerializeObject(role));
             return new UserModel(user, avatarUrl, role);
         }
 
@@ -234,6 +238,7 @@ namespace UserOperations.Services
             List<ApplicationUser> recepients = null;
             if (roleInToken == "Employee")
             {
+                System.Console.WriteLine(1);
                 var managerRole = _repository.GetAsQueryable<ApplicationRole>().First(p => p.Name == "Manager");
                 recepients = _repository.GetAsQueryable<ApplicationUser>().Where(p => p.CompanyId == companyIdInToken
                         && p.UserRoles.Where(r => r.Role == managerRole).Any())
@@ -242,6 +247,7 @@ namespace UserOperations.Services
             }
             else if (roleInToken == "Manager" && corporationIdInToken != null)
             {
+                System.Console.WriteLine(2);
                 var supervisorRole = _repository.GetAsQueryable<ApplicationRole>().First(p => p.Name == "Supervisor");
                 recepients = _repository.GetAsQueryable<ApplicationUser>()
                     .Include(p => p.Company)
@@ -252,7 +258,7 @@ namespace UserOperations.Services
             }
             else
                 throw new Exception($"{roleInToken} not have leader");
-
+            System.Console.WriteLine(recepients.Count);
             if (formData.Files.Count != 0 && recepients != null && recepients.Count != 0)
             {
                 try

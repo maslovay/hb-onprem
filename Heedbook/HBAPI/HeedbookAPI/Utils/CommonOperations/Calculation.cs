@@ -13,6 +13,7 @@ using UserOperations.Models.Get.HomeController;
 using UserOperations.Models.Get.AnalyticRatingController;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
 using UserOperations.Utils.Interfaces;
+using HBLib.Utils;
 
 namespace UserOperations.Utils
 {

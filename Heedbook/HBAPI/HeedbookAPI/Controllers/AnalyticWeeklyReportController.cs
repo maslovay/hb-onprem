@@ -4,6 +4,7 @@ using UserOperations.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {

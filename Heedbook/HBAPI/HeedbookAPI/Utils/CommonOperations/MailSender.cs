@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using UserOperations.Models;
 using UserOperations.Utils.CommonOperations;
 using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
@@ -17,10 +18,10 @@ namespace UserOperations.Services
     {
         private readonly SmtpSettings _smtpSettings;
         private readonly SmtpClient _smtpClient;
-        private readonly FileRefUtils _fileRef;
+        private readonly IFileRefUtils _fileRef;
         private readonly string _localFolder;
         private readonly string _containerName;
-        public MailSender(SmtpSettings smtpSettings, SmtpClient smtpClient, FileRefUtils fileRef)
+        public MailSender(SmtpSettings smtpSettings, SmtpClient smtpClient, IFileRefUtils fileRef)
         {
             _smtpSettings = smtpSettings;
             _smtpClient = smtpClient;

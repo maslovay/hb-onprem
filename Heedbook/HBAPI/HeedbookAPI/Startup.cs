@@ -30,6 +30,7 @@ using Microsoft.AspNetCore.Http;
 using UserOperations.Utils.CommonOperations;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations
 {
@@ -107,7 +108,7 @@ namespace UserOperations
             services.AddScoped<IAnalyticServiceQualityUtils, AnalyticServiceQualityUtils>();
             services.AddScoped<IAnalyticSpeechUtils, AnalyticSpeechUtils>();
             services.AddScoped<IAnalyticWeeklyReportUtils, AnalyticWeeklyReportUtils>();
-            services.AddScoped<FileRefUtils>();
+            services.AddScoped<IFileRefUtils, FileRefUtils>();
             services.AddScoped<ISpreadsheetDocumentUtils, SpreadsheetDocumentUtils>();
 
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
@@ -165,7 +166,7 @@ namespace UserOperations
 
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddTransient<SftpClient>();
+            services.AddTransient<ISftpClient, SftpClient>();
 
             services.AddSingleton<ElasticClientFactory>();
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));

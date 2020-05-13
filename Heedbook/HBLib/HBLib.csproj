@@ -18,6 +18,7 @@
   <ItemGroup>
     <PackageReference Include="DlibDotNet" Version="19.17.0.20190513" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" />
     <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.23.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="3.0.2" />
     <PackageReference Include="MongoDB.Driver" Version="2.9.0-beta2" />

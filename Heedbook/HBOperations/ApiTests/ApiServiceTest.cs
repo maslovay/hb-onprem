@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Models.AccountViewModels;
 using HBData.Repository;
+using HBLib;
+using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using UserOperations.AccountModels;
@@ -32,7 +36,7 @@ namespace ApiTests
         protected Mock<ICompanyService> companyServiceMock;
         protected Mock<ISalesStageService> salesStageServiceMock;
         protected Mock<ISpreadsheetDocumentUtils> spreadSheetDocumentUtils;
-        protected Mock<FileRefUtils> fileRefUtils;
+        protected Mock<IFileRefUtils> fileRefUtils;
         protected Mock<HttpContextAccessor> httpContextAccessor;
         protected Mock<IRequestFilters> requestFiltersMock;
         protected Mock<IAnalyticHomeUtils> analyticHomeUtils;
@@ -43,6 +47,8 @@ namespace ApiTests
         protected Mock<IAnalyticServiceQualityUtils> analyticServiceQualityUtils;
         protected Mock<IAnalyticSpeechUtils> analyticSpeechUtils;
         protected Mock<IAnalyticWeeklyReportUtils> analyticWeeklyReportUtils;
+        protected Mock<ISftpClient> sftpClient;
+        protected Mock<IdentityDbContext> recordContextMock;
 
         public void Setup()
         {
@@ -65,7 +71,7 @@ namespace ApiTests
             accountServiceMock = new Mock<AccountService>();
             configMock = new Mock<IConfiguration>();
             mailSenderMock = new Mock<IMailSender>();
-            fileRefUtils = new Mock<FileRefUtils>();
+            fileRefUtils = new Mock<IFileRefUtils>();
             httpContextAccessor = new Mock<HttpContextAccessor>();
             repositoryMock = new Mock<IGenericRepository>();
             moqILoginService = new Mock<ILoginService>();
@@ -81,6 +87,8 @@ namespace ApiTests
             analyticServiceQualityUtils = new Mock<IAnalyticServiceQualityUtils>();
             analyticSpeechUtils = new Mock<IAnalyticSpeechUtils>();
             analyticWeeklyReportUtils = new Mock<IAnalyticWeeklyReportUtils>();
+            sftpClient = new Mock<ISftpClient>();
+            recordContextMock = new Mock<IdentityDbContext>();
         }
         protected void InitData()
         {
@@ -99,107 +107,30 @@ namespace ApiTests
 
         public void InitMockILoginService()
         {
-            // moqILoginService.Setup(p => p.CheckUserLogin(It.IsAny<string>(), It.IsAny<string>()))
-            //    .Returns(true);
-            // moqILoginService.Setup(p => p.SaveErrorLoginHistory(It.IsAny<Guid>(), It.IsAny<string>()))
-            //    .Returns(true);
-            // var dict = TestData.GetClaims();
-            // moqILoginService.Setup(p => p.GetDataFromToken(It.IsAny<string>(), out dict, null))
-            //    .Returns(true);
-            // moqILoginService.Setup(p => p.GeneratePasswordHash(It.IsAny<string>()))
-            //    .Returns("Hash");
-            // moqILoginService.Setup(p => p.SavePasswordHistory(It.IsAny<Guid>(), It.IsAny<string>()))
-            //    .Returns(true);
-            // moqILoginService.Setup(p => p.GeneratePass(6))
-            //    .Returns("123456");
-            // moqILoginService.Setup(p => p.CreateTokenForUser(It.IsAny<ApplicationUser>()))
-            //    .Returns("Token");
+            
         }
         public void InitMockIMailSender()
         {
-            // mailSenderMock.Setup(p => p.SendRegisterEmail(new HBData.Models.ApplicationUser()))
-            //     .Returns(Task.FromResult(0));
-            // mailSenderMock.Setup(p => p.SendPasswordChangeEmail(new HBData.Models.ApplicationUser(), "password"))
-            //     .Returns(Task.FromResult(0));
+            
         }
         public void InitMockAccountService()
         {
         }
         public void InitMockIHelpProvider()
         {
-        //    // helpProvider.Setup(p => p.AddComanyPhrases());
-        //     helpProvider.Setup(p => p.CreatePoolAnswersSheet(It.IsAny<List<AnswerInfo>>(), It.IsAny<string>()))
-        //         .Returns(new MemoryStream());
+        
         }
         public void InitMockIRequestFiltersProvider()
         {
-            // var list = new List<Guid>(){};
-            // filterMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter( ref list, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
-            // filterMock.Setup(p => p.GetBegDate(It.IsAny<string>()))
-            //     .Returns(new DateTime(2019, 10, 30));
-            // filterMock.Setup(p => p.GetEndDate(It.IsAny<string>()))
-            //     .Returns(new DateTime(2019, 11, 01));
+            
         }
         public void InitMockIDBOperations()
         {
-            // dbOperationMock.Setup(p => p.LoadIndex(
-            //        It.IsAny<List<SessionInfo>>(),
-            //        It.IsAny<List<DialogueInfoFull>>(), 
-            //        It.IsAny<DateTime>(), 
-            //        It.IsAny<DateTime>()))
-            //    .Returns(0.5d);
-            // dbOperationMock.Setup(p => p.DialoguesCount(
-            //        It.IsAny<List<DialogueInfoFull>>(),
-            //        It.IsAny<Guid>(),
-            //        It.IsAny<DateTime>()))
-            //    .Returns(3);
-            // dbOperationMock.Setup(p => p.SessionAverageHours(
-            //        It.IsAny<List<SessionInfo>>(),                    
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<DateTime>()))
-            //    .Returns(5d);
-            // dbOperationMock.Setup(p => p.DialogueAverageDuration(
-            //        It.IsAny<List<DialogueInfoFull>>(),                    
-            //        It.IsAny<DateTime>(),
-            //        It.IsAny<DateTime>()))
-            //    .Returns(5d);
-            // dbOperationMock.Setup(p => p.BestEmployeeLoad(
-            //        It.IsAny<List<DialogueInfoFull>>(),
-            //        It.IsAny<List<SessionInfo>>(), 
-            //        It.IsAny<DateTime>(), 
-            //        It.IsAny<DateTime>()))
-            //    .Returns(new Employee());
-            // dbOperationMock.Setup(p => p.SatisfactionIndex(
-            //        It.IsAny<List<DialogueInfoFull>>()))
-            //    .Returns(60d);
-            // dbOperationMock.Setup(p => p.EmployeeCount(
-            //        It.IsAny<List<DialogueInfoFull>>()))
-            //    .Returns(3);
-            // dbOperationMock.Setup(p => p.DialogueAveragePause(
-            //        It.IsAny<List<SessionInfo>>(),
-            //        It.IsAny<List<DialogueInfoFull>>(), 
-            //        It.IsAny<DateTime>(), 
-            //        It.IsAny<DateTime>()))
-            //    .Returns(20d);
-            // dbOperationMock.Setup(p => p.DialogueAvgPauseListInMinutes(
-            //        It.IsAny<List<SessionInfo>>(),
-            //        It.IsAny<List<DialogueInfoFull>>(), 
-            //        It.IsAny<DateTime>(), 
-            //        It.IsAny<DateTime>()))
-            //    .Returns(new List<double>(){});
-            // dbOperationMock.Setup(p => p.SessionTotalHours(
-            //        It.IsAny<List<SessionInfo>>(),
-            //        It.IsAny<DateTime>(), 
-            //        It.IsAny<DateTime>()))
-            //    .Returns(9d);
-            // dbOperationMock.Setup(p => p.DialogueSumDuration(
-            //        It.IsAny<List<DialogueInfoFull>>(),
-            //        It.IsAny<DateTime>(), 
-            //        It.IsAny<DateTime>()))
-            //    .Returns(100d);
+            
         }
         public void Dispose()
         {
+            
         }
     }
 }

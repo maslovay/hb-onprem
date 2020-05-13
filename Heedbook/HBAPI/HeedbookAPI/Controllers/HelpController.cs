@@ -27,6 +27,8 @@ using HBData.Repository;
 using System.Data;
 using System.Reflection;
 using System.Data.SqlClient;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Controllers
 {
@@ -35,11 +37,11 @@ namespace UserOperations.Controllers
     public class HelpController : Controller
     {
         private readonly IConfiguration _config;
-        private readonly CompanyService _compService;
+        private readonly ICompanyService _compService;
         private readonly RecordsContext _context;
         //    private readonly SftpClient _sftpClient;
         //    private readonly MailSender _mailSender;
-        private readonly RequestFilters _requestFilters;
+        private readonly IRequestFilters _requestFilters;
         //    private readonly SftpSettings _sftpSettings;
         //    private readonly DBOperations _dbOperation;
         //    private readonly IGenericRepository _repository;
@@ -47,13 +49,13 @@ namespace UserOperations.Controllers
 
 
         public HelpController(
-            CompanyService compService,
+            ICompanyService compService,
             IConfiguration config,
             RecordsContext context,
           //   DescriptorCalculations calc
             //SftpClient sftpClient,
             //MailSender mailSender,
-            RequestFilters requestFilters
+            IRequestFilters requestFilters
             //SftpSettings sftpSettings,
             //DBOperations dBOperations,
             //IGenericRepository repository

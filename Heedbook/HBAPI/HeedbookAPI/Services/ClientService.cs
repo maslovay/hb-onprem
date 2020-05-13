@@ -9,24 +9,27 @@ using UserOperations.Models;
 using UserOperations.Controllers;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Utils.CommonOperations;
+using UserOperations.Utils.Interfaces;
+using UserOperations.Services.Interfaces;
+using HBLib.Utils;
 
 namespace UserOperations.Services
 {
     public class ClientService 
     {
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly FileRefUtils _fileRef;
+        private readonly IFileRefUtils _fileRef;
 
         private readonly string _containerName;
         private readonly int activeStatus = 3;
 
         public ClientService(
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository,
-            FileRefUtils fileRef
+            IFileRefUtils fileRef
             )
         {
             _loginService = loginService;

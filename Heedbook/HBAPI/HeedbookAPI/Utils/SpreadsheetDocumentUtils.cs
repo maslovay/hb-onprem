@@ -101,7 +101,7 @@ namespace UserOperations.Utils
                         }
                         catch (NullReferenceException ex)
                         {
-                            System.Console.WriteLine($"exception!!");
+                            System.Console.WriteLine($"exception!!\n{ex}");
                             break;
                         }
                     }

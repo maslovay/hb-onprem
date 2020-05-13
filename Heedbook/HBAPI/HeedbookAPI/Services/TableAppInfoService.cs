@@ -3,18 +3,17 @@ using System.Linq;
 using HBData.Models;
 using HBData.Repository;
 using Microsoft.AspNetCore.Mvc;
-
-
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Services
 {
     public class TabletAppInfoService
     {
-        private readonly LoginService _loginService;
+        private readonly ILoginService _loginService;
         private readonly IGenericRepository _repository;
         
         public TabletAppInfoService(
-            LoginService loginService,
+            ILoginService loginService,
             IGenericRepository repository)
         {
             _loginService = loginService;

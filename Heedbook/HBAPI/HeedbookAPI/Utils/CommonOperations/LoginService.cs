@@ -15,6 +15,7 @@ using HBLib;
 using Microsoft.AspNetCore.Http;
 using UserOperations.Utils.CommonOperations;
 using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
@@ -22,7 +23,7 @@ namespace UserOperations.Services
     {
         private readonly IConfiguration _config;
         private readonly IGenericRepository _repository;
-        private readonly FileRefUtils _fileRef;
+        private readonly IFileRefUtils _fileRef;
         //  private readonly SftpSettings _sftpSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private const int PASSWORDS_TO_SAVE = 5;
@@ -31,7 +32,7 @@ namespace UserOperations.Services
         public LoginService(
             IConfiguration config,
             IGenericRepository repository,
-            FileRefUtils fileRef,
+            IFileRefUtils fileRef,
             //   SftpSettings sftpSettings, 
             IHttpContextAccessor httpContextAccessor)
         {

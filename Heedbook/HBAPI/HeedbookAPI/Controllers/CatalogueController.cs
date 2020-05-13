@@ -5,6 +5,7 @@ using HBData.Models;
 using UserOperations.Services;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {
