@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.IO;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {

@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HBData.Models;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils.AnalyticWeeklyReportController
 {
-    public class AnalyticWeeklyReportUtils
+    public class AnalyticWeeklyReportUtils : IAnalyticWeeklyReportUtils
     {
         public double? TotalAvg(List<VWeeklyUserReport> dialogues, string property)
         {
@@ -15,10 +16,10 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
             PropertyInfo prop = dialogueType.GetProperty(property);
             return dialogues.Sum(p => (double?)prop.GetValue(p)) / dialogues.Count();
         }
-        public Dictionary<DateTime, double> AvgPerDay(List<VWeeklyUserReport> dialogues, string property)
+        public Dictionary<DateTime, double> AvgPerDay(List<VWeeklyUserReport> dialogues, string property, DateTime reportBegTime)
         {
-            DateTime begTime = DateTime.Now.AddDays(-6);
-            DateTime endTime = DateTime.Now;
+            DateTime begTime = reportBegTime.AddDays(-6);
+            DateTime endTime = reportBegTime;
             Type dialogueType = null;
             PropertyInfo prop = null;
             if (dialogues != null && dialogues.Count() != 0)
@@ -74,10 +75,10 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
                        .Select((s, i) => new { place = i, userId = s.Key });
             return OrderedByPositive.Where(p => p.userId == userId).FirstOrDefault()?.place ?? -1;
         }
-        public Dictionary<DateTime, double> AvgNumberOfDialoguesPerDay(List<VWeeklyUserReport> dialogues)
+        public Dictionary<DateTime, double> AvgNumberOfDialoguesPerDay(List<VWeeklyUserReport> dialogues, DateTime reportBegTime)
         {
-            DateTime begTime = DateTime.Now.AddDays(-6);
-            DateTime endTime = DateTime.Now;
+            DateTime begTime = reportBegTime.AddDays(-6);
+            DateTime endTime = reportBegTime;
             Dictionary<DateTime, double> result = new Dictionary<DateTime, double>();
             for (var day = begTime; day <= endTime; day = day.AddDays(1))
             {
@@ -94,10 +95,10 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
                 .OrderByDescending(x => x.Sum(r => r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered?.Where(x => x.UserId == userId).FirstOrDefault()?.Place ?? -1;
         }
-        public Dictionary<DateTime, double> AvgWorkingHoursPerDay(List<VSessionUserWeeklyReport> sessions)
+        public Dictionary<DateTime, double> AvgWorkingHoursPerDay(List<VSessionUserWeeklyReport> sessions, DateTime reportBegTime)
         {
-            DateTime begTime = DateTime.Now.AddDays(-6);
-            DateTime endTime = DateTime.Now;
+            DateTime begTime = reportBegTime.AddDays(-6);
+            DateTime endTime = reportBegTime;
             Dictionary<DateTime, double> result = new Dictionary<DateTime, double>();
             for (var day = begTime; day <= endTime; day = day.AddDays(1))
             {
@@ -119,10 +120,10 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
             if (dialogues == null || dialogues.Count() == 0) return 0;
             return dialogues.Sum(p => p.DialogueHours) / dialogues.Sum(p => p.Dialogues) ?? 0;
         }
-        public Dictionary<DateTime, double> AvgDialogueTimePerDay(List<VWeeklyUserReport> dialogues)
+        public Dictionary<DateTime, double> AvgDialogueTimePerDay(List<VWeeklyUserReport> dialogues, DateTime reportBegTime)
         {
-            DateTime begTime = DateTime.Now.AddDays(-6);
-            DateTime endTime = DateTime.Now;
+            DateTime begTime = reportBegTime.AddDays(-6);
+            DateTime endTime = reportBegTime;
             Dictionary<DateTime, double> result = new Dictionary<DateTime, double>();
             for (var day = begTime; day <= endTime; day = day.AddDays(1))
             {
@@ -144,10 +145,10 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
             var workload = dialogues.Sum(p => p.DialogueHours) / sessions.Sum(p => p.SessionsHours) ?? 0;
             return workload > 1 ? 1 : workload;
         }
-        public Dictionary<DateTime, double> AvgWorkloadPerDay(List<VWeeklyUserReport> dialogues, List<VSessionUserWeeklyReport> sessions)//---for one user
+        public Dictionary<DateTime, double> AvgWorkloadPerDay(List<VWeeklyUserReport> dialogues, List<VSessionUserWeeklyReport> sessions, DateTime reportBegTime)//---for one user
         {
-            DateTime begTime = DateTime.Now.AddDays(-6);
-            DateTime endTime = DateTime.Now;
+            DateTime begTime = reportBegTime.AddDays(-6);
+            DateTime endTime = reportBegTime;
             var workload = sessions
                 .Select(s => new
                 {
@@ -184,10 +185,10 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
             PropertyInfo prop = dialogueType.GetProperty(property);
             return dialogues.Sum(p => Convert.ToDouble(prop.GetValue(p))) / dialogues.Sum(p => (double?)p.Dialogues) ?? 0;
         }
-        public Dictionary<DateTime, double> PhraseAvgPerDay(List<VWeeklyUserReport> dialogues, string property)
+        public Dictionary<DateTime, double> PhraseAvgPerDay(List<VWeeklyUserReport> dialogues, string property, DateTime reportBegTime)
         {
-            DateTime begTime = DateTime.Now.AddDays(-6);
-            DateTime endTime = DateTime.Now;
+            DateTime begTime = reportBegTime.AddDays(-6);
+            DateTime endTime = reportBegTime;
             Type dialogueType = null;
             PropertyInfo prop = null;
             if (dialogues != null && dialogues.Count() != 0)
@@ -209,7 +210,7 @@ namespace UserOperations.Utils.AnalyticWeeklyReportController
             Type dialogueType = dialogues.First().GetType();
             PropertyInfo prop = dialogueType.GetProperty(property);
             var ordered = dialogues.GroupBy(p => p.AspNetUserId)
-                .OrderByDescending(x => x.Sum(r => Convert.ToDouble(prop.GetValue(r)??0) / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
+                .OrderByDescending(x => x.Sum(r => Convert.ToDouble(prop.GetValue(r) ?? 0) / r.Dialogues)).Select((x, i) => new { Place = i, UserId = x.Key });
             return ordered?.Where(x => x.UserId == userId).FirstOrDefault()?.Place ?? -1;
         }
     }

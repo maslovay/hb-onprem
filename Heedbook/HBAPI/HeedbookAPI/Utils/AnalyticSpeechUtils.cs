@@ -1,10 +1,11 @@
 using System;
 using System.Linq;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils.AnalyticSpeechController
 {
-    public class AnalyticSpeechUtils
+    public class AnalyticSpeechUtils : IAnalyticSpeechUtils
     {
         public double? CrossIndex(IGrouping<Guid?, DialogueInfo> dialogues)
         {

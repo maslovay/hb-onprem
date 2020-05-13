@@ -12,27 +12,30 @@ using UserOperations.Controllers;
 using HBData.Models;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Utils.CommonOperations;
+using HBLib.Utils;
+using UserOperations.Utils.Interfaces;
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Services
 {
     public class AnalyticContentService
     {
-        private readonly SpreadsheetDocumentUtils _helpProvider;
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ISpreadsheetDocumentUtils _helpProvider;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
         private readonly AnalyticContentUtils _utils;
-        private readonly FileRefUtils _fileRef;
+        private readonly IFileRefUtils _fileRef;
 
         private const string _containerName = "screenshots";
 
         public AnalyticContentService(
-            SpreadsheetDocumentUtils helpProvider,
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ISpreadsheetDocumentUtils helpProvider,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository,
             AnalyticContentUtils utils,
-            FileRefUtils fileRef
+            IFileRefUtils fileRef
             )
         {
             _helpProvider = helpProvider;

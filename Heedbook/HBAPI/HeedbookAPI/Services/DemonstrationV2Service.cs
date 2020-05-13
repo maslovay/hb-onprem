@@ -5,17 +5,18 @@ using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
 using UserOperations.Models;
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Services
 {
     public class DemonstrationV2Service
     {
         private readonly IGenericRepository _repository;
-        private readonly LoginService _loginService;
+        private readonly ILoginService _loginService;
 
         public DemonstrationV2Service(
             IGenericRepository repository,
-            LoginService loginService
+            ILoginService loginService
             )
         {
             _repository = repository;

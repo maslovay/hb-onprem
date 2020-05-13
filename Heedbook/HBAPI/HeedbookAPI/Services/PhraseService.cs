@@ -1,5 +1,6 @@
 ﻿using HBData.Models;
 using HBData.Repository;
+using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UserOperations.Controllers;
 using UserOperations.Models;
+using UserOperations.Services.Interfaces;
 using UserOperations.Utils;
 
 namespace UserOperations.Services
@@ -15,9 +17,9 @@ namespace UserOperations.Services
     public class PhraseService
     {
         private readonly IGenericRepository _repository;
-        private readonly LoginService _loginService;
+        private readonly ILoginService _loginService;
 
-        public PhraseService(IGenericRepository repository, LoginService loginService)
+        public PhraseService(IGenericRepository repository, ILoginService loginService)
         {
             _repository = repository;
             _loginService = loginService;

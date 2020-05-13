@@ -55,8 +55,8 @@ namespace UserOperations.Models
             CompanyId = user.CompanyId;
             StatusId = user.StatusId;
             OneSignalId = user.OneSignalId;
-            Role = user.UserRoles.FirstOrDefault()?.Role ?? role;
-            RoleId = user.UserRoles.FirstOrDefault()?.RoleId;
+            Role = user.UserRoles?.FirstOrDefault()?.Role ?? role;
+            RoleId = user.UserRoles?.FirstOrDefault()?.RoleId;
         }
     }
 

@@ -7,6 +7,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using System.Collections.Generic;
 using UserOperations.Utils;
 using HBData.Models;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {

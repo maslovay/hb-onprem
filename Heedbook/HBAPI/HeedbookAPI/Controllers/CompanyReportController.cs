@@ -16,6 +16,10 @@ using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 using FileResult = Microsoft.AspNetCore.Mvc.FileResult;
 using UserOperations.Utils;
+using HBData.Repository;
+using HBData.Models;
+using UserOperations.Services.Interfaces;
+using HBLib.Utils;
 
 //---FOR VADIM KUZNECOV
 namespace UserOperations.Controllers
@@ -26,16 +30,16 @@ namespace UserOperations.Controllers
     [ControllerExceptionFilter]
     public class CompanyReportController : Controller
     {
-        private readonly RecordsContext _context;
-        private readonly LoginService _loginService;
+        private readonly ILoginService _loginService;
+        private readonly IGenericRepository _repository;
 
         public CompanyReportController(
-            RecordsContext context,
-            LoginService loginService
+            ILoginService loginService,
+            IGenericRepository repository
             )
         {
-            _context = context;
             _loginService = loginService;
+            _repository = repository;
         }
    
 
@@ -50,7 +54,12 @@ namespace UserOperations.Controllers
             var stringFormat = "yyyyMMddHHmmss";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
 
-            companyIds = companyIds.Any() ? companyIds : _context.Companys.Where(p => p.StatusId == 3).Select(p=>p.CompanyId).ToList();
+            companyIds = companyIds.Any() 
+                ? companyIds 
+                : _repository.GetAsQueryable<Company>()
+                    .Where(p => p.StatusId == 3)
+                    .Select(p => p.CompanyId)
+                    .ToList();
 
             DialogueReport(begTime, companyIds);
 
@@ -66,19 +75,7 @@ namespace UserOperations.Controllers
 
         private void DialogueReport(DateTime beginTime, List<Guid> companyIds)
         {            
-            var dialogues = _context.Dialogues
-                .Include(p => p.ApplicationUser)
-                .Include(p => p.Device.Company)
-                .Include(p => p.DialogueAudio)
-                .Include(p => p.Language)
-                .Include(p => p.DialogueClientSatisfaction)
-                .Include(p => p.DialogueClientProfile)
-                .Include(p => p.DialogueHint)
-                .Include(p => p.DialogueInterval)
-                .Include(p => p.DialogueSpeech)
-                .Include(p => p.DialogueVisual)
-                .Include(p => p.DialoguePhrase)
-                .Include(p => p.DialogueWord)
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
                 .Where(p => p.BegTime > beginTime
                     && companyIds.Contains((Guid)p.Device.CompanyId))
                 .Select(p => new DialogueReportModel

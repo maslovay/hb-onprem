@@ -15,25 +15,28 @@ using UserOperations.Utils.CommonOperations;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http;
 using System.IO;
+using UserOperations.Utils.Interfaces;
+using UserOperations.Services.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class CampaignContentService
     {
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly SftpClient _sftpClient;
-        private readonly FileRefUtils _fileRef;
+        private readonly ISftpClient _sftpClient;
+        private readonly IFileRefUtils _fileRef;
 
         private const string _containerName = "screenshots";
 
         public CampaignContentService(
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository,
-            SftpClient sftpClient,
-            FileRefUtils fileRef
+            ISftpClient sftpClient,
+            IFileRefUtils fileRef
             )
         {
             try
@@ -251,6 +254,7 @@ namespace UserOperations.Services
 
         public async Task<ContentWithScreenshotModel> ContentPut(IFormCollection formData)
         {
+            try{
             var roleInToken = _loginService.GetCurrentRoleName();
             var companyIdInToken = _loginService.GetCurrentCompanyId();
             var corporationIdInToken = _loginService.GetCurrentCorporationId();
@@ -279,6 +283,12 @@ namespace UserOperations.Services
                 await _sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{_containerName}/", screenshot, true);
             }
             return new ContentWithScreenshotModel(contentEntity, _fileRef.GetFileLink(_containerName, screenshot, default));
+            }
+            catch(Exception e)
+            {
+                System.Console.WriteLine(e);
+                return null;
+            }
         }
 
         public async Task<string> ContentDelete( Guid contentId )

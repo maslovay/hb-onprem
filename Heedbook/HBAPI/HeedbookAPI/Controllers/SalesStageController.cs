@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Authorization;
 using UserOperations.Services;
 using UserOperations.Utils;
 using UserOperations.Models;
+using HBLib.Utils;
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Controllers
 {
@@ -16,8 +18,8 @@ namespace UserOperations.Controllers
     [ControllerExceptionFilter]
     public class SalesStageController : Controller
     {
-        private readonly SalesStageService _salesStageService;
-        public SalesStageController(SalesStageService salesStageService)
+        private readonly ISalesStageService _salesStageService;
+        public SalesStageController(ISalesStageService salesStageService)
         {
             _salesStageService = salesStageService;
         }

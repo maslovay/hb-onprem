@@ -9,6 +9,8 @@ using HBData.Models;
 using UserOperations.Services;
 using UserOperations.Models;
 using Microsoft.AspNetCore.Authorization;
+using HBLib.Utils;
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Controllers
 {
@@ -18,15 +20,15 @@ namespace UserOperations.Controllers
     [ControllerExceptionFilter]
     public class UserController : Controller
     {
-        private readonly LoginService _loginService;
-        private readonly CompanyService _companyService;
+        private readonly ILoginService _loginService;
+        private readonly ICompanyService _companyService;
         private readonly UserService _userService;
         private readonly PhraseService _phraseService;
         private readonly DialogueService _dialogueService;
 
         public UserController(
-            LoginService loginService,
-            CompanyService companyService,
+            ILoginService loginService,
+            ICompanyService companyService,
             UserService userService,
             PhraseService phraseService,
             DialogueService dialogueService

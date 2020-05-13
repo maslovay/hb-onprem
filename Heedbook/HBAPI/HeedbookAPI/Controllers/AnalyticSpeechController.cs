@@ -6,6 +6,7 @@ using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Models.Get.AnalyticSpeechController;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 namespace UserOperations.Controllers
 {

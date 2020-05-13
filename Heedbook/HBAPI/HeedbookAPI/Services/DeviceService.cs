@@ -8,18 +8,22 @@ using HBData.Models;
 using UserOperations.AccountModels;
 using UserOperations.Models;
 using UserOperations.Controllers;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
+using Newtonsoft.Json;
+using HBLib.Utils;
 
 namespace UserOperations.Services
 {
     public class DeviceService 
     {
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
 
         public DeviceService(
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository
             )
         {
@@ -101,7 +105,7 @@ namespace UserOperations.Services
 
             var usersInSessions = sessions.Select(x => x.UserId).ToList();
             var userSessionsNotIncludedInResult = users.Where(x => !usersInSessions.Contains(x.Id))
-                .Select(x => new GetUsersSessions
+                .Select(x => new GetUsersSessions   
                 {
                     UserId = x.Id,
                     FullName = x.FullName,
