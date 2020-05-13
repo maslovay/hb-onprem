@@ -1300,7 +1300,17 @@ namespace ApiTests
                                 {
                                     MeetingExpectationsTotal = 0.7d
                                 }
-                            }                        
+                            },
+                            DialogueWord = new List<DialogueWord>
+                            {
+                                new DialogueWord
+                                {
+                                    DialogueWordId = Guid.NewGuid(),
+                                    DialogueId = dialogueId,
+                                    IsClient = true,
+                                    Words = "test Word"
+                                }
+                            }                           
                         }
                     }.AsQueryable());
             repositoryMock.Setup(p => p.GetAsQueryable<SalesStage>())
