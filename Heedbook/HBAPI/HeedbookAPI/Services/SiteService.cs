@@ -4,15 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Models.Post;
+using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Services
 {
     public class SiteService
     {
-        private readonly MailSender _mailSender;
+        private readonly IMailSender _mailSender;
 
         public SiteService(
-            MailSender mailSender
+            IMailSender mailSender
             )
         {
             _mailSender = mailSender;

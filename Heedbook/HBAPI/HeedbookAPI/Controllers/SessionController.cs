@@ -6,6 +6,7 @@ using UserOperations.Models.Session;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Models;
 using UserOperations.Utils;
+using HBLib.Utils;
 
 /// <summary>
 /// called from devices and by web socket

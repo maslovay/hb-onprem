@@ -10,18 +10,20 @@ using UserOperations.Models;
 using UserOperations.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
-    public class SalesStageService
+    public class SalesStageService : ISalesStageService
     {
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
 
         public SalesStageService(
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository
             )
         {

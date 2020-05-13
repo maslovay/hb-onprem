@@ -4,10 +4,11 @@ using System.Linq;
 using Microsoft.Extensions.Configuration;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Models.Get.AnalyticRatingController;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils.AnalyticRatingUtils
 {
-    public class AnalyticRatingUtils
+    public class AnalyticRatingUtils : IAnalyticRatingUtils
     {
         public T Max<T>(T val1, T val2) where T : IComparable<T>
         {

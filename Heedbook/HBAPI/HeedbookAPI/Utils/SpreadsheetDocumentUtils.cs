@@ -9,13 +9,14 @@ using Microsoft.EntityFrameworkCore;
 using HBData.Models;
 using DocumentFormat.OpenXml;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Utils
 {
-    public class SpreadsheetDocumentUtils
+    public class SpreadsheetDocumentUtils : ISpreadsheetDocumentUtils
     {
         private readonly RecordsContext _context;
-        public SpreadsheetDocumentUtils( RecordsContext context )
+        public SpreadsheetDocumentUtils(RecordsContext context)
         {
             _context = context;
             //xlsx
@@ -100,7 +101,7 @@ namespace UserOperations.Utils
                         }
                         catch (NullReferenceException ex)
                         {
-                            System.Console.WriteLine($"exception!!");
+                            System.Console.WriteLine($"exception!!\n{ex}");
                             break;
                         }
                     }
@@ -178,11 +179,11 @@ namespace UserOperations.Utils
                 spreadsheetDocument1.Close();
             }
             return memoryStream;
-        }      
+        }
 
         private Row CreateRow(List<Cell> cells, uint index)
         {
-            Row row =  new Row() { RowIndex = index };
+            Row row = new Row() { RowIndex = index };
             foreach (var cell in cells)
             {
                 row.Append(cell);

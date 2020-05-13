@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HBLib.Utils;
 
-namespace UserOperations.Utils
+namespace HBLib.Utils
 {
     public class ControllerExceptionFilter : ExceptionFilterAttribute
     {

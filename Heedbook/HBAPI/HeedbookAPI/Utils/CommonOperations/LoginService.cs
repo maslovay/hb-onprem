@@ -14,14 +14,16 @@ using HBLib.Utils;
 using HBLib;
 using Microsoft.AspNetCore.Http;
 using UserOperations.Utils.CommonOperations;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
-    public class LoginService
+    public class LoginService : ILoginService
     {
         private readonly IConfiguration _config;
         private readonly IGenericRepository _repository;
-        private readonly FileRefUtils _fileRef;
+        private readonly IFileRefUtils _fileRef;
         //  private readonly SftpSettings _sftpSettings;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private const int PASSWORDS_TO_SAVE = 5;
@@ -30,7 +32,7 @@ namespace UserOperations.Services
         public LoginService(
             IConfiguration config,
             IGenericRepository repository,
-            FileRefUtils fileRef,
+            IFileRefUtils fileRef,
             //   SftpSettings sftpSettings, 
             IHttpContextAccessor httpContextAccessor)
         {
@@ -75,24 +77,24 @@ namespace UserOperations.Services
                 {
                     claims = ClaimsForWebsocket(user, role);
                 }
-                else if(user.StatusId == 3 )
+                else if (user.StatusId == 3)
                 {
                     claims = ClaimsForUser(user, role);
                 }
                 else return "User inactive";
 
                 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
-                    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-                    var token = new JwtSecurityToken(_config["Tokens:Issuer"],
-                        _config["Tokens:Issuer"],
-                        claims,
-                        expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
-                        signingCredentials: creds);
+                var token = new JwtSecurityToken(_config["Tokens:Issuer"],
+                    _config["Tokens:Issuer"],
+                    claims,
+                    expires: DateTime.Now.AddDays(31),// remember ? DateTime.Now.AddDays(31) : DateTime.Now.AddDays(1),
+                    signingCredentials: creds);
 
-                    var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
+                var tokenenc = new JwtSecurityTokenHandler().WriteToken(token);
                 return tokenenc;
-               
+
             }
             catch (Exception e)
             {
@@ -133,6 +135,40 @@ namespace UserOperations.Services
                     };
             return claims;
         }
+
+        // private Claim[] ClaimsForUser(ApplicationUser user, string role)
+        // {
+        //     var claims = new[]
+        //            {
+        //                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+        //                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        //                 new Claim("applicationUserId", user.Id.ToString()),
+        //                 new Claim("applicationUserName", user.FullName),
+        //                 new Claim("companyName", user.Company.CompanyName),
+        //                 new Claim("companyId", user.CompanyId.ToString()),
+        //                 new Claim("corporationId", user.Company.CorporationId.ToString()),
+        //                 new Claim("languageCode", user.Company.LanguageId.ToString()),
+        //                 new Claim("role", role),
+        //                 new Claim("fullName", user.FullName),
+        //                 new Claim("avatar", GetAvatar(user.Avatar)),
+        //                 new Claim("isExtended", user.Company.IsExtended.ToString())
+        //             };
+        //     return claims;
+        // }
+
+        // private Claim[] ClaimsForWebsocket(ApplicationUser user, string role)
+        // {
+        //     var claims = new[]
+        //             {
+        //                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+        //                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        //                 new Claim("applicationUserId", user.Id.ToString()),
+        //                 new Claim("applicationUserName", user.FullName),
+        //                 new Claim("role", role),
+        //                 new Claim("fullName", user.FullName),
+        //             };
+        //     return claims;
+        // }
 
         public string CreateTokenForDevice(Device device)
         {

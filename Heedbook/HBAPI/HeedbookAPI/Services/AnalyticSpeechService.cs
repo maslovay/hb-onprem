@@ -8,22 +8,24 @@ using UserOperations.Models.Get.AnalyticSpeechController;
 using UserOperations.Utils.AnalyticSpeechController;
 using HBData.Repository;
 using UserOperations.Models.AnalyticModels;
+using UserOperations.Services.Interfaces;
+using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
     public class AnalyticSpeechService
     {  
-        private readonly LoginService _loginService;
-        private readonly RequestFilters _requestFilters;
+        private readonly ILoginService _loginService;
+        private readonly IRequestFilters _requestFilters;
         private readonly IGenericRepository _repository;
-        private readonly AnalyticSpeechUtils _analyticSpeechUtils;
+        private readonly IAnalyticSpeechUtils _analyticSpeechUtils;
 
 
         public AnalyticSpeechService(
-            LoginService loginService,
-            RequestFilters requestFilters,
+            ILoginService loginService,
+            IRequestFilters requestFilters,
             IGenericRepository repository,
-            AnalyticSpeechUtils analyticSpeechUtils
+            IAnalyticSpeechUtils analyticSpeechUtils
             )
         {
             _loginService = loginService;
