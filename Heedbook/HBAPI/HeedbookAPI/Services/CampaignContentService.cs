@@ -397,11 +397,12 @@ namespace UserOperations.Services
             {
                 return _repository.GetAsQueryable<Content>()
                    .Where(x => x.StatusId == activeStatusId
+                        && x.CompanyId != null
                        && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
                    .ToList();
             }
             return _repository.GetAsQueryable<Content>()
-                .Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))
+                .Where(x => (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)) && x.CompanyId != null)
                 .ToList();
         }
 
@@ -412,13 +413,14 @@ namespace UserOperations.Services
             {
                 return  _repository.GetAsQueryable<Content>()
                 .Where(x => x.StatusId == activeStatusId
+                    && x.CompanyId != null
                     && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
                 .ToList()
                 .Select(x => new ContentWithScreenshotModel(x, _fileRef.GetFileLink(_containerName, x.ContentId.ToString() + ".png", default)))
                 .ToList();
             }
             return _repository.GetAsQueryable<Content>()
-                .Where(x => x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId))
+                .Where(x => (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)) && x.CompanyId != null)
                 .ToList()
                 .Select(x => new ContentWithScreenshotModel(x, _fileRef.GetFileLink(_containerName, x.ContentId.ToString() + ".png", default)))
                 .ToList();
