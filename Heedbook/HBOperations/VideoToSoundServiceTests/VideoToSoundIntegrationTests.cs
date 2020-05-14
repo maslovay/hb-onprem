@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Configurations;
@@ -79,7 +80,7 @@ namespace VideoToSoundService.Tests
         public async Task CheckSoundFilePresents()
         {
             await _videoToSoundService.Run("dialoguevideos/" + testDialogVideoCorrectFileName);
-
+            Thread.Sleep(15000);
             _sftpClient.ChangeDirectoryToDefault();
             
             Assert.IsTrue(await _sftpClient.IsFileExistsAsync("dialogueaudios/" + testDialogAudioCorrectFileName));
