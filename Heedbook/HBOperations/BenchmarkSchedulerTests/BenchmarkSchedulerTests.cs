@@ -209,7 +209,7 @@ namespace BenchmarkScheduler.Tests
             System.Console.WriteLine($"industryId: {_industry.CompanyIndustryId}");
             System.Console.WriteLine($"benchMarks: {JsonConvert.SerializeObject(benchMarks)}");
             //Assert
-            Assert.IsTrue(benchMarks.Any());
+            Assert.IsTrue(benchMarks.Any()); 
         }
 
         [TearDown]
