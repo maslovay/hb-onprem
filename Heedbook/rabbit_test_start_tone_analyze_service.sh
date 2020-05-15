@@ -32,8 +32,6 @@ service --status-all
 mkdir /app/HBOperations/ToneAnalyzeServiceTests/TestResults/
 cd /app/HBOperations/ToneAnalyzeServiceTests/
 dotnet test --logger:"trx;LogFileName=results.trx" ; base64 /app/HBOperations/ToneAnalyzeServiceTests/TestResults/results*.trx > /app/HBOperations/ToneAnalyzeServiceTests/TestResults/results_base64 ;
-<<<<<<< HEAD
-=======
 if grep -c 'outcome="Failed"' /app/HBOperations/ToneAnalyzeServiceTests/TestResults/results*.trx
 then
 	echo "exit"
@@ -41,6 +39,5 @@ then
 else
 	echo "Test Pass"
 fi
->>>>>>> origin/devices
 curl -X POST "https://heedbookapi.northeurope.cloudapp.azure.com/user/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxTextBase64\" : \"$(cat /app/HBOperations/ToneAnalyzeServiceTests/TestResults/results_base64)\" }";
 echo test ended
