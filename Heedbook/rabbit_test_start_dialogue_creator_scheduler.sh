@@ -32,8 +32,6 @@ service --status-all
 mkdir /app/HBOperations/DialogueCreatorSchedulerTests/TestResults/
 cd /app/HBOperations/DialogueCreatorSchedulerTests/
 dotnet test --logger:"trx;LogFileName=results.trx" ; base64 /app/HBOperations/DialogueCreatorSchedulerTests/TestResults/results*.trx > /app/HBOperations/DialogueCreatorSchedulerTests/TestResults/results_base64 ;
-<<<<<<< HEAD
-=======
 if grep -c 'outcome="Failed"' /app/HBOperations/DialogueCreatorSchedulerTests/TestResults/results*.trx
 then
 	echo "exit"
@@ -41,6 +39,5 @@ then
 else
 	echo "Test Pass"
 fi
->>>>>>> origin/devices
 curl -X POST "https://heedbookapi.northeurope.cloudapp.azure.com/user/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxTextBase64\" : \"$(cat /app/HBOperations/DialogueCreatorSchedulerTests/TestResults/results_base64)\" }";
 echo test ended
