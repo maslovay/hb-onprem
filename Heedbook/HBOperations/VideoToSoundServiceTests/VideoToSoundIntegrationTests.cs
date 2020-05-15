@@ -85,7 +85,7 @@ namespace VideoToSoundService.Tests
             
             Assert.IsTrue(await _sftpClient.IsFileExistsAsync("dialogueaudios/" + testDialogAudioCorrectFileName));
             Assert.IsTrue(await _sftpClient.IsFileExistsAsync("dialogueaudiosemp/" + testDialogAudioCorrectFileName));
-            //Assert.IsTrue(false);
+            Assert.IsTrue(false);
         }
     }
 }

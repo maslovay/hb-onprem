@@ -17,11 +17,9 @@ WORKDIR /app/HBOperations
 RUN killall -9 dotnet; exit 0;   
 
 WORKDIR /app/HBOperations/VideoToSoundService/
-RUN dotnet restore .; exit 0;
 RUN dotnet build
   
 WORKDIR /app/HBOperations/VideoToSoundServiceTests/
-RUN dotnet restore .; exit 0;
 RUN dotnet build
 
 RUN ../../rabbit_test_start_video_to_sound_service.sh; exit 0;
