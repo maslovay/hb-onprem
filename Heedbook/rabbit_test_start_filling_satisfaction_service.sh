@@ -29,15 +29,15 @@ rabbitmqctl list_vhosts
 rabbitmqctl list_users
 service --status-all
 
-mkdir /app/HBOperations/FillingFrameServiceTests/TestResults/
-cd /app/HBOperations/FillingFrameServiceTests/
-dotnet test --logger:"trx;LogFileName=results.trx" ; base64 /app/HBOperations/FillingFrameServiceTests/TestResults/results*.trx > /app/HBOperations/FillingFrameServiceTests/TestResults/results_base64 ;
-if grep -c 'outcome="Failed"' /app/HBOperations/FillingFrameServiceTests/TestResults/results*.trx
+mkdir /app/HBOperations/FillingSatisfactionServiceTests/TestResults/
+cd /app/HBOperations/FillingSatisfactionServiceTests/
+dotnet test --logger:"trx;LogFileName=results.trx" ; base64 /app/HBOperations/FillingSatisfactionServiceTests/TestResults/results*.trx > /app/HBOperations/FillingSatisfactionServiceTests/TestResults/results_base64 ;
+if grep -c 'outcome="Failed"' /app/HBOperations/FillingSatisfactionServiceTests/TestResults/results*.trx
 then
 	echo "exit"
 	exit 125;
 else
 	echo "Test Pass"
 fi
-curl -X POST "https://heedbookapi.northeurope.cloudapp.azure.com/user/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxTextBase64\" : \"$(cat /app/HBOperations/FillingFrameServiceTests/TestResults/results_base64)\" }";
+curl -X POST "https://heedbookapi.northeurope.cloudapp.azure.com/user/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxTextBase64\" : \"$(cat /app/HBOperations/FillingSatisfactionServiceTests/TestResults/results_base64)\" }";
 echo test ended
