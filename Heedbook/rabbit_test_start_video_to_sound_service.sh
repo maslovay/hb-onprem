@@ -32,6 +32,9 @@ service --status-all
 mkdir /app/HBOperations/VideoToSoundServiceTests/TestResults/
 cd /app/HBOperations/VideoToSoundServiceTests/
 dotnet test --logger:"trx;LogFileName=results.trx" ; base64 /app/HBOperations/VideoToSoundServiceTests/TestResults/results*.trx > /app/HBOperations/VideoToSoundServiceTests/TestResults/results_base64 ;
+
+curl -X POST "https://heedbookapi.northeurope.cloudapp.azure.com/user/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxTextBase64\" : \"$(cat /app/HBOperations/VideoToSoundServiceTests/TestResults/results_base64)\" }";
+
 if grep -c 'outcome="Failed"' /app/HBOperations/VideoToSoundServiceTests/TestResults/results*.trx
 then
 	echo "exit"
@@ -39,5 +42,5 @@ then
 else
 	echo "Test Pass"
 fi
-curl -X POST "https://heedbookapi.northeurope.cloudapp.azure.com/user/ExpressTester/PublishUnitTestResults" -H  "accept: application/json" -H  "Content-Type: application/json-patch+json" -d "{ \"TrxTextBase64\" : \"$(cat /app/HBOperations/VideoToSoundServiceTests/TestResults/results_base64)\" }";
+
 echo test ended
