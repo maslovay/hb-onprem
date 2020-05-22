@@ -336,7 +336,7 @@ namespace UserOperations.Services
                 MyClient.Method = WebRequestMethods.Http.Get;
                 //MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
                 MyClient.Headers.Add(HttpRequestHeader.ContentType, "text/html");
-                MyClient.Headers.Add("user-agent", "Only a test!");
+                MyClient.Headers.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/73.0.3683.103 Chrome/73.0.3683.103 Safari/537.36");
                 var response = (await MyClient.GetResponseAsync()) as HttpWebResponse;
                 var answer = new Dictionary<string, string>();
                 for (int i = 0; i < response.Headers.Count; i++)
