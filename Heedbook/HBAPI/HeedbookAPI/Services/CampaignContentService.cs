@@ -335,12 +335,14 @@ namespace UserOperations.Services
                 var MyClient = WebRequest.Create(url) as HttpWebRequest;
                 MyClient.Method = WebRequestMethods.Http.Get;
                 MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
+                MyClient.UseDefaultCredentials = true;
                 // MyClient.Headers.Add(HttpRequestHeader.ContentType, "text/html");
                 MyClient.Headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/73.0.3683.103 Chrome/73.0.3683.103 Safari/537.36";
                 MyClient.Headers["Accept"] = " application/json";
                 MyClient.Headers["Accept-Encoding"] = "gzip, deflate, br";
                 MyClient.Headers["Connection"] = "keep-alive";
                 MyClient.Headers["Cache-Control"] = "no-cache";
+                MyClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
                 var response = (await MyClient.GetResponseAsync()) as HttpWebResponse;
                 var answer = new Dictionary<string, string>();
                 for (int i = 0; i < response.Headers.Count; i++)
