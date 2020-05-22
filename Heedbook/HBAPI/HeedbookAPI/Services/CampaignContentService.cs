@@ -334,8 +334,8 @@ namespace UserOperations.Services
             {
                 var MyClient = WebRequest.Create(url) as HttpWebRequest;
                 MyClient.Method = WebRequestMethods.Http.Get;
-                MyClient.UseDefaultCredentials = true;
-                MyClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
+                // MyClient.UseDefaultCredentials = true;
+                // MyClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
                 MyClient.Headers.Add("Accept: text/html, application/xhtml+xml, */*");
                 MyClient.Headers.Add("User-Agent: Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)");
                 MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
