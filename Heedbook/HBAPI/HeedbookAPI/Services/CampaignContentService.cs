@@ -332,7 +332,8 @@ namespace UserOperations.Services
         {
                 var MyClient = WebRequest.Create(url) as HttpWebRequest;
                 MyClient.Method = WebRequestMethods.Http.Get;
-                MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
+                //MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
+                MyClient.Headers.Add(HttpRequestHeader.ContentType, "text/html");
                 MyClient.Headers.Add("user-agent", "Only a test!");
                 var response = (await MyClient.GetResponseAsync()) as HttpWebResponse;
                 var answer = new Dictionary<string, string>();
