@@ -336,14 +336,11 @@ namespace UserOperations.Services
                 MyClient.Method = WebRequestMethods.Http.Get;
                 MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
                 // MyClient.Headers.Add(HttpRequestHeader.ContentType, "text/html");
-                MyClient.Headers.Add("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/73.0.3683.103 Chrome/73.0.3683.103 Safari/537.36");
-                MyClient.Headers.Add("Host", "");
-                MyClient.Headers.Add("Accept", "*/*");
-                MyClient.Headers.Add("Accept-Encoding", "gzip, deflate, br");
-                MyClient.Headers.Add("Connection", "keep-alive");
-                MyClient.Headers.Add("Cache-Control", "no-cache");
-                MyClient.UserAgent = @"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/73.0.3683.103 Chrome/73.0.3683.103 Safari/537.36";
-                MyClient.Accept = @"*/*";
+                MyClient.Headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/73.0.3683.103 Chrome/73.0.3683.103 Safari/537.36";
+                MyClient.Headers["Accept"] = " application/json";
+                MyClient.Headers["Accept-Encoding"] = "gzip, deflate, br";
+                MyClient.Headers["Connection"] = "keep-alive";
+                MyClient.Headers["Cache-Control"] = "no-cache";
                 var response = (await MyClient.GetResponseAsync()) as HttpWebResponse;
                 var answer = new Dictionary<string, string>();
                 for (int i = 0; i < response.Headers.Count; i++)
