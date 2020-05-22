@@ -330,6 +330,8 @@ namespace UserOperations.Services
 
         public async Task<Dictionary<string, string>> GetResponseHeaders( string url)
         {
+            try
+            {
                 var MyClient = WebRequest.Create(url) as HttpWebRequest;
                 MyClient.Method = WebRequestMethods.Http.Get;
                 //MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
@@ -340,6 +342,14 @@ namespace UserOperations.Services
                 for (int i = 0; i < response.Headers.Count; i++)
                     answer[response.Headers.GetKey(i)] = response.Headers.Get(i).ToString();
                 return answer;
+            }
+            catch(Exception e)
+            {
+                return new Dictionary<string, string>
+                {
+                    {"exception", $"{e}"}
+                };
+            }
         }
 
         //---PRIVATE---
