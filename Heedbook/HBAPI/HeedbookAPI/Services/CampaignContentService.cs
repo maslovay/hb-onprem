@@ -334,21 +334,13 @@ namespace UserOperations.Services
             {
                 var MyClient = WebRequest.Create(url) as HttpWebRequest;
                 MyClient.Method = WebRequestMethods.Http.Get;
-                // MyClient.UseDefaultCredentials = true;
-                // MyClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
-                MyClient.UserAgent = "[any words that is more than 5 characters]";
+                MyClient.UseDefaultCredentials = true;
+                MyClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
                 MyClient.Headers.Add("Accept: text/html, application/xhtml+xml, */*");
-                // MyClient.Headers.Add("User-Agent: Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)");
                 MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
                 MyClient.Headers.Add("Accept-Encoding", "gzip, deflate, br");
-                MyClient.Headers.Add("Connection", "keep-alive");
-                // MyClient.Headers.Add(HttpRequestHeader.ContentType, "text/html");
-                // MyClient.UserAgent = "[any words that is more than 5 characters]";
-                // MyClient.Headers["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/73.0.3683.103 Chrome/73.0.3683.103 Safari/537.36";
-                // MyClient.Headers["Accept"] = " application/json";
-                // MyClient.Headers["Accept-Encoding"] = "gzip, deflate, br";
-                // MyClient.Headers["Connection"] = "keep-alive";
-                // MyClient.Headers["Cache-Control"] = "no-cache";
+                MyClient.Headers.Add(HttpRequestHeader.Connection, "keep-alive");
+                MyClient.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)");
                 
                 var response = (await MyClient.GetResponseAsync()) as HttpWebResponse;
                 var answer = new Dictionary<string, string>();
