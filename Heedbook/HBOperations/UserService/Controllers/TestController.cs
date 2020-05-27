@@ -27,6 +27,7 @@ using HBLib;
 using HBMLHttpClient.Model;
 using System.Drawing;
 using Microsoft.AspNetCore.Authorization;
+using RabbitMqEventBus;
 
 namespace UserService.Controllers
 {
@@ -42,11 +43,13 @@ namespace UserService.Controllers
         private readonly SftpSettings _sftpSettings;
         private readonly FFMpegWrapper _wrapper;
         private readonly CheckTokenService _service;
+        private readonly INotificationPublisher _publisher;
 
         public TestController(RecordsContext context, IGenericRepository repository,
             SftpSettings sftpSettings,
             FFMpegWrapper wrapper,
-            INotificationHandler handler, SftpClient sftpClient, CheckTokenService service)
+            INotificationHandler handler, SftpClient sftpClient, CheckTokenService service,
+            INotificationPublisher publisher)
         {
             _context = context;
             _repository = repository;
@@ -55,6 +58,7 @@ namespace UserService.Controllers
             _sftpSettings = sftpSettings;
             _wrapper = wrapper;
             _service = service;
+            _publisher = publisher;
         }
 
         [HttpPost("[action]")]
@@ -390,7 +394,13 @@ namespace UserService.Controllers
                 return value;
             }
         }
-
+        [HttpPost("[action]")]
+        public async Task<string> SendCommandToTabletLoadTest(TabletLoadRun model)
+        {
+            _publisher.Publish(model);
+            System.Console.WriteLine($"model sended");
+            return "model sended!";
+        }
     }
 }
 
