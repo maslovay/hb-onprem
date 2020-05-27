@@ -40,8 +40,8 @@ namespace UserService.Controllers
         public async Task<IActionResult> DialogueAssemble([FromBody] DialogueCreationRun message)
         {
           //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
-            var user = _context.ApplicationUsers.Include(p=>p.Company)
-                .FirstOrDefault(p => p.Id == message.ApplicationUserId);
+            var user = _context.Devices.Include(p=>p.Company)
+                .FirstOrDefault(p => p.DeviceId == message.DeviceId);
             int? languageId;
             if (user?.Company == null)
                 languageId = null;
@@ -78,7 +78,8 @@ namespace UserService.Controllers
                 ApplicationUserId = message.ApplicationUserId,
                 DialogueId = message.DialogueId,
                 BeginTime = message.BeginTime,
-                EndTime = message.EndTime
+                EndTime = message.EndTime,
+                DeviceId = message.DeviceId
             };
             _publisher.Publish(dialogueVideoMerge);
             _publisher.Publish(message);
