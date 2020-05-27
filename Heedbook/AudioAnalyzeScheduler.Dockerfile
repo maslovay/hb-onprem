@@ -20,8 +20,13 @@ COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/sentimental/ /app/
 
 RUN apk add --update python3
 RUN apk add --update git
-RUN pip3 install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
-RUN pip3 install nltk
+RUN pip3 install --upgrade pip
+RUN apk add --update python3-dev
+
+RUN apk add build-base
+RUN apk add --update gcc
+RUN pip install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
+RUN pip install --user -U nltk
 
 #WORKDIR /app/sentimental
 #RUN ls -n .

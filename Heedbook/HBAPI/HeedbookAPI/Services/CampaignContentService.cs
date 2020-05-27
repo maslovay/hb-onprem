@@ -330,14 +330,31 @@ namespace UserOperations.Services
 
         public async Task<Dictionary<string, string>> GetResponseHeaders( string url)
         {
+            try
+            {
                 var MyClient = WebRequest.Create(url) as HttpWebRequest;
                 MyClient.Method = WebRequestMethods.Http.Get;
+                MyClient.UseDefaultCredentials = true;
+                MyClient.Proxy.Credentials = System.Net.CredentialCache.DefaultCredentials;
+                MyClient.Headers.Add("Accept: text/html, application/xhtml+xml, */*");
                 MyClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
+                MyClient.Headers.Add("Accept-Encoding", "gzip, deflate, br");
+                MyClient.Headers.Add(HttpRequestHeader.Connection, "keep-alive");
+                MyClient.Headers.Add(HttpRequestHeader.UserAgent, "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)");
+                
                 var response = (await MyClient.GetResponseAsync()) as HttpWebResponse;
                 var answer = new Dictionary<string, string>();
                 for (int i = 0; i < response.Headers.Count; i++)
                     answer[response.Headers.GetKey(i)] = response.Headers.Get(i).ToString();
                 return answer;
+            }
+            catch(Exception e)
+            {
+                return new Dictionary<string, string>
+                {
+                    {"exception", $"{e}"}
+                };
+            }
         }
 
         //---PRIVATE---
