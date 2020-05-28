@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
+using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -23,16 +24,16 @@ namespace UserService.Controllers
     [ControllerExceptionFilter]
     public class VideoSaveInfoController : Controller
     {
-        private readonly RecordsContext _context;
+        private readonly IGenericRepository _repository;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
         //private readonly ElasticClient _log;
 
 
-        public VideoSaveInfoController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient /*, ElasticClient log*/)
+        public VideoSaveInfoController(INotificationHandler handler, IGenericRepository repository, SftpClient sftpClient /*, ElasticClient log*/)
         {
             _handler = handler;
-            _context = context;
+            _repository = repository;
             _sftpClient = sftpClient;
            // _log = log;
 
@@ -50,10 +51,10 @@ namespace UserService.Controllers
             try
             {
                 duration = duration == null ? 15 : duration;
-                var languageId = _context.Devices
-                                         .Where(p => p.DeviceId == deviceId)
-                                         .Select( x => x.Company.Language.LanguageId).First();
-                var isExtended = _context.Devices
+                var languageId = _repository.GetAsQueryable<Device>()
+                    .Where(p => p.DeviceId == deviceId)
+                    .Select( x => x.Company.Language.LanguageId).First();
+                var isExtended = _repository.GetAsQueryable<Device>()
                     .Include(p => p.Company)
                     .Where(p => p.DeviceId == deviceId).FirstOrDefault().Company.IsExtended;
                             
@@ -68,18 +69,18 @@ namespace UserService.Controllers
                 var timeEnd = endTime != null ? DateTime.ParseExact(endTime, stringFormat, CultureInfo.InvariantCulture): timeBeg.AddSeconds((double)duration);
                 var fileName = $"{userId?? Guid.Empty}_{deviceId}_{timeBeg.ToString(stringFormat)}_{languageId}.mkv";
 
-                var videoIntersectVideosAny = _context.FileVideos
+                var videoIntersectVideosAny = _repository.GetAsQueryable<FileVideo>()
                     .Where(p => p.DeviceId == deviceId
-                    && ((p.BegTime <= timeBeg
-                            && p.EndTime > timeBeg
-                            && p.EndTime < timeEnd) 
-                        || (p.BegTime < timeEnd
-                            && p.BegTime > timeBeg
-                            && p.EndTime >= timeEnd)
-                        || (p.BegTime >= timeBeg
-                            && p.EndTime <= timeEnd)
-                        || (p.BegTime < timeBeg
-                            && p.EndTime > timeEnd)))
+                        && ((p.BegTime <= timeBeg
+                                && p.EndTime > timeBeg
+                                && p.EndTime < timeEnd) 
+                            || (p.BegTime < timeEnd
+                                && p.BegTime > timeBeg
+                                && p.EndTime >= timeEnd)
+                            || (p.BegTime >= timeBeg
+                                && p.EndTime <= timeEnd)
+                            || (p.BegTime < timeBeg
+                                && p.EndTime > timeEnd)))
                     .Any();
                 var videoFile = new FileVideo
                 {
@@ -99,8 +100,8 @@ namespace UserService.Controllers
                 {
                     videoFile.StatusId = 8;
                 }    
-                _context.FileVideos.Add(videoFile);
-                _context.SaveChanges();
+                _repository.Create<FileVideo>(videoFile);
+                _repository.Save();
 
                 if (videoFile.FileExist && isExtended)
                 {

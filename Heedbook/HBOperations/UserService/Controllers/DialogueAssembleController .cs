@@ -21,17 +21,14 @@ namespace UserService.Controllers
     {
         private readonly IGenericRepository _genericRepository;
         private readonly INotificationPublisher _publisher;
-        private readonly RecordsContext _context;
         private readonly CheckTokenService _service;
 
         public DialogueAssembleController(INotificationPublisher publisher,
             IGenericRepository genericRepository,
-            RecordsContext context, 
             CheckTokenService service)
         {
             _publisher = publisher;
             _genericRepository = genericRepository;
-            _context = context;
             _service = service;
         }
 
@@ -40,13 +37,12 @@ namespace UserService.Controllers
         public async Task<IActionResult> DialogueAssemble([FromBody] DialogueCreationRun message)
         {
           //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
-            var user = _context.Devices.Include(p=>p.Company)
-                .FirstOrDefault(p => p.DeviceId == message.DeviceId);
+            var device = _genericRepository.GetWithInclude<Device>(p => p.DeviceId == message.DeviceId, p=>p.Company)
+                .FirstOrDefault();
             int? languageId;
-            if (user?.Company == null)
+            if (device?.Company == null)
                 languageId = null;
-            languageId = user.Company.LanguageId;
-            
+            languageId = device.Company.LanguageId;
             Console.WriteLine(languageId);
             var dialogue = new Dialogue
             {
@@ -61,10 +57,10 @@ namespace UserService.Controllers
             };
             try
             {
-                if (!_context.Dialogues.Any(p => p.DialogueId == dialogue.DialogueId))
+                if (!_genericRepository.GetAsQueryable<Dialogue>().Any(p => p.DialogueId == dialogue.DialogueId))
                 {
-                    _context.Dialogues.Add(dialogue);
-                    _context.SaveChanges();
+                    _genericRepository.Create<Dialogue>(dialogue);
+                    _genericRepository.Save();
                 }
             }
             catch (Exception e)

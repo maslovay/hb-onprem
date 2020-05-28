@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
+using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -22,17 +23,17 @@ namespace UserService.Controllers
     [ApiController]
     public class VideoSaveController : Controller
     {
-        private readonly RecordsContext _context;
+        private readonly IGenericRepository _repository;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
         private readonly CheckTokenService _service;
         //        private readonly ElasticClient _log;
 
 
-        public VideoSaveController(INotificationHandler handler, RecordsContext context, SftpClient sftpClient, CheckTokenService service/*, ElasticClient log*/)
+        public VideoSaveController(INotificationHandler handler, IGenericRepository repository, SftpClient sftpClient, CheckTokenService service/*, ElasticClient log*/)
         {
+            _repository = repository;
             _handler = handler;
-            _context = context;
             _sftpClient = sftpClient;
             _service = service;
             //            _log = log;
@@ -53,11 +54,11 @@ namespace UserService.Controllers
                 duration = duration == null ? 15 : duration;
                 var file = formData.Files.FirstOrDefault();
                 //if (memoryStream == null)   return BadRequest("No video file or file is empty");
-                var languageId = _context.Devices
-                                         .Include(p => p.Company)
-                                         .Include(p => p.Company.Language)
-                                         .Where(p => p.DeviceId == deviceId)
-                                         .First().Company.Language.LanguageId;
+                var languageId = _repository.GetAsQueryable<Device>()
+                    .Include(p => p.Company)
+                    .Include(p => p.Company.Language)
+                    .Where(p => p.DeviceId == deviceId)
+                    .First().Company.Language.LanguageId;
 
                 var stringFormat = "yyyyMMddHHmmss";
                 var time = DateTime.ParseExact(begTime, stringFormat, CultureInfo.InvariantCulture);
@@ -81,8 +82,8 @@ namespace UserService.Controllers
                 videoFile.FileVideoId = Guid.NewGuid();
                 videoFile.StatusId = 6;
 
-                _context.FileVideos.Add(videoFile);
-                _context.SaveChanges();
+                _repository.Create<FileVideo>(videoFile);
+                _repository.Save();
 
 
                 if (videoFile.FileExist)

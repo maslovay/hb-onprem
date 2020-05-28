@@ -37,7 +37,6 @@ namespace UserService.Controllers
     public class TestController : Controller
     {
         private readonly IGenericRepository _repository;
-        private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
@@ -45,13 +44,12 @@ namespace UserService.Controllers
         private readonly CheckTokenService _service;
         private readonly INotificationPublisher _publisher;
 
-        public TestController(RecordsContext context, IGenericRepository repository,
+        public TestController(IGenericRepository repository,
             SftpSettings sftpSettings,
             FFMpegWrapper wrapper,
             INotificationHandler handler, SftpClient sftpClient, CheckTokenService service,
             INotificationPublisher publisher)
         {
-            _context = context;
             _repository = repository;
             _handler = handler;
             _sftpClient = sftpClient;
@@ -65,12 +63,12 @@ namespace UserService.Controllers
         public async Task<IActionResult> CreateAvatar(string fileName)
         {
           //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
-            var frame = _context.FileFrames
+            var frame = _repository.GetAsQueryable<FileFrame>()
                 .Include(p => p.FrameAttribute)
                 .Where(p => p.FileName == fileName)
                 .FirstOrDefault();
 
-            var video = _context.FileVideos.Where(p => p.BegTime <= frame.Time && p.EndTime >= frame.Time && p.DeviceId == frame.DeviceId).FirstOrDefault();
+            var video = _repository.GetAsQueryable<FileVideo>().Where(p => p.BegTime <= frame.Time && p.EndTime >= frame.Time && p.DeviceId == frame.DeviceId).FirstOrDefault();
             var dt = frame.Time;
             var seconds = dt.Subtract(video.BegTime).TotalSeconds;
             System.Console.WriteLine($"Seconds - {seconds}, FileVideo - {video.FileName}");
@@ -216,7 +214,7 @@ namespace UserService.Controllers
                //var applicationUserId = "010039d5-895b-47ad-bd38-eb28685ab9aa";
                var begTime = DateTime.Now.AddDays(-3);
 
-               var dialogues = _context.Dialogues
+               var dialogues = _repository.GetAsQueryable<Dialogue>()
                    .Include(p => p.DialogueFrame)
                    .Include(p => p.DialogueAudio)
                    .Include(p => p.DialogueInterval)
@@ -242,7 +240,7 @@ namespace UserService.Controllers
                }
             //    dialogues.ForEach(p=>p.StatusId = 6);
                dialogues.ForEach(p => p.CreationTime = DateTime.UtcNow);
-               _context.SaveChanges();
+               _repository.Save();
                System.Console.WriteLine("Конец");
                return Ok();
            }
@@ -309,12 +307,12 @@ namespace UserService.Controllers
                     var cells = sheet.Descendants<Cell>();
                     var rows = sheet.Descendants<Row>();
 
-                    var phrases = _context.Phrases
+                    var phrases = _repository.GetAsQueryable<Phrase>()
                         .Include(p => p.PhraseType)
                         .ToList();
-                    var phraseTypes = _context.PhraseTypes.ToList();
+                    var phraseTypes = _repository.GetAsQueryable<PhraseType>().ToList();
 
-                    var user = _context.ApplicationUsers
+                    var user = _repository.GetAsQueryable<ApplicationUser>()
                         .Include(p => p.Company)
                         .FirstOrDefault(p => p.FullName == "Сотрудник с бейджем №1");
                     
@@ -353,8 +351,8 @@ namespace UserService.Controllers
                                     CompanyId = user.CompanyId
                                 };  
                                 System.Console.WriteLine($"Phrase: {newPhrase.PhraseText} - {newPhrase.PhraseTypeId}");
-                                _context.Phrases.Add(newPhrase); 
-                                _context.PhraseCompanys.Add(phraseCompany);
+                                _repository.Create<Phrase>(newPhrase); 
+                                _repository.Create<PhraseCompany>(phraseCompany);
                             }
                             else
                             {
@@ -365,7 +363,7 @@ namespace UserService.Controllers
                                     CompanyId = user.CompanyId
                                 };  
                                 System.Console.WriteLine($"Phrase: {existPhrase.PhraseText} - {existPhrase.PhraseTypeId}");  
-                                _context.PhraseCompanys.Add(phraseCompany); 
+                                _repository.Create<PhraseCompany>(phraseCompany); 
                                 System.Console.WriteLine($"phrase exist in base");
                             }                            
                         }
@@ -375,7 +373,7 @@ namespace UserService.Controllers
                             break;
                         }   
                     }
-                    _context.SaveChanges();
+                    _repository.Save();
                 }
             }
         }
@@ -394,13 +392,13 @@ namespace UserService.Controllers
                 return value;
             }
         }
-        // [HttpPost("[action]")]
-        // public async Task<IActionResult> SendCommandToTabletLoadTest(TabletLoadRun model)
-        // {
-        //     _publisher.Publish(model);
-        //     System.Console.WriteLine($"model sended");
-        //     return Ok("model sended!");
-        // }
+        [HttpPost("[action]")]
+        public async Task<IActionResult> SendCommandToTabletLoadTest(TabletLoadRun model)
+        {
+            _publisher.Publish(model);
+            System.Console.WriteLine($"model sended");
+            return Ok("model sended!");
+        }
     }
 }
 
