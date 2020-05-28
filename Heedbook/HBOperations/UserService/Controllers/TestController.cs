@@ -394,13 +394,13 @@ namespace UserService.Controllers
                 return value;
             }
         }
-        [HttpPost("[action]")]
-        public async Task<IActionResult> SendCommandToTabletLoadTest(TabletLoadRun model)
-        {
-            _publisher.Publish(model);
-            System.Console.WriteLine($"model sended");
-            return Ok("model sended!");
-        }
+        // [HttpPost("[action]")]
+        // public async Task<IActionResult> SendCommandToTabletLoadTest(TabletLoadRun model)
+        // {
+        //     _publisher.Publish(model);
+        //     System.Console.WriteLine($"model sended");
+        //     return Ok("model sended!");
+        // }
     }
 }
 
