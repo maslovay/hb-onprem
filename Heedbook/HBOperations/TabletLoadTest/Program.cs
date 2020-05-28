@@ -15,13 +15,8 @@ namespace TabletLoadTest
 
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
-            // return WebHost.CreateDefaultBuilder(args)
-            //     .UseStartup<Startup>();
             return WebHost.CreateDefaultBuilder(args)
-                .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseUrls("https://localhost:5004/")
-                .UseStartup<Startup>();
+                .UseStartup<Startup>();            
         }
     }
 }
