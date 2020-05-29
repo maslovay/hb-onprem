@@ -29,7 +29,6 @@ namespace UserService.Controllers
     [ApiController]
     public class DialogueRecalculateController : Controller
     {
-        private readonly RecordsContext _context;
         private readonly IGenericRepository _repository;
         private readonly INotificationHandler _handler;
 //        private readonly ElasticClient _log;
@@ -39,13 +38,15 @@ namespace UserService.Controllers
         private readonly CheckTokenService _service;
 
 
-        public DialogueRecalculateController(INotificationHandler handler, RecordsContext context, 
-                                               /* ElasticClient log,*/ SftpClient sftpClient, 
-                                                INotificationPublisher notificationPublisher,
-                                                SftpSettings sftpSettings, IGenericRepository repository, CheckTokenService service)
+        public DialogueRecalculateController(INotificationHandler handler,
+            /* ElasticClient log,*/ 
+            SftpClient sftpClient, 
+            INotificationPublisher notificationPublisher,
+            SftpSettings sftpSettings, 
+            IGenericRepository repository, 
+            CheckTokenService service)
         {
             _handler = handler;
-            _context = context;
 //            _log = log;
             _sftpClient = sftpClient;
             _notificationPublisher = notificationPublisher;
@@ -62,14 +63,13 @@ namespace UserService.Controllers
             try
             {
 //                _log.Info("Function Dialogue recalculation started");
-                var dialogue = _context.Dialogues
+                var dialogue = _repository.GetAsQueryable<Dialogue>()
                     .Include(p => p.Device)
                     .Include(p => p.Device.Company)
                     .Where(p => p.DialogueId == dialogueId)
                     .First();
 
                 var languageId = dialogue.Device.Company.LanguageId;
-
                 var dialogueVideoMerge = new DialogueVideoAssembleRun
                 {
                     ApplicationUserId = (Guid)dialogue.ApplicationUserId,
@@ -92,15 +92,15 @@ namespace UserService.Controllers
                 dialogue.StatusId = 6;
                 dialogue.Comment = null;
                 dialogue.CreationTime =DateTime.UtcNow;
-                _context.SaveChanges();
+                _repository.Save();
 
                 _handler.EventRaised(fillingFrame);
-//                _log.Info("Function Dialogue recalculation finished");
+                // _log.Info("Function Dialogue recalculation finished");
                 return Ok();
             }
             catch (Exception e)
             {
-//                _log.Fatal($"Exception occured {e}");
+                // _log.Fatal($"Exception occured {e}");
                 return BadRequest(e);
             }
         }
@@ -109,13 +109,13 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Re assemble dialogue")]
         public async Task<IActionResult> CheckRelatedDialogueData(Guid dialogueId)
         {
-          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
-            //            _log.SetFormat("{DialogueId}");
-            //            _log.SetArgs(dialogueId);
+            // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            // _log.SetFormat("{DialogueId}");
+            // _log.SetArgs(dialogueId);
             var result = "";
             try
             {           
-                var dialogue = _context.Dialogues
+                var dialogue = _repository.GetAsQueryable<Dialogue>()
                     .Include(p=>p.DialogueAudio)                    
                     .Include(p=>p.DialogueVisual)                    
                     .Include(p=>p.DialogueClientProfile)
@@ -134,7 +134,8 @@ namespace UserService.Controllers
 //                    _log.Info($"Audio file exist - {dialogueAudioFileExist}");
                     if(dialogueAudioFileExist)
                     {
-                        var speechResult = _context.FileAudioDialogues.FirstOrDefault(p => p.DialogueId == dialogueId);
+                        var speechResult = _repository.GetAsQueryable<FileAudioDialogue>()
+                            .FirstOrDefault(p => p.DialogueId == dialogueId);
 //                        _log.Info($"Audio analyze result - {speechResult ==null}");
 
                         if(speechResult == null)
@@ -181,7 +182,6 @@ namespace UserService.Controllers
                             BeginTime = dialogue.BegTime,
                             EndTime = dialogue.EndTime,
                             ClientId = dialogue.ClientId
-                            
                         };
                         _notificationPublisher.Publish(@event);
                     }                     
@@ -207,7 +207,7 @@ namespace UserService.Controllers
                     dialogue.StatusId = 6;
                     dialogue.CreationTime = DateTime.UtcNow;
                     dialogue.Comment = "";
-                    _context.SaveChanges();
+                    _repository.Save();
                 }      
 //                _log.Info("Function finished");
                 

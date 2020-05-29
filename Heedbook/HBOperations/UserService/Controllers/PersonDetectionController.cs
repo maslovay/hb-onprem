@@ -19,12 +19,14 @@ namespace UserService.Controllers
     public class PersonDetectionController : ControllerBase
     {
         private readonly INotificationHandler _handler;
-        private readonly RecordsContext _context;
+        private readonly IGenericRepository _repository;
         private readonly CheckTokenService _service;
-        public PersonDetectionController(INotificationHandler handler, RecordsContext context, CheckTokenService service)
+        public PersonDetectionController(INotificationHandler handler, 
+            IGenericRepository repository, 
+            CheckTokenService service)
         {
             _handler = handler;
-            _context = context;
+            _repository = repository;
             _service = service;
         }
 
@@ -43,7 +45,8 @@ namespace UserService.Controllers
         {
           //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var begTime = DateTime.UtcNow.AddDays(-30);
-            var devices = _context.Dialogues.Where(p => p.BegTime > begTime)
+            var devices = _repository.GetAsQueryable<Dialogue>()
+                .Where(p => p.BegTime > begTime)
                 .Select(p => p.DeviceId)
                 .ToList();
             var message = new PersonDetectionRun

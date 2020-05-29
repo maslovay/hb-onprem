@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using HBData;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Notifications.Base;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -24,6 +26,7 @@ namespace LogSave.Controllers
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
         public async Task<IActionResult> LogSave([FromForm] IFormFile file)
         {
+            var answer = new Dictionary<string, object>();
             try
             {  
                 System.Console.WriteLine($"{file.FileName}");
@@ -44,12 +47,19 @@ namespace LogSave.Controllers
                     }
                 }
                 else
-                    return BadRequest("file not exist");
-                return Ok();
+                {
+                    answer["success"] = false;
+                    answer["error"] = "File not exist";
+                    return BadRequest(answer);
+                }
+                answer["status"] = true;
+                return Ok(answer);
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                answer["success"] = false;
+                answer["error"] = e.Message;
+                return BadRequest(answer);
             }
         }
     }

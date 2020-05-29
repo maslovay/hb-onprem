@@ -35,11 +35,10 @@ namespace UserService.Controllers
         [SwaggerOperation(Description = "Dialogue creation. Merge videos and frames in one video.")]
         public async Task<IActionResult> DialogueCreation([FromBody] DialogueCreationRun message)
         {
-           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
-            var languageId = _genericRepository.GetWithInclude<ApplicationUser>(p =>
-                                                        p.Id == message.ApplicationUserId,
-                                                    link => link.Company)
-                                               .First().Company.LanguageId;
+            // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            var languageId = _genericRepository.GetWithInclude<Device>(p => p.DeviceId == message.DeviceId, p => p.Company)
+                .FirstOrDefault()
+                .Company.LanguageId;
             Console.WriteLine(languageId);
             var dialogue = new Dialogue
             {
@@ -58,6 +57,7 @@ namespace UserService.Controllers
             var dialogueVideoMerge = new DialogueVideoMergeRun
             {
                 ApplicationUserId = message.ApplicationUserId,
+                DeviceId = message.DeviceId,
                 DialogueId = message.DialogueId,
                 BeginTime = message.BeginTime,
                 EndTime = message.EndTime
@@ -67,7 +67,6 @@ namespace UserService.Controllers
             Console.WriteLine("finished");
             return Ok();
         }
-        
         
         [HttpPut("changeInStatistic")]
         [SwaggerOperation(Description = "Changes InStatistic field for a dialog.")]

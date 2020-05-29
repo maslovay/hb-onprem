@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DialogueCreatorScheduler.Models;
 using HBData.Models;
+using Newtonsoft.Json;
 
 namespace DialogueCreatorScheduler.Services
 {
@@ -21,8 +22,10 @@ namespace DialogueCreatorScheduler.Services
             DateTime updateTime = DateTime.UtcNow.AddDays(-100);
             for (int i = 0; i < intervals.Count(); i++)
             {
+                System.Console.WriteLine($"Processing interval {i}");
                 if (i < intervals.Count() - 2)
                 {
+                    System.Console.WriteLine("Case 1");
                     var frameExample = frames.Where(p => p.FrameAttribute.Any() && p.FaceId == intervals[i].FaceId ).FirstOrDefault();
                     if (frameExample != null)
                     {
@@ -55,13 +58,16 @@ namespace DialogueCreatorScheduler.Services
                 }
                 else
                 {
+                    System.Console.WriteLine($"Case 2, End time = {intervals[i].EndTime}, curtime - 3 hour = { DateTime.UtcNow.AddHours(-3)}");
                     if (intervals[i].EndTime <= DateTime.UtcNow.AddHours(-3))
                     {
                         var frameExample = frames.Where(p => p.FrameAttribute.Any() && p.FaceId == intervals[i].FaceId ).FirstOrDefault();
+                        System.Console.WriteLine($"Frame example {JsonConvert.SerializeObject(frameExample)}");
                         if (frameExample != null)
                         {
                             var clientId = _det.FindId(frameExample, clients);
                             var curFrame = frames.Where(p => p.Time >= intervals[i].BegTime && p.Time <= intervals[i].BegTime).FirstOrDefault();
+                            System.Console.WriteLine($"Current frame example {JsonConvert.SerializeObject(curFrame)}");
                             if (curFrame != null)
                             {
                                 dialogues.Add(new Dialogue{
@@ -86,6 +92,8 @@ namespace DialogueCreatorScheduler.Services
             frames.Where(p => p.Time <= updateTime)
                 .ToList()
                 .ForEach(p => p.StatusNNId=7);
+
+            System.Console.WriteLine(JsonConvert.SerializeObject(dialogues));
 
             return dialogues;
         }
