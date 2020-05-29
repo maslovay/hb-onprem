@@ -136,40 +136,6 @@ namespace UserOperations.Services
             return claims;
         }
 
-        // private Claim[] ClaimsForUser(ApplicationUser user, string role)
-        // {
-        //     var claims = new[]
-        //            {
-        //                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-        //                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        //                 new Claim("applicationUserId", user.Id.ToString()),
-        //                 new Claim("applicationUserName", user.FullName),
-        //                 new Claim("companyName", user.Company.CompanyName),
-        //                 new Claim("companyId", user.CompanyId.ToString()),
-        //                 new Claim("corporationId", user.Company.CorporationId.ToString()),
-        //                 new Claim("languageCode", user.Company.LanguageId.ToString()),
-        //                 new Claim("role", role),
-        //                 new Claim("fullName", user.FullName),
-        //                 new Claim("avatar", GetAvatar(user.Avatar)),
-        //                 new Claim("isExtended", user.Company.IsExtended.ToString())
-        //             };
-        //     return claims;
-        // }
-
-        // private Claim[] ClaimsForWebsocket(ApplicationUser user, string role)
-        // {
-        //     var claims = new[]
-        //             {
-        //                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-        //                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        //                 new Claim("applicationUserId", user.Id.ToString()),
-        //                 new Claim("applicationUserName", user.FullName),
-        //                 new Claim("role", role),
-        //                 new Claim("fullName", user.FullName),
-        //             };
-        //     return claims;
-        // }
-
         public string CreateTokenForDevice(Device device)
         {
             try

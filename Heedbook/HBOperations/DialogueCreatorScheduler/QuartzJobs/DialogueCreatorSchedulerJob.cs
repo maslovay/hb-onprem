@@ -113,7 +113,7 @@ namespace DialogueCreatorScheduler.QuartzJobs
                         dialogues.ForEach(p => p.Comment = null);
                     }
                     _context.SaveChanges();
-                    
+                    _log.Info("Function finished");
                 }
             }
             catch (Exception e)

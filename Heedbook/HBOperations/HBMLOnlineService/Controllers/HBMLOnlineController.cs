@@ -48,7 +48,8 @@ namespace HBMLOnlineService.Controllers
             [FromQuery] bool emotions,
             [FromQuery] bool headpose,
             [FromQuery] bool attributes,
-            [FromBody] string base64String 
+            [FromBody] string base64String,
+            [FromQuery] bool isDetect=true
         )
         {
             var _log = _elasticClientFactory.GetElasticClient();
@@ -69,7 +70,11 @@ namespace HBMLOnlineService.Controllers
                     if (faceResults.Any())
                     {
                         faceResults = faceResults.OrderByDescending(p => p.Rectangle.Height * p.Rectangle.Width).ToList();
-                        _hbmlservice.PublishMessageToRabbit(deviceId, companyId, filename, faceResults);
+                        if (isDetect)
+                        {
+                            _log.Info("Sending message to rabbitmq");
+                            _hbmlservice.PublishMessageToRabbit(deviceId, companyId, filename, faceResults);
+                        }
                     }
                     _log.Info("Function finished");
                     return faceResults;

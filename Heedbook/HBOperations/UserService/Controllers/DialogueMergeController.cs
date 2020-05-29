@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBData.Models;
+using HBData.Repository;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -23,18 +24,19 @@ namespace UserService.Controllers
     [ApiController]
     public class DialogueMergeController : Controller
     {
-        private readonly RecordsContext _context;
         private readonly INotificationHandler _handler;
         private readonly CheckTokenService _service;
-        //        private readonly ElasticClient _log;
-
-
-        public DialogueMergeController(INotificationHandler handler, RecordsContext context, CheckTokenService service/*, ElasticClient log*/)
+        // private readonly ElasticClient _log;
+        private readonly IGenericRepository _repository;
+        public DialogueMergeController(INotificationHandler handler, 
+            CheckTokenService service,
+            /*, ElasticClient log*/
+            IGenericRepository repository)
         {
             _handler = handler;
-            _context = context;
             _service = service;
-            //            _log = log;
+            // _log = log;
+            _repository = repository;
         }
 
         [HttpPost]
@@ -44,18 +46,18 @@ namespace UserService.Controllers
             [FromQuery] String begTime,
             [FromQuery] String endTime)
         {
-          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {  
-//                _log.Info("Function Video save info started");
+            // _log.Info("Function Video save info started");
                 var dateFormat = "HH:mm:ss dd.MM.yyyy";
 
                 Guid? userId = null;
                 if(Email != null)
-                    userId = _context.ApplicationUsers.FirstOrDefault(p => p.Email == Email).Id;
+                    userId = _repository.GetAsQueryable<ApplicationUser>().FirstOrDefault(p => p.Email == Email).Id;
                 Guid? deviceId = null;
                 if(DeviceCode != null) 
-                    deviceId = _context.Devices.FirstOrDefault(p => p.Code==DeviceCode).DeviceId;
+                    deviceId = _repository.GetAsQueryable<Device>().FirstOrDefault(p => p.Code == DeviceCode).DeviceId;
 
                 var timeBeg = DateTime.ParseExact(begTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
                 var timeEnd = DateTime.ParseExact(endTime, dateFormat, CultureInfo.InvariantCulture).AddHours(-3);
@@ -66,7 +68,7 @@ namespace UserService.Controllers
                 List<Dialogue> dialogues = new List<Dialogue>();
                 if(userId != null)
                 {
-                    dialogues = _context.Dialogues
+                    dialogues = _repository.GetAsQueryable<Dialogue>()
                     .Include(p => p.Client)
                     .Where(p => p.ApplicationUserId == userId
                         && p.StatusId == 3
@@ -77,7 +79,7 @@ namespace UserService.Controllers
                 }
                 else if(deviceId != null)
                 {
-                    dialogues = _context.Dialogues
+                    dialogues = _repository.GetAsQueryable<Dialogue>()
                     .Include(p => p.Client)
                     .Where(p => p.DeviceId == deviceId
                         && p.StatusId == 3
@@ -113,7 +115,7 @@ namespace UserService.Controllers
                     StatusId = 6,
                     InStatistic = true
                 };
-                _context.Dialogues.Add(newDialogue);                
+                _repository.Create<Dialogue>(newDialogue);                
 
                 var dialogueVideoAssembleRun = new DialogueVideoAssembleRun
                 {
@@ -134,7 +136,7 @@ namespace UserService.Controllers
                 _handler.EventRaised(dialogueVideoAssembleRun);
                 _handler.EventRaised(dialogueCreationRun);
 
-                _context.SaveChanges();
+                _repository.Save();
                 return Ok();
             }
             catch (Exception e)
