@@ -1,0 +1,12 @@
+hb-asr:
+  build: .
+  ports:
+    - "5000:5000"
+  environment:
+    WEBSOCKET: "ws://kaldi:2700"
+  volumes:
+    - ./app:/app
+  links:
+    - kaldi
+kaldi:
+  image: alphacep/kaldi-ru
