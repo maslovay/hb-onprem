@@ -8,6 +8,10 @@ RUN dotnet publish ./HBOperations/TabletRequestService -c Release -o publish
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/TabletRequestService/publish .
+
+RUN mkdir -p /app/UploadFiles
+RUN chmod -R 777 /app/UploadFiles
+COPY --from=build-env /app/HBOperations/TabletRequestService/UploadFiles /app/UploadFiles
 ENTRYPOINT ["dotnet", "TabletRequestService.dll"]
 RUN apk add ffmpeg
 RUN mkdir -p /opt/
