@@ -57,7 +57,10 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                          .Where(p => p.StatusId == 6);
 
                     //  .ToList();
+                    System.Console.WriteLine(Environment.GetEnvironmentVariable("INFRASTRUCTURE"));
                     await _googleConnector.CheckApiKey();
+                    System.Console.WriteLine(Environment.GetEnvironmentVariable("INFRASTRUCTURE"));
+
                     if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                     {
                         audiosReq = audiosReq.Where(p => !String.IsNullOrEmpty(p.TransactionId));
