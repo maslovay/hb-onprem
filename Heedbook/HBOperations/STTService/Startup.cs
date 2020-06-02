@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using hb_asr_service.Extensions;
+using hb_asr_service.Utils;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
@@ -48,6 +49,7 @@ namespace STTService
             services.AddSingleton<ConcurrentQueue<FileAudioDialogue>>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<SftpClient>();
+            services.AddScoped<STTUtils>();
             
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);

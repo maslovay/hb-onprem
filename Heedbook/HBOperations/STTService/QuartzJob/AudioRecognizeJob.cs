@@ -1,3 +1,4 @@
+using hb_asr_service.Utils;
 using HBData;
 using HBData.Models;
 using HBData.Repository;
@@ -18,12 +19,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
+
 namespace hb_asr_service.QuartzJob
 {
     public class AudioRecognizeJob : IJob
     {
         private readonly ConcurrentQueue<FileAudioDialogue> _globalQueue;
-        private readonly STTSettings _sttSettings;
+        private readonly STTUtils _stt;
         private RecordsContext _context;
         private ElasticClientFactory _elasticClientFactory;
         private static string output = String.Empty;
@@ -31,6 +33,7 @@ namespace hb_asr_service.QuartzJob
         private IServiceScopeFactory _factory;
 
         public AudioRecognizeJob(
+            STTUtils stt,
             STTSettings settings,
             ConcurrentQueue<FileAudioDialogue> globalQueue,
             IServiceScopeFactory factory,
@@ -39,15 +42,12 @@ namespace hb_asr_service.QuartzJob
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _globalQueue = globalQueue;
             _factory = factory;
-            _sttSettings = settings;
+            _stt = stt;
             _elasticClientFactory = elasticClientFactory;
-            var sttUrl = Environment.GetEnvironmentVariable("STTURL");
-            _sttSettings.STTUrl = (sttUrl == null) ? "http://0.0.0.0:8118/stt" : sttUrl;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            System.Console.WriteLine($"Stt settings are {JsonConvert.SerializeObject(_sttSettings)}");
             System.Console.WriteLine("Scheduler started");
             using (var scope = _factory.CreateScope())
             {
@@ -73,13 +73,12 @@ namespace hb_asr_service.QuartzJob
                             log.Info($"Audio file path is {path}");
                             System.Console.WriteLine($"Audio file path is {path}");
                             fileAudioDialogue = _context.FileAudioDialogues.Where(item => item.DialogueId == fileAudioDialogue.DialogueId).FirstOrDefault();
-                            var audioDuration = fileAudioDialogue.Duration;
-                            System.Console.WriteLine($"Url is {_sttSettings.STTUrl}");
-                            var result = await RecognizeSttAsync(path, _sttSettings.STTUrl, (double) fileAudioDialogue.Duration);
+                            
+                            var result = await RecognizeSttAsync(path);
                             var res = new List<WordRecognized>();
-                            if (result.result.Any())
+                            if (result.Any())
                             {
-                                res = result.result.Select(p => new WordRecognized{
+                                res = result.Select(p => new WordRecognized{
                                     Time = p.start,
                                     Duration = p.end - p.start,
                                     Word = p.word                                    
@@ -122,27 +121,12 @@ namespace hb_asr_service.QuartzJob
             }
         }
 
-        private async Task<RecognitionResult> RecognizeSttAsync(String path, String url, double duration)
+        private async Task<List<WordRecognizedResult>> RecognizeSttAsync(String path)
         {
-            System.Console.WriteLine(url);
-            var client = new HttpClient();
-            //client.Timeout = TimeSpan.FromSeconds(1.5 * duration);
-            client.Timeout = TimeSpan.FromSeconds(Math.Max(1000, 1.5 * duration));
-            System.Console.WriteLine($"Timeout is {client.Timeout} seconds");
-            var basePath = path;
-
-            var content = new MultipartFormDataContent();
-            content.Add(
-                new StringContent(basePath), "Path"
-            );
-
-            System.Console.WriteLine($"Send request to url {url}");
-            System.Console.WriteLine($"Path is {basePath}");
-
-            var result = await client.PostAsync(url, content);
-            var contentResult = await result.Content.ReadAsStringAsync();
-            System.Console.WriteLine(contentResult);
-            return JsonConvert.DeserializeObject<RecognitionResult>(contentResult);
+            var result = _stt.Execute(path);
+            System.Console.WriteLine(result);
+            if (result.StartsWith("Exception occured:")) return null;
+            return JsonConvert.DeserializeObject<List<WordRecognizedResult>>(result);
         }
     }
 }
