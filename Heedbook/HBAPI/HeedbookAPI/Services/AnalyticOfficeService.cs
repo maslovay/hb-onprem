@@ -12,6 +12,7 @@ using UserOperations.Controllers;
 using UserOperations.Models.Get.HomeController;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Services
 {
@@ -276,29 +277,35 @@ namespace UserOperations.Services
             List<Guid> deviceIds,
             WorkingTime[] workingTimes)
         {
-            var dialogues = _repository.GetAsQueryable<Dialogue>().Where(
-                    p => p.BegTime >= prevBeg
+        var startTime = DateTime.Now;
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.Device)
+                .Include(p => p.DialogueClientSatisfaction)
+                .Where(p => p.BegTime >= prevBeg
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
-                    .Select(p =>  new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        DeviceId = p.DeviceId,
-                        DeviceName = p.Device.Name,
-                        CompanyId = p.Device.CompanyId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        FullName = p.ApplicationUser.FullName,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
-                    })
                 .ToList();
-            return dialogues;
+            var dialoguesInfo = dialogues
+                .Select(p =>  new DialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
+                    DeviceName = p.Device.Name,
+                    CompanyId = p.Device.CompanyId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    FullName = p.ApplicationUser.FullName,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
+                })
+                .ToList();
+            return dialoguesInfo;
         }
 
         //private double TimetableHoursForAllComapnies(string role, DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
