@@ -56,7 +56,7 @@ namespace UserOperations.Controllers
                 deviceIds);
 
         [HttpGet("DashboardFiltered")]
-        [SwaggerOperation(Summary = "DashboardFialtered", Description = "Get DialogueCount, CrossIndex, CrossIndexIndustry, LoadIndex, LoadIndexIndustry")]
+        [SwaggerOperation(Summary = "DashboardFiltered", Description = "Get DialogueCount, CrossIndex, CrossIndexIndustry, LoadIndex, LoadIndexIndustry")]
         public async Task<string> GetDashboardFiltered([FromQuery(Name = "begTime")] string beg,
                                                   [FromQuery(Name = "endTime")] string end,
                                                   [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,

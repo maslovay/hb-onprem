@@ -27,6 +27,7 @@ namespace UserOperations.Controllers
         }    
 
         [HttpGet("EmployeeRating")]
+        [SwaggerOperation(Summary = "SpeechEmployeeRating", Description = "Get responce model which contains CrossFrequency, AlertFrequency for every user in current range")]
         public string SpeechEmployeeRating([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
@@ -44,6 +45,7 @@ namespace UserOperations.Controllers
                 deviceIds);
 
         [HttpGet("PhraseTable")]
+        [SwaggerOperation(Summary = "SpeechPhraseTable", Description = "Get responce SpeechPhrsaeTable")]
         public string SpeechPhraseTable([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
@@ -83,6 +85,7 @@ namespace UserOperations.Controllers
         
 
         [HttpGet("WordCloud")]
+        [SwaggerOperation(Summary = "SpeechWordCloud", Description = "Get responce SpeechWordCloud")]
         public string SpeechWordCloud([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
@@ -101,6 +104,7 @@ namespace UserOperations.Controllers
                 phraseTypeIds);
 
         [HttpGet("PhraseSalesStageCount")]
+        [SwaggerOperation(Summary = "PhraseSalesStage", Description = "If Company have corporationId, Get responce PhraseSalesStage for all companys in corporation or only for one company")]
         public string PhraseSalesStageCount([FromQuery(Name = "begTime")] string beg,
                                                       [FromQuery(Name = "endTime")] string end,
                                                       [FromQuery(Name = "corporationId")] Guid? corporationId,
