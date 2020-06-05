@@ -29,6 +29,7 @@ using System.Reflection;
 using System.Data.SqlClient;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -74,6 +75,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("DevicesCreate")]
+        [SwaggerOperation(Summary = "Create device for SlideShowSessions - only for developers", Description = "Some SlideShowSession models in DB DeviceId field empty")]
         public async Task<IActionResult> DevicesCreate(int skip, int take)
         {
             var userid = _context.SlideShowSessions.Where(x => x.DeviceId == Guid.Empty).OrderByDescending(x => x.BegTime).Skip(skip).Take(take).ToList();
@@ -92,6 +94,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("SalesStageCreate")]
+        [SwaggerOperation(Summary = "SalesStageCreate - only for developers", Description = "Create SalesStagePhrases for company and Corporation if in DB exist company without SalesStagePhrases")]
         public async Task<IActionResult> SalesStageCreate()
         {
             var companyIds = _context.Companys.Where(x => x.CorporationId == null && !x.SalesStagePhrases.Any()).Select(x => x.CompanyId).ToList();
@@ -139,6 +142,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("PhraseClear")]
+        [SwaggerOperation(Summary = "PhraseVlear - only for developers", Description = "Remove phrase template copyes in DB")]
         public async Task<IActionResult> PhraseClear()
         {
             var phrases = _context.Phrases.Include(x => x.PhraseCompanys).Include(x => x.DialoguePhrases).GroupBy(x => x.PhraseText).ToList();
@@ -206,6 +210,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("WorkingTimeFill")]
+        [SwaggerOperation(Summary = "Create WorkingTime for all companys - only for developers")]
         public async Task<IActionResult> WorkingTimeFill()
         {
             var companyIds = _context.Companys.Select(x => x.CompanyId).ToList();
@@ -238,6 +243,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("PersDet")]
+        [SwaggerOperation(Summary = "Person detect - only for developers", Description = "Find and fill Client Id for all old dialogues")]
         public async Task PersDet(Guid devId)
         {
             try
@@ -384,6 +390,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("CopyDataFromDB")]
+        [SwaggerOperation(Summary = "CopyDataFromOldDB - only for developers", Description = "Copy Companys and Devices from old DB")]
         public async Task<IActionResult> CopyDataFromDB()
         {
             var date = DateTime.Now.AddDays(-3);
