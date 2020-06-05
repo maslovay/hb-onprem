@@ -25,7 +25,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("SalesStages")]
-        [SwaggerOperation(Summary = "Return a list of sales stages ", Description = "")]
+        [SwaggerOperation(Summary = "Return a list of sales stages ", Description = "Get list of SalesStage for one companyId")]
         [SwaggerResponse(200, "SalesStage[]", typeof(List<GetSalesStage>))]
         public async Task<ICollection<GetSalesStage>> SalesStagesGet([FromQuery(Name = "companyId")] Guid? companyId) 
             => await _salesStageService.GetAll(companyId);
