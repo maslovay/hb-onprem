@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Utils;
 using HBLib.Utils;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -25,6 +26,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Progress")]
+        [SwaggerOperation(Summary = "Get User performance", Description = "Receive Users performance according filter")]
         public async Task<string> RatingProgress([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
@@ -39,6 +41,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("RatingUsers")]
+        [SwaggerOperation(Summary = "Get RatingUsers", Description = "Receive list of RatingUserInfo according filter")]
         public async Task<string> RatingUsers([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
@@ -53,6 +56,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("RatingOffices")]
+        [SwaggerOperation(Summary = "GetRating Offices", Description = "Get list of RatingOfficeInfo according filter")]
         public async Task<string> RatingOffices([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
