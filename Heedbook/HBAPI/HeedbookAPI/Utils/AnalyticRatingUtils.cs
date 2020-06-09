@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Models.Get.AnalyticRatingController;
 using UserOperations.Utils.Interfaces;

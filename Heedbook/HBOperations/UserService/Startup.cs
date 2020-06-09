@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using HBLib.Utils.Interfaces;
 
 namespace UserService
 {
@@ -69,6 +70,10 @@ namespace UserService
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
+            services.AddScoped<IRequestFilters, RequestFilters>();
+            services.AddScoped<ILoginService, LoginService>();
+            services.AddScoped<IRequestFilters, RequestFilters>();
+            services.AddScoped<IFileRefUtils, FileRefUtils>();
             services.AddScoped<CheckTokenService>();
             services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 

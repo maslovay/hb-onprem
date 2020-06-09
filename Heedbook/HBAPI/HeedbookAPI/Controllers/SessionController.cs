@@ -5,7 +5,6 @@ using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Models.Session;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Models;
-using UserOperations.Utils;
 using HBLib.Utils;
 
 /// <summary>

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
-using UserOperations.Utils;
 using HBLib.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 

@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UserOperations.Models.Get.AnalyticServiceQualityController;
 using Newtonsoft.Json;
-using UserOperations.Utils;
 using System.Threading.Tasks;
-using UserOperations.Utils.AnalyticServiceQualityUtils;
 using HBData.Repository;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Utils.Interfaces;
-using UserOperations.Services.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

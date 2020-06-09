@@ -4,7 +4,6 @@ using System.Linq;
 using Newtonsoft.Json;
 using HBData.Repository;
 using UserOperations.Models;
-using Microsoft.AspNetCore.Mvc;
 using HBData.Models;
 
 namespace UserOperations.Services

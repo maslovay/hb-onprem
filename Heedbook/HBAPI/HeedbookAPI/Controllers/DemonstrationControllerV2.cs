@@ -7,7 +7,6 @@ using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Controllers;
 using UserOperations.Models;
-using UserOperations.Utils;
 using HBLib.Utils;
 /// <summary>
 /// called from devices

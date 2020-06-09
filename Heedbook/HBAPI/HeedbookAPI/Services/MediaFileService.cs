@@ -5,11 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-using HBLib.Utils;
-using UserOperations.Utils.CommonOperations;
-using UserOperations.Services.Interfaces;
 using HBLib.Utils.Interfaces;
-using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

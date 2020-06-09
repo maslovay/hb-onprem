@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using UserOperations.Services;
-using UserOperations.Utils;
 using UserOperations.Models;
 using HBLib.Utils;
 using UserOperations.Services.Interfaces;

@@ -1,11 +1,11 @@
 ﻿using HBLib;
+using HBLib.Utils.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UserOperations.Utils.Interfaces;
 
-namespace UserOperations.Utils.CommonOperations
+namespace HBLib.Utils
 {
     public class FileRefUtils : IFileRefUtils
     {

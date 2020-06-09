@@ -1,16 +1,14 @@
 ﻿using HBData.Models;
 using HBData.Repository;
 using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using UserOperations.Controllers;
 using UserOperations.Models;
-using UserOperations.Services.Interfaces;
-using UserOperations.Utils;
 
 namespace UserOperations.Services
 {

@@ -2,9 +2,9 @@ using HBData.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using UserOperations.Models;
+using HBLib.Model;
 
-namespace UserOperations.Services.Interfaces
+namespace HBLib.Utils.Interfaces
 {
     public interface IMailSender
     {

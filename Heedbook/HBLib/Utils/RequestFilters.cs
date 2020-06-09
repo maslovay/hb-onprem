@@ -5,15 +5,12 @@ using Microsoft.Extensions.Configuration;
 using HBData;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using UserOperations.Controllers;
-using UserOperations.Services;
+using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 using HBData.Repository;
 using HBData.Models;
-using UserOperations.Utils.Interfaces;
-using UserOperations.Services.Interfaces;
-using HBLib.Utils;
 
-namespace UserOperations.Utils
+namespace HBLib.Utils
 {
     public class RequestFilters : IRequestFilters
     {

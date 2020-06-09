@@ -15,11 +15,11 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Annotations;
 using FileResult = Microsoft.AspNetCore.Mvc.FileResult;
-using UserOperations.Utils;
 using HBData.Repository;
 using HBData.Models;
 using UserOperations.Services.Interfaces;
 using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 
 //---FOR VADIM KUZNECOV
 namespace UserOperations.Controllers

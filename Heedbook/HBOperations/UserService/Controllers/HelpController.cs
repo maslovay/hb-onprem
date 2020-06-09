@@ -6,39 +6,21 @@ using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using HBData.Models;
-using UserOperations.Services;
-using HBData;
 using Newtonsoft.Json;
-using HBLib.Utils;
-using UserOperations.Utils;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
-using System.Globalization;
-using HBLib;
-using RabbitMqEventBus.Events;
-using Notifications.Base;
-using HBMLHttpClient;
 using Renci.SshNet.Common;
-using UserOperations.Models.AnalyticModels;
-using HBMLHttpClient.Model;
-using System.Drawing;
-using System.Transactions;
-using HBData.Repository;
-using System.Data;
-using System.Reflection;
-using System.Data.SqlClient;
-using UserOperations.Services.Interfaces;
 using Swashbuckle.AspNetCore.Annotations;
 using HBLib.Utils.Interfaces;
+using HBData;
 
-namespace UserOperations.Controllers
+namespace UserService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class HelpController : Controller
     {
         private readonly IConfiguration _config;
-        private readonly ICompanyService _compService;
+        // private readonly ICompanyService _compService;
         private readonly RecordsContext _context;
         //    private readonly SftpClient _sftpClient;
         //    private readonly MailSender _mailSender;
@@ -50,7 +32,7 @@ namespace UserOperations.Controllers
 
 
         public HelpController(
-            ICompanyService compService,
+            // ICompanyService compService,
             IConfiguration config,
             RecordsContext context,
           //   DescriptorCalculations calc
@@ -62,7 +44,7 @@ namespace UserOperations.Controllers
             //IGenericRepository repository
             )
         {
-            _compService = compService;
+            // _compService = compService;
             _config = config;
             _context = context;
          //   _calc = calc;
@@ -209,35 +191,35 @@ namespace UserOperations.Controllers
             return Ok();
         }
 
-        [HttpGet("WorkingTimeFill")]
-        [SwaggerOperation(Summary = "Create WorkingTime for all companys - only for developers")]
-        public async Task<IActionResult> WorkingTimeFill()
-        {
-            var companyIds = _context.Companys.Select(x => x.CompanyId).ToList();
-            foreach (var companyId in companyIds)
-            {
+        // [HttpGet("WorkingTimeFill")]
+        // [SwaggerOperation(Summary = "Create WorkingTime for all companys - only for developers")]
+        // public async Task<IActionResult> WorkingTimeFill()
+        // {
+        //     var companyIds = _context.Companys.Select(x => x.CompanyId).ToList();
+        //     foreach (var companyId in companyIds)
+        //     {
 
-                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1);
-                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2);
-                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3);
-                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4);
-                await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
-                await _compService.AddOneWorkingTimeAsync(companyId, null, null, 6);
-                await _compService.AddOneWorkingTimeAsync(companyId, null, null, 0);
-                //try
-                //{
-                //    await _compService.AddOneWorkingTimeAsync(companyId, null, null, 0);
-                //    _context.SaveChanges();
-                //}
-                //catch { }
-            }
+        //         await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1);
+        //         await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2);
+        //         await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3);
+        //         await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4);
+        //         await _compService.AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
+        //         await _compService.AddOneWorkingTimeAsync(companyId, null, null, 6);
+        //         await _compService.AddOneWorkingTimeAsync(companyId, null, null, 0);
+        //         //try
+        //         //{
+        //         //    await _compService.AddOneWorkingTimeAsync(companyId, null, null, 0);
+        //         //    _context.SaveChanges();
+        //         //}
+        //         //catch { }
+        //     }
 
-            //var d = _context.WorkingTimes.Where(x => x.Day == 7).ToList();
-            //_context.RemoveRange(d);
-            _context.SaveChanges();
+        //     //var d = _context.WorkingTimes.Where(x => x.Day == 7).ToList();
+        //     //_context.RemoveRange(d);
+        //     _context.SaveChanges();
 
-            return Ok();
-        }
+        //     return Ok();
+        // }
 
      
 
@@ -393,68 +375,65 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "CopyDataFromOldDB - only for developers", Description = "Copy Companys and Devices from old DB")]
         public async Task<IActionResult> CopyDataFromDB()
         {
-            var date = DateTime.Now.AddDays(-3);
-            var connectionString = "User ID=test_user;Password=test_password;Host=40.69.85.202;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0;";
-            DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
-            dbContextOptionsBuilder.UseNpgsql(connectionString,
-                   dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
-            var oldContext = new RecordsContext(dbContextOptionsBuilder.Options);
+            // var date = DateTime.Now.AddDays(-3);
+            // var connectionString = "User ID=test_user;Password=test_password;Host=40.69.85.202;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0;";
+            // DbContextOptionsBuilder<RecordsContext> dbContextOptionsBuilder = new DbContextOptionsBuilder<RecordsContext>();
+            // dbContextOptionsBuilder.UseNpgsql(connectionString,
+            //        dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
+            // var oldContext = new RecordsContext(dbContextOptionsBuilder.Options);
 
-            Dictionary<string, int> result = new Dictionary<string, int>();
+            // Dictionary<string, int> result = new Dictionary<string, int>();
 
 
-            //-1--COMPANIES---
-            var oldCompId = oldContext.Companys.Select(x => x.CompanyId).ToList();
-            var newCompId = _context.Companys.Select(x => x.CompanyId).ToList();
-            var compIdsToAdd = oldCompId.Except(newCompId).ToList();
-            List<Company> addComp = oldContext.Companys.Where(x => compIdsToAdd.Contains(x.CompanyId)).ToList();
-            var devType = _context.DeviceTypes.FirstOrDefault().DeviceTypeId;
+            // //-1--COMPANIES---
+            // var oldCompId = oldContext.Companys.Select(x => x.CompanyId).ToList();
+            // var newCompId = _context.Companys.Select(x => x.CompanyId).ToList();
+            // var compIdsToAdd = oldCompId.Except(newCompId).ToList();
+            // List<Company> addComp = oldContext.Companys.Where(x => compIdsToAdd.Contains(x.CompanyId)).ToList();
+            // var devType = _context.DeviceTypes.FirstOrDefault().DeviceTypeId;
 
-            try
-            {
-                _context.AddRange(addComp);
-                _context.SaveChanges();
-                result["companys"] = addComp.Count();
+            // try
+            // {
+            //     _context.AddRange(addComp);
+            //     _context.SaveChanges();
+            //     result["companys"] = addComp.Count();
 
-                var devicesToAdd = compIdsToAdd.Select(x => new Device
-                {
-                    DeviceId = Guid.NewGuid(),
-                    CompanyId = x,
-                    Code = "AAAAAA",
-                    DeviceTypeId = devType,
-                    Name = "TEMP DEVICE",
-                    StatusId = 3
-                });
+            //     var devicesToAdd = compIdsToAdd.Select(x => new Device
+            //     {
+            //         DeviceId = Guid.NewGuid(),
+            //         CompanyId = x,
+            //         Code = "AAAAAA",
+            //         DeviceTypeId = devType,
+            //         Name = "TEMP DEVICE",
+            //         StatusId = 3
+            //     });
 
-                _context.AddRange(devicesToAdd);
-                _context.SaveChanges();
-                result["devices"] = devicesToAdd.Count();
+            //     _context.AddRange(devicesToAdd);
+            //     _context.SaveChanges();
+            //     result["devices"] = devicesToAdd.Count();
 
-                var work = compIdsToAdd.Select(x => new List<WorkingTime> {
-                    new WorkingTime { CompanyId = x, Day = 0 },
-                    new WorkingTime { CompanyId = x, Day = 1 },
-                    new WorkingTime { CompanyId = x, Day = 2 },
-                    new WorkingTime { CompanyId = x, Day = 3 },
-                    new WorkingTime { CompanyId = x, Day = 4 },
-                    new WorkingTime { CompanyId = x, Day = 5 },
-                    new WorkingTime { CompanyId = x, Day = 6 }}
-                    );
+            //     var work = compIdsToAdd.Select(x => new List<WorkingTime> {
+            //         new WorkingTime { CompanyId = x, Day = 0 },
+            //         new WorkingTime { CompanyId = x, Day = 1 },
+            //         new WorkingTime { CompanyId = x, Day = 2 },
+            //         new WorkingTime { CompanyId = x, Day = 3 },
+            //         new WorkingTime { CompanyId = x, Day = 4 },
+            //         new WorkingTime { CompanyId = x, Day = 5 },
+            //         new WorkingTime { CompanyId = x, Day = 6 }}
+            //         );
 
-                _context.AddRange(work);
-                _context.SaveChanges();
-                result["devices"] = work.Count();
-            }
-            catch { }
+            //     _context.AddRange(work);
+            //     _context.SaveChanges();
+            //     result["devices"] = work.Count();
+            // }
+            // catch { }
 
-            var devices = _context.Devices.Include(x => x.Company.ApplicationUser)
-            .Select(x => new { x.DeviceId, applicationUserIds = x.Company.ApplicationUser.Select(p => p.Id).ToList() }).ToList();
+            // var devices = _context.Devices.Include(x => x.Company.ApplicationUser)
+            // .Select(x => new { x.DeviceId, applicationUserIds = x.Company.ApplicationUser.Select(p => p.Id).ToList() }).ToList();
 
-            return Ok(result);
+            // return Ok(result);
+            return Ok();
         }
-
-
-
-     
     }
 }
 

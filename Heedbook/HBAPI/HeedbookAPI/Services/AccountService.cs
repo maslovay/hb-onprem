@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 using UserOperations.AccountModels;
 using HBData.Repository;
 using System.Transactions;
-using UserOperations.Utils;
 using System.Collections.Generic;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

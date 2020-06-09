@@ -2,8 +2,8 @@ using System;
 using System.Linq;
 using HBData.Models;
 using HBData.Repository;
+using HBLib.Utils.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using UserOperations.Services.Interfaces;
 
 namespace UserOperations.Services
 {

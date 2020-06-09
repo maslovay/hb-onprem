@@ -6,7 +6,6 @@ using Swashbuckle.AspNetCore.Annotations;
 using System.Threading.Tasks;
 using UserOperations.Models.Get.AnalyticClientProfileController;
 using Microsoft.AspNetCore.Authorization;
-using UserOperations.Utils;
 using HBLib.Utils;
 
 namespace UserOperations.Controllers

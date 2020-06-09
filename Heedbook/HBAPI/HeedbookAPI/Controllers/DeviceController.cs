@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using UserOperations.Services;
 using HBData.Models;
 using UserOperations.Models;
-using UserOperations.Utils;
 using HBLib.Utils;
 
 namespace UserOperations.Controllers

@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models;
-using UserOperations.Controllers;
 using Microsoft.EntityFrameworkCore;
-using UserOperations.Utils.CommonOperations;
-using UserOperations.Utils.Interfaces;
-using UserOperations.Services.Interfaces;
 using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

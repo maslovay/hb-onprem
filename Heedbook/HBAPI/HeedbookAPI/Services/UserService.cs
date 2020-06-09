@@ -1,6 +1,6 @@
-﻿using HBData;
-using HBData.Models;
+﻿using HBData.Models;
 using HBData.Repository;
+using HBLib.Model;
 using HBLib.Utils;
 using HBLib.Utils.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -12,12 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using UserOperations.Controllers;
 using UserOperations.Models;
-using UserOperations.Services.Interfaces;
-using UserOperations.Utils;
-using UserOperations.Utils.CommonOperations;
-using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

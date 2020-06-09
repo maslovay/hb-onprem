@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http;
 using UserOperations.Services;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
-using UserOperations.Utils;
 using HBLib.Utils;
 
 namespace UserOperations.Controllers

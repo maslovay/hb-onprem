@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using HBData.Models;
 using Newtonsoft.Json;
-using UserOperations.Utils;
 using UserOperations.Models.Get.AnalyticSpeechController;
-using UserOperations.Utils.AnalyticSpeechController;
 using HBData.Repository;
 using UserOperations.Models.AnalyticModels;
-using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

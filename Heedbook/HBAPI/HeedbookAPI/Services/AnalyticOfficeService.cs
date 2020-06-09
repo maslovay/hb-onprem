@@ -8,11 +8,10 @@ using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models.AnalyticModels;
 using System.Threading.Tasks;
-using UserOperations.Controllers;
 using UserOperations.Models.Get.HomeController;
-using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

@@ -4,13 +4,11 @@ using System.Linq;
 using Microsoft.Extensions.Configuration;
 using UserOperations.Models.Get.AnalyticReportController;
 using Newtonsoft.Json;
-using UserOperations.Utils.AnalyticReportUtils;
-using UserOperations.Utils;
 using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models.AnalyticModels;
-using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
