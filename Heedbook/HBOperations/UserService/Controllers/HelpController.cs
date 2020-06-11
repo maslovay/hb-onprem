@@ -567,7 +567,7 @@ namespace UserService.Controllers
                     .FirstOrDefault(p => p.CompanyIndustryName == "Bank");
                 if(_industry is null)
                     return;
-                var supervisorRole = _context.ApplicationRoles.FirstOrDefault(p => p.Name == "Supervisor");
+                var supervisorRole = _context.ApplicationRoles.FirstOrDefault(p => p.Name == "Admin");
                 if(supervisorRole is null)
                     return;
                 var countryId = _context.Countrys.FirstOrDefault(p => p.CountryName == "Russia").CountryId;
