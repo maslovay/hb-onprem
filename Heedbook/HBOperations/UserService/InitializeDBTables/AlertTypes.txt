@@ -1,0 +1,1 @@
+[{"AlertTypeId":"27336439-0f90-4d88-baad-dd28b59fd4ff","Name":"session open"},{"AlertTypeId":"03b9dbf3-70f2-49a1-8a72-706310f4646a","Name":"session close"},{"AlertTypeId":"570cbfbd-1ec3-4758-a4ff-71f4c97cb695","Name":"client does not smile"},{"AlertTypeId":"c9b7b984-964f-4f3f-b0f2-e21c33fd352e","Name":"no conversations"}]

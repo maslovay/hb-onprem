@@ -29,6 +29,7 @@ namespace UserService.Controllers
         //    private readonly DBOperations _dbOperation;
         //    private readonly IGenericRepository _repository;
       //  private readonly DescriptorCalculations _calc;
+        private readonly ILoginService _loginService;
 
 
         public HelpController(
@@ -38,7 +39,8 @@ namespace UserService.Controllers
           //   DescriptorCalculations calc
             //SftpClient sftpClient,
             //MailSender mailSender,
-            IRequestFilters requestFilters
+            IRequestFilters requestFilters,
+            ILoginService loginService
             //SftpSettings sftpSettings,
             //DBOperations dBOperations,
             //IGenericRepository repository
@@ -54,6 +56,7 @@ namespace UserService.Controllers
             //_sftpSettings = sftpSettings;
             //_dbOperation = dBOperations;
             //_repository = repository;
+            _loginService = loginService;
         }
 
         [HttpGet("DevicesCreate")]
@@ -433,6 +436,217 @@ namespace UserService.Controllers
 
             // return Ok(result);
             return Ok();
+        }
+        [HttpPost("PrepareDB")]
+        [SwaggerOperation(Summary = "Prepare DB", Description = "Prepare DB with test data")]
+        public async Task<IActionResult> PrepareDB()
+        {            
+            //AlertTypes  
+            AddAlertTypes();          
+            //ApplicationRoles
+            ApplicationRoles();
+            //CatalogueHints
+            AddCatalogueHints();
+            //CompanyIndustrys
+            AddCompanyIndustrys();
+            //Countrys
+            AddCountrys();
+            //DeviceTypes
+            AddDeviceTypes();
+            //Languages
+            AddLanguages();
+            //PhraseTypes
+            AddPhraseTypes();
+            //Statuss
+            AddStatuss();
+
+            //Account info@heedbook.com
+            //Company AkBars
+            //Corporation AkBars
+            PrepareInfoAccount();
+            return Ok();
+        }
+        private void AddAlertTypes()
+        {
+            var filePath = @"InitializeDBTables/AlertTypes.txt";
+            using(var SR = new StreamReader(filePath))
+            {
+                var jsonData = SR.ReadToEnd();
+                var alertTypes = JsonConvert.DeserializeObject<List<AlertType>>(jsonData);
+                _context.AlertTypes.AddRange(alertTypes);
+            }
+        }
+        private void ApplicationRoles()
+        {
+            var filePath = @"InitializeDBTables/ApplicationRoles.txt";
+            using(var SR = new StreamReader(filePath))
+            {
+                var jsonData = SR.ReadToEnd();
+                var applicationRoles = JsonConvert.DeserializeObject<List<ApplicationRole>>(jsonData);
+                _context.ApplicationRoles.AddRange(applicationRoles);
+            }
+        }
+        private void AddCatalogueHints()
+        {
+            var filePath = @"InitializeDBTables/CatalogueHints.txt";
+            using(var SR = new StreamReader(filePath))
+            {
+                var jsonData = SR.ReadToEnd();
+                var catalogueHints = JsonConvert.DeserializeObject<List<CatalogueHint>>(jsonData);
+                _context.CatalogueHints.AddRange(catalogueHints);
+            }
+        }
+        private void AddCompanyIndustrys()
+        {
+            var filePath = @"InitializeDBTables/CompanyIndustrys.txt";
+            using(var SR = new StreamReader(filePath))
+            {
+                var jsonData = SR.ReadToEnd();
+                var companyIndustrys = JsonConvert.DeserializeObject<List<CompanyIndustry>>(jsonData);
+                _context.CompanyIndustrys.AddRange(companyIndustrys);
+            }
+        }
+        private void AddCountrys()
+        {
+            var filePath = @"InitializeDBTables/Countrys.txt";
+            using(var SR = new StreamReader(filePath))
+            {
+                var jsonData = SR.ReadToEnd();
+                var countrys = JsonConvert.DeserializeObject<List<Country>>(jsonData);
+                _context.Countrys.AddRange(countrys);
+            }
+        }
+        private void AddDeviceTypes()
+        {
+            var filePath = @"InitializeDBTables/DeviceTypes.txt";
+            using(var SR = new StreamReader(filePath))
+            {
+                var jsonData = SR.ReadToEnd();
+                var deviceTypes = JsonConvert.DeserializeObject<List<DeviceType>>(jsonData);
+                _context.DeviceTypes.AddRange(deviceTypes);
+            }
+        }
+        private void AddLanguages()
+        {
+            var filePath = @"InitializeDBTables/LanguagesLists.txt";
+            using(var SR = new StreamReader(filePath))
+            {
+                var jsonData = SR.ReadToEnd();
+                var languages = JsonConvert.DeserializeObject<List<Language>>(jsonData);
+                _context.Languages.AddRange(languages);
+            }
+        }
+        private void AddPhraseTypes()
+        {
+            var filePath = @"InitializeDBTables/PhraseTypesLists.txt";
+            using(var SR = new StreamReader(filePath))
+            {
+                var jsonData = SR.ReadToEnd();
+                var phraseTypes = JsonConvert.DeserializeObject<List<PhraseType>>(jsonData);
+                _context.PhraseTypes.AddRange(phraseTypes);
+            }
+        }
+        private void AddStatuss()
+        {
+            var filePath = @"InitializeDBTables/StatusLists.txt";
+            using(var SR = new StreamReader(filePath))
+            {
+                var jsonData = SR.ReadToEnd();
+                var statuses = JsonConvert.DeserializeObject<List<Status>>(jsonData);
+                _context.Statuss.AddRange(statuses);
+            }
+        }
+        private void PrepareInfoAccount()
+        {
+            try
+            {   
+                var companyName = "AkBars";
+                var accountEmail = "info@heedbook.com";
+                var accountUserName = "info@heedbook.com";
+                var _industry = _context.CompanyIndustrys
+                    .FirstOrDefault(p => p.CompanyIndustryName == "Bank");
+                if(_industry is null)
+                    return;
+                var supervisorRole = _context.ApplicationRoles.FirstOrDefault(p => p.Name == "Supervisor");
+                if(supervisorRole is null)
+                    return;
+                var countryId = _context.Countrys.FirstOrDefault(p => p.CountryName == "Russia").CountryId;
+                if(countryId == Guid.Empty)
+                    return;
+                var _corporation = new Corporation
+                {
+                    Id = Guid.NewGuid(),
+                    Name = companyName
+                };
+                var _company = new Company
+                {
+                    CompanyId = Guid.NewGuid(),
+                    CompanyName = companyName,
+                    IsExtended = true,
+                    CompanyIndustryId = _industry.CompanyIndustryId,
+                    CreationDate = DateTime.Now,
+                    LanguageId = 2,
+                    CountryId = countryId,
+                    StatusId = 3,
+                    CorporationId = _corporation.Id
+                };
+                var _applicationUser = new ApplicationUser
+                {
+                    Id = Guid.NewGuid(),
+                    UserName = accountUserName,
+                    NormalizedUserName = accountUserName.ToUpper(),
+                    FullName = accountUserName,
+                    CreationDate = DateTime.Now,
+                    CompanyId = _company.CompanyId,
+                    EmailConfirmed = false,
+                    StatusId = 3,
+                    Email = accountEmail,
+                    NormalizedEmail = accountEmail.ToUpper(),
+                    PasswordHash = _loginService.GeneratePasswordHash("Test_User12345"),
+                    PhoneNumberConfirmed = false,
+                    TwoFactorEnabled = false,
+                    LockoutEnabled = false,
+                    UserRoles = new List<ApplicationUserRole>
+                    {
+                        new ApplicationUserRole
+                        {
+                            RoleId = supervisorRole.Id,
+                        }
+                    }
+                };
+                
+                _context.Corporations.Add(_corporation);
+                _context.Companys.Add(_company);
+                _context.ApplicationUsers.Add(_applicationUser);
+                _context.SaveChanges();
+                AddWorkingTime(_company.CompanyId);
+                _context.SaveChanges();
+            }
+            catch(Exception e)
+            {
+                System.Console.WriteLine(e);
+            }
+        }
+        private void AddWorkingTime(Guid companyId)
+        {
+            AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1);
+            AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2);
+            AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3);
+            AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4);
+            AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
+            AddOneWorkingTimeAsync(companyId, null, null, 6);
+            AddOneWorkingTimeAsync(companyId, null, null, 0);
+        }
+        private void AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day)
+        {
+            WorkingTime time = new WorkingTime
+            {
+                CompanyId = companyId,
+                Day = day,
+                BegTime = beg,
+                EndTime = end
+            };
+            _context.WorkingTimes.Add(time);
         }
     }
 }
