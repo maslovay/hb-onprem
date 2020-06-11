@@ -15,7 +15,7 @@ using HBData;
 
 namespace UserService.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("user/[controller]")]
     [ApiController]
     public class HelpController : Controller
     {
