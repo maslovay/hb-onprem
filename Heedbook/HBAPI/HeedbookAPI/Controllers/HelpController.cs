@@ -29,6 +29,7 @@ using System.Reflection;
 using System.Data.SqlClient;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using System.Threading;
 
 namespace UserOperations.Controllers
 {
@@ -71,6 +72,41 @@ namespace UserOperations.Controllers
             //_sftpSettings = sftpSettings;
             //_dbOperation = dBOperations;
             //_repository = repository;
+        }
+
+        [HttpGet("STTTest")]
+        public IActionResult STTTest()
+        {
+            var begTime = DateTime.UtcNow.AddDays(-150);
+            var dialogues = _context.Dialogues
+                .Include(p => p.Device)
+                .Include(p => p.Device.Company)
+                .Include(p => p.DialogueWord)
+                .Where(p => p.StatusId == 3 
+                    && p.Device.Company.IsExtended == true 
+                    && !p.DialogueWord.Where(q => q.Words != null).Any()
+                    && p.BegTime >= begTime)
+                .Take(100)
+                .ToList();
+            
+            foreach (var dialogue in dialogues)
+            {
+                try
+                {
+                    System.Console.WriteLine($"Processing dialogue {dialogue.DialogueId}");
+                    var uri = $"https://heedbookapi.northeurope.cloudapp.azure.com/asr/AudioRecognize/{dialogue.DialogueId}";
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
+                    HttpWebResponse response = (HttpWebResponse) request.GetResponse();
+                    Thread.Sleep(100);
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine($"Exception occured {e}");
+                }
+            }
+            System.Console.WriteLine(JsonConvert.SerializeObject(dialogues.FirstOrDefault().DialogueId));
+            System.Console.WriteLine(dialogues.Count());
+            return Ok(dialogues.Count());
         }
 
         [HttpGet("DevicesCreate")]
