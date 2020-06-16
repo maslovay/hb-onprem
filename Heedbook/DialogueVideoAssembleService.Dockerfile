@@ -9,6 +9,8 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/DialogueVideoAssembleService/publish .
 ENTRYPOINT ["dotnet", "DialogueVideoAssembleService.dll"]
+EXPOSE 53660
+ENV ASPNETCORE_URLS http://+:53660
 RUN apk add ffmpeg
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/

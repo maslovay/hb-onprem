@@ -9,4 +9,6 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/DialogueStatusCheckerScheduler/publish .
 ENTRYPOINT ["dotnet", "DialogueStatusCheckerScheduler.dll"]
+EXPOSE 53550
+ENV ASPNETCORE_URLS http://+:53550
 ENV TESTCLUSTER testcluster

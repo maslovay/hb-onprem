@@ -9,4 +9,6 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/DetectFaceIdScheduler/publish .
 ENTRYPOINT ["dotnet", "DetectFaceIdScheduler.dll"]
+EXPOSE 54811
+ENV ASPNETCORE_URLS http://+:54811
 ENV TESTCLUSTER testcluster

@@ -9,9 +9,11 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/AudioAnalyzeService/publish .
 ENTRYPOINT ["dotnet", "AudioAnalyzeService.dll"]
+EXPOSE 53500
+ENV ASPNETCORE_URLS http://+:53500
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download
 RUN chmod -R 777 /opt/download
-ENV INFRASTRUCTURE Cloud
+ENV INFRASTRUCTURE OnPrem
 ENV TESTCLUSTER testcluster

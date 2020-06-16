@@ -9,6 +9,8 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/PersonDetectionService/publish .
 ENTRYPOINT ["dotnet", "PersonDetectionService.dll"]
+EXPOSE 52224
+ENV ASPNETCORE_URLS http://+:52224
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download

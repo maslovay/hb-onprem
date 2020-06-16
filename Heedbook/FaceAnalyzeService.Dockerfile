@@ -10,6 +10,8 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/FaceAnalyzeService/publish .
 ENTRYPOINT ["dotnet", "FaceAnalyzeService.dll"]
+EXPOSE 53600
+ENV ASPNETCORE_URLS http://+:53600
 RUN chmod -R 777 /opt/
 RUN mkdir /opt/download
 RUN chmod -R 777 /opt/download

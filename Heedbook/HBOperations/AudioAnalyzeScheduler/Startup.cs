@@ -31,7 +31,6 @@ namespace AudioAnalyzeScheduler
             services.AddOptions();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
-            //services.Configure<AudioAnalyseSchedulerSettings>(Configuration.GetSection(nameof(AudioAnalyseSchedulerSettings)));
 
             var schedulerSettings = new AudioAnalyseSchedulerSettings()
             {

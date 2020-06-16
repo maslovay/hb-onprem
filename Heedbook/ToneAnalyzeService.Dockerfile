@@ -9,6 +9,8 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/ToneAnalyzeService/publish .
 ENTRYPOINT ["dotnet", "ToneAnalyzeService.dll"]
+EXPOSE 53535
+ENV ASPNETCORE_URLS http://+:53535
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download

@@ -9,6 +9,8 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/VideoToSoundService/publish .
 ENTRYPOINT ["dotnet", "VideoToSoundService.dll"]
+EXPOSE 53675
+ENV ASPNETCORE_URLS http://+:53675
 RUN apk add ffmpeg
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/

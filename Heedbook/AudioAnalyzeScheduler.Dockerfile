@@ -27,16 +27,13 @@ RUN apk add build-base
 RUN apk add --update gcc
 RUN pip install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
 RUN pip install --user -U nltk
-
-#WORKDIR /app/sentimental
-#RUN ls -n .
-#RUN python3 GetPositiveShare.py "Хорошо или плохо?"
-#WORKDIR /app
  
 ENTRYPOINT ["dotnet", "AudioAnalyzeScheduler.dll"]
+EXPOSE 53525
+ENV ASPNETCORE_URLS http://+:53525
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download
 RUN chmod -R 777 /opt/download
-ENV INFRASTRUCTURE Cloud
+ENV INFRASTRUCTURE OnPrem
 ENV TESTCLUSTER testcluster

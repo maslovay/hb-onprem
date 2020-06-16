@@ -9,6 +9,8 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/FillingFrameService/publish .
 ENTRYPOINT ["dotnet", "FillingFrameService.dll"]
+EXPOSE 53625
+ENV ASPNETCORE_URLS http://+:53625
 RUN apk add libgdiplus --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ --allow-untrusted
 RUN apk add ffmpeg
 RUN mkdir -p /opt/

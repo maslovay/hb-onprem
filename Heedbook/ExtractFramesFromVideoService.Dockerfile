@@ -8,6 +8,8 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 COPY --from=build-env /app/HBOperations/ExtractFramesFromVideoService/publish .
 ENTRYPOINT ["dotnet", "ExtractFramesFromVideoService.dll"]
+EXPOSE 53575
+ENV ASPNETCORE_URLS http://+:53575
 RUN apk add ffmpeg
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
