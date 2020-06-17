@@ -21,7 +21,7 @@ namespace TestLoging.Controllers
         [SwaggerOperation(Description =
             "Send logs")]
         public IActionResult TestLog()
-        {
+        { 
             _log.Info("Test controller started");
             _log.Error("Test controller error message");
             _log.Fatal("Test controller fatal message");
