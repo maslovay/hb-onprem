@@ -17,7 +17,7 @@ using PersonDetectionAkBarsService.Exceptions;
 using PersonDetectionAkBarsService.Handler;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
-using PersonDetectionAkBarsService.Models;
+using HBLib.Model;
 
 namespace PersonDetectionAkBarsService
 {
@@ -49,6 +49,7 @@ namespace PersonDetectionAkBarsService
             services.AddSingleton<ElasticClientFactory>();
             services.Configure<HeedbookSettingsInAkBars>(Configuration.GetSection(nameof(HeedbookSettingsInAkBars)));
             services.AddSingleton(provider => provider.GetRequiredService<IOptions<HeedbookSettingsInAkBars>>().Value);
+            services.AddTransient<AkBarsOperations>();
 
             services.AddTransient<SftpClient>();
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));

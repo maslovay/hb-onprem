@@ -1,6 +1,6 @@
 using System;
 
-namespace PersonDetectionAkBarsService.Models
+namespace HBLib.Model
 {
     public class AkBarsValidationResponceModel
     {

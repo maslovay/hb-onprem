@@ -7,8 +7,9 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using ServiceExtensions;
 
-namespace PersonDetectionAkBarsService
+namespace PersonOnlineDetectionService
 {
     public class Program
     {
@@ -17,10 +18,9 @@ namespace PersonDetectionAkBarsService
             CreateWebHostBuilder(args).Build().Run();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
-        {
-            return WebHost.CreateDefaultBuilder(args)
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .ConfigureBuilderDueToEnvironment(args: args, portToReassignForTests: 5075)
                 .UseStartup<Startup>();
-        }
     }
 }
