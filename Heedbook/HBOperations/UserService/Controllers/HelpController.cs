@@ -59,6 +59,36 @@ namespace UserService.Controllers
             _loginService = loginService;
         }
 
+        [HttpGet("GetLanguage")]
+        //[SwaggerOperation(Summary = "Create device for SlideShowSessions - only for developers", Description = "Some SlideShowSession models in DB DeviceId field empty")]
+        public async Task<IActionResult> GetLanguages()
+        {
+            try
+            {
+                var languages = _context.Languages.ToList();
+                return Ok(JsonConvert.SerializeObject(languages));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+
+        [HttpPost("PostLanguage")]
+        public async Task<IActionResult> PostLanguage(Language language)
+        {
+            try
+            {
+                _context.Add(language);
+                _context.SaveChanges();
+                return Ok(JsonConvert.SerializeObject(language));
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+
         [HttpGet("DevicesCreate")]
         [SwaggerOperation(Summary = "Create device for SlideShowSessions - only for developers", Description = "Some SlideShowSession models in DB DeviceId field empty")]
         public async Task<IActionResult> DevicesCreate(int skip, int take)
@@ -441,29 +471,40 @@ namespace UserService.Controllers
         [SwaggerOperation(Summary = "Prepare DB", Description = "Prepare DB with test data")]
         public async Task<IActionResult> PrepareDB()
         {            
-            //AlertTypes  
-            AddAlertTypes();          
-            //ApplicationRoles
-            ApplicationRoles();
-            //CatalogueHints
-            AddCatalogueHints();
-            //CompanyIndustrys
-            AddCompanyIndustrys();
-            //Countrys
-            AddCountrys();
-            //DeviceTypes
-            AddDeviceTypes();
-            //Languages
-            AddLanguages();
-            //PhraseTypes
-            AddPhraseTypes();
-            //Statuss
-            AddStatuss();
+            //AlertTypes
+            try { AddAlertTypes();}          
+            catch (Exception e) { System.Console.WriteLine(e);}
+            
+            try{ ApplicationRoles();}
+            catch (Exception e) { System.Console.WriteLine(e);}
+
+            try{ AddCatalogueHints();}
+            catch (Exception e) { System.Console.WriteLine(e);}
+
+            try {AddCompanyIndustrys();}
+            catch (Exception e) {System.Console.WriteLine(e);}
+            
+            try {AddCountrys();}
+            catch (Exception e) {System.Console.WriteLine(e);}
+            
+            try {AddDeviceTypes();}
+            catch (Exception e) {System.Console.WriteLine(e);}
+            
+            try {AddLanguages();}
+            catch (Exception e) {System.Console.WriteLine(e);}
+            
+            try {AddPhraseTypes();}
+            catch (Exception e) {System.Console.WriteLine(e);}
+            
+            try {AddStatuss();}
+            catch (Exception e) {System.Console.WriteLine(e);}
 
             //Account info@heedbook.com
             //Company AkBars
             //Corporation AkBars
-            PrepareInfoAccount();
+            try { PrepareInfoAccount();}
+            catch (Exception e) {System.Console.WriteLine(e);}
+
             return Ok();
         }
         private void AddAlertTypes()
@@ -474,6 +515,8 @@ namespace UserService.Controllers
                 var jsonData = SR.ReadToEnd();
                 var alertTypes = JsonConvert.DeserializeObject<List<AlertType>>(jsonData);
                 _context.AlertTypes.AddRange(alertTypes);
+                _context.SaveChanges();
+                System.Console.WriteLine("Aded alert types");
             }
         }
         private void ApplicationRoles()
@@ -484,6 +527,8 @@ namespace UserService.Controllers
                 var jsonData = SR.ReadToEnd();
                 var applicationRoles = JsonConvert.DeserializeObject<List<ApplicationRole>>(jsonData);
                 _context.ApplicationRoles.AddRange(applicationRoles);
+                _context.SaveChanges();
+                System.Console.WriteLine("Added application user roles");
             }
         }
         private void AddCatalogueHints()
@@ -494,6 +539,8 @@ namespace UserService.Controllers
                 var jsonData = SR.ReadToEnd();
                 var catalogueHints = JsonConvert.DeserializeObject<List<CatalogueHint>>(jsonData);
                 _context.CatalogueHints.AddRange(catalogueHints);
+                _context.SaveChanges();
+                System.Console.WriteLine("Added catalogue hints");
             }
         }
         private void AddCompanyIndustrys()
@@ -504,6 +551,8 @@ namespace UserService.Controllers
                 var jsonData = SR.ReadToEnd();
                 var companyIndustrys = JsonConvert.DeserializeObject<List<CompanyIndustry>>(jsonData);
                 _context.CompanyIndustrys.AddRange(companyIndustrys);
+                _context.SaveChanges();
+                System.Console.WriteLine("Added company industries");
             }
         }
         private void AddCountrys()
@@ -514,6 +563,8 @@ namespace UserService.Controllers
                 var jsonData = SR.ReadToEnd();
                 var countrys = JsonConvert.DeserializeObject<List<Country>>(jsonData);
                 _context.Countrys.AddRange(countrys);
+                _context.SaveChanges();
+                System.Console.WriteLine("Added countries");
             }
         }
         private void AddDeviceTypes()
@@ -524,6 +575,8 @@ namespace UserService.Controllers
                 var jsonData = SR.ReadToEnd();
                 var deviceTypes = JsonConvert.DeserializeObject<List<DeviceType>>(jsonData);
                 _context.DeviceTypes.AddRange(deviceTypes);
+                _context.SaveChanges();
+                System.Console.WriteLine("Added device types");
             }
         }
         private void AddLanguages()
@@ -534,6 +587,8 @@ namespace UserService.Controllers
                 var jsonData = SR.ReadToEnd();
                 var languages = JsonConvert.DeserializeObject<List<Language>>(jsonData);
                 _context.Languages.AddRange(languages);
+                _context.SaveChanges();
+                System.Console.WriteLine("Added languages");
             }
         }
         private void AddPhraseTypes()
@@ -544,6 +599,8 @@ namespace UserService.Controllers
                 var jsonData = SR.ReadToEnd();
                 var phraseTypes = JsonConvert.DeserializeObject<List<PhraseType>>(jsonData);
                 _context.PhraseTypes.AddRange(phraseTypes);
+                _context.SaveChanges();
+                System.Console.WriteLine("Added phrase types");
             }
         }
         private void AddStatuss()
@@ -554,6 +611,8 @@ namespace UserService.Controllers
                 var jsonData = SR.ReadToEnd();
                 var statuses = JsonConvert.DeserializeObject<List<Status>>(jsonData);
                 _context.Statuss.AddRange(statuses);
+                _context.SaveChanges();
+                System.Console.WriteLine("Save statuses");
             }
         }
         private void PrepareInfoAccount()
