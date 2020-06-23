@@ -12,6 +12,9 @@ using Renci.SshNet.Common;
 using Swashbuckle.AspNetCore.Annotations;
 using HBLib.Utils.Interfaces;
 using HBData;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using HBData.Repository;
 
 namespace UserService.Controllers
 {
@@ -27,7 +30,7 @@ namespace UserService.Controllers
         private readonly IRequestFilters _requestFilters;
         //    private readonly SftpSettings _sftpSettings;
         //    private readonly DBOperations _dbOperation;
-        //    private readonly IGenericRepository _repository;
+           private readonly IGenericRepository _repository;
       //  private readonly DescriptorCalculations _calc;
         private readonly ILoginService _loginService;
 
@@ -40,10 +43,10 @@ namespace UserService.Controllers
             //SftpClient sftpClient,
             //MailSender mailSender,
             IRequestFilters requestFilters,
-            ILoginService loginService
+            ILoginService loginService,
             //SftpSettings sftpSettings,
             //DBOperations dBOperations,
-            //IGenericRepository repository
+            IGenericRepository repository
             )
         {
             // _compService = compService;
@@ -55,7 +58,7 @@ namespace UserService.Controllers
             _requestFilters = requestFilters;
             //_sftpSettings = sftpSettings;
             //_dbOperation = dBOperations;
-            //_repository = repository;
+            _repository = repository;
             _loginService = loginService;
         }
 
@@ -440,7 +443,10 @@ namespace UserService.Controllers
         [HttpPost("PrepareDB")]
         [SwaggerOperation(Summary = "Prepare DB", Description = "Prepare DB with test data")]
         public async Task<IActionResult> PrepareDB()
-        {            
+        {      
+            PrepareInfoAccount();
+            return Ok();
+
             //AlertTypes  
             AddAlertTypes();          
             //ApplicationRoles
@@ -617,7 +623,7 @@ namespace UserService.Controllers
                 
                 _context.Corporations.Add(_corporation);
                 _context.Companys.Add(_company);
-                _context.ApplicationUsers.Add(_applicationUser);
+                // _context.ApplicationUsers.Add(_applicationUser);
                 _context.SaveChanges();
                 AddWorkingTime(_company.CompanyId);
                 _context.SaveChanges();
@@ -647,6 +653,300 @@ namespace UserService.Controllers
                 EndTime = end
             };
             _context.WorkingTimes.Add(time);
+        }
+        [HttpPost("[action]")]
+        public async Task<IActionResult> AkBarsAddOfficesAndDictionary()
+        {
+            var result = "";
+            result += AddCompanysAndUsers($"InitializeDBTables/offices.xlsx");
+            result += $"\n";
+            result += AddCompanyPhrases($"InitializeDBTables/Library.xlsx");
+            return Ok(result);
+        }
+        private string AddCompanysAndUsers(string filePath)
+        {
+            using(FileStream FS = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using(SpreadsheetDocument doc = SpreadsheetDocument.Open(filePath, false))
+                {
+                    System.Console.WriteLine();
+                    WorkbookPart workbook = doc.WorkbookPart;
+                    SharedStringTablePart sstpart = workbook.GetPartsOfType<SharedStringTablePart>().First();
+                    SharedStringTable sst = sstpart.SharedStringTable;
+
+                    WorksheetPart worksheet = workbook.WorksheetParts.First();
+                    Worksheet sheet = worksheet.Worksheet;
+
+                    var cells = sheet.Descendants<Cell>();
+                    var rows = sheet.Descendants<Row>();
+
+                    
+                    var users = _repository.GetAsQueryable<ApplicationUser>()
+                        .ToList();
+
+                    var userRoles = _repository.GetAsQueryable<ApplicationRole>()
+                        .ToList();
+
+                    var akBarsCorporation = _repository.GetAsQueryable<Corporation>()
+                        .FirstOrDefault(p => p.Name == "AkBars");
+
+                    if(akBarsCorporation is null)
+                        return "akBarsCorporation not exist";
+
+                    var akBarsCompanys = _repository.GetAsQueryable<Company>()
+                        .Where(p => p.CorporationId == akBarsCorporation.Id)
+                        .ToList();  
+                    
+                    var countryId = _repository.GetAsQueryable<Country>()
+                        .FirstOrDefault(p => p.CountryName == "Russia").CountryId;
+
+                    var _industry = _repository.GetAsQueryable<CompanyIndustry>()
+                        .FirstOrDefault(p => p.CompanyIndustryName == "Bank");
+                    string companyName = "";
+                    foreach(var row in rows)
+                    {
+                        try
+                        {
+                            var tmpCompanyName = GetCellValue(doc, row.Descendants<Cell>().ElementAt(0));
+                            if(tmpCompanyName != null && tmpCompanyName != "")
+                                companyName = tmpCompanyName;
+
+                            var userName = GetCellValue(doc, row.Descendants<Cell>().ElementAt(1));
+                            var userEmail = GetCellValue(doc, row.Descendants<Cell>().ElementAt(2));
+                            var userRoleName = GetCellValue(doc, row.Descendants<Cell>().ElementAt(3));
+                            var userPassword = GetCellValue(doc, row.Descendants<Cell>().ElementAt(4));
+
+                            userRoleName = userRoleName == $"Руководитель офиса продаж" ? "Manager" : "Employee";
+                            var userRole = userRoles
+                                .FirstOrDefault(p => p.Name == userRoleName);
+                            if(userRole is null)
+                                return $"userRole is null";
+
+                            var existCompany = _repository.GetAsQueryable<Company>()
+                                .FirstOrDefault(p => p.CompanyName == companyName);
+
+                            if(existCompany is null)
+                            {
+                                var company = new Company
+                                {
+                                    CompanyId = Guid.NewGuid(),
+                                    CompanyName = companyName,
+                                    IsExtended = true,
+                                    CompanyIndustryId = _industry.CompanyIndustryId,
+                                    CreationDate = DateTime.Now,
+                                    LanguageId = 2,
+                                    CountryId = countryId,
+                                    StatusId = 3,
+                                    CorporationId = akBarsCorporation.Id
+                                };
+                                System.Console.WriteLine($"companyName: {company.CompanyName}");
+                                _repository.Create<Company>(company);
+
+                                var userExist = users.Any(p => p.UserName == userName);
+                                if(userExist)
+                                    continue;
+                                if(userEmail is null)
+                                    continue;
+                                var _applicationUser = new ApplicationUser
+                                {
+                                    Id = Guid.NewGuid(),
+                                    UserName = userName,
+                                    NormalizedUserName = userName.ToUpper(),
+                                    FullName = userName,
+                                    CreationDate = DateTime.Now,
+                                    CompanyId = company.CompanyId,
+                                    EmailConfirmed = false,
+                                    StatusId = 3,
+                                    Email = userEmail,
+                                    NormalizedEmail = userEmail.ToUpper(),
+                                    PasswordHash = _loginService.GeneratePasswordHash(userPassword),
+                                    PhoneNumberConfirmed = false,
+                                    TwoFactorEnabled = false,
+                                    LockoutEnabled = false,
+                                    UserRoles = new List<ApplicationUserRole>
+                                    {
+                                        new ApplicationUserRole
+                                        {
+                                            RoleId = userRole.Id,
+                                        }
+                                    }
+                                };
+                                
+                                System.Console.WriteLine($"username: {_applicationUser.UserName} {userRoleName}");                                
+                                _repository.Create<ApplicationUser>(_applicationUser);
+                            }
+                            else
+                            {
+                                var userExist = users.Any(p => p.UserName == userName);
+                                if(userExist)
+                                    continue;
+                                if(userEmail is null)
+                                    continue;
+                                var _applicationUser = new ApplicationUser
+                                {
+                                    Id = Guid.NewGuid(),
+                                    UserName = userName,
+                                    NormalizedUserName = userName.ToUpper(),
+                                    FullName = userName,
+                                    CreationDate = DateTime.Now,
+                                    CompanyId = existCompany.CompanyId,
+                                    EmailConfirmed = false,
+                                    StatusId = 3,
+                                    Email = userEmail,
+                                    NormalizedEmail = userEmail.ToUpper(),
+                                    PasswordHash = _loginService.GeneratePasswordHash(userPassword),
+                                    PhoneNumberConfirmed = false,
+                                    TwoFactorEnabled = false,
+                                    LockoutEnabled = false,
+                                    UserRoles = new List<ApplicationUserRole>
+                                    {
+                                        new ApplicationUserRole
+                                        {
+                                            RoleId = userRole.Id,
+                                        }
+                                    }
+                                };
+                                System.Console.WriteLine($"username: {_applicationUser.UserName} {userRoleName}");
+                                _repository.Create<ApplicationUser>(_applicationUser);
+                            }
+                            _repository.Save();
+                        }
+                        catch(NullReferenceException ex)
+                        {
+                            System.Console.WriteLine($"exception:\n{ex}");
+                            break;
+                        }  
+                        catch(Exception e)
+                        {
+                            System.Console.WriteLine(e);
+                        } 
+                    }
+                    _repository.Save();
+                    return "Ok";
+                }
+            }
+        }
+        private string AddCompanyPhrases(string filePath)
+        {
+            using(FileStream FS = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using(SpreadsheetDocument doc = SpreadsheetDocument.Open(filePath, false))
+                {
+                    System.Console.WriteLine();
+                    WorkbookPart workbook = doc.WorkbookPart;
+                    SharedStringTablePart sstpart = workbook.GetPartsOfType<SharedStringTablePart>().First();
+                    SharedStringTable sst = sstpart.SharedStringTable;
+
+                    WorksheetPart worksheet = workbook.WorksheetParts.First();
+                    Worksheet sheet = worksheet.Worksheet;
+
+                    var cells = sheet.Descendants<Cell>();
+                    var rows = sheet.Descendants<Row>();
+
+                    var phrases = _repository.GetAsQueryable<Phrase>()
+                        .Include(p => p.PhraseType)
+                        .ToList();
+                    var phraseTypes = _repository.GetAsQueryable<PhraseType>()
+                        .ToList();
+
+                    var akBarsCorporation = _repository.GetAsQueryable<Corporation>()
+                        .FirstOrDefault(p => p.Name == "AkBars");
+
+                    if(akBarsCorporation is null)
+                        return "akBarsCorporation is null";
+
+                    var akBarsCompanys = _repository.GetAsQueryable<Company>()
+                        .Where(p => p.CorporationId == akBarsCorporation.Id)
+                        .ToList();
+                    
+                    if(akBarsCompanys is null || akBarsCompanys.Count == 0)
+                        return "akBarsCompanys is null";
+                    
+                    foreach(var row in rows)
+                    {
+                        try
+                        {
+                            var phraseTextString = GetCellValue(doc, row.Descendants<Cell>().ElementAt(0));
+                            var phraseTypeString = GetCellValue(doc, row.Descendants<Cell>().ElementAt(1));
+                            var existPhrase = phrases.FirstOrDefault(p => p.PhraseText == phraseTextString
+                                    && p.PhraseType.PhraseTypeText == phraseTypeString);
+                            
+                            var phraseType = phraseTypes.FirstOrDefault(p => p.PhraseTypeText == GetCellValue(doc, row.Descendants<Cell>().ElementAt(1)));
+                            if(phraseType is null)
+                                continue;
+                            
+                            if(existPhrase==null)
+                            {   
+                                System.Console.WriteLine($"phrase not exist in base");
+                                var phraseText = GetCellValue(doc, row.Descendants<Cell>().ElementAt(0));
+                                var newPhrase = new Phrase
+                                {
+                                    PhraseId = Guid.NewGuid(),
+                                    PhraseText = phraseText,
+                                    PhraseTypeId = phraseType.PhraseTypeId,
+                                    LanguageId = 2,
+                                    WordsSpace = 1,
+                                    Accurancy = 1,
+                                    IsTemplate = false
+                                };
+                                _repository.Create<Phrase>(newPhrase); 
+                                System.Console.WriteLine($"Phrase: {newPhrase.PhraseText} {newPhrase.PhraseTypeId}");
+                                foreach(var company in akBarsCompanys)
+                                {
+                                    var phraseCompany = new PhraseCompany
+                                    {
+                                        PhraseCompanyId = Guid.NewGuid(),
+                                        PhraseId = newPhrase.PhraseId,
+                                        CompanyId = company.CompanyId
+                                    };
+                                    _repository.Create<PhraseCompany>(phraseCompany);
+                                    System.Console.WriteLine($"phraseCompany: {phraseCompany.PhraseId} {phraseCompany.CompanyId}");
+                                }
+                            }
+                            else
+                            {
+                                foreach(var company in akBarsCompanys)
+                                {
+                                    var phraseCompany = new PhraseCompany
+                                    {
+                                        PhraseCompanyId = Guid.NewGuid(),
+                                        PhraseId = existPhrase.PhraseId,
+                                        CompanyId = company.CompanyId
+                                    };  
+                                    _repository.Create<PhraseCompany>(phraseCompany);
+                                    System.Console.WriteLine($"Phrase: {existPhrase.PhraseText} - {existPhrase.PhraseTypeId}");
+                                }
+                                System.Console.WriteLine($"phrase exist in base");
+                            } 
+                            // _repository.Save();
+                        }
+                        catch(NullReferenceException ex)
+                        {
+                            System.Console.WriteLine($"exception:\n{ex}");
+                            break;
+                        }   
+                    }
+                    _repository.Save();
+                    return "all phrases added in DB";
+                }
+            }
+        }
+        ///Method for get Cell Value
+        private static string GetCellValue(SpreadsheetDocument document, Cell cell)
+        {
+            SharedStringTablePart stringTablePart = document.WorkbookPart.SharedStringTablePart;
+            if(cell.CellValue is null)
+                return null;
+            string value = cell.CellValue.InnerXml;
+
+            if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
+            {
+                return stringTablePart.SharedStringTable.ChildElements[Int32.Parse(value)].InnerText;
+            }
+            else
+            {
+                return value;
+            }
         }
     }
 }
