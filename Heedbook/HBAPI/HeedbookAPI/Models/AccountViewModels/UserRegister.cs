@@ -22,7 +22,8 @@ namespace UserOperations.AccountModels
         public Guid? CorporationId;
         public string Role;
         public bool? IsExtended;
-
+        [Required]
+        public int TimeZone;
         //---working hours
         public DateTime? MondayBeg;
         public DateTime? MondayEnd;

@@ -262,36 +262,37 @@ namespace UserOperations.Services
         }
         private async Task AddWorkingTime(Guid companyId, UserRegister mess)
         {
+            var timeZone = (mess.TimeZone >= -12 && mess.TimeZone <= 14) ? mess.TimeZone : 0;
             if(mess.MondayBeg == null)
             {
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1);
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2);
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3);
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4);
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5);
-                await AddOneWorkingTimeAsync(companyId, null, null, 6);
-                await AddOneWorkingTimeAsync(companyId, null, null, 0);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1, timeZone);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2, timeZone);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3, timeZone);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4, timeZone);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5, timeZone);
+                await AddOneWorkingTimeAsync(companyId, null, null, 6, timeZone);
+                await AddOneWorkingTimeAsync(companyId, null, null, 0, timeZone);
             }
             else
             {
-                await AddOneWorkingTimeAsync(companyId, mess.MondayBeg, mess.MondayEnd, 1);
-                await AddOneWorkingTimeAsync(companyId, mess.TuesdayBeg, mess.TuesdayEnd, 2);
-                await AddOneWorkingTimeAsync(companyId, mess.WednesdayBeg, mess.WednesdayEnd, 3);
-                await AddOneWorkingTimeAsync(companyId, mess.ThursdayBeg, mess.ThursdayEnd, 4);
-                await AddOneWorkingTimeAsync(companyId, mess.FridayBeg, mess.FridayEnd, 5);
-                await AddOneWorkingTimeAsync(companyId, mess.SaturdayBeg, mess.SaturdayEnd, 6);
-                await AddOneWorkingTimeAsync(companyId, mess.SundayBeg, mess.SundayEnd, 0);
+                await AddOneWorkingTimeAsync(companyId, mess.MondayBeg, mess.MondayEnd, 1, timeZone);
+                await AddOneWorkingTimeAsync(companyId, mess.TuesdayBeg, mess.TuesdayEnd, 2, timeZone);
+                await AddOneWorkingTimeAsync(companyId, mess.WednesdayBeg, mess.WednesdayEnd, 3, timeZone);
+                await AddOneWorkingTimeAsync(companyId, mess.ThursdayBeg, mess.ThursdayEnd, 4, timeZone);
+                await AddOneWorkingTimeAsync(companyId, mess.FridayBeg, mess.FridayEnd, 5, timeZone);
+                await AddOneWorkingTimeAsync(companyId, mess.SaturdayBeg, mess.SaturdayEnd, 6, timeZone);
+                await AddOneWorkingTimeAsync(companyId, mess.SundayBeg, mess.SundayEnd, 0, timeZone);
             }
         }
 
-        private async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day)
+        private async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day, int timeZone)
         {
             WorkingTime time = new WorkingTime
             {
                 CompanyId = companyId,
                 Day = day,
-                BegTime = beg,
-                EndTime = end
+                BegTime = beg.Value.AddHours(timeZone),
+                EndTime = end.Value.AddHours(timeZone)
             };
             await _repository.CreateAsync<WorkingTime>(time);
         }
