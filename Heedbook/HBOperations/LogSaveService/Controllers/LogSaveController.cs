@@ -18,9 +18,11 @@ namespace LogSave.Controllers
     public class LogSaveController : Controller
     {
         private readonly RecordsContext _context;
-        public LogSaveController(RecordsContext context)
+        private readonly SftpClient _client;
+        public LogSaveController(RecordsContext context, SftpClient client)
         {
             _context = context;
+            _client = client;
         }
         [HttpPost]
         [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
@@ -36,14 +38,7 @@ namespace LogSave.Controllers
                     var fileStream = file.OpenReadStream();
                     if(fileStream.Length != 0)
                     {
-                        var path = $"/var/log/saved_logs/{file.FileName}";
-                        System.Console.WriteLine(path);
-                        using(FileStream newFile = new FileStream(path, FileMode.Create, FileAccess.Write))
-                        {
-                            byte[] bytes = new byte[fileStream.Length];
-                            fileStream.Read(bytes, 0, (int)fileStream.Length);
-                            newFile.Write(bytes, 0, (int)fileStream.Length);
-                        }
+                        await _client.UploadAsMemoryStreamAsync(fileStream, "log/", file.FileName);
                     }
                 }
                 else
