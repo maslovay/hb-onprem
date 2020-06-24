@@ -41,4 +41,5 @@ WORKDIR /hbml_service
 ADD . /hbml_service
 RUN pip3 install --upgrade pip
 RUN pip3 install -r deploy/requirements.txt
+EXPOSE 8000
 CMD ["/bin/bash", "-c", "/hbml_service/deploy/run.sh"]
