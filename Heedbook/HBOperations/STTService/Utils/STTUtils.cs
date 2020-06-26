@@ -13,7 +13,8 @@ namespace hb_asr_service.Utils
         public string Execute(string path)
         {
             var websocketUrl = Environment.GetEnvironmentVariable("WEBSOCKET");
-            if (websocketUrl == null) websocketUrl = "ws://localhost:2700";
+            if (websocketUrl == null) websocketUrl = "ws://alpacepkaldiservice.heedbook.svc.cluster.local:2700";
+            System.Console.WriteLine($"Websocket url id {websocketUrl}");
             var cmd = new CMDWithOutput();
 
             var args = $"stt.py {path} {websocketUrl}";
