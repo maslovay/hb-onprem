@@ -50,14 +50,14 @@ namespace HBLib.Utils
         public async Task<bool> CheckApiKey()
         {
            var isApiKeyExists = _repository.Get<GoogleAccount>().Any(item => item.StatusId == 3);
-            if (isApiKeyExists)
-            {
-                Environment.SetEnvironmentVariable("INFRASTRUCTURE", "Cloud");
-            }
-            else
-            {
-                Environment.SetEnvironmentVariable("INFRASTRUCTURE", "OnPrem");
-            }
+            //if (isApiKeyExists)
+            //{
+            //    Environment.SetEnvironmentVariable("INFRASTRUCTURE", "Cloud");
+            //}
+            //else
+            //{
+            //    Environment.SetEnvironmentVariable("INFRASTRUCTURE", "OnPrem");
+            //}
             return isApiKeyExists;
         }
 
