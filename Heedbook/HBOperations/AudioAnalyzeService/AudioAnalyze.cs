@@ -50,6 +50,7 @@ namespace AudioAnalyzeService
             _log.SetArgs(path);
             _log.Info("Function started");
             _log.Info($"Environment is {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
+            System.Console.WriteLine("Function started");
             try
             {
                 if (!String.IsNullOrWhiteSpace(path))
@@ -62,6 +63,7 @@ namespace AudioAnalyzeService
                         .FirstOrDefault(p => p.DialogueId == dialogueId);
 
                     var fileExist = await _sftpclient.IsFileExistsAsync(path);
+                    System.Console.WriteLine($"File exist {fileExist}");
                     if(!fileExist)
                     {
                         dialogue.Comment += " dialogue not have audio";
@@ -92,6 +94,7 @@ namespace AudioAnalyzeService
                             Duration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds
                         };
                         await _googleConnector.CheckApiKey();
+                        System.Console.WriteLine($"Environment is {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             var languageId = Int32.Parse("2");
@@ -125,8 +128,10 @@ namespace AudioAnalyzeService
                         _context.SaveChanges();
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
                         {
+                            System.Console.WriteLine("Send files to stt");
                             await _asrHttpClient.StartAudioRecognize(dialogueId);
                         }
+                        System.Console.WriteLine("Function finished");
                         _log.Info("Started recognize audio");
                     }
                 }
