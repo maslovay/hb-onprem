@@ -16,4 +16,5 @@ RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download
 RUN chmod -R 777 /opt/download
+RUN chmod g+rwx /app
 ENV TESTCLUSTER testcluster
