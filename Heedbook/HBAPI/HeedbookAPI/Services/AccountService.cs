@@ -63,7 +63,7 @@ namespace UserOperations.Services
             var user = await AddNewUserInBase(message, company?.CompanyId);
             await AddUserRoleInBase(message, user);
             await _repository.SaveAsync();
-
+            
             if (await GetTariffsAsync(company?.CompanyId) == 0)
             {
                 await CreateCompanyTariffAndTransaction(company);
@@ -72,11 +72,15 @@ namespace UserOperations.Services
             await AddWorkingTime(company.CompanyId, message);
             await _salesStageService.CreateSalesStageForNewAccount(company.CompanyId, company.CorporationId);
             await _repository.SaveAsync();
+            
             try
             {
                 await _mailSender.SendRegisterEmail(user);
             }
-            catch { }
+            catch(Exception e)
+            {
+                System.Console.WriteLine(e);
+            }
         }
 
        
@@ -291,8 +295,8 @@ namespace UserOperations.Services
             {
                 CompanyId = companyId,
                 Day = day,
-                BegTime = beg.Value.AddHours(timeZone),
-                EndTime = end.Value.AddHours(timeZone)
+                BegTime = beg is null ? (DateTime?)null : ((DateTime)beg).AddHours(timeZone),
+                EndTime = end is null ? (DateTime?)null : ((DateTime)end).AddHours(timeZone)
             };
             await _repository.CreateAsync<WorkingTime>(time);
         }
