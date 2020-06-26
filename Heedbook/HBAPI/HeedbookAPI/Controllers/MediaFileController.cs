@@ -61,5 +61,12 @@ namespace UserOperations.Controllers
                 [FromQuery] string containerName = null, 
                 [FromQuery] string fileName = null) =>
             await _mediaFileService.FileDelete(containerName, fileName);
+        
+        [HttpPost("FileToContainer")]
+        [SwaggerOperation(Description = "Save file on sftp. Folder determined by containerName.")]
+        [SwaggerResponse(400, "Filed to upload file / Exception message", typeof(string))]
+        [SwaggerResponse(200, "File uploaded")]
+        public async Task<object> FilePostInContainer([FromForm] IFormCollection formData) =>
+            await _mediaFileService.FilePostInContainer(formData);
     }
 }

@@ -113,5 +113,32 @@ namespace UserOperations.Services
             // _log.Info("MediaFile/File DELETE finished"); 
             return "OK";
         }
+        public async Task<List<string>> FilePostInContainer([FromForm] IFormCollection formData)
+        {
+            // _log.Info("MediaFile/File POST started");
+            var containerNameParam = formData.FirstOrDefault(x => x.Key == "containerName");
+            var containerName = containerNameParam.Value.Any() ? containerNameParam.Value.ToString() : _containerName;
+
+            var tasks = new List<Task>();
+            var fileNames = new List<string>();
+            foreach (var file in formData.Files)
+            {
+                FileInfo fileInfo = new FileInfo(file.FileName);
+                var fn = Guid.NewGuid() + fileInfo.Extension;
+                var memoryStream = file.OpenReadStream();
+                tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}", fn, true));
+                fileNames.Add(fn);
+                //memoryStream.Close();
+            }
+            await Task.WhenAll(tasks);
+
+            List<string> result = new List<string>();
+            foreach (var file in fileNames)
+            {
+                result.Add(_fileRef.GetFileLink(containerName, file, default));
+            }
+            // _log.Info("MediaFile/File POST finished"); 
+            return result;
+        }
     }
 }
