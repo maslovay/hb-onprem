@@ -6,6 +6,15 @@ import json
 async def hello(uri):
     full_result = []
     async with websockets.connect(uri) as websocket:
+        i = 0
+        if not websocket.open and i < 3:
+            try:
+                websocket = await websocket.connect(uri)
+                i += 1
+            except:
+                i += 1
+                pass
+                
         wf = open(sys.argv[1], "rb")
         while True:
             data = wf.read(8000)

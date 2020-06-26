@@ -91,7 +91,7 @@ namespace hb_asr_service.QuartzJob
                         catch (Exception e)
                         {
                             Console.WriteLine(e);
-                            log.Fatal("Exception occured {e.ToString()}");
+                            log.Fatal($"Exception occured {e}");
                             if ((DateTime.Now - fileAudioDialogue.CreationTime).Hours > 2)
                             {
                                 fileAudioDialogue.StatusId = 8;
