@@ -26,7 +26,7 @@ def parse_args(parser):
     return data,  client_data
         
 if __name__ == '__main__':
-    socket_io = "https://websocketserverprod.azurewebsites.net"
+    socket_io = "https://websocket-heedbook.live-int.akbars.ru"
     parser=argparse.ArgumentParser()
     
     data, client_data = parse_args(parser)

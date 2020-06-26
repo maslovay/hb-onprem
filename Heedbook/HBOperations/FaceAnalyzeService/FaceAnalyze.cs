@@ -150,11 +150,20 @@ namespace FaceAnalyzeService
                     }
                     _log.Info("Function finished");
 
-                    File.Delete(localPath);
+                    //File.Delete(localPath);
                 }
                 else
                 {
-                    _log.Info($"No such file {remotePath}");
+                    _log.Info($"No face detected {remotePath}");
+                }
+
+                try
+                {
+                    File.Delete(localPath);
+                }
+                catch (Exception e)
+                {
+                    _log.Info("No such file");
                 }
 
                 _log.Info("Function face analyze finished");

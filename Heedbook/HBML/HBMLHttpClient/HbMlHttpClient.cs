@@ -46,32 +46,15 @@ namespace HBMLHttpClient
             var uri = new Uri(path);
             var client = new HttpClient();
             client.Timeout = TimeSpan.FromMinutes(5);
-            //var content = new StringContent(base64StringFile);
-
-            
-            using (StringContent content = new StringContent(base64StringFile))
-            {
-                content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
-                //var response = await client.PostAsync(uri, content);
-
-                System.Console.WriteLine($"Send request to {uri}");
-                var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri);
-                httpRequest.Content = content;
-
-                HttpResponseMessage response = await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead);
-                var contentAsString = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"{contentAsString}");
-
-                return JsonConvert.DeserializeObject<List<FaceResult>>(contentAsString);
-            }
-            
-            
-            //var contentAsString = await response.Content.ReadAsStringAsync();
+            var content = new StringContent(base64StringFile);
+            content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
+            var response = await client.PostAsync(uri, content);
+            var contentAsString = await response.Content.ReadAsStringAsync();
 
             // to do: delete or change to elastic
-            //Console.WriteLine($"{contentAsString}");
+            Console.WriteLine($"{contentAsString}");
 
-            //return JsonConvert.DeserializeObject<List<FaceResult>>(contentAsString);
+            return JsonConvert.DeserializeObject<List<FaceResult>>(contentAsString);
         }
     }
 }
