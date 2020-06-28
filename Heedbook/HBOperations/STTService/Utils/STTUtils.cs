@@ -17,7 +17,7 @@ namespace hb_asr_service.Utils
             System.Console.WriteLine($"Websocket url id {websocketUrl}");
             var cmd = new CMDWithOutput();
 
-            var args = $"{pyFile} {path} {websocketUrl}";
+            var args = $"{pyFile} {path}";
             System.Console.WriteLine(args);
             var output = cmd.runCMD("python3", args);
             System.Console.WriteLine(output);
