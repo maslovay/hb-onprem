@@ -123,7 +123,7 @@ namespace hb_asr_service.QuartzJob
 
         private async Task<List<WordRecognizedResult>> RecognizeSttAsync(String path)
         {
-            var result = _stt.Execute(path);
+            var result = _stt.Execute(Environment.GetEnvironmentVariable("PYFILE"), path);
             System.Console.WriteLine(result);
             if (result.StartsWith("Exception occured:")) return null;
             return JsonConvert.DeserializeObject<List<WordRecognizedResult>>(result);
