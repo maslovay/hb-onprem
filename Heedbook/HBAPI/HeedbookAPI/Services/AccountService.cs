@@ -266,7 +266,17 @@ namespace UserOperations.Services
         }
         private async Task AddWorkingTime(Guid companyId, UserRegister mess)
         {
-            var timeZone = (mess.TimeZone >= -12 && mess.TimeZone <= 14) ? mess.TimeZone : 0;
+            TimeSpan timeZone;
+            if(mess.TimeZone is null)
+                timeZone = TimeSpan.Zero;
+            else
+            {
+                var tmpTimeZone = mess.TimeZone.Contains("-") 
+                    ? -TimeSpan.Parse(mess.TimeZone.Trim(new char[]{'+', '-'})) 
+                    : TimeSpan.Parse(mess.TimeZone.Trim(new char[]{'+', '-'}));
+                timeZone = (tmpTimeZone.Hours >= -12 && tmpTimeZone.Hours <= 14) ? tmpTimeZone : TimeSpan.Zero;
+            } 
+            
             if(mess.MondayBeg == null)
             {
                 await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1, timeZone);
@@ -289,14 +299,14 @@ namespace UserOperations.Services
             }
         }
 
-        private async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day, int timeZone)
+        private async Task AddOneWorkingTimeAsync(Guid companyId, DateTime? beg, DateTime? end, int day, TimeSpan timeShift)
         {
             WorkingTime time = new WorkingTime
             {
                 CompanyId = companyId,
                 Day = day,
-                BegTime = beg is null ? (DateTime?)null : ((DateTime)beg).AddHours(timeZone),
-                EndTime = end is null ? (DateTime?)null : ((DateTime)end).AddHours(timeZone)
+                BegTime = beg is null ? (DateTime?)null : ((DateTime)beg).Add(timeShift),
+                EndTime = end is null ? (DateTime?)null : ((DateTime)end).Add(timeShift)
             };
             await _repository.CreateAsync<WorkingTime>(time);
         }

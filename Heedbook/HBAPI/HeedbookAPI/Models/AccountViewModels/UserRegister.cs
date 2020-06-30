@@ -23,7 +23,7 @@ namespace UserOperations.AccountModels
         public string Role;
         public bool? IsExtended;
         [Required]
-        public int TimeZone;
+        public string TimeZone;
         //---working hours
         public DateTime? MondayBeg;
         public DateTime? MondayEnd;
