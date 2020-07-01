@@ -276,14 +276,13 @@ namespace UserOperations.Services
                     : TimeSpan.Parse(mess.TimeZone.Trim(new char[]{'+', '-'}));
                 timeZone = (tmpTimeZone.Hours >= -12 && tmpTimeZone.Hours <= 14) ? tmpTimeZone : TimeSpan.Zero;
             } 
-            
             if(mess.MondayBeg == null)
             {
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 1, timeZone);
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 2, timeZone);
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 3, timeZone);
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 4, timeZone);
-                await AddOneWorkingTimeAsync(companyId, new DateTime(1, 1, 1, 10, 0, 0), new DateTime(1, 1, 1, 19, 0, 0), 5, timeZone);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(2, 2, 2, 10, 0, 0), new DateTime(2, 2, 2, 19, 0, 0), 1, timeZone);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(2, 2, 2, 10, 0, 0), new DateTime(2, 2, 2, 19, 0, 0), 2, timeZone);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(2, 2, 2, 10, 0, 0), new DateTime(2, 2, 2, 19, 0, 0), 3, timeZone);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(2, 2, 2, 10, 0, 0), new DateTime(2, 2, 2, 19, 0, 0), 4, timeZone);
+                await AddOneWorkingTimeAsync(companyId, new DateTime(2, 2, 2, 10, 0, 0), new DateTime(2, 2, 2, 19, 0, 0), 5, timeZone);
                 await AddOneWorkingTimeAsync(companyId, null, null, 6, timeZone);
                 await AddOneWorkingTimeAsync(companyId, null, null, 0, timeZone);
             }
