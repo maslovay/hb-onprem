@@ -117,17 +117,24 @@ namespace UserOperations.Services
         {
             // _log.Info("MediaFile/File POST started");
             var containerNameParam = formData.FirstOrDefault(x => x.Key == "containerName");
-            var containerName = containerNameParam.Value.Any() ? containerNameParam.Value.ToString() : _containerName;
+            var fileNameParam = formData.FirstOrDefault(x => x.Key == "fileName");
+
+            if(!containerNameParam.Value.Any())
+                throw new ArgumentNullException("containerName in null");
+
+            if(!fileNameParam.Value.Any())
+                throw new ArgumentNullException("fileName in null");
+            var containerName = containerNameParam.Value.ToString();
+            var fileName = fileNameParam.Value.ToString();
 
             var tasks = new List<Task>();
             var fileNames = new List<string>();
             foreach (var file in formData.Files)
             {
                 FileInfo fileInfo = new FileInfo(file.FileName);
-                var fn = Guid.NewGuid() + fileInfo.Extension;
                 var memoryStream = file.OpenReadStream();
-                tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}", fn, true));
-                fileNames.Add(fn);
+                tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}", fileName, true));
+                fileNames.Add(fileName);
                 //memoryStream.Close();
             }
             await Task.WhenAll(tasks);

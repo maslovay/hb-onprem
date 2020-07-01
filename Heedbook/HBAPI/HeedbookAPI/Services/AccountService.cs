@@ -272,8 +272,8 @@ namespace UserOperations.Services
             else
             {
                 var tmpTimeZone = mess.TimeZone.Contains("-") 
-                    ? -TimeSpan.Parse(mess.TimeZone.Trim(new char[]{'+', '-'})) 
-                    : TimeSpan.Parse(mess.TimeZone.Trim(new char[]{'+', '-'}));
+                    ? TimeSpan.Parse(mess.TimeZone.Trim(new char[]{'+', '-'})) 
+                    : -TimeSpan.Parse(mess.TimeZone.Trim(new char[]{'+', '-'}));
                 timeZone = (tmpTimeZone.Hours >= -12 && tmpTimeZone.Hours <= 14) ? tmpTimeZone : TimeSpan.Zero;
             } 
             if(mess.MondayBeg == null)
