@@ -8,7 +8,6 @@ using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using UserOperations.Utils;
 using HBLib.Utils;
 
 namespace UserOperations.Controllers
@@ -67,30 +66,10 @@ namespace UserOperations.Controllers
                                 [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                 [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
                                 [FromQuery(Name = "inActive")] bool inactive = false,
-                                [FromQuery(Name = "screenshot")] bool screenshot = false) =>
-            await _campaignContentService.ContentGet( companyIds, corporationIds, inactive, screenshot);
+                                [FromQuery(Name = "screenshot")] bool screenshot = false,
+                                [FromQuery(Name = "isTemplate")] bool isTemplate = false) =>
+            await _campaignContentService.ContentGet( companyIds, corporationIds, inactive, screenshot, isTemplate);
         
-
-        [HttpGet("ContentPaginated")]
-        [SwaggerOperation(Summary = "Get all content", Description = "Return content for loggined company with screenshot url links (one page). limit=10, page=0, orderBy=Name/CreationDate/UpdateDate, orderDirection=desc/asc")]
-        [SwaggerResponse(200, "Content list", typeof(List<Content>))]
-        public async Task<object> ContentPaginatedGet(
-                                [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
-                                [FromQuery(Name = "inActive")] bool inactive = false,
-                                [FromQuery(Name = "limit")] int limit = 10,
-                                [FromQuery(Name = "page")] int page = 0,
-                                [FromQuery(Name = "orderBy")] string orderBy = "Name",
-                                [FromQuery(Name = "orderDirection")] string orderDirection = "desc") =>
-            await _campaignContentService.ContentPaginatedGet(
-                companyIds,
-                corporationIds,
-                inactive,
-                limit,
-                page,
-                orderBy,
-                orderDirection);
-
 
         [HttpPost("Content")]
         [SwaggerOperation(Summary = "Save new content", Description = "Create new content")]
@@ -118,6 +97,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("GetResponseHeaders")]
+        [SwaggerOperation(Summary = "GetResponceheader", Description = "Method return Url responce headers")]
         [AllowAnonymous]
         public async Task<Dictionary<string, string>> GetResponseHeaders([FromQuery] string url) =>
             await _campaignContentService.GetResponseHeaders(url);

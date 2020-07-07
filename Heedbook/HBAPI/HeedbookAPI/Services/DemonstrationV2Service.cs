@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData.Models;
 using HBData.Repository;
+using HBLib.Utils.Interfaces;
 using UserOperations.Models;
 using UserOperations.Services.Interfaces;
 

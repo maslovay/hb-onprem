@@ -119,7 +119,7 @@ namespace DialogueAndSessionsNested.QuartzJobs
                     var tempSession = new Session
                     {
                         SessionId = Guid.NewGuid(),
-                        ApplicationUserId = applicationUserId,
+                        ApplicationUserId = (Guid)applicationUserId,
                         ApplicationUser = applicationUser,
                         BegTime = dialogue.BegTime,
                         EndTime = dialogue.EndTime,
@@ -159,7 +159,7 @@ namespace DialogueAndSessionsNested.QuartzJobs
                         var tempSession = new Session
                         {
                             SessionId = Guid.NewGuid(),
-                            ApplicationUserId = applicationUserId,
+                            ApplicationUserId = (Guid)applicationUserId,
                             ApplicationUser = applicationUser,
                             BegTime = dialogue.BegTime,
                             EndTime = dialogue.EndTime,

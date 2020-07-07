@@ -29,6 +29,7 @@ using System.Reflection;
 using System.Data.SqlClient;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Controllers
 {

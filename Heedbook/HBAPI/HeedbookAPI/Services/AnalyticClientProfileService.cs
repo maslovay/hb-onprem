@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

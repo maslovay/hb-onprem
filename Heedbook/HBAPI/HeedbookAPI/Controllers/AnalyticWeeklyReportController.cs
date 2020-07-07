@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
-using UserOperations.Utils;
 using HBLib.Utils;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -26,6 +26,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("User")]
+        [SwaggerOperation(Summary = "UserReport", Description = "Responce user weekly report")]
         public Dictionary<string, object> User(
                 [FromQuery(Name = "applicationUserId")] Guid userId,
                 [FromQuery(Name = "begTime")] string beg,

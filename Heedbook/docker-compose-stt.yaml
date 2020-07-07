@@ -1,0 +1,29 @@
+version: '3.4'
+services:
+  stt-service:
+    image: heedbookcontainerregistrytest.azurecr.io/sttservice
+    ports:
+      - "53653:53653"
+    depends_on:
+      - hb-asr
+    volumes:
+      - app-volume:/opt/download
+
+  hb-asr:
+    image: heedbookcontainerregistrytest.azurecr.io/asr-flask
+    ports:
+      - "8118:8118"
+    environment:
+      WEBSOCKET: "ws://kaldi:2700"
+      PYTHONUNBUFFERED: 1
+    depends_on:
+      - kaldi
+    volumes:
+      - app-volume:/opt/download
+
+  kaldi:
+    image: alphacep/kaldi-ru
+
+volumes:
+  app-volume:
+

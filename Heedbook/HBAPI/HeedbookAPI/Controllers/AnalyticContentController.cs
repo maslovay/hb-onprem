@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using System.IO;
 using Swashbuckle.AspNetCore.Annotations;
-using UserOperations.Utils;
 using HBLib.Utils;
 
 namespace UserOperations.Controllers
@@ -44,7 +43,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("Poll")]
-        [SwaggerOperation(Summary = "Poll analytic for all dialogues", Description = "Analytic about pools shown with filters")]
+        [SwaggerOperation(Summary = "Poll analytic for all dialogues", Description = "Return Excel file with analytic about pools shown with filters")]
         [SwaggerResponse(200, "Views, Clients, Answers, Conversion -pool statistic for content. If type != json, return xls file", typeof(Dictionary<string, object>))]
         public async Task<IActionResult> Poll([FromQuery(Name = "begTime")] string beg,
                                                      [FromQuery(Name = "endTime")] string end,

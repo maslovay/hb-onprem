@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UserOperations.Utils;
 using System.Threading.Tasks;
 using HBData.Repository;
 using HBData.Models;
 using UserOperations.Models;
-using UserOperations.Utils.Interfaces;
-using UserOperations.Services.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
