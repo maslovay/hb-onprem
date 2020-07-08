@@ -117,7 +117,8 @@ namespace TabletLoadTest
                 new Tuple<int, bool, string>(180, true, "DemonstrationV2PoolAnswerRequest"),
                 new Tuple<int, bool, string>(180, true, "SessionAlertNotSmileRequest"),
                 new Tuple<int, bool, string>(180, false, "FillingFileFrameRequest"),
-                new Tuple<int, bool, string>(180, false, "FaceRequest"),
+                //FaceRequest not work on TestClaster
+                // new Tuple<int, bool, string>(180, false, "FaceRequest"),
                 new Tuple<int, bool, string>(180, true, "LogSaveRequest"),
                 new Tuple<int, bool, string>(180, true, "VideoSaveInfoRequest")
             };

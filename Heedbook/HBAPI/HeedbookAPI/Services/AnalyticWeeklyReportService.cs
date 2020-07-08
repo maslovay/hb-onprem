@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
-using UserOperations.Utils;
 using HBData.Models;
-using UserOperations.Utils.AnalyticWeeklyReportController;
 using HBData.Repository;
 using UserOperations.Models.AnalyticModels;
-using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

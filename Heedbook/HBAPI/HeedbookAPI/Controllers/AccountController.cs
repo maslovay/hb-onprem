@@ -5,7 +5,6 @@ using Swashbuckle.AspNetCore.Annotations;
 using HBData.Models.AccountViewModels;
 using UserOperations.AccountModels;
 using UserOperations.Services;
-using UserOperations.Utils;
 using System.Collections.Generic;
 using HBLib.Utils;
 
@@ -40,7 +39,7 @@ namespace UserOperations.Controllers
 
 
         [HttpPost("GenerateToken")]
-        [SwaggerOperation(Summary = "Loggin user", Description = "Loggin for user. Return jwt token. Save errors passwords history (Block user)")]
+        [SwaggerOperation(Summary = "Loggin user", Description = "Loggin for user. Return jwt token.")]
         [SwaggerResponse(400, "The user data is invalid", typeof(string))]
         [SwaggerResponse(200, "JWT token")]
         public string GenerateToken([FromBody,
@@ -50,19 +49,19 @@ namespace UserOperations.Controllers
 
 
         [HttpPost("ChangePassword")]
-        [SwaggerOperation(Summary = "two cases", Description = "Change password for user. Receive email. Receive new password for loggined user(with token) or send new password on email")]
+        [SwaggerOperation(Summary = "Change password", Description = "Change password for user. For loggined user change password with input. If user not loggined receive generated password on email.")]
         [SwaggerResponse(400, "No such user / Exception message", typeof(string))]
         [SwaggerResponse(200, "Password changed")]
         public async Task<string> UserChangePasswordAsync(
                     [FromBody, SwaggerParameter("email required, password only with token")] AccountAuthorization message,
-                    [FromHeader, SwaggerParameter("JWT token not required, if exist receive new password, if not - generate new password", Required = false)] string Authorization)
+                    [FromHeader, SwaggerParameter("JWT token not required, if need receive new password on email, otherwise, generate new password", Required = false)] string Authorization)
             => await _service.ChangePassword(message, Authorization);
 
         [HttpPost("ValidateToken")]
         [SwaggerOperation(Summary = "Return true or false")]
         [SwaggerResponse(400, "The user data is invalid", typeof(string))]
         [SwaggerResponse(200, "{\"status\": <bool>}")]
-        public async Task<Dictionary<string,bool>> ValidateToken([FromHeader, SwaggerParameter("JWT token not", Required = true)] string Authorization)
+        public async Task<Dictionary<string,bool>> ValidateToken([FromHeader, SwaggerParameter("JWT token required", Required = true)] string Authorization)
          => await _service.ValidateToken(Authorization);
 
 
@@ -75,16 +74,16 @@ namespace UserOperations.Controllers
              => await _service.ChangePasswordOnDefault(email);
 
 
-        [HttpDelete("Remove")]
+        [HttpDelete("RemoveUserCompany")]
         [Authorize(AuthenticationSchemes = "Bearer")]
-        [SwaggerOperation(Summary = "Delete user, company, trial tariff - only for developers")]
+        [SwaggerOperation(Summary = "Delete user, company, trial tariff - only for developers", Description = "Delete current user Company with all users")]
         public async Task<string> AccountDelete([FromQuery,
                         SwaggerParameter("user email", Required = true)]
                         string email)
             => await _service.DeleteCompany(email);
 
         [HttpDelete("RemoveUser")]
-        [SwaggerOperation(Summary = "Delete user, company, trial tariff - only for developers")]
+        [SwaggerOperation(Summary = "Delete user", Description = "Delete user with current Email")]
         public async Task UserDelete([FromQuery,
                         SwaggerParameter("user email", Required = true)]
                         string email)
@@ -92,10 +91,12 @@ namespace UserOperations.Controllers
 
         [HttpGet("[action]")]
         [Authorize(AuthenticationSchemes = "Bearer")]
+        [SwaggerOperation(Summary = "Add CompanyPhrases from Excel table - only for developers", Description = "Add CompanyPhrases in DB form Excel table, when api runned locally")]
         public void AddCompanyDictionary(string fileName)=>  _service.AddPhrasesFromExcel(fileName);
 
 
         [HttpPost("EmptyToken")]
+        [SwaggerOperation(Summary = "get empty JWT Token - only for developers", Description = "")]
         public async Task<string> EmptyToken()=>await _service.CreateEmptyToken();
     }
 }

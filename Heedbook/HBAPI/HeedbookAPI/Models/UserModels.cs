@@ -87,9 +87,4 @@ namespace UserOperations.Models
         public int Age;
         public string Gender;
     }
-    public class VideoMessage
-    {
-        public string Subject;
-        public string Body;
-    }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace UserOperations.Utils.Interfaces
+namespace HBLib.Utils.Interfaces
 {
     public interface IFileRefUtils
     {

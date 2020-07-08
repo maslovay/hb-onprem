@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UserOperations.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Swashbuckle.AspNetCore.Annotations;
@@ -11,6 +10,7 @@ using UserOperations.Models;
 using Microsoft.AspNetCore.Authorization;
 using HBLib.Utils;
 using UserOperations.Services.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Controllers
 {

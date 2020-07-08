@@ -13,11 +13,9 @@ using System.Security.Cryptography;
 using HBLib.Utils;
 using HBLib;
 using Microsoft.AspNetCore.Http;
-using UserOperations.Utils.CommonOperations;
-using UserOperations.Services.Interfaces;
-using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
-namespace UserOperations.Services
+namespace HBLib.Utils
 {
     public class LoginService : ILoginService
     {

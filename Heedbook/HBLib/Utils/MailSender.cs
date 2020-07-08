@@ -7,12 +7,10 @@ using System.IO;
 using HBLib.Utils;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http;
-using UserOperations.Models;
-using UserOperations.Utils.CommonOperations;
-using UserOperations.Services.Interfaces;
-using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
+using HBLib.Model;
 
-namespace UserOperations.Services
+namespace HBLib.Utils
 {
     public class MailSender : IMailSender
     {

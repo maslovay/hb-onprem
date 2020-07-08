@@ -5,18 +5,12 @@ using System.Threading.Tasks;
 using HBData.Models;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Models;
-using UserOperations.Utils;
-using System.Reflection;
 using System.Net;
 using HBData.Repository;
-using UserOperations.Controllers;
 using HBLib.Utils;
-using UserOperations.Utils.CommonOperations;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http;
 using System.IO;
-using UserOperations.Utils.Interfaces;
-using UserOperations.Services.Interfaces;
 using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
@@ -180,48 +174,18 @@ namespace UserOperations.Services
             return "No such campaign";
         }
 
-        public async Task<object> ContentGet( List<Guid> companyIds, List<Guid> corporationIds, bool inactive, bool screenshot)
+        public async Task<object> ContentGet( List<Guid> companyIds, List<Guid> corporationIds, bool inactive, bool screenshot, bool isTemplate)
         {
-                var roleInToken = _loginService.GetCurrentRoleName();
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
-                if (screenshot == true)
-                {
-                    var contentsWithScreen = GetContentsByStatusIdWithUrls(inactive, companyIds);
-                    return contentsWithScreen;
-                }
-                    var contents = GetContentsByStatusId(inactive, companyIds);
-                    return contents;
-        }
-
-        public async Task<object> ContentPaginatedGet( List<Guid> companyIds, List<Guid> corporationIds,
-                                 bool inactive, int limit = 10, int page = 0,
-                                 string orderBy = "Name", string orderDirection = "desc")
-        {
-                var roleInToken = _loginService.GetCurrentRoleName();
-                var companyIdInToken = _loginService.GetCurrentCompanyId();
-                _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
-
-                var activeStatusId = GetStatusId("Active");
-                List<Content> contents = GetContentsByStatusId(inactive, companyIds);
-                if(contents.Count == 0) return contents;
-
-                ////---PAGINATION---
-                var pageCount = (int)Math.Ceiling((double)contents.Count() / limit);//---round to the bigger 
-
-                Type contentType = contents.First().GetType();
-                PropertyInfo prop = contentType.GetProperty(orderBy);
-                
-                if (orderDirection == "asc")
-                {
-                    var contentsList = contents.OrderBy(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
-                    return new { contentsList, pageCount, orderBy, limit, page };
-                }
-                else
-                {
-                    var contentsList = contents.OrderByDescending(p => prop.GetValue(p)).Skip(page * limit).Take(limit).ToList();
-                    return new { contentsList, pageCount, orderBy, limit, page };
-                }
+            var roleInToken = _loginService.GetCurrentRoleName();
+            var companyIdInToken = _loginService.GetCurrentCompanyId();
+            _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, roleInToken, companyIdInToken);
+            if (screenshot == true)
+            {
+                var contentsWithScreen = GetContentsByStatusIdWithUrls(inactive, companyIds, isTemplate);
+                return contentsWithScreen;
+            }
+            var contents = GetContentsByStatusId(inactive, companyIds, isTemplate);
+            return contents;
         }
 
         public async Task<ContentWithScreenshotModel> ContentPost(IFormCollection formData)
@@ -407,23 +371,24 @@ namespace UserOperations.Services
         {
             _repository.Delete<T>(entity);
         }
-        private List<Content> GetContentsByStatusId(bool Inactive, List<Guid> companyIds)
+        private List<Content> GetContentsByStatusId(bool Inactive, List<Guid> companyIds, bool isTemplate)
         {
             var activeStatusId = GetStatusId("Active");
             if (Inactive == false)
             {
                 return _repository.GetAsQueryable<Content>()
-                   .Where(x => x.StatusId == activeStatusId
+                    .Where(x => x.StatusId == activeStatusId
                         && x.CompanyId != null
-                       && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
-                   .ToList();
+                        && (isTemplate ? (x.IsTemplate == isTemplate || companyIds.Contains((Guid)x.CompanyId)):(companyIds.Contains((Guid)x.CompanyId))))
+                    .ToList();
             }
             return _repository.GetAsQueryable<Content>()
-                .Where(x => (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)) && x.CompanyId != null)
+                .Where(x => (isTemplate ? (x.IsTemplate == isTemplate || companyIds.Contains((Guid)x.CompanyId)):(companyIds.Contains((Guid)x.CompanyId))) 
+                    && x.CompanyId != null)
                 .ToList();
         }
 
-        private List<ContentWithScreenshotModel> GetContentsByStatusIdWithUrls(bool Inactive, List<Guid> companyIds)
+        private List<ContentWithScreenshotModel> GetContentsByStatusIdWithUrls(bool Inactive, List<Guid> companyIds, bool isTemplate)
         {
             var activeStatusId = GetStatusId("Active");
             if (Inactive == false)
@@ -431,13 +396,14 @@ namespace UserOperations.Services
                 return  _repository.GetAsQueryable<Content>()
                 .Where(x => x.StatusId == activeStatusId
                     && x.CompanyId != null
-                    && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
+                    && (isTemplate ? (x.IsTemplate == isTemplate || companyIds.Contains((Guid)x.CompanyId)):(companyIds.Contains((Guid)x.CompanyId))))
                 .ToList()
                 .Select(x => new ContentWithScreenshotModel(x, _fileRef.GetFileLink(_containerName, x.ContentId.ToString() + ".png", default)))
                 .ToList();
             }
             return _repository.GetAsQueryable<Content>()
-                .Where(x => (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)) && x.CompanyId != null)
+                .Where(x => (isTemplate ? (x.IsTemplate == isTemplate || companyIds.Contains((Guid)x.CompanyId)):(companyIds.Contains((Guid)x.CompanyId))) 
+                    && x.CompanyId != null)
                 .ToList()
                 .Select(x => new ContentWithScreenshotModel(x, _fileRef.GetFileLink(_containerName, x.ContentId.ToString() + ".png", default)))
                 .ToList();

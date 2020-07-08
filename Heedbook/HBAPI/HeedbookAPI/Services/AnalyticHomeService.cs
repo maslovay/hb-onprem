@@ -3,18 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using UserOperations.Utils;
 using System.Threading.Tasks;
 using UserOperations.Models.Get.HomeController;
-using UserOperations.Utils.AnalyticHomeUtils;
 using HBData.Models;
 using HBData.Repository;
 using Microsoft.EntityFrameworkCore;
 using UserOperations.Models.AnalyticModels;
-using UserOperations.Controllers;
-using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
-using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

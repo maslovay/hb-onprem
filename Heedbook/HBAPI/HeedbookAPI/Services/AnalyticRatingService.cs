@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using HBData;
 using Microsoft.EntityFrameworkCore;
-using UserOperations.Utils;
 using UserOperations.Models.Get.AnalyticRatingController;
-using UserOperations.Utils.AnalyticRatingUtils;
 using HBData.Repository;
 using System.Threading.Tasks;
 using HBData.Models;
 using Newtonsoft.Json;
 using UserOperations.Models.AnalyticModels;
-using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

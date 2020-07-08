@@ -8,13 +8,11 @@ using System.Threading.Tasks;
 using System.IO;
 using HBData.Repository;
 using UserOperations.Utils.AnalyticContentUtils;
-using UserOperations.Controllers;
 using HBData.Models;
 using UserOperations.Models.AnalyticModels;
-using UserOperations.Utils.CommonOperations;
 using HBLib.Utils;
 using UserOperations.Utils.Interfaces;
-using UserOperations.Services.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {

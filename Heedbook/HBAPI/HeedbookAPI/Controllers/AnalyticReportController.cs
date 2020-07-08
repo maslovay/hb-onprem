@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using Microsoft.AspNetCore.Authorization;
-using UserOperations.Utils;
 using HBLib.Utils;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -25,6 +25,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("ActiveEmployee")]
+        [SwaggerOperation(Summary = "ActiveEmployee", Description = "Get Employee SessionInfo List according parameters")]
         public string ReportActiveEmployee([FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
                                                         [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
@@ -36,6 +37,7 @@ namespace UserOperations.Controllers
             deviceIds);
 
         [HttpGet("UserPartial")]
+        [SwaggerOperation(Summary = "Get ReportUserPartial", Description = "Receive list of ReportPartDayEmployeeInfo which contains number of dialogues, working hours, load index for every day in range of days.")]
         public string ReportUserPartial([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
@@ -52,6 +54,7 @@ namespace UserOperations.Controllers
 
 
         [HttpGet("UserFull")]
+        [SwaggerOperation(Summary = "Get ReportUserFull", Description = "Receive list of ReportFullPeriodInfo")]
         public string ReportUserFull([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,

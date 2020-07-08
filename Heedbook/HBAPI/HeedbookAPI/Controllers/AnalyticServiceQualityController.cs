@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using UserOperations.Services;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using UserOperations.Utils;
 using HBLib.Utils;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -25,6 +25,7 @@ namespace UserOperations.Controllers
         }
 
         [HttpGet("Components")]
+        [SwaggerOperation(Summary = "Get ServiceQualityComponents", Description = "Get responce ComponentsSatisfactionInfo model whitch contains average properties for current period")]
         public async Task<string> ServiceQualityComponents([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
@@ -42,6 +43,7 @@ namespace UserOperations.Controllers
         
 
         [HttpGet("Dashboard")]
+        [SwaggerOperation(Summary = "Get ServiceQualityDashboard", Description = "Get responce ComponentsDashboardInfo model")]
         public string ServiceQualityDashboard([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
@@ -59,6 +61,7 @@ namespace UserOperations.Controllers
         
 
         [HttpGet("Rating")]
+        [SwaggerOperation(Summary = "", Description = "Get responce RatingRatingInfo model, which contains SatisfactionIndex, DialogueCount, PositiveEmotionShare, AttentionShare, PositiveToneShare, TextLoyaltyShare, TextPositiveShare.")]
         public async Task<string> ServiceQualityRating([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
@@ -76,6 +79,7 @@ namespace UserOperations.Controllers
         
 
         [HttpGet("SatisfactionStats")]
+        [SwaggerOperation(Summary = "ServiceQualitySatisfactionStats", Description = "Get responce SatisfactionStatsInfo model whitch contains AverageSatisfactionScore, PeriodSatisfaction")]
         public async Task<string> ServiceQualitySatisfactionStats([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end, 
                                                         [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,

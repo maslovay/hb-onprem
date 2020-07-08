@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using HBData.Models;
-using Microsoft.Extensions.Configuration;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Utils.Interfaces;
 

@@ -46,6 +46,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             using (var scope = _factory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
+                System.Console.WriteLine("Function started");
                 _log.Info("Audio analyze scheduler started.");
                 try
                 {
@@ -84,6 +85,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         var recognized = new List<WordRecognized>();
                         
                         _log.Info($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
+                        System.Console.WriteLine($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             try
@@ -93,7 +95,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     break;
                                 
                                 var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
-
                                 if(sttResults?.Error != null && sttResults?.Error.Status == "NOT_FOUND")
                                     continue;
                                     
@@ -172,11 +173,13 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 });
                             });
                             _log.Info($"Has items: {asrResults.Any()}");
+                            System.Console.WriteLine($"Has items: {asrResults.Any()}");
                         }
 
                         if (recognized.Any())
                         {
-                            var languageId = (int) audio.Dialogue.Device.Company.LanguageId;
+                            var languageId = (audio.Dialogue.Device.Company.LanguageId == null) ? 2 : (int) audio.Dialogue.Device.Company.LanguageId;
+                            _log.Info("Starting calculating speech speed");
                             var speechSpeed = GetSpeechSpeed(recognized, languageId, _log);
                             _log.Info($"Speech speed: {speechSpeed}");
 
@@ -339,6 +342,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private Double GetSpeechSpeed(List<WordRecognized> words, Int32 languageId, ElasticClient _log)
         {
+            _log.Info($"Words - {JsonConvert.SerializeObject(words)}");
+
             var vowels = Vowels.VowelsDictionary[languageId];
             var sumTime = words.Sum(item =>
             {
@@ -368,8 +373,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             var result = new List<PhraseResult>();
             word = lemmatizer.Lemmatize(word.ToLower());
             var index = 0;
-            // Console.WriteLine(JsonConvert.SerializeObject(text));
-            // Console.WriteLine(JsonConvert.SerializeObject(word));
 
             foreach (var w in text)
             {

@@ -5,11 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-using HBLib.Utils;
-using UserOperations.Utils.CommonOperations;
-using UserOperations.Services.Interfaces;
 using HBLib.Utils.Interfaces;
-using UserOperations.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
@@ -116,6 +112,40 @@ namespace UserOperations.Services
             await Task.Run(() => _sftpClient.DeleteFileIfExistsAsync($"{container}/{companyId}/{fileName}"));
             // _log.Info("MediaFile/File DELETE finished"); 
             return "OK";
+        }
+        public async Task<List<string>> FilePostInContainer([FromForm] IFormCollection formData)
+        {
+            // _log.Info("MediaFile/File POST started");
+            var containerNameParam = formData.FirstOrDefault(x => x.Key == "containerName");
+            var fileNameParam = formData.FirstOrDefault(x => x.Key == "fileName");
+
+            if(!containerNameParam.Value.Any())
+                throw new ArgumentNullException("containerName in null");
+
+            if(!fileNameParam.Value.Any())
+                throw new ArgumentNullException("fileName in null");
+            var containerName = containerNameParam.Value.ToString();
+            var fileName = fileNameParam.Value.ToString();
+
+            var tasks = new List<Task>();
+            var fileNames = new List<string>();
+            foreach (var file in formData.Files)
+            {
+                FileInfo fileInfo = new FileInfo(file.FileName);
+                var memoryStream = file.OpenReadStream();
+                tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}", fileName, true));
+                fileNames.Add(fileName);
+                //memoryStream.Close();
+            }
+            await Task.WhenAll(tasks);
+
+            List<string> result = new List<string>();
+            foreach (var file in fileNames)
+            {
+                result.Add(_fileRef.GetFileLink(containerName, file, default));
+            }
+            // _log.Info("MediaFile/File POST finished"); 
+            return result;
         }
     }
 }

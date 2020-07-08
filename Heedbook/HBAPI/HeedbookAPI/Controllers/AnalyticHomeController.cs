@@ -5,8 +5,8 @@ using UserOperations.Services;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using UserOperations.Models.Get.HomeController;
-using UserOperations.Utils;
 using HBLib.Utils;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
@@ -41,6 +41,7 @@ namespace UserOperations.Controllers
         
 
         [HttpGet("NewDashboard")]
+        [SwaggerOperation(Summary = "GetNewDashboard", Description = "Get ClientCount, SatisfactionCount, LoadIndex, SmileShare, Workload with filter for current period")]
         public async Task<NewDashboardInfo> GetNewDashboard([FromQuery(Name = "begTime")] string beg,
                                                    [FromQuery(Name = "endTime")] string end,
                                                    [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
@@ -54,6 +55,7 @@ namespace UserOperations.Controllers
                 deviceIds);
 
         [HttpGet("DashboardFiltered")]
+        [SwaggerOperation(Summary = "DashboardFiltered", Description = "Get DialogueCount, CrossIndex, CrossIndexIndustry, LoadIndex, LoadIndexIndustry")]
         public async Task<string> GetDashboardFiltered([FromQuery(Name = "begTime")] string beg,
                                                   [FromQuery(Name = "endTime")] string end,
                                                   [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,

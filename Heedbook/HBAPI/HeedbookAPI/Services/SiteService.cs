@@ -1,10 +1,7 @@
 using System;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UserOperations.Services;
-using Swashbuckle.AspNetCore.Annotations;
 using UserOperations.Models.Post;
-using UserOperations.Services.Interfaces;
+using HBLib.Utils.Interfaces;
 
 namespace UserOperations.Services
 {
