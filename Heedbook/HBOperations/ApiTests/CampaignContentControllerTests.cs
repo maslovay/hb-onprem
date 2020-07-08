@@ -302,6 +302,7 @@ namespace ApiTests
                 new List<Guid>{companyId},
                 new List<Guid>{corporationId},
                 false,
+                true,
                 true);            
             System.Console.WriteLine(JsonConvert.SerializeObject(result));
             var listOfScreenShotModel = (List<ContentWithScreenshotModel>)result;
@@ -309,57 +310,6 @@ namespace ApiTests
             //Assert
             Assert.IsFalse(listOfScreenShotModel is null);
             Assert.IsTrue(listOfScreenShotModel.Count > 0);
-        }
-        [Test]
-        public async Task ContentPaginatedGetGetTest()
-        {
-            //Arrange
-            var companyId = Guid.NewGuid();
-            var corporationId = Guid.NewGuid();
-            var campaignId = Guid.NewGuid();
-            var campaignContentId = Guid.NewGuid();
-            var contentId = Guid.NewGuid();
-            var roleId = Guid.NewGuid();
-            moqILoginService.Setup(p => p.GetCurrentRoleName())
-                .Returns("Supervisor");
-            moqILoginService.Setup(p => p.GetCurrentCompanyId())
-                .Returns(companyId);
-            repositoryMock.Setup(p => p.GetAsQueryable<Status>())
-                .Returns(new TestAsyncEnumerable<Status>(new List<Status>
-                {
-                    new Status
-                    {
-                        StatusName = "Active",
-                        StatusId = 3
-                    },
-                    new Status
-                    {
-                        StatusName = "Inactive",
-                        StatusId = 8
-                    }
-                }.AsQueryable()));
-            var companyIds = new List<Guid>{companyId};
-            requestFiltersMock.Setup(p => p.CheckRolesAndChangeCompaniesInFilter(ref companyIds, It.IsAny<List<Guid>>(), It.IsAny<string>(), It.IsAny<Guid>()));
-            repositoryMock.Setup(p => p.GetAsQueryable<Content>())
-                .Returns(new TestAsyncEnumerable<Content>(new List<Content>
-                {
-                    new Content
-                    {
-                        StatusId = 3,
-                        ContentId = contentId,
-                        IsTemplate = true,
-                        CompanyId = companyId
-                    }
-                }.AsQueryable()));            
-
-            //Act
-            var result = await campaignContentService.ContentPaginatedGet(
-                new List<Guid>{companyId},
-                new List<Guid>{corporationId},
-                false);
-
-            //Assert
-            Assert.IsFalse(result is null);
         }
         [Test]
         public async Task ContentPostPostTest()
