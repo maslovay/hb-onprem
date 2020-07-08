@@ -46,20 +46,5 @@ namespace ApiTests
             Assert.IsTrue(result.StatusCode == 200);
             Assert.IsTrue((string)result.Value == "Logged");
         }
-        [Test]
-        public async Task SendLogGetTest()
-        {
-            //Arrange
-
-            //Act
-            var result = await loggingController.SendLog(
-                "message",
-                "severity",
-                "functionName");
-
-            //Assert
-            Assert.IsTrue(result.StatusCode == 200);
-            Assert.IsTrue((string)result.Value == "logged");
-        }
     }
 }

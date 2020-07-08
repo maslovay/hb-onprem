@@ -17,10 +17,6 @@ using UserOperations.AccountModels;
 using UserOperations.Models.AnalyticModels;
 using UserOperations.Services;
 using UserOperations.Services.Interfaces;
-using UserOperations.Utils;
-using UserOperations.Utils.AnalyticHomeUtils;
-using UserOperations.Utils.AnalyticOfficeUtils;
-using UserOperations.Utils.CommonOperations;
 using UserOperations.Utils.Interfaces;
 
 namespace ApiTests

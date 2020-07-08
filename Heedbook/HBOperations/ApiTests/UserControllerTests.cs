@@ -19,6 +19,7 @@ using System.Linq.Expressions;
 using UserOperations.Controllers;
 using Newtonsoft.Json.Linq;
 using UserOperations.Models.Session;
+using HBLib.Model;
 
 namespace ApiTests
 {
