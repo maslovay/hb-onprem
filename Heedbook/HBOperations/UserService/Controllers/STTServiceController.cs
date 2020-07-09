@@ -32,7 +32,7 @@ namespace UserService.Controllers
             _publisher = publisher;
         }
 
-        [HttpPost]
+        [HttpPost("sttfirst")]
         [SwaggerOperation(Description =
             "Run local stt for dialogue")]
         public async Task<IActionResult> STTRun1([FromBody] STTMessageRun message)
@@ -44,7 +44,7 @@ namespace UserService.Controllers
             return Ok();
         }
 
-        [HttpPost]
+        [HttpPost("sttsecond")]
         [SwaggerOperation(Description =
             "Run local stt for dialogue second variant")]
         public async Task<IActionResult> STTRun2([FromBody] STTMessageRun message)
