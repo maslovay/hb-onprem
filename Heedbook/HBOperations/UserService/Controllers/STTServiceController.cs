@@ -47,12 +47,9 @@ namespace UserService.Controllers
         [HttpPost("sttsecond")]
         [SwaggerOperation(Description =
             "Run local stt for dialogue second variant")]
-        public async Task<IActionResult> STTRun2([FromBody] STTMessageRun message)
+        public async Task<IActionResult> STTRun2([FromBody] string message, string queue)
         {
-          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
-            System.Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
-            _publisher.Publish(message);
-            System.Console.WriteLine("Sended");
+            _publisher.PublishQueue(queue, message);
             return Ok();
         }
 
