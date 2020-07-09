@@ -8,6 +8,8 @@ using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
+using Notifications.Base;
+using RabbitMqEventBus.Events;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AudioAnalyzeService
@@ -20,12 +22,14 @@ namespace AudioAnalyzeService
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly GoogleConnector _googleConnector;
         private readonly SftpClient _sftpclient;
+        private readonly INotificationHandler _handler;
         public AudioAnalyze(
             IServiceScopeFactory factory,
             AsrHttpClient.AsrHttpClient asrHttpClient,
             ElasticClientFactory elasticClientFactory,
             GoogleConnector googleConnector,
-            SftpClient sftpclient
+            SftpClient sftpclient,
+            INotificationHandler handler
         )
         {
             try
@@ -33,6 +37,7 @@ namespace AudioAnalyzeService
                 // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
                 _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
                 _asrHttpClient = asrHttpClient;
+                _handler = handler;
                 _elasticClientFactory = elasticClientFactory;
                 _googleConnector = googleConnector;
                 _sftpclient = sftpclient;
@@ -125,7 +130,11 @@ namespace AudioAnalyzeService
                         _context.SaveChanges();
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
                         {
-                            await _asrHttpClient.StartAudioRecognize(dialogueId);
+                            //await _asrHttpClient.StartAudioRecognize(dialogueId);
+                            var message = new STTMessageRun{
+                                Path = path
+                            };
+                            _handler.EventRaised(message);
                         }
                         _log.Info("Started recognize audio");
                     }
