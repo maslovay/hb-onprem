@@ -9,9 +9,10 @@ using HBLib;
 using Notifications.Base;
 using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
-using Notifications.Base;
+using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace AudioAnalyzeService
 {
@@ -139,7 +140,7 @@ namespace AudioAnalyzeService
                                 Path = path
                             };
                             
-                            _handler.EventRaised(message);
+                            _publisher.PublishQueue("STTMessageRun", JsonConvert.SerializeObject(message));
                         }
                         _log.Info("Started recognize audio");
                     }
