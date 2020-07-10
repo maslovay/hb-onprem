@@ -6,6 +6,7 @@ using HBData;
 using HBData.Models;
 using HBData.Repository;
 using HBLib;
+using Notifications.Base;
 using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
 using Notifications.Base;
@@ -22,9 +23,11 @@ namespace AudioAnalyzeService
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly GoogleConnector _googleConnector;
         private readonly SftpClient _sftpclient;
+        private readonly INotificationPublisher _publisher;
         private readonly INotificationHandler _handler;
         public AudioAnalyze(
             IServiceScopeFactory factory,
+            INotificationPublisher publisher,
             AsrHttpClient.AsrHttpClient asrHttpClient,
             ElasticClientFactory elasticClientFactory,
             GoogleConnector googleConnector,
@@ -41,6 +44,7 @@ namespace AudioAnalyzeService
                 _elasticClientFactory = elasticClientFactory;
                 _googleConnector = googleConnector;
                 _sftpclient = sftpclient;
+                _publisher = publisher;
             }
             catch
             {
@@ -134,6 +138,7 @@ namespace AudioAnalyzeService
                             var message = new STTMessageRun{
                                 Path = path
                             };
+                            
                             _handler.EventRaised(message);
                         }
                         _log.Info("Started recognize audio");
