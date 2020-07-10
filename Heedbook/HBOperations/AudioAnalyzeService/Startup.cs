@@ -66,6 +66,7 @@ namespace AudioAnalyzeService
         {
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             service.Subscribe<AudioAnalyzeRun, AudioAnalyzeRunHandler>();
+            var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();

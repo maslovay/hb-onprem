@@ -83,6 +83,7 @@ namespace AudioAnalyzeService
                     
                     if (dialogue != null)
                     {
+                        _log.Info($"Dialogue {dialogue.DialogueId} exists");
                         var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId
                                 && p.FileContainer == containerName
                             ).ToList();
@@ -131,17 +132,18 @@ namespace AudioAnalyzeService
                                 fileAudio.StatusId = 6;
                             }
                         }
-                        _context.FileAudioDialogues.Add(fileAudio);
-                        _context.SaveChanges();
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
                         {
-                            //await _asrHttpClient.StartAudioRecognize(dialogueId);
+                            _log.Info("Processing on prem case");
                             var message = new STTMessageRun{
                                 Path = path
                             };
-                            
+                            _log.Info($"Sending message {JsonConvert.SerializeObject(message)} to STTMessageRun queue");
                             _publisher.PublishQueue("STTMessageRun", JsonConvert.SerializeObject(message));
+                            fileAudio.StatusId = 6;
                         }
+                        _context.FileAudioDialogues.Add(fileAudio);
+                        _context.SaveChanges();
                         _log.Info("Started recognize audio");
                     }
                 }
