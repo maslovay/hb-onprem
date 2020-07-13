@@ -7,6 +7,8 @@ namespace RabbitMqEventBus
     {
         void Publish(IntegrationEvent @event);
 
+        void PublishQueue(String queue, String message);
+
         void Subscribe<T, TH>()
             where T : IntegrationEvent
             where TH : IIntegrationEventHandler<T>;

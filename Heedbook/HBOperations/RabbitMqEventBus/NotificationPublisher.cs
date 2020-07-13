@@ -66,6 +66,31 @@ namespace RabbitMqEventBus
             }
         }
 
+        public void PublishQueue(String queue, String message)
+        {
+            if (!_persistentConnection.IsConnected) _persistentConnection.TryConnect();
+            var policy = Policy.Handle<BrokerUnreachableException>()
+                               .Or<SocketException>()
+                               .WaitAndRetry(_retryCount,
+                                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) => { });
+
+            using (var channel = _persistentConnection.CreateModel())
+            {
+                var body = Encoding.UTF8.GetBytes(message);
+                policy.Execute(() =>
+                {
+                    var properties = channel.CreateBasicProperties();
+                    properties.DeliveryMode = 2; // persistent
+                    System.Console.WriteLine(queue);
+                    channel.BasicPublish("",
+                        queue,
+                        true,
+                        properties,
+                        body);
+                });
+            }
+        }
+
         public void SubscribeDynamic<TH>(String eventName)
             where TH : IDynamicIntegrationEventHandler
         {
