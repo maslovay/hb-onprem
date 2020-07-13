@@ -146,6 +146,10 @@ namespace AudioAnalyzeService
                         _context.SaveChanges();
                         _log.Info("Started recognize audio");
                     }
+                    else
+                    {
+                        _log.Error($"No such dialogue {dialogueId}");
+                    }
                 }
 
                 _log.Info("Function Audio STT finished");
