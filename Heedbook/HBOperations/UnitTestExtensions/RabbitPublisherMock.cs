@@ -21,6 +21,11 @@ namespace UnitTestExtensions
             _pipesSender.SendEventMessage(@event);
         }
 
+        public void PublishQueue(String queue, String message)
+        {
+            _pipesSender.SendEventQueueMessage(queue, message);
+        }
+
         public void Subscribe<T, TH>() where T : IntegrationEvent where TH : IIntegrationEventHandler<T>
         {
             _pipesSender.RegisterPipe<T>();

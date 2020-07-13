@@ -32,6 +32,15 @@ namespace UnitTestExtensions
 
             pipe?.Write(Encoding.UTF8.GetBytes(text));
         }
+
+        public void SendEventQueueMessage(String queue, String message)
+        {
+            var pipe = _pipeServerStreams[queue];
+
+            pipe?.Write(Encoding.UTF8.GetBytes(message));
+        }
+
+
         
         public void Dispose()
         {
