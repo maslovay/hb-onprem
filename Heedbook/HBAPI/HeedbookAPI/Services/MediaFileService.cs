@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using HBLib.Utils.Interfaces;
+using HBLib.Utils;
 
 namespace UserOperations.Services
 {
@@ -15,15 +16,18 @@ namespace UserOperations.Services
         private readonly ISftpClient _sftpClient;
         private readonly IFileRefUtils _fileRef;
         private readonly string _containerName;
+        private readonly ElasticClient _log;
         public MediaFileService(
             ILoginService loginService,
             ISftpClient sftpClient,
-            IFileRefUtils fileRef)
+            IFileRefUtils fileRef,
+            ElasticClient log)
         {
             _loginService = loginService;
             _sftpClient = sftpClient;
             _fileRef = fileRef;
             _containerName = "media";
+            _log = log;
         }
 
         public async Task<object> FileGet(
@@ -146,6 +150,16 @@ namespace UserOperations.Services
             }
             // _log.Info("MediaFile/File POST finished"); 
             return result;
+        }
+        public async Task TmpWebHook([FromForm] IFormCollection formData)
+        {
+            var resultLog = "";
+            foreach(var FD in formData)
+            {
+                var fdString = $"{FD.Key} {FD.Value}\n";
+                resultLog += fdString;
+            }
+            _log.Info(resultLog);
         }
     }
 }

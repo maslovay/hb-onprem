@@ -68,5 +68,11 @@ namespace UserOperations.Controllers
         [SwaggerResponse(200, "File uploaded")]
         public async Task<object> FilePostInContainer([FromForm] IFormCollection formData) =>
             await _mediaFileService.FilePostInContainer(formData);
+        
+        [HttpPost("TmpWebHook")]
+        [SwaggerOperation(Description = "TmpWebHook")]
+        [SwaggerResponse(200, "always return 200")]
+        public async Task TmpWebHook([FromForm] IFormCollection formData) =>
+            await _mediaFileService.TmpWebHook(formData);
     }
 }
