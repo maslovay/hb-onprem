@@ -7,6 +7,11 @@ using System.IO;
 using Microsoft.AspNetCore.Http;
 using HBLib.Utils.Interfaces;
 using HBLib.Utils;
+using HBLib;
+using System.Net;
+using Newtonsoft.Json;
+using System.Text;
+using RabbitMqEventBus.Events;
 
 namespace UserOperations.Services
 {
@@ -17,17 +22,20 @@ namespace UserOperations.Services
         private readonly IFileRefUtils _fileRef;
         private readonly string _containerName;
         private readonly ElasticClient _log;
+        private readonly URLSettings _urlSettings;
         public MediaFileService(
             ILoginService loginService,
             ISftpClient sftpClient,
             IFileRefUtils fileRef,
-            ElasticClient log)
+            ElasticClient log,
+            URLSettings urlSettings)
         {
             _loginService = loginService;
             _sftpClient = sftpClient;
             _fileRef = fileRef;
             _containerName = "media";
             _log = log;
+            _urlSettings = urlSettings;
         }
 
         public async Task<object> FileGet(
@@ -73,6 +81,7 @@ namespace UserOperations.Services
                 var memoryStream = file.OpenReadStream();
                 tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}/{companyId}", fn, true));
                 fileNames.Add(fn);
+                await SendMessageCreateGif($"{containerName}/{companyId}/{fn}");
                 //memoryStream.Close();
             }
             await Task.WhenAll(tasks);
@@ -160,6 +169,28 @@ namespace UserOperations.Services
                 resultLog += fdString;
             }
             _log.Info(resultLog);
+        }
+        private async Task SendMessageCreateGif(string fileName)
+        {
+            var url = _urlSettings.Host + $"user/VideoToSound/VideoToGif";
+                
+            var request = WebRequest.Create(url);
+            request.Credentials = CredentialCache.DefaultCredentials;
+            request.Method = "POST";
+            request.ContentType = "application/json-patch+json";                
+
+            var model = new VideoContentToGifRun
+            {
+                Path = $"{fileName}"                    
+            };
+            var json = JsonConvert.SerializeObject(model);
+            var data = Encoding.ASCII.GetBytes(json);
+
+            using(var stream = request.GetRequestStream())
+            {
+                stream.Write(data, 0, data.Length);
+            }
+            var responce = request.GetResponseAsync();
         }
     }
 }

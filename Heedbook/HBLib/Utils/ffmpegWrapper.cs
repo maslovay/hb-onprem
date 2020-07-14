@@ -86,7 +86,53 @@ namespace HBLib.Utils
                 throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
             }
         }
-
+        public async Task<String> VideoToGifAsync(String videoFn, String gifFn)
+        {
+            try
+            {
+                var duration = GetDuration(videoFn);
+                videoFn = Path.GetFullPath(videoFn);
+                gifFn = Path.GetFullPath(gifFn);
+                var fps = 10;
+                var scale = 240;
+               
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $" -ss {(int)duration/3} -t {(int)duration/6} -i {videoFn} -vf \"fps={fps},scale={scale}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" -loop 0 {gifFn}");
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
+            }
+        }
+        public async Task<String> CatAudio(String audioFn , int begTime, int endTime, string audioPartFileName)
+        {
+            try
+            {
+                var _begTime = TimeSpan.FromSeconds(begTime);
+                var _endTime = TimeSpan.FromSeconds(endTime);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $@"-i {audioFn} -ss {_begTime.ToString("hh\\:mm\\:ss")} -to {_endTime.ToString("hh\\:mm\\:ss")} -acodec copy -vcodec copy {audioPartFileName}");
+            }
+            catch(Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}");
+            }
+        }
+        public async Task<String> FilterAudio(String audioFn , int highpass, int lowpass, string newAudioFileName)
+        {
+            try
+            {
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $"-y -i {audioFn} -af \"highpass=f={highpass}, lowpass=f={lowpass}\" {newAudioFileName}");
+            }
+            catch(Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}");
+            }
+        }
         public async Task<String> SplitAudioToMono(String audioFn, String leftAudioFn, String rightAudioFn)
         {
             try
