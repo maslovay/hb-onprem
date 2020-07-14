@@ -6,9 +6,13 @@ using HBData;
 using HBData.Models;
 using HBData.Repository;
 using HBLib;
+using Notifications.Base;
 using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace AudioAnalyzeService
 {
@@ -20,12 +24,16 @@ namespace AudioAnalyzeService
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly GoogleConnector _googleConnector;
         private readonly SftpClient _sftpclient;
+        private readonly INotificationPublisher _publisher;
+        private readonly INotificationHandler _handler;
         public AudioAnalyze(
             IServiceScopeFactory factory,
+            INotificationPublisher publisher,
             AsrHttpClient.AsrHttpClient asrHttpClient,
             ElasticClientFactory elasticClientFactory,
             GoogleConnector googleConnector,
-            SftpClient sftpclient
+            SftpClient sftpclient,
+            INotificationHandler handler
         )
         {
             try
@@ -33,9 +41,11 @@ namespace AudioAnalyzeService
                 // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
                 _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
                 _asrHttpClient = asrHttpClient;
+                _handler = handler;
                 _elasticClientFactory = elasticClientFactory;
                 _googleConnector = googleConnector;
                 _sftpclient = sftpclient;
+                _publisher = publisher;
             }
             catch
             {
@@ -49,8 +59,7 @@ namespace AudioAnalyzeService
             _log.SetFormat("{Path}");
             _log.SetArgs(path);
             _log.Info("Function started");
-            _log.Info($"Environment is {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
-            System.Console.WriteLine("Function started");
+
             try
             {
                 if (!String.IsNullOrWhiteSpace(path))
@@ -63,7 +72,6 @@ namespace AudioAnalyzeService
                         .FirstOrDefault(p => p.DialogueId == dialogueId);
 
                     var fileExist = await _sftpclient.IsFileExistsAsync(path);
-                    System.Console.WriteLine($"File exist {fileExist}");
                     if(!fileExist)
                     {
                         dialogue.Comment += " dialogue not have audio";
@@ -75,6 +83,7 @@ namespace AudioAnalyzeService
                     
                     if (dialogue != null)
                     {
+                        _log.Info($"Dialogue {dialogue.DialogueId} exists");
                         var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId
                                 && p.FileContainer == containerName
                             ).ToList();
@@ -94,7 +103,6 @@ namespace AudioAnalyzeService
                             Duration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds
                         };
                         await _googleConnector.CheckApiKey();
-                        System.Console.WriteLine($"Environment is {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             var languageId = Int32.Parse("2");
@@ -124,15 +132,22 @@ namespace AudioAnalyzeService
                                 fileAudio.StatusId = 6;
                             }
                         }
-                        _context.FileAudioDialogues.Add(fileAudio);
-                        _context.SaveChanges();
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
                         {
-                            System.Console.WriteLine("Send files to stt");
-                            await _asrHttpClient.StartAudioRecognize(dialogueId);
+                            _log.Info("Processing on prem case");
+                            var message = new STTMessageRun{
+                                Path = path
+                            };
+                            _log.Info($"Sending message {JsonConvert.SerializeObject(message)} to STTMessageRun queue");
+                            _publisher.PublishQueue("STTMessageRun", JsonConvert.SerializeObject(message));
                         }
-                        System.Console.WriteLine("Function finished");
+                        _context.FileAudioDialogues.Add(fileAudio);
+                        _context.SaveChanges();
                         _log.Info("Started recognize audio");
+                    }
+                    else
+                    {
+                        _log.Error($"No such dialogue {dialogueId}");
                     }
                 }
 
