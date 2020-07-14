@@ -30,6 +30,10 @@ using System.Data.SqlClient;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
 using HBLib.Utils.Interfaces;
+using System.Text;
+using System.Collections.Specialized;
+using System.Threading;
+using System.Net.Http;
 
 namespace UserOperations.Controllers
 {
@@ -90,6 +94,37 @@ namespace UserOperations.Controllers
             _context.SaveChanges();
 
             return Ok();
+        }
+
+        [HttpGet("Asr")]
+        public async Task<IActionResult> STTRecalculate()
+        {
+            var begTime = DateTime.UtcNow.AddDays(-270);
+            var dialogues = _context.Dialogues
+                .Include(p => p.ApplicationUser.Company)
+                .Include(p => p.DialogueWord)
+                .Where(p => p.StatusId == 3 && p.ApplicationUser.Company.IsExtended == true && !p.DialogueWord.Any())
+                .Take(1000)
+                .ToList();
+
+            using (var client = new HttpClient())
+            {
+                foreach( var dialogue in dialogues)
+                {
+                    var values = new Dictionary<string, string>();
+                    values["Path"] = $"dialogueaudios/{dialogue.DialogueId}.wav";
+                    string json = JsonConvert.SerializeObject(values);
+
+                    System.Console.WriteLine($"Send {json}");
+                    var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                    var response = await client.PostAsync("https://heedbookapi.northeurope.cloudapp.azure.com/user/AudioAnalyze/audio-analyze", httpContent);
+
+                    System.Console.WriteLine($"Proceeded {dialogue.DialogueId}, result {response.Content}");
+                    Thread.Sleep(100);
+                }
+            }
+
+            return Ok(dialogues.Count());
         }
 
         [HttpGet("SalesStageCreate")]
