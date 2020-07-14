@@ -140,7 +140,6 @@ namespace AudioAnalyzeService
                             };
                             _log.Info($"Sending message {JsonConvert.SerializeObject(message)} to STTMessageRun queue");
                             _publisher.PublishQueue("STTMessageRun", JsonConvert.SerializeObject(message));
-                            fileAudio.StatusId = 6;
                         }
                         _context.FileAudioDialogues.Add(fileAudio);
                         _context.SaveChanges();
