@@ -303,7 +303,7 @@ namespace UserOperations.Services
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
                     // FullName = p.ApplicationUser.FullName,
-                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault() == null ? 0 : p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                     IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
                 })
                 .ToList();
