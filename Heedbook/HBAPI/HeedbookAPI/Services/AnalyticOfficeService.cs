@@ -162,19 +162,20 @@ namespace UserOperations.Services
 
             //----new diagrams---dialogue amount by device and by employee
             var dialogueUserDate = dialoguesUserCur?
-                 .GroupBy(p => p.BegTime.Date)
-                 .OrderBy(p => p.Key)
-                 .Select(p => new 
-                 {
-                     Day = p.Key.ToShortDateString(),
-                     DialoguesUsers = p.GroupBy(r => r.ApplicationUserId)
-                     .Select(r => new 
-                                    {
-                                        UserId = (Guid)r.Key,
-                                        ClientCount = r.Count(),
-                                        r.FirstOrDefault()?.FullName
-                                    }).OrderBy(r => r.UserId).ToArray()
-                 }).ToArray();
+                .Where(p => p.ApplicationUserId != null)
+                .GroupBy(p => p.BegTime.Date)
+                .OrderBy(p => p.Key)
+                .Select(p => new 
+                {
+                    Day = p.Key.ToShortDateString(),
+                    DialoguesUsers = p.GroupBy(r => r.ApplicationUserId)
+                    .Select(r => new 
+                                {
+                                    UserId = (Guid)r.Key,
+                                    ClientCount = r.Count(),
+                                    r.FirstOrDefault()?.FullName
+                                }).OrderBy(r => r.UserId).ToArray()
+                }).ToArray();
 
 
             var dialogueDeviceDate = dialoguesDevicesCur?
