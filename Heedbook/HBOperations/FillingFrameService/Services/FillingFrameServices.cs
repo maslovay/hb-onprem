@@ -100,30 +100,41 @@ namespace FillingFrameService.Services
         {
             
             string localPath;
+            var fileExist = await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}");
             if (isExtended)
             {
-                localPath =
-                    await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + fileAvatar.FileName);
-                System.Console.WriteLine($"Avatar path - {localPath}");
-            
-
-                var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value);
-                var rectangle = new Rectangle
+                if (message.ClientId != null)
                 {
-                    Height = faceRectangle.Height,
-                    Width = faceRectangle.Width,
-                    X = faceRectangle.Top,
-                    Y = faceRectangle.Left
-                };
+                    
+                    log.Info($"Rename client avatar {client.Avatar} as dialogue avatar {message.DialogueId}.jpg");
+                    localPath =
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync($"clientavatars/{client.Avatar}");
+                    await _sftpClient.UploadAsync(localPath, "clientavatars/", $"{message.DialogueId}.jpg");
+                }
+                else
+                {
+                    localPath =
+                        await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + fileAvatar.FileName);
+                    System.Console.WriteLine($"Avatar path - {localPath}");
+                
 
-                var stream = FaceDetection.CreateAvatar(localPath, rectangle);
-                stream.Seek(0, SeekOrigin.Begin);
-                await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
-                stream.Close();
+                    var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value);
+                    var rectangle = new Rectangle
+                    {
+                        Height = faceRectangle.Height,
+                        Width = faceRectangle.Width,
+                        X = faceRectangle.Top,
+                        Y = faceRectangle.Left
+                    };
+
+                    var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await _sftpClient.UploadAsMemoryStreamAsync(stream, "clientavatars/", $"{message.DialogueId}.jpg");
+                    stream.Close();
+                }
             }
             else
             {
-                var fileExist = await _sftpClient.IsFileExistsAsync($"clientavatars/{client.Avatar}");
                 log.Info($"Client avatar - {client.Avatar}, file exist - {fileExist}");
                 if (message.ClientId != null)
                 {
@@ -161,6 +172,17 @@ namespace FillingFrameService.Services
                     stream.Close();
                 }
             }
+        }
+
+        public class FaceRectangle
+        {
+            public Int32 Top { get; set; }
+
+            public Int32 Width { get; set; }
+
+            public Int32 Height { get; set; }
+
+            public Int32 Left { get; set; }
         }
 
     }
