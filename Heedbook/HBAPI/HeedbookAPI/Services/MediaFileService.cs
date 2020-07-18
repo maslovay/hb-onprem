@@ -78,10 +78,13 @@ namespace UserOperations.Services
             {
                 FileInfo fileInfo = new FileInfo(file.FileName);
                 var fn = Guid.NewGuid() + fileInfo.Extension;
+                System.Console.WriteLine(fileInfo.Extension);
                 var memoryStream = file.OpenReadStream();
                 tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}/{companyId}", fn, true));
                 fileNames.Add(fn);
-                await SendMessageCreateGif($"{containerName}/{companyId}/{fn}");
+
+                if(fileInfo.Extension == ".mkv" || fileInfo.Extension == ".mp4")
+                    await SendMessageCreateGif($"{containerName}/{companyId}/{fn}");
                 //memoryStream.Close();
             }
             await Task.WhenAll(tasks);

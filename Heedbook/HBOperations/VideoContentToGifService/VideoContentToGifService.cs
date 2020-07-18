@@ -46,7 +46,7 @@ namespace VideoContentToGifService
                 _log.Info($"Function started with path: {path}");
                 if(await _sftpClient.IsFileExistsAsync(path))
                 {
-                    System.Console.WriteLine($"path: {path}");
+                    // System.Console.WriteLine($"path: {path}");
 
                     await _sftpClient.DownloadFromFtpToLocalDiskAsync(path, Directory.GetCurrentDirectory());
                     var localVideoName = Path.GetFileName(path);
@@ -60,7 +60,7 @@ namespace VideoContentToGifService
 
                     await _sftpClient.CreateIfDirNoExistsAsync("gif");
                     await _sftpClient.UploadAsync(localGifName, "gif", $"{localGifName}");
-                    System.Console.WriteLine($"ended");
+                    // System.Console.WriteLine($"ended");
 
                     File.Delete(localVideoName);
                     File.Delete(localGifName);
