@@ -74,6 +74,7 @@ namespace UserOperations.Services
             {
                 FileInfo fileInfo = new FileInfo(file.FileName);
                 var fn = Guid.NewGuid() + fileInfo.Extension;
+                System.Console.WriteLine(fileInfo.Extension);
                 var memoryStream = file.OpenReadStream();
                 tasks.Add(_sftpClient.UploadAsMemoryStreamAsync(memoryStream, $"{containerName}/{companyId}", fn, true));
                 fileNames.Add(fn);
