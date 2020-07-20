@@ -29,5 +29,13 @@ namespace UserService.Controllers
             _handler.EventRaised(message);
             return Ok();
         }
+        [HttpPost("VideoToGif")]
+        [SwaggerOperation(Description = "Extract audio from video")]
+        public IActionResult VideoToGif([FromBody] VideoContentToGifRun message)
+        {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            _handler.EventRaised(message);
+            return Ok();
+        }
     }
 }
