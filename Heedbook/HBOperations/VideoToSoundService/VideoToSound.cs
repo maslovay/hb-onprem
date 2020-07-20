@@ -51,84 +51,57 @@ namespace VideoToSoundService
 
                 if (File.Exists(localAudioPath))
                 {
-                    _log.Info("Processing mono audio");
-                    await _sftpClient.UploadAsync(localAudioPath, "dialogueaudios", $"{dialogueId}.wav");
-                    File.Delete(localAudioPath);
-                    File.Delete(localVideoPath);
-
-                    var audioAnalyzeEvent = new AudioAnalyzeRun
+                    if (await _wrapper.IsAudioStereo(localAudioPath))
                     {
-                        Path = uploadPath
-                    };
-                    var toneAnalyzeEvent = new ToneAnalyzeRun
-                    {
-                        Path = uploadPath
-                    };
-                    _publisher.Publish(audioAnalyzeEvent);
-                    _publisher.Publish(toneAnalyzeEvent);
-                    _log.Info("message sent to rabbit. Wait for tone analyze and audio analyze");
-
-
-                    // if (await _wrapper.IsAudioStereo(localAudioPath))
-                    // {
-                    //     _log.Info("Processing stereo audio");
-                    //     var localAudioPathLeft = Path.Combine(_sftpSettings.DownloadPath, dialogueId + "_left.wav");
-                    //     var localAudioPathRight = Path.Combine(_sftpSettings.DownloadPath, dialogueId + "_right.wav");
-                    //     await _wrapper.SplitAudioToMono(localAudioPath,localAudioPathLeft, localAudioPathRight );
-                    //     await _sftpClient.UploadAsync(localAudioPathLeft, "dialogueaudios", $"{dialogueId}.wav");
-                    //     await _sftpClient.UploadAsync(localAudioPathRight, "dialogueaudiosemp", $"{dialogueId}.wav");
+                        _log.Info("Processing stereo audio");
+                        var localAudioPathLeft = Path.Combine(_sftpSettings.DownloadPath, dialogueId + "_left.wav");
+                        var localAudioPathRight = Path.Combine(_sftpSettings.DownloadPath, dialogueId + "_right.wav");
+                        await _wrapper.SplitAudioToMono(localAudioPath,localAudioPathLeft, localAudioPathRight );
+                        await _sftpClient.UploadAsync(localAudioPathLeft, "dialogueaudios", $"{dialogueId}.wav");
+                        await _sftpClient.UploadAsync(localAudioPathRight, "dialogueaudiosemp", $"{dialogueId}.wav");
                         
-                    //     var uploadPathEmp = Path.Combine("dialogueaudiosemp", $"{dialogueId}.wav");
-                    //     File.Delete(localAudioPath);
-                    //     File.Delete(localVideoPath);
-                    //     File.Delete(localAudioPathLeft);
-                    //     File.Delete(localAudioPathRight);
+                        var uploadPathEmp = Path.Combine("dialogueaudiosemp", $"{dialogueId}.wav");
+                        File.Delete(localAudioPath);
+                        File.Delete(localVideoPath);
+                        File.Delete(localAudioPathLeft);
+                        File.Delete(localAudioPathRight);
 
-                    //     var audioAnalyzeEvent = new AudioAnalyzeRun
-                    //     {
-                    //         Path = uploadPath
-                    //     };
-                    //     var toneAnalyzeEvent = new ToneAnalyzeRun
-                    //     {
-                    //         Path = uploadPath
-                    //     };
+                        var audioAnalyzeEvent = new AudioAnalyzeRun
+                        {
+                            Path = uploadPath
+                        };
+                        var toneAnalyzeEvent = new ToneAnalyzeRun
+                        {
+                            Path = uploadPath
+                        };
+                        _publisher.Publish(audioAnalyzeEvent);
+                        // Thread.Sleep(100);
+                        _publisher.Publish(toneAnalyzeEvent);
+                        // Thread.Sleep(100);
+                        // _publisher.Publish(audioAnalyzeEmpEvent);
+                        // Thread.Sleep(100);
+                        // _publisher.Publish(toneAnalyzeEmpEvent);
+                        _log.Info("message sent to rabbit. Wait for tone analyze and audio analyze");
+                    }
+                    else
+                    {
+                        _log.Info("Processing mono audio");
+                        await _sftpClient.UploadAsync(localAudioPath, "dialogueaudios", $"{dialogueId}.wav");
+                        File.Delete(localAudioPath);
+                        File.Delete(localVideoPath);
 
-                    //     var audioAnalyzeEmpEvent = new AudioAnalyzeRun
-                    //     {
-                    //         Path = uploadPathEmp
-                    //     };
-                    //     var toneAnalyzeEmpEvent = new ToneAnalyzeRun
-                    //     {
-                    //         Path = uploadPathEmp
-                    //     };
-                    //     _publisher.Publish(audioAnalyzeEvent);
-                    //     Thread.Sleep(100);
-                    //     _publisher.Publish(toneAnalyzeEvent);
-                    //     Thread.Sleep(100);
-                    //     _publisher.Publish(audioAnalyzeEmpEvent);
-                    //     Thread.Sleep(100);
-                    //     _publisher.Publish(toneAnalyzeEmpEvent);
-                    //     _log.Info("message sent to rabbit. Wait for tone analyze and audio analyze");
-                    // }
-                    // else
-                    // {
-                    //     _log.Info("Processing mono audio");
-                    //     await _sftpClient.UploadAsync(localAudioPath, "dialogueaudios", $"{dialogueId}.wav");
-                    //     File.Delete(localAudioPath);
-                    //     File.Delete(localVideoPath);
-
-                    //     var audioAnalyzeEvent = new AudioAnalyzeRun
-                    //     {
-                    //         Path = uploadPath
-                    //     };
-                    //     var toneAnalyzeEvent = new ToneAnalyzeRun
-                    //     {
-                    //         Path = uploadPath
-                    //     };
-                    //     _publisher.Publish(audioAnalyzeEvent);
-                    //     _publisher.Publish(toneAnalyzeEvent);
-                    //     _log.Info("message sent to rabbit. Wait for tone analyze and audio analyze");
-                    // }
+                        var audioAnalyzeEvent = new AudioAnalyzeRun
+                        {
+                            Path = uploadPath
+                        };
+                        var toneAnalyzeEvent = new ToneAnalyzeRun
+                        {
+                            Path = uploadPath
+                        };
+                        _publisher.Publish(audioAnalyzeEvent);
+                        _publisher.Publish(toneAnalyzeEvent);
+                        _log.Info("message sent to rabbit. Wait for tone analyze and audio analyze");
+                    }
                 }
                 _log.Info("Function finished");
 
