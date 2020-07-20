@@ -132,12 +132,12 @@ namespace DialogueVideoAssembleService
                         (message.BeginTime.Subtract(fileVideos.Min(p => p.BegTime)).ToString(@"hh\:mm\:ss\.ff")),
                         (message.EndTime.Subtract(message.BeginTime).ToString(@"hh\:mm\:ss\.ff")));
                 _log.Info("Uploading to FTP server result dialogue video");
-                await _sftpClient.UploadAsync(outputFn, "dialoguevideos", $"{message.DialogueId}{extension}");
+                await _sftpClient.UploadAsync(outputFn, "dialoguevideos", $"{message.DialogueId}{outputFileExtension}");
 
                 _log.Info("Send message to video to sound");
                 if (isExtended)
                 {
-                    _utils.SendMessageToVideoToSound(message, extension, _notificationPublisher);
+                    _utils.SendMessageToVideoToSound(message, outputFileExtension, _notificationPublisher);
                 }
                 
                 _log.Info("Delete all local files");
