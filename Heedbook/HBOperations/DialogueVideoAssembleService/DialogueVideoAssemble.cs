@@ -119,8 +119,9 @@ namespace DialogueVideoAssembleService
                 _utils.RunFrameFFmpegCommands(frameCommands, cmd, _wrapper, _log, sessionDir);
 
                 var extension = Path.GetExtension(fileVideos.Select(item => item.FileName).FirstOrDefault());
+                var outputFileExtension = $".mp4";
                 var tempOutputFn = Path.Combine(sessionDir, $"_tmp_{message.DialogueId}{extension}");
-                var outputFn = Path.Combine(sessionDir, $"{message.DialogueId}{extension}");                                
+                var outputFn = Path.Combine(sessionDir, $"{message.DialogueId}{outputFileExtension}");                                
 
                 _log.Info("Concat videos and frames");
                 // var outputDialogueMerge = _wrapper.ConcatSameCodecsAndFrames(videoMergeCommands, tempOutputFn, sessionDir);
@@ -131,16 +132,16 @@ namespace DialogueVideoAssembleService
                         (message.BeginTime.Subtract(fileVideos.Min(p => p.BegTime)).ToString(@"hh\:mm\:ss\.ff")),
                         (message.EndTime.Subtract(message.BeginTime).ToString(@"hh\:mm\:ss\.ff")));
                 _log.Info("Uploading to FTP server result dialogue video");
-                await _sftpClient.UploadAsync(outputFn, "dialoguevideos", $"{message.DialogueId}{extension}");
+                await _sftpClient.UploadAsync(outputFn, "dialoguevideos", $"{message.DialogueId}{outputFileExtension}");
 
                 _log.Info("Send message to video to sound");
                 if (isExtended)
                 {
-                    _utils.SendMessageToVideoToSound(message, extension, _notificationPublisher);
+                    _utils.SendMessageToVideoToSound(message, outputFileExtension, _notificationPublisher);
                 }
                 
                 _log.Info("Delete all local files");
-                Directory.Delete(sessionDir, true);
+                // Directory.Delete(sessionDir, true);
                 _log.Info("Function finished OnPremDialogueAssembleMerge");
             }
             catch (SftpPathNotFoundException e)
