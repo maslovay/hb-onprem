@@ -43,7 +43,7 @@ namespace ClientAzureCheckingService
                 {
                     var faceResult = await _azureClient.DetectGenderAgeAsync(path);
                     _log.Info($"Result of age gender detection - {JsonConvert.SerializeObject(faceResult)}");
-                    if (faceResult != null)
+                    if (faceResult != null && faceResult.Any())
                     {
                         client.Gender = faceResult.FirstOrDefault().FaceAttributes.Gender.ToString();
                         client.Age = (int) faceResult.FirstOrDefault().FaceAttributes.Age;
