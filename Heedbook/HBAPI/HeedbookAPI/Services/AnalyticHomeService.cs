@@ -80,7 +80,7 @@ namespace UserOperations.Services
                            DeviceId = p.DeviceId,
                            CompanyId = p.Device.CompanyId,
                            SlideShowSessions = p.SlideShowSessions,
-                           IsInWorkingTime = _dbOperations.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
+                           IsInWorkingTime = true
                        }).ToList();
 
                 ////-----------------FOR BRANCH---------------------------------------------------------------
