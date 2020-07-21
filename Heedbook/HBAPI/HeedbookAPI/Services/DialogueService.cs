@@ -183,7 +183,7 @@ namespace UserOperations.Services
             jsonDialogue["DeviceName"] = dialogue.Device.Name;
             jsonDialogue["FullName"] = dialogue.ApplicationUser?.FullName;
             jsonDialogue["Avatar"] = (dialogue.DialogueClientProfile.FirstOrDefault() == null) ? null : _fileRef.GetFileUrlFast($"clientavatars/{dialogue.DialogueClientProfile.FirstOrDefault().Avatar}");
-            jsonDialogue["Video"] = dialogue == null ? null : _fileRef.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mkv");
+            jsonDialogue["Video"] = dialogue == null ? null : _fileRef.GetFileUrlFast($"dialoguevideos/{dialogue.DialogueId}.mp4");
             jsonDialogue["DialogueAvgDurationLastMonth"] = avgDialogueTime;
             jsonDialogue["SalesStages"] = salesStages;
 
