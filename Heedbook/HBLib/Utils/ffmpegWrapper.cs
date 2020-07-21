@@ -70,7 +70,22 @@ namespace HBLib.Utils
             var ts = TimeSpan.Parse(captured);
             return ts.TotalSeconds;
         }
-
+        //-acodec copy -vcodec copy
+        public async Task<String> ConvertMkvToMp4Async(String videoFn, String outFn)
+        {
+            try
+            {
+                videoFn = Path.GetFullPath(videoFn);
+                outFn = Path.GetFullPath(outFn);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $@"-i {videoFn} -acodec copy -vcodec copy {outFn}");
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
+            }
+        }
         public async Task<String> VideoToWavAsync(String videoFn, String audioFn)
         {
             try

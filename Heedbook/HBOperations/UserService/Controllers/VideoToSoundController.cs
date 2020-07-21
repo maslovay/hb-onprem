@@ -37,5 +37,16 @@ namespace UserService.Controllers
             _handler.EventRaised(message);
             return Ok();
         }
+        [HttpPost("[action]")]
+        public IActionResult ConvertDialogueMkvToMp4(string dialogueId)
+        {
+            var model = new VideoConvertToMp4Run
+            {
+                DialogueId = dialogueId
+            };
+            _handler.EventRaised(model);
+            System.Console.WriteLine($"model sended");
+            return Ok("model sended!");
+        }
     }
 }
