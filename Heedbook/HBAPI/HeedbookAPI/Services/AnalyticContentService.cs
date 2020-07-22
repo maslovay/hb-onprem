@@ -152,7 +152,7 @@ namespace UserOperations.Services
 
             var dialogueIds = GetDialogueIds(begTime, endTime, companyIds, applicationUserIds, deviceIds);
         
-            var slideShowSessionsInDialogues = GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialogueIds);
+            var slideShowSessionsInDialogues = GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialogueIds, begTime, endTime);
             var views = slideShowSessionsInDialogues.Count();
             var clients = dialogueIds.Count();
 
@@ -215,7 +215,8 @@ namespace UserOperations.Services
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
             var dialogues = await GetDialoguesAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds);
-            var slideShowSessionsInDialogues = GetSlideShowWithDialogueIdFilteredByPoolAsync(true, dialogues.Select( x=> x.DialogueId).ToList());
+            var slideShowSessionsInDialogues = GetSlideShowWithDialogueIdFilteredByPoolAsync(true, dialogues.Select( x=> x.DialogueId).ToList(),
+                begTime, endTime);
 
             List<AnswerInfo.AnswerOne> answers = await GetAnswersFullAsync(dialogues, begTime, endTime, companyIds, applicationUserIds, deviceIds);
             double conversion = GetConversion(slideShowSessionsInDialogues.Count(), answers.Count());
@@ -273,12 +274,13 @@ namespace UserOperations.Services
 
 
         private List<SlideShowInfo> GetSlideShowWithDialogueIdFilteredByPoolAsync(
-          bool isPool, List<Guid> dialogueIds
+          bool isPool, List<Guid> dialogueIds, DateTime beg, DateTime end
           )
         {
             if (dialogueIds.Count() == 0) return new List<SlideShowInfo>();
             var slideShows = _repository.GetAsQueryable<SlideShowSession>().Where(
-                    ses => ( ses.DialogueId != null && dialogueIds.Contains((Guid)ses.DialogueId )
+                    ses => ses.BegTime >= beg && ses.EndTime < end 
+                    && ( ses.DialogueId != null && dialogueIds.Contains((Guid)ses.DialogueId )
                     && ses.IsPoll == isPool
                     && ses.CampaignContent != null))
                 .Select(ssi =>
