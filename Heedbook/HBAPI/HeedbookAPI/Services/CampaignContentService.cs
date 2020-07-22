@@ -190,8 +190,8 @@ namespace UserOperations.Services
                     var contentsWithScreen = GetContentsByStatusIdWithUrls(inactive, companyIds);
                     return contentsWithScreen;
                 }
-                    var contents = GetContentsByStatusId(inactive, companyIds);
-                    return contents;
+                var contents = GetContentsByStatusId(inactive, companyIds);
+                return contents;
         }
 
         public async Task<object> ContentPaginatedGet( List<Guid> companyIds, List<Guid> corporationIds,
@@ -412,15 +412,19 @@ namespace UserOperations.Services
             var activeStatusId = GetStatusId("Active");
             if (Inactive == false)
             {
-                return _repository.GetAsQueryable<Content>()
+                var contentActive =  _repository.GetAsQueryable<Content>()
                    .Where(x => x.StatusId == activeStatusId
                         && x.CompanyId != null
                        && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
                    .ToList();
+                contentActive.ForEach(p => p.JSONData = p.JSONData.Replace("https", "http"));
+                return contentActive;
             }
-            return _repository.GetAsQueryable<Content>()
+            var content = _repository.GetAsQueryable<Content>()
                 .Where(x => (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)) && x.CompanyId != null)
                 .ToList();
+            content.ForEach(p => p.JSONData = p.JSONData.Replace("https", "http"));
+            return content;
         }
 
         private List<ContentWithScreenshotModel> GetContentsByStatusIdWithUrls(bool Inactive, List<Guid> companyIds)
