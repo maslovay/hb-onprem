@@ -412,15 +412,19 @@ namespace UserOperations.Services
             var activeStatusId = GetStatusId("Active");
             if (Inactive == false)
             {
-                return _repository.GetAsQueryable<Content>()
+                var contentActive =  _repository.GetAsQueryable<Content>()
                    .Where(x => x.StatusId == activeStatusId
                         && x.CompanyId != null
                        && (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)))
                    .ToList();
+                contentActive.ForEach(p => p.JSONData = p.JSONData.Replace("10.149.126.130", "p-hbook-app01.abb-win.akbars.ru"));
+                return contentActive;
             }
-            return _repository.GetAsQueryable<Content>()
+            var content = _repository.GetAsQueryable<Content>()
                 .Where(x => (x.IsTemplate == true || companyIds.Contains((Guid)x.CompanyId)) && x.CompanyId != null)
                 .ToList();
+            content.ForEach(p => p.JSONData = p.JSONData.Replace("10.149.126.130", "p-hbook-app01.abb-win.akbars.ru"));
+            return content;
         }
 
         private List<ContentWithScreenshotModel> GetContentsByStatusIdWithUrls(bool Inactive, List<Guid> companyIds)
