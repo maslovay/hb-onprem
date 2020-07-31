@@ -228,7 +228,8 @@ namespace UserOperations.Services
                     ContentName = ssh.FirstOrDefault().ContentName,
                     Answers = GetAnswersForOneContent(answers, ssh.Key),
                     AnswersAmount = GetAnswersForOneContent(answers, ssh.Key).Count(),
-                    Conversion = (double)GetAnswersForOneContent(answers, ssh.Key).Count() / (double)ssh.Count()
+                    Conversion = (double)GetAnswersForOneContent(answers, ssh.Key).Count() / (double)ssh.Count(),
+                    FtpLink = _fileRef.GetFileLink(_containerName, ssh.FirstOrDefault().ContentId + ".png", default)
                 }).ToList();
 
             var contentInfo = new
