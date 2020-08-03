@@ -9,16 +9,16 @@
   ```sh
     <VirtualHost *:80>
     # ServerName filereference.northeurope.cloudapp.azure.com
-    DocumentRoot /home/nkrokhmal/storage
+    DocumentRoot /home/open_user/storage
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
-    <Directory /home/nkrokhmal/storage>
+    <Directory /home/open_user/storage>
       AllowOverride None
       Order allow,deny
       allow from  46.148.203
       Require all granted
     </Directory>
-    <Directory /home/nkrokhmal/storage/clientavatars>
+    <Directory /home/open_user/storage/clientavatars>
       AllowOverride None
       Order allow,deny
       <Files ~ "\.(jpg|png)$">
@@ -26,7 +26,7 @@
         Allow from All
       </Files>
     </Directory>
-    <Directory /home/nkrokhmal/storage/dialoguevideos>
+    <Directory /home/open_user/storage/dialoguevideos>
        AllowOverride None
        Order allow,deny
       <Files ~ "\.(mkv|webm|mp4)$">
@@ -34,7 +34,7 @@
         Allow from All
       </Files>
     </Directory>
-    <Directory /home/nkrokhmal/storage/media>
+    <Directory /home/open_user/storage/media>
       allow from all
       AllowOverride None
       Order allow,deny
@@ -43,7 +43,7 @@
   ```
 В файле */etc/apache2/apach2.conf* добавляем строки  в самое начало 
 ```sh
-<Directory /home/nkrokhmal/storage>
+<Directory /home/open_user/storage>
  Options Indexes FollowSymLinks
  AllowOverride None
  Require all granted

@@ -116,7 +116,7 @@ namespace HBLib.Utils
                 files = _client.ListDirectory(directory).ToList();
             return await Task.Run(() => files
                 .Where(f => !f.IsDirectory)
-                .Select(f => $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}"));
+                .Select(f => $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/open_user/storage/", "")}"));
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace HBLib.Utils
                 .Select(f =>
                     new FileInfoModel
                     {
-                        url = $"{httpFileUrl}{f.FullName.Replace("/home/nkrokhmal/storage/", "")}",
+                        url = $"{httpFileUrl}{f.FullName.Replace("/home/open_user/storage/", "")}",
                         name = f.Name,
                         date = f.Attributes.LastWriteTime
                     }));
