@@ -25,8 +25,6 @@ namespace UserOperations.Services
         private readonly IGenericRepository _repository;
         private readonly AnalyticContentUtils _utils;
         private readonly IFileRefUtils _fileRef;
-        private readonly RecordsContext _context;
-
         private const string _containerName = "screenshots";
 
         public AnalyticContentService(
@@ -35,8 +33,7 @@ namespace UserOperations.Services
             IRequestFilters requestFilters,
             IGenericRepository repository,
             AnalyticContentUtils utils,
-            IFileRefUtils fileRef,
-            RecordsContext context
+            IFileRefUtils fileRef
             )
         {
             _helpProvider = helpProvider;
@@ -45,7 +42,6 @@ namespace UserOperations.Services
             _repository = repository;
             _utils = utils;
             _fileRef = fileRef;
-            _context = context;
         }
 
         //---FOR ONE DIALOGUE---
@@ -148,18 +144,14 @@ namespace UserOperations.Services
                                 List<Guid> deviceIds)
         {
             int active = 3;
-            System.Console.WriteLine("1");
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
             var begTime = _requestFilters.GetBegDate(beg);
             var endTime = _requestFilters.GetEndDate(end);
-            System.Console.WriteLine("2");
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
             var dialogueIds = GetDialogueIds(begTime, endTime, companyIds, applicationUserIds, deviceIds);
-            System.Console.WriteLine("3");
             var slideShowSessionsInDialogues = GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialogueIds, begTime, endTime);
-            System.Console.WriteLine("4");
             var views = slideShowSessionsInDialogues.Count();
             var clients = dialogueIds.Count();
 
@@ -286,109 +278,31 @@ namespace UserOperations.Services
           )
         {
             if (dialogueIds.Count() == 0) return new List<SlideShowInfo>();
-            System.Console.WriteLine(beg);
-            System.Console.WriteLine(end);
-
-            System.Console.WriteLine("Beg");
-            var dialogues = _context.Dialogues
-                .Include(p => p.DialogueFrame)
-                .Include(p => p.DialogueClientProfile)
-                .Include(p => p.SlideShowSessions)
-                .ThenInclude(p => p.CampaignContent)
-                .ThenInclude(p => p.Content)
-                .Where(p => p.StatusId == 3 
-                    && p.InStatistic == true 
-                    && p.BegTime >= beg
-                    && p.EndTime < end)
+            var slideShows = _repository.GetAsQueryable<SlideShowSession>().Where(
+                    ses => ses.BegTime >= beg && ses.EndTime < end 
+                    && ( ses.DialogueId != null && dialogueIds.Contains((Guid)ses.DialogueId )
+                    && ses.IsPoll == isPool
+                    && ses.CampaignContent != null))
+                .Select(ssi =>
+                    new SlideShowInfo
+                    {
+                        BegTime = ssi.BegTime,
+                        ContentId = ssi.CampaignContent.ContentId,
+                        Campaign = ssi.CampaignContent.Campaign,
+                        ContentType = ssi.ContentType,
+                        ContentName = ssi.CampaignContent.Content != null ? ssi.CampaignContent.Content.Name : null,
+                        EndTime = ssi.EndTime,
+                        IsPoll = ssi.IsPoll,
+                        Url = ssi.Url,
+                        ApplicationUserId = ssi.ApplicationUserId,
+                        DialogueId = ssi.DialogueId,
+                        DialogueFrames = ssi.Dialogue.DialogueFrame.ToList(),
+                        ContentUpdateDate = ssi.CampaignContent.Content.UpdateDate.ToString(),
+                        Gender = ssi.Dialogue.DialogueClientProfile.Max(x => x.Gender),
+                        Age = ssi.Dialogue.DialogueClientProfile.Average(x => x.Age)
+                    })
                 .ToList();
-
-            var result = new List<SlideShowInfo>();
-            foreach (var dialogue in dialogues)
-            {
-                if (dialogue.SlideShowSessions.Any())
-                {
-                    // foreach (var session in dialogue.SlideShowSessions.Where(p => p.CampaignContent != null))
-                    // {
-                    //     System.Console.WriteLine(JsonConvert.SerializeObject(dialogue.DialogueClientProfile));
-                    //     System.Console.WriteLine(session.BegTime);
-                    //     System.Console.WriteLine(session.CampaignContent.ContentId);
-                    //     System.Console.WriteLine(session.CampaignContent.Campaign);
-                    //     System.Console.WriteLine(session.ContentType);
-                    //     System.Console.WriteLine(session.CampaignContent.Content != null ? session.CampaignContent.Content.Name : null);
-                    //     System.Console.WriteLine(session.EndTime);
-                    //     System.Console.WriteLine(session.IsPoll);
-                    //     System.Console.WriteLine(session.Url);
-                    //     System.Console.WriteLine(session.ApplicationUserId);
-                    //     System.Console.WriteLine(session.CampaignContent.Content.UpdateDate.ToString());
-                    //     System.Console.WriteLine(dialogue.DialogueClientProfile.Max(x => x.Gender));
-                    //     System.Console.WriteLine(dialogue.DialogueClientProfile.Average(x => x.Age));
-
-                    //     result.Add(new SlideShowInfo{
-                    //         BegTime = session.BegTime,
-                    //         ContentId = session.CampaignContent.ContentId,
-                    //         Campaign = session.CampaignContent.Campaign,
-                    //         ContentType = session.ContentType,
-                    //         ContentName = session.CampaignContent.Content != null ? session.CampaignContent.Content.Name : null,
-                    //         EndTime = session.EndTime,
-                    //         IsPoll = session.IsPoll,
-                    //         Url = session.Url,
-                    //         ApplicationUserId = session.ApplicationUserId,
-                    //         DialogueId = session.DialogueId,
-                    //         DialogueFrames = dialogue.DialogueFrame.ToList(),
-                    //         ContentUpdateDate = session.CampaignContent.Content.UpdateDate.ToString(),
-                    //         Gender = dialogue.DialogueClientProfile.Max(x => x.Gender),
-                    //         Age = dialogue.DialogueClientProfile.Average(x => x.Age)
-                    //     });
-                    result.AddRange(dialogue.SlideShowSessions.Select(p => new SlideShowInfo{
-                        BegTime = p.BegTime,
-                        ContentId = p.CampaignContent.ContentId,
-                        Campaign = p.CampaignContent.Campaign,
-                        ContentType = p.ContentType,
-                        ContentName = p.CampaignContent.Content != null ? p.CampaignContent.Content.Name : null,
-                        EndTime = p.EndTime,
-                        IsPoll = p.IsPoll,
-                        Url = p.Url,
-                        ApplicationUserId = p.ApplicationUserId,
-                        DialogueId = p.DialogueId,
-                        DialogueFrames = dialogue.DialogueFrame.ToList(),
-                        ContentUpdateDate = p.CampaignContent.Content.UpdateDate.ToString(),
-                        Gender = dialogue.DialogueClientProfile.Max(x => x.Gender),
-                        Age = dialogue.DialogueClientProfile.Average(x => x.Age)
-                    }));
-                    // }
-                }
-                System.Console.WriteLine(result.Count());
-            }
-
-            // System.Console.WriteLine("Beg1");
-            // var slideShows = _repository.GetAsQueryable<SlideShowSession>().Where(
-            //         ses => ses.BegTime >= beg 
-            //         && ses.EndTime < end 
-            //         && ses.DialogueId != null 
-            //         && dialogueIds.Contains((Guid)ses.DialogueId) 
-            //         && ses.IsPoll == isPool)
-            //     .Select(ssi =>
-            //         new SlideShowInfo
-            //         {
-            //             BegTime = ssi.BegTime,
-            //             ContentId = ssi.CampaignContent.ContentId,
-            //             Campaign = ssi.CampaignContent.Campaign,
-            //             ContentType = ssi.ContentType,
-            //             ContentName = ssi.CampaignContent.Content != null ? ssi.CampaignContent.Content.Name : null,
-            //             EndTime = ssi.EndTime,
-            //             IsPoll = ssi.IsPoll,
-            //             Url = ssi.Url,
-            //             ApplicationUserId = ssi.ApplicationUserId,
-            //             DialogueId = ssi.DialogueId,
-            //             DialogueFrames = ssi.Dialogue.DialogueFrame.ToList(),
-            //             ContentUpdateDate = ssi.CampaignContent.Content.UpdateDate.ToString(),
-            //             Gender = ssi.Dialogue.DialogueClientProfile.Max(x => x.Gender),
-            //             Age = ssi.Dialogue.DialogueClientProfile.Average(x => x.Age)
-            //         })
-            //     .ToList();
-            // System.Console.WriteLine("End2");
-            // return slideShows;
-            return result;
+            return slideShows;
         }
 
         private async Task<List<CampaignContentAnswer>> GetAnswersInOneDialogueAsync(
