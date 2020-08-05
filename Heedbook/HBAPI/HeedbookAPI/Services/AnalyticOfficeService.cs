@@ -64,10 +64,10 @@ namespace UserOperations.Services
             var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
             var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
 
-            // var dialoguesUserCur = dialoguesCur.Where(p => p.ApplicationUserId != null).ToList();
-            // var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
-            var dialoguesUserCur = dialoguesCur;
-            var dialoguesUserOld = dialoguesOld;
+            var dialoguesUserCur = dialoguesCur.Where(p => p.ApplicationUserId != null).ToList();
+            var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
+            // var dialoguesUserCur = dialoguesCur;
+            // var dialoguesUserOld = dialoguesOld;
 
             var dialoguesDevicesCur = dialoguesCur.Where(x => x.IsInWorkingTime).ToList();
             var dialoguesDevicesOld = dialoguesOld.Where(x => x.IsInWorkingTime).ToList();
@@ -289,20 +289,20 @@ namespace UserOperations.Services
                     && p.StatusId == 3
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
-                    // && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+                    && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
                 .ToList();
             var dialoguesInfo = dialogues
                 .Select(p =>  new DialogueInfo
                 {
                     DialogueId = p.DialogueId,
-                    // ApplicationUserId = p.ApplicationUserId,
+                    ApplicationUserId = p.ApplicationUserId != null ? p.ApplicationUserId : null,
                     DeviceId = p.DeviceId,
                     DeviceName = p.Device.Name,
                     CompanyId = p.Device.CompanyId,
                     BegTime = p.BegTime,
                     EndTime = p.EndTime,
-                    // FullName = p.ApplicationUser.FullName,
+                    FullName = p.ApplicationUser != null ? p.ApplicationUser.FullName : null,
                     SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault() == null ? 0 : p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
                     IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
                 })
