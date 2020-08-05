@@ -174,7 +174,7 @@ namespace UserOperations.Services
                                                 workingTimes, 
                                                 begTime, endTime, 
                                                 (Guid)p.Key, 
-                                                p.Select(x => x.DeviceId).Count()), 
+                                                p.Select(x => x.DeviceId).Distinct().Count()), 
                                 p.Where(x => x.CompanyId == p.Key && x.IsInWorkingTime).ToList(), 
                                 begTime, endTime),
                         CrossIndex = _analyticRatingUtils.CrossIndex(p),
