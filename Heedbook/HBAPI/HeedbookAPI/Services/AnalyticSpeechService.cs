@@ -88,7 +88,13 @@ namespace UserOperations.Services
                     deviceIds);
 
                 var dialoguesTotal = dialogueIds.Count();
-               
+
+                var companyPhraseIds = _repository.GetAsQueryable<PhraseCompany>()
+                    .Where(p => companyIds.Contains((Guid)p.CompanyId))
+                    .Select(p => (Guid)p.PhraseId)
+                    .Distinct()
+                    .ToList();
+                
                 // GET ALL PHRASES INFORMATION
                 var phrasesInfo = GetPhraseInfo(
                     dialogueIds,
@@ -96,6 +102,7 @@ namespace UserOperations.Services
                     phraseTypeIds);
 
                 var result = phrasesInfo
+                    .Where(p => companyPhraseIds.Contains((Guid)p.PhraseId))
                     .GroupBy(p => p.PhraseText.ToLower())
                     .Select(p => new {
                         Phrase = p.Key,
