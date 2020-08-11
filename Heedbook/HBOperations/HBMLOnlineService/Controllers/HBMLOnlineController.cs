@@ -14,7 +14,6 @@ using Newtonsoft.Json;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
 using Swashbuckle.AspNetCore.Annotations;
-using UserOperations.Utils;
 using HBMLHttpClient.Model;
 using System.Collections.Generic;
 

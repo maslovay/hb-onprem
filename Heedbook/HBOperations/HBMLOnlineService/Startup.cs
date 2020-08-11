@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using UserOperations.Utils;
 using Newtonsoft.Json.Serialization;
 
 namespace HBMLOnlineService
