@@ -81,7 +81,7 @@ namespace PersonOnlineDetectionService
                 }
                 else
                 {
-                    _personDetectionUtils.CreateClientSession((Guid) clientId, message.Path);
+                    _personDetectionUtils.CreateClientSession((Guid) clientId, $"{clientId}.jpg");
                     var client = _context.Clients.FirstOrDefault(p => p.ClientId == clientId);
                     client.LastDate = DateTime.UtcNow;
                     System.Console.WriteLine($"clientlastTime: {client.LastDate}");
