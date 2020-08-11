@@ -15,8 +15,8 @@ RUN pip3 install --upgrade pip
 RUN pip3 install "python-socketio[client]" 
 
 ENTRYPOINT ["dotnet", "PersonOnlineDetectionAkBarsService.dll"]
-EXPOSE 52824
-ENV ASPNETCORE_URLS http://+:52824
+EXPOSE 52830
+ENV ASPNETCORE_URLS http://+:52830
 
 RUN apk add libgdiplus --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ --allow-untrusted
 RUN mkdir -p /opt/
