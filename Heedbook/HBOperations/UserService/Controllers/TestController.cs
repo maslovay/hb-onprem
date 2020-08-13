@@ -60,6 +60,14 @@ namespace UserService.Controllers
         }
 
         [HttpPost("[action]")]
+        public IActionResult TestHookRequest(object message)
+        {
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            System.Console.WriteLine(JsonConvert.SerializeObject(message));
+            return Ok();
+        }
+
+        [HttpPost("[action]")]
         public async Task<IActionResult> CreateAvatar(string fileName)
         {
           //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
