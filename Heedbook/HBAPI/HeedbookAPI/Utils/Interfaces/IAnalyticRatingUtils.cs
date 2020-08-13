@@ -13,6 +13,7 @@ namespace UserOperations.Utils.Interfaces
         double? CrossIndex(List<DialogueInfo> dialogues);
         double? CrossIndex(IGrouping<DateTime, DialogueInfo> dialogues);
         double? DialogueAverageDuration(IGrouping<DateTime, DialogueInfo> dialogues, DateTime beg = default, DateTime end = default);
+        double? ApplicationUserWorkingTimeAverage(IGrouping<Guid?, DialogueInfo> dialogues, DateTime beg, DateTime end);
         double? DialogueAverageDuration(IGrouping<Guid?, DialogueInfo> dialogues, DateTime beg, DateTime end);
         double? DialogueHourAveragePause(List<double> sessionMinTime, List<DialogueInfo> dialogues, DateTime beg, DateTime end);
         double? DialogueSumDuration(IGrouping<DateTime, DialogueInfo> dialogues, DateTime beg = default, DateTime end = default);

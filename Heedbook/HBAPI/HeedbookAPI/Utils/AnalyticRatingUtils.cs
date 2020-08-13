@@ -76,6 +76,17 @@ namespace UserOperations.Utils.AnalyticRatingUtils
         {
             return dialogues.Any() ? (double?)dialogues.Average(r => Min(r.EndTime, end).Subtract(Max(r.BegTime, beg)).TotalHours) : null;
         }
+        public double? ApplicationUserWorkingTimeAverage(IGrouping<Guid?, DialogueInfo> dialogues, DateTime beg, DateTime end)
+        {
+            var usersDialogues = dialogues.GroupBy(p => p.ApplicationUserId)
+                .Select(p => new{
+                        Id = p.Key,
+                        AmountDialoguesDurationInHours = p.Sum(q => Min(q.EndTime, end).Subtract(Max(q.BegTime, beg)).TotalHours)
+                    })
+                .ToList();
+                
+            return usersDialogues.Average(p => p.AmountDialoguesDurationInHours)/(end.Subtract(beg).Days);
+        }
         public double? DialogueAverageDuration(IGrouping<Guid?, DialogueInfo> dialogues, DateTime beg, DateTime end)
         {
             return dialogues.Average(p => Min(p.EndTime, end).Subtract(Max(p.BegTime, beg)).TotalHours);

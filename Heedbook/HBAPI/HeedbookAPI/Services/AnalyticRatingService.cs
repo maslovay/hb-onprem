@@ -181,14 +181,14 @@ namespace UserOperations.Services
                         Recommendation = "",
                         DialoguesCount = p.Select(q => q.DialogueId).Distinct().Count(),
                         DaysCount = p.Select(q => q.BegTime.Date).Distinct().Count(),
-                        WorkingHoursDaily = _analyticRatingUtils.DialogueAverageDuration(p, begTime, endTime),
+                        WorkingHoursDaily = _analyticRatingUtils.ApplicationUserWorkingTimeAverage(p, begTime, endTime),
                         DialogueAverageDuration = _analyticRatingUtils.DialogueAverageDuration(p, begTime, endTime),
                         DialogueAveragePause = _analyticRatingUtils.DialogueHourAveragePause(
                                  _dbOperations.WorkingTimeDoubleListInMinForOneCompany(
                                                 workingTimes,
                                                 begTime, endTime,
                                                 (Guid)p.Key,
-                                                p.Select(x => x.DeviceId).Count()), 
+                                                p.Select(x => x.DeviceId).Distinct().Count()), 
                                  p.Where(x => x.CompanyId == p.Key && x.IsInWorkingTime).ToList(), 
                                  begTime, endTime)
                     }).ToList();
