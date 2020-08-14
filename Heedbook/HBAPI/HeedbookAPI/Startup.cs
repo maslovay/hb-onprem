@@ -31,6 +31,7 @@ using UserOperations.Utils.CommonOperations;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
 using HBLib.Utils.Interfaces;
+using Swashbuckle.AspNetCore.ReDoc;
 
 namespace UserOperations
 {
@@ -205,6 +206,7 @@ namespace UserOperations
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.UseStaticFiles();
             app.UseSwagger(c =>
             {
                 c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
@@ -214,7 +216,10 @@ namespace UserOperations
             {
                 c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
                 c.RoutePrefix = "api/swagger";
+                c.IndexStream = () => GetType().Assembly
+                    .GetManifestResourceStream("UserOperations.swagger-index.html"); 
             });
+
             app.UseAuthentication();
             app.UseMvc();
 
