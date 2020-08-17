@@ -108,12 +108,23 @@ namespace HBLib.Utils
                 var duration = GetDuration(videoFn);
                 videoFn = Path.GetFullPath(videoFn);
                 gifFn = Path.GetFullPath(gifFn);
-                var fps = 10;
-                var scale = 240;
-               
+                var fps = 5;
+                var scale = 160;
+                int ss, t = 0;
+                if((int)duration > 60)
+                {
+                    ss = 30;
+                    t = 5;
+                }
+                else
+                {
+                    ss = (int) duration/2;
+                    t = (int) duration/5;
+                }
+                
                 var cmd = new CMDWithOutput();
                 return cmd.runCMD(FfPath,
-                    $" -ss {(int)duration/3} -t {(int)duration/6} -i {videoFn} -vf \"fps={fps},scale={scale}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" -loop 0 {gifFn}");
+                    $" -ss {ss} -t {t} -i {videoFn} -vf \"fps={fps},scale={scale}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" -loop 0 {gifFn}");
             }
             catch (Win32Exception ex)
             {
