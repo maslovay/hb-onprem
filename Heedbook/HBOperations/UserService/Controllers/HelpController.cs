@@ -443,34 +443,39 @@ namespace UserService.Controllers
         [HttpPost("PrepareDB")]
         [SwaggerOperation(Summary = "Prepare DB", Description = "Prepare DB with test data")]
         public async Task<IActionResult> PrepareDB()
-        {      
-            PrepareInfoAccount();
-            return Ok();
+        {    
+            try
+            {  
+                //AlertTypes  
+                AddAlertTypes();          
+                //ApplicationRoles
+                ApplicationRoles();
+                //CatalogueHints
+                AddCatalogueHints();
+                //CompanyIndustrys
+                AddCompanyIndustrys();
+                //Countrys
+                AddCountrys();
+                //DeviceTypes
+                AddDeviceTypes();
+                //Languages
+                AddLanguages();
+                //PhraseTypes
+                AddPhraseTypes();
+                //Statuss
+                AddStatuss();
 
-            //AlertTypes  
-            AddAlertTypes();          
-            //ApplicationRoles
-            ApplicationRoles();
-            //CatalogueHints
-            AddCatalogueHints();
-            //CompanyIndustrys
-            AddCompanyIndustrys();
-            //Countrys
-            AddCountrys();
-            //DeviceTypes
-            AddDeviceTypes();
-            //Languages
-            AddLanguages();
-            //PhraseTypes
-            AddPhraseTypes();
-            //Statuss
-            AddStatuss();
-
-            //Account info@heedbook.com
-            //Company AkBars
-            //Corporation AkBars
-            PrepareInfoAccount();
-            return Ok();
+                //Account info@heedbook.com
+                //Company Open
+                //Corporation Open
+                PrepareInfoAccount();
+                return Ok();
+            }
+            catch(Exception e)
+            {
+                System.Console.WriteLine(e);
+                return BadRequest(e.Message);
+            }
         }
         private void AddAlertTypes()
         {
@@ -481,6 +486,8 @@ namespace UserService.Controllers
                 var alertTypes = JsonConvert.DeserializeObject<List<AlertType>>(jsonData);
                 _context.AlertTypes.AddRange(alertTypes);
             }
+            System.Console.WriteLine($"AlertTypes added");
+            _context.SaveChanges();
         }
         private void ApplicationRoles()
         {
@@ -491,6 +498,8 @@ namespace UserService.Controllers
                 var applicationRoles = JsonConvert.DeserializeObject<List<ApplicationRole>>(jsonData);
                 _context.ApplicationRoles.AddRange(applicationRoles);
             }
+            System.Console.WriteLine($"ApplicationRoles added");
+            _context.SaveChanges();
         }
         private void AddCatalogueHints()
         {
@@ -501,6 +510,8 @@ namespace UserService.Controllers
                 var catalogueHints = JsonConvert.DeserializeObject<List<CatalogueHint>>(jsonData);
                 _context.CatalogueHints.AddRange(catalogueHints);
             }
+            System.Console.WriteLine($"CatalogueHints added");
+            _context.SaveChanges();
         }
         private void AddCompanyIndustrys()
         {
@@ -511,6 +522,8 @@ namespace UserService.Controllers
                 var companyIndustrys = JsonConvert.DeserializeObject<List<CompanyIndustry>>(jsonData);
                 _context.CompanyIndustrys.AddRange(companyIndustrys);
             }
+            System.Console.WriteLine($"CompanyIndustrys added");
+            _context.SaveChanges();
         }
         private void AddCountrys()
         {
@@ -521,6 +534,8 @@ namespace UserService.Controllers
                 var countrys = JsonConvert.DeserializeObject<List<Country>>(jsonData);
                 _context.Countrys.AddRange(countrys);
             }
+            System.Console.WriteLine($"Countrys added");
+            _context.SaveChanges();
         }
         private void AddDeviceTypes()
         {
@@ -531,6 +546,8 @@ namespace UserService.Controllers
                 var deviceTypes = JsonConvert.DeserializeObject<List<DeviceType>>(jsonData);
                 _context.DeviceTypes.AddRange(deviceTypes);
             }
+            System.Console.WriteLine($"DeviceTypes added");
+            _context.SaveChanges();
         }
         private void AddLanguages()
         {
@@ -541,6 +558,8 @@ namespace UserService.Controllers
                 var languages = JsonConvert.DeserializeObject<List<Language>>(jsonData);
                 _context.Languages.AddRange(languages);
             }
+            System.Console.WriteLine($"Languages added");
+            _context.SaveChanges();
         }
         private void AddPhraseTypes()
         {
@@ -551,6 +570,8 @@ namespace UserService.Controllers
                 var phraseTypes = JsonConvert.DeserializeObject<List<PhraseType>>(jsonData);
                 _context.PhraseTypes.AddRange(phraseTypes);
             }
+            System.Console.WriteLine($"PhraseTypes added");
+            _context.SaveChanges();
         }
         private void AddStatuss()
         {
@@ -561,12 +582,14 @@ namespace UserService.Controllers
                 var statuses = JsonConvert.DeserializeObject<List<Status>>(jsonData);
                 _context.Statuss.AddRange(statuses);
             }
+            System.Console.WriteLine($"Statuses added");
+            _context.SaveChanges();
         }
         private void PrepareInfoAccount()
         {
             try
             {   
-                var companyName = "AkBars";
+                var companyName = "Open";
                 var accountEmail = "info@heedbook.com";
                 var accountUserName = "info@heedbook.com";
                 var _industry = _context.CompanyIndustrys
@@ -655,7 +678,7 @@ namespace UserService.Controllers
             _context.WorkingTimes.Add(time);
         }
         [HttpPost("[action]")]
-        public async Task<IActionResult> AkBarsAddOfficesAndDictionary()
+        public async Task<IActionResult> OpenAddOfficesAndDictionary()
         {
             var result = "";
             result += AddCompanysAndUsers($"InitializeDBTables/offices.xlsx");
@@ -687,14 +710,14 @@ namespace UserService.Controllers
                     var userRoles = _repository.GetAsQueryable<ApplicationRole>()
                         .ToList();
 
-                    var akBarsCorporation = _repository.GetAsQueryable<Corporation>()
-                        .FirstOrDefault(p => p.Name == "AkBars");
+                    var OpenCorporation = _repository.GetAsQueryable<Corporation>()
+                        .FirstOrDefault(p => p.Name == "Open");
 
-                    if(akBarsCorporation is null)
-                        return "akBarsCorporation not exist";
+                    if(OpenCorporation is null)
+                        return "OpenCorporation not exist";
 
-                    var akBarsCompanys = _repository.GetAsQueryable<Company>()
-                        .Where(p => p.CorporationId == akBarsCorporation.Id)
+                    var OpenCompanys = _repository.GetAsQueryable<Company>()
+                        .Where(p => p.CorporationId == OpenCorporation.Id)
                         .ToList();  
                     
                     var countryId = _repository.GetAsQueryable<Country>()
@@ -737,7 +760,7 @@ namespace UserService.Controllers
                                     LanguageId = 2,
                                     CountryId = countryId,
                                     StatusId = 3,
-                                    CorporationId = akBarsCorporation.Id
+                                    CorporationId = OpenCorporation.Id
                                 };
                                 System.Console.WriteLine($"companyName: {company.CompanyName}");
                                 _repository.Create<Company>(company);
@@ -849,18 +872,18 @@ namespace UserService.Controllers
                     var phraseTypes = _repository.GetAsQueryable<PhraseType>()
                         .ToList();
 
-                    var akBarsCorporation = _repository.GetAsQueryable<Corporation>()
-                        .FirstOrDefault(p => p.Name == "AkBars");
+                    var OpenCorporation = _repository.GetAsQueryable<Corporation>()
+                        .FirstOrDefault(p => p.Name == "Open");
 
-                    if(akBarsCorporation is null)
-                        return "akBarsCorporation is null";
+                    if(OpenCorporation is null)
+                        return "OpenCorporation is null";
 
-                    var akBarsCompanys = _repository.GetAsQueryable<Company>()
-                        .Where(p => p.CorporationId == akBarsCorporation.Id)
+                    var OpenCompanys = _repository.GetAsQueryable<Company>()
+                        .Where(p => p.CorporationId == OpenCorporation.Id)
                         .ToList();
                     
-                    if(akBarsCompanys is null || akBarsCompanys.Count == 0)
-                        return "akBarsCompanys is null";
+                    if(OpenCompanys is null || OpenCompanys.Count == 0)
+                        return "OpenCompanys is null";
                     
                     foreach(var row in rows)
                     {
@@ -891,7 +914,7 @@ namespace UserService.Controllers
                                 };
                                 _repository.Create<Phrase>(newPhrase); 
                                 System.Console.WriteLine($"Phrase: {newPhrase.PhraseText} {newPhrase.PhraseTypeId}");
-                                foreach(var company in akBarsCompanys)
+                                foreach(var company in OpenCompanys)
                                 {
                                     var phraseCompany = new PhraseCompany
                                     {
@@ -905,7 +928,7 @@ namespace UserService.Controllers
                             }
                             else
                             {
-                                foreach(var company in akBarsCompanys)
+                                foreach(var company in OpenCompanys)
                                 {
                                     var phraseCompany = new PhraseCompany
                                     {

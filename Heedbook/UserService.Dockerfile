@@ -3,11 +3,12 @@ WORKDIR /app
 COPY . .
 # Copy everything else and build
 RUN dotnet publish ./HBOperations/UserService -c Release -o publish
-
 # Build runtime image
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
+RUN mkdir InitializeDBTables
 COPY --from=build-env /app/HBOperations/UserService/publish .
+COPY --from=build-env /app/HBOperations/UserService/InitializeDBTables InitializeDBTables
 ENTRYPOINT ["dotnet", "UserService.dll"]
 EXPOSE 53650
 ENV ASPNETCORE_URLS http://+:53650
