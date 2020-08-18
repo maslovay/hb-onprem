@@ -66,7 +66,6 @@ namespace UserOperations.Controllers
 
 
         [HttpPost("ChangePasswordOnDefault")]
-        [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "For own use", Description = "Change password for user on Test_User12345")]
         [SwaggerResponse(400, "No such user / Exception message", typeof(string))]
         [SwaggerResponse(200, "Password changed")]
