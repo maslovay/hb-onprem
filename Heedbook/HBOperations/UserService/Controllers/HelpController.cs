@@ -440,6 +440,56 @@ namespace UserService.Controllers
             // return Ok(result);
             return Ok();
         }
+        [HttpPost("AddInfoUser")]
+        [SwaggerOperation(Summary = "AddInfoUser", Description = "")]
+        public async Task<IActionResult> AddInfoUser()
+        {
+            try
+            {   
+                var companyName = "Open";
+                var accountEmail = "info@heedbook.com";
+                var accountUserName = "info@heedbook.com";
+                var _industry = _context.CompanyIndustrys
+                    .FirstOrDefault(p => p.CompanyIndustryName == "Bank");
+
+                var supervisorRole = _context.ApplicationRoles.FirstOrDefault(p => p.Name == "Admin");
+
+                var _company = _context.Companys.FirstOrDefault(p => p.CompanyName == companyName);
+                var _applicationUser = new ApplicationUser
+                {
+                    Id = Guid.NewGuid(),
+                    UserName = accountUserName,
+                    NormalizedUserName = accountUserName.ToUpper(),
+                    FullName = accountUserName,
+                    CreationDate = DateTime.Now,
+                    CompanyId = _company.CompanyId,
+                    EmailConfirmed = false,
+                    StatusId = 3,
+                    Email = accountEmail,
+                    NormalizedEmail = accountEmail.ToUpper(),
+                    PasswordHash = _loginService.GeneratePasswordHash("Test_User12345"),
+                    PhoneNumberConfirmed = false,
+                    TwoFactorEnabled = false,
+                    LockoutEnabled = false,
+                    UserRoles = new List<ApplicationUserRole>
+                    {
+                        new ApplicationUserRole
+                        {
+                            RoleId = supervisorRole.Id,
+                        }
+                    }
+                };
+                
+                _context.ApplicationUsers.Add(_applicationUser);
+                _context.SaveChanges();
+                return Ok();
+            }
+            catch(Exception e)
+            {
+                System.Console.WriteLine(e);
+                return BadRequest(e.Message);
+            }
+        }
         [HttpPost("PrepareDB")]
         [SwaggerOperation(Summary = "Prepare DB", Description = "Prepare DB with test data")]
         public async Task<IActionResult> PrepareDB()
@@ -646,7 +696,7 @@ namespace UserService.Controllers
                 
                 _context.Corporations.Add(_corporation);
                 _context.Companys.Add(_company);
-                // _context.ApplicationUsers.Add(_applicationUser);
+                _context.ApplicationUsers.Add(_applicationUser);
                 _context.SaveChanges();
                 AddWorkingTime(_company.CompanyId);
                 _context.SaveChanges();
