@@ -100,8 +100,13 @@ namespace DialogueCreatorScheduler.QuartzJobs
 
                     var dialogues = _dialogueCreator.Dialogues(updatedDatesIntervals, ref deviceFrames, deviceClients);
                     dialogues = dialogues.Where(p => p.EndTime.Subtract(p.BegTime).TotalSeconds > 40).ToList();
-                    dialogues.ForEach(p => p.EndTime = p.EndTime.AddSeconds(15));
-                    dialogues.ForEach(p => p.BegTime = p.BegTime.AddSeconds(-15));
+                    dialogues = dialogues.Select(p => 
+                            {
+                                p.BegTime = p.BegTime.AddSeconds(-15);
+                                p.EndTime = p.EndTime.AddSeconds(15);
+                                return p;
+                            })
+                        .ToList();
                     _log.Info($"Created dialogues for device {deviceId} - {JsonConvert.SerializeObject(dialogues)}");
 
                     if (dialogues.Any())
