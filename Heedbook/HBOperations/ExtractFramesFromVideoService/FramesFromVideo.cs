@@ -80,6 +80,9 @@ namespace ExtractFramesFromVideo
 
                 var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
                 List<FrameInfo> frames = GetLocalFilesInformation(applicationUserId, deviceId, sessionDir, videoTimeStamp);
+                var firstFrame = frames.FirstOrDefault();
+                frames = frames.Where(p => p.FrameName != firstFrame.FrameName)
+                    .ToList();
                 System.Console.WriteLine($"Frames info - {JsonConvert.SerializeObject(frames)}");
                 var tasks = frames.Select(p => {
                     return Task.Run(async() => 
