@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HBLib.Utils.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using Renci.SshNet.Messages.Transport;
 using Renci.SshNet.Sftp;
 
@@ -25,6 +26,7 @@ namespace HBLib.Utils
             _client = new Renci.SshNet.SftpClient(sftpSettings.Host, sftpSettings.Port, sftpSettings.UserName,
                 sftpSettings.Password);
             _sftpSettings = sftpSettings;
+            System.Console.WriteLine($"SFTP settings {JsonConvert.SerializeObject(_sftpSettings)}");
             _config = config;
 
             httpFileUrl = _config["FileRefPath:url"];
@@ -33,11 +35,14 @@ namespace HBLib.Utils
             {
                 try
                 {
+                    System.Console.WriteLine("Try to connect to sftp server");
                     ConnectToSftpAsync().Wait();
+                    System.Console.WriteLine("Connected");
                     break;
                 }
                 catch (Exception e)
                 {
+                    System.Console.WriteLine($"Exception occured {e}");
                     _retryCount-- ;
                     if (_retryCount == 0) throw;
                     Thread.Sleep(100 * _retryCount);
