@@ -163,7 +163,7 @@ namespace UserService.Controllers
                     {
 //                        _log.Info("Starting video to sound");
                         result += "Starting VideoToSound, ";
-                        var @event = new VideoToSoundRun
+                        var @event = new VideoToSoundRun2
                         {
                             Path = $"dialoguevideos/{dialogueId}.mkv"
                         };

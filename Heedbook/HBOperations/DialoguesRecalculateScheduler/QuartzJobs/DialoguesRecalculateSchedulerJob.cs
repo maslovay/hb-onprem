@@ -138,7 +138,7 @@ namespace DialoguesRecalculateScheduler.QuartzJobs
                         else
                         {
                             _log.Info("Starting video to sound");
-                            var @event = new VideoToSoundRun
+                            var @event = new VideoToSoundRun2
                             {
                                 Path = $"dialoguevideos/{dialogueId}.mkv"
                             };

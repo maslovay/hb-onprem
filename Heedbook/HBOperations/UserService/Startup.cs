@@ -157,7 +157,7 @@ namespace UserService
                 c.SwaggerEndpoint("/user/swagger/v1/swagger.json", "Sample API");
                 c.RoutePrefix = "user/swagger";
                 c.IndexStream = () => GetType().Assembly
-                    .GetManifestResourceStream("UserOperations.swagger-index.html"); 
+                    .GetManifestResourceStream("UserService.swagger-index.html"); 
             
             });
             app.UseCors(MyAllowSpecificOrigins);

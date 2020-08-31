@@ -61,7 +61,7 @@ namespace VideoToSoundService
         {
             System.Console.WriteLine("Subscribe");
             var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
-            publisher.Subscribe<VideoToSoundRun, VideoToSoundRunHandler>();
+            publisher.Subscribe<VideoToSoundRun2, VideoToSoundRunHandler>();
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
             else

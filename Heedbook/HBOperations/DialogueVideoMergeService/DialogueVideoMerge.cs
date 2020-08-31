@@ -158,7 +158,7 @@ namespace DialogueVideoMergeService
 
                 _log.Info("Delete all local files");
                 Directory.Delete(sessionDir, true);
-                var @event = new VideoToSoundRun
+                var @event = new VideoToSoundRun2
                 {
                     Path = "dialoguevideos/" + filename
                 };

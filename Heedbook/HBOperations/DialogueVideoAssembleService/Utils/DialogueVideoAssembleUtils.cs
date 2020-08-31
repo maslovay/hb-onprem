@@ -124,7 +124,7 @@ namespace DialogueVideoAssembleService.Utils
 
         public void SendMessageToVideoToSound(DialogueVideoAssembleRun message, string extension, INotificationPublisher notificationPublisher)
         {
-            var @event = new VideoToSoundRun
+            var @event = new VideoToSoundRun2
             {
                 Path = $"dialoguevideos/{message.DialogueId}{extension}"
             };
