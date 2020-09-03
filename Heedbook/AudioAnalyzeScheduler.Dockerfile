@@ -25,8 +25,8 @@ RUN apk add --update python3-dev
 
 RUN apk add build-base
 RUN apk add --update gcc
-RUN pip install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
-RUN pip install --user -U nltk
+RUN pip install git+https://github.com/devgopher/sentimental_w_stemmer.git
+RUN pip install nltk
  
 ENTRYPOINT ["dotnet", "AudioAnalyzeScheduler.dll"]
 EXPOSE 53525
@@ -36,4 +36,3 @@ RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download
 RUN chmod -R 777 /opt/download
 ENV INFRASTRUCTURE OnPrem
-ENV TESTCLUSTER testcluster

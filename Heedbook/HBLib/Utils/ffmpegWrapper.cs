@@ -179,7 +179,7 @@ namespace HBLib.Utils
             return resultStream;
         }
 
-        public List<Dictionary<String, String>> SplitBySeconds(String fn, Double seconds, String directory = null,
+        public List<Dictionary<String, String>> SplitBySeconds(String fn, Double seconds, ElasticClient _log, String directory = null,
             String rootFn = "split", Boolean convertToWebm = false)
         {
             fn = Path.GetFullPath(fn);
@@ -201,6 +201,7 @@ namespace HBLib.Utils
                 var newFn = $"{rootFn}_{i}{newExtension}";
 
                 if (directory != null) newFn = Path.Combine(directory, newFn);
+                _log.Info($"Save file to path {newFn}");
                 newFn = Path.GetFullPath(newFn);
 
                 if  (File.Exists(newFn))
@@ -214,6 +215,7 @@ namespace HBLib.Utils
                 arguments += $" {newFn}";
 
                 var output = cmd.runCMD(FfPath, arguments);
+                _log.Info($"Result of ffmpeg - {output}");
 
                 curMetadata["fn"] = newFn;
                 curMetadata["duration"] = Math.Min(b - a, duration - a).ToString();

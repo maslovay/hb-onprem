@@ -53,7 +53,7 @@ namespace ToneAnalyzeService
                     Guid.Parse((ReadOnlySpan<Char>) Path.GetFileNameWithoutExtension(path.Split('/').Last()));
                 var seconds = 3;
                 var localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync(path);
-                var metadata = _wrapper.SplitBySeconds(localPath, seconds);
+                var metadata = _wrapper.SplitBySeconds(localPath, seconds, _log, "/opt/download/");
                 var intervals = new List<DialogueInterval>();
                 var begTime = _repository.Get<Dialogue>().Where(item => item.DialogueId == dialogueId)
                                          .Select(item => item.BegTime).First();
@@ -149,6 +149,7 @@ namespace ToneAnalyzeService
             }
 
             var text = output;
+            _log.Info($"Result of working wocaturi path {vokaturiPath} for file {fileName} - {text}");
             try
             {
                 var pattern = @"\n\s?(\w+)\s+([\d\.]+)";
