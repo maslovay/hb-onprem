@@ -104,7 +104,7 @@ namespace ExtractFramesFromVideo
                         var fileFrame = await CreateFileFrameAsync(applicationUserId, frame.FrameTime, frame.FrameName, deviceId);
                         fileFrames.Add(fileFrame);
                         _log.Info($"Creating frame - {frame.FrameName}");
-                        RaiseNewFrameEvent(frame.FrameName);
+                        // RaiseNewFrameEvent(frame.FrameName);
                     }
                 }
                 _log.Info($"Frames for adding - {JsonConvert.SerializeObject(fileFrames)}");
@@ -115,6 +115,10 @@ namespace ExtractFramesFromVideo
                         _context.FileFrames.AddRange(fileFrames);
                         _context.SaveChanges();
                     }
+                }
+                foreach (var fileFrame in fileFrames)
+                {
+                    RaiseNewFrameEvent(fileFrame.FileName);
                 }
                 _log.Info("Deleting local files");
                 Directory.Delete(sessionDir, true);
