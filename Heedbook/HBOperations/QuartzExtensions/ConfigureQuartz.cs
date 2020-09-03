@@ -1,10 +1,10 @@
 ﻿using System;
+using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions.Jobs;
-using UserOperations.Services;
 
 namespace QuartzExtensions
 {
@@ -132,10 +132,10 @@ namespace QuartzExtensions
                 return TriggerBuilder.Create()
                                     .WithIdentity("SendUserAnalyticReportJob.trigger", "SelfStatistic")
                                     .StartNow()                                       
-                                    .WithCronSchedule("0 00 7 ? * MON", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())                                   
+                                    .WithCronSchedule("0 00 7 ? * MON", a=>a.InTimeZone(TimeZoneInfo.Utc).Build())
                                     .Build();
             });
-            services.AddSingleton<ILoginService, LoginService>();
+            services.AddSingleton<CheckTokenService>();
             services.AddSingleton(provider =>
             {
                 var schedulerFactory = new StdSchedulerFactory();

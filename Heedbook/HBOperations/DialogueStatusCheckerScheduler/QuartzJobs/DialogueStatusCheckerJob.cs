@@ -33,14 +33,11 @@ namespace QuartzExtensions.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            System.Console.WriteLine("Function started");
             using (var scope = _scopeFactory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
-                _log.Info("Audio analyze scheduler started.");
                 try
                 {
-                    _log.Info("Function started.");
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     var dialogues = _context.Dialogues
                         .Include(p => p.DialogueFrame)
@@ -48,7 +45,10 @@ namespace QuartzExtensions.Jobs
                         .Include(p => p.DialogueInterval)
                         .Include(p => p.DialogueVisual)
                         .Include(p => p.DialogueClientProfile)
+                        .Include(p => p.Device)
+                        .Include(p => p.Device.Company)
                         .Where(item => item.StatusId == 6)
+                        .OrderBy(p => p.BegTime)
                         .ToList();
                     System.Console.WriteLine($"{dialogues.Count()}");
 
@@ -59,36 +59,80 @@ namespace QuartzExtensions.Jobs
                         return;
                     }
 
+                    _log.Info($"DialogueStatusChecker for {dialogues.Count} dialogues.");
                     foreach (var dialogue in dialogues)
                     {
 
-                        if (dialogue.DialogueAudio.Any() &&
-                            dialogue.DialogueInterval.Any() &&
-                            dialogue.DialogueVisual.Any() &&
-                            dialogue.DialogueClientProfile.Any() &&
-                            dialogue.DialogueFrame.Any())
+                        if (
+                                (dialogue.Device.Company.IsExtended && dialogue.DialogueAudio.Any() &&
+                                dialogue.DialogueInterval.Any() &&
+                                dialogue.DialogueVisual.Any() &&
+                                dialogue.DialogueClientProfile.Any() &&
+                                dialogue.DialogueFrame.Any()) 
+                                || 
+                                (!dialogue.Device.Company.IsExtended &&  dialogue.DialogueVisual.Any() &&
+                                dialogue.DialogueClientProfile.Any() &&
+                                dialogue.DialogueFrame.Any())
+                            )
                         {
-                            _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
-                            dialogue.StatusId = 3;
-                            var @event = new FillingSatisfactionRun
+                            
+                            if (CheckDialogue(dialogue))
                             {
-                                DialogueId = dialogue.DialogueId
-                            };
-                            _notificationPublisher.Publish(@event);
+                                if (CheckDialogueIntersection(dialogue))
+                                {
+                                    _log.Info($"Everything is Ok. Dialogue id {dialogue.DialogueId}");
+                                    dialogue.StatusId = 3;
+                                    if (dialogue.Device.Company.IsExtended)
+                                    {
+                                        var @event = new FillingSatisfactionRun
+                                        {
+                                            DialogueId = dialogue.DialogueId
+                                        };
+                                        _notificationPublisher.Publish(@event);
+                                    }
+                                    var @eventFillSlideShowDialogue = new FillSlideShowDialogueRun
+                                    {
+                                        DialogueId = dialogue.DialogueId
+                                    };
+                                    _notificationPublisher.Publish(@eventFillSlideShowDialogue);
+                                    _log.Info($"FillSlideShowDialogueRun");
+                                }
+                                else
+                                {
+                                    dialogue.StatusId = 8;
+                                    dialogue.Comment = "Huge intersection";
+                                }
+                            }
+                            else
+                            {
+                                dialogue.StatusId = 8;
+                                dialogue.Comment = "Dialogue exist";
+                            }
                         }
                         else
                         {
-                            if ((DateTime.UtcNow - dialogue.CreationTime).Hours > 2)
+                            if ((DateTime.UtcNow - dialogue.CreationTime).Minutes > 30)
                             {
                                 _log.Error($"Error dialogue. Dialogue id {dialogue.DialogueId}");
                                 dialogue.StatusId = 8;
-                                var comment = "";
-                                comment += !dialogue.DialogueAudio.Any() ? "DialogueAudio is unfilled ," : "";
-                                comment += !dialogue.DialogueInterval.Any() ? "DialogueInterval is unfilled ," : "";
-                                comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
-                                comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
-                                comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
-                                dialogue.Comment = comment;
+                                if (dialogue.Device.Company.IsExtended)
+                                {
+                                    var comment = "";
+                                    comment += !dialogue.DialogueAudio.Any() ? "DialogueAudio is unfilled ," : "";
+                                    comment += !dialogue.DialogueInterval.Any() ? "DialogueInterval is unfilled ," : "";
+                                    comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
+                                    comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
+                                    comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
+                                    dialogue.Comment = comment;
+                                }
+                                else
+                                {
+                                    var comment = "";
+                                    comment += !dialogue.DialogueVisual.Any() ? "DialogueVisual is unfilled ," : "";
+                                    comment += !dialogue.DialogueClientProfile.Any() ? "DialogueClientProfile is unfilled ," : "";
+                                    comment += !dialogue.DialogueFrame.Any() ? "DialogueFrame is unfilled ," : "";
+                                    dialogue.Comment = comment;
+                                }
                             }
                             else
                             {
@@ -104,6 +148,46 @@ namespace QuartzExtensions.Jobs
                     _log.Fatal($"Exception occured {e}");
                 }
             }
+        }
+
+        private bool CheckDialogue(Dialogue dialogue)
+        {
+            var dialogues = _context.Dialogues.Where(p => p.DeviceId == dialogue.DeviceId && 
+                p.BegTime == dialogue.BegTime &&
+                p.EndTime == dialogue.EndTime &&
+                p.StatusId == 3 ).Count();
+            if (dialogues == 0) 
+                return true;
+            else
+                return false; 
+
+        }
+
+        private bool CheckDialogueIntersection(Dialogue dialogue)
+        {
+            var dialogues = _context.Dialogues.Where(p => p.DeviceId == dialogue.DeviceId && 
+                p.BegTime <= dialogue.BegTime &&
+                p.EndTime >= dialogue.BegTime &&
+                p.StatusId == 3 );
+            
+            if (dialogues.Sum(p => MinTime(p.EndTime, dialogue.EndTime).Subtract(dialogue.BegTime).TotalSeconds) > 
+                dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds * 0.8) 
+                return false;
+            else
+                return true; 
+
+        }
+
+        private DateTime MinTime(DateTime dt1, DateTime dt2)
+        {
+            if (dt1 > dt2) return dt2;
+            return dt1;
+        }
+
+        private DateTime MaxTime(DateTime dt1, DateTime dt2)
+        {
+            if (dt1 > dt2) return dt1;
+            return dt2;
         }
 
         // public async Task Execute(IJobExecutionContext context)

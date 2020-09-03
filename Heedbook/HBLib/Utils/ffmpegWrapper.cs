@@ -70,7 +70,22 @@ namespace HBLib.Utils
             var ts = TimeSpan.Parse(captured);
             return ts.TotalSeconds;
         }
-
+        //-acodec copy -vcodec copy
+        public async Task<String> ConvertMkvToMp4Async(String videoFn, String outFn)
+        {
+            try
+            {
+                videoFn = Path.GetFullPath(videoFn);
+                outFn = Path.GetFullPath(outFn);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $@"-i {videoFn} -acodec copy -vcodec copy {outFn}");
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
+            }
+        }
         public async Task<String> VideoToWavAsync(String videoFn, String audioFn)
         {
             try
@@ -79,13 +94,140 @@ namespace HBLib.Utils
                 audioFn = Path.GetFullPath(audioFn);
                 var cmd = new CMDWithOutput();
                 return cmd.runCMD(FfPath,
-                    $@"-i {videoFn} -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
+                    $@"-i {videoFn} -acodec pcm_s16le -ac 2 -ar 18000 -fflags +bitexact -flags:v +bitexact -flags:a +bitexact {audioFn}");
             }
             catch (Win32Exception ex)
             {
                 throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
             }
         }
+        public async Task<String> VideoToGifAsync(String videoFn, String gifFn)
+        {
+            try
+            {
+                var duration = GetDuration(videoFn);
+                videoFn = Path.GetFullPath(videoFn);
+                gifFn = Path.GetFullPath(gifFn);
+                var fps = 5;
+                var scale = 160;
+                int ss, t = 0;
+                if((int)duration > 60)
+                {
+                    ss = 30;
+                    t = 5;
+                }
+                else
+                {
+                    ss = (int) duration/2;
+                    t = (int) duration/5;
+                }
+                
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $" -ss {ss} -t {t} -i {videoFn} -vf \"fps={fps},scale={scale}:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" -loop 0 {gifFn}");
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
+            }
+        }
+        public async Task<String> CatAudio(String audioFn , int begTime, int endTime, string audioPartFileName)
+        {
+            try
+            {
+                var _begTime = TimeSpan.FromSeconds(begTime);
+                var _endTime = TimeSpan.FromSeconds(endTime);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $@"-i {audioFn} -ss {_begTime.ToString("hh\\:mm\\:ss")} -to {_endTime.ToString("hh\\:mm\\:ss")} -acodec copy -vcodec copy {audioPartFileName}");
+            }
+            catch(Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}");
+            }
+        }
+        public async Task<String> FilterAudio(String audioFn , int highpass, int lowpass, string newAudioFileName)
+        {
+            try
+            {
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $"-y -i {audioFn} -af \"highpass=f={highpass}, lowpass=f={lowpass}\" {newAudioFileName}");
+            }
+            catch(Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}");
+            }
+        }
+        public async Task<String> SplitAudioToMono(String audioFn, String leftAudioFn, String rightAudioFn)
+        {
+            try
+            {
+                audioFn = Path.GetFullPath(audioFn);
+                leftAudioFn = Path.GetFullPath(leftAudioFn);
+                rightAudioFn = Path.GetFullPath(rightAudioFn);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath, $@"-i {audioFn} -map_channel 0.0.0 {leftAudioFn} -map_channel 0.0.1 {rightAudioFn}");
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
+            }
+        }
+
+        public async Task<bool> IsAudioStereo(String audioFn)
+        {
+            try
+            {
+                audioFn = Path.GetFullPath(audioFn);
+                var cmd = new CMDWithOutput();
+                var output = cmd.runCMD(FfPath, $"-i \"{audioFn}\"");
+                
+                return output.Contains("stereo");
+
+            }
+            catch (Win32Exception ex)
+            {
+                throw new Exception($"{ex.Message} \r\n executable: {FfPath}"); // for tests!
+
+            }
+        }
+
+        public async Task<String> GetLastFrameFromVideo(String videoFn, string frameFn)
+        {
+            //ffmpeg -sseof -3 -i 00000000-0000-0000-0000-000000000000_4b95777d-abe2-4987-98c6-d541f86f4894_20200123104457_1.mkv -update 1 -q:v 1 last.jpg
+            try
+            {
+                videoFn = Path.GetFullPath(videoFn);
+                frameFn = Path.GetFullPath(frameFn);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $@" -sseof -3 -i {videoFn} -update 1 -q:v 1 {frameFn}");
+            }
+            catch (Exception e)
+            {
+                 throw new Exception($"Exception occured {e.Message}");
+            }
+        }
+
+        public async Task<String> GetFrameNSeconds(String videoFn, string frameFn, int seconds)
+        {
+            //ffmpeg -ss 00:00:02 -i "file.flv" -f image2 -vframes 1 "file_out.jpg"
+            try
+            {
+                videoFn = Path.GetFullPath(videoFn);
+                frameFn = Path.GetFullPath(frameFn);
+                var cmd = new CMDWithOutput();
+                return cmd.runCMD(FfPath,
+                    $@"-ss {seconds} -i {videoFn} -f image2 -vframes 1 {frameFn}");
+            }
+            catch (Exception e)
+            {
+                 throw new Exception($"Exception occured {e.Message}");
+            }
+        }
+
+        // public async Task<>
 
         public async Task<FileStream> VideoToWavAsync(MemoryStream videoStream)
         {
@@ -252,6 +394,29 @@ namespace HBLib.Utils
             var res = cmd.runCMD(FfPath, arguments);
             return res;
         }
+        public string CreateVideoFromAudioAndOneFrame(string framePath, string audioPath)
+        {
+            var cmd = new CMDWithOutput();
+            var filename = Path.GetFileNameWithoutExtension($"{audioPath}");
+            var directoryPath = Path.GetDirectoryName($"{audioPath}");
+            var newName = $"{directoryPath}/{filename}.mkv";
+
+            var arguments = $"-loop 1 -y -i {framePath} -i {audioPath} -shortest -acodec copy -vcodec mjpeg {newName}";
+            var res = cmd.runCMD(FfPath, arguments);
+            return res;
+        }
+        public string ChangeBitrateTo8000(string audioPath)
+        {
+            var cmd = new CMDWithOutput();
+            var filename = Path.GetFileNameWithoutExtension($"{audioPath}");
+            var directoryPath = Path.GetDirectoryName($"{audioPath}");
+            var newName = $"{directoryPath}/newdirectory/{filename}.wav";
+
+            var arguments = $"-i {audioPath} -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:a +bitexact {newName}";
+            //ffmpeg -i 0a78acd6-8115-4c34-a6c4-7802c50d7858.wav -acodec pcm_s16le -ac 1 -ar 8000 -fflags +bitexact -flags:a +bitexact 123.wav
+            var res = cmd.runCMD(FfPath, arguments);
+            return res;
+        }
 
         public String ConcatSameCodecsAndFrames(List<FFmpegCommand> fns, String outputFn, String dir = null)
         {
@@ -398,6 +563,7 @@ namespace HBLib.Utils
             public String ImagePath;
             public String Type;
             public int Duration;
+            public String InsideVideoPath;
         }
     }
 }

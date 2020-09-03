@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -46,8 +47,20 @@ namespace HBData.Models
         /// <summary>
         ///     Place where the content was shown
         /// </summary>
-        public Guid? ApplicationUserId { get; set; }
+        public Guid DeviceId { get; set; }
+        [JsonIgnore] public Device Device { get; set; }
 
-        [ForeignKey("ApplicationUserId")] public ApplicationUser ApplicationUser { get; set; }
+        /// <summary>
+        ///     Employee who showed the content
+        /// </summary>
+        public Guid? ApplicationUserId { get; set; }
+        [JsonIgnore] public ApplicationUser ApplicationUser { get; set; }
+
+        /// <summary>
+        ///     Will fill with scheduler
+        /// </summary>
+        public Guid? DialogueId { get; set; }
+
+        public Dialogue Dialogue { get; set; }
     }
 }

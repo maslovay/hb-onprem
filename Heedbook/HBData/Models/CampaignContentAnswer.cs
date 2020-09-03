@@ -24,12 +24,17 @@ namespace HBData.Models
         [JsonIgnore] public CampaignContent CampaignContent { get; set; }
 
         /// <summary>
-        ///     Employee who showed the survey
+        ///     Place where the content was shown
         /// </summary>
-        public Guid ApplicationUserId { get; set; }
+        public Guid DeviceId { get; set; }
+        [JsonIgnore] public Device Device { get; set; }
 
+        /// <summary>
+        ///     Employee who showed the content
+        /// </summary>
+        public Guid? ApplicationUserId { get; set; }
         [JsonIgnore] public ApplicationUser ApplicationUser { get; set; }
-        
+
         /// <summary>
         ///     Time of answer
         /// </summary>

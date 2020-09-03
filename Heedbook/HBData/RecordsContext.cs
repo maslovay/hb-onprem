@@ -19,13 +19,14 @@ namespace HBData
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-           // optionsBuilder.UseNpgsql("User ID=test_user;Password=test_password;Host=40.69.85.181;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0");
+            // optionsBuilder.UseNpgsql("User ID=;Password=;Host=;Port=;Database=;Pooling=true;Timeout=120;CommandTimeout=0");
         }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            builder.Entity<Client>().HasQueryFilter(m => m.StatusId == 3);
 
             builder.Entity<ApplicationUser>(i =>
             {
@@ -74,6 +75,8 @@ namespace HBData
                     ;
                 userRole.ToTable("AspNetUserRoles");
             });
+
+            builder.Entity<WorkingTime>().HasKey(a => new {a.Day, a.CompanyId });
         }
         
         
@@ -119,15 +122,26 @@ namespace HBData
         public DbSet<Status> Statuss { get; set; }
         public DbSet<Tariff> Tariffs { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
-        public DbSet<WorkerType> WorkerTypes { get; set; }
-        public DbSet<PasswordHistory> PasswordHistorys { get; set; }
-        public DbSet<LoginHistory> LoginHistorys { get; set; }
         public DbSet<AlertType> AlertTypes { get; set; }
         public DbSet<Alert> Alerts { get; set; }
-        public DbSet<VIndexByCompanyDay> VIndexesByCompanysDays { get; set; }        
-        public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
-        public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }        
         public DbSet<TabletAppInfo> TabletAppInfos { get; set; }
         public DbSet<VideoFace> VideoFaces { get; set; }
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<ClientNote> ClientNotes { get; set; }
+
+        public DbSet<Benchmark> Benchmarks { get; set; }
+        public DbSet<BenchmarkName> BenchmarkNames { get; set; }
+
+        //---(NEW) ---
+        public DbSet<ClientSession> ClientSessions { get; set; }
+        public DbSet<Device> Devices { get; set; }
+        public DbSet<DeviceType> DeviceTypes { get; set; }
+        public DbSet<SalesStage> SalesStages { get; set; }
+        public DbSet<SalesStagePhrase> SalesStagePhrases { get; set; }
+        public DbSet<WorkingTime> WorkingTimes { get; set; }
+
+        //---VIES
+        public DbSet<VWeeklyUserReport> VWeeklyUserReports { get; set; }
+        public DbSet<VSessionUserWeeklyReport> VSessionUserWeeklyReports { get; set; }
     }
 }

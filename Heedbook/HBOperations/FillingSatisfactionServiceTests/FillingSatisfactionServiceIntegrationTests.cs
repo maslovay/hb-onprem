@@ -1,6 +1,7 @@
 using System;
 using System.Configuration;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Common;
 using FillingSatisfactionService.Helper;
@@ -18,7 +19,6 @@ namespace FillingSatisfactionService.Tests
 {
     public class FillingSatisfactionServiceTests : ServiceTest
     {
-        private IGenericRepository _repository;
         private FillingSatisfaction _fillingSatisfactionService;
         private Startup startup;
         private Dialogue dialog;
@@ -58,7 +58,7 @@ namespace FillingSatisfactionService.Tests
             _fillingSatisfactionService = ServiceProvider.GetService<FillingSatisfaction>();
         }
 
-        [Test, Retry(3)]
+        [Test]
         public async Task EnsureCreatesSatisfactionRecord()
         {
             await _fillingSatisfactionService.Run(dialog.DialogueId);        

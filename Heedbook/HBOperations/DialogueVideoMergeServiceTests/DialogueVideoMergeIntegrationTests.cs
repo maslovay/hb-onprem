@@ -33,7 +33,7 @@ namespace DialogueVideoMerge.Tests
         }
 
         [TearDown]
-        public async Task TearDown()
+        public async new Task TearDown()
         {
             await base.TearDown();
         }

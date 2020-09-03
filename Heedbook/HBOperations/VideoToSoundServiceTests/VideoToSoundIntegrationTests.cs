@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
+using Configurations;
 using HBData.Repository;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -24,13 +26,16 @@ namespace VideoToSoundService.Tests
         {
             await base.Setup(() =>
             {
+                Services.AddRabbitMqEventBus(Config);
+                StartupExtensions.MockRabbitPublisher(Services);
+                //StartupExtensions.MockNotificationService(Services);
                 _startup = new Startup(Config);
-                _startup.ConfigureServices(Services);
+                _startup.ConfigureServices(Services);              
             }, true);
         }
 
         [TearDown]
-        public async Task TearDown()
+        public async new Task TearDown()
         {
             await base.TearDown();
         }
@@ -39,7 +44,8 @@ namespace VideoToSoundService.Tests
         {
             testDialogueId = Guid.NewGuid().ToString();
             
-            var currentDir = Environment.CurrentDirectory;
+            // var currentDir = Environment.CurrentDirectory;
+            var currentDir = $"../../../../Common";
 
             var testDialogVideoPath = Directory
                 .GetFiles(Path.Combine(currentDir, "Resources/DialogueVideos"), "dialogueid.mkv")
@@ -50,7 +56,7 @@ namespace VideoToSoundService.Tests
 
              testDialogVideoCorrectFileName = Path.GetFileName(testDialogVideoPath
                 .Replace("dialogueid", testDialogueId));
-
+            System.Console.WriteLine($"testDialogVideoCorrectFileName: {testDialogVideoCorrectFileName}");
              testDialogAudioCorrectFileName = testDialogueId + ".wav";
              
             if (!(await _sftpClient.IsFileExistsAsync("dialoguevideos/" + testDialogVideoCorrectFileName)))
@@ -60,7 +66,8 @@ namespace VideoToSoundService.Tests
         protected override async Task CleanTestData()
         {
             await _sftpClient.DeleteFileIfExistsAsync("dialoguevideos/" + testDialogVideoCorrectFileName);
-            await _sftpClient.DeleteFileIfExistsAsync("dialogueaudios/" + testDialogAudioCorrectFileName);            
+            await _sftpClient.DeleteFileIfExistsAsync("dialogueaudios/" + testDialogAudioCorrectFileName);   
+            await _sftpClient.DeleteFileIfExistsAsync("dialogueaudiosemp/" + testDialogAudioCorrectFileName);                     
         }
 
         protected override void InitServices()
@@ -69,14 +76,15 @@ namespace VideoToSoundService.Tests
             _videoToSoundService = ServiceProvider.GetService<VideoToSound>();
         }
 
-        [Test, Retry(3)]
+        [Test]
         public async Task CheckSoundFilePresents()
         {
             await _videoToSoundService.Run("dialoguevideos/" + testDialogVideoCorrectFileName);
-
+            Thread.Sleep(15000);
             _sftpClient.ChangeDirectoryToDefault();
             
             Assert.IsTrue(await _sftpClient.IsFileExistsAsync("dialogueaudios/" + testDialogAudioCorrectFileName));
+            Assert.IsTrue(await _sftpClient.IsFileExistsAsync("dialogueaudiosemp/" + testDialogAudioCorrectFileName));
         }
     }
 }

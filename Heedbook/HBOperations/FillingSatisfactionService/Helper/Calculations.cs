@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HBData;
 using HBData.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FillingSatisfactionService.Helper
@@ -19,40 +20,99 @@ namespace FillingSatisfactionService.Helper
             _config = config;
         }
 
-        public List<DialogueClientSatisfaction> TotalScoreCalculate(List<Dialogue> dialogues)
+        public int TotalScoreCalculate(Dialogue dialogue)
         {
-            var dialoguesIdName = new List<String>();
-            foreach (var dialogue in dialogues) dialoguesIdName.Add(dialogue.DialogueId.ToString());
+            var visuals = _context.DialogueVisuals.Where(p => p.DialogueId == dialogue.DialogueId)
+                                  .ToList();
+            var audios = _context.DialogueAudios.Where(p => p.DialogueId == dialogue.DialogueId).ToList();
+            var speechs = _context.DialogueSpeechs.Where(p => p.DialogueId == dialogue.DialogueId).ToList();
 
-            var visuals = _context.DialogueVisuals.Where(p => dialoguesIdName.Contains(p.DialogueId.ToString()))
-                                  .ToList();
-            var audios = _context.DialogueAudios.Where(p => dialoguesIdName.Contains(p.DialogueId.ToString())).ToList();
-            var speechs = _context.DialogueSpeechs.Where(p => dialoguesIdName.Contains(p.DialogueId.ToString()))
-                                  .ToList();
-            var satisfactions = _context.DialogueClientSatisfactions
-                                        .Where(p => dialoguesIdName.Contains(p.Dialogue.ToString())).ToList();
-            foreach (var dialogue in dialogues)
+            var dialogueId = dialogue.DialogueId;
+            var visual = visuals.Find(p => p.DialogueId == dialogueId);
+            var audio = audios.Find(p => p.DialogueId == dialogueId);
+            var speech = speechs.Find(p => p.DialogueId == dialogueId);
+
+            var totalScore = 35 + CalculateVisual(visual) + CalculateAudio(audio) + CalculateText(speech);
+
+            var ACot11 = 2.5*(Math.PI/2-Math.Atan((totalScore-10)*0.25)) + 1.05;
+            var ACot12 = 0.06*(Math.PI/2-Math.Atan((totalScore-80)*0.1)) + 0.75;
+            var ATan13 = 0.3*Math.Atan((totalScore-2.5)*1) + 0.465;
+            var ACot21 = 0.245*(Math.PI/2-Math.Atan((totalScore-34)*0.7)) + 1.1;
+            var ATan22 = 0.12*Math.Atan((totalScore-21)*0.3) + 0.8;
+
+            totalScore = Convert.ToInt16(totalScore * (ACot11 * ACot12 * ATan13 * ACot21 * ATan22));
+            if (totalScore > 99) return 99;
+            if (totalScore < 35) return 35;
+            return Convert.ToInt32(totalScore);
+        }
+
+        public double MeetingExpectationsByClientCalculate(Dialogue dialogue)
+        {
+            try
             {
-                var dialogueId = dialogue.DialogueId;
-                var visual = visuals.Find(p => p.DialogueId == dialogueId);
-                var audio = audios.Find(p => p.DialogueId == dialogueId);
-                var speech = speechs.Find(p => p.DialogueId == dialogueId);
-                var satisfaction = satisfactions.Find(p => p.DialogueId == dialogueId);
+                var campaignContentIds = _context.SlideShowSessions
+                        .Where(p => p.BegTime >= dialogue.BegTime
+                                && p.BegTime <= dialogue.EndTime
+                                && p.ApplicationUserId == dialogue.ApplicationUserId
+                                && p.IsPoll)
+                        .Select(p => p.CampaignContentId).ToList();
 
-                var TotalScore = Math.Round((Decimal) (80 + visual.HappinessShare + visual.SurpriseShare -
-                                                       (visual.FearShare + visual.DisgustShare + visual.SadnessShare +
-                                                        visual.ContemptShare) +
-                                                       (audio.PositiveTone * 0.5 - audio.NegativeTone * 0.3) +
-                                                       (visual.AttentionShare / 3 - 27) +
-                                                       (speech.PositiveShare / 4 - 18)), 0);
+                Func<string, double> intParse = (string answer) =>
+                {
+                    switch (answer)
+                    {
+                        case "EMOTION_ANGRY":
+                            return 0;
+                        case "EMOTION_BAD":
+                            return 2.5;
+                        case "EMOTION_NEUTRAL":
+                            return 5;
+                        case "EMOTION_GOOD":
+                            return 7.5;
+                        case "EMOTION_EXCELLENT":
+                            return 10;
+                        default:
+                            {
+                                Int32.TryParse(answer, out int res);
+                                return res != 0? Convert.ToDouble(res): -1;
+                            }
+                    }
 
-                satisfaction.MeetingExpectationsTotal = (Single) TotalScore;
-                if (satisfaction.MeetingExpectationsTotal > 99) satisfaction.MeetingExpectationsTotal = 99;
-
-                if (satisfaction.MeetingExpectationsTotal < 10) satisfaction.MeetingExpectationsTotal = 10;
+                };
+                var pollAnswersAvg = _context.CampaignContentAnswers
+                      .Where(x => campaignContentIds.Contains(x.CampaignContentId)
+                          && x.Time >= dialogue.BegTime
+                          && x.Time <= dialogue.EndTime
+                          && x.ApplicationUserId == dialogue.ApplicationUserId).ToList()
+                      .Select(x => intParse(x.Answer))
+                      .Where(res => res >= 0)
+                      .Average() * 10;
+                return pollAnswersAvg > 100 ? 100 : pollAnswersAvg;
             }
+            catch
+            {
+                return 0;
+            }
+        }
 
-            return satisfactions;
+        public int CalculateVisual(DialogueVisual visual)
+        {
+            if (visual == null) return 0;
+            return  Convert.ToInt32(100 * (visual.HappinessShare + visual.SurpriseShare) -
+                                                    60 * (visual.FearShare + visual.DisgustShare + visual.SadnessShare +
+                                                    visual.ContemptShare) +  0.5 * (visual.AttentionShare  - 10));
+        }
+
+        public int CalculateAudio(DialogueAudio audio)
+        {
+            if (audio == null) return 0;
+            return Convert.ToInt32((audio.PositiveTone * 50 - audio.NegativeTone * 10));
+        }
+
+        public int CalculateText(DialogueSpeech speech)
+        {
+            if (speech == null) return 0;
+            return Convert.ToInt32( 0.3 * (speech.PositiveShare / 4 - 12));
         }
 
         public Int32 TotalScoreInsideCalculate(IEnumerable<DialogueFrame> DF, DialogueAudio DA,
@@ -178,16 +238,8 @@ namespace FillingSatisfactionService.Helper
 
         public void RewriteSatisfactionScore(String dialogueId)
         {
-            var satisfactionScore = new DialogueClientSatisfaction();
-            try
-            {
-                satisfactionScore =
-                    _context.DialogueClientSatisfactions.First(p => p.DialogueId.ToString() == dialogueId);
-            }
-            catch
-            {
-                satisfactionScore = null;
-            }
+            var satisfactionScore = 
+                    _context.DialogueClientSatisfactions.FirstOrDefault(p => p.DialogueId.ToString() == dialogueId);
 
             if (satisfactionScore != null)
             {

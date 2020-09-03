@@ -6,12 +6,12 @@ namespace DialogueMarkUp.Utils
     public class ClassCreator
     {
 
-        public Dialogue CreateDialogueClass(Guid dialogueId, Guid applicationUserId, DateTime begTime, DateTime endTime, string personFaceDescriptor)
+        public Dialogue CreateDialogueClass(Guid dialogueId, Guid? applicationUserId, Guid deviceId, DateTime begTime, DateTime endTime, string personFaceDescriptor)
         {
-            return new CreateDialogue(dialogueId, applicationUserId, begTime, endTime, personFaceDescriptor).GetDialogue();
+            return new CreateDialogue(dialogueId, applicationUserId, deviceId, begTime, endTime, personFaceDescriptor).GetDialogue();
         }
 
-        public DialogueMarkup CreateMarkUpClass(Guid applicationUserId, DateTime begTime, DateTime endTime)
+        public DialogueMarkup CreateMarkUpClass(Guid? applicationUserId, DateTime begTime, DateTime endTime)
         {
             return new CreateMarkUp(applicationUserId, begTime, endTime).GetMarkUp();
         }
@@ -19,14 +19,16 @@ namespace DialogueMarkUp.Utils
         private class CreateDialogue
         {
             private Dialogue _dialogue;
-            public CreateDialogue(Guid dialogueId, Guid applicationUserId, DateTime begTime, DateTime endTime, string personFaceDescriptor)
+            public CreateDialogue(Guid dialogueId, Guid? applicationUserId, Guid deviceId, DateTime begTime, DateTime endTime, string personFaceDescriptor)
             {
                 _dialogue = new Dialogue{
                     DialogueId = dialogueId,
+                    DeviceId = deviceId,
                     ApplicationUserId = applicationUserId,
                     BegTime = begTime,
                     EndTime = endTime,
                     CreationTime = DateTime.UtcNow,
+                    PersonFaceDescriptor = personFaceDescriptor,
                     LanguageId = 1,
                     StatusId = 6,
                     InStatistic = true
@@ -43,7 +45,7 @@ namespace DialogueMarkUp.Utils
         {
             private HBData.Models.DialogueMarkup _markup;
 
-            public CreateMarkUp(Guid applicationUserId, DateTime begTime, DateTime endTime)
+            public CreateMarkUp(Guid? applicationUserId, DateTime begTime, DateTime endTime)
             {
                 _markup = new HBData.Models.DialogueMarkup{
                     DialogueMarkUpId = Guid.NewGuid(),

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,11 +27,12 @@ namespace FaceAnalyzeService
             SftpClient sftpClient,
             IServiceScopeFactory factory,
             HbMlHttpClient client,
-            ElasticClientFactory elasticClientFactory
+            ElasticClientFactory elasticClientFactory,
+            RecordsContext context
             )
         {
             _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
-            _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
+            _context = context;
             _client = client ?? throw new ArgumentNullException(nameof(client));
             _elasticClientFactory = elasticClientFactory;
         }
@@ -49,64 +51,64 @@ namespace FaceAnalyzeService
             try
             {
                 _log.Info($"Function started");
-                if (await _sftpClient.IsFileExistsAsync(remotePath))
+                string localPath;
+                lock (_syncRoot)
                 {
-                    string localPath;
-                    lock (_syncRoot)
+                    localPath = _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath).GetAwaiter().GetResult();
+                }
+                _log.Info($"Download to path - {localPath}");
+                if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
+                {
+                    _log.Info($"{localPath}: Face detected!  {faceLength}: faceLength");
+
+                    var byteArray = await File.ReadAllBytesAsync(localPath);
+                    var base64String = Convert.ToBase64String(byteArray);
+                    var faceResult = await _client.GetFaceResult(base64String);
+                    _log.Info($"Face result is {JsonConvert.SerializeObject(faceResult)}");
+                    
+                    var fileName = localPath.Split('/').Last();
+                    var fileFrame = _context.FileFrames.Where(entity => entity.FileName == fileName).FirstOrDefault();
+                    
+                    var frameEmotion = new List<FrameEmotion>();
+                    var frameAttribute = new List<FrameAttribute>();
+                    if (fileFrame != null && faceResult.Any())
                     {
-                        localPath = _sftpClient.DownloadFromFtpToLocalDiskAsync(remotePath).GetAwaiter().GetResult();
-                    }
-                    _log.Info($"Download to path - {localPath}");
-                    if (FaceDetection.IsFaceDetected(localPath, out var faceLength))
-                    {
-                        _log.Info($"{localPath}: Face detected!");
-
-                        var byteArray = await File.ReadAllBytesAsync(localPath);
-                        var base64String = Convert.ToBase64String(byteArray);
-
-                        var faceResult = await _client.GetFaceResult(base64String);
-                        _log.Info($"Face result is {JsonConvert.SerializeObject(faceResult)}");
-                        var fileName = localPath.Split('/').Last();
-                        FileFrame fileFrame;
-                        lock (_context)
+                        fileFrame.FaceLength = faceLength;
+                        fileFrame.IsFacePresent = true;
+                        frameEmotion.Add(new FrameEmotion
                         {
-                            fileFrame = _context.FileFrames.Where(entity => entity.FileName == fileName).FirstOrDefault();
-                        }
-                        if (fileFrame != null && faceResult.Any())
-                        {
-                            var frameEmotion = new FrameEmotion
-                            {
-                                FileFrameId = fileFrame.FileFrameId,
-                                AngerShare = faceResult.Average(item => item.Emotions.Anger),
-                                ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
-                                DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
-                                FearShare = faceResult.Average(item => item.Emotions.Fear),
-                                HappinessShare = faceResult.Average(item => item.Emotions.Happiness),
-                                NeutralShare = faceResult.Average(item => item.Emotions.Neutral),
-                                SadnessShare = faceResult.Average(item => item.Emotions.Sadness),
-                                SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
-                                YawShare = faceResult.Average(item => item.Headpose.Yaw)
-                            };
-
-                            var frameAttribute = faceResult.Select(item => new FrameAttribute
+                            FileFrameId = fileFrame.FileFrameId,
+                            AngerShare = faceResult.Average(item => item.Emotions.Anger),
+                            ContemptShare = faceResult.Average(item => item.Emotions.Contempt),
+                            DisgustShare = faceResult.Average(item => item.Emotions.Disgust),
+                            FearShare = faceResult.Average(item => item.Emotions.Fear),
+                            HappinessShare = faceResult.Average(item => item.Emotions.Happiness),
+                            NeutralShare = faceResult.Average(item => item.Emotions.Neutral),
+                            SadnessShare = faceResult.Average(item => item.Emotions.Sadness),
+                            SurpriseShare = faceResult.Average(item => item.Emotions.Surprise),
+                            YawShare = faceResult.Average(item => item.Headpose.Yaw)
+                        });
+                        
+                        frameAttribute.Add(faceResult.Select(item => new FrameAttribute
                             {
                                 Age = item.Attributes.Age,
                                 Gender = item.Attributes.Gender,
                                 Descriptor = JsonConvert.SerializeObject(item.Descriptor),
                                 FileFrameId = fileFrame.FileFrameId,
                                 Value = JsonConvert.SerializeObject(item.Rectangle)
-                            }).FirstOrDefault();
+                            }).FirstOrDefault());
 
-                            fileFrame.FaceLength = faceLength;
-                            fileFrame.IsFacePresent = true;
-
-                            if (frameAttribute != null) _context.FrameAttributes.Add(frameAttribute);
-                            _context.FrameEmotions.Add(frameEmotion);
-                            lock (_context)
-                            {
-                                _context.SaveChanges();
-                            }
+                        if (frameAttribute.Any()) 
+                        {
+                            _log.Info($"Saving frame attributes {JsonConvert.SerializeObject(frameAttribute)}");
+                            _context.FrameAttributes.AddRange(frameAttribute);
                         }
+                        if (frameEmotion.Any()) 
+                        {
+                            _log.Info($"Saving frame emotions {JsonConvert.SerializeObject(frameEmotion)}");
+                            _context.FrameEmotions.AddRange(frameEmotion);
+                        }
+                        _context.SaveChanges();
                     }
                     else
                     {

@@ -1,347 +1,73 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.Extensions.Configuration;
-using UserOperations.AccountModels;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-using UserOperations.Models.AnalyticModels;
-using System.Globalization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
-using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
-using HBData;
-using UserOperations.Utils;
+using Microsoft.AspNetCore.Authorization;
 using HBLib.Utils;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [ControllerExceptionFilter]
+
     public class AnalyticReportController : Controller
     {
-        private readonly IConfiguration _config;
-        private readonly ILoginService _loginService;
-        private readonly RecordsContext _context;
-        private readonly DBOperations _dbOperation;
-        private readonly RequestFilters _requestFilters;
-        // private readonly ElasticClient _log;
+        private readonly AnalyticReportService _analyticReportService;
 
         public AnalyticReportController(
-            IConfiguration config,
-            ILoginService loginService,
-            RecordsContext context,
-            DBOperations dbOperation,
-            RequestFilters requestFilters
-            // ElasticClient log
+            AnalyticReportService analyticReportService
             )
         {
-            _config = config;
-            _loginService = loginService;
-            _context = context;
-            _dbOperation = dbOperation;
-            _requestFilters = requestFilters;
-            // _log = log;
+            _analyticReportService = analyticReportService;
         }
 
         [HttpGet("ActiveEmployee")]
-        public IActionResult ReportActiveEmployee([FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+        [SwaggerOperation(Summary = "ActiveEmployee", Description = "Get Employee SessionInfo List according parameters")]
+        public string ReportActiveEmployee([FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
-        {
-            try
-            {
-                // _log.Info("AnalyticReport/ActiveEmployee started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Where(p => p.StatusId == 6
-                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new SessionInfo
-                    {
-                        ApplicationUserId = p.ApplicationUserId,
-                        FullName = p.ApplicationUser.FullName
-                    })
-                    .ToList().Distinct().ToList();
-                // _log.Info("AnalyticReport/ActiveEmployee finished");
-                return Ok(JsonConvert.SerializeObject(sessions));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
-        }
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                         [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) => 
+        _analyticReportService.ReportActiveEmployee(
+            applicationUserIds,
+            companyIds,
+            corporationIds,
+            deviceIds);
 
         [HttpGet("UserPartial")]
-        public IActionResult ReportUserPartial([FromQuery(Name = "begTime")] string beg,
+        [SwaggerOperation(Summary = "Get ReportUserPartial", Description = "Receive list of ReportPartDayEmployeeInfo which contains number of dialogues, working hours, load index for every day in range of days.")]
+        public string ReportUserPartial([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
-        {
-            try
-            {
-                // _log.Info("AnalyticReport/UserPartial started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
+        _analyticReportService.ReportUserPartial(
+            beg,
+            end,
+            applicationUserIds,
+            companyIds,
+            corporationIds,
+            deviceIds);
 
-                var employeeRole = _context.Roles.FirstOrDefault(x =>x.Name == "Employee").Id;
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.ApplicationUser.UserRoles)
-                    .Include(p => p.ApplicationUser.WorkerType)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                            && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
-                    .Select(p => new SessionInfo
-                    {
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        FullName = p.ApplicationUser.FullName,
-                        // WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
-                    })
-                    .ToList();
-
-          //      var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
-
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.ApplicationUser.WorkerType)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhrase)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId)))
-                    .Select(p => new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        // WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
-                        FullName = p.ApplicationUser.FullName,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal
-                    })
-                    .ToList();
-                    //---USER WITHOUT SESSIONS---
-                var userIds = sessions.Select(x => x.ApplicationUserId).Distinct().ToList();
-                
-                var usersToAdd = _context.ApplicationUsers
-                    .Include(x =>x.UserRoles)
-                    .Where(p => 
-                        p.CreationDate <= endTime
-                        && p.StatusId == 3
-                        &&(!companyIds.Any() || companyIds.Contains((Guid)p.CompanyId))
-                        && (!applicationUserIds.Any() || applicationUserIds.Contains(p.Id))
-                        && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.WorkerTypeId))
-                        && !userIds.Contains(p.Id)
-                        && p.Id != Guid.Parse(userClaims["applicationUserId"])
-                        && (p.UserRoles.Any(x => x.RoleId == employeeRole))
-                    ).ToList();
-
-                var result = sessions
-                    .GroupBy(p => p.ApplicationUserId)
-                    .Select(p => new 
-                    {
-                        FullName = p.First().FullName,
-                        ApplicationUserId = p.Key,
-                        LoadIndexAverage = _dbOperation.LoadIndex(p, dialogues, begTime, endTime),
-                        PeriodInfo = p.GroupBy(q => q.BegTime.Date).Select(q => new ReportPartDayEmployeeInfo
-                        {
-                            Date = q.Key,
-                            WorkingHours = _dbOperation.MaxDouble(_dbOperation.SessionAverageHours(q), _dbOperation.DialogueSumDuration(q, dialogues, p.Key)),
-                            DialogueHours = _dbOperation.DialogueSumDuration(q, dialogues, p.Key),
-                            LoadIndex = 100 * _dbOperation.LoadIndex(_dbOperation.SessionAverageHours(q), _dbOperation.DialogueSumDuration(q, dialogues, p.Key)),
-                            DialogueCount = _dbOperation.DialoguesCount(dialogues, p.Key, q.Key)
-                        }).ToList()
-                    }).ToList();
-
-                var emptyUsers = usersToAdd.Select(p => new 
-                    {
-                        FullName = p.FullName,
-                        ApplicationUserId = p.Id,
-                        LoadIndexAverage = (double?)0,
-                        PeriodInfo =  new List<ReportPartDayEmployeeInfo>()
-                        }).ToList();                   
-                   
-                result.AddRange(emptyUsers);
-                // _log.Info("AnalyticReport/UserPartial finished");
-                return Ok(JsonConvert.SerializeObject(result));
-
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
-        }
 
         [HttpGet("UserFull")]
-        public IActionResult ReportUserFull([FromQuery(Name = "begTime")] string beg,
+        [SwaggerOperation(Summary = "Get ReportUserFull", Description = "Receive list of ReportFullPeriodInfo")]
+        public string ReportUserFull([FromQuery(Name = "begTime")] string beg,
                                                         [FromQuery(Name = "endTime")] string end,
-                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid> applicationUserIds,
+                                                        [FromQuery(Name = "applicationUserId[]")] List<Guid?> applicationUserIds,
                                                         [FromQuery(Name = "companyId[]")] List<Guid> companyIds,
-                                                        [FromQuery(Name = "corporationIds[]")] List<Guid> corporationIds,
-                                                        [FromQuery(Name = "workerTypeId[]")] List<Guid> workerTypeIds,
-                                                        [FromHeader] string Authorization)
-        {
-            try
-            {
-                // _log.Info("AnalyticReport/UserFull started");
-                if (!_loginService.GetDataFromToken(Authorization, out var userClaims))
-                    return BadRequest("Token wrong");
-                var role = userClaims["role"];
-                var companyId = Guid.Parse(userClaims["companyId"]);
-                var begTime = _requestFilters.GetBegDate(beg);
-                var endTime = _requestFilters.GetEndDate(end);
-                _requestFilters.CheckRoles(ref companyIds, corporationIds, role, companyId);    
-                var employeeRole = _context.Roles.FirstOrDefault(x =>x.Name == "Employee").Id;
-
-                var sessions = _context.Sessions
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.ApplicationUser.UserRoles)
-                    .Include(p => p.ApplicationUser.WorkerType)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 7
-                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                            && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
-                    .Select(p => new SessionInfo
-                    {
-                        ApplicationUserId = p.ApplicationUserId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        FullName = p.ApplicationUser.FullName,
-                        // WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
-                    })
-                    .ToList();
-        //        var typeIdCross = _context.PhraseTypes.Where(p => p.PhraseTypeText == "Cross").Select(p => p.PhraseTypeId).First();
-
-                var dialogues = _context.Dialogues
-                    .Include(p => p.ApplicationUser)
-                    .Include(p => p.ApplicationUser.UserRoles)
-                    .Include(p => p.ApplicationUser.WorkerType)
-                    .Include(p => p.DialogueClientSatisfaction)
-                    .Include(p => p.DialoguePhrase)
-                    .Where(p => p.BegTime >= begTime
-                            && p.EndTime <= endTime
-                            && p.StatusId == 3
-                            && p.InStatistic == true
-                            && (!companyIds.Any() || companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
-                            && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
-                            && (!workerTypeIds.Any() || workerTypeIds.Contains((Guid)p.ApplicationUser.WorkerTypeId))
-                            && (p.ApplicationUser.UserRoles.Any(x => x.RoleId == employeeRole)))
-                    .Select(p => new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        WorkerType = p.ApplicationUser.WorkerType.WorkerTypeName,
-                        FullName = p.ApplicationUser.FullName,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        // Date = DbFunctions.TruncateTime(p.BegTime)
-                    })
-                    .ToList();
-                var result = new List<ReportFullPeriodInfo>();
-
-                foreach (var date in dialogues.Select(p => p.BegTime.Date).Distinct().ToList())
-                {
-                    foreach (var applicationUserId in dialogues.Select(p => p.ApplicationUserId).Distinct().ToList())
-                    {
-
-                        var userInfo = new ReportFullPeriodInfo();
-                        var dialoguesUser = dialogues.Where(p => p.ApplicationUserId == applicationUserId && p.BegTime.Date == date).ToList();
-                        if (dialoguesUser.Any())
-                        {                          
-                                var begDate = Convert.ToDateTime(date);
-                                var endDate = Convert.ToDateTime(date).AddDays(1);
-                                userInfo.ApplicationUserId = applicationUserId;
-                                userInfo.Date = Convert.ToDateTime(date);
-                                userInfo.FullName = dialoguesUser.FirstOrDefault().FullName;
-                                userInfo.WorkerType = dialoguesUser.FirstOrDefault().WorkerType;
-                                userInfo.Load = _dbOperation.LoadIndex(sessions, dialoguesUser, applicationUserId, Convert.ToDateTime(date), begDate, endDate);
-                                userInfo.DialoguesTime = _dbOperation.DialogueSumDuration(dialoguesUser, begDate, endDate);
-                                userInfo.SessionTime = _dbOperation.SessionAverageHours(sessions, applicationUserId, Convert.ToDateTime(date), begDate, endDate);
-                                userInfo.PeriodInfo = _dbOperation.TimeTable(sessions, dialoguesUser, applicationUserId, Convert.ToDateTime(date));
-
-                                result.Add(userInfo);
-                        }
-                    }
-                }
-                // _log.Info("AnalyticReport/UserFull finished");
-                return Ok(JsonConvert.SerializeObject(result));
-            }
-            catch (Exception e)
-            {
-                // _log.Fatal($"Exception occurred {e}");
-                return BadRequest(e);
-            }
-        }
-
-
-    }
-
-    public class ReportPartDayEmployeeInfo
-    {
-        public DateTime Date;
-        public double? WorkingHours;
-        public double? DialogueHours;
-        public double? LoadIndex;
-        public int? DialogueCount;
-    }
-
-    public class ReportPartPeriodEmployeeInfo
-    {
-        public string FullName;
-        public Guid ApplicationUserId;
-        // public string WorkerType;
-        public double? LoadIndexAverage;
-        public List<ReportPartDayEmployeeInfo> PeriodInfo;
-    }
+                                                        [FromQuery(Name = "corporationId[]")] List<Guid> corporationIds,
+                                                        [FromQuery(Name = "deviceId[]")] List<Guid> deviceIds) =>
+        _analyticReportService.ReportUserFull(
+            beg,
+            end,
+            applicationUserIds,
+            companyIds,
+            corporationIds,
+            deviceIds);
+        
+    }    
 }

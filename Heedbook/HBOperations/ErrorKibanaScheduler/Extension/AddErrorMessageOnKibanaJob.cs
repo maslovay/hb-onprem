@@ -4,6 +4,7 @@ using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using QuartzExtensions;
+using System;
 
 namespace ErrorKibanaScheduler
 {
@@ -22,7 +23,8 @@ namespace ErrorKibanaScheduler
                 return TriggerBuilder.Create()
                     .WithIdentity("KibanaErrorJob.trigger", "KibanaError")
                     .StartNow()
-                    .WithSimpleSchedule(s => s.WithIntervalInHours(4).RepeatForever())
+                    .WithSimpleSchedule(s => s.WithIntervalInHours(12).RepeatForever())
+                   // .WithCronSchedule("0 0 10 * * ?", a => a.InTimeZone(TimeZoneInfo.Utc).Build())
                     .Build();
             });
 

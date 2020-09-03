@@ -15,6 +15,7 @@ namespace DialogueStatusCheckerScheduler.Tests.Handlers
 
         public async Task Handle(FillingSatisfactionRun @event)
         {
+            System.Console.WriteLine($"got FillingSatisfactionRun message");
             _serv.SetFlag();
         }
     }

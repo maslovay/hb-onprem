@@ -6,9 +6,13 @@ using HBData;
 using HBData.Models;
 using HBData.Repository;
 using HBLib;
+using Notifications.Base;
 using HBLib.Utils;
 using Microsoft.EntityFrameworkCore;
+using RabbitMqEventBus;
+using RabbitMqEventBus.Events;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace AudioAnalyzeService
 {
@@ -19,18 +23,34 @@ namespace AudioAnalyzeService
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly GoogleConnector _googleConnector;
+        private readonly SftpClient _sftpclient;
+        private readonly INotificationPublisher _publisher;
+        private readonly INotificationHandler _handler;
         public AudioAnalyze(
             IServiceScopeFactory factory,
+            INotificationPublisher publisher,
             AsrHttpClient.AsrHttpClient asrHttpClient,
             ElasticClientFactory elasticClientFactory,
-            GoogleConnector googleConnector
+            GoogleConnector googleConnector,
+            SftpClient sftpclient,
+            INotificationHandler handler
         )
         {
-            // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
-            _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
-            _asrHttpClient = asrHttpClient;
-            _elasticClientFactory = elasticClientFactory;
-            _googleConnector = googleConnector;
+            try
+            {
+                // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
+                _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
+                _asrHttpClient = asrHttpClient;
+                _handler = handler;
+                _elasticClientFactory = elasticClientFactory;
+                _googleConnector = googleConnector;
+                _sftpclient = sftpclient;
+                _publisher = publisher;
+            }
+            catch
+            {
+
+            }
         }
 
         public async Task Run(String path)
@@ -43,16 +63,30 @@ namespace AudioAnalyzeService
             try
             {
                 if (!String.IsNullOrWhiteSpace(path))
-                {
+                {     
                     var splitedString = path.Split('/');
+                    var containerName = splitedString[0];
                     var fileName = splitedString[1];
                     var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
                     var dialogue = _context.Dialogues
                         .FirstOrDefault(p => p.DialogueId == dialogueId);
 
+                    var fileExist = await _sftpclient.IsFileExistsAsync(path);
+                    if(!fileExist)
+                    {
+                        dialogue.Comment += " dialogue not have audio";
+                        dialogue.StatusId = 8;
+                        _context.SaveChanges();
+                        _log.Info($"dialogue {dialogue.DialogueId} not have dialogueAudio");                        
+                        return;
+                    }
+                    
                     if (dialogue != null)
                     {
-                        var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId).ToList();
+                        _log.Info($"Dialogue {dialogue.DialogueId} exists");
+                        var fileAudios = _context.FileAudioDialogues.Where(p => p.DialogueId == dialogueId
+                                && p.FileContainer == containerName
+                            ).ToList();
                         fileAudios.Where(p => p.StatusId != 6)
                             .ToList()
                             .ForEach(p => p.StatusId = 8);
@@ -63,7 +97,7 @@ namespace AudioAnalyzeService
                             CreationTime = DateTime.UtcNow,
                             FileName = fileName,
                             StatusId = 3,
-                            FileContainer = "dialogueaudios",
+                            FileContainer = containerName,
                             BegTime = dialogue.BegTime,
                             EndTime = dialogue.EndTime,
                             Duration = dialogue.EndTime.Subtract(dialogue.BegTime).TotalSeconds
@@ -76,8 +110,11 @@ namespace AudioAnalyzeService
                             var currentPath = Directory.GetCurrentDirectory();
                             var token = await _googleConnector.GetAuthorizationToken(currentPath);
                             
+                            var role = containerName == "dialogueaudios" ? "_client" : "_employee";
                             var blobGoogleDriveName =
-                                dialogueId + "_client" + Path.GetExtension(fileName);
+                                dialogueId
+                                + role
+                                + Path.GetExtension(fileName);
                             await _googleConnector.LoadFileToGoogleDrive(blobGoogleDriveName, path, token);
                             _log.Info("Load to disk");
                             await _googleConnector.MakeFilePublicGoogleCloud(blobGoogleDriveName, "./", token);
@@ -95,13 +132,22 @@ namespace AudioAnalyzeService
                                 fileAudio.StatusId = 6;
                             }
                         }
-                        _context.FileAudioDialogues.Add(fileAudio);
-                        _context.SaveChanges();
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem")
                         {
-                            await _asrHttpClient.StartAudioRecognize(dialogueId);
+                            _log.Info("Processing on prem case");
+                            var message = new STTMessageRun{
+                                Path = path
+                            };
+                            _log.Info($"Sending message {JsonConvert.SerializeObject(message)} to STTMessageRun queue");
+                            _publisher.PublishQueue("STTMessageRun", JsonConvert.SerializeObject(message));
                         }
+                        _context.FileAudioDialogues.Add(fileAudio);
+                        _context.SaveChanges();
                         _log.Info("Started recognize audio");
+                    }
+                    else
+                    {
+                        _log.Error($"No such dialogue {dialogueId}");
                     }
                 }
 

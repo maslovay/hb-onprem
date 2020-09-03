@@ -25,20 +25,14 @@ namespace HBData.Models
         ///     Phrase type
         /// </summary>
         public Guid? PhraseTypeId { get; set; }
-
         public PhraseType PhraseType { get; set; }
+
 
         /// <summary>
         ///     Phrase language
         /// </summary>
         public Int32? LanguageId { get; set; }
-
         public Language Language { get; set; }
-
-        /// <summary>
-        ///     Is client's phrase or employee
-        /// </summary>
-        public Boolean IsClient { get; set; }
 
         /// <summary>
         ///     Number of additional words in phrase
@@ -55,10 +49,11 @@ namespace HBData.Models
         /// </summary>
         public Boolean IsTemplate { get; set; }
 
-        [JsonIgnore]
         /// <summary>
         ///     Links
         /// </summary>
-        public ICollection<PhraseCompany> PhraseCompany { get; set; }
+        [JsonIgnore] public ICollection<PhraseCompany> PhraseCompanys { get; set; }
+        [JsonIgnore] public ICollection<DialoguePhrase> DialoguePhrases { get; set; }
+        [JsonIgnore] public ICollection<SalesStagePhrase> SalesStagePhrases { get; set; }
     }
 }

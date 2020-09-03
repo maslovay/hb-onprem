@@ -18,7 +18,6 @@ namespace PersonDetectionService
 {
     public class PersonDetection
     {
-        private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
         private readonly DescriptorCalculations _calc;
@@ -38,25 +37,35 @@ namespace PersonDetectionService
         public async Task Run(PersonDetectionRun message)
         {
             var _log = _elasticClientFactory.GetElasticClient();
-            _log.SetFormat("{ApplicationUserIds}");
-            _log.SetArgs(JsonConvert.SerializeObject(message.ApplicationUserIds));
+            _log.SetFormat("{deviceIds}");
             _log.Info("Function started");
+            _log.SetArgs(JsonConvert.SerializeObject(message.DeviceIds));
             try
             {
-                var begTime = DateTime.Now.AddYears(-1);
+                var begTime = DateTime.Now.AddMonths(-1);
+                var companyIds = _context.Devices.Where(x => message.DeviceIds.Contains(x.DeviceId)).Select(x => x.CompanyId).Distinct().ToList();
+
+                //---dialogues for devices in company
                 var dialogues = _context.Dialogues
-                    .Where(p => message.ApplicationUserIds.Contains(p.ApplicationUserId))
-                    .Where(p => !String.IsNullOrEmpty(p.PersonFaceDescriptor) && p.BegTime >= begTime)
+                    .Where(p => ( companyIds.Contains(p.Device.CompanyId)) && p.BegTime >= begTime)
                     .OrderBy(p => p.BegTime)
                     .ToList();
                 
-                foreach (var curDialogue in dialogues.Where(p => p.PersonId == null).ToList())
+                foreach (var curDialogue in dialogues.Where(p => p.ClientId == null).ToList())
                 {
-                    var dialoguesProceeded = dialogues.Where(p => p.ApplicationUserId == curDialogue.ApplicationUserId && p.PersonId != null).ToList();
-                    curDialogue.PersonId = FindId(curDialogue, dialoguesProceeded);
+                    var dialoguesProceeded = dialogues
+                        .Where(p => p.ClientId != null && p.DeviceId == curDialogue.DeviceId)
+                        .ToList();
+                    var clientId = FindId(curDialogue, dialoguesProceeded);
+                    try
+                    {
+                        CreateNewClient(curDialogue, clientId);
+                    }
+                    catch( Exception ex )
+                    {
+                        _log.Error($"client for dialogue {curDialogue.DialogueId} creation error: " + ex.Message);
+                    }
                 }
-                
-                _context.SaveChanges();
                 _log.Info("Function finished");
             }
             catch (Exception e)
@@ -73,10 +82,57 @@ namespace PersonDetectionService
             {
                 var cosResult = _calc.Cos(curDialogue.PersonFaceDescriptor, dialogue.PersonFaceDescriptor);
                 System.Console.WriteLine($"Cos distance is -- {cosResult}");
-                if (cosResult > threshold) return dialogue.PersonId;
+                if (cosResult > threshold) return dialogue.ClientId;
             }
             return Guid.NewGuid();
+        }
 
+        public Guid? CreateNewClient(Dialogue curDialogue, Guid? clientId)
+        {
+            Company company = _context.Devices
+                              .Where(x => x.DeviceId == curDialogue.DeviceId).Select(x => x.Company).FirstOrDefault();
+            var findClient = _context.Clients//---search only client with status 3 (record context)
+                        .Where(x => x.ClientId == clientId).FirstOrDefault();
+            if (findClient != null)
+            {
+                findClient.LastDate = DateTime.UtcNow;
+                curDialogue.ClientId = findClient.ClientId;
+                _context.SaveChanges();
+                return findClient.ClientId;
+            }
+
+            var dialogueClientProfile = _context.DialogueClientProfiles
+                            .FirstOrDefault(x => x.DialogueId == curDialogue.DialogueId);
+            if (dialogueClientProfile == null) return null;
+            if (dialogueClientProfile.Age == null || dialogueClientProfile.Gender == null) return null;
+
+            var activeStatusId = _context.Statuss
+                            .Where(x => x.StatusName == "Active")
+                            .Select(x => x.StatusId)
+                            .FirstOrDefault();
+
+            double[] faceDescr = new double[0];
+            try
+            {
+                faceDescr = JsonConvert.DeserializeObject<double[]>(curDialogue.PersonFaceDescriptor);
+            }
+            catch { }
+                Client client = new Client
+                {
+                    ClientId = (Guid)clientId,
+                    CompanyId = (Guid)company?.CompanyId,
+                    CorporationId = company?.CorporationId,
+                    FaceDescriptor = faceDescr,
+                    Age = (int)dialogueClientProfile?.Age,
+                    Avatar = dialogueClientProfile?.Avatar,
+                    Gender = dialogueClientProfile?.Gender,
+                    StatusId = activeStatusId,
+                    LastDate = curDialogue.EndTime
+                };
+            curDialogue.ClientId = client.ClientId;
+            _context.Clients.Add(client);
+            _context.SaveChanges();
+            return client.ClientId;
         }
     }
 }
