@@ -61,7 +61,7 @@ namespace  FillingFrameService.Requests
             }
             else
             {
-                fileAvatar = frames.FirstOrDefault();
+                fileAvatar = frames.Count > 4 ? frames[4] : frames.FirstOrDefault();
             }
             return fileAvatar;
         }

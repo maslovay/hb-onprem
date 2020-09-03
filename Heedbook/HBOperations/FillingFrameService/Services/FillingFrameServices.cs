@@ -102,10 +102,8 @@ namespace FillingFrameService.Services
             string localPath;
             if (isExtended)
             {
-                localPath =
-                    await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + fileAvatar.FileName);
+                localPath = await _sftpClient.DownloadFromFtpToLocalDiskAsync("frames/" + fileAvatar.FileName);
                 System.Console.WriteLine($"Avatar path - {localPath}");
-            
 
                 var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(fileAvatar.FrameAttribute.FirstOrDefault().Value);
                 var rectangle = new Rectangle
