@@ -133,10 +133,10 @@ namespace UserService.Controllers
                     BeginTime = maxBegTime,
                     EndTime = minEndTime
                 };
+                _repository.Save();
                 _handler.EventRaised(dialogueVideoAssembleRun);
                 _handler.EventRaised(dialogueCreationRun);
-
-                _repository.Save();
+                
                 return Ok();
             }
             catch (Exception e)
