@@ -32,6 +32,7 @@ namespace UserOperations.Services
             _sftpClient = sftpClient;
             _fileRef = fileRef;
             _containerName = "media";
+            _urlSettings = urlSettings;
         }
 
         public async Task<object> FileGet(
