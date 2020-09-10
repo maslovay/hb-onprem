@@ -97,6 +97,7 @@ namespace MetricsController.QuartzJob
             catch (Exception e)
             {
                 _log.Fatal($"Exception occured:{e}");
+                System.Console.WriteLine(e);
             }
 
             _log.Info($"Finished function");
