@@ -90,13 +90,13 @@ namespace FaceAnalyzeService
                         });
                         
                         frameAttribute.Add(faceResult.Select(item => new FrameAttribute
-                            {
-                                Age = item.Attributes.Age,
-                                Gender = item.Attributes.Gender,
-                                Descriptor = JsonConvert.SerializeObject(item.Descriptor),
-                                FileFrameId = fileFrame.FileFrameId,
-                                Value = JsonConvert.SerializeObject(item.Rectangle)
-                            }).FirstOrDefault());
+                        {
+                            Age = item.Attributes.Age,
+                            Gender = item.Attributes.Gender,
+                            Descriptor = JsonConvert.SerializeObject(item.Descriptor),
+                            FileFrameId = fileFrame.FileFrameId,
+                            Value = JsonConvert.SerializeObject(item.Rectangle)
+                        }).FirstOrDefault());
 
                         if (frameAttribute.Any()) 
                         {
