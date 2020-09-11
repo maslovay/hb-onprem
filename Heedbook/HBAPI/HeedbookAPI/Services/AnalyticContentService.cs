@@ -153,9 +153,10 @@ namespace UserOperations.Services
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
             var dialogueIds = GetDialogueIds(begTime, endTime, companyIds, applicationUserIds, deviceIds);
-        
+            System.Console.WriteLine($"dialogueIdsCount: {dialogueIds.Count}");
             var slideShowSessionsInDialogues = GetSlideShowWithDialogueIdFilteredByPoolAsync(false, dialogueIds);
             var views = slideShowSessionsInDialogues.Count();
+            System.Console.WriteLine($"views: {views}");
             var clients = dialogueIds.Count();
 
             var contentsShownGroup = slideShowSessionsInDialogues
@@ -168,6 +169,7 @@ namespace UserOperations.Services
             // var splashShows = slideShowSessionsAll.Where(x => x.Campaign != null && x.Campaign.IsSplash).Count();
             var splashViews = slideShowSessionsInDialogues.Where(x => x.Campaign != null && x.Campaign.IsSplash).Count();
 
+            System.Console.WriteLine($"splashViews: {splashViews}");
             var contentInfo = new
             {
                 Views = views - splashViews,
@@ -197,6 +199,7 @@ namespace UserOperations.Services
                 }
                 )).ToList()
             };
+            System.Console.WriteLine($"contentInfo:\n{JsonConvert.SerializeObject(contentInfo)}");
             var jsonToReturn = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(contentInfo));
             return jsonToReturn;
         }
@@ -209,6 +212,7 @@ namespace UserOperations.Services
                                 List<Guid> deviceIds,
                                 string type)
         {
+            System.Console.WriteLine($"start");
             int active = 3;
             var role = _loginService.GetCurrentRoleName();
             var companyId = _loginService.GetCurrentCompanyId();
@@ -217,8 +221,9 @@ namespace UserOperations.Services
             _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
 
             var dialogues = await GetDialoguesAsync(begTime, endTime, companyIds, applicationUserIds, deviceIds);
+            System.Console.WriteLine($"dialoguesCount: {dialogues.Count}");
             var slideShowSessionsInDialogues = GetSlideShowWithDialogueIdFilteredByPoolAsync(true, dialogues.Select( x=> x.DialogueId).ToList());
-
+            System.Console.WriteLine($"slideShowSessionsInDialoguesCount: {slideShowSessionsInDialogues.Count}");
             List<AnswerInfo.AnswerOne> answers = await GetAnswersFullAsync(dialogues, begTime, endTime, companyIds, applicationUserIds, deviceIds);
             double conversion = GetConversion(slideShowSessionsInDialogues.Count(), answers.Count());
             List<AnswerInfo> slideShowInfoGroupByContent = slideShowSessionsInDialogues?
@@ -230,9 +235,10 @@ namespace UserOperations.Services
                     ContentName = ssh.FirstOrDefault().ContentName,
                     Answers = GetAnswersForOneContent(answers, ssh.Key),
                     AnswersAmount = GetAnswersForOneContent(answers, ssh.Key).Count(),
-                    Conversion = (double)GetAnswersForOneContent(answers, ssh.Key).Count() / (double)ssh.Count()
+                    Conversion = (double)GetAnswersForOneContent(answers, ssh.Key).Count() / (double)ssh.Count(),
+                    FtpLink = _fileRef.GetFileLink(_containerName, ssh.FirstOrDefault().ContentName + ".png", default)
                 }).ToList();
-
+            System.Console.WriteLine($"slideShowInfoGroupByContentCount: {slideShowInfoGroupByContent.Count}");
             var contentInfo = new
             {
                 Views = slideShowSessionsInDialogues.Count(),
@@ -279,6 +285,12 @@ namespace UserOperations.Services
           )
         {
             if (dialogueIds.Count() == 0) return new List<SlideShowInfo>();
+            var slideShows2 = _repository.GetAsQueryable<SlideShowSession>().Where(
+                    ses => ( ses.DialogueId != null && dialogueIds.Contains((Guid)ses.DialogueId )
+                    && ses.IsPoll == isPool
+                    && ses.CampaignContent != null))
+                .ToList();
+            System.Console.WriteLine($"slideShowsCount: {slideShows2.Count}");
             var slideShows = _repository.GetAsQueryable<SlideShowSession>().Where(
                     ses => ( ses.DialogueId != null && dialogueIds.Contains((Guid)ses.DialogueId )
                     && ses.IsPoll == isPool

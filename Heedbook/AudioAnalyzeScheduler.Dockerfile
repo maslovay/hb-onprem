@@ -3,8 +3,7 @@ WORKDIR /app
 
 COPY . .
 
-
-RUN dotnet restore ./HBOperations/AudioAnalyzeScheduler/
+#RUN dotnet restore ./HBOperations/AudioAnalyzeScheduler/
 RUN dotnet build ./HBOperations/AudioAnalyzeScheduler/
 
 # Copy everything else and build
@@ -20,6 +19,7 @@ COPY --from=build-env /app/HBOperations/AudioAnalyzeScheduler/sentimental/ /app/
 
 RUN apk add --update python3
 RUN apk add --update git
+RUN pip3 install --upgrade pip
 RUN pip3 install -U git+https://github.com/devgopher/sentimental_w_stemmer.git
 RUN pip3 install nltk
 

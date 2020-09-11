@@ -74,6 +74,7 @@ namespace UserOperations.Services
                                          List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds,
                                          List<Guid> deviceIds, List<Guid> phraseIds, List<Guid> phraseTypeIds )
         {
+            System.Console.WriteLine(123);
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
                 var begTime = _requestFilters.GetBegDate(beg);
@@ -91,6 +92,11 @@ namespace UserOperations.Services
 
                 var dialoguesTotal = dialogueIds.Count();
                
+                var companyPhraseIds = _repository.GetAsQueryable<PhraseCompany>()
+                    .Where(p => companyIds.Contains((Guid)p.CompanyId))
+                    .Select(p => (Guid)p.PhraseId)
+                    .Distinct()
+                    .ToList();
                 // GET ALL PHRASES INFORMATION
                 var phrasesInfo = GetPhraseInfo(
                     dialogueIds,
@@ -98,6 +104,7 @@ namespace UserOperations.Services
                     phraseTypeIds);
 
                 var result = phrasesInfo
+                    .Where(p => companyPhraseIds.Contains((Guid)p.PhraseId))
                     .GroupBy(p => p.PhraseText.ToLower())
                     .Select(p => new {
                         Phrase = p.Key,
@@ -205,6 +212,15 @@ namespace UserOperations.Services
             var begTime = _requestFilters.GetBegDate(beg);
             var endTime = _requestFilters.GetEndDate(end);
 
+            if(corporationId == null && !companyIds.Any())
+            {
+                System.Console.WriteLine($"f1");
+                var company = _repository.GetAsQueryable<Company>()
+                    .FirstOrDefault(p => p.CompanyId == companyId);
+                if(company.CorporationId != null)
+                    corporationId = company.CorporationId;
+            }
+
             if (corporationId == null && companyIds.Any())
             {
                 corporationId = _repository.GetAsQueryable<Company>()
@@ -213,6 +229,7 @@ namespace UserOperations.Services
 
             if (corporationId != null)
             {
+                System.Console.WriteLine($"f2");
                 var companyInCorporatioIds = _repository.GetAsQueryable<Corporation>()
                        .Where(x => x.Id == corporationId).SelectMany(x => x.Companies.Select(p => p.CompanyId)).ToList();
                 companyIds = companyIds.Intersect(companyInCorporatioIds).ToList();

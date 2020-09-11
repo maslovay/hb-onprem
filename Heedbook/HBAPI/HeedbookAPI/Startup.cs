@@ -31,6 +31,9 @@ using UserOperations.Utils.CommonOperations;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
 using HBLib.Utils.Interfaces;
+using System.Reflection;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 namespace UserOperations
 {
@@ -209,9 +212,16 @@ namespace UserOperations
             {
                 c.RouteTemplate = "api/swagger/{documentName}/swagger.json";
             });
-
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+                    Path.Combine(Directory.GetCurrentDirectory(), "Styles")),
+                RequestPath = "/Styles"
+            });
             app.UseSwaggerUI(c =>
             {
+                c.RoutePrefix = "Styles";
+                c.InjectStylesheet("/Styles/Custom.css");                
                 c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "Sample API");
                 c.RoutePrefix = "api/swagger";
             });

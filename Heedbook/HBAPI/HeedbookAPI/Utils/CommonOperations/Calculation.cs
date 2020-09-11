@@ -152,6 +152,7 @@ namespace UserOperations.Utils
         {
             var totalWorkHours = timeTableForDevices.Sum() / 60;
             if (totalWorkHours == 0) return 0;
+            System.Console.WriteLine($"{DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)}/{totalWorkHours}={100 * (DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)/ totalWorkHours)}");
             return 100 * (DialogueTotalDuration(dialogues.Where(x => x.IsInWorkingTime).ToList(), beg, end)
                          / totalWorkHours);
         }
@@ -975,7 +976,7 @@ namespace UserOperations.Utils
         public List<double> WorkingTimeDoubleListInMinForOneCompany(WorkingTime[] timeTable, DateTime beg, DateTime end, Guid companyId, int devicesAmount)
         {
             List<double> times = new List<double>();
-
+            System.Console.WriteLine($"deviceCount: {devicesAmount}");
             if (!timeTable.Any()) return null;
             if (devicesAmount == 0) return times;
             var timeTableForComp = GetTimeTable(companyId, timeTable);

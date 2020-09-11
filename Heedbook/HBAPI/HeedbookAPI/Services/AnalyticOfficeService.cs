@@ -12,6 +12,7 @@ using UserOperations.Controllers;
 using UserOperations.Models.Get.HomeController;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace UserOperations.Services
 {
@@ -40,39 +41,51 @@ namespace UserOperations.Services
         public async Task<string> Efficiency(string beg, string end,
                                         List<Guid?> applicationUserIds, List<Guid> companyIds, List<Guid> corporationIds, List<Guid> deviceIds)
         {
+                DateTime startMethod = DateTime.Now;
+                DateTime startTime;
                 int active = 3;
                 var role = _loginService.GetCurrentRoleName();
                 var companyId = _loginService.GetCurrentCompanyId();
+                System.Console.WriteLine($"startMethod");
                 var begTime = _requestFilters.GetBegDate(beg);
                 var endTime = _requestFilters.GetEndDate(end);
                 _requestFilters.CheckRolesAndChangeCompaniesInFilter(ref companyIds, corporationIds, role, companyId);
                 var prevBeg = begTime.AddDays(-endTime.Subtract(begTime).TotalDays);
 
                 var workingTimes = _repository.GetAsQueryable<WorkingTime>().Where(x => companyIds.Contains(x.CompanyId)).ToArray();
+                startTime = DateTime.Now;
                 var devicesFiltered = _repository.GetAsQueryable<Device>()
                                     .Where(x => companyIds.Contains(x.CompanyId) 
                                         && (!deviceIds.Any() || deviceIds.Contains(x.DeviceId))
                                         && x.StatusId == active)
                                     .ToList();
+                System.Console.WriteLine($"deviceFiltered: {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var timeTableForDevices = _dbOperations.WorkingTimeDoubleList(workingTimes, begTime, endTime, companyIds, devicesFiltered, role);
-
+                System.Console.WriteLine($"timeTableForDevices: {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var sessions = GetSessionsInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds);
+                System.Console.WriteLine($"sessions: {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var sessionCur = sessions.Where(p => p.BegTime.Date >= begTime).ToList();
                 var sessionOld = sessions.Where(p => p.BegTime.Date < begTime).ToList();
-
-                List<DialogueInfo> dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds, workingTimes);
+                System.Console.WriteLine($"sessionCur(Old): {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
+                var dialogues = GetDialoguesInfo(prevBeg, endTime, companyIds, applicationUserIds, deviceIds, workingTimes.ToArray());
                 var dialoguesCur = dialogues.Where(p => p.BegTime >= begTime).ToList();
-                var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();
-
+                var dialoguesOld = dialogues.Where(p => p.BegTime < begTime).ToList();                
+                System.Console.WriteLine($"dialoguesCur(Old): {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var dialoguesUserCur = dialoguesCur.Where(p => p.ApplicationUserId != null).ToList();
                 var dialoguesUserOld = dialoguesOld.Where(p => p.ApplicationUserId != null).ToList();
-
+                System.Console.WriteLine($"dialoguesUserCur(Old): {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var dialoguesDevicesCur = dialoguesCur.Where(x => x.IsInWorkingTime).ToList();
                 var dialoguesDevicesOld = dialoguesOld.Where(x => x.IsInWorkingTime).ToList();
-
-
+                System.Console.WriteLine($"dialoguesDevicesCur(Old): {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
-
+            startTime = DateTime.Now;
             var result = new EfficiencyDashboardInfoNew
             {
                 WorkloadValueAvg = _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesUserCur, begTime, endTime),
@@ -83,7 +96,8 @@ namespace UserOperations.Services
                 WorkloadValueAvgByWorkingTime = _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesDevicesCur, begTime, endTime),
                 WorkloadDynamicsWorkingTime = - _dbOperations.WorklLoadByTimeIndex(timeTableForDevices, dialoguesDevicesOld, prevBeg, begTime)
             };
-
+            System.Console.WriteLine($"result: {DateTime.Now.Subtract(startTime)}");
+            startTime = DateTime.Now;
             if (benchmarksList != null && benchmarksList.Count() != 0)
             {
                 result.LoadIndexIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "LoadIndexIndustryAvg");
@@ -92,7 +106,8 @@ namespace UserOperations.Services
                 result.WorkLoadByTimeIndustryAverage = GetBenchmarkIndustryAvg(benchmarksList, "WorkLoadByTimeIndustryAvg");
                 result.WorkLoadByTimeIndustryBenchmark = GetBenchmarkIndustryMax(benchmarksList, "WorkLoadByTimeIndustryBenchmark");
             }
-
+            System.Console.WriteLine($"result: {DateTime.Now.Subtract(startTime)}");
+            startTime = DateTime.Now;
             var satisfactionIndex = _utils.SatisfactionIndex(dialoguesCur);
                 var loadIndex = _utils.LoadIndex(sessionCur, dialoguesUserCur, begTime, endTime.AddDays(1));
                 var employeeCount = _utils.EmployeeCount(dialoguesUserCur);
@@ -103,7 +118,7 @@ namespace UserOperations.Services
                 result.DialoguesNumberAvgPerEmployee = (dialoguesUserCur.Count() != 0 && employeeCount != 0) ? dialoguesUserCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / employeeCount : 0;
                 result.DialoguesNumberAvgPerDevice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() / deviceCount : 0;
                 result.DialoguesNumberAvgPerDayOffice = (dialoguesCur.Count() != 0) ? dialoguesCur.GroupBy(p => p.BegTime.Date).Select(p => p.Count()).Average() : 0;
-
+            startTime = DateTime.Now;
             var optimalLoad = 0.7;
                 var employeeWorked = sessionCur
                 .GroupBy(p => p.BegTime.Date)
@@ -121,7 +136,8 @@ namespace UserOperations.Services
                             p.Min(s => s.BegTime),
                             p.Max(s => s.EndTime))
                 }).ToList();
-
+                System.Console.WriteLine($"employeeWorked: {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var diagramEmployeeWorked = employeeWorked.Select(
                     p => new {
                         p.Day,
@@ -130,7 +146,8 @@ namespace UserOperations.Services
                         (Int32?)(Math.Ceiling((double)(p.EmployeeCount * optimalLoad / p.LoadIndex))) : null
                     }
                 );
-
+                System.Console.WriteLine($"diagramEmployeeWorked: {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var clientTime = dialoguesCur
                    .GroupBy(p => p.BegTime.Hour)
                    .Select(p => new EfficiencyLoadClientTimeInfo
@@ -139,7 +156,8 @@ namespace UserOperations.Services
                        ClientCount = p.GroupBy(q => q.BegTime.Date)
                        .Average(q => q.Count())
                    }).ToList();
-
+                System.Console.WriteLine($"clientTime: {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var days = new List<string> {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
                 var clientDay = dialoguesCur?
                     .GroupBy(p => p.BegTime.DayOfWeek)
@@ -156,8 +174,8 @@ namespace UserOperations.Services
                             ClientCount = 0
                         });
                 clientDay = clientDay.Union(zeroDays).ToList();
-
-
+            System.Console.WriteLine($"clientDay: {DateTime.Now.Subtract(startTime)}");
+            startTime = DateTime.Now;
             //----new diagrams---dialogue amount by device and by employee
             var dialogueUserDate = dialoguesUserCur?
                  .GroupBy(p => p.BegTime.Date)
@@ -173,8 +191,8 @@ namespace UserOperations.Services
                                         r.FirstOrDefault()?.FullName
                                     }).OrderBy(r => r.UserId).ToArray()
                  }).ToArray();
-
-
+            System.Console.WriteLine($"dialogueUserDate: {DateTime.Now.Subtract(startTime)}");
+            startTime = DateTime.Now;
             var dialogueDeviceDate = dialoguesDevicesCur?
                  .GroupBy(p => p.BegTime.Date)
                  .OrderBy(p => p.Key)
@@ -190,7 +208,8 @@ namespace UserOperations.Services
                      }).OrderBy(r => r.DeviceId).ToArray()
                  }).ToArray();
             //---end new block
-
+            System.Console.WriteLine($"dialogueDeviceDate: {DateTime.Now.Subtract(startTime)}");
+            startTime = DateTime.Now;
             var pauseInMin = DialogueAvgPauseListInMinutes(workingTimes, dialoguesDevicesCur, begTime, endTime, role, companyIds, devicesFiltered);
 
             if (pauseInMin == null) pauseInMin = timeTableForDevices;
@@ -202,15 +221,16 @@ namespace UserOperations.Services
             {
                 pauseInMin = pauseInMin.Select(x => x * fract).ToList();
             }
-
-
+                System.Console.WriteLine($"totalDialogueDur: {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var pausesAmount = new{
                     Less_10 = pauseInMin?.Where(p => p <= 10).Count(),
                     Between_11_20 = pauseInMin?.Where(p => p > 10 && p <= 20).Count(),
                     Between_21_60 = pauseInMin?.Where(p => p > 20 && p <= 60).Count(),
                     More_60 = pauseInMin?.Where(p => p > 60).Count()
                 };
-
+                System.Console.WriteLine($"pausesAmount: {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                 var pausesShareInSession = new{
                     Less_10 = sessTimeMinutes != 0 && pauseInMin != null? 100 *  pauseInMin.Where(p => p <= 10).Sum() / sessTimeMinutes : 0,
                     Between_11_20 = sessTimeMinutes != 0 && pauseInMin != null ? 100 * pauseInMin.Where(p => p > 10 && p <= 20).Sum() / sessTimeMinutes : 0,
@@ -218,6 +238,8 @@ namespace UserOperations.Services
                     More_60 = sessTimeMinutes != 0 && pauseInMin != null ? 100 * pauseInMin.Where(p => p > 60).Sum() / sessTimeMinutes : 0,
                     Load =  sessTimeMinutes != 0 && pauseInMin != null ? Math.Round(100 * (double)(sessTimeMinutes - pauseInMin.Sum()) / sessTimeMinutes, 2) : 0
                 };
+                System.Console.WriteLine($"pausesShareInSession: {DateTime.Now.Subtract(startTime)}");
+                startTime = DateTime.Now;
                  var pausesInMinutes = new{
                     Less_10 = pauseInMin?.Where(p => p <= 10).Sum(),
                     Between_11_20 = pauseInMin?.Where(p => p > 10 && p <= 20).Sum(),
@@ -225,7 +247,7 @@ namespace UserOperations.Services
                     More_60 = pauseInMin?.Where(p => p > 60).Sum(),
                     Load = pauseInMin != null? sessTimeMinutes - Math.Round((double)pauseInMin?.Sum(), 2) : sessTimeMinutes
                 };
-
+                System.Console.WriteLine($"pausesInMinutes: {DateTime.Now.Subtract(startTime)}");
            
   
                 var jsonToReturn = new Dictionary<string, object>();
@@ -239,6 +261,7 @@ namespace UserOperations.Services
                 jsonToReturn["PausesAmount"] = pausesAmount;
                 jsonToReturn["PausesShare"] = pausesShareInSession;
                 jsonToReturn["PausesInMinutes"] = pausesInMinutes;
+                System.Console.WriteLine($"Total MethodWorkTime: {DateTime.Now.Subtract(startMethod)}");
                 return JsonConvert.SerializeObject(jsonToReturn);
         }
 
@@ -276,30 +299,69 @@ namespace UserOperations.Services
             List<Guid> deviceIds,
             WorkingTime[] workingTimes)
         {
-            var dialogues = _repository.GetAsQueryable<Dialogue>().Where(
-                    p => p.BegTime >= prevBeg
+            var startTime = DateTime.Now;
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.Device)
+                .Include(p => p.DialogueClientSatisfaction)
+                .Where(p => p.BegTime >= prevBeg
                     && p.EndTime <= endTime
                     && p.StatusId == 3
                     && p.InStatistic == true
                     && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
                     && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
                     && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
-                    .Select(p =>  new DialogueInfo
-                    {
-                        DialogueId = p.DialogueId,
-                        ApplicationUserId = p.ApplicationUserId,
-                        DeviceId = p.DeviceId,
-                        DeviceName = p.Device.Name,
-                        CompanyId = p.Device.CompanyId,
-                        BegTime = p.BegTime,
-                        EndTime = p.EndTime,
-                        FullName = p.ApplicationUser.FullName,
-                        SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
-                        IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
-                    })
                 .ToList();
-            return dialogues;
+            var dialoguesInfo = dialogues
+                .Select(p =>  new DialogueInfo
+                {
+                    DialogueId = p.DialogueId,
+                    ApplicationUserId = p.ApplicationUserId,
+                    DeviceId = p.DeviceId,
+                    DeviceName = p.Device.Name,
+                    CompanyId = p.Device.CompanyId,
+                    BegTime = p.BegTime,
+                    EndTime = p.EndTime,
+                    FullName = p.ApplicationUser.FullName,
+                    SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+                    IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
+                })
+                .ToList();
+            return dialoguesInfo;
         }
+        
+        // private List<DialogueInfo> GetDialoguesInfo(
+        //     DateTime prevBeg,
+        //     DateTime endTime,
+        //     List<Guid> companyIds,
+        //     List<Guid?> applicationUserIds,
+        //     List<Guid> deviceIds,
+        //     WorkingTime[] workingTimes)
+        // {
+        //     var dialogues = _repository.GetAsQueryable<Dialogue>().Where(
+        //             p => p.BegTime >= prevBeg
+        //             && p.EndTime <= endTime
+        //             && p.StatusId == 3
+        //             && p.InStatistic == true
+        //             && (!companyIds.Any() || companyIds.Contains(p.Device.CompanyId))
+        //             && (!applicationUserIds.Any() || applicationUserIds.Contains(p.ApplicationUserId))
+        //             && (!deviceIds.Any() || deviceIds.Contains(p.DeviceId)))
+        //             .Select(p =>  new DialogueInfo
+        //             {
+        //                 DialogueId = p.DialogueId,
+        //                 ApplicationUserId = p.ApplicationUserId,
+        //                 DeviceId = p.DeviceId,
+        //                 DeviceName = p.Device.Name,
+        //                 CompanyId = p.Device.CompanyId,
+        //                 BegTime = p.BegTime,
+        //                 EndTime = p.EndTime,
+        //                 FullName = p.ApplicationUser.FullName,
+        //                 SatisfactionScore = p.DialogueClientSatisfaction.FirstOrDefault().MeetingExpectationsTotal,
+        //                 IsInWorkingTime = _utils.CheckIfDialogueInWorkingTime(p, workingTimes.Where(x => x.CompanyId == p.Device.CompanyId).ToArray())
+        //             })
+        //         .ToList();
+        //     return dialogues;
+        // }
 
         //private double TimetableHoursForAllComapnies(string role, DateTime beg, DateTime end, List<Guid> companyIds, List<Guid> deviceIds)
         //{

@@ -157,6 +157,9 @@ namespace ExtractFramesFromVideo
                     FramePath = p,
                 })
                 .ToList();
+            var firstFrame = frames.FirstOrDefault();
+            frames = frames.Where(p => p.FramePath != firstFrame.FramePath)
+                .ToList();
             for (int i = 0; i< frames.Count(); i++)
             {
                 frames[i].FrameTime =  videoTimeStamp.AddSeconds(i * 3).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);

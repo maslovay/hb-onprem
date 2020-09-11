@@ -316,7 +316,8 @@ namespace HBLib.Utils
         public string SplitToFrames(string path, string sessionPath, int framesPerSecond = 3)
         {
             var cmd = new CMDWithOutput();
-            var arguments = $"-i {path} -r 1/{framesPerSecond} -f image2 {sessionPath}/%01d.jpg";
+            // var arguments = $"-i {path} -r 1/{framesPerSecond} -f image2 {sessionPath}/%01d.jpg";
+            var arguments = $"-i {path} -r 1/{framesPerSecond} -vframes 1 -vf -vsync 0 {sessionPath}/%01d.jpg";
             var res = cmd.runCMD(FfPath, arguments);
             return res;
         }

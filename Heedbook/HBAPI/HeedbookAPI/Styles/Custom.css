@@ -1,0 +1,46 @@
+.swagger-ui .topbar a {
+    font-size: 1.5em;
+    font-weight: 700;
+    -webkit-box-flex: 1;
+    -ms-flex: 1;
+    flex: 1;
+    max-width: 300px;
+    text-decoration: none;
+    font-family: 'Times New Roman', Times, serif;
+    color: #ff124d;
+}
+.swagger-ui .opblock-tag {
+    font-size: 24px;
+    margin: 0 0 5px;
+    font-family: 'Times New Roman', Times, serif;
+    color: #e2b217;
+}
+.swagger-ui .opblock .opblock-summary-method {
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 80px;
+    padding: 6px 15px;
+    text-align: center;
+    border-radius: 3px;
+    background: #000;
+    text-shadow: 0 1px 0 rgba(0,0,0,.1);
+    font-family: 'Times New Roman', Times, serif;
+    color: rgb(219, 25, 25);
+}
+.swagger-ui .opblock .opblock-summary-operation-id, .swagger-ui .opblock .opblock-summary-path, .swagger-ui .opblock .opblock-summary-path__deprecated {
+    font-size: 16px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-flex: 0;
+    -ms-flex: 0 3 auto;
+    flex: 0 3 auto;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    word-break: break-all;
+    padding: 0 10px;
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: 600;
+    color: #e4771e;
+}

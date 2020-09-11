@@ -60,7 +60,7 @@ namespace AudioAnalyzeService
                     var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
                     var dialogue = _context.Dialogues
                         .FirstOrDefault(p => p.DialogueId == dialogueId);
-
+                    System.Console.WriteLine($"path: {path}");
                     var fileExist = await _sftpclient.IsFileExistsAsync(path);
                     if(!fileExist)
                     {
@@ -95,7 +95,7 @@ namespace AudioAnalyzeService
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             var languageId = Int32.Parse("2");
-
+                            System.Console.WriteLine($"Infrastructure cloud");
                             var currentPath = Directory.GetCurrentDirectory();
                             var token = await _googleConnector.GetAuthorizationToken(currentPath);
                             

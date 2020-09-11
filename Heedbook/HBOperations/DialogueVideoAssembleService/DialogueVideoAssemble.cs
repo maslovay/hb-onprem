@@ -79,9 +79,9 @@ namespace DialogueVideoAssembleService
                     _log.Error("No video files");
                     return;
                 }                
-                
+                System.Console.WriteLine($"fileVideos:\n{JsonConvert.SerializeObject(fileVideos)}");
                 var fileFrames = _utils.GetFileFrame(message);                
-
+                System.Console.WriteLine($"fileFrames:\n{JsonConvert.SerializeObject(fileFrames)}");
                 var dialogue = _context.Dialogues.FirstOrDefault(p => p.DialogueId == message.DialogueId);
                 if (dialogue == null) 
                 {
@@ -127,7 +127,7 @@ namespace DialogueVideoAssembleService
                         (message.BeginTime.Subtract(fileVideos.Min(p => p.BegTime)).ToString(@"hh\:mm\:ss\.ff")),
                         (message.EndTime.Subtract(message.BeginTime).ToString(@"hh\:mm\:ss\.ff")));
                 _log.Info("Uploading to FTP server result dialogue video");
-                await _sftpClient.UploadAsync(outputFn, "dialoguevideos", $"{message.DialogueId}{extension}");
+                // await _sftpClient.UploadAsync(outputFn, "dialoguevideos", $"{message.DialogueId}{extension}");
 
                 _log.Info("Send message to video to sound");
                 if (isExtended)
@@ -136,7 +136,7 @@ namespace DialogueVideoAssembleService
                 }
                 
                 _log.Info("Delete all local files");
-                Directory.Delete(sessionDir, true);
+                // Directory.Delete(sessionDir, true);
                 _log.Info("Function finished OnPremDialogueAssembleMerge");
             }
             catch (SftpPathNotFoundException e)

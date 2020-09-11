@@ -43,10 +43,11 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         public async Task Execute(IJobExecutionContext context)
         {
+            System.Console.WriteLine($"Job started");
             using (var scope = _factory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
-                _log.Info("Audio analyze scheduler started.");
+                System.Console.WriteLine("Audio analyze scheduler started.");
                 try
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
@@ -54,7 +55,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                          .Include(p => p.Dialogue)
                                          .Include(p => p.Dialogue.Device)
                                          .Include(p => p.Dialogue.Device.Company)
-                                         .Where(p => p.StatusId == 6);
+                                         .Where(p => p.StatusId == 6
+                                            && p.DialogueId == Guid.Parse("600cf351-a259-4cba-835d-cd417015ce72"));
 
                     //  .ToList();
                     await _googleConnector.CheckApiKey();
@@ -63,7 +65,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         audiosReq = audiosReq.Where(p => !String.IsNullOrEmpty(p.TransactionId));
                     }
                     var audios = audiosReq.ToList();
-
+                    System.Console.WriteLine($"number of audios: {audios.Count}");
                     var phrases = _context.Phrases.ToList();
 
                     
@@ -76,22 +78,27 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         var dialogueSpeeches = new List<DialogueSpeech>();
                         var dialogueWords = new List<DialogueWord>();
                         var phraseCounts = new List<DialoguePhraseCount>();
-                        _log.Info($"Processing {audio.DialogueId}");
+                        System.Console.WriteLine($"Processing {audio.DialogueId}");
                      
                         var recognized = new List<WordRecognized>();
                         
-                        _log.Info($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
+                        System.Console.WriteLine($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             try
                             {
                                 var googleAccount = _context.GoogleAccounts.FirstOrDefault(item => item.StatusId == 3);
+                                System.Console.WriteLine($"googleAccount is null: {googleAccount is null}");
                                 if(googleAccount is null)
                                     break;
                                 
                                 var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
-                                if(sttResults?.Error?.Status != "NOT_FOUND")
+                                System.Console.WriteLine($"sttResults: {JsonConvert.SerializeObject(sttResults)}");
+                                if(sttResults?.Error != null && sttResults?.Error.Status == "NOT_FOUND")
+                                {
                                     continue;
+                                }
+                                    
                                     
                                 var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
 
@@ -99,13 +106,13 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 {
                                     audio.StatusId = 8;
                                     audio.STTResult = "[]";
-                                    _log.Error($"Error with stt results for {audio.DialogueId}");
+                                    System.Console.WriteLine($"Error with stt results for {audio.DialogueId}");
                                 }
                                 else
                                 {
                                     if (sttResults.Response.Results.Any())
                                     {
-                                        _log.Info($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
+                                        System.Console.WriteLine($"{JsonConvert.SerializeObject(sttResults.Response.Results)}");
                                         sttResults.Response.Results
                                             .ForEach(res => res.Alternatives
                                                                 .ForEach(alt => alt.Words
@@ -113,19 +120,19 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                                                                     {
                                                                                         if (word == null)
                                                                                         {
-                                                                                            _log.Error("word = NULL!");
+                                                                                            System.Console.WriteLine("word = NULL!");
                                                                                             return;
                                                                                         }
 
                                                                                         if (word.EndTime == null)
                                                                                         {
-                                                                                            _log.Error("No word.EndTime!");
+                                                                                            System.Console.WriteLine("No word.EndTime!");
                                                                                             return;
                                                                                         }
 
                                                                                         if (word.StartTime == null)
                                                                                         {
-                                                                                            _log.Error("No word.StartTime!");
+                                                                                            System.Console.WriteLine("No word.StartTime!");
                                                                                             return;
                                                                                         }
 
@@ -144,12 +151,12 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                         audio.StatusId = 7;
                                         audio.STTResult = "[]";
                                     }
-                                    _log.Info($"Has items: {sttResults.Response.Results.Any()}");
+                                    System.Console.WriteLine($"Has items: {sttResults.Response.Results.Any()}");
                                 }
                             }
                             catch (Exception e)
                             {
-                                _log.Error($"Error parsing result for dialogue {audio.DialogueId}. {e}");
+                                System.Console.WriteLine($"Error parsing result for dialogue {audio.DialogueId}. {e}");
                                 audio.StatusId = 8;
                                 audio.STTResult = "[]";
                             }
@@ -167,14 +174,14 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     EndTime = (word.Time + word.Duration).ToString(CultureInfo.InvariantCulture)
                                 });
                             });
-                            _log.Info($"Has items: {asrResults.Any()}");
+                            System.Console.WriteLine($"Has items: {asrResults.Any()}");
                         }
 
                         if (recognized.Any())
                         {
                             var languageId = (int) audio.Dialogue.Device.Company.LanguageId;
                             var speechSpeed = GetSpeechSpeed(recognized, languageId, _log);
-                            _log.Info($"Speech speed: {speechSpeed}");
+                            System.Console.WriteLine($"Speech speed: {speechSpeed}");
 
                             var newSpeech = new DialogueSpeech
                             {
@@ -254,7 +261,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 Words = JsonConvert.SerializeObject(words)
                             });
                             phraseCounts.AddRange(phraseCount);
-                            _log.Info("Asr stt results is not empty. Everything is ok!");
+                            System.Console.WriteLine("Asr stt results is not empty. Everything is ok!");
                             
                             
                             if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud") audio.StatusId = 7;
@@ -270,7 +277,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 SilenceShare = 0
                             };
                             dialogueSpeeches.Add(newSpeech);
-                            _log.Info("Asr stt results is empty");
+                            System.Console.WriteLine("Asr stt results is empty");
                         }
 
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "OnPrem") audio.StatusId = 7;
@@ -280,9 +287,9 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         _context.DialogueWords.AddRange(dialogueWords);
                         _context.DialoguePhraseCounts.AddRange(phraseCounts);
                         _context.SaveChanges();
-                        _log.Info($"Finished processing {audio.DialogueId}");
+                        System.Console.WriteLine($"Finished processing {audio.DialogueId}");
                     }
-                    _log.Info("Function finished.");
+                    System.Console.WriteLine("Function finished.");
                 }
                 catch (Exception e)
                 {
@@ -301,11 +308,11 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     sentence, _log);
 
                 if (!posShareStrg.Item2.Trim().IsNullOrEmpty())
-                    _log.Error("RunPython err string: " + posShareStrg.Item2 + "  dialogueId: " + dialogueId);
+                    System.Console.WriteLine("RunPython err string: " + posShareStrg.Item2 + "  dialogueId: " + dialogueId);
                 else
-                    _log.Info("RunPython result string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
+                    System.Console.WriteLine("RunPython result string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
 
-                _log.Info("RunPython out string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
+                System.Console.WriteLine("RunPython out string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
 
                 if (!double.TryParse(posShareStrg.Item1.Trim(), out double result))
                 {

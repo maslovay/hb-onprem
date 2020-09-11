@@ -82,7 +82,10 @@ namespace FillingFrameService
                             frameVideo = _requests.FileVideo(message, fileAvatar);
                         }
                     }
-                    _log.Info($"Avatar is {JsonConvert.SerializeObject(fileAvatar)}");
+                    System.Console.WriteLine($"fileAvatar is null: {fileAvatar is null}");
+                    System.Console.WriteLine($"framescount: {frames.Count}");
+                    System.Console.WriteLine($"message: {JsonConvert.SerializeObject(message)}");
+                    //_log.Info($"Avatar is {JsonConvert.SerializeObject(fileAvatar)}");
 
                     var dialogueFrames = _filling.FillingDialogueFrame(message, emotions);
                     var dialogueClientProfile = _filling.FillingDialogueClientProfile(message, attributes);

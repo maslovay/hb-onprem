@@ -11,6 +11,7 @@ namespace UserOperations.Models.AnalyticModels
         public int AmountViews { get; set; }
         public double Conversion { get; set; }
         public List<AnswerOne> Answers { get; set; }
+        public string FtpLink { get; set; }
         public class AnswerOne
         {
             public string Answer { get; set; }

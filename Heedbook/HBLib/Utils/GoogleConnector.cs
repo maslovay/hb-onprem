@@ -155,7 +155,7 @@ namespace HBLib.Utils
             _httpClient = new HttpClient();
             var googleApiKey = await GetApiKey();
             _httpClient.DefaultRequestHeaders.Clear();
-
+            System.Console.WriteLine($"googleTransactionId: {googleTransactionId}");
             var response = await _httpClient.GetAsync("https://speech.googleapis.com/v1/operations/" +
                                                       googleTransactionId + "?key=" + googleApiKey.GoogleKey);
 
@@ -205,6 +205,7 @@ namespace HBLib.Utils
 
             var jsStr = Retry.Do(() => { return RecognizeLongRunning(fileName, apiKey.GoogleKey, languageId); },
                 TimeSpan.FromSeconds(1), 5);
+            System.Console.WriteLine($"jsStr:\n{JsonConvert.SerializeObject(jsStr)}");
             if (jsStr.Error != null && jsStr.Error.Status == "PERMISSION_DENIED")
             {
                 Console.WriteLine("api key expired");
@@ -249,8 +250,8 @@ namespace HBLib.Utils
                 config = new
                 {
                     encoding = "LINEAR16",
-                    // sampleRateHertz = 16000,
-                    sampleRateHertz = 8000,
+                    sampleRateHertz = 44100,
+                    // sampleRateHertz = 8000,
                     languageCode = GetLanguageName(languageId),
                     enableWordTimeOffsets
                     //enableSpeakerDiarization,

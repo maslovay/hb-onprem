@@ -444,10 +444,76 @@ namespace UserOperations.Controllers
 
             return Ok(result);
         }
+        [HttpPost("[action]")]
+        public async Task UserReport()
+        {
+            //Лаптева
+            // var Id = Guid.Parse("c7e514e5-d1cd-4aa1-91be-6d25396a8cc3");
+            //Берсенева
+            var Id = Guid.Parse("707fc479-6979-432b-b6d8-1ead99c71fe3");
+            var user = _context.ApplicationUsers.FirstOrDefault(p => p.Id == Id);
+            var dialogues = _context.Dialogues
+                .Where(p => p.BegTime > new DateTime(2020, 07, 30)
+                    && p.EndTime < DateTime.Now
+                    && p.ApplicationUserId == Id)
+                .ToList();
+            var sessions = _context.Sessions
+                .Where(p => p.BegTime > new DateTime(2020, 07, 30)
+                    && p.EndTime < DateTime.Now
+                    && p.ApplicationUserId == Id)
+                .ToList();
+            var workingTimes = _context.WorkingTimes
+                .Where(p => p.CompanyId == user.CompanyId)
+                .ToList();
+            
+            var report = dialogues.GroupBy(p => p.BegTime.Date)
+                .Select(p => new UserDayReport() {
+                    Day = p.Key,
+                    DurationOfDialoguesWithStatus3InHours = p.Where(q => q.StatusId == 3).Sum(q => q.EndTime.Subtract(q.BegTime).TotalHours),
+                    DurationOfDialoguesWithStatus8InHours = p.Where(q => q.StatusId == 8).Sum(q => q.EndTime.Subtract(q.BegTime).TotalHours),
+                    DurationOfSessionsInHours = sessions.Where(q => q.BegTime.Date == p.Key).Sum(q => q.EndTime.Subtract(q.BegTime).TotalHours),
+                    WorkingTimeInThisDayInHours = workingTimeCalculateInHours(workingTimes, p.Key).TotalHours
+                })
+                .ToList();
+            System.Console.WriteLine($"{user.FullName}");
+            foreach(var day in report)
+            {
+                double minimum = 0.0d;
+                if(day.DurationOfSessionsInHours != 0)
+                    minimum = day.DurationOfSessionsInHours < day.WorkingTimeInThisDayInHours ? day.DurationOfSessionsInHours : day.WorkingTimeInThisDayInHours;
+                else
+                    minimum = day.WorkingTimeInThisDayInHours;
 
+                day.LoadIndex = day.DurationOfDialoguesWithStatus3InHours/minimum;
+                
+
+                System.Console.WriteLine($"{day.Day.ToString($"dd-MM-yyyy")}");
+                System.Console.WriteLine($"DurationOfDialoguesWithStatus3InHours: {day.DurationOfDialoguesWithStatus3InHours}");
+                System.Console.WriteLine($"DurationOfDialoguesWithStatus8InHours: {day.DurationOfDialoguesWithStatus8InHours}");
+                System.Console.WriteLine($"DurationOfSessionsInHours: {day.DurationOfSessionsInHours}");
+                System.Console.WriteLine($"WorkingTimeInThisDayInHours: {day.WorkingTimeInThisDayInHours}");
+                System.Console.WriteLine($"LoadIndex: {day.LoadIndex.ToString()}");
+                System.Console.WriteLine();
+            }
+            System.Console.WriteLine($"Average: {report.Average(p => p.LoadIndex)}");
+        }
+        private TimeSpan workingTimeCalculateInHours(List<WorkingTime> workingTimes, DateTime day)
+        {
+            var wt = workingTimes.FirstOrDefault(q => q.Day == (int)day.DayOfWeek);
+            return wt.EndTime.Value.Subtract(wt.BegTime.Value);
+        }
 
 
      
+    }
+    public class UserDayReport
+    {
+        public DateTime Day { get; set; }
+        public double DurationOfDialoguesWithStatus3InHours { get; set; }
+        public double DurationOfDialoguesWithStatus8InHours { get; set; }
+        public double DurationOfSessionsInHours { get; set; }
+        public double WorkingTimeInThisDayInHours { get; set; }
+        public double LoadIndex { get; set; }
     }
 }
 

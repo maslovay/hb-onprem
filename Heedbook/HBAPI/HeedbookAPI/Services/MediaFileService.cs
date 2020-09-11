@@ -61,6 +61,7 @@ namespace UserOperations.Services
         {
             // _log.Info("MediaFile/File POST started");                 
             var companyId = _loginService.GetCurrentCompanyId();
+            System.Console.WriteLine($"companyId: {companyId}");
             var containerNameParam = formData.FirstOrDefault(x => x.Key == "containerName");
             var containerName = containerNameParam.Value.Any() ? containerNameParam.Value.ToString() : _containerName;
 

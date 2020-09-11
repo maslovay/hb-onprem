@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using ServiceExtensions;
@@ -14,9 +15,14 @@ namespace AudioAnalyzeScheduler
 
         public static IWebHostBuilder CreateWebHostBuilder(String[] args)
         {
+            // return WebHost.CreateDefaultBuilder(args)
+            //         .ConfigureBuilderDueToEnvironment(args:args, portToReassignForTests:5060)
+            //         .UseStartup<Startup>();
             return WebHost.CreateDefaultBuilder(args)
-                    .ConfigureBuilderDueToEnvironment(args:args, portToReassignForTests:5060)
-                    .UseStartup<Startup>();
+                .UseKestrel()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseUrls("https://localhost:5005/")
+                .UseStartup<Startup>();
         }
     }
 }
