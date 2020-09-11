@@ -69,8 +69,8 @@ namespace QuartzExtensions.Jobs
                     {
                         _log.Info($"Prepare report for applicationUser {user.Id} - {user.FullName}");
                         //await CreateHtmlWeeklyReport(user);
-                        await _weeklyReport.CreateHtmlWeeklyReport(user);
-                        await _weeklyReport.SendHttpReport();
+                        // await _weeklyReport.CreateHtmlWeeklyReport(user);
+                        // await _weeklyReport.SendHttpReport();
                         counter++;                        
                     }
                 }

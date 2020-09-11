@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace UserOperations.Migrations
 {
     [DbContext(typeof(RecordsContext))]
-    [Migration("20200904121148_UpdateMigration")]
-    partial class UpdateMigration
+    [Migration("20200906165601_UpgradeMigrations")]
+    partial class UpgradeMigrations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
