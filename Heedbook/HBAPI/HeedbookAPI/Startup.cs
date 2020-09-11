@@ -50,8 +50,9 @@ namespace UserOperations
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-               // var connectionString = "User ID=postgres;Password=annushka123;Host=127.0.0.1;Port=5432;Database=onprem_backup;Pooling=true;Timeout=120;CommandTimeout=0";
+                // var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+            //    var connectionString = "User ID=postgres;Password=annushka123;Host=127.0.0.1;Port=5432;Database=onprem_backup;Pooling=true;Timeout=120;CommandTimeout=0";
+                var connectionString = "User ID=test_user;Password=test_password;Host=104.40.181.96;Port=5432;Database=test_db;Pooling=true;Timeout=120;CommandTimeout=0;";
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
             });

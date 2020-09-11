@@ -63,6 +63,11 @@ namespace HBData.Models
         public DateTime Time { get; set; }
 
         /// <summary>
+        ///     Creation time
+        /// </summary>
+        public DateTime? CreationTime { get; set; }
+
+        /// <summary>
         ///     Face id in group of faces
         /// </summary>
         public Guid? FaceId {get; set;}
