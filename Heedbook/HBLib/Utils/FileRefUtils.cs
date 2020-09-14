@@ -23,12 +23,12 @@ namespace HBLib.Utils
         /// <returns></returns>
         public string GetFileUrlFast(String path)
         {
-            return $"https://{_sftpSettings.Host}/{path}";
+            return $"https://heedbook-files.open.ru/{path}";
         }
 
         public string GetFileLink(string directory, string file, DateTime exp = default)
         {
-            return $"https://{_sftpSettings.Host}/{directory}/{file}";
+            return $"https://heedbook-files.open.ru/{directory}/{file}";
         }
     }
 }
