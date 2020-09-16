@@ -220,7 +220,7 @@ namespace UserOperations.Services
             {
                 var companyInCorporatioIds = _repository.GetAsQueryable<Corporation>()
                        .Where(x => x.Id == corporationId).SelectMany(x => x.Companies.Select(p => p.CompanyId)).ToList();
-                companyIds = companyIds.Intersect(companyInCorporatioIds).ToList();
+                companyIds = companyIds.Concat(companyInCorporatioIds).ToList();
                 var resultForCorp = SalesStagePhraseForCorporation(
                         begTime, endTime, 
                         corporationId, companyIds, applicationUserIds,
