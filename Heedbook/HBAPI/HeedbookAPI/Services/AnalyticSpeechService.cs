@@ -210,6 +210,14 @@ namespace UserOperations.Services
             var begTime = _requestFilters.GetBegDate(beg);
             var endTime = _requestFilters.GetEndDate(end);
 
+            if(corporationId == null && !companyIds.Any())
+            {
+                var company = _repository.GetAsQueryable<Company>()
+                    .FirstOrDefault(p => p.CompanyId == companyId);
+                if(company.CorporationId != null)
+                    corporationId = company.CorporationId;
+            }
+
             if (corporationId == null && companyIds.Any())
             {
                 corporationId = _repository.GetAsQueryable<Company>()
