@@ -226,14 +226,27 @@ namespace UserOperations.Services
 
             if (corporationId != null)
             {
-                var companyInCorporatioIds = _repository.GetAsQueryable<Corporation>()
+                if(companyIds.Any())
+                {
+                    System.Console.WriteLine($"f1");
+                    var resultForCorp = SalesStagePhraseForSelectedCompanysInCorporation(
+                            begTime, endTime, 
+                            corporationId, companyIds, applicationUserIds,
+                            deviceIds, phraseIds, salesStageIds);
+                    return JsonConvert.SerializeObject(resultForCorp);
+                }
+                else
+                {
+                    System.Console.WriteLine($"f2");
+                    var companyInCorporatioIds = _repository.GetAsQueryable<Corporation>()
                        .Where(x => x.Id == corporationId).SelectMany(x => x.Companies.Select(p => p.CompanyId)).ToList();
-                companyIds = companyIds.Concat(companyInCorporatioIds).ToList();
-                var resultForCorp = SalesStagePhraseForCorporation(
-                        begTime, endTime, 
-                        corporationId, companyIds, applicationUserIds,
-                        deviceIds, phraseIds, salesStageIds);
-                return JsonConvert.SerializeObject(resultForCorp);
+                    companyIds = companyIds.Concat(companyInCorporatioIds).ToList();
+                    var resultForCorp = SalesStagePhraseForCorporation(
+                            begTime, endTime, 
+                            corporationId, companyIds, applicationUserIds,
+                            deviceIds, phraseIds, salesStageIds);
+                    return JsonConvert.SerializeObject(resultForCorp);
+                }
             }
 
             var result = SalesStagePhraseForOneCompany(
@@ -439,6 +452,45 @@ namespace UserOperations.Services
                         SalesStageId = k.Key,
                         SalesStageName = k.FirstOrDefault().SalesStage.Name,
                         SequenceNumber = k.FirstOrDefault().SalesStage.SequenceNumber
+                    }).ToList();
+
+            var dialogueCount = 0;
+            foreach (var item in phrasesSalesStages)
+            {
+                dialogueCount = dialogueIds.Count();
+                item.PercentageOfExecution = dialogueCount == 0? 0: (double)item.Count / dialogueCount;
+            }
+            return phrasesSalesStages;
+        }
+        private List<SalesStagePhraseModel> SalesStagePhraseForSelectedCompanysInCorporation(
+                    DateTime begTime,
+                    DateTime endTime, 
+                    Guid? corporationId,
+                    List<Guid> companyIds,
+                    List<Guid?> applicationUserIds, 
+                    List<Guid> deviceIds, 
+                    List<Guid> phraseIds,
+                    List<Guid> salesStageIds)
+        {
+            var dialogueIds = companyIds.Count()==0? new List<Guid>() : GetDialogueDeviceIds(begTime, endTime, companyIds, applicationUserIds, deviceIds);
+
+            var phrases = _repository.GetAsQueryable<DialoguePhrase>()
+                    .Where(p => p.PhraseId != null
+                    && (!phraseIds.Any() || phraseIds.Contains((Guid)p.PhraseId))
+                    && (!dialogueIds.Any() || dialogueIds.Contains((Guid)p.DialogueId)))
+                    .ToList();
+
+            var phrasesSalesStages = _repository.GetAsQueryable<SalesStagePhrase>()
+                    .Where(x =>
+                        (!salesStageIds.Any() || salesStageIds.Contains((Guid)x.SalesStageId))
+                        && companyIds.Contains((Guid)x.CompanyId))
+                    .GroupBy(x => x.SalesStageId)
+                    .Select(k => new SalesStagePhraseModel
+                    {
+                        Count = CountPhrasesAmount( phrases, k, phraseIds),
+                        SalesStageId = k.Key,
+                        SalesStageName = k.FirstOrDefault().SalesStage.Name,
+                        SequenceNumber=  k.FirstOrDefault().SalesStage.SequenceNumber
                     }).ToList();
 
             var dialogueCount = 0;
