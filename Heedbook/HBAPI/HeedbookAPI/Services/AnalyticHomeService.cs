@@ -79,10 +79,16 @@ namespace UserOperations.Services
                            SmilesShare = p.DialogueFrame.Average(x => x.HappinessShare),
                            DeviceId = p.DeviceId,
                            CompanyId = p.Device.CompanyId,
-                           SlideShowSessions = p.SlideShowSessions,
-                           IsInWorkingTime = true
+                           SlideShowSessions = p.SlideShowSessions
                        }).ToList();
-
+                dialogues = dialogues.Select(p => 
+                        {
+                            p.IsInWorkingTime = _dbOperations.CheckIfDialogueInWorkingTime(
+                                p, 
+                                workingTimes.Where(x => x.CompanyId == p.CompanyId).ToArray());
+                            return p;
+                        })
+                    .ToList();
                 ////-----------------FOR BRANCH---------------------------------------------------------------
                 List<BenchmarkModel> benchmarksList = (await GetBenchmarksList(begTime, endTime, companyIds)).ToList();
 

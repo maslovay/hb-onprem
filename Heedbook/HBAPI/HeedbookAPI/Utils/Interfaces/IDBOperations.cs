@@ -23,6 +23,7 @@ namespace UserOperations.Utils.Interfaces
         List<BestEmployee> BestThreeEmployees(List<DialogueInfoFull> dialogues, List<SessionInfo> sessions, DateTime beg, DateTime end);
         double CalcWorkingDayDurationMin(DateTime? beg, DateTime? end);
         bool CheckIfDialogueInWorkingTime(Dialogue dialogue, WorkingTime[] times);
+        bool CheckIfDialogueInWorkingTime(DialogueInfo dialogue, WorkingTime[] times);
         double? CrossIndex(List<DialogueInfoFull> dialogues);
         double? CrossIndex(IGrouping<Guid?, DialogueInfoFull> dialogues);
         double? CrossIndex(IGrouping<Guid?, DialogueInfo> dialogues);
