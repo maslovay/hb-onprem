@@ -191,8 +191,12 @@ namespace UserOperations.Utils
             if (day.BegTime == null || day.EndTime == null) return false;
             return dialogue.BegTime.TimeOfDay > ((DateTime)day.BegTime).TimeOfDay && dialogue.EndTime.TimeOfDay < ((DateTime)day.EndTime).TimeOfDay;
         }
-
-
+        public bool CheckIfDialogueInWorkingTime(DialogueInfo dialogue, WorkingTime[] times)
+        {
+            var day = times[(int)dialogue.BegTime.DayOfWeek];
+            if (day.BegTime == null || day.EndTime == null) return false;
+            return dialogue.BegTime.TimeOfDay > ((DateTime)day.BegTime).TimeOfDay && dialogue.EndTime.TimeOfDay < ((DateTime)day.EndTime).TimeOfDay;
+        }
         //Satisfaction index calculation
         public double? SatisfactionIndex(List<DialogueInfoFull> dialogues)
         {
