@@ -64,6 +64,8 @@ namespace  FillingFrameService.Requests
                 if(frames.Count > 4)
                 {
                     var frame = frames
+                        .Where(p => p.Time >= message.BeginTime.AddSeconds(15)
+                            && p.Time <= message.EndTime.AddSeconds(-15))
                         .Aggregate((f1, f2) => Square(f1) > Square(f2) ? f1 : f2);
                     fileAvatar = frame;
                 }
