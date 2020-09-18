@@ -61,11 +61,24 @@ namespace  FillingFrameService.Requests
             }
             else
             {
-                fileAvatar = frames.Count > 4 ? frames[4] : frames.FirstOrDefault();
+                if(frames.Count > 4)
+                {
+                    var frame = frames
+                        .Aggregate((f1, f2) => Square(f1) > Square(f2) ? f1 : f2);
+                    fileAvatar = frame;
+                }
+                else
+                {
+                    fileAvatar = frames.FirstOrDefault();
+                }
             }
             return fileAvatar;
         }
-
+        public Int32 Square(FileFrame frame)
+        {
+            var rectangle = JsonConvert.DeserializeObject<FaceRectangle>(frame.FrameAttribute.FirstOrDefault().Value);
+            return rectangle.Height * rectangle.Width;
+        }
         public FileVideo FileVideo(DialogueCreationRun message, FileFrame fileAvatar)
         {
             return _context.FileVideos
