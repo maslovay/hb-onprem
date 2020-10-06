@@ -407,6 +407,14 @@ namespace UserService.Controllers
             System.Console.WriteLine($"model sended");
             return Ok("model sended!");
         }
+        [HttpGet("[action]")]
+        public async Task<string> CheckDBConnections()
+        {
+            var phraseTypes = _repository.GetAsQueryable<PhraseType>()
+                .ToList();
+            return JsonConvert.SerializeObject(phraseTypes);
+        }
+
     }
 }
 
