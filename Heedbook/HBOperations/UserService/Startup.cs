@@ -67,9 +67,7 @@ namespace UserService
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                // var connectionString = Configuration.GetConnectionString("DefaultConnection");
                 var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-                System.Console.WriteLine($"DefaultConnection: {connectionString}");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
@@ -154,8 +152,7 @@ namespace UserService
                 var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
                 return new HbMlHttpClient(settings);
             });
-            // services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            // services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            
             services.AddTransient<SftpSettings>(p => new SftpSettings
                 {
                     Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
