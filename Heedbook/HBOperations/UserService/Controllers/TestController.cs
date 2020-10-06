@@ -414,7 +414,12 @@ namespace UserService.Controllers
                 .ToList();
             return JsonConvert.SerializeObject(phraseTypes);
         }
-
+        [HttpGet("[action]")]
+        public async Task<string> CheckSftpConnection()
+        {
+            var fileExist = await _sftpClient.IsFileExistsAsync($"gif/bf0fbd4b-e85d-4dbb-b806-bb6b9f87fe8f.gif");
+            return $"file exist: {fileExist}";
+        }
     }
 }
 

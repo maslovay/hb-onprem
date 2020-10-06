@@ -26,6 +26,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using HBLib.Utils.Interfaces;
+using RabbitMQ.Client;
+using Notifications.Services;
 
 namespace UserService
 {
@@ -121,23 +123,48 @@ namespace UserService
                 return new ElasticClient(settings);
             });
 
-            // (!isCalledFromUnitTest)
-                services.AddRabbitMqEventBus(Configuration);
-//            else
-//            {
-//                StartupExtensions.MockRabbitPublisher(services);
-//                StartupExtensions.MockNotificationService(services);
-//                StartupExtensions.MockNotificationHandler(services);
-//                StartupExtensions.MockTransmissionEnvironment<IntegrationEvent>(services);                
-//            }
+            services
+                .AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionManager>()
+                .AddSingleton<IRabbitMqPersistentConnection, DefaultRabbitMqPersistentConnection>(sp =>
+                    {
+                        var factory = new ConnectionFactory
+                        {
+                            UserName = Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_USERNAME"),
+                            Password = Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_PASSWORD"),
+                            Port = Int32.Parse(Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_PORT")),
+                            VirtualHost = Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_VHOST"),
+                            HostName = Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_HOSTNAME")
+                        };
+                        //we can set retry count into appsettings. Now defaults 5. 
+                        return new DefaultRabbitMqPersistentConnection(factory);
+                    })
+                .AddSingleton<INotificationPublisher, NotificationPublisher>(sp =>
+                    {
+                        var rabbitMqPersistentConnection = sp.GetRequiredService<IRabbitMqPersistentConnection>();
+                        var subsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
+                        var provider = sp.GetRequiredService<IServiceProvider>();
+                        return new NotificationPublisher(rabbitMqPersistentConnection, subsManager, provider);
+                    })
+                .AddSingleton<INotificationService, NotificationService>()
+                .AddSingleton<INotificationHandler, NotificationHandler>();
+
             services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
             services.AddScoped(provider =>
             {
                 var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
                 return new HbMlHttpClient(settings);
             });
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            // services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            // services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddTransient<SftpSettings>(p => new SftpSettings
+                {
+                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
+                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
+                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
+                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
+                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
+                });
             services.AddTransient<SftpClient>();
 
             services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
