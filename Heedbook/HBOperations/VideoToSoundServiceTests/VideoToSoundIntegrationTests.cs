@@ -79,6 +79,7 @@ namespace VideoToSoundService.Tests
         [Test]
         public async Task CheckSoundFilePresents()
         {
+            System.Console.WriteLine($"dialoguevideos/{testDialogVideoCorrectFileName}");
             await _videoToSoundService.Run("dialoguevideos/" + testDialogVideoCorrectFileName);
             Thread.Sleep(15000);
             _sftpClient.ChangeDirectoryToDefault();

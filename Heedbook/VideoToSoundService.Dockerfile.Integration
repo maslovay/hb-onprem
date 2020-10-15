@@ -12,6 +12,7 @@ RUN apt-get update
 RUN apt-get install ffmpeg -y
 RUN ./rabbit_test_setup.sh; exit 0;
 RUN ./test_environment_setup.sh; exit 0;
+RUN ./environment_variables_for_tests.sh; exit 0;
 
 WORKDIR /app/HBOperations
 RUN killall -9 dotnet; exit 0;   
