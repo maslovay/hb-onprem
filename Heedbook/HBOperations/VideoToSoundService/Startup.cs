@@ -1,4 +1,5 @@
-﻿using Configurations;
+﻿using System;
+using Configurations;
 using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
@@ -32,14 +33,26 @@ namespace VideoToSoundService
             services.AddTransient<VideoToSoundRunHandler>();
             services.AddTransient<SftpClient>();
             services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient<SftpSettings>(p => new SftpSettings
+                {
+                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
+                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
+                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
+                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
+                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
+                });
             services.AddTransient(provider => provider.GetRequiredService<IOptions<FFMpegSettings>>().Value);
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddScoped<ElasticClientFactory>();
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddTransient(provider =>
+                {
+                    var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
+                    return new ElasticClient(settings);
+                });
             services.AddTransient<FFMpegWrapper>();
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddRabbitMqEventBus(Configuration);
+            services.AddRabbitMqEventBusConfigFromEnv();
+                
             services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

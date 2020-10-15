@@ -28,6 +28,7 @@ using HBMLHttpClient.Model;
 using System.Drawing;
 using Microsoft.AspNetCore.Authorization;
 using RabbitMqEventBus;
+using System.Diagnostics;
 
 namespace UserService.Controllers
 {
@@ -43,12 +44,14 @@ namespace UserService.Controllers
         private readonly FFMpegWrapper _wrapper;
         private readonly CheckTokenService _service;
         private readonly INotificationPublisher _publisher;
+        private readonly ElasticClient _elasticClient;
 
         public TestController(IGenericRepository repository,
             SftpSettings sftpSettings,
             FFMpegWrapper wrapper,
             INotificationHandler handler, SftpClient sftpClient, CheckTokenService service,
-            INotificationPublisher publisher)
+            INotificationPublisher publisher,
+            ElasticClient elasticClient)
         {
             _repository = repository;
             _handler = handler;
@@ -57,6 +60,7 @@ namespace UserService.Controllers
             _wrapper = wrapper;
             _service = service;
             _publisher = publisher;
+            _elasticClient = elasticClient;
         }
 
         [HttpPost("[action]")]
@@ -419,6 +423,26 @@ namespace UserService.Controllers
         {
             var fileExist = await _sftpClient.IsFileExistsAsync($"gif/bf0fbd4b-e85d-4dbb-b806-bb6b9f87fe8f.gif");
             return $"file exist: {fileExist}";
+        }
+        [HttpPost("VideoToGif")]
+        [SwaggerOperation(Description = "Extract audio from video")]
+        public IActionResult VideoToGif([FromBody] VideoContentToGifRun message)
+        {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            _publisher.Publish(message);
+            Debug.WriteLine("sended message");
+            return Ok();
+        }
+        [HttpPost("send VideoToSound model")]
+        public async Task SendVideoToSoundModel(string path)
+        {
+            _publisher.Publish(new VideoToSoundRun(){Path=path});
+        }
+        [HttpPost("send VideoToSound model")]
+        public async Task CheckElasticClient(string message)
+        {
+            _elasticClient.SetFormat("{Path}");
+            _elasticClient.Fatal(message);
         }
     }
 }
