@@ -438,7 +438,7 @@ namespace UserService.Controllers
         {
             _publisher.Publish(new VideoToSoundRun(){Path=path});
         }
-        [HttpPost("send VideoToSound model")]
+        [HttpPost("send CheckElasticClient")]
         public async Task CheckElasticClient(string message)
         {
             _elasticClient.SetFormat("{Path}");
