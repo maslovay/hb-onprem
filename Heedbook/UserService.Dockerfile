@@ -8,6 +8,7 @@ FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 RUN mkdir InitializeDBTables
 COPY --from=build-env /app/HBOperations/UserService/publish .
+COPY --from=build-env /app/HBOperations/UserService/Phrases.xlsx .
 COPY --from=build-env /app/HBOperations/UserService/InitializeDBTables InitializeDBTables
 ENTRYPOINT ["dotnet", "UserService.dll"]
 EXPOSE 53650
