@@ -1,5 +1,17 @@
 FROM microsoft/dotnet:2.2-sdk AS test-env
 ENV DOCKER_INTEGRATION_TEST_ENVIRONMENT TRUE
+ENV DB_CONNECTION_STRING "User ID=test_user;Password=test_password;Host=104.40.181.96;Port=5432;Database=test_db;Pooling=true;Keepalive=25"
+ENV RABBITMQ_CONNECTION_USERNAME "guest"
+ENV RABBITMQ_CONNECTION_PASSWORD "guest"
+ENV RABBITMQ_CONNECTION_PORT "5672"
+ENV RABBITMQ_CONNECTION_VHOST "test"
+ENV RABBITMQ_CONNECTION_HOSTNAME "localhost"
+ENV SFTP_CONNECTION_HOST "hbftptest.westeurope.cloudapp.azure.com"
+ENV SFTP_CONNECTION_PORT "22"
+ENV SFTP_CONNECTION_USERNAME "nkrokhmal"
+ENV SFTP_CONNECTION_PASSWORD "kloppolk_2018"
+ENV SFTP_CONNECTION_DESTINATIONPATH "/home/nkrokhmal/storage/"
+ENV SFTP_CONNECTION_DOWNLOADPATH "/opt/download/"
 WORKDIR /app
 COPY . .
 
@@ -12,7 +24,6 @@ RUN apt-get update
 RUN apt-get install ffmpeg -y
 RUN ./rabbit_test_setup.sh; exit 0;
 RUN ./test_environment_setup.sh; exit 0;
-RUN ./environment_variables_for_tests.sh; exit 0;
 
 WORKDIR /app/HBOperations
 RUN killall -9 dotnet; exit 0;   
