@@ -9,6 +9,7 @@ WORKDIR /app
 RUN mkdir InitializeDBTables
 COPY --from=build-env /app/HBOperations/UserService/Phrases.xlsx Phrases.xlsx
 COPY --from=build-env /app/HBOperations/UserService/publish .
+COPY --from=build-env /app/HBOperations/UserService/Phrases.xlsx .
 COPY --from=build-env /app/HBOperations/UserService/InitializeDBTables InitializeDBTables
 #COPY --from=build-env /app/HBOperations/UserService/Phrases.xlsx Phrases.xlsx
 ENTRYPOINT ["dotnet", "UserService.dll"]
