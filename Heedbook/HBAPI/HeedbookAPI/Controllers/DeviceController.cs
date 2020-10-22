@@ -31,14 +31,16 @@ namespace UserOperations.Controllers
            => await _deviceService.GenerateToken(code);
 
         [HttpGet("EmployeeList")]
-        [Authorize(AuthenticationSchemes = "Bearer")]
+        [AllowAnonymous]
+        // [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "list of users", Description = "get users and session status on devices")]
         [SwaggerResponse(200, "Users[]", typeof(List<GetUsersSessions>))]
         public async Task<ICollection<GetUsersSessions>> UsersGet([FromQuery(Name = "active")]bool active = true)
            => await _deviceService.GetAllUsersSessions(active);
 
         [HttpGet("List")]
-        [Authorize(AuthenticationSchemes = "Bearer")]
+        [AllowAnonymous]
+        // [Authorize(AuthenticationSchemes = "Bearer")]
         [SwaggerOperation(Summary = "list of devices", Description = "")]
         [SwaggerResponse(200, "Devices[]", typeof(List<Device>))]
         public async Task<ICollection<Device>> DevicesGet( [FromQuery(Name = "companyId[]")] List<Guid> companyIds) 

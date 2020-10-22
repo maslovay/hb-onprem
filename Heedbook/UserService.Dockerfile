@@ -7,8 +7,10 @@ RUN dotnet publish ./HBOperations/UserService -c Release -o publish
 FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine
 WORKDIR /app
 RUN mkdir InitializeDBTables
+COPY --from=build-env /app/HBOperations/UserService/Phrases.xlsx Phrases.xlsx
 COPY --from=build-env /app/HBOperations/UserService/publish .
 COPY --from=build-env /app/HBOperations/UserService/InitializeDBTables InitializeDBTables
+#COPY --from=build-env /app/HBOperations/UserService/Phrases.xlsx Phrases.xlsx
 ENTRYPOINT ["dotnet", "UserService.dll"]
 EXPOSE 53650
 ENV ASPNETCORE_URLS http://+:53650

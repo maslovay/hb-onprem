@@ -89,7 +89,7 @@ namespace HBMLOnlineService.Controllers
             catch (Exception e)
             {
                 // System.Console.WriteLine($"Exception occured {e}");
-                _log.Fatal("Exception occured {e}");
+                _log.Fatal($"Exception occured {e}");
                 throw new Exception($"Exception occured {e}");
             }
         }
