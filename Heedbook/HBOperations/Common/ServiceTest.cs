@@ -233,13 +233,19 @@ namespace Common
 
             Services.AddDbContext<RecordsContext>(options =>
             {
-                var connectionString = Config.GetSection("ConnectionStrings")["DefaultConnection"];
+                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
-
-            Services.Configure<SftpSettings>(Config.GetSection(nameof(SftpSettings)));
-            Services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            Services.AddSingleton<SftpSettings>(p => new SftpSettings
+                {
+                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
+                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
+                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
+                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
+                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
+                });
             Services.AddSingleton<SftpClient>();
             
             Services.AddSingleton<IGenericRepository, GenericRepository>();

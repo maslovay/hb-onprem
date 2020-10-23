@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -19,26 +20,25 @@ namespace VideoContentToGifService
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly FFMpegWrapper _wrapper;
-        private readonly ElasticClientFactory _elasticClientFactory;
 
 
         public VideoContentToGif(SftpClient sftpClient,
             INotificationPublisher publisher,
             SftpSettings sftpSettings,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             FFMpegWrapper wrapper)
         {
             _sftpClient = sftpClient;
             _publisher = publisher;
             _sftpSettings = sftpSettings;
             _wrapper = wrapper;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
         }
 
         public async Task Run(String path)
         {
+            Debug.WriteLine("started");
             System.Console.WriteLine($"started");
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(path);
             try

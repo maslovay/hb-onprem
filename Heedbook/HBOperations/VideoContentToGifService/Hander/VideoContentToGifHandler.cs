@@ -3,7 +3,7 @@ using RabbitMqEventBus.Base;
 using RabbitMqEventBus.Events;
 using VideoContentToGifService;
 
-namespace VideoToSoundService.Hander
+namespace VideoToGifService.Hander
 {
     public class VideoContentToGifHandler : IIntegrationEventHandler<VideoContentToGifRun>
     {

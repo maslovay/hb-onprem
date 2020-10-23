@@ -292,103 +292,6 @@ namespace UserService.Controllers
            _handler.EventRaised(message);
             return Ok();
         }
-
-        [HttpGet("[action]")]
-       public async Task<IActionResult> AddCompanyDictionary(string fileName)
-       {
-          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
-            AddCpomanyPhrases();
-            return Ok();
-        }
-       
-       private void AddCpomanyPhrases()
-        {
-            var filePath = "/home/oleg/Downloads/Phrases.xlsx";
-            using(FileStream FS = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                using(SpreadsheetDocument doc = SpreadsheetDocument.Open(filePath, false))
-                {
-                    System.Console.WriteLine();
-                    WorkbookPart workbook = doc.WorkbookPart;
-                    SharedStringTablePart sstpart = workbook.GetPartsOfType<SharedStringTablePart>().First();
-                    SharedStringTable sst = sstpart.SharedStringTable;
-
-                    WorksheetPart worksheet = workbook.WorksheetParts.First();
-                    Worksheet sheet = worksheet.Worksheet;
-
-                    var cells = sheet.Descendants<Cell>();
-                    var rows = sheet.Descendants<Row>();
-
-                    var phrases = _repository.GetAsQueryable<Phrase>()
-                        .Include(p => p.PhraseType)
-                        .ToList();
-                    var phraseTypes = _repository.GetAsQueryable<PhraseType>().ToList();
-
-                    var user = _repository.GetAsQueryable<ApplicationUser>()
-                        .Include(p => p.Company)
-                        .FirstOrDefault(p => p.FullName == "Сотрудник с бейджем №1");
-                    
-                    
-                    foreach(var row in rows)
-                    {
-                        try
-                        {
-                            //var rowCells = row.Elements<Cell>();
-                            var phraseTextString = GetCellValue(doc, row.Descendants<Cell>().ElementAt(0));
-                            var phraseTypeString = GetCellValue(doc, row.Descendants<Cell>().ElementAt(1));
-                            var existPhrase = phrases.FirstOrDefault(p => p.PhraseText == phraseTextString
-                                    && p.PhraseType.PhraseTypeText == phraseTypeString);
-
-                            var phraseType = phraseTypes.FirstOrDefault(p => p.PhraseTypeText == GetCellValue(doc, row.Descendants<Cell>().ElementAt(1)));
-                            if(phraseType is null)
-                                continue;
-                            
-                            if(existPhrase==null)
-                            {   
-                                System.Console.WriteLine($"phrase not exist in base");
-                                var newPhrase = new Phrase
-                                {
-                                    PhraseId = Guid.NewGuid(),
-                                    PhraseText = GetCellValue(doc, row.Descendants<Cell>().ElementAt(0)),
-                                    PhraseTypeId = phraseType.PhraseTypeId,
-                                    LanguageId = 2,
-                                    WordsSpace = 1,
-                                    Accurancy = 1,
-                                    IsTemplate = false
-                                } ;
-                                var phraseCompany = new PhraseCompany
-                                {
-                                    PhraseCompanyId = Guid.NewGuid(),
-                                    PhraseId = newPhrase.PhraseId,
-                                    CompanyId = user.CompanyId
-                                };  
-                                System.Console.WriteLine($"Phrase: {newPhrase.PhraseText} - {newPhrase.PhraseTypeId}");
-                                _repository.Create<Phrase>(newPhrase); 
-                                _repository.Create<PhraseCompany>(phraseCompany);
-                            }
-                            else
-                            {
-                                var phraseCompany = new PhraseCompany
-                                {
-                                    PhraseCompanyId = Guid.NewGuid(),
-                                    PhraseId = existPhrase.PhraseId,
-                                    CompanyId = user.CompanyId
-                                };  
-                                System.Console.WriteLine($"Phrase: {existPhrase.PhraseText} - {existPhrase.PhraseTypeId}");  
-                                _repository.Create<PhraseCompany>(phraseCompany); 
-                                System.Console.WriteLine($"phrase exist in base");
-                            }                            
-                        }
-                        catch(NullReferenceException ex)
-                        {
-                            System.Console.WriteLine($"exception!!");
-                            break;
-                        }   
-                    }
-                    _repository.Save();
-                }
-            }
-        }
         ///Method for get Cell Value
         private static string GetCellValue(SpreadsheetDocument document, Cell cell)
         {
@@ -443,6 +346,15 @@ namespace UserService.Controllers
         {
             _elasticClient.SetFormat("{Path}");
             _elasticClient.Fatal(message);
+        }
+        [HttpPost("send VideoContentToGifRun")]
+        public async Task CheckContentToGif(string path)
+        {
+            var model = new VideoContentToGifRun
+            {
+                Path = path
+            };
+            _publisher.Publish(model);
         }
     }
 }
