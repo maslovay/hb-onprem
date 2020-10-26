@@ -19,16 +19,15 @@ namespace PersonOnlineDetectionService
 {
     public class PersonOnlineDetection
     {
-        private readonly ElasticClient _log;
         private readonly RecordsContext _context;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
         private readonly PersonDetectionUtils _personDetectionUtils;
         private readonly CreateAvatarUtils _createAvatar;
         private readonly WebSocketIoUtils _socket;
 
         public PersonOnlineDetection(
             IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             PersonDetectionUtils personDetectionUtils,
             CreateAvatarUtils createAvatar,
             WebSocketIoUtils socket
@@ -36,7 +35,7 @@ namespace PersonOnlineDetectionService
         {
             // _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
             _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _personDetectionUtils = personDetectionUtils;
             _socket = socket;
             _createAvatar = createAvatar;
@@ -46,7 +45,6 @@ namespace PersonOnlineDetectionService
         {
             System.Console.WriteLine(message.Path);
             System.Console.WriteLine(message.DeviceId);
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(message.Path);
             _log.Info("Function started");

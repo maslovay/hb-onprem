@@ -38,7 +38,7 @@ namespace PersonOnlineDetectionService.Tests
         {
             await base.Setup(() =>
             {
-                Services.AddRabbitMqEventBus(Config);
+                Services.AddRabbitMqEventBusConfigFromEnv();
             }, true);
             RunServices();
         }

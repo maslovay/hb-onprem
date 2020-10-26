@@ -365,6 +365,11 @@ namespace UserService.Controllers
             };
             _publisher.Publish(model);
         }
+        [HttpPost("[action]")]
+        public async Task CheckPersonOnlineDetectionRun(PersonOnlineDetectionRun model)
+        {
+            _publisher.Publish(model);
+        }
     }
 }
 
