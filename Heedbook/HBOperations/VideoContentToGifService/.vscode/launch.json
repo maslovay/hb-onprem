@@ -30,7 +30,9 @@
                 "SFTP_CONNECTION_USERNAME": "nkrokhmal",
                 "SFTP_CONNECTION_PASSWORD": "kloppolk_2018",
                 "SFTP_CONNECTION_DESTINATIONPATH": "/home/nkrokhmal/storage/",
-                "SFTP_CONNECTION_DOWNLOADPATH": "/opt/download/"
+                "SFTP_CONNECTION_DOWNLOADPATH": "/opt/download/",
+                "ELASTIC_SETTINGS_HOST": "tcp://logstash-service.kube-system",
+                "ELASTIC_SETTINGS_PORT": "5000"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"

@@ -50,8 +50,16 @@ namespace VideoContentToGifService
                     return setting;
                 });
             services.AddTransient(provider => provider.GetRequiredService<IOptions<FFMpegSettings>>().Value);
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "OnPremVideoToGif"
+                    };
+                    return elasticSettings;
+                });
             services.AddTransient(provider =>
                 {
                     var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
