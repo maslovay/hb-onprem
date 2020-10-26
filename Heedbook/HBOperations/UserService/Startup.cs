@@ -131,30 +131,7 @@ namespace UserService
                 return new ElasticClient(settings);
             });
 
-            services
-                .AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionManager>()
-                .AddSingleton<IRabbitMqPersistentConnection, DefaultRabbitMqPersistentConnection>(sp =>
-                    {
-                        var factory = new ConnectionFactory
-                        {
-                            UserName = Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_USERNAME"),
-                            Password = Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_PASSWORD"),
-                            Port = Int32.Parse(Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_PORT")),
-                            VirtualHost = Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_VHOST"),
-                            HostName = Environment.GetEnvironmentVariable("RABBITMQ_CONNECTION_HOSTNAME")
-                        };
-                        //we can set retry count into appsettings. Now defaults 5. 
-                        return new DefaultRabbitMqPersistentConnection(factory);
-                    })
-                .AddSingleton<INotificationPublisher, NotificationPublisher>(sp =>
-                    {
-                        var rabbitMqPersistentConnection = sp.GetRequiredService<IRabbitMqPersistentConnection>();
-                        var subsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
-                        var provider = sp.GetRequiredService<IServiceProvider>();
-                        return new NotificationPublisher(rabbitMqPersistentConnection, subsManager, provider);
-                    })
-                .AddSingleton<INotificationService, NotificationService>()
-                .AddSingleton<INotificationHandler, NotificationHandler>();
+            services.AddRabbitMqEventBusConfigFromEnv();
 
             services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
             services.AddScoped(provider =>

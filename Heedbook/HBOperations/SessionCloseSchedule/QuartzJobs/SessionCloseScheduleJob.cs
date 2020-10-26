@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HBData;
 using HBLib;
-
+using HBLib.Utils;
 
 namespace SessionCloseSchedule
 {
@@ -16,18 +16,17 @@ namespace SessionCloseSchedule
     {
         private readonly RecordsContext _context;
         private readonly INotificationPublisher _publisher;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
 
         public SessionCloseJob(IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory)
+            ElasticClient log)
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             try
             {
                 const int OPEN = 6;
