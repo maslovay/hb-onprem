@@ -35,7 +35,7 @@ namespace PersonDetectionService.Tests
         {
             await base.Setup(() =>
             {
-                Services.AddRabbitMqEventBus(Config);
+                Services.AddRabbitMqEventBusConfigFromEnv();
                 StartupExtensions.MockRabbitPublisher(Services);
                 //StartupExtensions.MockNotificationService(Services);
                 _startup = new Startup(Config);

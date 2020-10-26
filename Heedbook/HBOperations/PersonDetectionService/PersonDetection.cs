@@ -19,24 +19,23 @@ namespace PersonDetectionService
     public class PersonDetection
     {
         private readonly RecordsContext _context;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
         private readonly DescriptorCalculations _calc;
 
 
         public PersonDetection(
             IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             DescriptorCalculations calc
         )
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _calc = calc;
         }
 
         public async Task Run(PersonDetectionRun message)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{deviceIds}");
             _log.Info("Function started");
             _log.SetArgs(JsonConvert.SerializeObject(message.DeviceIds));

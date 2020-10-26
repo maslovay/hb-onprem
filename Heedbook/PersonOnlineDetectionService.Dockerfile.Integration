@@ -23,9 +23,9 @@ RUN mkdir /opt/download; exit 0;
 RUN chmod -R 777 /opt/download; exit 0;
 
 RUN apt-get update
-RUN apt-get install ffmpeg -y
+#RUN apt-get install ffmpeg -y
 RUN ./rabbit_test_setup.sh; exit 0;
-RUN ./test_environment_setup.sh; exit 0;
+#RUN ./test_environment_setup.sh; exit 0;
 
 WORKDIR /app/HBOperations
 RUN killall -9 dotnet; exit 0;   
