@@ -24,26 +24,25 @@ namespace ToneAnalyzeService
         private readonly IGenericRepository _repository;
         private readonly SftpClient _sftpClient;
         private readonly FFMpegWrapper _wrapper;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
 
 
         public ToneAnalyze(SftpClient sftpClient,
             IConfiguration configuration,
             IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             FFMpegWrapper wrapper)
         {
             _sftpClient = sftpClient;
             _configuration = configuration;
             _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _wrapper = wrapper;
         }
 
 
         public async Task Run(String path)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(path);
             try

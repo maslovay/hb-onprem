@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Configurations;
 using HBData;
 using HBData.Repository;
@@ -9,12 +6,10 @@ using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Quartz;
 using QuartzExtensions;
@@ -37,24 +32,42 @@ namespace ToneAnalyzeService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddScoped<ElasticClientFactory>();
+            services.AddTransient<SftpSettings>(p => new SftpSettings
+                {
+                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
+                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
+                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
+                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
+                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
+                });
+            services.AddTransient<SftpClient>();
+            services.AddRabbitMqEventBusConfigFromEnv();
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "OnPremUserService"
+                    };
+                    return elasticSettings;
+                });
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
             services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
             services.AddTransient<FFMpegWrapper>();
-            services.AddTransient(provider =>
-                provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddRabbitMqEventBus(Configuration);
-            services.AddTransient<SftpClient>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddTransient<ToneAnalyze>();
             services.AddTransient<ToneAnalyzeRunHandler>();

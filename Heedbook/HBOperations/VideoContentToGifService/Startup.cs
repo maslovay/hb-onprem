@@ -62,7 +62,7 @@ namespace VideoContentToGifService
                 });
             services.AddTransient(provider =>
                 {
-                    var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
+                    var settings = provider.GetRequiredService<ElasticSettings>();
                     return new ElasticClient(settings);
                 });
             services.AddTransient<FFMpegWrapper>();

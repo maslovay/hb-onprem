@@ -356,6 +356,15 @@ namespace UserService.Controllers
             };
             _publisher.Publish(model);
         }
+        [HttpPost("[action]")]
+        public async Task CheckToneAnalyzeRun(string path)
+        {
+            var model = new ToneAnalyzeRun
+            {
+                Path = path
+            };
+            _publisher.Publish(model);
+        }
     }
 }
 

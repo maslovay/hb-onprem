@@ -28,6 +28,7 @@ using Microsoft.AspNetCore.Http;
 using HBLib.Utils.Interfaces;
 using RabbitMQ.Client;
 using Notifications.Services;
+using Newtonsoft.Json;
 
 namespace UserService
 {
@@ -126,7 +127,7 @@ namespace UserService
                 });
             services.AddTransient(provider =>
             {
-                var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
+                var settings = provider.GetRequiredService<ElasticSettings>();
                 return new ElasticClient(settings);
             });
 
