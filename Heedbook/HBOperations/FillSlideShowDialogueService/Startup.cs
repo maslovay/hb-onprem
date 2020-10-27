@@ -17,6 +17,7 @@ using FillSlideShowDialogueService.Exceptions;
 using FillSlideShowDialogueService.Handler;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using System;
 
 namespace FillSlideShowDialogueService
 {
@@ -38,19 +39,31 @@ namespace FillSlideShowDialogueService
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
 
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddSingleton<ElasticClientFactory>();
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "FillSlideShowDialogue"
+                    };
+                    return elasticSettings;
+                });
+            services.AddSingleton(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
 
             services.AddTransient<FillSlideShowDialogue>();
             services.AddTransient<FillSlideShowDialogueRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.AddRabbitMqEventBus(Configuration);
+            services.AddRabbitMqEventBusConfigFromEnv();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

@@ -370,6 +370,11 @@ namespace UserService.Controllers
         {
             _publisher.Publish(model);
         }
+        [HttpPost("[action]")]
+        public async Task CheckFillSlideShowDialogueRun(FillSlideShowDialogueRun model)
+        {
+            _publisher.Publish(model);
+        }
     }
 }
 

@@ -19,21 +19,20 @@ namespace FillSlideShowDialogueService
     public class FillSlideShowDialogue
     {
         private readonly RecordsContext _context;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
 
 
         public FillSlideShowDialogue (
             IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory
+            ElasticClient log
         )
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
         }
 
         public async Task Run(FillSlideShowDialogueRun message)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetArgs(JsonConvert.SerializeObject(message.DialogueId));
             var dialogue = _context.Dialogues.FirstOrDefault(x => x.DialogueId == message.DialogueId);
             var slideShowSessions = _context.SlideShowSessions
