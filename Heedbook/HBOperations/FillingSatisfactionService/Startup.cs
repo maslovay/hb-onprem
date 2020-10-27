@@ -1,4 +1,5 @@
-﻿using Configurations;
+﻿using System;
+using Configurations;
 using FillingSatisfactionService.Handler;
 using FillingSatisfactionService.Helper;
 using HBData;
@@ -33,19 +34,32 @@ namespace FillingSatisfactionService
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.Configure<CalculationConfig>(Configuration.GetSection(nameof(CalculationConfig)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<CalculationConfig>>().Value);
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddScoped<ElasticClientFactory>();
             services.AddTransient<Calculations>();
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "OnPremUserService"
+                    };
+                    return elasticSettings;
+                });
+            services.AddSingleton(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
+            
             services.AddTransient<FillingSatisfaction>();
             services.AddTransient<FillingSatisfactionRunHandler>();
-            services.AddRabbitMqEventBus(Configuration);
+            services.AddRabbitMqEventBusConfigFromEnv();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

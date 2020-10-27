@@ -22,26 +22,25 @@ namespace FillingSatisfactionService
         private readonly INotificationPublisher _notificationPublisher;
        // private readonly ElasticClient _log;
         private readonly RecordsContext _context;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
 
 
         public FillingSatisfaction(IServiceScopeFactory factory,
             Calculations calculations,
             INotificationPublisher notificationPublisher,
             CalculationConfig config,
-            ElasticClientFactory elasticClientFactory
+            ElasticClient log
             )
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _calculations = calculations;
             _notificationPublisher = notificationPublisher;
             _config = config;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
         }
 
         public async Task Run(Guid dialogueId)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{DialogueId}");
             _log.SetArgs(dialogueId);
 
