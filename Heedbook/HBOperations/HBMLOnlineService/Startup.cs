@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Newtonsoft.Json.Serialization;
+using System;
 
 namespace HBMLOnlineService
 {
@@ -36,7 +37,7 @@ namespace HBMLOnlineService
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
@@ -74,25 +75,47 @@ namespace HBMLOnlineService
             });
 
             services.AddScoped<HBMLOnlineFaceService>();
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            // services.AddTransient(provider =>
-            // {
-                // var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
-                // return new ElasticClient(settings);
-            // });
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddSingleton<ElasticClientFactory>();
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "HBMLOnlineService"
+                    };
+                    return elasticSettings;
+                });
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
+            
             services.AddSingleton<ControllerExceptionFilter>();
-            services.AddRabbitMqEventBus(Configuration);
+            services.AddRabbitMqEventBusConfigFromEnv();
            
-            services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
+            services.AddSingleton(provider =>
+                {
+                    var hbmlurisetting = new HttpSettings
+                    {
+                        HbMlUri = Environment.GetEnvironmentVariable("HBML_URI_SETTING")
+                    };
+                    return hbmlurisetting;
+                });
             services.AddScoped(provider =>
             {
-                var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
+                var settings = provider.GetRequiredService<HttpSettings>();
                 return new HbMlHttpClient(settings);
             });
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddTransient<SftpSettings>(p => new SftpSettings
+                {
+                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
+                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
+                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
+                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
+                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
+                });
             services.AddTransient<SftpClient>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddMvc()

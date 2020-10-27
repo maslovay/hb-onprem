@@ -11,13 +11,11 @@ namespace HBLib.Utils
 {
     public class ControllerExceptionFilter : ExceptionFilterAttribute
     {
-        private ElasticClientFactory _elasticClientFactory;
         private ElasticClient _log;
         public ControllerExceptionFilter(){}
-        public ControllerExceptionFilter(ElasticClientFactory elasticClientFactory)
+        public ControllerExceptionFilter(ElasticClient log)
         {
-            _elasticClientFactory = elasticClientFactory;
-            _log = _elasticClientFactory.GetElasticClient();
+            _log = log;
         }     
         public override void OnException(ExceptionContext context)
         {

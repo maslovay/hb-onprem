@@ -1,0 +1,49 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": ".NET Core Launch (web)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/netcoreapp2.2/HBMLOnlineService.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "DB_CONNECTION_STRING": "User ID=test_user;Password=test_password;Host=104.40.181.96;Port=5432;Database=test_db;Pooling=true;Keepalive=25",
+                "RABBITMQ_CONNECTION_USERNAME": "guest",
+                "RABBITMQ_CONNECTION_PASSWORD": "guest",
+                "RABBITMQ_CONNECTION_PORT": "5672",
+                "RABBITMQ_CONNECTION_VHOST": "test",
+                "RABBITMQ_CONNECTION_HOSTNAME": "172.17.0.2",
+                "SFTP_CONNECTION_HOST": "hbftptest.westeurope.cloudapp.azure.com",
+                "SFTP_CONNECTION_PORT": "22",
+                "SFTP_CONNECTION_USERNAME": "nkrokhmal",
+                "SFTP_CONNECTION_PASSWORD": "kloppolk_2018",
+                "SFTP_CONNECTION_DESTINATIONPATH": "/home/nkrokhmal/storage/",
+                "SFTP_CONNECTION_DOWNLOADPATH": "/opt/download/",
+                "ELASTIC_SETTINGS_HOST": "tcp://logstash-service.kube-system",
+                "ELASTIC_SETTINGS_PORT": "5000",
+                "HBML_URI_SETTING": "http://hbmlservice:8000"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
+        }
+    ]
+}

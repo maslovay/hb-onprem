@@ -26,15 +26,14 @@ namespace HBMLOnlineService.Controllers
     public class HBMLOnlineService : Controller
     {
         private readonly HBMLOnlineFaceService _hbmlservice;
-        private readonly ElasticClientFactory _elasticClientFactory;
         private readonly ElasticClient _log;
 
         public HBMLOnlineService( HBMLOnlineFaceService hbmlservice,
-            ElasticClientFactory elasticClientFactory
+            ElasticClient log
         )
         {
             _hbmlservice = hbmlservice;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
         }
 
         //Descriptor=true&Emotions=true&Headpose=true&Attributes=true&DeviceId=null&CompanyId=4f318be9-7f1e-4a8b-96ec-c6ac2226cae6
@@ -51,7 +50,6 @@ namespace HBMLOnlineService.Controllers
             [FromQuery] bool isDetect=true
         )
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{DeviceId}");
             _log.SetArgs(deviceId);
 
