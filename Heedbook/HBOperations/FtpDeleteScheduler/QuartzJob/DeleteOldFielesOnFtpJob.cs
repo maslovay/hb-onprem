@@ -11,19 +11,18 @@ namespace DeleteScheduler.QuartzJob
     public class DeleteOldFilesOnFtpJob : IJob
     {
         private SftpClient _sftpclient;
-        private ElasticClientFactory _elasticClientFactory;
+        private ElasticClient _log;
 
         public DeleteOldFilesOnFtpJob(SftpClient sftpclient,
-            ElasticClientFactory elasticClientFactory)
+            ElasticClient log)
         {
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _sftpclient = sftpclient;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             var dirs = new[] {"videos", "frames"};
-            var _log = _elasticClientFactory.GetElasticClient();
             try
             {
                 _log.Info($"Start function");
