@@ -375,6 +375,11 @@ namespace UserService.Controllers
         {
             _publisher.Publish(model);
         }
+        [HttpPost("[action]")]
+        public async Task CheckFillingHintsRun(FillingHintsRun model)
+        {
+            _publisher.Publish(model);
+        }
     }
 }
 

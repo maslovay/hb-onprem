@@ -20,22 +20,21 @@ namespace FillingHintService
     {
         //private readonly ElasticClient _log;
         private readonly IGenericRepository _repository;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
         private RecordsContext _context;
 
         public FillingHints(IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             RecordsContext context
             )
         {
             _repository = factory.CreateScope().ServiceProvider.GetService<IGenericRepository>();
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _context = context;
         }
 
         public async Task Run(Guid dialogueId)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{DialogueId}");
             _log.SetArgs(dialogueId);
             _log.Info($"Function started: {dialogueId}");

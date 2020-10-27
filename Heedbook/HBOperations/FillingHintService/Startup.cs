@@ -1,4 +1,5 @@
-﻿using Configurations;
+﻿using System;
+using Configurations;
 using FillingHintService.Handler;
 using HBData;
 using HBData.Repository;
@@ -32,17 +33,29 @@ namespace FillingHintService
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddScoped<ElasticClientFactory>();
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "OnPremUserService"
+                    };
+                    return elasticSettings;
+                });
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
             services.AddTransient<FillingHints>();
             services.AddTransient<FillingHintsRunHandler>();
-            services.AddRabbitMqEventBus(Configuration);
+            services.AddRabbitMqEventBusConfigFromEnv();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

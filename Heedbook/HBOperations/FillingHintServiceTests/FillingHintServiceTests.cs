@@ -33,7 +33,7 @@ namespace FillingHintService.Tests
         {
             await base.Setup(() =>
             {
-                Services.AddRabbitMqEventBus(Config);
+                Services.AddRabbitMqEventBusConfigFromEnv();
                 // _startup = new Startup(Config);
                 // _startup.ConfigureServices(Services);    
 
