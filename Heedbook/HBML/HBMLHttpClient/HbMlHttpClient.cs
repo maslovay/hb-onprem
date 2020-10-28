@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace HBMLHttpClient
 {
-    public class HbMlHttpClient
+    public class HbMlHttpClient : IHbMlHttpClient
     {
         private const String FaceEmotionsPath = "face/";
         private readonly HttpSettings _hbMlSettings;

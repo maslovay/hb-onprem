@@ -1,4 +1,5 @@
-﻿using Configurations;
+﻿using System;
+using Configurations;
 using FaceAnalyzeService.Handler;
 using HBData;
 using HBData.Repository;
@@ -35,30 +36,61 @@ namespace FaceAnalyzeService
             services.AddOptions();
             services.AddDbContext<RecordsContext>
             (options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"),
+                options.UseNpgsql(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"),
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData))),
                 ServiceLifetime.Transient
             );
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
+
+            services.AddScoped<SftpSettings>(p => new SftpSettings
+                {
+                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
+                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
+                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
+                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
+                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
+                });
+            services.AddScoped<SftpClient>();
+
+            if(Environment.GetEnvironmentVariable("DOCKER_INTEGRATION_TEST_ENVIRONMENT") != "TRUE")
+            {
+                services.AddScoped(provider =>
+                {
+                    var hbmlurisetting = new HttpSettings
+                    {
+                        HbMlUri = Environment.GetEnvironmentVariable("HBML_URI_SETTING")
+                    };
+                    return hbmlurisetting;
+                });
+                services.AddScoped(provider =>
+                {
+                    var settings = provider.GetRequiredService<HttpSettings>();
+                    return new HbMlHttpClient(settings);
+                });
+            }
+            
+            services.AddScoped(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "OnPremUserService"
+                    };
+                    return elasticSettings;
+                });
             services.AddScoped(provider =>
             {
-                var settings = provider.GetRequiredService<IOptions<SftpSettings>>().Value;
-                return new SftpClient(settings, Configuration);
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
             });
-            services.AddScoped(provider =>
-            {
-                var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
-                return new HbMlHttpClient(settings);
-            });
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddScoped<ElasticClientFactory>();
+
             services.AddScoped<FaceAnalyze>();
             services.AddScoped<FaceAnalyzeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddLogging(provider => provider.AddSerilog());
-            services.AddRabbitMqEventBus(Configuration);
+            services.AddRabbitMqEventBusConfigFromEnv();
             services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }

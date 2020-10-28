@@ -22,19 +22,19 @@ namespace FaceAnalyzeService
         private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
         private readonly Object _syncRoot = new Object();
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
         public FaceAnalyze(
             SftpClient sftpClient,
             IServiceScopeFactory factory,
             HbMlHttpClient client,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             RecordsContext context
             )
         {
             _sftpClient = sftpClient ?? throw new ArgumentNullException(nameof(sftpClient));
             _context = context;
             _client = client ?? throw new ArgumentNullException(nameof(client));
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
         }
 
         public void GetAll(Func<String, bool> func)
@@ -43,8 +43,6 @@ namespace FaceAnalyzeService
 
         public async Task Run(String remotePath)
         {
-            
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(remotePath);
             
