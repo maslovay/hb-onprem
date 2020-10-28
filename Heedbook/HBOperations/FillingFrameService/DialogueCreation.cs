@@ -26,7 +26,7 @@ namespace FillingFrameService
         //private readonly ElasticClient _log;
         // private readonly RecordsContext _context;
         private readonly SftpClient _sftpClient;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
         private readonly FillingFrameServices _filling;
         private readonly RequestsService _requests;
 
@@ -36,18 +36,17 @@ namespace FillingFrameService
             SftpClient client,
             FillingFrameServices filling,
             RequestsService requests,
-            ElasticClientFactory elasticClientFactory)
+            ElasticClient log)
         {
             // _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
             _sftpClient = client;
             _filling = filling;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _requests = requests;
         }
 
         public async Task Run(DialogueCreationRun message)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{DialogueId}");
             _log.SetArgs(message.DialogueId);
             _log.Info("Function started");
