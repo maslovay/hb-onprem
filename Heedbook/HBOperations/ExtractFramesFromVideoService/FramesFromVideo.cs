@@ -21,7 +21,6 @@ namespace ExtractFramesFromVideo
     public class FramesFromVideo
     {
         private readonly INotificationHandler _handler;
-        private readonly ElasticClientFactory _clientFactory;
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private const string FrameContainerName = "frames";
@@ -32,7 +31,7 @@ namespace ExtractFramesFromVideo
         
         public FramesFromVideo(
             INotificationHandler handler,
-            ElasticClientFactory clientFactory,
+            ElasticClient log,
             FFMpegSettings settings,
             FFMpegWrapper wrapper,
             SftpClient sftpClient,
@@ -41,13 +40,12 @@ namespace ExtractFramesFromVideo
             )
         {
             _handler = handler;
-            _clientFactory = clientFactory;
+            _log = log;
             _settings = settings;
             _wrapper = wrapper;
             _sftpClient = sftpClient;
             _sftpSettings = sftpSettings;
             _context = context;
-            _log = _clientFactory.GetElasticClient();
         }
 
         public async Task Run(string videoBlobRelativePath)
