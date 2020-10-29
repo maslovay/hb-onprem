@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using HBData.Models;
@@ -47,7 +48,7 @@ namespace DialogueVideoAssembleService.Tests
             {
                 var testVideoFilename = Path.GetFileName(filePath);
 
-                var testVideoCorrectFileName = testVideoFilename?.Replace("testid", TestUserId.ToString());
+                var testVideoCorrectFileName = testVideoFilename?.Replace("testid", TestUserId.ToString() + "_" + TestDeviceId.ToString());
 
                 if (!(await _sftpClient.IsFileExistsAsync("videos/" + testVideoCorrectFileName)))
                     await _sftpClient.UploadAsync(filePath, "videos/", testVideoCorrectFileName);
@@ -65,9 +66,10 @@ namespace DialogueVideoAssembleService.Tests
                 {
                     FileVideoId = Guid.NewGuid(),
                     ApplicationUserId = TestUserId,
+                    DeviceId = TestDeviceId,
                     BegTime = videoDateTime,
                     EndTime = videoDateTime.AddSeconds(deltaSeconds),
-                    CreationTime = videoDateTime,
+                    CreationTime = DateTime.Now,
                     FileName = testVideoCorrectFileName,
                     FileContainer = "videos",
                     FileExist = true,
@@ -100,8 +102,7 @@ namespace DialogueVideoAssembleService.Tests
             {
                 var testFileFramePath = Path.GetFileName(testFramePath);
                 var testFrameCorrectFileName = testFileFramePath
-                    .Replace("testid", TestUserId.ToString());
-
+                    .Replace("testid", TestUserId.ToString() + "_" + TestDeviceId.ToString());
                 if (!(await _sftpClient.IsFileExistsAsync("frames/" + testFrameCorrectFileName)))
                     await _sftpClient.UploadAsync(testFramePath, "frames/", testFrameCorrectFileName);
                 
@@ -113,6 +114,7 @@ namespace DialogueVideoAssembleService.Tests
                 {
                     FileFrameId = Guid.NewGuid(),
                     ApplicationUserId = TestUserId,
+                    DeviceId = TestDeviceId,
                     FileExist = true,
                     FileName = testFrameCorrectFileName,
                     FileContainer = "frames",
@@ -128,6 +130,14 @@ namespace DialogueVideoAssembleService.Tests
 
             await _repository.CreateAsync(newDialog);
             await _repository.SaveAsync();
+            _dialogueVideoAssembleRun = new DialogueVideoAssembleRun()
+            {
+                ApplicationUserId = TestUserId,
+                DeviceId = TestDeviceId,
+                DialogueId = newDialog.DialogueId,
+                BeginTime = beginTime,
+                EndTime = endTime
+            };
         }
         
         protected override async Task CleanTestData()
@@ -150,30 +160,25 @@ namespace DialogueVideoAssembleService.Tests
         [Test, Retry(3)]
         public async Task EnsureCreatesOutputVideoFile()
         {
+            Thread.Sleep(10000);
             _sftpClient.ChangeDirectoryToDefault();
-            
-            _dialogueVideoAssembleRun = new DialogueVideoAssembleRun()
-            {
-                ApplicationUserId = TestUserId,
-                DialogueId = Guid.NewGuid(),
-                BeginTime = beginTime,
-                EndTime = endTime
-            };
 
-            Assert.DoesNotThrowAsync(() => _dialogueVideoAssembleService.Run(_dialogueVideoAssembleRun));
-            Assert.IsTrue(
-                await _sftpClient.IsFileExistsAsync($"dialoguevideos/{_dialogueVideoAssembleRun.DialogueId}.mkv"));
+            await _dialogueVideoAssembleService.Run(_dialogueVideoAssembleRun);
+
+            //Assert
+            Thread.Sleep(5000);
+            Assert.IsTrue(await _sftpClient.IsFileExistsAsync($"dialoguevideos/{_dialogueVideoAssembleRun.DialogueId}.mp4"));
         }
 
         private async Task CleanAllVideoFilesFromDb()
         {
-            _repository.Delete<FileVideo>( fv => fv.ApplicationUserId == TestUserId );
+            _repository.Delete<FileVideo>( fv => fv.DeviceId == TestDeviceId );
             await _repository.SaveAsync();
         }
         
         private async Task CleanAllFileFramesFromDb()
         {
-            _repository.Delete<FileFrame>( ff => ff.ApplicationUserId == TestUserId );
+            _repository.Delete<FileFrame>( ff => ff.DeviceId == TestDeviceId );
             await _repository.SaveAsync();
         }
     }

@@ -23,13 +23,12 @@ namespace DialogueVideoAssembleService
     public class DialogueVideoAssemble
     {
         private readonly string _sessionId = new PathClient().GenSessionId();
-       // private readonly ElasticClient _log;
+        private readonly ElasticClient _log;
         private readonly INotificationPublisher _notificationPublisher;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly RecordsContext _context;
         private readonly FFMpegWrapper _wrapper;
-        private readonly ElasticClientFactory _elasticClientFactory;
         private readonly DialogueVideoAssembleUtils _utils;
         private readonly DialogueVideoAssembleSettings _videoSettings;
 
@@ -40,14 +39,14 @@ namespace DialogueVideoAssembleService
             SftpSettings sftpSettings,
             RecordsContext context,
             FFMpegWrapper wrapper,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             DialogueVideoAssembleUtils utils,
             DialogueVideoAssembleSettings videoSettings   
         )
         {
             _sftpClient = client;
             _sftpSettings = sftpSettings;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _notificationPublisher = notificationPublisher;
             _context = context;
             _wrapper = wrapper;
@@ -57,7 +56,6 @@ namespace DialogueVideoAssembleService
 
         public async Task Run(DialogueVideoAssembleRun message)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{DialogueId}");
             _log.SetArgs(message.DialogueId);
 

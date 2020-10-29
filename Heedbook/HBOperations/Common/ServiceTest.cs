@@ -42,9 +42,9 @@ namespace Common
 
         public IServiceScopeFactory ScopeFactory { get; private set; }
 
-        private const string FileFrameWithDatePattern = @"(.*)_(.*)_([0-9]*)";
+        private const string FileFrameWithDatePattern = @"(.*)_([0-9]*)";
 
-        private const string FileVideoWithDatePattern = @"(.*)_(.*)_([0-9]*)_(.*)";
+        private const string FileVideoWithDatePattern = @"(.*)_([0-9]*)_(.*)";
         
         private Action _additionalInitialization;
         
@@ -299,7 +299,7 @@ namespace Common
             if (dateTimeRegex.IsMatch(fileName))
             {
                 System.Console.WriteLine($"file name is match Time");
-                var dateTimeString = dateTimeRegex.Match(inputFilePath).Groups[3].ToString();
+                var dateTimeString = dateTimeRegex.Match(inputFilePath).Groups[2].ToString();
                 System.Console.WriteLine($"{dateTimeString}");
                 return DateTime.ParseExact(dateTimeString, "yyyyMMddHHmmss", CultureInfo.InvariantCulture);                
             }
