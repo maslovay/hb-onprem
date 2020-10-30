@@ -28,7 +28,6 @@ namespace DialoguesRecalculateScheduler.QuartzJobs
         private ElasticClient _log;
         private RecordsContext _context;
         private readonly IServiceScopeFactory _factory;
-        private readonly ElasticClientFactory _elasticClientFactory;
         private readonly SftpClient _sftpClient;
         private readonly SftpSettings _sftpSettings;
         private readonly DialoguesRecalculateSchedulerSettings _settings;
@@ -36,14 +35,14 @@ namespace DialoguesRecalculateScheduler.QuartzJobs
 
         
         public DialoguesRecalculateSchedulerJob(IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             INotificationPublisher notificationPublisher,
             SftpClient sftpClient,
             SftpSettings sftpSettings,
             DialoguesRecalculateSchedulerSettings settings)
         {
             _factory = factory;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _sftpClient = sftpClient;
             _sftpSettings = sftpSettings;
             _notificationPublisher = notificationPublisher;
@@ -54,7 +53,6 @@ namespace DialoguesRecalculateScheduler.QuartzJobs
         {
             using (var scope = _factory.CreateScope())
             {
-                _log = _elasticClientFactory.GetElasticClient();
                 _log.Info("Dialogues recalculate scheduler started.");
                 try
                 {

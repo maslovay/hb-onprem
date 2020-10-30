@@ -42,7 +42,7 @@ namespace DialoguesRecalculateScheduler.Tests
         private DialogueVisual _dialogueVisual;
         private DialoguesRecalculateSchedulerJob _dialoguesRecalculateSchedulerJob;
         private SftpClient _sftpClient;        
-        private ElasticClientFactory _elasticClientFactory;
+        private ElasticClient _elasticClient;
         private INotificationPublisher _publisher;
         private SftpSettings _sftpSetting;
         private DialoguesRecalculateSchedulerSettings _dialogueRecalculateSetting;
@@ -60,7 +60,7 @@ namespace DialoguesRecalculateScheduler.Tests
             _dialoguesRecalculateSchedulerJob = new DialoguesRecalculateSchedulerJob
             (
                 ScopeFactory,
-                _elasticClientFactory,
+                _elasticClient,
                 _publisher,
                 _sftpClient,
                 _sftpSetting,
@@ -72,7 +72,7 @@ namespace DialoguesRecalculateScheduler.Tests
             System.Console.WriteLine($"InitServices");
             _repository = ServiceProvider.GetService<IGenericRepository>();
             _sftpClient = ServiceProvider.GetService<SftpClient>();
-            _elasticClientFactory = ServiceProvider.GetService<ElasticClientFactory>();
+            _elasticClient = ServiceProvider.GetService<ElasticClient>();
             _sftpSetting = ServiceProvider.GetService<SftpSettings>();
             _publisher = ServiceProvider.GetRequiredService<INotificationPublisher>();
             System.Console.WriteLine($"_publisherIsNull: {_publisher is null}");
