@@ -36,7 +36,7 @@ namespace DialogueCreatorScheduler.Tests
         private Device _device;
         private DialogueCreatorSchedulerJob _dialogueCreatorSchedulerJob;
         private SftpClient _sftpClient;        
-        private ElasticClientFactory _elasticClientFactory;
+        private ElasticClient _elasticClient;
         private SftpSettings _sftpSetting;
         private DialogueCreatorService _dialogueCreator;
         private DialogueSavingService _publisher;
@@ -52,7 +52,7 @@ namespace DialogueCreatorScheduler.Tests
         {
             await base.Setup(() =>
             {
-                Services.AddRabbitMqEventBus(Config);
+                Services.AddRabbitMqEventBusConfigFromEnv();
                 _startup = new Startup(Config);
                 _startup.ConfigureServices(Services);    
                 Services.AddSingleton<DialogueCreatorService>();
@@ -64,7 +64,7 @@ namespace DialogueCreatorScheduler.Tests
             _dialogueCreatorSchedulerJob = new DialogueCreatorSchedulerJob
             (
                 ScopeFactory,
-                _elasticClientFactory,
+                _elasticClient,
                 _dialogueCreator,
                 _publisher,
                 _intervalCalc
@@ -76,7 +76,7 @@ namespace DialogueCreatorScheduler.Tests
             //_repository = ServiceProvider.GetRequiredService<IGenericRepository>();
             System.Console.WriteLine($"repository is null: {_repository is null}");
             _sftpClient = ServiceProvider.GetService<SftpClient>();
-            _elasticClientFactory = ServiceProvider.GetService<ElasticClientFactory>();
+            _elasticClient= ServiceProvider.GetService<ElasticClient>();
             _sftpSetting = ServiceProvider.GetService<SftpSettings>();
             _dialogueCreator = ServiceProvider.GetService<DialogueCreatorService>();
             _publisher = ServiceProvider.GetService<DialogueSavingService>();
@@ -228,6 +228,8 @@ namespace DialogueCreatorScheduler.Tests
                 _repository.Delete<CompanyIndustry>(_industry);
                 _repository.Delete<Company>(_company);
                 _repository.Delete<Device>(_device);
+                _repository.Delete<Dialogue>(p => p.DeviceId == _device.DeviceId 
+                && p.BegTime >= _startFrameTime.AddMinutes(-1));
                 _repository.Save();
             }
             catch(Exception e)

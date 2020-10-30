@@ -23,20 +23,19 @@ namespace DialogueCreatorScheduler.QuartzJobs
     {
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
-        private readonly ElasticClientFactory _elasticClientFactory;
         private readonly FaceIntervalsService _intervalCalc;
         private readonly DialogueCreatorService _dialogueCreator;
         private readonly DialogueSavingService _publisher;
 
         public DialogueCreatorSchedulerJob(IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             DialogueCreatorService dialogueCreator,
             DialogueSavingService publisher,
             FaceIntervalsService intervalCalc
             )
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _intervalCalc =intervalCalc;
             _dialogueCreator = dialogueCreator;
             _publisher = publisher;
@@ -45,7 +44,6 @@ namespace DialogueCreatorScheduler.QuartzJobs
         public async Task Execute(IJobExecutionContext context)
         {
             System.Console.WriteLine("Function started");
-            var _log = _elasticClientFactory.GetElasticClient();
             
             try
             {
