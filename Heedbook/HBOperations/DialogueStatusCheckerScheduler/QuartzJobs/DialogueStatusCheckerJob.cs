@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
+using System.Diagnostics;
 
 namespace QuartzExtensions.Jobs
 {
@@ -20,14 +21,13 @@ namespace QuartzExtensions.Jobs
         private readonly INotificationPublisher _notificationPublisher;
         private RecordsContext _context;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ElasticClientFactory _elasticClientFactory;
 
         public DialogueStatusCheckerJob(IServiceScopeFactory factory,
             INotificationPublisher notificationPublisher,
-            ElasticClientFactory elasticClientFactory)
+            ElasticClient log)
         {
             _notificationPublisher = notificationPublisher;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _scopeFactory = factory;
         }
 
@@ -35,7 +35,6 @@ namespace QuartzExtensions.Jobs
         {
             using (var scope = _scopeFactory.CreateScope())
             {
-                _log = _elasticClientFactory.GetElasticClient();
                 try
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();

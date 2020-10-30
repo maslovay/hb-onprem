@@ -28,7 +28,7 @@ namespace DialogueStatusCheckerScheduler.Tests
         {
             await base.Setup(() =>
             {
-                Services.AddRabbitMqEventBus(Config);
+                Services.AddRabbitMqEventBusConfigFromEnv();
                 //Services.AddScoped<INotificationPublisher, NotificationPublisher>();
                 Services.AddSingleton<FillingSatisfactionRunHandler>();
                 Services.AddSingleton<StubService>();
