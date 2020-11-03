@@ -7,6 +7,7 @@ using HBLib;
 using Quartz;
 using Microsoft.Extensions.DependencyInjection;
 using HBData.Models;
+using HBLib.Utils;
 //using UserOperations.Models.AnalyticModels;
 //using UserOperations.Utils;
 //using UserOperations.Controllers;
@@ -18,19 +19,18 @@ namespace BenchmarkScheduler
         private RecordsContext _context;
        // private DBOperations _dbOperation;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ElasticClientFactory _elasticClientFactory;
+        private readonly ElasticClient _log;
 
-        public BenchmarkJob(IServiceScopeFactory scopeFactory, ElasticClientFactory elasticClientFactory)
+        public BenchmarkJob(IServiceScopeFactory scopeFactory, ElasticClient log)
         {
             _scopeFactory = scopeFactory;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
             using (var scope = _scopeFactory.CreateScope())
             {
-                var _log = _elasticClientFactory.GetElasticClient();
                 try
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
