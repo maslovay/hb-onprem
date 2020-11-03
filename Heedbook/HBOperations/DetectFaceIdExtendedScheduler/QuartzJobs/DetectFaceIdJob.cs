@@ -19,26 +19,24 @@ namespace DetectFaceIdExtendedScheduler.QuartzJobs
     {
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
-        private readonly ElasticClientFactory _elasticClientFactory;
         private readonly DetectFaceIdService _detect;
         private readonly DetectFaceIdSettings _settings;
 
         public DetectFaceIdJob(
             IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             DetectFaceIdService detect,
             DetectFaceIdSettings settings
             )
         {
             _context = factory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _detect = detect;
             _settings = settings;
         }
 
          public async Task Execute(IJobExecutionContext context)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             try
             {
                 System.Console.WriteLine("Funtion extended started");
