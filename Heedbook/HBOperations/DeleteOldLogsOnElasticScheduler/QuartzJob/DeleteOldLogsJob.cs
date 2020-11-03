@@ -12,20 +12,18 @@ namespace DeleteOldLogsOnElasticScheduler.QuartzJob
 {
     public class DeleteOldLogsJob : IJob
     {
-        private ElasticClientFactory _elasticClientFactory;
+        private HBLib.Utils.ElasticClient _log;
         private UriPathOnKibana _uriPath;
 
-        public DeleteOldLogsJob(ElasticClientFactory elasticClientFactory,
+        public DeleteOldLogsJob(HBLib.Utils.ElasticClient log,
             UriPathOnKibana uriPath)
         {
             _uriPath = uriPath;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
-
             var pool = new SingleNodeConnectionPool(new Uri($"{_uriPath.UriPath}"));
             var settings = new ConnectionSettings(pool, sourceSerializer: JsonNetSerializer.Default);
             var client = new ElasticClient(settings);

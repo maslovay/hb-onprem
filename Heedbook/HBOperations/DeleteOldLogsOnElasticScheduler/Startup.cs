@@ -30,11 +30,24 @@ namespace DeleteOldLogsOnElasticScheduler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "OnPremUserService"
+                    };
+                    return elasticSettings;
+                });
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
+
             services.Configure<UriPathOnKibana>(Configuration.GetSection(nameof(UriPathOnKibana)));
             services.AddSingleton(provider=> provider.GetRequiredService<IOptions<UriPathOnKibana>>().Value);
-            services.AddSingleton<ElasticClientFactory>();
             services.AddDeleteOldLogsOnQuartzJob();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
