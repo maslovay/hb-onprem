@@ -22,7 +22,7 @@ namespace DialogueCreatorScheduler.Services
         public Guid? FindId(FileFrame fileFrame, List<Client> clients, double threshold=0.44)
         {
             if (!clients.Any()) return null;
-            foreach(var client in clients.Distinct())
+            foreach(var client in clients.Where(p => p.FaceDescriptor != null).Distinct())
             {
                 var cos = _calc.Cos(fileFrame.FrameAttribute.FirstOrDefault().Descriptor, JsonConvert.SerializeObject(client.FaceDescriptor));
                 System.Console.WriteLine($"Cos distance is {cos} with client {client.ClientId}");

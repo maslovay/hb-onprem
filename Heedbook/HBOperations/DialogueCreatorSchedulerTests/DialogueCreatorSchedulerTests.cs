@@ -34,14 +34,16 @@ namespace DialogueCreatorScheduler.Tests
         private CompanyIndustry _industry;
         private Company _company;
         private Device _device;
-        private DialogueCreatorSchedulerJob _dialogueCreatorSchedulerJob;
+        private Process _dialogueCreatorSchedulerProcess;
         private SftpClient _sftpClient;        
         private ElasticClient _elasticClient;
         private SftpSettings _sftpSetting;
         private DialogueCreatorService _dialogueCreator;
         private DialogueSavingService _publisher;
         private FaceIntervalsService _intervalCalc;
-        private Guid _faceId = Guid.Parse("49c569a5-d0c7-4cb7-9306-9cb3a4bff36b");
+        private Guid _faceId1 = Guid.Parse("49c569a5-d0c7-4cb7-9306-9cb3a4bff36b");
+        private Guid _faceId2 = Guid.Parse("49c569a5-d0c7-4cb7-9306-9cb3a4bff36c");
+        private Guid _faceId3 = Guid.Parse("49c569a5-d0c7-4cb7-9306-9cb3a4bff36d");
         private DateTime _startFrameTime;
         private FileVideo _fileVideo;
         private Client _client;
@@ -60,27 +62,57 @@ namespace DialogueCreatorScheduler.Tests
                 Services.AddSingleton<DialogueSavingService>(); 
 
             }, true);
+            // _dialogueCreatorSchedulerJob = new DialogueCreatorSchedulerJob
+            // (
+            //     ScopeFactory,
+            //     _elasticClient,
+            //     _dialogueCreator,
+            //     _publisher,
+            //     _intervalCalc
+            // );
+            RunServices();
+        }
+        private void RunServices()
+        {
+            try
+            {
+                var config = "Release";
 
-            _dialogueCreatorSchedulerJob = new DialogueCreatorSchedulerJob
-            (
-                ScopeFactory,
-                _elasticClient,
-                _dialogueCreator,
-                _publisher,
-                _intervalCalc
-            );
+#if DEBUG
+                config = "Debug";
+#endif
+                var dockerEnvironment = Environment.GetEnvironmentVariable("DOCKER_INTEGRATION_TEST_ENVIRONMENT")=="TRUE" ? true : false;
+                System.Console.WriteLine($"dockerEnvironment: {dockerEnvironment}");
+                System.Console.WriteLine($"process folder: {config}");
+                if(!dockerEnvironment)
+                {
+                    _dialogueCreatorSchedulerProcess = Process.Start(
+                        "dotnet",
+                        $"../../../../DialogueCreatorScheduler/bin/{config}/netcoreapp2.2/DialogueCreatorScheduler.dll --isCalledFromUnitTest true");
+                }
+                else
+                {
+                    _dialogueCreatorSchedulerProcess = Process.Start(
+                    "dotnet",
+                    $"/app/HBOperations/DialogueCreatorScheduler/bin/{config}/netcoreapp2.2/DialogueCreatorScheduler.dll --isCalledFromUnitTest true");
+                }
+            }
+            catch(Exception e)
+            {
+                System.Console.WriteLine(e);
+            }
         }
         protected override void InitServices()
         {
-            System.Console.WriteLine($"InitServices");
-            //_repository = ServiceProvider.GetRequiredService<IGenericRepository>();
-            System.Console.WriteLine($"repository is null: {_repository is null}");
+        //     System.Console.WriteLine($"InitServices");
+        //     //_repository = ServiceProvider.GetRequiredService<IGenericRepository>();
+        //     System.Console.WriteLine($"repository is null: {_repository is null}");
             _sftpClient = ServiceProvider.GetService<SftpClient>();
-            _elasticClient= ServiceProvider.GetService<ElasticClient>();
-            _sftpSetting = ServiceProvider.GetService<SftpSettings>();
-            _dialogueCreator = ServiceProvider.GetService<DialogueCreatorService>();
+            // _elasticClient= ServiceProvider.GetService<ElasticClient>();
+            // _sftpSetting = ServiceProvider.GetService<SftpSettings>();
+            // _dialogueCreator = ServiceProvider.GetService<DialogueCreatorService>();
             _publisher = ServiceProvider.GetService<DialogueSavingService>();
-            _intervalCalc = ServiceProvider.GetService<FaceIntervalsService>();
+            // _intervalCalc = ServiceProvider.GetService<FaceIntervalsService>();
             _context = ScopeFactory.CreateScope().ServiceProvider.GetRequiredService<RecordsContext>();
         }
 
@@ -129,10 +161,10 @@ namespace DialogueCreatorScheduler.Tests
                         FileExist = true,
                         Time = _startFrameTime.AddSeconds(3 * i),
                         StatusNNId = 6,
-                        FileName = $"{Guid.Empty}_{_device.DeviceId}_{_startFrameTime.AddMinutes(1).ToString("yyyyMMddHHmmss")}.jpg",
+                        FileName = $"{Guid.Empty}_{_device.DeviceId}_{_startFrameTime.AddSeconds(3 * i).ToString("yyyyMMddHHmmss")}.jpg",
                         FileContainer = "frames",
                         IsFacePresent = true,
-                        FaceId = _faceId
+                        FaceId = _faceId1
                     };
                     var frameAttribute1 = new FrameAttribute()
                     {
@@ -146,6 +178,58 @@ namespace DialogueCreatorScheduler.Tests
                     _repository.Create<FileFrame>(Frame1);
                     _repository.Create<FrameAttribute>(frameAttribute1);
                 }
+                for(int i = 0; i < 50; i++)
+                {
+                    var Frame1 = new FileFrame()
+                    {
+                        FileFrameId = Guid.NewGuid(),
+                        DeviceId = _device.DeviceId,
+                        FileExist = true,
+                        Time = _startFrameTime.AddSeconds(3 * i + 150),
+                        StatusNNId = 6,
+                        FileName = $"{Guid.Empty}_{_device.DeviceId}_{_startFrameTime.AddSeconds(3 * i + 150).ToString("yyyyMMddHHmmss")}.jpg",
+                        FileContainer = "frames",
+                        IsFacePresent = true,
+                        FaceId = _faceId2
+                    };
+                    var frameAttribute1 = new FrameAttribute()
+                    {
+                        FrameAttributeId = Guid.NewGuid(),
+                        FileFrameId = Frame1.FileFrameId,
+                        Gender = "Male",
+                        Age = 20,
+                        Value = "{\"Top\":309,\"Width\":137,\"Height\":170,\"Left\":709}",
+                        Descriptor = $"[-2.0959391593933105,0.43795990943908691,-1.6736390590667725,-0.16262742877006531,-0.34278824925422668,-0.307516872882843,-0.44359880685806274,1.064613938331604,-1.25150728225708,-0.75976383686065674,-0.35757991671562195,1.6352155208587646,1.5066981315612793,0.98759603500366211,-0.76563656330108643,1.2489914894104004,1.4826879501342773,1.4086699485778809,-0.82746410369873047,-0.36088800430297852,-0.597713053226471,0.95482087135314941,0.60715866088867188,0.64249539375305176,-0.25822675228118896,0.27920025587081909,-1.4058806896209717,-0.88751065731048584,1.3869714736938477,0.56836998462677,1.2897430658340454,0.54238027334213257,-1.170656681060791,-0.55779582262039185,0.9106147289276123,0.2985231876373291,2.2949678897857666,0.8972238302230835,-0.68773567676544189,0.53073298931121826,0.035398706793785095,-0.61453044414520264,0.96453279256820679,0.60169428586959839,-1.4536647796630859,0.13823921978473663,-0.037592977285385132,1.6418142318725586,-0.31255587935447693,-1.3024345636367798,-1.3518290519714355,-0.69100779294967651,-0.17219501733779907,0.41318845748901367,-1.6488233804702759,-0.54190731048583984,-0.40307158231735229,-0.57815998792648315,0.18663111329078674,-0.93513929843902588,-0.20953401923179626,-0.71170938014984131,0.1850351095199585,0.88860130310058594,1.5358927249908447,1.5317559242248535,0.17729613184928894,0.084294110536575317,-1.1412994861602783,0.10090388357639313,1.0420640707015991,-0.23077172040939331,1.182610034942627,-0.15671081840991974,0.50824511051177979,0.034049242734909058,-0.80914485454559326,0.51683807373046875,1.0706796646118164,-1.2384099960327148,-0.13427779078483582,1.4485347270965576,-1.6352885961532593,0.29843971133232117,-0.32535314559936523,-0.85027611255645752,-0.62078642845153809,-0.93078446388244629,-0.17550534009933472,0.841457724571228,-0.92076396942138672,0.72931110858917236,1.0968921184539795,0.10135974735021591,0.074665814638137817,2.390944242477417,0.16302193701267242,0.974261999130249,-1.2439051866531372,-1.546734094619751,-0.3606836199760437,-2.07814359664917,0.030411824584007263,-0.33550271391868591,-0.83249181509017944,0.84558665752410889,-1.3991916179656982,0.42703855037689209,2.6027131080627441,0.089847534894943237,0.043019570410251617,0.51574504375457764,-0.24788348376750946,-1.0736285448074341,1.0325376987457275,0.43269988894462585,-0.78623819351196289,0.4307994544506073,0.4360983669757843,1.7714049816131592,-0.15138930082321167,-1.1748948097229004,-1.2937556505203247,-0.48170369863510132,-0.55204778909683228,-0.020247355103492737,0.46014308929443359,-0.70004433393478394,1.6459712982177734,0.35100853443145752,1.1090682744979858,-0.28108629584312439,-0.55097711086273193,0.14901632070541382,0.28107988834381104,-1.1543245315551758,-0.43636450171470642,-0.21921195089817047,0.542283296585083,-1.717143177986145,0.14700780808925629,-0.15048021078109741,0.18569932878017426,1.4705864191055298,-0.3395894467830658,-0.14659604430198669,-0.21133069694042206,0.527028501033783,-0.48318549990653992,-0.69100111722946167,1.1181087493896484,0.12547433376312256,0.8010249137878418,-0.092713236808776855,-0.42356401681900024,1.9602857828140259,-0.19123777747154236,-1.0568385124206543,-1.4981493949890137,-0.062316108494997025,1.8289966583251953,1.2101197242736816,-2.5595777034759521,0.1562650203704834,0.11333528161048889,1.5057131052017212,0.67362332344055176,-1.8982501029968262,0.959375262260437,-1.912712574005127,0.18856798112392426,0.69459617137908936,-0.1368609219789505,-0.0036837905645370483,0.28542208671569824,-0.57914596796035767,-0.35814103484153748,-0.60368931293487549,-1.1042697429656982,1.1371842622756958,-0.040014743804931641,-0.0057339668273925781,0.7815701961517334,1.0092954635620117,-0.87037211656570435,0.035806626081466675,0.15245541930198669,-0.97076350450515747,1.052619457244873,1.3457673788070679,-1.0667247772216797,1.7325680255889893,-1.5071444511413574,-0.01991608738899231,0.0918656587600708,0.56995022296905518,-1.0040096044540405,-0.78297138214111328,0.52974206209182739,-0.27377030253410339,-0.67859983444213867,0.84213799238204956,-0.58307278156280518,-1.2228807210922241,0.31284403800964355,-0.8526039719581604,-0.852859377861023,1.1564230918884277,0.7574041485786438,0.73723369836807251,0.96165114641189575,-1.8966120481491089,-0.29474073648452759,0.37839889526367188,0.1092333197593689,-0.021520309150218964,0.055786531418561935,-0.99060994386672974,-0.45300376415252686,-0.26335442066192627,0.46598231792449951,2.4418983459472656,0.3519764244556427,-0.78871017694473267,-0.025670498609542847,0.10010302066802979,1.7518637180328369,0.94964170455932617,0.58030557632446289,0.084985822439193726,-0.42856284976005554,0.11199593544006348,1.1608908176422119,0.66435611248016357,-0.39197713136672974,-1.4913243055343628,-0.22928377985954285,-0.14754441380500793,-0.51086759567260742,-1.6018646955490112,-1.8159408569335938,-0.48223227262496948,0.67174792289733887,0.97037762403488159,-0.19560733437538147,0.27844905853271484,-0.2595956027507782,0.616930365562439,-0.51418477296829224,0.34101036190986633,-0.61240577697753906,0.99845737218856812,0.10041148215532303,1.2478548288345337,0.014641940593719482,0.21320334076881409]"
+                    };
+                    _repository.Create<FileFrame>(Frame1);
+                    _repository.Create<FrameAttribute>(frameAttribute1);
+                }
+                for(int i = 0; i < 50; i++)
+                {
+                    var Frame1 = new FileFrame()
+                    {
+                        FileFrameId = Guid.NewGuid(),
+                        DeviceId = _device.DeviceId,
+                        FileExist = true,
+                        Time = _startFrameTime.AddSeconds(3 * i + 300),
+                        StatusNNId = 6,
+                        FileName = $"{Guid.Empty}_{_device.DeviceId}_{_startFrameTime.AddSeconds(3 * i + 300).ToString("yyyyMMddHHmmss")}.jpg",
+                        FileContainer = "frames",
+                        IsFacePresent = true,
+                        FaceId = _faceId3
+                    };
+                    var frameAttribute1 = new FrameAttribute()
+                    {
+                        FrameAttributeId = Guid.NewGuid(),
+                        FileFrameId = Frame1.FileFrameId,
+                        Gender = "Male",
+                        Age = 20,
+                        Value = "{\"Top\":309,\"Width\":137,\"Height\":170,\"Left\":709}",
+                        Descriptor = $"[-1.9366841316223145,0.57715415954589844,-1.5010974407196045,-0.24954712390899658,-0.5141294002532959,-0.3920416533946991,-0.47824060916900635,0.90469926595687866,-1.4735347032546997,-0.63061034679412842,-0.37355893850326538,1.5611511468887329,1.5956703424453735,1.2404042482376099,-0.8018302321434021,1.1807320117950439,1.6408089399337769,1.5281314849853516,-0.835005521774292,-0.10618260502815247,-0.82752549648284912,0.77287924289703369,0.58770817518234253,0.72035902738571167,-0.35126334428787231,0.26537525653839111,-1.1960703134536743,-0.90395140647888184,1.5021198987960815,0.793578565120697,1.3016786575317383,0.44627445936203003,-0.93370151519775391,-0.73389101028442383,0.93601894378662109,0.17126971483230591,2.044710636138916,1.2181516885757446,-0.64323318004608154,0.61026978492736816,-0.059307098388671875,-0.69130599498748779,0.96009397506713867,0.337700754404068,-1.5556936264038086,0.039059147238731384,-0.070102483034133911,1.5764604806900024,-0.25699919462203979,-1.2782577276229858,-1.4779989719390869,-0.90599781274795532,-0.37920668721199036,0.59166300296783447,-1.7846758365631104,-0.49019345641136169,-0.479935884475708,-0.37125575542449951,0.17677547037601471,-0.77804297208786011,-0.15184420347213745,-0.83417898416519165,0.10317867994308472,0.83837968111038208,1.1780856847763062,1.3061246871948242,0.071547374129295349,0.017951339483261108,-1.3221685886383057,0.074065789580345154,1.0951513051986694,-0.14748063683509827,1.3545999526977539,0.043419092893600464,0.70796465873718262,0.32006722688674927,-0.76353859901428223,0.62990474700927734,0.824897289276123,-1.145179271697998,-0.15529127418994904,1.5096805095672607,-1.23270845413208,0.058021202683448792,-0.32268670201301575,-0.69433963298797607,-0.47951692342758179,-0.6992647647857666,-0.1810162365436554,0.898118257522583,-0.72645145654678345,0.80835610628128052,1.2126095294952393,0.13138031959533691,-0.51714175939559937,2.3571481704711914,-0.1765364408493042,1.3182934522628784,-1.1902117729187012,-1.4072988033294678,-0.77866226434707642,-1.8808028697967529,0.10047918558120728,-0.43623906373977661,-0.8229789137840271,1.2149749994277954,-1.5166693925857544,0.3498874306678772,2.7311675548553467,0.07536432147026062,-0.15886932611465454,0.63646548986434937,-0.0832449197769165,-1.0290771722793579,0.775200605392456,0.44153660535812378,-0.67158418893814087,0.41557455062866211,0.59468734264373779,2.0197830200195312,0.0039356350898742676,-1.1439294815063477,-1.3785555362701416,-0.64301151037216187,-0.61951369047164917,-0.30904653668403625,0.60088557004928589,-0.92732739448547363,1.5375779867172241,0.29333710670471191,0.78886550664901733,-0.11050869524478912,-0.59671187400817871,0.10811448097229004,0.067869171500206,-1.4539451599121094,-0.42615586519241333,-0.23354583978652954,0.70295768976211548,-1.5641369819641113,0.017036654055118561,-0.36508095264434814,0.24937263131141663,1.5287615060806274,-0.43902075290679932,0.094900086522102356,-0.017794758081436157,0.608043372631073,-0.32749843597412109,-0.87737476825714111,0.81273335218429565,0.20591622591018677,0.61072057485580444,-0.16006922721862793,-0.5328020453453064,1.8276370763778687,-0.071130216121673584,-0.56362533569335938,-1.5378661155700684,0.043126814067363739,1.7316234111785889,1.2049343585968018,-2.7541494369506836,0.098994791507720947,0.19116696715354919,1.5443887710571289,0.49511092901229858,-1.8097465038299561,0.67518818378448486,-1.9147639274597168,0.28692048788070679,0.45800948143005371,-0.28619691729545593,-0.022098630666732788,0.46655493974685669,-0.65752267837524414,-0.15140828490257263,-0.622596263885498,-0.73468184471130371,1.5114109516143799,-0.0032471716403961182,0.28257536888122559,0.86659824848175049,0.78748136758804321,-0.7424195408821106,0.28649777173995972,0.097224533557891846,-1.0254741907119751,1.3493245840072632,1.4067330360412598,-1.0696769952774048,1.708321213722229,-1.5100464820861816,-0.16909989714622498,-0.075139880180358887,0.30166876316070557,-0.85596150159835815,-0.93560773134231567,0.48361340165138245,-0.421873539686203,-0.648298442363739,0.82964968681335449,-0.499112606048584,-1.3666821718215942,0.28470179438591003,-0.63110560178756714,-0.71601533889770508,1.1046320199966431,0.9221879243850708,0.45919716358184814,0.81940317153930664,-1.7968021631240845,-0.11906206607818604,0.17317190766334534,0.029994092881679535,-0.15905025601387024,-0.068697273731231689,-0.72592955827713013,-0.50529563426971436,-0.19546559453010559,0.47252482175827026,2.485304594039917,-0.17350964248180389,-0.78578865528106689,0.0310937762260437,-0.14180567860603333,2.0136923789978027,0.9274788498878479,0.84648185968399048,-0.025740087032318115,-0.39752113819122314,0.13916963338851929,1.1257096529006958,0.68054044246673584,-0.3468298614025116,-1.6815259456634521,-0.34677019715309143,-0.16056004166603088,-0.69959557056427,-1.7878879308700562,-1.702517032623291,-0.86725866794586182,0.92923092842102051,0.69770777225494385,0.11604064702987671,0.086969614028930664,-0.25445070862770081,0.33371242880821228,-0.85307765007019043,0.2993604838848114,-0.68142455816268921,0.77254551649093628,0.14040522277355194,0.916832447052002,0.0081265568733215332,0.17075762152671814]"
+                    };
+                    _repository.Create<FileFrame>(Frame1);
+                    _repository.Create<FrameAttribute>(frameAttribute1);
+                }
                 _fileVideo = new FileVideo()
                 {
                     FileVideoId = Guid.NewGuid(),
@@ -153,7 +237,7 @@ namespace DialogueCreatorScheduler.Tests
                     BegTime = _startFrameTime,
                     EndTime = _startFrameTime.AddSeconds(80),
                     CreationTime = _startFrameTime.AddSeconds(80),
-                    FileName = $"{Guid.Empty}_{_device.DeviceId}_{_startFrameTime.AddMinutes(3).ToString("yyyyMMddHHmmss")}_2.mkv",
+                    FileName = $"{Guid.Empty}_{_device.DeviceId}_{_startFrameTime.AddSeconds(80).ToString("yyyyMMddHHmmss")}_2.mkv",
                     FileContainer = "videos",
                     FileExist = true,
                     StatusId = 6,
@@ -206,19 +290,20 @@ namespace DialogueCreatorScheduler.Tests
             IJobExecutionContext mockJobExecutionContext= new Mock<IJobExecutionContext>().Object;
 
             //Act
-            var testTask = _dialogueCreatorSchedulerJob.Execute(mockJobExecutionContext);
-            await testTask;
-            testTask.Wait();            
-            var dialogue = _context.Dialogues.FirstOrDefault(p => p.DeviceId == _device.DeviceId 
-                && p.BegTime >= _startFrameTime.AddMinutes(-1));            
+            // await _dialogueCreatorSchedulerJob.Execute(mockJobExecutionContext);
+            Thread.Sleep(300000);         
+            var dialogue = _context.Dialogues.Where(p => p.DeviceId == _device.DeviceId)
+                .ToList();
+                // && p.BegTime >= _startFrameTime.AddMinutes(-1));            
             System.Console.WriteLine($"Test: dialogue:\n{JsonConvert.SerializeObject(dialogue)}");
             //Assert
-            Assert.IsFalse(dialogue is null);      
+            Assert.IsTrue(dialogue.Any());      
         }
         [TearDown]
         public async new Task TearDown()
         {
-            await base.TearDown();            
+            await base.TearDown();   
+            _dialogueCreatorSchedulerProcess.Kill();         
         }
         protected override async Task CleanTestData()
         {   
@@ -228,8 +313,7 @@ namespace DialogueCreatorScheduler.Tests
                 _repository.Delete<CompanyIndustry>(_industry);
                 _repository.Delete<Company>(_company);
                 _repository.Delete<Device>(_device);
-                _repository.Delete<Dialogue>(p => p.DeviceId == _device.DeviceId 
-                && p.BegTime >= _startFrameTime.AddMinutes(-1));
+                _repository.Delete<Dialogue>(p => p.DeviceId == _device.DeviceId);
                 _repository.Save();
             }
             catch(Exception e)
