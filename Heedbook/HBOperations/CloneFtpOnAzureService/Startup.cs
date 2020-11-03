@@ -36,21 +36,39 @@ namespace CloneFtpOnAzureService
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddSingleton<ElasticClientFactory>();
-            System.Console.WriteLine(JsonConvert.SerializeObject(Configuration.GetSection(nameof(SftpSettings))));
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "OnPremUserService"
+                    };
+                    return elasticSettings;
+                });
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
             services.Configure<BlobSettings>(Configuration.GetSection(nameof(BlobSettings)));
             services.AddSingleton(provider=> provider.GetRequiredService<IOptions<BlobSettings>>().Value);
             services.AddSingleton<BlobClient>();
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
-            services.AddSingleton<SftpClient>();
+            services.AddTransient<SftpSettings>(p => new SftpSettings
+                {
+                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
+                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
+                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
+                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
+                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
+                });
+            services.AddTransient<SftpClient>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddFtpFileOnQuartzJob();
         }

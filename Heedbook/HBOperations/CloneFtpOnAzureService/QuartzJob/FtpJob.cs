@@ -20,7 +20,7 @@ namespace CloneFtpOnAzureService
         private BlobSettings _blobSettings;
         private SftpSettings _sftpSetting;
         private BlobClient _blobClient;
-        private readonly ElasticClientFactory _elasticClientFactory;        
+        private readonly ElasticClient _log;        
         private RecordsContext _context;
         private readonly IServiceScopeFactory _scopeFactory;
 
@@ -28,11 +28,11 @@ namespace CloneFtpOnAzureService
             SftpClient sftpClient,
             BlobSettings blobSettings,
             BlobClient blobClient,
-            ElasticClientFactory elasticClientFactory,
+            ElasticClient log,
             SftpSettings sftpSetting)
         {
             _scopeFactory = scopeFactory;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _blobSettings = blobSettings;
             _blobClient = blobClient;
             _sftpClient = sftpClient;
@@ -43,7 +43,6 @@ namespace CloneFtpOnAzureService
         {
             using (var scope = _scopeFactory.CreateScope())
             {
-                var _log = _elasticClientFactory.GetElasticClient();
                 try
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();

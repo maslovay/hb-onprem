@@ -32,7 +32,7 @@ namespace CloneFtpOnAzureService.Tests
         private SftpClient _sftpClient;
         private BlobSettings _blobSettings;
         private BlobClient _blobClient;
-        private ElasticClientFactory _elasticClientFactory;
+        private ElasticClient _elasticClient;
         private SftpSettings _sftpSetting;
         
         [SetUp]
@@ -43,9 +43,21 @@ namespace CloneFtpOnAzureService.Tests
                 Services.Configure<BlobSettings>(Config.GetSection(nameof(BlobSettings)));
                 Services.AddSingleton(provider=> provider.GetRequiredService<IOptions<BlobSettings>>().Value);
                 Services.AddSingleton<BlobClient>();
-                Services.Configure<ElasticSettings>(Config.GetSection(nameof(ElasticSettings)));
-                Services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-                Services.AddSingleton<ElasticClientFactory>();
+                Services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "OnPremUserService"
+                    };
+                    return elasticSettings;
+                });
+                Services.AddTransient(provider =>
+                {
+                    var settings = provider.GetRequiredService<ElasticSettings>();
+                    return new ElasticClient(settings);
+                });
             }, true);
             RunServices();
         }
@@ -55,7 +67,7 @@ namespace CloneFtpOnAzureService.Tests
             _sftpClient = ServiceProvider.GetService<SftpClient>();
             _blobSettings = ServiceProvider.GetService<BlobSettings>();
             _blobClient = ServiceProvider.GetService<BlobClient>();
-            _elasticClientFactory = ServiceProvider.GetService<ElasticClientFactory>();
+            _elasticClient = ServiceProvider.GetService<ElasticClient>();
             _sftpSetting = ServiceProvider.GetService<SftpSettings>();
         }
         private void RunServices()
@@ -65,7 +77,7 @@ namespace CloneFtpOnAzureService.Tests
                 _sftpClient,
                 _blobSettings,
                 _blobClient,
-                _elasticClientFactory,
+                _elasticClient,
                 _sftpSetting
             );
 
