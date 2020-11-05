@@ -107,11 +107,8 @@ namespace ExtractFramesFromVideo
                 _log.Info($"Frames for adding - {JsonConvert.SerializeObject(fileFrames)}");
                 if (fileFrames.Any())
                 {
-                    lock (_context)
-                    {
-                        _context.FileFrames.AddRange(fileFrames);
-                        _context.SaveChanges();
-                    }
+                    _context.FileFrames.AddRange(fileFrames);
+                    _context.SaveChanges();
                 }
                 _log.Info("Deleting local files");
                 Directory.Delete(sessionDir, true);
