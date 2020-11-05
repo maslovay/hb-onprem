@@ -18,6 +18,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Castle.Core.Internal;
+using HBLib.Utils.Interfaces;
 
 namespace AudioAnalyzeScheduler.QuartzJobs
 {
@@ -26,18 +27,16 @@ namespace AudioAnalyzeScheduler.QuartzJobs
         private ElasticClient _log;
         private RecordsContext _context;
         private readonly IServiceScopeFactory _factory;
-        private readonly ElasticClientFactory _elasticClientFactory;
-
-        private readonly GoogleConnector _googleConnector;
+        private readonly IGoogleConnector _googleConnector;
         // private readonly IGenericRepository _repository;
 
         public CheckAudioRecognizeStatusJob(IServiceScopeFactory factory,
-            ElasticClientFactory elasticClientFactory,
-            GoogleConnector googleConnector)
+            ElasticClient log,
+            IGoogleConnector googleConnector)
         {
             // _repository = factory.CreateScope().ServiceProvider.GetRequiredService<IGenericRepository>();
             _factory = factory;
-            _elasticClientFactory = elasticClientFactory;
+            _log = log;
             _googleConnector = googleConnector;
         }
 
@@ -45,7 +44,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
         {
             using (var scope = _factory.CreateScope())
             {
-                _log = _elasticClientFactory.GetElasticClient();
                 System.Console.WriteLine("Function started");
                 _log.Info("Audio analyze scheduler started.");
                 try

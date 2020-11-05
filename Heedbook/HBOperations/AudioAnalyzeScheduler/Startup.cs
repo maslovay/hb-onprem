@@ -1,10 +1,12 @@
-﻿using AsrHttpClient;
+﻿using System;
+using AsrHttpClient;
 using AudioAnalyzeScheduler.Extensions;
 using AudioAnalyzeScheduler.Settings;
 using HBData;
 using HBData.Repository;
 using HBLib;
 using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +31,16 @@ namespace AudioAnalyzeScheduler
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient<SftpSettings>(p => new SftpSettings
+                {
+                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
+                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
+                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
+                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
+                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
+                });
+            services.AddTransient<SftpClient>();
             services.Configure<AsrSettings>(Configuration.GetSection(nameof(AsrSettings)));
             //services.Configure<AudioAnalyseSchedulerSettings>(Configuration.GetSection(nameof(AudioAnalyseSchedulerSettings)));
 
@@ -41,18 +52,28 @@ namespace AudioAnalyzeScheduler
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
+                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.AddSingleton(provider => provider.GetService<IOptions<AsrSettings>>().Value);
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddTransient<GoogleConnector>();
-            services.AddSingleton<ElasticClientFactory>();
-            services.AddSingleton<AsrHttpClient.AsrHttpClient>();
-            services.AddSingleton<SftpClient>();
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "OnPremUserService"
+                    };
+                    return elasticSettings;
+                });
+            services.AddTransient(provider =>
+            {
+                var settings = provider.GetRequiredService<ElasticSettings>();
+                return new ElasticClient(settings);
+            });
+            services.AddTransient<IGoogleConnector, GoogleConnector>();
+            services.AddSingleton<AsrHttpClient.AsrHttpClient>();            
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddAudioRecognizeQuartz(schedulerSettings);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
