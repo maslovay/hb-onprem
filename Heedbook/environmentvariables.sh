@@ -1,4 +1,4 @@
-export DOCKER_INTEGRATION_TEST_ENVIRONMENT="TRUE"
+#export DOCKER_INTEGRATION_TEST_ENVIRONMENT="TRUE"
 export DB_CONNECTION_STRING='User ID=test_user;Password=test_password;Host=104.40.181.96;Port=5432;Database=test_db;Pooling=true;Keepalive=25'
 export RABBITMQ_CONNECTION_USERNAME='guest'
 export RABBITMQ_CONNECTION_PASSWORD='guest'

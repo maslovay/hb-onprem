@@ -21,8 +21,7 @@ namespace AudioAnalyzeService
         private readonly AsrHttpClient.AsrHttpClient _asrHttpClient;
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
-        private readonly ElasticClientFactory _elasticClientFactory;
-        private readonly GoogleConnector _googleConnector;
+        private readonly IGoogleConnector _googleConnector;
         private readonly SftpClient _sftpclient;
         private readonly INotificationPublisher _publisher;
         private readonly INotificationHandler _handler;
@@ -30,8 +29,8 @@ namespace AudioAnalyzeService
             IServiceScopeFactory factory,
             INotificationPublisher publisher,
             AsrHttpClient.AsrHttpClient asrHttpClient,
-            ElasticClientFactory elasticClientFactory,
-            GoogleConnector googleConnector,
+            ElasticClient log,
+            IGoogleConnector googleConnector,
             SftpClient sftpclient,
             INotificationHandler handler
         )
@@ -42,8 +41,7 @@ namespace AudioAnalyzeService
                 _context = factory.CreateScope().ServiceProvider.GetService<RecordsContext>();
                 _asrHttpClient = asrHttpClient;
                 _handler = handler;
-                _elasticClientFactory = elasticClientFactory;
-                _googleConnector = googleConnector;
+                _log = log;
                 _sftpclient = sftpclient;
                 _publisher = publisher;
             }
@@ -55,7 +53,6 @@ namespace AudioAnalyzeService
 
         public async Task Run(String path)
         {
-            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(path);
             _log.Info("Function started");

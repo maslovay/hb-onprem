@@ -13,13 +13,14 @@ using System.Web;
 using HBData.Models;
 using HBData.Repository;
 using HBLib.Model;
+using HBLib.Utils.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using RsaKey = System.Security.Cryptography.RSA;
 
 namespace HBLib.Utils
 {
-    public class GoogleConnector
+    public class GoogleConnector : IGoogleConnector
     {
         private const String GoogleScopes = @"https://www.googleapis.com/auth/devstorage.full_control";
 
@@ -49,7 +50,7 @@ namespace HBLib.Utils
 
         public async Task<bool> CheckApiKey()
         {
-           var isApiKeyExists = _repository.Get<GoogleAccount>().Any(item => item.StatusId == 3);
+            var isApiKeyExists = _repository.Get<GoogleAccount>().Any(item => item.StatusId == 3);
             //if (isApiKeyExists)
             //{
             //    Environment.SetEnvironmentVariable("INFRASTRUCTURE", "Cloud");

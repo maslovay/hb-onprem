@@ -10,6 +10,8 @@ using HBLib.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using UnitTestExtensions;
+using RabbitMqEventBus;
+using Notifications.Base;
 
 namespace AudioAnalyzeService.Tests
 {
@@ -18,13 +20,15 @@ namespace AudioAnalyzeService.Tests
     {
         private AudioAnalyze _audioAnalyzeService;
         private Startup _startup;
-        private GoogleConnector _googleConnector;
-        private ElasticClientFactory _elasticClientFactory;
+        private IGoogleConnector _googleConnector;
+        private ElasticClient _elasticClient;
         private FFMpegWrapper _ffmpegWrapper;
         private AsrHttpClient.AsrHttpClient _asrClient;
         private string testDialogVideoCorrectFileName;
         private string testDialogAudioCorrectFileName;
         private Dialogue testDialog;
+        private INotificationPublisher _publisher;
+        private INotificationHandler _handler;
 
 
         [SetUp]
@@ -81,6 +85,7 @@ namespace AudioAnalyzeService.Tests
 
         protected override async Task CleanTestData()
         {
+            _sftpClient.ChangeDirectoryToDefault();
             await _sftpClient.DeleteFileIfExistsAsync("dialoguevideos/" + testDialogVideoCorrectFileName);
             await _sftpClient.DeleteFileIfExistsAsync("dialogueaudios/" + testDialogAudioCorrectFileName);
             
@@ -94,19 +99,22 @@ namespace AudioAnalyzeService.Tests
         protected override void InitServices()
         {
             _repository = ServiceProvider.GetService<IGenericRepository>();
-            _elasticClientFactory = ServiceProvider.GetService<ElasticClientFactory>();
-            
+            _elasticClient = ServiceProvider.GetService<ElasticClient>();
+            _publisher = ServiceProvider.GetService<INotificationPublisher>();
+            _handler = ServiceProvider.GetService<INotificationHandler>();
             _ffmpegWrapper = ServiceProvider.GetService<FFMpegWrapper>();
             _asrClient = ServiceProvider.GetService<AsrHttpClient.AsrHttpClient>();
             _googleConnector = ServiceProvider.GetService<GoogleConnector>();
-            _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _asrClient, _elasticClientFactory, _googleConnector, _sftpClient);
+            _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _publisher, _asrClient, _elasticClient, _googleConnector, _sftpClient, _handler);
         }
         
         [Test, Retry(3)]
         public async Task AudioAnalyzerCreatesDbRecords()
         {
-            _sftpClient.ChangeDirectoryToDefault();
+            //Act
             await _audioAnalyzeService.Run("dialogueaudios/" + testDialogAudioCorrectFileName);
+
+            //Assert
             Assert.True( _repository.Get<FileAudioDialogue>().Any(fad => fad.DialogueId == testDialog.DialogueId) );
         }
     }
