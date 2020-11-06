@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Http.Internal;
 using System.Linq.Expressions;
 using UserOperations.Controllers;
 using Newtonsoft.Json.Linq;
+using HBLib;
 
 namespace ApiTests
 {
@@ -31,7 +32,9 @@ namespace ApiTests
             mediaFileService = new MediaFileService(
                 moqILoginService.Object,
                 sftpClient.Object,
-                fileRefUtils.Object);
+                fileRefUtils.Object,
+                elasticClient.Object,
+                new URLSettings(){Host = "https://heedbookapitest.westeurope.cloudapp.azure.com/"});
         }
         [Test]
         public async Task FileGetGetTest()
@@ -48,7 +51,9 @@ namespace ApiTests
                 .Returns(Task.FromResult(new List<string>
                 {
                     "file"
-                }));            
+                }));
+            elasticClient.Setup(p => p.Info(It.IsAny<string>(), It.IsAny<object[]>()))
+                .Verifiable();
 
             //Act
             var result = await mediaFileService.FileGet(

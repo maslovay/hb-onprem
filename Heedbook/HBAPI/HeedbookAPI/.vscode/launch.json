@@ -5,18 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/netcoreapp2.2/UserOperations.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "console": "internalConsole",
-            "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart"
-        },
-        {
             "name": ".NET Core Launch (web)",
             "type": "coreclr",
             "request": "launch",
@@ -25,23 +13,35 @@
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart",
-            "launchBrowser": {
-                "enabled": true,
-                "args": "${auto-detect-url}",
-                "windows": {
-                    "command": "cmd.exe",
-                    "args": "/C start ${auto-detect-url}"
-                },
-                "osx": {
-                    "command": "open"
-                },
-                "linux": {
-                    "command": "xdg-open"
-                }
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
             },
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "DB_CONNECTION_STRING": "User ID=test_user;Password=test_password;Host=104.40.181.96;Port=5432;Database=test_db;Pooling=true;Keepalive=25",
+                "RABBITMQ_CONNECTION_USERNAME": "guest",
+                "RABBITMQ_CONNECTION_PASSWORD": "guest",
+                "RABBITMQ_CONNECTION_PORT": "5672",
+                "RABBITMQ_CONNECTION_VHOST": "test",
+                "RABBITMQ_CONNECTION_HOSTNAME": "172.17.0.2",
+                "SFTP_CONNECTION_HOST": "hbftptest.westeurope.cloudapp.azure.com",
+                "SFTP_CONNECTION_PORT": "22",
+                "SFTP_CONNECTION_USERNAME": "nkrokhmal",
+                "SFTP_CONNECTION_PASSWORD": "kloppolk_2018",
+                "SFTP_CONNECTION_DESTINATIONPATH": "/home/nkrokhmal/storage/",
+                "SFTP_CONNECTION_DOWNLOADPATH": "/opt/download/",
+                "SMTP_SETTINGS_FROM_EMAIL": "support@heedbook.com",
+                "SMTP_SETTINGS_PASSWORD": "Heedbook_2017",
+                "SMTP_SETTINGS_HOST": "smtp.yandex.ru",
+                "SMTP_SETTINGS_PORT": "587",
+                "SMTP_SETTINGS_DELIVERY_METHOD": "0",
+                "SMTP_SETTINGS_ENABLE_SSL": "true",
+                "SMTP_SETTINGS_USE_DEFAULT_CREDENTIALS": "false",
+                "SMTP_SETTINGS_TIMEOUT": "10000",
+                "URL_SETTINGS": "https://heedbookapitest.westeurope.cloudapp.azure.com/",
+                "ELASTIC_SETTINGS_HOST": "tcp://logstash-service.kube-system",
+                "ELASTIC_SETTINGS_PORT": "5000"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"

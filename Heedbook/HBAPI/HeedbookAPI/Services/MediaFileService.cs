@@ -21,13 +21,13 @@ namespace UserOperations.Services
         private readonly ISftpClient _sftpClient;
         private readonly IFileRefUtils _fileRef;
         private readonly string _containerName;
-        private readonly ElasticClient _log;
+        private readonly IElasticLogger _log;
         private readonly URLSettings _urlSettings;
         public MediaFileService(
             ILoginService loginService,
             ISftpClient sftpClient,
             IFileRefUtils fileRef,
-            ElasticClient log,
+            IElasticLogger log,
             URLSettings urlSettings)
         {
             _loginService = loginService;

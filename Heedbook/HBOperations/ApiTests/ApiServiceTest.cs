@@ -45,6 +45,7 @@ namespace ApiTests
         protected Mock<IAnalyticWeeklyReportUtils> analyticWeeklyReportUtils;
         protected Mock<ISftpClient> sftpClient;
         protected Mock<IdentityDbContext> recordContextMock;
+        protected Mock<IElasticLogger> elasticClient;
 
         public void Setup()
         {
@@ -85,6 +86,7 @@ namespace ApiTests
             analyticWeeklyReportUtils = new Mock<IAnalyticWeeklyReportUtils>();
             sftpClient = new Mock<ISftpClient>();
             recordContextMock = new Mock<IdentityDbContext>();
+            elasticClient = new Mock<IElasticLogger>();
         }
         protected void InitData()
         {

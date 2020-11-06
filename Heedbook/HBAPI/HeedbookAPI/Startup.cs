@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Http;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
 using HBLib.Utils.Interfaces;
+using System;
 
 namespace UserOperations
 {
@@ -49,8 +50,7 @@ namespace UserOperations
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
-               // var connectionString = "User ID=postgres;Password=annushka123;Host=127.0.0.1;Port=5432;Database=onprem_backup;Pooling=true;Timeout=120;CommandTimeout=0";
+                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(UserOperations)));
             });
@@ -160,24 +160,60 @@ namespace UserOperations
             });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-            services.Configure<URLSettings>(Configuration.GetSection(nameof(URLSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<URLSettings>>().Value);
+            services.AddSingleton(provider => 
+                {
+                    var urlSettings = new URLSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("URL_SETTINGS_HOST")
+                    };
+                    return urlSettings;
+                });
 
-            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
-            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddTransient<SftpSettings>(p => new SftpSettings
+                {
+                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
+                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
+                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
+                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
+                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
+                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
+                });
             services.AddTransient<ISftpClient, SftpClient>();
 
-            services.AddSingleton<ElasticClientFactory>();
-            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
-            services.AddSingleton(provider =>
-                       {
-                           var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
-                           return new ElasticClient(settings);
-                       });
+            // services.AddSingleton<ElasticClientFactory>();
+            services.AddSingleton(provider => 
+                {
+                    var elasticSettings = new ElasticSettings
+                    {
+                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
+                        FunctionName = "HbApi"
+                    };
+                    return elasticSettings;
+                });
 
-            services.Configure<SmtpSettings>(Configuration.GetSection(nameof(SmtpSettings)));
-            services.AddSingleton(provider => provider.GetRequiredService<IOptions<SmtpSettings>>().Value);
+            services.AddSingleton(provider =>
+                {
+                    var settings = provider.GetRequiredService<IOptions<ElasticSettings>>().Value;
+                    return new ElasticClient(settings);
+                });
+
+            services.AddSingleton(provider => 
+                {
+                    var settings =  new SmtpSettings
+                    {
+                        FromEmail = Environment.GetEnvironmentVariable("SMTP_SETTINGS_FROM_EMAIL"),
+                        Password = Environment.GetEnvironmentVariable("SMTP_SETTINGS_PASSWORD"),
+                        ToEmail = "",
+                        Host = Environment.GetEnvironmentVariable("SMTP_SETTINGS_HOST"),
+                        Port = Int32.Parse(Environment.GetEnvironmentVariable("SMTP_SETTINGS_PORT")),
+                        DeliveryMethod = Int32.Parse(Environment.GetEnvironmentVariable("SMTP_SETTINGS_DELIVERY_METHOD")),
+                        EnableSsl = Boolean.Parse(Environment.GetEnvironmentVariable("SMTP_SETTINGS_ENABLE_SSL")),
+                        UseDefaultCredentials = Boolean.Parse(Environment.GetEnvironmentVariable("SMTP_SETTINGS_USE_DEFAULT_CREDENTIALS")),
+                        Timeout = Int32.Parse(Environment.GetEnvironmentVariable("SMTP_SETTINGS_TIMEOUT"))
+                    };
+                    return settings;
+                });
             services.AddSingleton<SmtpClient>();
 
             //services.AddScoped(typeof(INotificationHandler), typeof(NotificationHandler));
@@ -220,6 +256,5 @@ namespace UserOperations
             // add seed
            // BenchmarkRunner.Run<TestRepository>();
         }
-
     }
 }
