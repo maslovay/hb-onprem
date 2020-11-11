@@ -1,10 +1,13 @@
 FROM microsoft/dotnet:2.2-sdk-alpine AS build-env
 WORKDIR /app
 COPY . .
-RUN apt-get update
-RUN apt-get install libopenblas-base -y 
-RUN apt-get install libc6-dev -y
-RUN apt-get install libgdiplus -y
+
+RUN mkdir /opt; exit 0;
+RUN chmod -R 777 /opt/; exit 0;
+RUN mkdir /opt/download; exit 0;
+RUN chmod -R 777 /opt/download; exit 0;
+RUN apk add libgdiplus --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ --allow-untrusted
+
 RUN dotnet publish ./HBOperations/ExtractFramesFromVideoService -c Release -o publish
 
 # Build runtime image
