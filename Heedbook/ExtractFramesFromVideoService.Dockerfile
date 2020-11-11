@@ -2,7 +2,7 @@ FROM microsoft/dotnet:2.2-sdk-alpine AS build-env
 WORKDIR /app
 COPY . .
 
-RUN apk add libc6-dev
+RUN apk add libc6-compat
 RUN apk add libgdiplus --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ --allow-untrusted
 
 RUN dotnet publish ./HBOperations/ExtractFramesFromVideoService -c Release -o publish
