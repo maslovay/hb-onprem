@@ -18,10 +18,12 @@ namespace HBData.Repository
     public class GenericRepository : IGenericRepository
     {
         private readonly RecordsContext _context;
+        private AssemblyName asmName;
 
         public GenericRepository(RecordsContext context)
         {
             _context = context;
+            asmName = new AssemblyName { Name = "MyDynamicAssembly" };
         }     
 
         public async Task<IEnumerable<T>> FindAllAsync<T>() where T : class
@@ -29,10 +31,17 @@ namespace HBData.Repository
             return await _context.Set<T>().ToListAsync();
         }
 
-        public async Task<T> FindOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate) where T : class
+        public async Task<T> FindOrNullOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate) where T : class
         {
             return await _context.Set<T>().Where(predicate).FirstOrDefaultAsync();
-        }      
+        }
+
+        public async Task<T> FindOrExceptionOneByConditionAsync<T>(Expression<Func<T, Boolean>> predicate) where T : class
+        {
+            var entity = await _context.Set<T>().Where(predicate).FirstOrDefaultAsync();
+            if (entity == default(T)) throw new Exception("No such entity");
+            return entity;
+        }
 
         public async Task<IEnumerable<T>> FindByConditionAsync<T>(Expression<Func<T, Boolean>> predicate)
             where T : class
@@ -44,6 +53,10 @@ namespace HBData.Repository
         {
             return _context.Set<T>();
         }
+        public IQueryable<T> GetAsQueryable<T>() where T : class
+        {
+            return _context.Set<T>().AsQueryable();
+        }
 
         public IEnumerable<T> GetWithInclude<T>(Expression<Func<T, Boolean>> predicate,
             params Expression<Func<T, Object>>[] children) where T : class
@@ -52,13 +65,25 @@ namespace HBData.Repository
             children.ToList().ForEach(x => dbSet.Include(x).Load());
             return dbSet.Where(predicate);
         }
+        public IQueryable<T> GetWithIncludeAsQueryable<T>(Expression<Func<T, Boolean>> predicate,
+            params Expression<Func<T, Object>>[] children) where T : class
+        {
+            var dbSet = _context.Set<T>();
+            children.ToList().ForEach(x => dbSet.Include(x).Load());
+            return dbSet.Where(predicate).AsQueryable();
+        }
 
         public T GetWithIncludeOne<T>(Expression<Func<T, Boolean>> predicate,
             params Expression<Func<T, Object>>[] children) where T : class
         {
-            var dbSet = _context.Set<T>();
-            children.ToList().ForEach(x => dbSet.Where(predicate).Include(x).Load());
-            return dbSet.First();
+            var dbSet = _context.Set<T>().Where(predicate).AsQueryable();
+            dbSet = children.Aggregate(dbSet, (current, child) => current.Include(child));
+            return dbSet.FirstOrDefault();
+        }
+
+        public void CreateRange<T>(List<T> entities) where T: class
+        {
+            _context.Set<T>().AddRange(entities);
         }
 
         public void BulkInsert<T>(IEnumerable<T> entities) where T : class
@@ -129,6 +154,8 @@ namespace HBData.Repository
             var dbSet = _context.Set<T>();
             _context.Set<T>().RemoveRange(dbSet.Where(expr));
         }
+        public void Delete<T>(IEnumerable<T> list) where T : class
+            => _context.Set<T>().RemoveRange(list);
 
 
         public IEnumerable<Object> ExecuteDbCommand(List<String> properties, String sql,
@@ -148,17 +175,24 @@ namespace HBData.Repository
                         dbParameter.Value = p.Value;
                         cmd.Parameters.Add(dbParameter);
                     }
-
+                
                 using (var dataReader = cmd.ExecuteReader())
                 {
                     while (dataReader.Read())
-                    {
+                    {         
                         for (var fieldCount = 0; fieldCount < dataReader.FieldCount; fieldCount++)
                         {
-                            type.GetRuntimeProperties().ToList()[fieldCount].SetValue(instance, dataReader[fieldCount]);
+                            try
+                            {
+                                type.GetRuntimeProperties().ToList()[fieldCount].SetValue(instance, Convert.ToDouble(dataReader.GetFieldValue<object>(fieldCount)),null);                            
+                            
+                            }
+                            catch(Exception ex)
+                            {
+                                System.Console.WriteLine(ex);
+                            }                            
                         }
-
-                        yield return instance;
+                        yield return instance;  
                     }
                 }
             }
@@ -182,7 +216,7 @@ namespace HBData.Repository
         private Object CreateType(List<String> properties, out Type type)
         {
             //TODO: replace it and make generic.
-            var asmName = new AssemblyName { Name = "MyDynamicAssembly" };
+            
             var asmBuilder = AssemblyBuilder.DefineDynamicAssembly(asmName, AssemblyBuilderAccess.RunAndCollect);
             var modBuilder =
                 asmBuilder.DefineDynamicModule(asmName.Name);
@@ -196,7 +230,7 @@ namespace HBData.Repository
             foreach (var property in properties)
             {
                 FieldBuilder customerNameBldr = typeBuilder.DefineField($"{property.ToLowerInvariant()}",
-                    typeof(string),
+                    typeof(Double),
                     FieldAttributes.Private);
 
                 var propertyBuilder =

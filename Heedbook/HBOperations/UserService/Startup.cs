@@ -19,6 +19,13 @@ using RabbitMqEventBus.Base;
 using Serilog;
 using Swashbuckle.AspNetCore.Swagger;
 using UnitTestExtensions;
+using HBMLHttpClient;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Http;
+using HBLib.Utils.Interfaces;
 
 namespace UserService
 {
@@ -63,6 +70,12 @@ namespace UserService
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
             services.AddScoped<IGenericRepository, GenericRepository>();
+            services.AddScoped<IRequestFilters, RequestFilters>();
+            services.AddScoped<ILoginService, LoginService>();
+            services.AddScoped<IRequestFilters, RequestFilters>();
+            services.AddScoped<IFileRefUtils, FileRefUtils>();
+            services.AddScoped<CheckTokenService>();
+            services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 
             services.AddSwaggerGen(c =>
             {
@@ -72,6 +85,31 @@ namespace UserService
                     Title = "User Service Api",
                     Version = "v1"
                 });
+
+                c.AddSecurityDefinition("Bearer", new ApiKeyScheme()
+                {
+                    Description = "JWT Authorization header {token}",
+                    Name = "Authorization",
+                    In = "header",
+                    Type = "apiKey"
+                });
+                c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                    {
+                        { "Bearer", new string[] { } }
+                    });
+            });
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidIssuer = Configuration["Tokens:Issuer"],
+                    ValidAudience = Configuration["Tokens:Issuer"],
+                    RequireSignedTokens = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
+                };
             });
 
             services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
@@ -90,9 +128,20 @@ namespace UserService
 //                StartupExtensions.MockNotificationHandler(services);
 //                StartupExtensions.MockTransmissionEnvironment<IntegrationEvent>(services);                
 //            }
+            services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
+            services.AddScoped(provider =>
+            {
+                var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
+                return new HbMlHttpClient(settings);
+            });
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
+
+            services.Configure<FFMpegSettings>(Configuration.GetSection(nameof(FFMpegSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<FFMpegSettings>>().Value);
+            services.AddTransient<FFMpegWrapper>();
+            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -100,6 +149,11 @@ namespace UserService
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             var service = app.ApplicationServices.GetRequiredService<INotificationService>();
+            if (env.IsDevelopment())
+                app.UseDeveloperExceptionPage();
+            else
+                app.UseHsts();
+
             app.UseSwagger(c => { c.RouteTemplate = "user/swagger/{documentName}/swagger.json"; });
             var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             

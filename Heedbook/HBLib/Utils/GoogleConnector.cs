@@ -50,14 +50,14 @@ namespace HBLib.Utils
         public async Task<bool> CheckApiKey()
         {
            var isApiKeyExists = _repository.Get<GoogleAccount>().Any(item => item.StatusId == 3);
-            if (isApiKeyExists)
-            {
-                Environment.SetEnvironmentVariable("INFRASTRUCTURE", "Cloud");
-            }
-            else
-            {
-                Environment.SetEnvironmentVariable("INFRASTRUCTURE", "OnPrem");
-            }
+            //if (isApiKeyExists)
+            //{
+            //    Environment.SetEnvironmentVariable("INFRASTRUCTURE", "Cloud");
+            //}
+            //else
+            //{
+            //    Environment.SetEnvironmentVariable("INFRASTRUCTURE", "OnPrem");
+            //}
             return isApiKeyExists;
         }
 
@@ -164,7 +164,7 @@ namespace HBLib.Utils
             if (result.Error != null && result.Error.Status == "PERMISSION_DENIED")
             {
                 var googleAccount =
-                    await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
+                    await _repository.FindOrNullOneByConditionAsync<GoogleAccount>(item =>
                         item.GoogleAccountId == googleApiKey.GoogleAccountId);
                 googleAccount.StatusId = 8;
                 _repository.Save();
@@ -209,7 +209,7 @@ namespace HBLib.Utils
             {
                 Console.WriteLine("api key expired");
                 var googleAccount =
-                    await _repository.FindOneByConditionAsync<GoogleAccount>(item =>
+                    await _repository.FindOrNullOneByConditionAsync<GoogleAccount>(item =>
                         item.GoogleAccountId == apiKey.GoogleAccountId);
                 googleAccount.StatusId = 8;
                 _repository.Save();
@@ -221,7 +221,7 @@ namespace HBLib.Utils
         private async Task<GoogleAccount> GetApiKey()
         {
             //3 - is active. 
-            var googleAccount = await _repository.FindOneByConditionAsync<GoogleAccount>(item => item.StatusId == 3);
+            var googleAccount = await _repository.FindOrNullOneByConditionAsync<GoogleAccount>(item => item.StatusId == 3);
             return googleAccount;
         }
 
@@ -250,7 +250,7 @@ namespace HBLib.Utils
                 {
                     encoding = "LINEAR16",
                     // sampleRateHertz = 16000,
-                    sampleRateHertz = 8000,
+                    sampleRateHertz = 18000,
                     languageCode = GetLanguageName(languageId),
                     enableWordTimeOffsets
                     //enableSpeakerDiarization,

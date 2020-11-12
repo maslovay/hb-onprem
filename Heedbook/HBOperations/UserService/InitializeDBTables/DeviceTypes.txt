@@ -1,0 +1,1 @@
+[{"DeviceTypeId":"b29a6c53-fbdf-4dba-930b-95a267e4e313","Name":"Планшет"}]

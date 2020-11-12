@@ -36,5 +36,25 @@ namespace HBMLHttpClient
 
             return JsonConvert.DeserializeObject<List<FaceResult>>(contentAsString);
         }
+
+        public async Task<List<FaceResult>> GetFaceResultWithParams(String base64StringFile, 
+            bool description=true, bool emotions=true, bool headpose=true, bool attributes=true)
+        {
+            var path = _hbMlSettings.HbMlUri.EndsWith('/')
+                ? _hbMlSettings.HbMlUri + FaceEmotionsPath + $"?Descriptor={description}&Emotions={emotions}&Headpose={headpose}&Attributes={attributes}"
+                : _hbMlSettings.HbMlUri + "/" + FaceEmotionsPath + $"?Descriptor={description}&Emotions={emotions}&Headpose={headpose}&Attributes={attributes}";
+            var uri = new Uri(path);
+            var client = new HttpClient();
+            client.Timeout = TimeSpan.FromMinutes(5);
+            var content = new StringContent(base64StringFile);
+            content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
+            var response = await client.PostAsync(uri, content);
+            var contentAsString = await response.Content.ReadAsStringAsync();
+
+            // to do: delete or change to elastic
+            Console.WriteLine($"{contentAsString}");
+
+            return JsonConvert.DeserializeObject<List<FaceResult>>(contentAsString);
+        }
     }
 }

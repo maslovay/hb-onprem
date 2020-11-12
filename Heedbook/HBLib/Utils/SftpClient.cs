@@ -5,13 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HBLib.Utils.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Renci.SshNet.Messages.Transport;
 using Renci.SshNet.Sftp;
 
 namespace HBLib.Utils
 {
-    public class SftpClient : IDisposable
+    public class SftpClient : IDisposable, ISftpClient
     {
         private readonly string httpFileUrl;
         private readonly Renci.SshNet.SftpClient _client;
@@ -44,6 +45,12 @@ namespace HBLib.Utils
             }
         }
 
+        public void RenameFile(String oldPath, String newPath)
+        {
+            ConnectToSftpAsync().Wait();
+            _client.RenameFile(oldPath, newPath);
+        }
+        
         public void Dispose()
         {
             _client.Dispose();
@@ -66,19 +73,10 @@ namespace HBLib.Utils
         {
             await ConnectToSftpAsync();
             if (await IsFileExistsAsync(_sftpSettings.DestinationPath + "/" + path))
-                return $"http://{_sftpSettings.Host}/storage/{path}";
+                return $"http://{_sftpSettings.Host}/{path}";
             return null;
         }
-
-        /// <summary>
-        /// Get url to file. 
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public string GetFileUrlFast(String path)
-        {
-            return $"http://{_sftpSettings.Host}/storage/{path}";
-        }
+     
         public async Task<List<string>> GetFileNames(String directory)
         {
             await ConnectToSftpAsync();
@@ -118,7 +116,7 @@ namespace HBLib.Utils
                 files = _client.ListDirectory(directory).ToList();
             return await Task.Run(() => files
                 .Where(f => !f.IsDirectory)
-                .Select(f => $"http://{_sftpSettings.Host}/storage/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}"));
+                .Select(f => $"http://{_sftpSettings.Host}/{f.FullName.Replace("/home/nkrokhmal/storage/", "")}"));
         }
 
         /// <summary>
@@ -229,8 +227,17 @@ namespace HBLib.Utils
             localPath = localPath == null ? Path.Combine(_sftpSettings.DownloadPath, filename) : Path.Combine(localPath, filename);
             using (var fs = File.OpenWrite(localPath))
             {
+                try
+                { 
                 _client.DownloadFile(remotePath, fs);
-                //await Task.Run(() => _client.DownloadFile(remotePath, fs));
+                    //await Task.Run(() => _client.DownloadFile(remotePath, fs));
+                }
+                catch
+                {
+                    _client.Disconnect();
+                    await ConnectToSftpAsync();
+                    _client.DownloadFile(remotePath, fs);
+                }
             }
             return localPath;
         }
@@ -377,12 +384,7 @@ namespace HBLib.Utils
             if (_client.IsConnected)
                 await Task.Run(() => _client.Disconnect());
         }
-
-        public FileResult GetFileLink(string directory, string file, DateTime exp = default(DateTime))
-        {
-            return new FileResult { path = $"{httpFileUrl}{directory}/{file}", ext = Path.GetExtension(file).Trim('.') };
-            // return new FileResult { path = fileref.GetReference(directory, file, exp), ext = Path.GetExtension(file).Trim('.') };
-        }
+    
         public class FileInfoModel
         {
             public string url;
@@ -395,11 +397,5 @@ namespace HBLib.Utils
 
         public string Host =>
             _sftpSettings.Host;
-    }
-
-    public class FileResult
-    {
-        public string path;
-        public string ext;
     }
 }

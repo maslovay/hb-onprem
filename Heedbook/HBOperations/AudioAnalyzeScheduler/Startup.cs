@@ -1,7 +1,6 @@
 ﻿using AsrHttpClient;
 using AudioAnalyzeScheduler.Extensions;
 using AudioAnalyzeScheduler.Settings;
-using Configurations;
 using HBData;
 using HBData.Repository;
 using HBLib;

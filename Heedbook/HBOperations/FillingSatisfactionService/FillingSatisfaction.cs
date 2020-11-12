@@ -11,6 +11,7 @@ using RabbitMqEventBus.Events;
 using HBLib;
 using HBData;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace FillingSatisfactionService
 {
@@ -19,7 +20,7 @@ namespace FillingSatisfactionService
         private readonly Calculations _calculations;
         private readonly CalculationConfig _config;
         private readonly INotificationPublisher _notificationPublisher;
-        private readonly ElasticClient _log;
+       // private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
 
@@ -40,7 +41,7 @@ namespace FillingSatisfactionService
 
         public async Task Run(Guid dialogueId)
         {
-             var _log = _elasticClientFactory.GetElasticClient();
+            var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{DialogueId}");
             _log.SetArgs(dialogueId);
 
@@ -55,13 +56,15 @@ namespace FillingSatisfactionService
                     .FirstOrDefault(p => p.DialogueId == dialogueId);
                 var dialogueFrame = dialogue.DialogueFrame;
                 var dialogueAudio = dialogue.DialogueAudio.FirstOrDefault();
-                var positiveTextTone = dialogue.DialogueSpeech.FirstOrDefault() == null ? null: dialogue.DialogueSpeech.FirstOrDefault().PositiveShare;
+                var positiveTextTone = dialogue.DialogueSpeech.FirstOrDefault()?.PositiveShare;
                 var dialogueInterval = dialogue.DialogueInterval;
 
-                var meetingExpectationsByNN =
-                    _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio,
-                        positiveTextTone);
-                
+                // var meetingExpectationsByNN =
+                // _calculations.TotalScoreInsideCalculate(dialogueFrame, dialogueAudio,
+                // positiveTextTone);
+                var meetingExpectationsByNN = _calculations.TotalScoreCalculate(dialogue);
+
+
                 Double? begMoodByNN = 0;
                 Double? endMoodByNN = 0;
                 Double nNWeight = 0;
@@ -94,7 +97,7 @@ namespace FillingSatisfactionService
                     nNWeight = 0;
                 }
 
-                var satisfactionScore = new DialogueClientSatisfaction();
+                DialogueClientSatisfaction satisfactionScore = null;
                 try
                 {
                     satisfactionScore =
@@ -112,17 +115,19 @@ namespace FillingSatisfactionService
                 double employeeEndScore = 0, teacherEndScore = 0;
                 if (satisfactionScore != null)
                 {
-                    if (satisfactionScore.MeetingExpectationsByClient != null)
-                    {
-                        clientTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByClient);
-                        clientWeight = Convert.ToDouble(_config.ClientWeight);
-                    }
-                    else
-                    {
-                        clientTotalScore = 0;
-                        clientWeight = 0;
-                    }
-
+                    //if (satisfactionScore.MeetingExpectationsByClient != null)
+                    //{
+                    //    clientTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByClient);
+                    //    clientWeight = Convert.ToDouble(_config.ClientWeight);
+                    //}
+                    //else
+                    //{
+                    //    clientTotalScore = 0;
+                    //    clientWeight = 0;
+                    //}
+                    satisfactionScore.MeetingExpectationsByClient = _calculations.MeetingExpectationsByClientCalculate(dialogue);
+                    clientTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByClient);
+                    clientWeight = Convert.ToDouble(_config.ClientWeight);
                     if (satisfactionScore.MeetingExpectationsByEmpoyee != null)
                     {
                         employeeTotalScore = Convert.ToDouble(satisfactionScore.MeetingExpectationsByEmpoyee);
@@ -187,24 +192,25 @@ namespace FillingSatisfactionService
                     {
                         DialogueClientSatisfactionId = Guid.NewGuid(),
                         DialogueId = dialogueId,
-                        MeetingExpectationsTotal = Math.Max((double) meetingExpectationsTotal, 35 + random.Next(10)),
-                        BegMoodTotal = Math.Max((double) begMoodTotal, 35 + random.Next(10)),
-                        EndMoodTotal = Math.Max((double) endMoodTotal, 35 + random.Next(10)),
-                        MeetingExpectationsByNN = Math.Max((double) meetingExpectationsByNN, 35 + random.Next(10)),
-                        BegMoodByNN = Math.Max((double) begMoodByNN, 35 + random.Next(10)),
-                        EndMoodByNN = Math.Max((double) endMoodByNN, 35 + random.Next(10))
+                        MeetingExpectationsTotal = Math.Max((double)meetingExpectationsTotal, 35),
+                        BegMoodTotal = Math.Max((double)begMoodTotal, 35),
+                        EndMoodTotal = Math.Max((double)endMoodTotal, 35),
+                        MeetingExpectationsByNN = Math.Max((double)meetingExpectationsByNN, 35),
+                        BegMoodByNN = Math.Max((double)begMoodByNN, 35),
+                        EndMoodByNN = Math.Max((double)endMoodByNN, 35),
+                        MeetingExpectationsByClient = _calculations.MeetingExpectationsByClientCalculate(dialogue)
                     };
                     _log.Info($"Total mood is --- {emp.MeetingExpectationsTotal}");
                     _context.DialogueClientSatisfactions.Add(emp);
                 }
                 else
                 {
-                    satisfactionScore.MeetingExpectationsTotal = Math.Max((double) meetingExpectationsTotal, 35 + random.Next(10));
-                    satisfactionScore.MeetingExpectationsByNN = Math.Max((double) meetingExpectationsByNN, 35 + random.Next(10));
-                    satisfactionScore.BegMoodTotal =  Math.Max((double) begMoodTotal, 35 + random.Next(10));
-                    satisfactionScore.BegMoodByNN = Math.Max((double)  begMoodByNN, 35 + random.Next(10));
-                    satisfactionScore.EndMoodTotal = Math.Max((double)  endMoodTotal, 35 + random.Next(10));
-                    satisfactionScore.EndMoodByNN =  Math.Max((double)  endMoodByNN, 35 + random.Next(10));
+                    satisfactionScore.MeetingExpectationsTotal = Math.Max((double)meetingExpectationsTotal, 35);
+                    satisfactionScore.MeetingExpectationsByNN = Math.Max((double)meetingExpectationsByNN, 35);
+                    satisfactionScore.BegMoodTotal = Math.Max((double)begMoodTotal, 35);
+                    satisfactionScore.BegMoodByNN = Math.Max((double)begMoodByNN, 35);
+                    satisfactionScore.EndMoodTotal = Math.Max((double)endMoodTotal, 35);
+                    satisfactionScore.EndMoodByNN = Math.Max((double)endMoodByNN, 35);
                     _log.Info($"Total mood is --- {satisfactionScore.MeetingExpectationsTotal}");
                 }
 

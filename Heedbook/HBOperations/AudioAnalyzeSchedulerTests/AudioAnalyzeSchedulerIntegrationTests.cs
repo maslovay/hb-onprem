@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -54,7 +55,7 @@ namespace AudioAnalyseScheduler.Tests
 
 
         [TearDown]
-        public async Task TearDown()
+        public async override Task TearDown()
         {
             await base.TearDown();
             _schedulerProcess.Kill();
@@ -69,7 +70,7 @@ namespace AudioAnalyseScheduler.Tests
             }
             catch (Exception ex)
             {
-                
+                System.Console.WriteLine(ex);
             }
        }
         
@@ -129,7 +130,7 @@ namespace AudioAnalyseScheduler.Tests
             };
             
             _repository.AddOrUpdate(_fileAudioDialogue);
-            _repository.Save();
+            await _repository.SaveAsync();
         }
 
         protected override async Task CleanTestData()
@@ -178,21 +179,27 @@ namespace AudioAnalyseScheduler.Tests
             var result = 0.0;
 
             var textsJson = GetTextResources("texts");
-
+            System.Console.WriteLine(JsonConvert.SerializeObject(textsJson));
+            System.Console.WriteLine($"texts Json: {JsonConvert.SerializeObject(textsJson)}");
             foreach (var (key, value) in textsJson)
             {
                 var posShareStrg = RunPython.Run("GetPositiveShare.py", Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "3", key);
+
+                System.Console.WriteLine($"posShareStrg: {JsonConvert.SerializeObject(posShareStrg)}");
                 Console.WriteLine($"GetPosShare text: {posShareStrg.ToString()}");
                 Console.WriteLine($"Source text: {key}");
                 Console.WriteLine($"Pos/neg: {value}");
-                result = double.Parse(posShareStrg.Item1.Trim().Replace("\n", string.Empty));
-
-                if (value == "positive")
+                var res = posShareStrg.Item1.Trim().Replace("\n", "");
+                System.Console.WriteLine(JsonConvert.SerializeObject(res));
+                result = double.Parse(res, NumberFormatInfo.InvariantInfo);
+                System.Console.WriteLine($"result: {result}");
+                if (value == "positive")                    
                     Assert.GreaterOrEqual(result, 0.5);
                 else
                     Assert.Less(result, 0.5);
-            }
 
+            }
+            //Assert.IsTrue(false);
             return result;
         }
     }

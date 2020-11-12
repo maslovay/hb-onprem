@@ -15,7 +15,7 @@ namespace QuartzExtensions.Jobs
     {
         private readonly RecordsContext _context;
         private readonly ElasticClientFactory _elasticClientFactory;
-        private readonly ElasticClient _log;
+        //private readonly ElasticClient _log;
         private readonly SmtpSettings _smtpSettings;
         private readonly SmtpClient _smtpClient;
 
@@ -50,10 +50,12 @@ namespace QuartzExtensions.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {   
-            var _log = _elasticClientFactory.GetElasticClient();         
-            var mail = new System.Net.Mail.MailMessage();
-            mail.From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail);            
-            mail.To.Add(new System.Net.Mail.MailAddress(_smtpSettings.ToEmail));            
+            var _log = _elasticClientFactory.GetElasticClient();
+            var mail = new System.Net.Mail.MailMessage
+            {
+                From = new System.Net.Mail.MailAddress(_smtpSettings.FromEmail)
+            };
+            mail.To.Add(new System.Net.Mail.MailAddress(_smtpSettings.ToEmail));
             mail.To.Add($"pinarin@heedbook.com");
             
             mail.Subject = "Active TUI OFFICES";
@@ -80,15 +82,15 @@ namespace QuartzExtensions.Jobs
         {           
             var offices = _context.Sessions
             .Include(p=>p.ApplicationUser)
-            .Include(p=>p.ApplicationUser.Company)
+            .Include(p=>p.Device.Company)
             .Where(p=>p.StatusId == 6
-                &&tuiOfficeGuids.Contains(p.ApplicationUser.CompanyId))
-            .GroupBy(p => p.ApplicationUser.CompanyId)
+                &&tuiOfficeGuids.Contains(p.Device.CompanyId))
+            .GroupBy(p => p.Device.CompanyId)
             .Select(p=> new CompanyInformation
                 {
                     CompanyId = p.Key,
-                    CompanyName = p.First().ApplicationUser.Company.CompanyName,
-                    ApplicationUserName = p.First().ApplicationUser.FullName
+                    CompanyName = p.First().Device.Company.CompanyName,
+                    ApplicationUserName = p.First().ApplicationUser!=null? p.First().ApplicationUser.FullName : null
                 })
             .ToList();            
             return offices;            

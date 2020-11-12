@@ -213,7 +213,6 @@ namespace ExtractFramesFromVideo
             if (prevOffset > -1)
                 yield return GetImageAt(allImages, prevOffset, allImages.Length);       //Вернуть оставшиеся данные массива в виде изображения
         }
-
         private Image GetImageAt(byte[] data, int start, int end)                        //Получили массив байтов, начальный индекс в массиве и конечный индекс в массиве
         {
             using (var ms = new MemoryStream(end - start))                              //Инициализировали поток

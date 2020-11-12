@@ -39,7 +39,7 @@ namespace AudioAnalyzeService.Tests
         }
 
         [TearDown]
-        public async Task TearDown()
+        public new async Task TearDown()
         {
             await base.TearDown();
         }
@@ -99,7 +99,7 @@ namespace AudioAnalyzeService.Tests
             _ffmpegWrapper = ServiceProvider.GetService<FFMpegWrapper>();
             _asrClient = ServiceProvider.GetService<AsrHttpClient.AsrHttpClient>();
             _googleConnector = ServiceProvider.GetService<GoogleConnector>();
-            _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _asrClient, _elasticClientFactory, _googleConnector);
+            _audioAnalyzeService = new AudioAnalyze(ScopeFactory, _asrClient, _elasticClientFactory, _googleConnector, _sftpClient);
         }
         
         [Test, Retry(3)]

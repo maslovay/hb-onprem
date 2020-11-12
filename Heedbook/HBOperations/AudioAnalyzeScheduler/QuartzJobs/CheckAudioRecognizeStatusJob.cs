@@ -46,15 +46,17 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             using (var scope = _factory.CreateScope())
             {
                 _log = _elasticClientFactory.GetElasticClient();
+                System.Console.WriteLine("Function started");
                 _log.Info("Audio analyze scheduler started.");
                 try
                 {
                     _context = scope.ServiceProvider.GetRequiredService<RecordsContext>();
                     var audiosReq = _context.FileAudioDialogues
                                          .Include(p => p.Dialogue)
-                                         .Include(p => p.Dialogue.ApplicationUser)
-                                         .Include(p => p.Dialogue.ApplicationUser.Company)
+                                         .Include(p => p.Dialogue.Device)
+                                         .Include(p => p.Dialogue.Device.Company)
                                          .Where(p => p.StatusId == 6);
+
                     //  .ToList();
                     await _googleConnector.CheckApiKey();
                     if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
@@ -70,6 +72,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                     // System.Console.WriteLine($"Audios count - {audios.Count()}");
                     foreach (var audio in audios)
                     {
+                        var isClient = (audio.FileContainer == "dialogueaudios");
                         var dialoguePhrases = new List<DialoguePhrase>();
                         var dialogueSpeeches = new List<DialogueSpeech>();
                         var dialogueWords = new List<DialogueWord>();
@@ -79,14 +82,22 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                         var recognized = new List<WordRecognized>();
                         
                         _log.Info($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
+                        System.Console.WriteLine($"Infrastructure: {Environment.GetEnvironmentVariable("INFRASTRUCTURE")}");
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
                             try
                             {
+                                var googleAccount = _context.GoogleAccounts.FirstOrDefault(item => item.StatusId == 3);
+                                if(googleAccount is null)
+                                    break;
+                                
                                 var sttResults = await _googleConnector.GetGoogleSTTResults(audio.TransactionId);
+                                if(sttResults?.Error != null && sttResults?.Error.Status == "NOT_FOUND")
+                                    continue;
+                                    
                                 var differenceHour = (DateTime.UtcNow - audio.CreationTime).Hours;
 
-                                if ((sttResults?.Response == null && differenceHour >= 1)||sttResults?.Response?.Results==null)
+                                if (((sttResults?.Response == null && differenceHour >= 1)||sttResults?.Response?.Results==null))
                                 {
                                     audio.StatusId = 8;
                                     audio.STTResult = "[]";
@@ -159,18 +170,20 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                 });
                             });
                             _log.Info($"Has items: {asrResults.Any()}");
+                            System.Console.WriteLine($"Has items: {asrResults.Any()}");
                         }
 
                         if (recognized.Any())
                         {
-                            var languageId = (int) audio.Dialogue.ApplicationUser.Company.LanguageId;
+                            var languageId = (audio.Dialogue.Device.Company.LanguageId == null) ? 2 : (int) audio.Dialogue.Device.Company.LanguageId;
+                            _log.Info("Starting calculating speech speed");
                             var speechSpeed = GetSpeechSpeed(recognized, languageId, _log);
                             _log.Info($"Speech speed: {speechSpeed}");
 
                             var newSpeech = new DialogueSpeech
                             {
                                 DialogueId = audio.DialogueId,
-                                IsClient = true,
+                                IsClient = isClient,
                                 SpeechSpeed = speechSpeed,
                                 PositiveShare = default(Double),
                                 SilenceShare = GetSilenceShare(recognized, audio.BegTime, audio.EndTime, _log)
@@ -211,7 +224,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     DialogueId = audio.DialogueId,
                                     PhraseTypeId = key,
                                     PhraseCount = phraseCounter[key],
-                                    IsClient = true
+                                    IsClient = isClient
                                 });
                                 
                             recognized.ForEach(r =>
@@ -227,7 +240,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                                     });
                             });
 
-                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList(), audio.DialogueId);                            
+                            newSpeech.PositiveShare = GetPositiveShareInText(recognized.Select(r => r.Word).ToList(), audio.DialogueId, isClient);                            
                             words = words.GroupBy(item => new
                             {
                                 item.BegTime,
@@ -241,7 +254,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             dialogueWords.Add(new DialogueWord
                             {
                                 DialogueId = audio.DialogueId,
-                                IsClient = true,
+                                IsClient = isClient,
                                 Words = JsonConvert.SerializeObject(words)
                             });
                             phraseCounts.AddRange(phraseCount);
@@ -255,7 +268,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                             var newSpeech = new DialogueSpeech
                             {
                                 DialogueId = audio.DialogueId,
-                                IsClient = true,
+                                IsClient = isClient,
                                 SpeechSpeed = 0,
                                 PositiveShare = default(Double),
                                 SilenceShare = 0
@@ -282,7 +295,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             }
         }
 
-        private double GetPositiveShareInText(IEnumerable<string> recognizedWords, Guid dialogueId)
+        private double GetPositiveShareInText(IEnumerable<string> recognizedWords, Guid dialogueId, bool isClient)
         {
             try
             {
@@ -298,16 +311,13 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
                 _log.Info("RunPython out string: " + posShareStrg.Item1 + "  dialogueId: " + dialogueId);
 
-                var result = 0.0;
-
-
-                if (!double.TryParse(posShareStrg.Item1.Trim(), out result))
+                if (!double.TryParse(posShareStrg.Item1.Trim(), out double result))
                 {
                     _log.Fatal($"GetPositiveShareInText can't parse string: {posShareStrg.Item1.Trim()} dialogueId: {dialogueId}");
                     // TODO: delete after bug fixing
-                    result = 0; 
+                    result = 0;
                 }
-                
+
                 return result;
             }
             catch (Exception ex)
@@ -316,7 +326,7 @@ namespace AudioAnalyzeScheduler.QuartzJobs
                 var newSpeech = new DialogueSpeech
                             {
                                 DialogueId = dialogueId,
-                                IsClient = true,
+                                IsClient = isClient,
                                 SpeechSpeed = 0,
                                 PositiveShare = default(Double),
                                 SilenceShare = 0
@@ -329,6 +339,8 @@ namespace AudioAnalyzeScheduler.QuartzJobs
 
         private Double GetSpeechSpeed(List<WordRecognized> words, Int32 languageId, ElasticClient _log)
         {
+            _log.Info($"Words - {JsonConvert.SerializeObject(words)}");
+
             var vowels = Vowels.VowelsDictionary[languageId];
             var sumTime = words.Sum(item =>
             {
@@ -358,8 +370,6 @@ namespace AudioAnalyzeScheduler.QuartzJobs
             var result = new List<PhraseResult>();
             word = lemmatizer.Lemmatize(word.ToLower());
             var index = 0;
-            // Console.WriteLine(JsonConvert.SerializeObject(text));
-            // Console.WriteLine(JsonConvert.SerializeObject(word));
 
             foreach (var w in text)
             {

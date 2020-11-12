@@ -1,25 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using System.IO;
-using Microsoft.AspNetCore.Http;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.Extensions.Configuration;
-using HBData.Models;
-using HBData.Models.AccountViewModels;
 using UserOperations.Services;
-using UserOperations.AccountModels;
 using HBData;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -27,49 +12,54 @@ using DocumentFormat.OpenXml.Spreadsheet;
 
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using System.Net.Http;
-using System.Net;
 using Newtonsoft.Json;
-using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Annotations;
-using HBLib.Utils;
 using FileResult = Microsoft.AspNetCore.Mvc.FileResult;
+using HBData.Repository;
+using HBData.Models;
+using UserOperations.Services.Interfaces;
+using HBLib.Utils;
+using HBLib.Utils.Interfaces;
 
+//---FOR VADIM KUZNECOV
 namespace UserOperations.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    [ControllerExceptionFilter]
     public class CompanyReportController : Controller
     {
-        private readonly RecordsContext _context;
         private readonly ILoginService _loginService;
-        private readonly ElasticClient _log;
+        private readonly IGenericRepository _repository;
 
         public CompanyReportController(
-            RecordsContext context,
             ILoginService loginService,
-            ElasticClient log
+            IGenericRepository repository
             )
         {
-            _context = context;
             _loginService = loginService;
-            _log = log;
+            _repository = repository;
         }
    
 
-        [AllowAnonymous]
         [HttpGet("GetReport")]
-        [SwaggerOperation(Summary = "Report about dialogues", Description = "For not loggined users")]        
+        [SwaggerOperation(Summary = "Report about dialogues", Description = "Requires any user token")]
         [SwaggerResponse(200, "Report constructed")]
         public FileResult GetReport([FromQuery(Name = "begTime")] string beg,
             [FromQuery(Name = "companyId"), SwaggerParameter("list guids, if not passed - takes from token")] List<Guid> companyIds)
         {
+            _loginService.GetCurrentUserId();
+            _loginService.GetCurrentCompanyId();
             var stringFormat = "yyyyMMddHHmmss";
             var begTime = !String.IsNullOrEmpty(beg) ? DateTime.ParseExact(beg, stringFormat, CultureInfo.InvariantCulture) : DateTime.Now.AddDays(-1);
-            System.Console.WriteLine($"{begTime}");
 
-            companyIds = companyIds.Any() ? companyIds : _context.Companys.Where(p => p.StatusId == 3).Select(p=>p.CompanyId).ToList();
+            companyIds = companyIds.Any() 
+                ? companyIds 
+                : _repository.GetAsQueryable<Company>()
+                    .Where(p => p.StatusId == 3)
+                    .Select(p => p.CompanyId)
+                    .ToList();
 
             DialogueReport(begTime, companyIds);
 
@@ -85,30 +75,15 @@ namespace UserOperations.Controllers
 
         private void DialogueReport(DateTime beginTime, List<Guid> companyIds)
         {            
-            var dialogues = _context.Dialogues
-                .Include(p => p.ApplicationUser)
-                .Include(p => p.ApplicationUser.Company)
-                .Include(p => p.ApplicationUser.WorkerType)
-                .Include(p => p.DialogueAudio)
-                .Include(p => p.Language)
-                .Include(p => p.DialogueClientSatisfaction)
-                .Include(p => p.DialogueClientProfile)
-                .Include(p => p.DialogueHint)
-                .Include(p => p.DialogueInterval)
-                .Include(p => p.DialogueSpeech)
-                .Include(p => p.DialogueVisual)
-                .Include(p => p.DialoguePhrase)
-                .Include(p => p.DialogueWord)
-
+            var dialogues = _repository.GetAsQueryable<Dialogue>()
                 .Where(p => p.BegTime > beginTime
-                    && companyIds.Contains((Guid)p.ApplicationUser.CompanyId))
+                    && companyIds.Contains((Guid)p.Device.CompanyId))
                 .Select(p => new DialogueReportModel
                     {
                         CompanyName = p.ApplicationUser.Company.CompanyName,
-                        CompanyId = (Guid)p.ApplicationUser.CompanyId,
+                        CompanyId = p.Device.CompanyId,
                         DialogueId = p.DialogueId,
-                        EmployeeEmployeeId = p.ApplicationUserId,
-                        EmployeeWorkerTypeName = p.ApplicationUser.WorkerType.WorkerTypeName,
+                        ApplicationUserId = p.ApplicationUserId,
                         BeginTime = p.BegTime,
                         EndTime = p.EndTime,
                         InStatistic = p.InStatistic,
@@ -138,12 +113,11 @@ namespace UserOperations.Controllers
                         SpeechesSpeechSpeed = p.DialogueSpeech.Average(s => s.SpeechSpeed).ToString(),
                         PhrasesPhraseText = JsonConvert.SerializeObject(p.DialoguePhrase.Select(s => new 
                                 {
-                                    phraseText = s.Phrase.PhraseText,
-                                    IsClient = s.Phrase.IsClient
+                                    phraseText = s.Phrase.PhraseText
                                 })),
                         WordsWord = JsonConvert.SerializeObject(p.DialogueWord.Select(s => new
                                 {
-                                    Words = s.Words
+                                    s.Words
                                 })),
                         Video = $"{p.DialogueId}.mkv",
                         Avatar = p.DialogueClientProfile.FirstOrDefault(s => s.Avatar != null).Avatar
@@ -216,8 +190,8 @@ namespace UserOperations.Controllers
                     tempRow.Append(
                         ConstructCell(dr.CompanyId.ToString(), CellValues.String),
                         ConstructCell(dr.DialogueId.ToString(), CellValues.String),
-                        ConstructCell(dr.EmployeeEmployeeId.ToString(), CellValues.String),
-                        ConstructCell(dr.EmployeeWorkerTypeName, CellValues.String),                    
+                        ConstructCell(dr.ApplicationUserId.ToString(), CellValues.String),
+                        ConstructCell(dr.EmployeeWorkerTypeName, CellValues.String),
                         ConstructCell(dr.BeginTime.ToString(), CellValues.String),
                         ConstructCell(dr.EndTime.ToString(), CellValues.String),
                         ConstructCell(dr.InStatistic.ToString(), CellValues.String),
@@ -269,8 +243,8 @@ namespace UserOperations.Controllers
         public string CompanyName {get; set;}
         public Guid CompanyId {get; set;}
         public Guid DialogueId { get; set; }
-        public Guid EmployeeEmployeeId { get; set; }
-        public string EmployeeWorkerTypeName { get; set; }                   
+        public Guid? ApplicationUserId { get; set; }
+        public string EmployeeWorkerTypeName { get; set; }
         public DateTime BeginTime { get; set; }
         public DateTime EndTime { get; set; }
         public bool InStatistic { get; set; }

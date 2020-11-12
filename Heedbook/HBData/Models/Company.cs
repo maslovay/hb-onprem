@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
 
 namespace HBData.Models
@@ -14,6 +15,7 @@ namespace HBData.Models
         ///     Company id
         /// </summary>
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid CompanyId { get; set; }
         /// <summary>
         ///     Company name
@@ -21,6 +23,8 @@ namespace HBData.Models
         
         [Required]
         public String CompanyName { get; set; }
+
+        public bool IsExtended { get; set; }
 
         /// <summary>
         ///     Id of company industry
@@ -56,6 +60,11 @@ namespace HBData.Models
         public ICollection<ApplicationUser> ApplicationUser { get; set; }
 
         /// <summary>
+        ///     Link to company devices
+        /// </summary>
+        public ICollection<Device> Devices { get; set; }
+
+        /// <summary>
         ///     Link to payments
         /// </summary>
         [JsonIgnore] public ICollection<Payment> Payment { get; set; }
@@ -65,5 +74,11 @@ namespace HBData.Models
         /// </summary>
         public Guid? CorporationId { get; set; }
         [JsonIgnore] public Corporation Corporation { get; set; }
+
+        /// <summary>
+        ///     Company schedule
+        /// </summary>
+        public ICollection<WorkingTime> WorkingTimes { get; set; }
+        public ICollection<SalesStagePhrase> SalesStagePhrases { get; set; }
     }
 }

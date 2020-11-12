@@ -35,15 +35,17 @@ namespace FaceAnalyzeService
             services.AddOptions();
             services.AddDbContext<RecordsContext>
             (options =>
-            {
-                var connectionString = Configuration.GetConnectionString("DefaultConnection");
-                options.UseNpgsql(connectionString,
-                    dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
-            });
+                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"),
+                    dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData))),
+                ServiceLifetime.Transient
+            );
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
-            services.AddScoped(provider => provider.GetService<IOptions<SftpSettings>>().Value);
-            services.AddScoped<SftpClient>();
+            services.AddScoped(provider =>
+            {
+                var settings = provider.GetRequiredService<IOptions<SftpSettings>>().Value;
+                return new SftpClient(settings, Configuration);
+            });
             services.AddScoped(provider =>
             {
                 var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;

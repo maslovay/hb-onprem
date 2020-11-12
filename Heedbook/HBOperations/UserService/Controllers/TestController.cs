@@ -21,24 +21,94 @@ using Newtonsoft.Json;
 using Notifications.Base;
 using RabbitMqEventBus.Events;
 using Swashbuckle.AspNetCore.Annotations;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using HBLib;
+using HBMLHttpClient.Model;
+using System.Drawing;
+using Microsoft.AspNetCore.Authorization;
+using RabbitMqEventBus;
+
 namespace UserService.Controllers
 {
     [Route("user/[controller]")]
+  //  [Authorize(AuthenticationSchemes = "Bearer")]
     [ApiController]
     public class TestController : Controller
     {
         private readonly IGenericRepository _repository;
-        private readonly RecordsContext _context;
-        
-        public TestController(RecordsContext context, IGenericRepository repository)
+        private readonly INotificationHandler _handler;
+        private readonly SftpClient _sftpClient;
+        private readonly SftpSettings _sftpSettings;
+        private readonly FFMpegWrapper _wrapper;
+        private readonly CheckTokenService _service;
+        private readonly INotificationPublisher _publisher;
+
+        public TestController(IGenericRepository repository,
+            SftpSettings sftpSettings,
+            FFMpegWrapper wrapper,
+            INotificationHandler handler, SftpClient sftpClient, CheckTokenService service,
+            INotificationPublisher publisher)
         {
-            _context = context;
             _repository = repository;
+            _handler = handler;
+            _sftpClient = sftpClient;
+            _sftpSettings = sftpSettings;
+            _wrapper = wrapper;
+            _service = service;
+            _publisher = publisher;
+        }
+
+        [HttpPost("[action]")]
+        public IActionResult TestHookRequest(object message)
+        {
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            System.Console.WriteLine(JsonConvert.SerializeObject(message));
+            return Ok();
+        }
+
+        [HttpPost("[action]")]
+        public async Task<IActionResult> CreateAvatar(string fileName)
+        {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            var frame = _repository.GetAsQueryable<FileFrame>()
+                .Include(p => p.FrameAttribute)
+                .Where(p => p.FileName == fileName)
+                .FirstOrDefault();
+
+            var video = _repository.GetAsQueryable<FileVideo>().Where(p => p.BegTime <= frame.Time && p.EndTime >= frame.Time && p.DeviceId == frame.DeviceId).FirstOrDefault();
+            var dt = frame.Time;
+            var seconds = dt.Subtract(video.BegTime).TotalSeconds;
+            System.Console.WriteLine($"Seconds - {seconds}, FileVideo - {video.FileName}");
+
+            var localVidePath =
+                await _sftpClient.DownloadFromFtpToLocalDiskAsync("videos/" + video.FileName);
+            System.Console.WriteLine(localVidePath);
+            var localPath = Path.Combine(_sftpSettings.DownloadPath, frame.FileName);
+            System.Console.WriteLine($"Avatar path - {localPath}");
+            var output = await _wrapper.GetFrameNSeconds(localVidePath, localPath, Convert.ToInt32(seconds));
+            System.Console.WriteLine(output);
+
+            var faceRectangle = JsonConvert.DeserializeObject<FaceRectangle>(frame.FrameAttribute.FirstOrDefault().Value);
+            var rectangle = new Rectangle
+            {
+                Height = faceRectangle.Height,
+                Width = faceRectangle.Width,
+                X = faceRectangle.Top,
+                Y = faceRectangle.Left
+            };
+
+            var stream = FaceDetection.CreateAvatar(localPath, rectangle);
+            stream.Seek(0, SeekOrigin.Begin);
+            await _sftpClient.UploadAsMemoryStreamAsync(stream, "test/", $"{frame.FileName}");
+            stream.Close();
+            return Ok();
         }
 
         [HttpGet("[action]/{timelInHours}")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> CheckIfAnyAssembledDialogues( int timelInHours )
         {
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var dialogs = _repository.GetWithInclude<Dialogue>(
                 d => d.EndTime >= DateTime.Now.AddHours(-timelInHours)
                      && d.EndTime < DateTime.Now
@@ -49,11 +119,11 @@ namespace UserService.Controllers
 
             return NotFound($"NO assembled dialogues present for last {timelInHours} hours!!!");
         }
-        
 
         [HttpGet("[action]")]
         public async Task<ObjectResult> RecognizedWords(Guid dialogueId)
         {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             try
             {
                 var dialogue = _repository.Get<Dialogue>().FirstOrDefault(d => d.DialogueId == dialogueId);
@@ -102,6 +172,7 @@ namespace UserService.Controllers
         [HttpGet("[action]")]
         public async Task<ActionResult<IEnumerable<Dialogue>>> GetLast20ProcessedDialogues()
         {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var dialogs = _repository.GetWithInclude<Dialogue>(
                     d => d.EndTime >= DateTime.Now.AddDays(-1) && d.EndTime < DateTime.Now && d.StatusId == 3,
                     d => d.DialogueSpeech,
@@ -116,8 +187,9 @@ namespace UserService.Controllers
 
         
         [HttpPost("[action]")]
-        public async Task Test1(DialogueCreationRun message)
+        public async Task<IActionResult> Test1(DialogueCreationRun message)
         {
+           // if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
             var frameIds =
                 _repository.Get<FileFrame>().Where(item =>
                         item.ApplicationUserId == message.ApplicationUserId
@@ -137,18 +209,20 @@ namespace UserService.Controllers
             var dt2 = DateTime.Now;
             
             Console.WriteLine($"Delta: {dt2-dt1}");
+            return Ok();
         }
 
        [HttpPost]
        [SwaggerOperation(Description = "Save video from frontend and trigger all process")]
        public async Task<IActionResult> Test()
        {
-           try
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            try
            {
                //var applicationUserId = "010039d5-895b-47ad-bd38-eb28685ab9aa";
                var begTime = DateTime.Now.AddDays(-3);
 
-               var dialogues = _context.Dialogues
+               var dialogues = _repository.GetAsQueryable<Dialogue>()
                    .Include(p => p.DialogueFrame)
                    .Include(p => p.DialogueAudio)
                    .Include(p => p.DialogueInterval)
@@ -174,7 +248,7 @@ namespace UserService.Controllers
                }
             //    dialogues.ForEach(p=>p.StatusId = 6);
                dialogues.ForEach(p => p.CreationTime = DateTime.UtcNow);
-               _context.SaveChanges();
+               _repository.Save();
                System.Console.WriteLine("Конец");
                return Ok();
            }
@@ -183,6 +257,156 @@ namespace UserService.Controllers
                return BadRequest(e);
            }
        }
+
+       [HttpGet("[action]")]
+       public async Task<IActionResult> ResendVideosForFraming(string fileNamesString)
+       {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            var names = fileNamesString.Split(',');
+
+           int i = 0;
+
+           foreach (var name in names)
+           {
+               if ( i % 30 == 0 )
+                   Thread.Sleep(60000);
+               ++i;
+               await ResendVideoForFraming(name);
+           }
+           return Ok();
+        }
+       
+       [HttpGet("[action]")]
+       public async Task<IActionResult> ResendVideoForFraming(string fileName)
+       {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            var message = new FramesFromVideoRun
+            {
+                Path = $"videos/{fileName}"
+            };
+            Console.WriteLine($"Sending message {JsonConvert.SerializeObject(message)}");
+           _handler.EventRaised(message);
+            return Ok();
+        }
+
+        [HttpGet("[action]")]
+       public async Task<IActionResult> AddCompanyDictionary(string fileName)
+       {
+          //  if (!_service.CheckIsUserAdmin()) return BadRequest("Requires admin role");
+            AddCpomanyPhrases();
+            return Ok();
+        }
+       
+       private void AddCpomanyPhrases()
+        {
+            var filePath = "/home/oleg/Downloads/Phrases.xlsx";
+            using(FileStream FS = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using(SpreadsheetDocument doc = SpreadsheetDocument.Open(filePath, false))
+                {
+                    System.Console.WriteLine();
+                    WorkbookPart workbook = doc.WorkbookPart;
+                    SharedStringTablePart sstpart = workbook.GetPartsOfType<SharedStringTablePart>().First();
+                    SharedStringTable sst = sstpart.SharedStringTable;
+
+                    WorksheetPart worksheet = workbook.WorksheetParts.First();
+                    Worksheet sheet = worksheet.Worksheet;
+
+                    var cells = sheet.Descendants<Cell>();
+                    var rows = sheet.Descendants<Row>();
+
+                    var phrases = _repository.GetAsQueryable<Phrase>()
+                        .Include(p => p.PhraseType)
+                        .ToList();
+                    var phraseTypes = _repository.GetAsQueryable<PhraseType>().ToList();
+
+                    var user = _repository.GetAsQueryable<ApplicationUser>()
+                        .Include(p => p.Company)
+                        .FirstOrDefault(p => p.FullName == "Сотрудник с бейджем №1");
+                    
+                    
+                    foreach(var row in rows)
+                    {
+                        try
+                        {
+                            //var rowCells = row.Elements<Cell>();
+                            var phraseTextString = GetCellValue(doc, row.Descendants<Cell>().ElementAt(0));
+                            var phraseTypeString = GetCellValue(doc, row.Descendants<Cell>().ElementAt(1));
+                            var existPhrase = phrases.FirstOrDefault(p => p.PhraseText == phraseTextString
+                                    && p.PhraseType.PhraseTypeText == phraseTypeString);
+
+                            var phraseType = phraseTypes.FirstOrDefault(p => p.PhraseTypeText == GetCellValue(doc, row.Descendants<Cell>().ElementAt(1)));
+                            if(phraseType is null)
+                                continue;
+                            
+                            if(existPhrase==null)
+                            {   
+                                System.Console.WriteLine($"phrase not exist in base");
+                                var newPhrase = new Phrase
+                                {
+                                    PhraseId = Guid.NewGuid(),
+                                    PhraseText = GetCellValue(doc, row.Descendants<Cell>().ElementAt(0)),
+                                    PhraseTypeId = phraseType.PhraseTypeId,
+                                    LanguageId = 2,
+                                    WordsSpace = 1,
+                                    Accurancy = 1,
+                                    IsTemplate = false
+                                } ;
+                                var phraseCompany = new PhraseCompany
+                                {
+                                    PhraseCompanyId = Guid.NewGuid(),
+                                    PhraseId = newPhrase.PhraseId,
+                                    CompanyId = user.CompanyId
+                                };  
+                                System.Console.WriteLine($"Phrase: {newPhrase.PhraseText} - {newPhrase.PhraseTypeId}");
+                                _repository.Create<Phrase>(newPhrase); 
+                                _repository.Create<PhraseCompany>(phraseCompany);
+                            }
+                            else
+                            {
+                                var phraseCompany = new PhraseCompany
+                                {
+                                    PhraseCompanyId = Guid.NewGuid(),
+                                    PhraseId = existPhrase.PhraseId,
+                                    CompanyId = user.CompanyId
+                                };  
+                                System.Console.WriteLine($"Phrase: {existPhrase.PhraseText} - {existPhrase.PhraseTypeId}");  
+                                _repository.Create<PhraseCompany>(phraseCompany); 
+                                System.Console.WriteLine($"phrase exist in base");
+                            }                            
+                        }
+                        catch(NullReferenceException ex)
+                        {
+                            System.Console.WriteLine($"exception!!");
+                            break;
+                        }   
+                    }
+                    _repository.Save();
+                }
+            }
+        }
+        ///Method for get Cell Value
+        private static string GetCellValue(SpreadsheetDocument document, Cell cell)
+        {
+            SharedStringTablePart stringTablePart = document.WorkbookPart.SharedStringTablePart;
+            string value = cell.CellValue.InnerXml;
+
+            if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
+            {
+                return stringTablePart.SharedStringTable.ChildElements[Int32.Parse(value)].InnerText;
+            }
+            else
+            {
+                return value;
+            }
+        }
+        [HttpPost("[action]")]
+        public async Task<IActionResult> SendCommandToTabletLoadTest(TabletLoadRun model)
+        {
+            _publisher.Publish(model);
+            System.Console.WriteLine($"model sended");
+            return Ok("model sended!");
+        }
     }
 }
 

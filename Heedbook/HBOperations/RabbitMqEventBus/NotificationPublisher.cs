@@ -66,6 +66,31 @@ namespace RabbitMqEventBus
             }
         }
 
+        public void PublishQueue(String queue, String message)
+        {
+            if (!_persistentConnection.IsConnected) _persistentConnection.TryConnect();
+            var policy = Policy.Handle<BrokerUnreachableException>()
+                               .Or<SocketException>()
+                               .WaitAndRetry(_retryCount,
+                                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) => { });
+
+            using (var channel = _persistentConnection.CreateModel())
+            {
+                var body = Encoding.UTF8.GetBytes(message);
+                policy.Execute(() =>
+                {
+                    var properties = channel.CreateBasicProperties();
+                    properties.DeliveryMode = 2; // persistent
+                    System.Console.WriteLine(queue);
+                    channel.BasicPublish("",
+                        queue,
+                        true,
+                        properties,
+                        body);
+                });
+            }
+        }
+
         public void SubscribeDynamic<TH>(String eventName)
             where TH : IDynamicIntegrationEventHandler
         {
@@ -130,7 +155,7 @@ namespace RabbitMqEventBus
                 try
                 {
                     var @event = ea.RoutingKey;
-                    var message = Encoding.UTF8.GetString(ea.Body);
+                    var message = Encoding.UTF8.GetString(ea?.Body ?? new byte[0]);
                     var eventMessage = ((IntegrationEvent)JsonConvert.DeserializeObject(message, _subsManager.GetEventTypeByName(@event)));
                     if (eventMessage.RetryCount >= _deliveryCount)
                     {
@@ -145,12 +170,12 @@ namespace RabbitMqEventBus
                 }
                 catch (Exception e)
                 {
-                    var encodingString = Encoding.UTF8.GetString(ea.Body);
+                    var encodingString = Encoding.UTF8.GetString(ea?.Body ?? new byte[0]);
                     var @event = (IntegrationEvent)JsonConvert.DeserializeObject(encodingString,
                         _subsManager.GetEventTypeByName(ea.RoutingKey));
                     Console.WriteLine(@event.RetryCount);
                     @event.RetryCount += 1;
-                    Console.WriteLine("exception occured in rabbitmq event bus, retry count is: " + @event.RetryCount);
+                    Console.WriteLine($"Exception occured in rabbitmq event bus {e}, retry count is: " + @event.RetryCount);
                     channel.BasicAck(ea.DeliveryTag, false);
                     Publish(@event);
                 }

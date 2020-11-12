@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UserOperations.Models.AnalyticModels;
+// using UserOperations.Models.AnalyticModels;
 
 namespace QuartzExtensions.Jobs
 {           

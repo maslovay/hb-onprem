@@ -40,12 +40,12 @@ namespace UserOperations.Controllers
     [ApiController]
     public class PaymentController : Controller
     {
-        private readonly ILoginService _loginService;
+        private readonly LoginService _loginService;
         private readonly RecordsContext _context;
         // private readonly ElasticClient _log;
 
         public PaymentController(
-            ILoginService loginService,
+            LoginService loginService,
             RecordsContext context
             // ElasticClient log
             )

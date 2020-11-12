@@ -10,7 +10,7 @@ WORKDIR /app
 COPY --from=build-env /app/HBOperations/DialogueVideoAssembleService/publish .
 ENTRYPOINT ["dotnet", "DialogueVideoAssembleService.dll"]
 RUN apk add ffmpeg
-RUN mkdir /opt/
+#RUN mkdir /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir /opt/download
 RUN chmod -R 777 /opt/download
