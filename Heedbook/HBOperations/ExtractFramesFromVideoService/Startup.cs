@@ -109,11 +109,11 @@ namespace ExtractFramesFromVideo
             {
                 if(DateTime.Now.Subtract(HelthTime.Time).Minutes > 5)
                 {
-                    await context.Response.WriteAsync($"NotAwesome\n{HelthTime.Time}");
+                    await context.Response.WriteAsync($"NotAwesome");
                 }
                 else
                 {
-                    await context.Response.WriteAsync($"Awesome\n{HelthTime.Time}");
+                    await context.Response.WriteAsync($"Awesome");
                 }
             });
         }
