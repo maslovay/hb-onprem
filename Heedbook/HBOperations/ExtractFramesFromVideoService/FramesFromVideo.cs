@@ -52,6 +52,8 @@ namespace ExtractFramesFromVideo
 
         public async Task Run(string videoBlobRelativePath)
         {
+            System.Console.WriteLine($"HelthTime.Time: {HelthTime.Time}");
+            HelthTime.Time = DateTime.Now;
             _log.SetFormat("{Path}");
             _log.SetArgs(videoBlobRelativePath);
             try

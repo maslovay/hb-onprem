@@ -8,10 +8,12 @@ using HBLib;
 using HBLib.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Notifications.Base;
 using Quartz;
@@ -25,6 +27,7 @@ namespace ExtractFramesFromVideo
     public class Startup
     {
         private bool isCalledFromUnitTest;
+        private DateTime lastTime;
         
         public Startup(IConfiguration configuration)
         {
@@ -97,6 +100,22 @@ namespace ExtractFramesFromVideo
                 trigger);
             app.UseHttpsRedirection();
             app.UseMvc();
+            HelthTime.Time = DateTime.Now;
+            app.Map("/healthz", Healthz);
+        }
+        private void Healthz(IApplicationBuilder app)
+        {
+            app.Run(async context => 
+            {
+                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > 5)
+                {
+                    await context.Response.WriteAsync($"NotAwesome\n{HelthTime.Time}");
+                }
+                else
+                {
+                    await context.Response.WriteAsync($"Awesome\n{HelthTime.Time}");
+                }
+            });
         }
     }
 }
