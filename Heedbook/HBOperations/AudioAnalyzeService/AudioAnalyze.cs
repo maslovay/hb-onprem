@@ -13,6 +13,7 @@ using RabbitMqEventBus;
 using RabbitMqEventBus.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using HBLib.Utils.Interfaces;
 
 namespace AudioAnalyzeService
 {
