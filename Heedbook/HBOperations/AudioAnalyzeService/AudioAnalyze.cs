@@ -69,6 +69,8 @@ namespace AudioAnalyzeService
                     var fileName = splitedString[1];
                     var dialogueId = Guid.Parse(Path.GetFileNameWithoutExtension(fileName));
                     var dialogue = _context.Dialogues
+                        .Include(p => p.Device)
+                        .Include(p => p.Device.Company)
                         .FirstOrDefault(p => p.DialogueId == dialogueId);
 
                     var fileExist = await _sftpclient.IsFileExistsAsync(path);
@@ -105,7 +107,8 @@ namespace AudioAnalyzeService
                         await _googleConnector.CheckApiKey();
                         if (Environment.GetEnvironmentVariable("INFRASTRUCTURE") == "Cloud")
                         {
-                            var languageId = Int32.Parse("2");
+                            // var languageId = Int32.Parse("2");
+                            var languageId = dialogue.Device.Company.LanguageId == null ? 2 : (int)dialogue.Device.Company.LanguageId;
 
                             var currentPath = Directory.GetCurrentDirectory();
                             var token = await _googleConnector.GetAuthorizationToken(currentPath);
