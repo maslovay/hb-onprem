@@ -23,4 +23,5 @@ export URL_SETTINGS="https://heedbookapitest.westeurope.cloudapp.azure.com/"
 export ELASTIC_SETTINGS_HOST="tcp://logstash-service.kube-system"
 export ELASTIC_SETTINGS_PORT="5000"
 export HBML_URI_SETTING="http://hbmlservice:8000"
+export SERVICELIVETIMEINMINUTES="5"
 

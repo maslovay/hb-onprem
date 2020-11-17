@@ -82,6 +82,8 @@ namespace ExtractFramesFromVideo
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddTransient<FramesFromVideo>();
             services.AddTransient<FramesFromVideoRunHandler>();
+
+            HelthTime.SERVICELIVETIMEINMINUTES = Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES") == null ? 5 : Int32.Parse(Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -108,7 +110,7 @@ namespace ExtractFramesFromVideo
         {
             app.Run(async context => 
             {
-                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > 5)
+                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES)
                 {
                     var response = context.Response;
                     response.StatusCode = 503;
