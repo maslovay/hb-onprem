@@ -102,6 +102,7 @@ namespace ExtractFramesFromVideo
             app.UseMvc();
             HelthTime.Time = DateTime.Now;
             app.Map("/healthz", Healthz);
+            app.Map("/awesome", Healthz);
         }
         private void Healthz(IApplicationBuilder app)
         {
