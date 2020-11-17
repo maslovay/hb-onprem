@@ -102,7 +102,7 @@ namespace ExtractFramesFromVideo
             app.UseMvc();
             HelthTime.Time = DateTime.Now;
             app.Map("/healthz", Healthz);
-            app.Map("/awesome", Healthz);
+            app.Map("/awesome", LastTime);
         }
         private void Healthz(IApplicationBuilder app)
         {
@@ -116,6 +116,13 @@ namespace ExtractFramesFromVideo
                 {
                     await context.Response.WriteAsync($"Awesome");
                 }
+            });
+        }
+        private void LastTime(IApplicationBuilder app)
+        {
+            app.Run(async context => 
+            {                
+                await context.Response.WriteAsync(HelthTime.Time.ToString());
             });
         }
     }
