@@ -37,7 +37,7 @@ namespace UserOperations.Services
             _dbOperation = dBOperations;
             _repository = repository;
         }
-        public async Task GenerateReport(string fileName, string corporationName, string begTime, string endTime)
+        public async Task<string> GenerateReport(string fileName, string corporationName, string begTime, string endTime)
         {
             try
             {
@@ -96,7 +96,8 @@ namespace UserOperations.Services
                         && p.InStatistic == true)
                     .OrderBy(p => p.BegTime)
                     .ToList();            
-
+                if(dialogues.Count == 0)
+                    return $"dialogues not exist";
                 using (ExcellDocument document = new ExcellDocument(fileName))
                 {
                     var workbookPart = document.AddWorkbookPart();
@@ -204,6 +205,7 @@ namespace UserOperations.Services
 
                     document.SaveDocument(ref workbookPart);
                     document.CloseDocument();
+                    return "report generated";
                 }
             }
             catch(Exception e)
@@ -236,6 +238,8 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime)
         {
+            if(dialogues.Count == 0)
+                return null;
             var dialogueIds = dialogues.Select(q => q.DialogueId).ToList();
             var phraseTypes = _repository.GetAsQueryable<PhraseType>()
                 .ToList();
