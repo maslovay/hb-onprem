@@ -111,6 +111,7 @@ namespace ExtractFramesFromVideo
                 if(DateTime.Now.Subtract(HelthTime.Time).Minutes > 5)
                 {
                     var response = context.Response;
+                    response.StatusCode = 503;
                     response.Headers.Add("Custom-Header", "NotAwesome");
                     await response.WriteAsync($"NotAwesome");
                 }
