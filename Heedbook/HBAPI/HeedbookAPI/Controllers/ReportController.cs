@@ -40,11 +40,23 @@ namespace UserOperations.Controllers
             {
                 var reportName = "Report.xlsx";
                 var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+<<<<<<< HEAD
                 await _reportService.GenerateReport(reportName, corporationName, begTime, endTime);
                 
                 var stream = new FileStream(reportName, FileMode.Open);
                 System.IO.File.Delete(reportName);
                 return File(stream, contentType, reportName);
+=======
+                var result = await _reportService.GenerateReport(reportName, corporationName, begTime, endTime);
+                if(result == "report generated")
+                {
+                    var stream = new FileStream(reportName, FileMode.Open);
+                    System.IO.File.Delete(reportName);
+                    return File(stream, contentType, reportName);
+                }
+                else
+                    return Ok(result);
+>>>>>>> origin/devices
             }
             catch(Exception e)
             {
