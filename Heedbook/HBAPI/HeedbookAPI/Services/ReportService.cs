@@ -37,11 +37,7 @@ namespace UserOperations.Services
             _dbOperation = dBOperations;
             _repository = repository;
         }
-<<<<<<< HEAD
-        public async Task GenerateReport(string fileName, string corporationName, string begTime, string endTime)
-=======
         public async Task<string> GenerateReport(string fileName, string corporationName, string begTime, string endTime)
->>>>>>> origin/devices
         {
             try
             {
@@ -99,13 +95,9 @@ namespace UserOperations.Services
                         && p.StatusId == 3
                         && p.InStatistic == true)
                     .OrderBy(p => p.BegTime)
-                    .ToList();            
-<<<<<<< HEAD
-
-=======
+                    .ToList();  
                 if(dialogues.Count == 0)
                     return $"dialogues not exist";
->>>>>>> origin/devices
                 using (ExcellDocument document = new ExcellDocument(fileName))
                 {
                     var workbookPart = document.AddWorkbookPart();
@@ -213,10 +205,7 @@ namespace UserOperations.Services
 
                     document.SaveDocument(ref workbookPart);
                     document.CloseDocument();
-<<<<<<< HEAD
-=======
                     return "report generated";
->>>>>>> origin/devices
                 }
             }
             catch(Exception e)
@@ -249,11 +238,8 @@ namespace UserOperations.Services
             DateTime begTime,
             DateTime endTime)
         {
-<<<<<<< HEAD
-=======
             if(dialogues.Count == 0)
                 return null;
->>>>>>> origin/devices
             var dialogueIds = dialogues.Select(q => q.DialogueId).ToList();
             var phraseTypes = _repository.GetAsQueryable<PhraseType>()
                 .ToList();
