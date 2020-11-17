@@ -98,7 +98,7 @@ namespace ExtractFramesFromVideo
             var trigger = app.ApplicationServices.GetService<ITrigger>();
             scheduler.ScheduleJob(job,
                 trigger);
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
             app.UseMvc();
             HelthTime.Time = DateTime.Now;
             app.Map("/healthz", Healthz);
