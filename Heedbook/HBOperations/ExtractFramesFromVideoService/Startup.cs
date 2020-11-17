@@ -110,11 +110,15 @@ namespace ExtractFramesFromVideo
             {
                 if(DateTime.Now.Subtract(HelthTime.Time).Minutes > 5)
                 {
-                    await context.Response.WriteAsync($"NotAwesome");
+                    var response = context.Response;
+                    response.Headers.Add("Custom-Header", "NotAwesome");
+                    await response.WriteAsync($"NotAwesome");
                 }
                 else
                 {
-                    await context.Response.WriteAsync($"Awesome");
+                    var response = context.Response;
+                    response.Headers.Add("Custom-Header", "Awesome");
+                    await response.WriteAsync($"Awesome");
                 }
             });
         }
