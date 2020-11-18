@@ -29,9 +29,6 @@
                 }
             },
             "env": {
-<<<<<<< HEAD
-                "ASPNETCORE_ENVIRONMENT": "Development"
-=======
                 "ASPNETCORE_ENVIRONMENT": "Development",
                 "DB_CONNECTION_STRING": "User ID=test_user;Password=test_password;Host=104.40.181.96;Port=5432;Database=test_db;Pooling=true;Keepalive=25",
                 "RABBITMQ_CONNECTION_USERNAME": "guest",
@@ -48,7 +45,6 @@
                 "ELASTIC_SETTINGS_HOST": "tcp://logstash-service.kube-system",
                 "ELASTIC_SETTINGS_PORT": "5000",
                 "SERVICELIVETIMEINMINUTES": "5"
->>>>>>> origin/devices
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"
