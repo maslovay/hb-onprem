@@ -10,6 +10,8 @@ using Renci.SshNet.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -21,7 +23,6 @@ namespace ExtractFramesFromVideo
     public class FramesFromVideo
     {
         private readonly INotificationHandler _handler;
-        private readonly ElasticClientFactory _clientFactory;
         private readonly ElasticClient _log;
         private readonly RecordsContext _context;
         private const string FrameContainerName = "frames";
@@ -32,33 +33,32 @@ namespace ExtractFramesFromVideo
         
         public FramesFromVideo(
             INotificationHandler handler,
-            ElasticClientFactory clientFactory,
             FFMpegSettings settings,
             FFMpegWrapper wrapper,
             SftpClient sftpClient,
             SftpSettings sftpSettings,
-            RecordsContext context
+            RecordsContext context,
+            ElasticClient log
             )
         {
             _handler = handler;
-            _clientFactory = clientFactory;
             _settings = settings;
             _wrapper = wrapper;
             _sftpClient = sftpClient;
             _sftpSettings = sftpSettings;
             _context = context;
-            _log = _clientFactory.GetElasticClient();
+            _log = log;
         }
 
         public async Task Run(string videoBlobRelativePath)
         {
+            System.Console.WriteLine($"HelthTime.Time: {HelthTime.Time}");
+            HelthTime.Time = DateTime.Now;
             _log.SetFormat("{Path}");
             _log.SetArgs(videoBlobRelativePath);
-
             try
             {
                 _log.Info("Function Extract Frames From Video Started");
-                
                 var fileName = Path.GetFileNameWithoutExtension(videoBlobRelativePath);
                 var applicationUserId = fileName.Split(("_"))[0];
                 var deviceId = fileName.Split(("_"))[1];
@@ -77,19 +77,21 @@ namespace ExtractFramesFromVideo
                 await _sftpClient.DownloadFromFtpToLocalDiskAsync(
                         $"{_sftpSettings.DestinationPath}{videoBlobRelativePath}", sessionDir);
                 var localFilePath = Path.Combine(sessionDir, Path.GetFileName(videoBlobRelativePath));
-
-                var splitRes = ffmpeg.SplitToFrames(localFilePath, sessionDir);
-                List<FrameInfo> frames = GetLocalFilesInformation(applicationUserId, deviceId, sessionDir, videoTimeStamp);
-                System.Console.WriteLine($"Frames info - {JsonConvert.SerializeObject(frames)}");
-                var tasks = frames.Select(p => {
-                    return Task.Run(async() => 
-                    {
-                        await _sftpClient.UploadAsync(p.FramePath, "frames", p.FrameName);
-                    });
-                });
-                await Task.WhenAll(tasks);
-
-                _log.Info($"Processing frames {JsonConvert.SerializeObject(frames)}");
+                var startTime = DateTime.Now;
+                var frames = await SplitVideoToFramesInMemoryStream(localFilePath, applicationUserId, deviceId, videoTimeStamp);
+                var firstFrame = frames.FirstOrDefault();
+                frames = frames.Where(p => p.FrameName != firstFrame.FrameName)
+                    .ToList();
+                // System.Console.WriteLine($"Frames info - {JsonConvert.SerializeObject(frames)}");
+                // var tasks = frames.Select(p => {
+                //     return Task.Run(async() => 
+                //     {
+                //         await _sftpClient.UploadAsync(p.FramePath, "frames", p.FrameName);
+                //     });
+                // });
+                // await Task.WhenAll(tasks);
+                
+                // _log.Info($"Processing frames {JsonConvert.SerializeObject(frames)}");
                 var existedFrames = _context.FileFrames.Where(p => p.DeviceId == Guid.Parse(deviceId))
                     .ToList();
                 var fileFrames = new List<FileFrame>();
@@ -113,6 +115,11 @@ namespace ExtractFramesFromVideo
                         _context.SaveChanges();
                     }
                 }
+                System.Console.WriteLine($"Total seconds: {DateTime.Now.Subtract(startTime).TotalSeconds}");
+                foreach (var fileFrame in fileFrames)
+                {
+                    RaiseNewFrameEvent(fileFrame.FileName);
+                }
                 _log.Info("Deleting local files");
                 Directory.Delete(sessionDir, true);
 
@@ -126,7 +133,143 @@ namespace ExtractFramesFromVideo
                 System.Console.WriteLine($"{e}");
             }   
         }
+        private async Task<List<FrameInfo>> SplitVideoToFramesInMemoryStream(
+            string inputFileName, 
+            string applicationUserId, 
+            string deviceId, 
+            DateTime videoTimeStamp, 
+            int period = 3)
+        {
+            string arguments = $"-skip_frame nokey -i {inputFileName} -r 1/{period} -f image2pipe -";  //Работает
+            Process proc = new Process();
+            proc.StartInfo.FileName = Environment.OSVersion.Platform == PlatformID.Win32NT ? _settings.FFMpegPath : "ffmpeg";
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.RedirectStandardInput = true;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.Arguments = arguments;
+            proc.Start();
+            var MS = (Stream)new MemoryStream();            
+            // var inputTask = Task.Run(() =>
+            // {
+            //     convertMemoryStreamToStream(videoStream, proc.StandardInput.BaseStream);
+            //     // videoStream.Position = 0;
+            //     // videoStream.CopyTo(proc.StandardInput.BaseStream);
+            //     proc.StandardInput.Close();
+            // });    
+             
+            var outputTask = Task.Run(() =>
+            {
+                var OutputStream = proc.StandardOutput.BaseStream;
+                OutputStream.CopyTo(MS);
+                proc.StandardOutput.Close();
+            });
+            // Task.WaitAll(inputTask, outputTask);
+            Task.WaitAll(outputTask);
+            proc.WaitForExit();
+            
+            int index = 1;
+            List<FrameInfo> framesInfo = new List<FrameInfo>();
+            var uploadTasks = new List<Task>();
+            MS.Position = 0;
+            foreach (Image Im in GetThumbnails(MS))             
+            {
+                var FrameStream = new MemoryStream();
+                using (var im = new Bitmap(Im))
+                {
+                    var frameTime =  videoTimeStamp.AddSeconds(index * 3).ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+                    var frameName = $"{applicationUserId}_{deviceId}_{frameTime}.jpg";
+                    framesInfo.Add(new FrameInfo()
+                        {
+                            FrameTime = frameTime,
+                            FrameName = frameName
+                        });
+                    im.Save(FrameStream, ImageFormat.Jpeg);                    
+                    FrameStream.Position = 0;
+                    uploadTasks.Add(Task.Run(async() =>
+                        {
+                            await _sftpClient.UploadAsMemoryStreamAsync(FrameStream, "frames", frameName);
+                        }));                    
+                    index++;
+                }
+            }
+            await Task.WhenAll(uploadTasks);
+            return framesInfo;
+        }
+        private IEnumerable<Image> GetThumbnails(Stream stream)
+        {
+            byte[] allImages;
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                allImages = ms.ToArray();                                               //В allImages поместили поток всех полученных изображений в виде одного массива байтов
+            }
+            var bof = allImages.Take(8).ToArray();                                      //В bof поместили 8 байтов из массива allImages (8 ячеек массива allImages)
+            var prevOffset = -1;                                                
+            foreach (var offset in GetBytePatternPositions(allImages, bof))             //Перебираем индексы начала подмассивов
+            {
+                if (prevOffset > -1)
+                    yield return GetImageAt(allImages, prevOffset, offset);             //Возвращаем объект Image на основе под массива байтов в место вызова метода
+                prevOffset = offset;
+            }
+            if (prevOffset > -1)
+                yield return GetImageAt(allImages, prevOffset, allImages.Length);       //Вернуть оставшиеся данные массива в виде изображения
+        }
 
+        private Image GetImageAt(byte[] data, int start, int end)                        //Получили массив байтов, начальный индекс в массиве и конечный индекс в массиве
+        {
+            using (var ms = new MemoryStream(end - start))                              //Инициализировали поток
+            {
+                ms.Write(data, start, end - start);                                     //Записали в поток под последовательность байтов
+                return Image.FromStream(ms);                                            //Вернули изображение в виде объекта Image
+            }
+        }
+
+        private IEnumerable<int> GetBytePatternPositions(byte[] data, byte[] pattern)    //data содержит весь массив байтов с изображениями, pattern - содержит первые 8 ячеек массива data
+        {
+            var dataLen = data.Length;                                                  //Получили общее количество байтов в массиве
+            var patternLen = pattern.Length - 1;                                        //Получили число байтов в шаблоне (8-1) = 7
+            int scanData = 0;                                                           //Индекс проверенных байтов массива data
+            int scanPattern = 0;                                                        //Индекс проверки байтов шаблона
+            while (scanData < dataLen)                                                  //В цикле переберем все ячеки массива байтов
+            {
+                if (pattern[0] == data[scanData])                                       //Найдем совпадения [0] го байта шаблона в основном массиве. Если нашли первое совпадение, то
+                {
+                    scanPattern = 1;                                                    //индекс шаблона присваиваем 1
+                    scanData++;                                                         //инкрементируем индекс основного массива
+                    while (pattern[scanPattern] == data[scanData])                      //Пока последующие байты совпадают
+                    {
+                        if (scanPattern == patternLen)                                  //Если индекс проверки байтов шаблона равен 7, то 
+                        {
+                            yield return scanData - patternLen;                         //Возвращаем индекс - (как разность  scanData - 7) начала изображения в общем массиве
+                            break;
+                        }
+                        scanPattern++;
+                        scanData++;
+                    }
+                }
+                scanData++;                                                             //Инкрементируем индекс основного массива с данными, до тех пор пока не найдем совпадение
+            }
+        }
+        private void convertMemoryStreamToStream(MemoryStream MS, Stream S)
+        {
+            byte[] buffer = new byte[32 * 1024]; // 32K buffer for example
+            int bytesRead;
+            MS.Position = 0;
+            while ((bytesRead = MS.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                S.Write(buffer, 0, bytesRead);
+            }
+        }
+        private void convertStreamToStream(Stream sourceStream, Stream targetStream)
+        {
+            byte[] buffer = new byte[32 * 1024]; // 32K buffer for example
+            int bytesRead;
+            while ((bytesRead = sourceStream.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                targetStream.Write(buffer, 0, bytesRead);
+            }
+        }
         private async Task<FileFrame> CreateFileFrameAsync(string applicationUserId, string frameTime, string fileName, string deviceId)
         {
             Guid? userId = Guid.Parse(applicationUserId);
@@ -143,7 +286,8 @@ namespace ExtractFramesFromVideo
                 IsFacePresent = false,
                 StatusId = 6,
                 StatusNNId = 6,
-                Time = DateTime.ParseExact(frameTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
+                Time = DateTime.ParseExact(frameTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture),
+                CreationTime = DateTime.UtcNow
             };
             return fileFrame;
         }

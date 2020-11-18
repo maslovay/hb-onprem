@@ -60,7 +60,10 @@ namespace HBLib.Utils
         {
             _client.Dispose();
         }
-
+        public bool ClientIsConnected()
+        {
+            return _client.IsConnected;            
+        }
         private async Task ConnectToSftpAsync()
         {
             if (!_client.IsConnected)
@@ -375,6 +378,35 @@ namespace HBLib.Utils
             return _client.ListDirectory(path).Where(f => !f.IsDirectory).Select(f => f.Name).ToList();
         }
 
+        public async Task<IEnumerable<Renci.SshNet.Sftp.SftpFile>> GetAllFilesDataRecursively(String directory)
+        {
+            await ConnectToSftpAsync();
+            return GetAllFilesRecursively(directory);
+            
+        }
+        private IEnumerable<Renci.SshNet.Sftp.SftpFile> GetAllFilesRecursively(String directory)
+        {
+            List<Renci.SshNet.Sftp.SftpFile> files = new List<Renci.SshNet.Sftp.SftpFile>();
+            var listOfItems = _client.ListDirectory($"{directory}").ToList();
+            foreach(var item in listOfItems)
+            {
+                if(item.IsDirectory)
+                {
+                    if(item.FullName.Split("/").Last() != "." && item.FullName.Split("/").Last() != "..")
+                    {
+                        var fileList = GetAllFilesRecursively($"{item.FullName}");
+                        files.AddRange(fileList);
+                        // System.Console.WriteLine($"{item.FullName} folder");
+                    }
+                }
+                else
+                {
+                    files.Add(item);
+                    // System.Console.WriteLine($"{item.FullName} file");
+                }
+            }
+            return files;
+        }
         public async Task<IEnumerable<SftpFile>> ListDirectoryAsync(string path)
         {
             await ConnectToSftpAsync();
