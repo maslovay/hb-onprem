@@ -19,6 +19,7 @@ using Notifications.Base;
 using Quartz;
 using QuartzExtensions;
 using RabbitMqEventBus;
+using RabbitMqEventBus.Base;
 using RabbitMqEventBus.Events;
 using UnitTestExtensions;
 
@@ -109,22 +110,23 @@ namespace ExtractFramesFromVideo
         private void Healthz(IApplicationBuilder app)
         {
             var sftpClient = app.ApplicationServices.GetService<SftpClient>();
-            
+            var rabbitClient = app.ApplicationServices.GetService<IRabbitMqPersistentConnection>();
             app.Run(async context => 
             {
                 var sftpIsConnected = sftpClient.ClientIsConnected();
-                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES || !sftpIsConnected)
+                var rabbitIsConnected = rabbitClient.IsConnected;
+                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES || !sftpIsConnected || !rabbitIsConnected)
                 {
                     var response = context.Response;
                     response.StatusCode = 503;
                     response.Headers.Add("Custom-Header", "NotAwesome");
-                    await response.WriteAsync($"NotAwesome\nsftpIsConnected: {sftpIsConnected}");
+                    await response.WriteAsync($"NotAwesome\nsftpIsConnected: {sftpIsConnected}\nrabbitIsConnected: {rabbitIsConnected}");
                 }
                 else
                 {
                     var response = context.Response;
                     response.Headers.Add("Custom-Header", "Awesome");
-                    await response.WriteAsync($"Awesome\nsftpIsConnected: {sftpIsConnected}");
+                    await response.WriteAsync($"Awesome\nsftpIsConnected: {sftpIsConnected}\nrabbitIsConnected: {rabbitIsConnected}");
                 }
             });
         }
