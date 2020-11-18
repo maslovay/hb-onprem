@@ -108,20 +108,23 @@ namespace ExtractFramesFromVideo
         }
         private void Healthz(IApplicationBuilder app)
         {
+            var sftpClient = app.ApplicationServices.GetService<SftpClient>();
+            
             app.Run(async context => 
             {
-                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES)
+                var sftpIsConnected = sftpClient.ClientIsConnected();
+                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES || !sftpIsConnected)
                 {
                     var response = context.Response;
                     response.StatusCode = 503;
                     response.Headers.Add("Custom-Header", "NotAwesome");
-                    await response.WriteAsync($"NotAwesome");
+                    await response.WriteAsync($"NotAwesome\nsftpIsConnected: {sftpIsConnected}");
                 }
                 else
                 {
                     var response = context.Response;
                     response.Headers.Add("Custom-Header", "Awesome");
-                    await response.WriteAsync($"Awesome");
+                    await response.WriteAsync($"Awesome\nsftpIsConnected: {sftpIsConnected}");
                 }
             });
         }
