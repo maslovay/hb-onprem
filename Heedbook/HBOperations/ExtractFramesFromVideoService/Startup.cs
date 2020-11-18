@@ -105,7 +105,6 @@ namespace ExtractFramesFromVideo
             app.UseMvc();
             HelthTime.Time = DateTime.Now;
             app.Map("/healthz", Healthz);
-            app.Map("/awesome", LastTime);
         }
         private void Healthz(IApplicationBuilder app)
         {
@@ -120,21 +119,14 @@ namespace ExtractFramesFromVideo
                     var response = context.Response;
                     response.StatusCode = 503;
                     response.Headers.Add("Custom-Header", "NotAwesome");
-                    await response.WriteAsync($"NotAwesome\nsftpIsConnected: {sftpIsConnected}\nrabbitIsConnected: {rabbitIsConnected}");
+                    await response.WriteAsync($"NotAwesome");
                 }
                 else
                 {
                     var response = context.Response;
                     response.Headers.Add("Custom-Header", "Awesome");
-                    await response.WriteAsync($"Awesome\nsftpIsConnected: {sftpIsConnected}\nrabbitIsConnected: {rabbitIsConnected}");
+                    await response.WriteAsync($"Awesome");
                 }
-            });
-        }
-        private void LastTime(IApplicationBuilder app)
-        {
-            app.Run(async context => 
-            {                
-                await context.Response.WriteAsync(HelthTime.Time.ToString());
             });
         }
     }
