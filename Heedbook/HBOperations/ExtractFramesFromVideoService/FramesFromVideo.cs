@@ -286,8 +286,7 @@ namespace ExtractFramesFromVideo
                 IsFacePresent = false,
                 StatusId = 6,
                 StatusNNId = 6,
-                Time = DateTime.ParseExact(frameTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture),
-                CreationTime = DateTime.UtcNow
+                Time = DateTime.ParseExact(frameTime, "yyyyMMddHHmmss", CultureInfo.InvariantCulture)
             };
             return fileFrame;
         }
