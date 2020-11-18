@@ -55,7 +55,10 @@ namespace HBLib.Utils
         {
             _client.Dispose();
         }
-
+        public bool ClientIsConnected()
+        {
+            return _client.IsConnected;            
+        }
         private async Task ConnectToSftpAsync()
         {
             if (!_client.IsConnected)
