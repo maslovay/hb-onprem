@@ -222,7 +222,6 @@ namespace UserOperations
 
             app.UseAuthentication();
             app.UseMvc();
-
             // add seed
            // BenchmarkRunner.Run<TestRepository>();
         }

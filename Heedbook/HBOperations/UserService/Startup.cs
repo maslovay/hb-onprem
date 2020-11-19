@@ -148,7 +148,6 @@ namespace UserService
                 app.UseDeveloperExceptionPage();
             else
                 app.UseHsts();
-
             app.UseSwagger(c => { c.RouteTemplate = "user/swagger/{documentName}/swagger.json"; });
             var publisher = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             
