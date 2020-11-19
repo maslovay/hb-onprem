@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Configurations;
 using FaceAnalyzeService.Handler;
 using HBData;
@@ -8,6 +9,7 @@ using HBLib.Utils;
 using HBMLHttpClient;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -16,6 +18,7 @@ using Microsoft.Extensions.Options;
 using Quartz;
 using QuartzExtensions;
 using RabbitMqEventBus;
+using RabbitMqEventBus.Base;
 using RabbitMqEventBus.Events;
 using Serilog;
 
@@ -93,6 +96,8 @@ namespace FaceAnalyzeService
             services.AddRabbitMqEventBusConfigFromEnv();
             services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            
+            HelthTime.SERVICELIVETIMEINMINUTES = Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES") == null ? 5 : Int32.Parse(Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -108,8 +113,42 @@ namespace FaceAnalyzeService
             var trigger = app.ApplicationServices.GetService<ITrigger>();
             scheduler.ScheduleJob(job,
                 trigger);
-            app.UseHttpsRedirection();
+            // app.UseHttpsRedirection();
             app.UseMvc();
+            HelthTime.Time = DateTime.Now;
+            app.Map("/healthz", Healthz);
+        }
+        private void Healthz(IApplicationBuilder app)
+        {
+            var rabbitClient = app.ApplicationServices.GetService<IRabbitMqPersistentConnection>();
+            var elasticClient = app.ApplicationServices.GetService<ElasticClient>();
+            app.Run(async context => 
+            {
+                var rabbitIsConnected = rabbitClient.IsConnected;
+                var SB = new StringBuilder();
+                
+                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES || !rabbitIsConnected)
+                {
+                    var response = context.Response;
+                    response.StatusCode = 503;
+                    response.Headers.Add("Custom-Header", "NotAwesome");
+                    await response.WriteAsync($"NotAwesome");
+                    SB.Append($"StatusCode: {503}\n");
+                }
+                else
+                {
+                    var response = context.Response;
+                    response.Headers.Add("Custom-Header", "Awesome");
+                    await response.WriteAsync($"Awesome");
+                    SB.Append($"StatusCode: {200}\n");
+                }
+                SB.Append($"SERVICELIVETIMEINMINUTES: {HelthTime.SERVICELIVETIMEINMINUTES}\n");
+                SB.Append($"curentTime: {DateTime.Now}\n");
+                SB.Append($"lastTime: {HelthTime.Time}\n");
+                SB.Append($"Subtract in.Minutes: {DateTime.Now.Subtract(HelthTime.Time).Minutes}\n");
+                SB.Append($"rabbitIsConnected: {rabbitIsConnected}\n");
+                elasticClient.Info(SB.ToString());
+            });
         }
     }
 }

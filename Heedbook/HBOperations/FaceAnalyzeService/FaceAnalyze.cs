@@ -45,7 +45,7 @@ namespace FaceAnalyzeService
         {
             _log.SetFormat("{Path}");
             _log.SetArgs(remotePath);
-            
+            HelthTime.Time = DateTime.Now;
             try
             {
                 _log.Info($"Function started");
