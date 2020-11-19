@@ -65,7 +65,7 @@ namespace ExtractFramesFromVideo
                     {
                         Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
                         Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
-                        FunctionName = "OnPremUserService"
+                        FunctionName = "OnPremExtractFramesFromVideo"
                     };
                     return elasticSettings;
                 });
