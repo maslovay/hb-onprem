@@ -6,6 +6,5 @@ namespace HBLib.Utils
     {
         public static DateTime Time = DateTime.Now;
         public static int SERVICELIVETIMEINMINUTES;
-        public static int SFTPDisconnectedCounter = 0;
     }
 }

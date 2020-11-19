@@ -108,21 +108,14 @@ namespace ExtractFramesFromVideo
         }
         private void Healthz(IApplicationBuilder app)
         {
-            var sftpClient = app.ApplicationServices.GetService<SftpClient>();
             var rabbitClient = app.ApplicationServices.GetService<IRabbitMqPersistentConnection>();
             var elasticClient = app.ApplicationServices.GetService<ElasticClient>();
             app.Run(async context => 
             {
-                var sftpIsConnected = sftpClient.ClientIsConnected();
-                if(sftpIsConnected)
-                    HelthTime.SFTPDisconnectedCounter = 0;
-                else
-                    HelthTime.SFTPDisconnectedCounter++;
-
                 var rabbitIsConnected = rabbitClient.IsConnected;
                 var SB = new StringBuilder();
                 
-                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES || (!sftpIsConnected && HelthTime.SFTPDisconnectedCounter > 1) || !rabbitIsConnected)
+                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES || !rabbitIsConnected)
                 {
                     var response = context.Response;
                     response.StatusCode = 503;
@@ -137,12 +130,10 @@ namespace ExtractFramesFromVideo
                     await response.WriteAsync($"Awesome");
                     SB.Append($"StatusCode: {200}\n");
                 }
-                SB.Append($"SFTPDisconnectedCounter: {HelthTime.SFTPDisconnectedCounter}\n");
                 SB.Append($"SERVICELIVETIMEINMINUTES: {HelthTime.SERVICELIVETIMEINMINUTES}\n");
                 SB.Append($"curentTime: {DateTime.Now}\n");
                 SB.Append($"lastTime: {HelthTime.Time}\n");
                 SB.Append($"Subtract in.Minutes: {DateTime.Now.Subtract(HelthTime.Time).Minutes}\n");
-                SB.Append($"sftpIsConnected: {sftpIsConnected}\n");
                 SB.Append($"rabbitIsConnected: {rabbitIsConnected}\n");
                 elasticClient.Info(SB.ToString());
             });
