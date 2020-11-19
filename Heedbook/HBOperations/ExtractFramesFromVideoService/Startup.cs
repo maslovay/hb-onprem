@@ -104,7 +104,6 @@ namespace ExtractFramesFromVideo
                 trigger);
             // app.UseHttpsRedirection();
             app.UseMvc();
-            HelthTime.Time = DateTime.Now;
             app.Map("/healthz", Healthz);
         }
         private void Healthz(IApplicationBuilder app)
@@ -115,10 +114,15 @@ namespace ExtractFramesFromVideo
             app.Run(async context => 
             {
                 var sftpIsConnected = sftpClient.ClientIsConnected();
+                if(sftpIsConnected)
+                    HelthTime.SFTPDisconnectedCounter = 0;
+                else
+                    HelthTime.SFTPDisconnectedCounter++;
+
                 var rabbitIsConnected = rabbitClient.IsConnected;
                 var SB = new StringBuilder();
                 
-                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES || !sftpIsConnected || !rabbitIsConnected)
+                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES || (!sftpIsConnected && HelthTime.SFTPDisconnectedCounter > 1) || !rabbitIsConnected)
                 {
                     var response = context.Response;
                     response.StatusCode = 503;
@@ -133,6 +137,7 @@ namespace ExtractFramesFromVideo
                     await response.WriteAsync($"Awesome");
                     SB.Append($"StatusCode: {200}\n");
                 }
+                SB.Append($"SFTPDisconnectedCounter: {HelthTime.SFTPDisconnectedCounter}\n");
                 SB.Append($"SERVICELIVETIMEINMINUTES: {HelthTime.SERVICELIVETIMEINMINUTES}\n");
                 SB.Append($"curentTime: {DateTime.Now}\n");
                 SB.Append($"lastTime: {HelthTime.Time}\n");
