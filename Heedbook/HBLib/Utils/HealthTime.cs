@@ -1,6 +1,6 @@
 using System;
 
-namespace ExtractFramesFromVideo
+namespace HBLib.Utils
 {
     public static class HelthTime
     {

@@ -235,6 +235,8 @@ namespace UserOperations
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
                 };
             });
+
+            HelthTime.SERVICELIVETIMEINMINUTES = Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES") == null ? 5 : Int32.Parse(Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -252,9 +254,33 @@ namespace UserOperations
             });
             app.UseAuthentication();
             app.UseMvc();
-
+            HelthTime.Time = DateTime.Now;
+            app.Map("/healthz", Healthz);
             // add seed
            // BenchmarkRunner.Run<TestRepository>();
+        }
+        private void Healthz(IApplicationBuilder app)
+        {
+            var sftpClient = app.ApplicationServices.GetService<SftpClient>();
+            var rabbitClient = app.ApplicationServices.GetService<IRabbitMqPersistentConnection>();
+            app.Run(async context => 
+            {
+                var sftpIsConnected = sftpClient.ClientIsConnected();
+                var rabbitIsConnected = rabbitClient.IsConnected;
+                if(DateTime.Now.Subtract(HelthTime.Time).Minutes > HelthTime.SERVICELIVETIMEINMINUTES || !sftpIsConnected || !rabbitIsConnected)
+                {
+                    var response = context.Response;
+                    response.StatusCode = 503;
+                    response.Headers.Add("Custom-Header", "NotAwesome");
+                    await response.WriteAsync($"NotAwesome");
+                }
+                else
+                {
+                    var response = context.Response;
+                    response.Headers.Add("Custom-Header", "Awesome");
+                    await response.WriteAsync($"Awesome");
+                }
+            });
         }
     }
 }
