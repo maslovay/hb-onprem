@@ -47,7 +47,7 @@ namespace FaceAnalyzeService
             var _log = _elasticClientFactory.GetElasticClient();
             _log.SetFormat("{Path}");
             _log.SetArgs(remotePath);
-            
+            HelthTime.Time = DateTime.Now;
             try
             {
                 _log.Info($"Function started");
