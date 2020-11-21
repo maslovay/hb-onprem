@@ -54,7 +54,7 @@ namespace ExtractFramesFromVideo
         {
             _log.SetFormat("{Path}");
             _log.SetArgs(videoBlobRelativePath);
-
+            HelthTime.Time = DateTime.Now;
             try
             {
                 _log.Info("Function Extract Frames From Video Started");
