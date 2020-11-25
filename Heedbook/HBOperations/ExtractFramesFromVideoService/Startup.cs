@@ -46,30 +46,15 @@ namespace ExtractFramesFromVideo
             services.AddDbContext<RecordsContext>
             (options =>
             {
-                var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+                var connectionString = Configuration.GetConnectionString("DefaultConnection");
                 options.UseNpgsql(connectionString,
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData)));
             });
-            services.AddTransient<SftpSettings>(p => new SftpSettings
-                {
-                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
-                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
-                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
-                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
-                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
-                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
-                });
+            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
-            services.AddSingleton(provider => 
-                {
-                    var elasticSettings = new ElasticSettings
-                    {
-                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
-                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
-                        FunctionName = "OnPremExtractFramesFromVideo"
-                    };
-                    return elasticSettings;
-                });
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddTransient(provider =>
             {
                 var settings = provider.GetRequiredService<ElasticSettings>();
@@ -80,17 +65,19 @@ namespace ExtractFramesFromVideo
             services.AddTransient(provider => provider.GetService<IOptions<FFMpegSettings>>().Value);
             services.AddTransient<FFMpegWrapper>();
             services.AddDeleteOldFilesQuartz();
-            services.AddRabbitMqEventBusConfigFromEnv();
+            services.AddRabbitMqEventBus(Configuration);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddTransient<FramesFromVideo>();
             services.AddTransient<FramesFromVideoRunHandler>();
-
-            HelthTime.SERVICELIVETIMEINMINUTES = Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES") == null ? 5 : Int32.Parse(Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES"));
+            services.Configure<LivenessSettings>(Configuration.GetSection(nameof(LivenessSettings)));
+            services.AddTransient(provider => provider.GetService<IOptions<LivenessSettings>>().Value);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
+            var livenessSettings = app.ApplicationServices.GetService<LivenessSettings>();
+            HelthTime.SERVICELIVETIMEINMINUTES = livenessSettings.LivenesCheckPeriod;
             app.ApplicationServices.GetRequiredService<INotificationService>();
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             service.Subscribe<FramesFromVideoRun, FramesFromVideoRunHandler>();
