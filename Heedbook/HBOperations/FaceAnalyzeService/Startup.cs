@@ -39,50 +39,32 @@ namespace FaceAnalyzeService
             services.AddOptions();
             services.AddDbContext<RecordsContext>
             (options =>
-                options.UseNpgsql(Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"),
+                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"),
                     dbContextOptions => dbContextOptions.MigrationsAssembly(nameof(HBData))),
                 ServiceLifetime.Transient
             );
             services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
 
-            services.AddScoped<SftpSettings>(p => new SftpSettings
-                {
-                    Host = Environment.GetEnvironmentVariable("SFTP_CONNECTION_HOST"),
-                    Port = Int32.Parse(Environment.GetEnvironmentVariable("SFTP_CONNECTION_PORT")),
-                    UserName = Environment.GetEnvironmentVariable("SFTP_CONNECTION_USERNAME"),
-                    Password = Environment.GetEnvironmentVariable("SFTP_CONNECTION_PASSWORD"),
-                    DestinationPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DESTINATIONPATH"),
-                    DownloadPath = Environment.GetEnvironmentVariable("SFTP_CONNECTION_DOWNLOADPATH")
-                });
-            services.AddScoped<SftpClient>();
+            services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
+            services.AddScoped(provider =>
+            {
+                var settings = provider.GetRequiredService<IOptions<SftpSettings>>().Value;
+                return new SftpClient(settings, Configuration);
+            });
 
             if(Environment.GetEnvironmentVariable("DOCKER_INTEGRATION_TEST_ENVIRONMENT") != "TRUE")
             {
+                services.Configure<HttpSettings>(Configuration.GetSection(nameof(HttpSettings)));
                 services.AddScoped(provider =>
                 {
-                    var hbmlurisetting = new HttpSettings
-                    {
-                        HbMlUri = Environment.GetEnvironmentVariable("HBML_URI_SETTING")
-                    };
-                    return hbmlurisetting;
-                });
-                services.AddScoped(provider =>
-                {
-                    var settings = provider.GetRequiredService<HttpSettings>();
+                    var settings = provider.GetRequiredService<IOptions<HttpSettings>>().Value;
                     return new HbMlHttpClient(settings);
                 });
             }
             
-            services.AddScoped(provider => 
-                {
-                    var elasticSettings = new ElasticSettings
-                    {
-                        Host = Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_HOST"),
-                        Port = Int32.Parse(Environment.GetEnvironmentVariable("ELASTIC_SETTINGS_PORT")),
-                        FunctionName = "FaceAnalyzeService"
-                    };
-                    return elasticSettings;
-                });
+            services.Configure<ElasticSettings>(Configuration.GetSection(nameof(ElasticSettings)));
+            services.AddScoped(provider => provider.GetRequiredService<IOptions<ElasticSettings>>().Value);
             services.AddScoped(provider =>
             {
                 var settings = provider.GetRequiredService<ElasticSettings>();
@@ -93,16 +75,19 @@ namespace FaceAnalyzeService
             services.AddScoped<FaceAnalyzeRunHandler>();
             services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddLogging(provider => provider.AddSerilog());
-            services.AddRabbitMqEventBusConfigFromEnv();
+            services.AddRabbitMqEventBus(Configuration);
             services.AddDeleteOldFilesQuartz();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            
-            HelthTime.SERVICELIVETIMEINMINUTES = Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES") == null ? 5 : Int32.Parse(Environment.GetEnvironmentVariable("SERVICELIVETIMEINMINUTES"));
+            services.Configure<LivenessSettings>(Configuration.GetSection(nameof(LivenessSettings)));
+            services.AddTransient(provider => provider.GetService<IOptions<LivenessSettings>>().Value);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IScheduler scheduler)
         {
+            var livenessSettings = app.ApplicationServices.GetService<LivenessSettings>();
+            HelthTime.SERVICELIVETIMEINMINUTES = livenessSettings.LivenesCheckPeriod;
+            HelthTime.Time = DateTime.Now;
             var service = app.ApplicationServices.GetRequiredService<INotificationPublisher>();
             service.Subscribe<FaceAnalyzeRun, FaceAnalyzeRunHandler>();
             if (env.IsDevelopment())
