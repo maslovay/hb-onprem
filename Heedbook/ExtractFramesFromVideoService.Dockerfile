@@ -9,6 +9,8 @@ WORKDIR /app
 COPY --from=build-env /app/HBOperations/ExtractFramesFromVideoService/publish .
 ENTRYPOINT ["dotnet", "ExtractFramesFromVideoService.dll"]
 RUN apk add ffmpeg
+RUN apk add libgdiplus-dev --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ --allow-untrusted  
+RUN apk add --no-cache icu-dev libc6-compat icu-libs libgdiplus 
 RUN mkdir -p /opt/
 RUN chmod -R 777 /opt/
 RUN mkdir -p /opt/download
