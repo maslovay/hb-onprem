@@ -122,6 +122,7 @@ namespace ExtractFramesFromVideo
                 SB.Append($"lastTime: {HelthTime.Time}\n");
                 SB.Append($"Subtract in.Minutes: {DateTime.Now.Subtract(HelthTime.Time).Minutes}\n");
                 SB.Append($"rabbitIsConnected: {rabbitIsConnected}\n");
+                System.Console.WriteLine(SB.ToString());
                 elasticClient.Info(SB.ToString());
             });
         }
