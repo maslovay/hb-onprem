@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
 using HBLib.Utils.Interfaces;
+using HBLib.Utils;
 
 namespace UserOperations.Services
 {
@@ -52,7 +53,40 @@ namespace UserOperations.Services
                 return new Dictionary<string, bool>() { { "status", false } };
             }
         }
+        public async Task AddUserInExistedCompany(UserRegisterInExistedCompany message)
+        {
+            var statusActiveId = GetStatusId("Active");
+            if (await EmailExist(message.Email))
+                throw new NotUniqueException("User email not unique");
 
+            if(message.Role != "Admin")
+            {
+                if(message.CompanyId == null)
+                    throw new NoDataException("CompanyId is empty");
+                await AddNewUserInDb(message, message.CompanyId);
+            }
+            else
+            {
+                var firstCompany = _repository.GetAsQueryable<Company>().FirstOrDefault();
+                if(firstCompany == null)
+                    throw new NoDataException($"For {message.Role} not have any companys");
+
+                await AddNewUserInDb(message, firstCompany.CompanyId);
+            }            
+        }
+        private async Task AddNewUserInDb(UserRegisterInExistedCompany message, Guid companyId)
+        {
+            var newMessage = new UserRegister()
+            {
+                Email = message.Email,
+                FullName = message.FullName,
+                Password = message.Password,
+                Role = message.Role
+            };
+            var user = await AddNewUserInBase(newMessage, companyId);
+            await AddUserRoleInBase(newMessage, user);
+            await _repository.SaveAsync();
+        }
             public async Task RegisterNewCompanyAndUser(UserRegister message)
         {
             var statusActiveId = GetStatusId("Active");

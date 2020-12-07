@@ -23,6 +23,17 @@ namespace UserOperations.Controllers
             _service = service;
         }
 
+        [HttpPost("UserRegister")]
+        [SwaggerOperation(Summary = "Create user for existed company")]
+        [SwaggerResponse(400, "Exception message")]
+        [SwaggerResponse(200, "Registred")]
+        public async Task<string> UserRegisterForExistedCompany([FromBody,
+                        SwaggerParameter("User data", Required = true)]
+                        UserRegisterInExistedCompany message)
+        {
+            await _service.AddUserInExistedCompany(message);
+            return "Registred";
+        }
 
         [HttpPost("Register")]
         [SwaggerOperation(Summary = "Create user, company, trial tariff",
