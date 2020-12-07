@@ -12,6 +12,7 @@ using UserOperations.Services.Interfaces;
 using UserOperations.Utils.Interfaces;
 using HBLib.Utils.Interfaces;
 using HBLib.Utils;
+using Newtonsoft.Json;
 
 namespace UserOperations.Services
 {
@@ -53,17 +54,17 @@ namespace UserOperations.Services
                 return new Dictionary<string, bool>() { { "status", false } };
             }
         }
-        public async Task AddUserInExistedCompany(UserRegisterInExistedCompany message)
+        public async Task<ApplicationUser> AddUserInExistedCompany(UserRegisterInExistedCompany message)
         {
             var statusActiveId = GetStatusId("Active");
             if (await EmailExist(message.Email))
                 throw new NotUniqueException("User email not unique");
-
+            ApplicationUser tempuser;
             if(message.Role != "Admin")
             {
                 if(message.CompanyId == null)
                     throw new NoDataException("CompanyId is empty");
-                await AddNewUserInDb(message, message.CompanyId);
+                tempuser = await AddNewUserInDb(message, message.CompanyId);
             }
             else
             {
@@ -71,10 +72,26 @@ namespace UserOperations.Services
                 if(firstCompany == null)
                     throw new NoDataException($"For {message.Role} not have any companys");
 
-                await AddNewUserInDb(message, firstCompany.CompanyId);
-            }            
+                tempuser = await AddNewUserInDb(message, firstCompany.CompanyId);
+            }
+            tempuser.PasswordHash = "";
+            var user = new ApplicationUser()
+                {
+                    Id = tempuser.Id,
+                    UserName = tempuser.UserName,
+                    NormalizedUserName = tempuser.NormalizedUserName,
+                    Email = tempuser.Email,
+                    NormalizedEmail = tempuser.NormalizedEmail,
+                    EmailConfirmed = tempuser.EmailConfirmed,
+                    ConcurrencyStamp = tempuser.ConcurrencyStamp,
+                    FullName = tempuser.FullName,
+                    CreationDate = tempuser.CreationDate,
+                    CompanyId = tempuser.CompanyId,
+                    StatusId = tempuser.StatusId
+                };
+            return await Task.FromResult<ApplicationUser>(user);          
         }
-        private async Task AddNewUserInDb(UserRegisterInExistedCompany message, Guid companyId)
+        private async Task<ApplicationUser> AddNewUserInDb(UserRegisterInExistedCompany message, Guid companyId)
         {
             var newMessage = new UserRegister()
             {
@@ -86,6 +103,7 @@ namespace UserOperations.Services
             var user = await AddNewUserInBase(newMessage, companyId);
             await AddUserRoleInBase(newMessage, user);
             await _repository.SaveAsync();
+            return await Task.FromResult<ApplicationUser>(user);;
         }
             public async Task RegisterNewCompanyAndUser(UserRegister message)
         {

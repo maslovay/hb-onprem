@@ -7,6 +7,7 @@ using UserOperations.AccountModels;
 using UserOperations.Services;
 using System.Collections.Generic;
 using HBLib.Utils;
+using HBData.Models;
 
 namespace UserOperations.Controllers
 {
@@ -27,12 +28,11 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Create user for existed company")]
         [SwaggerResponse(400, "Exception message")]
         [SwaggerResponse(200, "Registred")]
-        public async Task<string> UserRegisterForExistedCompany([FromBody,
+        public async Task<ApplicationUser> UserRegisterForExistedCompany([FromBody,
                         SwaggerParameter("User data", Required = true)]
                         UserRegisterInExistedCompany message)
         {
-            await _service.AddUserInExistedCompany(message);
-            return "Registred";
+            return await _service.AddUserInExistedCompany(message);
         }
 
         [HttpPost("Register")]
