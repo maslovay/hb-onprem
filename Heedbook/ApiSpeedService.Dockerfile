@@ -1,6 +1,7 @@
 FROM microsoft/dotnet:2.2-sdk-alpine AS build-env
 WORKDIR /app
 COPY . .
+COPY HBOperations/ApiSpeed/TestImage.jpg /app/
 # Copy everything else and build
 RUN dotnet publish ./HBOperations/ApiSpeed -c Release -o publish
 
