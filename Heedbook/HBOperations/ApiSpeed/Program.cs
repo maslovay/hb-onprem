@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using ServiceExtensions;
@@ -17,6 +18,7 @@ namespace ApiPerformance
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
                 .ConfigureBuilderDueToEnvironment(args: args, portToReassignForTests:5133);  
+                
         }
     }
 }

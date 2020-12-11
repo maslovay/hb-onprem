@@ -29,20 +29,11 @@ namespace UserOperations.Controllers
         [SwaggerOperation(Summary = "Create user for existed company")]
         [SwaggerResponse(400, "Exception message")]
         [SwaggerResponse(200, "Registred")]
-<<<<<<< HEAD
-        public async Task<string> UserRegisterForExistedCompany([FromBody,
-                        SwaggerParameter("User data", Required = true)]
-                        UserRegisterInExistedCompany message)
-        {
-            await _service.AddUserInExistedCompany(message);
-            return "Registred";
-=======
         public async Task<ApplicationUser> UserRegisterForExistedCompany([FromBody,
                         SwaggerParameter("User data", Required = true)]
                         UserRegisterInExistedCompany message)
         {
             return await _service.AddUserInExistedCompany(message);
->>>>>>> origin/devices
         }
 
         [HttpPost("Register")]
