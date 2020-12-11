@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading;
+using ApiPerformance.Models;
+using ApiPerformance.Services;
 using Configurations;
 using HBData;
 using HBData.Repository;
@@ -80,6 +82,13 @@ namespace ApiPerformance
             services.Configure<SftpSettings>(Configuration.GetSection(nameof(SftpSettings)));
             services.AddTransient(provider => provider.GetRequiredService<IOptions<SftpSettings>>().Value);
             services.AddTransient<SftpClient>();
+            services.Configure<URLSettings>(Configuration.GetSection(nameof(URLSettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<URLSettings>>().Value);
+
+            services.Configure<TestCompanySettings>(Configuration.GetSection(nameof(TestCompanySettings)));
+            services.AddTransient(provider => provider.GetRequiredService<IOptions<TestCompanySettings>>().Value);
+
+            services.AddTransient<ApiPerformanceService>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 

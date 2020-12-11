@@ -12,6 +12,7 @@ namespace HBLib.Utils
         public SmtpClient(SmtpSettings smtpSettings)
         {
             _smtpSettings = smtpSettings;
+            _smtpClient = new System.Net.Mail.SmtpClient(_smtpSettings.Host, _smtpSettings.Port);
         }
 
         public void Send(System.Net.Mail.MailMessage mail)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -141,6 +142,34 @@ namespace HBLib.Utils
                     CellReference = cellReference
                 };
         }
+        private Cell ConstructCell<T>(ref T model, CellValues dataType, int? rowIndex = null, int? columnIndex = null)
+            where T : class
+        {     
+            string value = "";
+            if(model != null)
+                value = model.ToString();
+
+            string cellReference = null;
+            if(columnIndex != null || rowIndex != null)
+            {
+                cellReference = GetCellReference(rowIndex, columnIndex);
+            }
+
+            if(cellReference is null)
+                return new Cell()
+                {
+                    CellValue = new CellValue(value),
+                    DataType = new EnumValue<CellValues>(dataType)
+                };
+            else
+                return new Cell()
+                {
+                    CellValue = new CellValue(value),
+                    DataType = new EnumValue<CellValues>(dataType),
+                    CellReference = cellReference
+                };
+        }
+        
         private Cell ConstructCell(List<ColoredText> listOfColoredText, SharedStringTablePart sharedStringTablePart, int? rowIndex = null, int? columnIndex = null)
         {
             string cellReference = null;
